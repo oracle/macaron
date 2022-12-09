@@ -1,0 +1,28 @@
+{
+  "commands": [
+    [
+      "echo",
+      "\"hash=$MACARON_UNKNOWN\""
+    ],
+    [
+      "echo",
+      "\"hash=$MACARON_UNKNOWN\""
+    ],
+    [
+      "echo",
+      "\"hash=$MACARON_UNKNOWN\""
+    ],
+    [
+      "echo",
+      "\"hash=$MACARON_UNKNOWN\""
+    ],
+    [
+      "echo",
+      "\"hash=$MACARON_UNKNOWN\""
+    ],
+    [
+      "echo",
+      "\"hash=$MACARON_UNKNOWN\""
+    ]
+  ]
+}

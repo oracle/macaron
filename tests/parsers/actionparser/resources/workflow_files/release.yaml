@@ -1,0 +1,74 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+name: Check and Release
+on:
+  push:
+    branches:
+    - main
+permissions:
+  contents: read
+env:
+  ARTIFACT_NAME: artifact-ubuntu-latest-3.10
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yaml
+    permissions:
+      contents: write # To create the release tag.
+    secrets: inherit
+
+  provenance:
+    needs: build
+    permissions:
+      actions: read # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    # The generator should be referenced with a semantic version.
+    # The build will fail if we reference it using the commit sha.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: ${{ needs.build.outputs.artifacts-sha256 }}
+
+  release:
+    if: "!startsWith(github.event.commits[0].message, 'bump:')"
+    needs: [build, provenance]
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # To publish release notes.
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@74b568e8591fbb3115c70f3436a0c6b0909a8504 # v1.4.4
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+    - name: Check out repository
+      uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
+      with:
+        fetch-depth: 0
+        ref: main
+    - name: Download provenance
+      uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
+      with:
+        name: ${{ needs.provenance.outputs.attestation-name }}
+    - name: Download artifact
+      uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        path: dist
+    - name: Verify the artifact hash
+      env:
+        ARTIFACT_HASH: ${{ needs.build.outputs.artifacts-sha256 }}
+      working-directory: scripts
+      run: |
+        set -euo pipefail
+        echo "Hash of package should be $ARTIFACT_HASH."
+        # Verify hashes by first computing hashes for the artifacts and
+        # then comparing them against the hashes computed by the build job.
+        echo "$ARTIFACT_HASH" | base64 -d | sha256sum --strict --check --status || exit 1
+    - name: Upload assets
+      env:
+        GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+      run: |
+        # Create the release including the artifacts and the SLSA L3 provenance.
+        gh release create `git describe --tags --abbrev=0` dist/* ${{ needs.provenance.outputs.attestation-name }} --notes-file dist/RELEASE_NOTES.md

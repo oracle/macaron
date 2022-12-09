@@ -1,0 +1,924 @@
+{
+  "Name": {
+    "Value": "Java CI",
+    "Quoted": false,
+    "Pos": {
+      "Line": 4,
+      "Col": 7
+    }
+  },
+  "RunName": null,
+  "On": [
+    {
+      "Hook": {
+        "Value": "push",
+        "Quoted": false,
+        "Pos": {
+          "Line": 6,
+          "Col": 6
+        }
+      },
+      "Types": null,
+      "Branches": null,
+      "BranchesIgnore": null,
+      "Tags": null,
+      "TagsIgnore": null,
+      "Paths": null,
+      "PathsIgnore": null,
+      "Workflows": null,
+      "Pos": {
+        "Line": 6,
+        "Col": 6
+      }
+    },
+    {
+      "Hook": {
+        "Value": "pull_request",
+        "Quoted": false,
+        "Pos": {
+          "Line": 6,
+          "Col": 12
+        }
+      },
+      "Types": null,
+      "Branches": null,
+      "BranchesIgnore": null,
+      "Tags": null,
+      "TagsIgnore": null,
+      "Paths": null,
+      "PathsIgnore": null,
+      "Workflows": null,
+      "Pos": {
+        "Line": 6,
+        "Col": 12
+      }
+    }
+  ],
+  "Permissions": null,
+  "Env": null,
+  "Defaults": null,
+  "Concurrency": null,
+  "Jobs": {
+    "build": {
+      "ID": {
+        "Value": "build",
+        "Quoted": false,
+        "Pos": {
+          "Line": 9,
+          "Col": 3
+        }
+      },
+      "Name": null,
+      "Needs": null,
+      "RunsOn": {
+        "Labels": null,
+        "Expression": {
+          "Value": "${{ matrix.os }}",
+          "Quoted": false,
+          "Pos": {
+            "Line": 15,
+            "Col": 14
+          }
+        }
+      },
+      "Permissions": null,
+      "Environment": null,
+      "Concurrency": null,
+      "Outputs": null,
+      "Env": null,
+      "Defaults": null,
+      "If": null,
+      "Steps": [
+        {
+          "ID": null,
+          "If": null,
+          "Name": null,
+          "Exec": {
+            "Uses": {
+              "Value": "actions/checkout@v2",
+              "Quoted": false,
+              "Pos": {
+                "Line": 18,
+                "Col": 15
+              }
+            },
+            "Inputs": null,
+            "Entrypoint": null,
+            "Args": null
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 18,
+            "Col": 9
+          }
+        },
+        {
+          "ID": null,
+          "If": null,
+          "Name": null,
+          "Exec": {
+            "Uses": {
+              "Value": "actions/setup-java@v2",
+              "Quoted": false,
+              "Pos": {
+                "Line": 19,
+                "Col": 15
+              }
+            },
+            "Inputs": {
+              "cache": {
+                "Name": {
+                  "Value": "cache",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 23,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "maven",
+                  "Quoted": true,
+                  "Pos": {
+                    "Line": 23,
+                    "Col": 18
+                  }
+                }
+              },
+              "distribution": {
+                "Name": {
+                  "Value": "distribution",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 22,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "temurin",
+                  "Quoted": true,
+                  "Pos": {
+                    "Line": 22,
+                    "Col": 25
+                  }
+                }
+              },
+              "java-version": {
+                "Name": {
+                  "Value": "java-version",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 21,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "8",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 21,
+                    "Col": 25
+                  }
+                }
+              }
+            },
+            "Entrypoint": null,
+            "Args": null
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 19,
+            "Col": 9
+          }
+        },
+        {
+          "ID": null,
+          "If": null,
+          "Name": {
+            "Value": "Build with Maven",
+            "Quoted": false,
+            "Pos": {
+              "Line": 25,
+              "Col": 15
+            }
+          },
+          "Exec": {
+            "Run": {
+              "Value": "mvn verify -e -B -V -DdistributionFileName=apache-maven",
+              "Quoted": false,
+              "Pos": {
+                "Line": 26,
+                "Col": 14
+              }
+            },
+            "Shell": null,
+            "WorkingDirectory": null,
+            "RunPos": {
+              "Line": 26,
+              "Col": 9
+            }
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 25,
+            "Col": 9
+          }
+        },
+        {
+          "ID": null,
+          "If": {
+            "Value": "${{ matrix.os == 'ubuntu-latest' }}",
+            "Quoted": false,
+            "Pos": {
+              "Line": 30,
+              "Col": 13
+            }
+          },
+          "Name": {
+            "Value": "Upload built Maven",
+            "Quoted": false,
+            "Pos": {
+              "Line": 28,
+              "Col": 15
+            }
+          },
+          "Exec": {
+            "Uses": {
+              "Value": "actions/upload-artifact@v2",
+              "Quoted": false,
+              "Pos": {
+                "Line": 29,
+                "Col": 15
+              }
+            },
+            "Inputs": {
+              "name": {
+                "Name": {
+                  "Value": "name",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 32,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "built-maven",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 32,
+                    "Col": 17
+                  }
+                }
+              },
+              "path": {
+                "Name": {
+                  "Value": "path",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 33,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "apache-maven/target/",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 33,
+                    "Col": 17
+                  }
+                }
+              }
+            },
+            "Entrypoint": null,
+            "Args": null
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 28,
+            "Col": 9
+          }
+        }
+      ],
+      "TimeoutMinutes": null,
+      "Strategy": {
+        "Matrix": {
+          "Rows": {
+            "os": {
+              "Name": {
+                "Value": "os",
+                "Quoted": false,
+                "Pos": {
+                  "Line": 12,
+                  "Col": 9
+                }
+              },
+              "Values": [
+                {
+                  "Value": "ubuntu-latest"
+                },
+                {
+                  "Value": "windows-latest"
+                },
+                {
+                  "Value": "macOS-latest"
+                }
+              ],
+              "Expression": null
+            }
+          },
+          "Include": null,
+          "Exclude": null,
+          "Expression": null,
+          "Pos": {
+            "Line": 11,
+            "Col": 7
+          }
+        },
+        "FailFast": {
+          "Value": false,
+          "Expression": null,
+          "Pos": {
+            "Line": 13,
+            "Col": 18
+          }
+        },
+        "MaxParallel": null,
+        "Pos": {
+          "Line": 10,
+          "Col": 5
+        }
+      },
+      "ContinueOnError": null,
+      "Container": null,
+      "Services": null,
+      "WorkflowCall": null,
+      "Pos": {
+        "Line": 9,
+        "Col": 3
+      }
+    },
+    "integration-test": {
+      "ID": {
+        "Value": "integration-test",
+        "Quoted": false,
+        "Pos": {
+          "Line": 35,
+          "Col": 3
+        }
+      },
+      "Name": null,
+      "Needs": [
+        {
+          "Value": "build",
+          "Quoted": false,
+          "Pos": {
+            "Line": 36,
+            "Col": 12
+          }
+        }
+      ],
+      "RunsOn": {
+        "Labels": null,
+        "Expression": {
+          "Value": "${{ matrix.os }}",
+          "Quoted": false,
+          "Pos": {
+            "Line": 43,
+            "Col": 14
+          }
+        }
+      },
+      "Permissions": null,
+      "Environment": null,
+      "Concurrency": null,
+      "Outputs": null,
+      "Env": null,
+      "Defaults": null,
+      "If": null,
+      "Steps": [
+        {
+          "ID": null,
+          "If": null,
+          "Name": {
+            "Value": "Collect environment context variables",
+            "Quoted": false,
+            "Pos": {
+              "Line": 46,
+              "Col": 15
+            }
+          },
+          "Exec": {
+            "Run": {
+              "Value": "set +e\nrepo=maven-integration-testing\ntarget_branch=master\ntarget_user=apache\nif [ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]; then\n  user=${PR_HEAD_LABEL%:*}\n  branch=${PR_HEAD_LABEL#*:}\nelse\n  user=${GITHUB_REPOSITORY%/*}\n  branch=${GITHUB_REF#refs/heads/}\nfi\nif [ $branch != \"master\" ]; then\n  git ls-remote https://github.com/$user/$repo.git | grep \"refs/heads/${branch}$\" \u003e /dev/null\n  if [ $? -eq 0 ]; then\n    echo \"Found a branch \\\"$branch\\\" in fork \\\"$user/$repo\\\", configuring this for the integration tests to be run against.\"\n    target_branch=$branch\n    target_user=$user\n  else\n    echo \"Could not find fork \\\"$user/$repo\\\" or a branch \\\"$branch\\\" in this fork. Falling back to \\\"$target_branch\\\" in \\\"$target_user/$repo\\\".\"\n  fi\nelse\n  echo \"Integration tests will run against $target_user/$repo for master builds.\"\nfi\necho \"REPO_BRANCH=$target_branch\" \u003e\u003e $GITHUB_ENV\necho \"REPO_USER=$target_user\" \u003e\u003e $GITHUB_ENV\n",
+              "Quoted": false,
+              "Pos": {
+                "Line": 50,
+                "Col": 14
+              }
+            },
+            "Shell": {
+              "Value": "bash",
+              "Quoted": false,
+              "Pos": {
+                "Line": 47,
+                "Col": 16
+              }
+            },
+            "WorkingDirectory": null,
+            "RunPos": {
+              "Line": 50,
+              "Col": 9
+            }
+          },
+          "Env": {
+            "Vars": {
+              "pr_head_label": {
+                "Name": {
+                  "Value": "PR_HEAD_LABEL",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 49,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "${{ github.event.pull_request.head.label }}",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 49,
+                    "Col": 26
+                  }
+                }
+              }
+            },
+            "Expression": null
+          },
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 46,
+            "Col": 9
+          }
+        },
+        {
+          "ID": null,
+          "If": null,
+          "Name": {
+            "Value": "Checkout maven-integration-testing",
+            "Quoted": false,
+            "Pos": {
+              "Line": 77,
+              "Col": 15
+            }
+          },
+          "Exec": {
+            "Uses": {
+              "Value": "actions/checkout@v2",
+              "Quoted": false,
+              "Pos": {
+                "Line": 78,
+                "Col": 15
+              }
+            },
+            "Inputs": {
+              "path": {
+                "Name": {
+                  "Value": "path",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 81,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "maven-integration-testing/",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 81,
+                    "Col": 17
+                  }
+                }
+              },
+              "ref": {
+                "Name": {
+                  "Value": "ref",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 82,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "${{ env.REPO_BRANCH }}",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 82,
+                    "Col": 16
+                  }
+                }
+              },
+              "repository": {
+                "Name": {
+                  "Value": "repository",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 80,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "${{ env.REPO_USER }}/maven-integration-testing",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 80,
+                    "Col": 23
+                  }
+                }
+              }
+            },
+            "Entrypoint": null,
+            "Args": null
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 77,
+            "Col": 9
+          }
+        },
+        {
+          "ID": null,
+          "If": null,
+          "Name": {
+            "Value": "Set up cache for ~/.m2/repository",
+            "Quoted": false,
+            "Pos": {
+              "Line": 84,
+              "Col": 15
+            }
+          },
+          "Exec": {
+            "Uses": {
+              "Value": "actions/cache@v2",
+              "Quoted": false,
+              "Pos": {
+                "Line": 85,
+                "Col": 15
+              }
+            },
+            "Inputs": {
+              "key": {
+                "Name": {
+                  "Value": "key",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 88,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "it-m2-repo-${{ matrix.os }}-${{ hashFiles('maven-integration-testing/**/pom.xml') }}",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 88,
+                    "Col": 16
+                  }
+                }
+              },
+              "path": {
+                "Name": {
+                  "Value": "path",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 87,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "~/.m2/repository",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 87,
+                    "Col": 17
+                  }
+                }
+              },
+              "restore-keys": {
+                "Name": {
+                  "Value": "restore-keys",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 89,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "it-m2-repo-${{ matrix.os }}-\n",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 89,
+                    "Col": 25
+                  }
+                }
+              }
+            },
+            "Entrypoint": null,
+            "Args": null
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 84,
+            "Col": 9
+          }
+        },
+        {
+          "ID": null,
+          "If": null,
+          "Name": {
+            "Value": "Download built Maven",
+            "Quoted": false,
+            "Pos": {
+              "Line": 92,
+              "Col": 15
+            }
+          },
+          "Exec": {
+            "Uses": {
+              "Value": "actions/download-artifact@v2",
+              "Quoted": false,
+              "Pos": {
+                "Line": 93,
+                "Col": 15
+              }
+            },
+            "Inputs": {
+              "name": {
+                "Name": {
+                  "Value": "name",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 95,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "built-maven",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 95,
+                    "Col": 17
+                  }
+                }
+              },
+              "path": {
+                "Name": {
+                  "Value": "path",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 96,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "built-maven/",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 96,
+                    "Col": 17
+                  }
+                }
+              }
+            },
+            "Entrypoint": null,
+            "Args": null
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 92,
+            "Col": 9
+          }
+        },
+        {
+          "ID": null,
+          "If": null,
+          "Name": {
+            "Value": "Set up JDK",
+            "Quoted": false,
+            "Pos": {
+              "Line": 98,
+              "Col": 15
+            }
+          },
+          "Exec": {
+            "Uses": {
+              "Value": "actions/setup-java@v2",
+              "Quoted": false,
+              "Pos": {
+                "Line": 99,
+                "Col": 15
+              }
+            },
+            "Inputs": {
+              "cache": {
+                "Name": {
+                  "Value": "cache",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 103,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "maven",
+                  "Quoted": true,
+                  "Pos": {
+                    "Line": 103,
+                    "Col": 18
+                  }
+                }
+              },
+              "distribution": {
+                "Name": {
+                  "Value": "distribution",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 102,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "temurin",
+                  "Quoted": true,
+                  "Pos": {
+                    "Line": 102,
+                    "Col": 25
+                  }
+                }
+              },
+              "java-version": {
+                "Name": {
+                  "Value": "java-version",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 101,
+                    "Col": 11
+                  }
+                },
+                "Value": {
+                  "Value": "${{ matrix.java }}",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 101,
+                    "Col": 25
+                  }
+                }
+              }
+            },
+            "Entrypoint": null,
+            "Args": null
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 98,
+            "Col": 9
+          }
+        },
+        {
+          "ID": null,
+          "If": null,
+          "Name": {
+            "Value": "Running integration tests",
+            "Quoted": false,
+            "Pos": {
+              "Line": 105,
+              "Col": 15
+            }
+          },
+          "Exec": {
+            "Run": {
+              "Value": "mvn install -e -B -V -Prun-its,embedded -Dmaven.repo.local=\"$HOME/.m2/repository\" -DmavenDistro=\"$GITHUB_WORKSPACE/built-maven/apache-maven-bin.zip\" -f maven-integration-testing/pom.xml",
+              "Quoted": false,
+              "Pos": {
+                "Line": 107,
+                "Col": 14
+              }
+            },
+            "Shell": {
+              "Value": "bash",
+              "Quoted": false,
+              "Pos": {
+                "Line": 106,
+                "Col": 16
+              }
+            },
+            "WorkingDirectory": null,
+            "RunPos": {
+              "Line": 107,
+              "Col": 9
+            }
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 105,
+            "Col": 9
+          }
+        }
+      ],
+      "TimeoutMinutes": null,
+      "Strategy": {
+        "Matrix": {
+          "Rows": {
+            "java": {
+              "Name": {
+                "Value": "java",
+                "Quoted": false,
+                "Pos": {
+                  "Line": 40,
+                  "Col": 9
+                }
+              },
+              "Values": [
+                {
+                  "Value": "8"
+                },
+                {
+                  "Value": "11"
+                },
+                {
+                  "Value": "17"
+                }
+              ],
+              "Expression": null
+            },
+            "os": {
+              "Name": {
+                "Value": "os",
+                "Quoted": false,
+                "Pos": {
+                  "Line": 39,
+                  "Col": 9
+                }
+              },
+              "Values": [
+                {
+                  "Value": "ubuntu-latest"
+                },
+                {
+                  "Value": "windows-latest"
+                },
+                {
+                  "Value": "macOS-latest"
+                }
+              ],
+              "Expression": null
+            }
+          },
+          "Include": null,
+          "Exclude": null,
+          "Expression": null,
+          "Pos": {
+            "Line": 38,
+            "Col": 7
+          }
+        },
+        "FailFast": {
+          "Value": false,
+          "Expression": null,
+          "Pos": {
+            "Line": 42,
+            "Col": 18
+          }
+        },
+        "MaxParallel": null,
+        "Pos": {
+          "Line": 37,
+          "Col": 5
+        }
+      },
+      "ContinueOnError": null,
+      "Container": null,
+      "Services": null,
+      "WorkflowCall": null,
+      "Pos": {
+        "Line": 35,
+        "Col": 3
+      }
+    }
+  }
+}
