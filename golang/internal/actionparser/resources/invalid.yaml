@@ -1,0 +1,7 @@
+name: Java CI
+
+on: [push, pull_request]
+
+build:
+
+integration-test:

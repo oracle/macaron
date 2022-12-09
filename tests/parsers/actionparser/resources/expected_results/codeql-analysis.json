@@ -1,0 +1,520 @@
+{
+  "Name": {
+    "Value": "CodeQL",
+    "Quoted": true,
+    "Pos": {
+      "Line": 4,
+      "Col": 7
+    }
+  },
+  "RunName": null,
+  "On": [
+    {
+      "Cron": [
+        {
+          "Value": "40 21 * * 2",
+          "Quoted": true,
+          "Pos": {
+            "Line": 8,
+            "Col": 13
+          }
+        }
+      ],
+      "Pos": {
+        "Line": 7,
+        "Col": 3
+      }
+    },
+    {
+      "Hook": {
+        "Value": "push",
+        "Quoted": false,
+        "Pos": {
+          "Line": 9,
+          "Col": 3
+        }
+      },
+      "Types": null,
+      "Branches": {
+        "Name": {
+          "Value": "branches",
+          "Quoted": false,
+          "Pos": {
+            "Line": 10,
+            "Col": 5
+          }
+        },
+        "Values": [
+          {
+            "Value": "master",
+            "Quoted": false,
+            "Pos": {
+              "Line": 11,
+              "Col": 7
+            }
+          },
+          {
+            "Value": "3.0",
+            "Quoted": true,
+            "Pos": {
+              "Line": 12,
+              "Col": 7
+            }
+          },
+          {
+            "Value": "2.14",
+            "Quoted": true,
+            "Pos": {
+              "Line": 13,
+              "Col": 7
+            }
+          },
+          {
+            "Value": "2.13",
+            "Quoted": true,
+            "Pos": {
+              "Line": 14,
+              "Col": 7
+            }
+          }
+        ]
+      },
+      "BranchesIgnore": null,
+      "Tags": null,
+      "TagsIgnore": null,
+      "Paths": null,
+      "PathsIgnore": {
+        "Name": {
+          "Value": "paths-ignore",
+          "Quoted": false,
+          "Pos": {
+            "Line": 15,
+            "Col": 5
+          }
+        },
+        "Values": [
+          {
+            "Value": "README.md",
+            "Quoted": true,
+            "Pos": {
+              "Line": 16,
+              "Col": 7
+            }
+          },
+          {
+            "Value": "release-notes/*",
+            "Quoted": true,
+            "Pos": {
+              "Line": 17,
+              "Col": 7
+            }
+          }
+        ]
+      },
+      "Workflows": null,
+      "Pos": {
+        "Line": 9,
+        "Col": 3
+      }
+    },
+    {
+      "Hook": {
+        "Value": "pull_request",
+        "Quoted": false,
+        "Pos": {
+          "Line": 18,
+          "Col": 3
+        }
+      },
+      "Types": null,
+      "Branches": {
+        "Name": {
+          "Value": "branches",
+          "Quoted": false,
+          "Pos": {
+            "Line": 19,
+            "Col": 5
+          }
+        },
+        "Values": [
+          {
+            "Value": "master",
+            "Quoted": false,
+            "Pos": {
+              "Line": 20,
+              "Col": 7
+            }
+          },
+          {
+            "Value": "3.0",
+            "Quoted": true,
+            "Pos": {
+              "Line": 21,
+              "Col": 7
+            }
+          },
+          {
+            "Value": "2.14",
+            "Quoted": true,
+            "Pos": {
+              "Line": 22,
+              "Col": 7
+            }
+          },
+          {
+            "Value": "2.13",
+            "Quoted": true,
+            "Pos": {
+              "Line": 23,
+              "Col": 7
+            }
+          }
+        ]
+      },
+      "BranchesIgnore": null,
+      "Tags": null,
+      "TagsIgnore": null,
+      "Paths": null,
+      "PathsIgnore": {
+        "Name": {
+          "Value": "paths-ignore",
+          "Quoted": false,
+          "Pos": {
+            "Line": 24,
+            "Col": 5
+          }
+        },
+        "Values": [
+          {
+            "Value": "README.md",
+            "Quoted": true,
+            "Pos": {
+              "Line": 25,
+              "Col": 7
+            }
+          },
+          {
+            "Value": "release-notes/*",
+            "Quoted": true,
+            "Pos": {
+              "Line": 26,
+              "Col": 7
+            }
+          }
+        ]
+      },
+      "Workflows": null,
+      "Pos": {
+        "Line": 18,
+        "Col": 3
+      }
+    }
+  ],
+  "Permissions": null,
+  "Env": null,
+  "Defaults": null,
+  "Concurrency": null,
+  "Jobs": {
+    "analyze": {
+      "ID": {
+        "Value": "analyze",
+        "Quoted": false,
+        "Pos": {
+          "Line": 29,
+          "Col": 3
+        }
+      },
+      "Name": {
+        "Value": "Analyze",
+        "Quoted": false,
+        "Pos": {
+          "Line": 30,
+          "Col": 11
+        }
+      },
+      "Needs": null,
+      "RunsOn": {
+        "Labels": [
+          {
+            "Value": "ubuntu-latest",
+            "Quoted": false,
+            "Pos": {
+              "Line": 31,
+              "Col": 14
+            }
+          }
+        ],
+        "Expression": null
+      },
+      "Permissions": {
+        "All": null,
+        "Scopes": {
+          "actions": {
+            "Name": {
+              "Value": "actions",
+              "Quoted": false,
+              "Pos": {
+                "Line": 33,
+                "Col": 7
+              }
+            },
+            "Value": {
+              "Value": "read",
+              "Quoted": false,
+              "Pos": {
+                "Line": 33,
+                "Col": 16
+              }
+            }
+          },
+          "contents": {
+            "Name": {
+              "Value": "contents",
+              "Quoted": false,
+              "Pos": {
+                "Line": 34,
+                "Col": 7
+              }
+            },
+            "Value": {
+              "Value": "read",
+              "Quoted": false,
+              "Pos": {
+                "Line": 34,
+                "Col": 17
+              }
+            }
+          },
+          "security-events": {
+            "Name": {
+              "Value": "security-events",
+              "Quoted": false,
+              "Pos": {
+                "Line": 35,
+                "Col": 7
+              }
+            },
+            "Value": {
+              "Value": "write",
+              "Quoted": false,
+              "Pos": {
+                "Line": 35,
+                "Col": 24
+              }
+            }
+          }
+        },
+        "Pos": {
+          "Line": 32,
+          "Col": 5
+        }
+      },
+      "Environment": null,
+      "Concurrency": null,
+      "Outputs": null,
+      "Env": null,
+      "Defaults": null,
+      "If": null,
+      "Steps": [
+        {
+          "ID": null,
+          "If": null,
+          "Name": {
+            "Value": "Checkout repository",
+            "Quoted": false,
+            "Pos": {
+              "Line": 43,
+              "Col": 13
+            }
+          },
+          "Exec": {
+            "Uses": {
+              "Value": "actions/checkout@v2",
+              "Quoted": false,
+              "Pos": {
+                "Line": 44,
+                "Col": 13
+              }
+            },
+            "Inputs": null,
+            "Entrypoint": null,
+            "Args": null
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 43,
+            "Col": 7
+          }
+        },
+        {
+          "ID": null,
+          "If": null,
+          "Name": {
+            "Value": "Initialize CodeQL",
+            "Quoted": false,
+            "Pos": {
+              "Line": 47,
+              "Col": 13
+            }
+          },
+          "Exec": {
+            "Uses": {
+              "Value": "github/codeql-action/init@v2",
+              "Quoted": false,
+              "Pos": {
+                "Line": 48,
+                "Col": 13
+              }
+            },
+            "Inputs": {
+              "languages": {
+                "Name": {
+                  "Value": "languages",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 50,
+                    "Col": 9
+                  }
+                },
+                "Value": {
+                  "Value": "${{ matrix.language }}",
+                  "Quoted": false,
+                  "Pos": {
+                    "Line": 50,
+                    "Col": 20
+                  }
+                }
+              }
+            },
+            "Entrypoint": null,
+            "Args": null
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 47,
+            "Col": 7
+          }
+        },
+        {
+          "ID": null,
+          "If": null,
+          "Name": {
+            "Value": "Autobuild",
+            "Quoted": false,
+            "Pos": {
+              "Line": 52,
+              "Col": 13
+            }
+          },
+          "Exec": {
+            "Uses": {
+              "Value": "github/codeql-action/autobuild@v2",
+              "Quoted": false,
+              "Pos": {
+                "Line": 53,
+                "Col": 13
+              }
+            },
+            "Inputs": null,
+            "Entrypoint": null,
+            "Args": null
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 52,
+            "Col": 7
+          }
+        },
+        {
+          "ID": null,
+          "If": null,
+          "Name": {
+            "Value": "Perform CodeQL Analysis",
+            "Quoted": false,
+            "Pos": {
+              "Line": 55,
+              "Col": 13
+            }
+          },
+          "Exec": {
+            "Uses": {
+              "Value": "github/codeql-action/analyze@v2",
+              "Quoted": false,
+              "Pos": {
+                "Line": 56,
+                "Col": 13
+              }
+            },
+            "Inputs": null,
+            "Entrypoint": null,
+            "Args": null
+          },
+          "Env": null,
+          "ContinueOnError": null,
+          "TimeoutMinutes": null,
+          "Pos": {
+            "Line": 55,
+            "Col": 7
+          }
+        }
+      ],
+      "TimeoutMinutes": null,
+      "Strategy": {
+        "Matrix": {
+          "Rows": {
+            "language": {
+              "Name": {
+                "Value": "language",
+                "Quoted": false,
+                "Pos": {
+                  "Line": 40,
+                  "Col": 9
+                }
+              },
+              "Values": [
+                {
+                  "Value": "java"
+                }
+              ],
+              "Expression": null
+            }
+          },
+          "Include": null,
+          "Exclude": null,
+          "Expression": null,
+          "Pos": {
+            "Line": 39,
+            "Col": 7
+          }
+        },
+        "FailFast": {
+          "Value": false,
+          "Expression": null,
+          "Pos": {
+            "Line": 38,
+            "Col": 18
+          }
+        },
+        "MaxParallel": null,
+        "Pos": {
+          "Line": 37,
+          "Col": 5
+        }
+      },
+      "ContinueOnError": null,
+      "Container": null,
+      "Services": null,
+      "WorkflowCall": null,
+      "Pos": {
+        "Line": 29,
+        "Col": 3
+      }
+    }
+  }
+}

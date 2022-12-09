@@ -1,0 +1,35 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+__pycache__
+.pyc
+.idea
+.vscode
+.mypy_cache
+sample_profile.json
+/search_result
+/htmlcov
+debug.log
+search_result.txt
+.coverage
+.hypothesis
+git_repos
+.pytest_cache
+.mvn
+mvnw
+build_log
+macaron.db
+gradlew
+.gradle
+.macaron
+reports
+output
+cdx_debug.json
+osint_debug.json
+golang/internal/filewriter/mock_dir/result.json
+tests/config/defaults.ini
+tests/defaults.ini
+tests/slsa_analyzer/checks/mock_repos/**
+tests/slsa_analyzer/ci_service/mock_repos/**
+docs/build
+bin/

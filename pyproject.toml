@@ -1,0 +1,22 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+[project]
+name = "macaron"
+requires-python = ">=3.10"
+version = "0.0.0"
+description = "Macaron"
+authors = [
+    {"name" = "Trong Nhan Mai", "email" = "trong.nhan.mai@oracle.com"},
+    {"name" = "Behnaz Hassanshahi", "email" = "behnaz.hassanshahi@oracle.com"},
+]
+dependencies = [
+    "requests ==2.28.0",
+    "pydriller >=2.0",
+    "yamale >=4.0.3",
+    "packaging ==21.3",
+    "jinja2 >=3.1.2"
+]
+
+[project.scripts]
+macaron = 'macaron.__main__:main'

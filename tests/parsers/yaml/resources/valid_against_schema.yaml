@@ -1,0 +1,9 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# This is a valid yaml file, but the content does not match the schema.
+
+target:
+  # Missing id and path.
+  branch: "master"
+  digest: "aac3b3bcb608e1e8451d4beedd38ecbe6306e7e7"

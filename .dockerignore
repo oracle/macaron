@@ -1,0 +1,36 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+*__pycache__
+*.hypothesis
+*.mypy_cache
+*.pytest_cache
+*.m2
+*.db
+build_log
+htmlcov
+git_repos
+tests
+scripts
+search_result
+.coveragerc
+.gitignore
+.pre-commit-config.yaml
+.pylintrc
+debug.log
+Jenkinsfile
+mypy.ini
+README.md
+assets
+setting.xml
+.coverage
+sample_profile.json
+.git
+Dockerfile
+.dockerignore
+.vscode
+.idea
+*.venv
+output
+bin
+slsa-verifier

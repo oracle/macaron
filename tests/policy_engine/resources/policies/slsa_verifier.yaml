@@ -1,0 +1,19 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+metadata:
+  id: MACARON_1
+  description: "Slsa-verifier policy - SLSA provenance v0.2."
+
+definition:
+  _type: https://in-toto.io/Statement/v0.1
+  predicateType: https://slsa.dev/provenance/v0.2
+
+  predicate:
+    builder:
+      id: https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.2.0
+    buildType: https://github.com/slsa-framework/slsa-github-generator/go@v1
+
+    invocation:
+      configSource:
+        entryPoint: .github/workflows/release.yml

@@ -1,0 +1,25 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+name: Verifier releaser
+
+on:
+  # For manual tests.
+  workflow_dispatch:
+  push:
+    tags:
+      - "*" # triggers only if push new tag version, like `0.8.4`.
+
+permissions: read-all
+
+jobs:
+  builder:
+    permissions:
+      actions: read # For the detection of GitHub Actions environment.
+      id-token: write # For signing.
+      contents: write # For asset uploads.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.2.0
+    with:
+      go-version: 1.18
+      config-file: .github/config-release.yml
+      compile-builder: true

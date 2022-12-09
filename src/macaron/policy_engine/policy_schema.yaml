@@ -1,0 +1,7 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+
+metadata:
+  id: str(required=True)
+  description: str(required=False)
+
+definition: map(key=str(), required=True)
