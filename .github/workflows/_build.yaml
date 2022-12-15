@@ -138,5 +138,6 @@ jobs:
           dist
           ${{ env.PACKAGE_PATH }}/bin/actionparser
           ${{ env.PACKAGE_PATH }}/bin/bashparser
+          ${{ env.PACKAGE_PATH }}/bin/slsa-verifier
         if-no-files-found: error
         retention-days: 7

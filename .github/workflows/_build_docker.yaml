@@ -1,0 +1,69 @@
+# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+name: Build Docker image
+on:
+  workflow_call:
+    inputs:
+      image-tag:
+        required: true
+        type: string
+    outputs:
+      artifacts-sha256:
+        description: The hash of the Docker image
+        value: ${{ jobs.build-docker.outputs.image-digest }}
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build.yaml
+    permissions:
+      contents: read
+
+  build-docker:
+    needs: [build]
+    runs-on: ubuntu-latest
+    outputs:
+      image-digest: ${{ steps.build_docker.outputs.digest }}
+
+    steps:
+    - name: Print inputs variables
+      run: echo ${{ inputs.image-tag }}
+
+    - name: Check out repository
+      uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+      with:
+        fetch-depth: 0
+
+    - name: Download artifact
+      uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3.0.1
+      with:
+        path: dist
+
+    - name: Check downloaded artifact
+      run: ls -R
+      working-directory: ./dist
+
+    - name: Prepare the required binaries and build the Python code for Macaron
+      run: make setup-go && make setup-binaries
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@8c0edbc76e98fa90f69d9a2c020dcb50019dc325   # v2.2.1
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a   # v2.1.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # Add documentation for using the context with this GitHub Actions.
+    - id: build_docker
+      name: Build and push
+      uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5   # v3.2.0
+      with:
+        context: .
+        push: false
+        tags: ${{ inputs.image-tag }}
+        file: docker/Dockerfile.final
