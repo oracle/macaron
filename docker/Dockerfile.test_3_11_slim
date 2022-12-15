@@ -1,0 +1,31 @@
+# PREPARE THE PYTHON DEPENDENCIES.
+FROM python:3.11.1-slim as python_base
+
+WORKDIR /home/macaron
+
+COPY ./pyproject.toml ./
+
+RUN python -m venv --copies .venv && \
+    . .venv/bin/activate
+
+RUN python -m pip install --editable .
+
+# # BUILD THE GOLANG PACKAGES
+# FROM golang:1.18.9-alpine3.17 as go_base
+
+# WORKDIR /home/macaron
+
+# COPY ./golang ./golang
+# COPY go.mod go.sum ./
+# RUN go build -o ./bin/ ./golang/cmd/...
+
+# # TODO: verify its provenance.
+# RUN wget https://github.com/slsa-framework/slsa-verifier/releases/download/v1.3.2/slsa-verifier-linux-amd64 && \
+#     mv slsa-verifier-linux-amd64 ./bin/slsa-verifier
+
+FROM oraclelinux:9-slim as final
+
+WORKDIR /home/macaron
+COPY --from=python_base /home/macaron/.venv /home/macaron/.venv
+# COPY --from=go_base /home/macaron/bin/ /home/macaron/bin/
+COPY ./src ./src

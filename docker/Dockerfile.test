@@ -1,0 +1,75 @@
+FROM oraclelinux:9-slim as builder
+
+ENV BUILD_DIR="/root" \
+    INSTALL_DIR="/usr/local" \
+    PYTHON3_VERSION=3.11.1 \
+    # PYTHONUNBUFFERED=1 \
+    # PYTHONIOENCODING=UTF-8 \
+    # PYTHONDONTWRITEBYTECODE=1 \
+    # POETRY_HOME="/opt/poetry" \
+    # POETRY_VIRTUALENVS_IN_PROJECT=true \
+    # POETRY_NO_INTERACTION=1 \
+    # PYSETUP_PATH="/opt/pysetup" \
+    # VENV_PATH="/opt/pysetup/.venv" \
+    # POETRY_VERSION=1.1.11 \
+    # GIT_VERSION=2.37.1 \
+    # OPENSSL_VERSION=openssl-3.0.5 \
+    # PIPX_BIN_DIR=$INSTALL_DIR/bin \
+    # PIPX_HOME=/opt/pipx/home \
+    # PIPX_VERSION=1.1.0 \
+    # JAVA_HOME="/usr/lib/jvm/java-11-openjdk"
+    PATH=$INSTALL_DIR/bin:$PATH
+
+# Installing build dependencies of Python via dnf builddep
+# RUN microdnf install -y dnf && \
+#     dnf -y update && \
+#     dnf -y install dnf-plugins-core && \
+#     dnf -y config-manager --add-repo https://yum.oracle.com/repo/OracleLinux/OL9/codeready/builder/x86_64/ && \
+#     dnf -y builddep python3
+
+# Installing build dependencies of Python via dnf
+# The necessary bits to build these optional modules were not found:
+# _bz2                  _curses               _curses_panel
+# _dbm                  _gdbm                 _lzma
+# _tkinter              _uuid                 nis
+# readline
+
+# RUN microdnf install -y dnf && \
+#     dnf -y update && \
+#     dnf -y install dnf-plugins-core && \
+#     dnf -y config-manager --add-repo https://yum.oracle.com/repo/OracleLinux/OL9/codeready/builder/x86_64/ && \
+#     dnf -y config-manager --add-repo https://yum.oracle.com/repo/OracleLinux/OL9/developer/EPEL/x86_64/
+
+RUN dnf install -y \
+        automake gcc gcc-c++ gdb make kernel-devel zlib-devel \
+        # openssl-3.0.1
+        openssl-devel \
+        # For interacting with SQLITE databases in Macaron.
+        sqlite-devel \
+        # Optional dependencies ?
+        #  xz-compat-libs
+        lcov gdbm-devel uuid-devel \
+        pkgconfig bzip2-devel libffi-devel \
+        ncurses-devel readline-devel xz xz-devel xz-libs \
+        tk-devel libuuid-devel \
+        # Git
+        git \
+        # openjdk11
+        java-11-openjdk-devel
+
+RUN export LIBS=lcov
+RUN mkdir -p $BUILD_DIR/python && \
+    cd $BUILD_DIR/python && \
+    curl -O https://www.python.org/ftp/python/$PYTHON3_VERSION/Python-$PYTHON3_VERSION.tgz && \
+    tar xzf Python-$PYTHON3_VERSION.tgz && \
+    cd Python-$PYTHON3_VERSION && \
+    # Currently, using --enable-optimization when building Python results in errors.
+    ./configure --enable-optimizations && \
+    make -j install
+
+RUN python3.11 --version
+
+# Clean up.
+RUN dnf clean all -y && \
+    rm -rf /var/cache/yum && \
+    rm -rf /var/cache/dnf

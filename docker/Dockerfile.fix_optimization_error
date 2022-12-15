@@ -1,0 +1,32 @@
+FROM oraclelinux:9-slim as builder
+
+ENV BUILD_DIR="/root" \
+    INSTALL_DIR="/usr/local" \
+    PYTHON3_VERSION=3.11.1 \
+    PATH=$INSTALL_DIR/bin:$PATH
+
+RUN microdnf install -y dnf && \
+    dnf -y update && \
+    dnf -y install dnf-plugins-core && \
+    dnf -y config-manager --add-repo https://yum.oracle.com/repo/OracleLinux/OL9/codeready/builder/x86_64/ && \
+    dnf -y builddep python3
+
+
+# RUN dnf groupinstall "Development Tools" -y && \
+#     dnf install curl gcc openssl-devel bzip2-devel libffi-devel zlib-devel wget make -y
+RUN export LIBS="lcov"
+RUN mkdir -p $BUILD_DIR/python && \
+    cd $BUILD_DIR/python && \
+    curl -O https://www.python.org/ftp/python/$PYTHON3_VERSION/Python-$PYTHON3_VERSION.tgz && \
+    tar xzf Python-$PYTHON3_VERSION.tgz && \
+    cd Python-$PYTHON3_VERSION && \
+    ./configure --enable-optimizations
+
+RUN cd $BUILD_DIR/python/Python-$PYTHON3_VERSION && make -j install
+
+RUN python3.11 --version
+
+# Clean up.
+RUN dnf clean all -y && \
+    rm -rf /var/cache/yum && \
+    rm -rf /var/cache/dnf
