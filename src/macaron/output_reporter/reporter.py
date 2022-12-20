@@ -7,6 +7,7 @@ import json
 import logging
 import os
 from copy import deepcopy
+from typing import Optional
 
 from jinja2 import (
     Environment,
@@ -26,17 +27,18 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templat
 
 
 class FileReporter:
-    """The reporter that handles writing data to disk files.
-
-    Parameters
-    ----------
-    mode : str, optional
-        The mode to open the target files, by default "w".
-    encoding : str, optional
-        The encoding used to handle disk files, by default "utf-8".
-    """
+    """The reporter that handles writing data to disk files."""
 
     def __init__(self, mode: str = "w", encoding: str = "utf-8"):
+        """Initialize instance.
+
+        Parameters
+        ----------
+        mode : str, optional
+            The mode to open the target files, by default "w".
+        encoding : str, optional
+            The encoding used to handle disk files, by default "utf-8".
+        """
         self.mode = mode
         self.encoding = encoding
 
@@ -80,15 +82,20 @@ class FileReporter:
 
 
 class JSONReporter(FileReporter):
-    """This class handles writing reports to JSON files.
-
-    Parameters
-    ----------
-    indent : int, optional
-        The indent for the JSON output, by default 4.
-    """
+    """This class handles writing reports to JSON files."""
 
     def __init__(self, mode: str = "w", encoding: str = "utf-8", indent: int = 4):
+        """Initialize instance.
+
+        Parameters
+        ----------
+        mode: str, optional
+            The file operation mode.
+        encoding: str, optional
+            The encoding.
+        indent : int, optional
+            The indent for the JSON output, by default 4.
+        """
         super().__init__(mode, encoding)
         self.indent = indent
 
@@ -122,20 +129,29 @@ class JSONReporter(FileReporter):
 
 
 class HTMLReporter(FileReporter):
-    """This class handles writing reports to HTML files.
-
-    Parameters
-    ----------
-    env : Environment
-        The pre-initiated ``jinja2.Environment`` instance for the HTMLReporter. If this is not
-        provided, a default jinja2.Environment will be initialized.
-    target_template : str
-        The target template. It will be looked up from the jinja2.Environment instance.
-    """
+    """This class handles writing reports to HTML files."""
 
     def __init__(
-        self, mode: str = "w", encoding: str = "utf-8", env: Environment = None, target_template: str = "macaron.html"
+        self,
+        mode: str = "w",
+        encoding: str = "utf-8",
+        env: Optional[Environment] = None,
+        target_template: str = "macaron.html",
     ) -> None:
+        """Initialize instance.
+
+        Parameters
+        ----------
+        mode: str, optional
+            The file operation mode.
+        encoding: str, optional
+            The encoding.
+        env : Optional[Environment]
+            The pre-initiated ``jinja2.Environment`` instance for the HTMLReporter. If this is not
+            provided, a default jinja2.Environment will be initialized.
+        target_template : str
+            The target template. It will be looked up from the jinja2.Environment instance.
+        """
         super().__init__(mode, encoding)
         if env:
             self.env = env

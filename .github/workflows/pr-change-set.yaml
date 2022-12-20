@@ -1,0 +1,23 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# This workflow checks and tests the package code, and it builds all package
+# artifacts whenever there were changes to a pull request.
+
+name: Check change set
+on:
+  pull_request:
+    branches:
+    - '*'
+    types:
+    - opened
+    - reopened
+    - synchronize
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build.yaml
+    permissions:
+      contents: read

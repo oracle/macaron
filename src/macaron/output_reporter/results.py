@@ -3,10 +3,11 @@
 
 """This module contains classes that represent the result of the Macaron analysis."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Generic, Iterable, TypedDict, TypeVar
+from typing import Generic, TypedDict, TypeVar
 
 from macaron.config.target_config import Configuration
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -168,15 +169,16 @@ class Record(Generic[RecordNode]):
 
 
 class Report:
-    """This class contains the report content of an analysis.
-
-    Parameters
-    ----------
-    root_record : Record
-        The record of the main target repository.
-    """
+    """This class contains the report content of an analysis."""
 
     def __init__(self, root_record: Record) -> None:
+        """Initialize instance.
+
+        Parameters
+        ----------
+        root_record : Record
+            The record of the main target repository.
+        """
         # The record of the target repo in the analysis.
         self.root_record: Record = root_record
         self.record_mapping: dict[str, Record] = {}

@@ -2,24 +2,24 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 target:
-  id: "micronaut-core"
+  id: micronaut-core
   # For version 3.5.5
   # https://github.com/micronaut-projects/micronaut-core/commit/08357218ce6d6347c4d1e3ff74a8b2936fe3c3dc
-  branch: "3.5.x"
-  digest: "08357218ce6d6347c4d1e3ff74a8b2936fe3c3dc"
-  path: "https://github.com/micronaut-projects/micronaut-core"
+  branch: 3.5.x
+  digest: 08357218ce6d6347c4d1e3ff74a8b2936fe3c3dc
+  path: https://github.com/micronaut-projects/micronaut-core
 
 dependencies:
-  - id: "slf4j"
+- id: slf4j
     # For version 1.7.36
     # https://github.com/qos-ch/slf4j/commit/e9ee55cca93c2bf26f14482a9bdf961c750d2a56
-    branch: "v_1.7.36"
-    digest: "e9ee55cca93c2bf26f14482a9bdf961c750d2a56"
-    path: "https://github.com/qos-ch/slf4j.git"
+  branch: v_1.7.36
+  digest: e9ee55cca93c2bf26f14482a9bdf961c750d2a56
+  path: https://github.com/qos-ch/slf4j.git
 
-  - id: "caffeine"
+- id: caffeine
     # For version 2.9.3
     # https://github.com/ben-manes/caffeine/commit/05a040c2478341bab8a58a02b3dc1fe14d626d72
-    branch: "v2.9.3"
-    digest: "05a040c2478341bab8a58a02b3dc1fe14d626d72"
-    path: "https://github.com/ben-manes/caffeine.git"
+  branch: v2.9.3
+  digest: 05a040c2478341bab8a58a02b3dc1fe14d626d72
+  path: https://github.com/ben-manes/caffeine.git

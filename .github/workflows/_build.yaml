@@ -1,0 +1,134 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# This is a trusted builder implemented as a reusable workflow that can be called by other
+# Actions workflows. It checks, tests, and builds the artifacts including SBOM and documentations,
+# and computes hash digests as output to be used by a SLSA provenance generator. The artifacts are
+# always uploaded for every job to be used for debugging purposes, but they will be removed within
+# the specified retention days.
+#
+# Even though we run the build in a matrix to check against different platforms, due to a known
+# limitation of reusable workflows that do not support setting strategy property from the caller
+# workflow, we only generate artifacts for ubuntu-latest and Python 3.11, which can be used to
+# create a release. For details see:
+#
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows#limitations
+#
+# Note: if the build workflow needs to access secrets, they need to be passed by the caller using
+# `secrets: inherit`. See also
+#
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions
+#
+# for the security recommendations.
+
+name: Build the package
+on:
+  workflow_call:
+    outputs:
+      artifacts-sha256:
+        description: The hash of the artifacts
+        value: ${{ jobs.build.outputs.artifacts-sha256 }}
+permissions:
+  contents: read
+env:
+  ARTIFACT_OS: ubuntu-latest # The default OS for release.
+  ARTIFACT_PYTHON: '3.11' # The default Python version for release.
+
+jobs:
+  build:
+    outputs:
+      artifacts-sha256: ${{ steps.compute-hash.outputs.artifacts-sha256 }}
+    name: Build Python ${{ matrix.python }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # It is recommended to pin a Runner version specifically:
+        # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
+        os: [ubuntu-latest]
+        python: ['3.11']
+    steps:
+
+    - name: Check out repository
+      uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # v4.3.0
+      with:
+        python-version: ${{ matrix.python }}
+
+    # Using the Makefile assumes an activated virtual environment, which doesn't exist
+    # when running in an Action environment (https://github.com/actions/setup-python/issues/359).
+    # Instead we create an empty .venv folder so that the Makefile continues to function
+    # while Python operates within the runner's global environment. It is safe to ignore
+    # warnings from the Makefile about the missing virtual environment.
+    - name: Create empty virtual environment for Actions
+      run: mkdir .venv
+    - name: Install dependencies
+      run: make setup
+
+    # Audit all currently installed packages for security vulnerabilities.
+    - name: Audit installed packages
+      run: make audit
+
+    # Build the sdist and wheel distribution of the package and docs as a zip file.
+    # We don't need to check and test the package separately because `make dist` runs
+    # those targets first and only builds the package if they succeed.
+    - name: Build the package
+      run: make dist
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+
+    # Generate the requirements.txt that contains the hash digests of the dependencies and
+    # generate the SBOM using CyclonDX SBOM generator.
+    - name: Generate requirements.txt and SBOM
+      if: matrix.os == env.ARTIFACT_OS && matrix.python == env.ARTIFACT_PYTHON
+      run: make requirements sbom
+
+    # Remove the old requirements.txt file (which includes _all_ packages) and generate a
+    # new one for the package and its actual and required dependencies only.
+    - name: Prune packages and generate required requirements.txt
+      if: matrix.os == env.ARTIFACT_OS && matrix.python == env.ARTIFACT_PYTHON
+      run: |
+        rm requirements.txt
+        make prune requirements
+
+    # Find the paths to the artifact files that will be included in the release, compute
+    # the SHA digest for all the release files and encode them using Base64, and export it
+    # from this job.
+    - name: Compute package hash
+      if: matrix.os == env.ARTIFACT_OS && matrix.python == env.ARTIFACT_PYTHON
+      id: compute-hash
+      shell: bash
+      run: |
+        set -euo pipefail
+        TARBALL_PATH=$(find dist/ -type f -name "*.tar.gz")
+        WHEEL_PATH=$(find dist/ -type f -name "*.whl")
+        GO_ACTION_PARSER=$(find bin/ -type f -name "actionparser")
+        GO_BASH_PARSER=$(find bin/ -type f -name "bashparser")
+        REQUIREMENTS_PATH=$(find dist/ -type f -name "*-requirements.txt")
+        SBOM_PATH=$(find dist/ -type f -name "*-sbom.json")
+        SBOM_GO_PATH=$(find dist/ -type f -name "*-sbom-go.json")
+        HTML_DOCS_PATH=$(find dist/ -type f -name "*-docs-html.zip")
+        BUILD_EPOCH_PATH=$(find dist/ -type f -name "*-build-epoch.txt")
+        DIGEST=$(sha256sum "$TARBALL_PATH" "$WHEEL_PATH" "$REQUIREMENTS_PATH" "$SBOM_PATH" \
+          "$SBOM_GO_PATH" "$GO_ACTION_PARSER" "$GO_BASH_PARSER" "$HTML_DOCS_PATH" "$BUILD_EPOCH_PATH" | base64 -w0)
+        echo "Digest of artifacts is $DIGEST."
+        echo "artifacts-sha256=$DIGEST" >> "$GITHUB_OUTPUT"
+
+    # For now only generate artifacts for the specified OS and Python version in env variables.
+    # Currently reusable workflows do not support setting strategy property from the caller workflow.
+    - name: Upload the package artifact for debugging and release
+      if: matrix.os == env.ARTIFACT_OS && matrix.python == env.ARTIFACT_PYTHON
+      uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+      with:
+        name: artifact-${{ matrix.os }}-python-${{ matrix.python }}
+        path: |
+          dist
+          bin/actionparser
+          bin/bashparser
+        if-no-files-found: error
+        retention-days: 7

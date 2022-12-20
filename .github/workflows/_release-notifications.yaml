@@ -1,0 +1,50 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# Send a Slack release notification. Instructions to set up Slack to receive
+# messages can be found here: https://github.com/slackapi/slack-github-action#setup-2
+
+name: Release Notifications
+on:
+  workflow_call:
+    inputs:
+      repo_name:
+        required: true
+        type: string
+      release_tag:
+        required: true
+        type: string
+      release_url:
+        required: true
+        type: string
+    secrets:
+      SLACK_WEBHOOK_URL:
+        required: true
+
+# Grant no permissions to this workflow.
+permissions: {}
+
+jobs:
+  slack:
+    name: Slack release notification
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Notify via Slack
+      run: |
+        curl --header "Content-Type: application/json; charset=UTF-8" --request POST --data "$SLACK_WEBHOOK_MSG" "$SLACK_WEBHOOK_URL"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK_MSG: |
+          {
+            "text": "${{ inputs.repo_name }} published a new release ${{ inputs.release_tag }}",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*${{ inputs.repo_name }}* published a new release <${{ inputs.release_url }}|${{ inputs.release_tag }}>"
+                }
+              }
+            ]
+          }

@@ -20,7 +20,7 @@ from macaron.config.global_config import global_config
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def parse(workflow_path: str, macaron_path: str = None) -> dict:
+def parse(workflow_path: str, macaron_path: str = "") -> dict:
     """Parse the GitHub Actions workflow YAML file.
 
     Parameters
@@ -35,7 +35,7 @@ def parse(workflow_path: str, macaron_path: str = None) -> dict:
     dict
         The parsed workflow as a JSON (dict) object.
     """
-    if macaron_path is None:
+    if not macaron_path:
         macaron_path = global_config.macaron_path
     cmd = [
         os.path.join(macaron_path, "bin", "actionparser"),
@@ -61,7 +61,7 @@ def parse(workflow_path: str, macaron_path: str = None) -> dict:
 
     try:
         if result.returncode == 0:
-            parsed_obj = json.loads(result.stdout.decode("utf-8"))
+            parsed_obj: dict = json.loads(result.stdout.decode("utf-8"))
             return parsed_obj
         logger.error("GitHub Actions parser failed: %s", result.stderr)
         return {}

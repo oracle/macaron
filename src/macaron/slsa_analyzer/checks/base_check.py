@@ -5,6 +5,7 @@
 
 import logging
 from abc import abstractmethod
+from typing import Optional
 
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType, SkippedInfo, get_result_as_bool
@@ -14,35 +15,36 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class BaseCheck:
-    """This abstract class is used to implement Checks in Macaron.
+    """This abstract class is used to implement Checks in Macaron."""
 
-    Parameters
-    ----------
-    check_id : str
-        The id of the check.
-    description : str
-        The description of the check.
-    depends_on : list[tuple(str, CheckResultType)]
-        The list of parent checks that this check depends on.
-        Each member of the list is a tuple of the parent's id and the status
-        of that parent check.
-    eval_reqs : list[ReqName]
-        The list of SLSA requirements that this check addresses.
-    result_on_skip : CheckResultType
-        The status for this check when it's skipped based on another check's result.
-    """
-
+    # The dictionary that contains the data of all SLSA requirements.
     SLSA_REQ_DATA = get_requirements_dict()
-    """The dictionary that contains the data of all SLSA requirements."""
 
     def __init__(
         self,
         check_id: str = "",
         description: str = "",
-        depends_on: list[tuple[str, CheckResultType]] = None,
-        eval_reqs: list[ReqName] = None,
+        depends_on: Optional[list[tuple[str, CheckResultType]]] = None,
+        eval_reqs: Optional[list[ReqName]] = None,
         result_on_skip: CheckResultType = CheckResultType.SKIPPED,
     ) -> None:
+        """Initialize instance.
+
+        Parameters
+        ----------
+        check_id : str
+            The id of the check.
+        description : str
+            The description of the check.
+        depends_on : Optional[list[tuple(str, CheckResultType)]]
+            The list of parent checks that this check depends on.
+            Each member of the list is a tuple of the parent's id and the status
+            of that parent check.
+        eval_reqs : Optional[list[ReqName]]
+            The list of SLSA requirements that this check addresses.
+        result_on_skip : CheckResultType
+            The status for this check when it's skipped based on another check's result.
+        """
         self.check_id = check_id
         self.description = description
 
@@ -58,14 +60,14 @@ class BaseCheck:
 
         self.result_on_skip = result_on_skip
 
-    def run(self, target: AnalyzeContext, skipped_info: SkippedInfo = None) -> CheckResult:
+    def run(self, target: AnalyzeContext, skipped_info: Optional[SkippedInfo] = None) -> CheckResult:
         """Run the check and return the results.
 
         Parameters
         ----------
         target : AnalyzeContext
             The object containing processed data for the target repo.
-        skipped_info : SkippedInfo
+        skipped_info : Optional[SkippedInfo]
             Determine whether the check is skipped.
 
         Returns

@@ -16,18 +16,19 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 # pylint: disable=too-few-public-methods
 class Runner:
-    """The Runner runs a Check in its own thread and returns the Check results.
-
-    Parameters
-    ----------
-    register
-        The Registry that initialized this Runner.
-    i : str
-        The id of this Runner instance
-    """
+    """The Runner runs a Check in its own thread and returns the Check results."""
 
     # We use Any to prevent circular dependency
     def __init__(self, registry: Any, i: int) -> None:
+        """Initialize instance.
+
+        Parameters
+        ----------
+        register
+            The Registry that initialized this Runner.
+        i : str
+            The id of this Runner instance
+        """
         self.registry = registry
         self.runner_id = i
 
@@ -57,9 +58,9 @@ class Runner:
 
         skip_info = None
         if skipped_checks:
-            if check.check_id in [skip["id"] for skip in skipped_checks]:
+            if check.check_id in [skip["check_id"] for skip in skipped_checks]:
                 # Get the skip info from the list.
-                skip_info = [skip for skip in skipped_checks if skip["id"] == check.check_id][0]
+                skip_info = [skip for skip in skipped_checks if skip["check_id"] == check.check_id][0]
 
         check_result = check.run(target, skip_info)
 

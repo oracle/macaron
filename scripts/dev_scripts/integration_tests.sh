@@ -8,7 +8,7 @@ WORKSPACE=$1
 HOMEDIR=$2
 COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
-RUN_MACARON="python -m macaron -o $WORKSPACE/output -t $GH_TOKEN"
+RUN_MACARON="python -m macaron -o $WORKSPACE/output -t $GITHUB_TOKEN"
 RESULT_CODE=0
 
 if [[ ! -d "$HOMEDIR/.m2/settings.xml" ]];
@@ -20,15 +20,10 @@ then
     cp $WORKSPACE/resources/settings.xml $HOMEDIR/.m2/
 fi
 
-Running Macaron without config files
+# Running Macaron without config files
 echo -e "\n=================================================================================="
 echo "Run integration tests without configurations"
 echo -e "==================================================================================\n"
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "pmd/pmd: Analyze using only the repo path when automatic dependency resolution is skipped."
-echo -e "----------------------------------------------------------------------------------\n"
-$RUN_MACARON analyze -rp https://github.com/pmd/pmd --skip-deps || RESULT_CODE=1
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "micronaut-projects/micronaut-core: Analyzing the repo path and the branch name when automatic dependency resolution is skipped."
@@ -63,11 +58,11 @@ $RUN_MACARON analyze -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 8
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || RESULT_CODE=1
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using osint maven plugin (default)."
+echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/osint_maven_apache_maven.json
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 $RUN_MACARON analyze -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 || RESULT_CODE=1
 
@@ -84,15 +79,15 @@ DEP_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-cor
 echo -e "\n----------------------------------------------------------------------------------"
 echo "micronaut-projects/micronaut-core: Check the resolved dependency output when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/osint_maven_micronaut-projects_micronaut-core.json
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-core.json
 $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_core_config.yaml --skip-deps || RESULT_CODE=1
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || RESULT_CODE=1
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "micronaut-projects/micronaut-core: Check the resolved dependency output with config for osint maven plugin (default)."
+echo "micronaut-projects/micronaut-core: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/osint_maven_micronaut-projects_micronaut-core.json
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-core.json
 $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_core_config.yaml || RESULT_CODE=1
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || RESULT_CODE=1
@@ -149,27 +144,13 @@ do
     python $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || RESULT_CODE=1
 done
 
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the resolved dependency output with config for osint maven plugin (default)."
-echo -e "----------------------------------------------------------------------------------\n"
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/osint_maven_apache_maven.json
-$RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || RESULT_CODE=1
-
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || RESULT_CODE=1
-
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check the resolved dependency output with config for cyclonedx maven plugin."
 echo -e "----------------------------------------------------------------------------------\n"
-# Add the user defaults.ini that sets cyclonedx-maven to the root path.
-cp $WORKSPACE/tests/config/resources/defaults.ini $WORKSPACE
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || RESULT_CODE=1
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || RESULT_CODE=1
-
-# Remove the user defaults.ini to use osint-maven by default.
-rm $WORKSPACE/defaults.ini
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/mavenCheck: Check the e2e status code of running with invalid branch or digest defined in the yaml configuration."
@@ -215,9 +196,9 @@ $RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/jackson_databind_con
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || RESULT_CODE=1
 
 # echo -e "\n----------------------------------------------------------------------------------"
-# echo "FasterXML/jackson-databind: Check the resolved dependency output with config for osint maven plugin (default)."
+# echo "FasterXML/jackson-databind: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
 # echo -e "----------------------------------------------------------------------------------\n"
-# DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/osint_maven_FasterXML_jackson-databind.json
+# DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_FasterXML_jackson-databind.json
 # DEP_RESULT=$WORKSPACE/output/reports/github_com/FasterXML/jackson-databind/dependencies.json
 # $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/jackson_databind_config.yaml || RESULT_CODE=1
 
@@ -229,11 +210,11 @@ echo "Run integration tests with local paths for apache/maven..."
 echo -e "==================================================================================\n"
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing with the branch name, the commit digest and dependency resolution using osint maven plugin (default)."
+echo "apache/maven: Analyzing with the branch name, the commit digest and dependency resolution using cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/osint_maven_apache_maven.json
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 $RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com analyze -rp apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 || RESULT_CODE=1
 
@@ -357,5 +338,6 @@ fi
 
 if [ $RESULT_CODE -ne 0 ];
 then
+    echo -e "Expected zero status code but got $RESULT_CODE."
     exit 1
 fi

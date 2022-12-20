@@ -18,7 +18,6 @@ class TestGitHub(MacaronTestCase):
 
     def test_is_detected(self) -> None:
         """Test the is detected method."""
-
         github = GitHub()
 
         assert github.is_detected("http://github.com/org/name")
@@ -32,7 +31,6 @@ class TestGitHub(MacaronTestCase):
 
     def test_can_clone_remote_repo(self) -> None:
         """Test the can clone remote repo method."""
-
         github = GitHub()
         with patch.object(GhAPIClient, "get_repo_data", return_value=True):
             assert github.can_clone_remote_repo("can_clone_repo_url")

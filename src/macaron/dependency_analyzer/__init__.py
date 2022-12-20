@@ -3,5 +3,5 @@
 
 """This package contains the dependency resolvers for Java projects."""
 
-from .cyclonedx_mvn import CycloneDxMaven
-from .dependency_resolver import DependencyAnalyzer, DependencyInfo, DependencyTools
+from .cyclonedx_mvn import CycloneDxMaven  # noqa: F401
+from .dependency_resolver import DependencyAnalyzer, DependencyInfo, DependencyTools  # noqa: F401

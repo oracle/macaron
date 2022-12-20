@@ -6,9 +6,9 @@
 import glob
 import logging
 import os
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Iterable
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.config.defaults import defaults
@@ -31,25 +31,26 @@ class GHWorkflowType(Enum):
 
 
 class GitHubNode(BaseNode):
-    """This class is used to create a call graph node for GitHub Actions.
-
-    Parameters
-    ----------
-    name : str
-        Name of the workflow (or URL for reusable and external workflows).
-    node_type : GHWorkflowType
-        The type of workflow.
-    source_path : str
-        The path of the workflow.
-    parsed_obj : dict
-        The parsed Actions workflow object.
-    caller_path : str
-        The path to the caller workflow.
-    """
+    """This class is used to create a call graph node for GitHub Actions."""
 
     def __init__(
         self, name: str, node_type: GHWorkflowType, source_path: str, parsed_obj: dict, caller_path: str
     ) -> None:
+        """Initialize instance.
+
+        Parameters
+        ----------
+        name : str
+            Name of the workflow (or URL for reusable and external workflows).
+        node_type : GHWorkflowType
+            The type of workflow.
+        source_path : str
+            The path of the workflow.
+        parsed_obj : dict
+            The parsed Actions workflow object.
+        caller_path : str
+            The path to the caller workflow.
+        """
         super().__init__()
         self.name = name
         self.node_type: GHWorkflowType = node_type
@@ -65,6 +66,7 @@ class GitHubActions(BaseCIService):
     """This class contains the spec of the GitHub Actions."""
 
     def __init__(self) -> None:
+        """Initialize instance."""
         super().__init__(name="github_actions")
         self.personal_access_token = ""  # nosec B105
         self.api_client: GhAPIClient = get_default_gh_client("")
@@ -81,18 +83,32 @@ class GitHubActions(BaseCIService):
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
         if "ci.github_actions" in defaults:
-            setattr(
+            setattr(  # noqa: B010
                 self, "query_page_threshold", defaults.getint("ci.github_actions", "query_page_threshold", fallback=10)
             )
-            setattr(self, "max_items_num", defaults.getint("ci.github_actions", "max_items_num", fallback=100))
-            setattr(
+            setattr(  # noqa: B010
+                self, "max_items_num", defaults.getint("ci.github_actions", "max_items_num", fallback=100)
+            )
+            setattr(  # noqa: B010
                 self, "entry_conf", defaults.get_list("ci.github_actions", "entry_conf", fallback=[".github/workflows"])
             )
-            setattr(
+            setattr(  # noqa: B010
                 self, "max_workflow_persist", defaults.getint("ci.github_actions", "max_workflow_persist", fallback=90)
             )
 
     def is_detected(self, repo_path: str) -> bool:
+        """Return True if this CI service is used in the target repo.
+
+        Parameters
+        ----------
+        repo_path : str
+            The path to the target repo.
+
+        Returns
+        -------
+        bool
+            True if this CI service is detected, else False.
+        """
         # GitHub Actions need a special detection implementation.
         # We need to check if YAML files exist in the workflows dir.
         exists = False
@@ -174,7 +190,7 @@ class GitHubActions(BaseCIService):
                     )
                 )
 
-    def build_call_graph(self, repo_path: str, macaron_path: str = None) -> CallGraph:
+    def build_call_graph(self, repo_path: str, macaron_path: str = "") -> CallGraph:
         """Build the call Graph for GitHub Actions workflows.
 
         At the moment it does not analyze third-party workflows to include their callees.
@@ -191,7 +207,7 @@ class GitHubActions(BaseCIService):
         CallGraph: CallGraph
             The call graph built for GitHub Actions.
         """
-        if macaron_path is None:
+        if not macaron_path:
             macaron_path = global_config.macaron_path
 
         root = GitHubNode(name="", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
@@ -223,7 +239,7 @@ class GitHubActions(BaseCIService):
 
         return gh_cg
 
-    def extract_all_bash(self, callgraph: CallGraph, macaron_path: str = None) -> Iterable[BashCommands]:
+    def extract_all_bash(self, callgraph: CallGraph, macaron_path: str = "") -> Iterable[BashCommands]:
         """Extract the bash scripts triggered by the CI service from parsing the configurations.
 
         Parameters
@@ -238,7 +254,7 @@ class GitHubActions(BaseCIService):
         BashCommands
             The parsed bash script commands.
         """
-        if macaron_path is None:
+        if not macaron_path:
             macaron_path = global_config.macaron_path
 
         # Analyze GitHub Actions workflows.
@@ -321,7 +337,7 @@ class GitHubActions(BaseCIService):
             logger.debug("Error while calculating the delta time of commit date: %s.", error)
 
         workflow_data = self.api_client.get_repo_workflow_data(repo_full_name, workflow)
-        if workflow_data == {}:
+        if not workflow_data:
             logger.error("Cannot find data of workflow %s.", workflow)
             return ""
 
@@ -363,8 +379,8 @@ class GitHubActions(BaseCIService):
 
         # Skip this workflow when it's failing.
         try:
-            run_id = latest_run_data["id"]
-            html_url = latest_run_data["html_url"]
+            run_id: str = latest_run_data["id"]
+            html_url: str = latest_run_data["html_url"]
             if latest_run_data["conclusion"] != "success":
                 logger.info("The workflow run for %s was unsuccessful. Skipping ....", workflow)
                 return ""
@@ -443,7 +459,7 @@ class GitHubActions(BaseCIService):
                 for run in runs_data["workflow_runs"]:
                     if run["workflow_id"] == workflow_id and run["head_sha"] == commit_sha:
                         logger.info("Found workflow run of %s in page %s.", workflow_id, query_page)
-                        return run
+                        return dict(run)
 
                 logger.info("Didn't find any target run of %s on page %s.", workflow_id, query_page)
                 if len(runs_data["workflow_runs"]) < self.max_items_num:

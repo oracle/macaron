@@ -10,15 +10,16 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class DatabaseManager:
-    """This class handles and manages the connection to sqlite database during the search session.
-
-    Parameters
-    ----------
-    db_path : str
-        The path to the target database.
-    """
+    """This class handles and manages the connection to sqlite database during the search session."""
 
     def __init__(self, db_path: str):
+        """Initialize instance.
+
+        Parameters
+        ----------
+        db_path : str
+            The path to the target database.
+        """
         self.db_path = db_path
         self.is_init = False
         self.db_con = None
@@ -77,7 +78,7 @@ class DatabaseManager:
         """
         logger.debug("Executing DB query: %s", query)
         try:
-            result = self.db_cursor.execute(query).fetchall()  # type: ignore
+            result: list = self.db_cursor.execute(query).fetchall()  # type: ignore
             return result
         except sqlite3.OperationalError as error:
             logger.error(

@@ -30,11 +30,11 @@ class TestYamlLoader(TestCase):
 
         # Failed while loading the yaml file
         with patch("yamale.make_data", side_effect=YAMLError):
-            assert YamlLoader._load_yaml_content("sample_file_path") == []
+            assert not YamlLoader._load_yaml_content("sample_file_path")
 
         # File not found
         with patch("yamale.make_data", side_effect=FileNotFoundError):
-            assert YamlLoader._load_yaml_content("sample_file_path") == []
+            assert not YamlLoader._load_yaml_content("sample_file_path")
 
     def test_validate_yaml_data(self) -> None:
         """Test the validate yaml data method."""
@@ -56,7 +56,7 @@ class TestYamlLoader(TestCase):
         schema_file = os.path.join(self.RESOURCES_DIR, "schema.yaml")
         schema: Schema = yamale.make_schema(schema_file)
 
-        assert not YamlLoader.load(os.path.join(self.RESOURCES_DIR, "invalid.yaml"))
+        assert YamlLoader.load(os.path.join(self.RESOURCES_DIR, "invalid.yaml")) == {None: None}
         assert not YamlLoader.load(os.path.join(self.RESOURCES_DIR, "invalid.yaml"), schema)
 
         assert YamlLoader.load(os.path.join(self.RESOURCES_DIR, "valid_against_schema.yaml"))

@@ -1,29 +1,29 @@
 # Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-name: "CodeQL"
+name: CodeQL
 
 on:
   schedule:
-    - cron: '40 21 * * 2'
+  - cron: 40 21 * * 2
   push:
     branches:
     - master
-    - "3.0"
-    - "2.14"
-    - "2.13"
+    - '3.0'
+    - '2.14'
+    - '2.13'
     paths-ignore:
-    - "README.md"
-    - "release-notes/*"
+    - README.md
+    - release-notes/*
   pull_request:
     branches:
     - master
-    - "3.0"
-    - "2.14"
-    - "2.13"
+    - '3.0'
+    - '2.14'
+    - '2.13'
     paths-ignore:
-    - "README.md"
-    - "release-notes/*"
+    - README.md
+    - release-notes/*
 
 jobs:
   analyze:
@@ -37,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'java' ]
+        language: [java]
 
     steps:
     - name: Checkout repository

@@ -3,7 +3,8 @@
 
 """This module contains classes to generate build call graphs for the target repository."""
 
-from typing import Generic, Iterable, TypeVar
+from collections.abc import Iterable
+from typing import Generic, TypeVar
 
 Node = TypeVar("Node", bound="BaseNode")
 """This binds type ``Node`` to ``BaseNode`` and any of its subclasses.
@@ -17,6 +18,7 @@ class BaseNode(Generic[Node]):
     """This is the generic class for call graph nodes."""
 
     def __init__(self) -> None:
+        """Initialize instance."""
         self.callee: list[Node] = []
 
     def add_callee(self, node: Node) -> None:
@@ -41,17 +43,18 @@ class BaseNode(Generic[Node]):
 
 
 class CallGraph(Generic[Node]):
-    """This is the generic class for creating a call graph.
-
-    Parameters
-    ----------
-    root : Node
-        The root call graph node.
-    repo_path : str
-        The path to the repo.
-    """
+    """This is the generic class for creating a call graph."""
 
     def __init__(self, root: Node, repo_path: str) -> None:
+        """Initialize instance.
+
+        Parameters
+        ----------
+        root : Node
+            The root call graph node.
+        repo_path : str
+            The path to the repo.
+        """
         self.root = root
         self.repo_path = repo_path
 
