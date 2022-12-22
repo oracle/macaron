@@ -15,6 +15,7 @@ class VCSCheck(BaseCheck):
     """This Check checks whether the target repo uses a version control system."""
 
     def __init__(self) -> None:
+        """Initialize instance."""
         check_id = "mcn_version_control_system_1"
         description = "Check whether the target repo uses a version control system."
         depends_on: list[tuple[str, CheckResultType]] = []
@@ -22,6 +23,20 @@ class VCSCheck(BaseCheck):
         super().__init__(check_id=check_id, description=description, depends_on=depends_on, eval_reqs=eval_reqs)
 
     def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+        """Implement the check in this method.
+
+        Parameters
+        ----------
+        ctx : AnalyzeContext
+            The object containing processed data for the target repo.
+        check_result : CheckResult
+            The object containing result data of a check.
+
+        Returns
+        -------
+        CheckResultType
+            The result type of the check (e.g. PASSED).
+        """
         # TODO: refactor and use the git_service and its API client to create
         # the hyperlink tag to allow validation.
         if not ctx.git_obj:

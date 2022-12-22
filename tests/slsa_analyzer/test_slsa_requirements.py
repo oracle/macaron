@@ -41,8 +41,7 @@ class TestSLSARequirements(TestCase):
 
     def test_get_requirements_dict(self) -> None:
         """
-        Test if all the requirements defined in ReqName class are
-        included in the returned dictionary
+        Test if all the requirements defined in ReqName class are included in the returned dictionary.
         """
         all_reqs = get_requirements_dict()
         assert all(req in all_reqs for req in BUILD_REQ_DESC)

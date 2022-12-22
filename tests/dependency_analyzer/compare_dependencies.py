@@ -4,8 +4,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
-This module checks the dependency analysis
-results against the expected outputs.
+This module checks the dependency analysis results against the expected outputs.
 """
 
 import json
@@ -27,8 +26,8 @@ def main() -> None:
 
         # Iterate through the elements to provide useful debug info.
         # We could use deepdiff library, but let's avoid adding a third-party dependency.
-        result_sorted = sorted(result, key=lambda item: item["id"])
-        expected_sorted = sorted(expected, key=lambda item: item["id"])
+        result_sorted = sorted(result, key=lambda item: str(item["id"]))
+        expected_sorted = sorted(expected, key=lambda item: str(item["id"]))
 
         if len(result_sorted) < len(expected_sorted):
             for dep in expected_sorted[len(result_sorted) :]:

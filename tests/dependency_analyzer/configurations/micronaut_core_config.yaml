@@ -2,18 +2,18 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 target:
-  id: "micronaut-core"
-  branch: "3.5.x"
-  digest: "bf3f5e8f33b84160276acaa2b4f977e64730b8cd"
-  path: "https://github.com/micronaut-projects/micronaut-core"
+  id: micronaut-core
+  branch: 3.5.x
+  digest: bf3f5e8f33b84160276acaa2b4f977e64730b8cd
+  path: https://github.com/micronaut-projects/micronaut-core
 
 dependencies:
-  - id: "slf4j"
-    branch: ""
-    digest: ""
-    path: "https://github.com/qos-ch/slf4j.git"
+- id: slf4j
+  branch: ''
+  digest: ''
+  path: https://github.com/qos-ch/slf4j.git
 
-  - id: "caffeine"
-    branch: ""
-    digest: ""
-    path: "https://github.com/ben-manes/caffeine.git"
+- id: caffeine
+  branch: ''
+  digest: ''
+  path: https://github.com/ben-manes/caffeine.git

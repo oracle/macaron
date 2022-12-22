@@ -1,0 +1,214 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# We run checks on pushing to the specified branches.
+# Pushing to main also triggers a release.
+
+name: Check and Release
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #   - main
+  #   - staging
+permissions:
+  contents: read
+env:
+  ARTIFACT_NAME: artifact-ubuntu-latest-python-3.11
+  # This is the username and email for the user who commits and pushes the release
+  # commit. In an organisation that should be a dedicated devops account.
+  USER_NAME: behnazh-w
+  USER_EMAIL: behnazh-w@users.noreply.github.com
+
+jobs:
+  check:
+    if: ${{ !startsWith(github.event.commits[0].message, 'bump:') }}
+    uses: ./.github/workflows/_build.yaml
+    permissions:
+      contents: read
+
+  # On pushes to the 'main' branch create a new release by bumping the version
+  # and generating a change log. That's the new bump commit and associated tag.
+  bump:
+    needs: check
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+
+    - name: Check out repository
+      uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.REPO_ACCESS_TOKEN }}
+
+    - name: Set up Python
+      uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # v4.3.0
+      with:
+        python-version: '3.11'
+
+    - name: Set up Commitizen
+      run: |
+        pip install --upgrade pip wheel
+        pip install 'commitizen ==2.37.1'
+
+    - name: Set up user
+      run: |
+        git config --global user.name "$USER_NAME"
+        git config --global user.email "$USER_EMAIL"
+        git config --list --global # For debug purposes.
+
+    - name: Create changelog and bump
+      run: cz bump --changelog --yes
+
+    - name: Push the release
+      run: |
+        git push
+        git push --tags
+
+  # When triggered by the version bump commit, build the package and publish the release artifacts.
+  build:
+    if: github.ref == 'refs/heads/main' && startsWith(github.event.commits[0].message, 'bump:')
+    uses: ./.github/workflows/_build.yaml
+    permissions:
+      contents: read
+
+  # Create a new Release on Github from the verified build artifacts, and optionally
+  # publish the artifacts to a PyPI server.
+  release:
+    needs: [build]
+    name: Release
+    outputs:
+      release-tag: ${{ steps.upload-assets.outputs.release-tag }}
+      release-url: ${{ steps.upload-assets.outputs.release-url }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # To publish release notes.
+    steps:
+
+    - name: Check out repository
+      uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+      with:
+        fetch-depth: 0
+
+    - name: Download artifact
+      uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3.0.1
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        path: dist
+
+    # Verify hashes by first computing hashes for the artifacts and then comparing them
+    # against the hashes computed by the build job.
+    - name: Verify the artifact hash
+      env:
+        ARTIFACT_HASH: ${{ needs.build.outputs.artifacts-sha256 }}
+      run: |
+        set -euo pipefail
+        echo "Hash of package should be $ARTIFACT_HASH."
+        echo "$ARTIFACT_HASH" | base64 --decode | sha256sum --strict --check --status || exit 1
+
+    # Create the Release Notes using commitizen.
+    - name: Set up Python
+      uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # v4.3.0
+      with:
+        python-version: '3.11'
+
+    - name: Set up Commitizen
+      run: |
+        pip install --upgrade pip wheel
+        pip install 'commitizen ==2.37.1'
+
+    - name: Create Release Notes
+      run: cz changelog --dry-run "$(cz version --project)" > RELEASE_NOTES.md
+
+    # Create the release including the artifacts and the SLSA L3 provenance.
+    - name: Upload assets
+      id: upload-assets
+      env:
+        GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+      run: |
+        TAG=$(git describe --tags --abbrev=0)
+        gh release create "$TAG" dist/* --title "$TAG" --notes-file RELEASE_NOTES.md
+        echo "release-tag=$TAG" >> "$GITHUB_OUTPUT"
+        echo "release-url=$(gh release view """$TAG""" --json url --jq .url)" >> "$GITHUB_OUTPUT"
+
+    # Uncomment the following steps to publish to a PyPI server.
+    # At the moment PyPI does not provide a mechanism to publish
+    # the provenance. So, users have to download the provenance from
+    # the release page of the GitHub repository to verify the artifact.
+    # Install Twine without using the package's Makefile to avoid
+    # installing unnecessary dependencies, which is slow.
+    # - name: Set up Twine
+    #   run: |
+    #     pip install --upgrade pip wheel
+    #     pip install 'twine ==4.0.1'
+
+    # Pass the username, password, and PYPI repository URL via env variables.
+    # Read the password from GitHub secrets or via other trusted mechanisms.
+    # Do not hardcode the password in the workflow.
+    # - name: Publish to PyPI server
+    #   run: twine upload --verbose dist/*.tar.gz dist/*.whl
+    #   env:
+    #     TWINE_USERNAME=<USERNAME>
+    #     TWINE_PASSWORD=<PASSWORD>
+    #     TWINE_REPOSITORY_URL=<REPOSITORY_URL>
+
+  # Generate the build provenance. The generator should be referenced with a semantic version.
+  # The build will fail if we reference it using the commit SHA. To avoid using a pre-built
+  # provenance generator which depends on an external service Rekor (https://github.com/sigstore/rekor)
+  # we build this generator from source for now. For more information see this discussion:
+  # https://github.com/slsa-framework/slsa-github-generator/issues/942
+  provenance:
+    needs: [build, release]
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.2
+    with:
+      base64-subjects: ${{ needs.build.outputs.artifacts-sha256 }}
+      compile-generator: true # Build the generator from source.
+      # Set private-repository to true for private repositories. Note that the repository name is
+      # uploaded as part of the transparency log entry on the public Rekor instance (rekor.sigstore.dev).
+      private-repository: false
+    permissions:
+      actions: read # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+
+  # Publish the SLSA provenance as the GitHub release asset.
+  publish_provenance:
+    needs: [release, provenance]
+    name: Publish provenance
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # To publish release notes.
+    steps:
+
+    - name: Check out repository
+      uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
+      with:
+        fetch-depth: 0
+
+    - name: Download provenance
+      uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3.0.1
+      with:
+        name: ${{ needs.provenance.outputs.provenance-name }}
+
+    - name: Upload provenance
+      run: gh release upload ${{ needs.release.outputs.release-tag }} ${{ needs.provenance.outputs.provenance-name }}
+      env:
+        GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+
+  # Send out release notifications after the Release was published on GitHub.
+  # Uncomment the `if` to disable sending release notifications.
+  notifications:
+    # if: ${{ false }}
+    needs: [release]
+    name: Send Release notifications
+    uses: ./.github/workflows/_release-notifications.yaml
+    permissions:
+      contents: read
+    with:
+      repo_name: ${{ github.event.repository.name }}
+      release_tag: ${{ needs.release.outputs.release-tag }}
+      release_url: ${{ needs.release.outputs.release-url }}
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

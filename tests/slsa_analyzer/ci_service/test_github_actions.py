@@ -8,6 +8,8 @@ This module tests the call graphs.
 import os
 from pathlib import Path
 
+import pytest
+
 from macaron.code_analyzer.call_graph import CallGraph
 from macaron.parsers.actionparser import parse as parse_action
 from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType, GitHubActions, GitHubNode
@@ -72,6 +74,7 @@ class TestGitHubActions(MacaronTestCase):
             "GitHubNode(actions/setup-java@v3,GHWorkflowType.EXTERNAL)",
         ] == [str(node) for node in gh_cg.bfs()]
 
+    @pytest.mark.skip()
     def test_is_detected(self) -> None:
         """Test detecting GitHub Action config files."""
         assert self.github_actions.is_detected(str(self.ga_has_build_kws))

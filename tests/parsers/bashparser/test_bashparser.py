@@ -19,7 +19,6 @@ class TestParsers(MacaronTestCase):
 
     def test_bashparser_parse(self) -> None:
         """Test parsing bash scripts."""
-
         resources_dir = Path(__file__).parent.joinpath("resources")
 
         # Parse the valid mock bash script.
@@ -41,4 +40,4 @@ class TestParsers(MacaronTestCase):
 
         # Parse invalid workflows.
         with open(os.path.join(resources_dir, "bash_files", "invalid.sh"), encoding="utf8") as bash_file:
-            assert parse(bash_file.read(), str(MacaronTestCase.macaron_path)) == {}
+            assert not parse(bash_file.read(), str(MacaronTestCase.macaron_path))

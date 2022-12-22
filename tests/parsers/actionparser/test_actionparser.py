@@ -19,7 +19,6 @@ class TestParsers(MacaronTestCase):
 
     def test_actionparser_parse(self) -> None:
         """Test parsing GH Actions workflows."""
-
         resources_dir = Path(__file__).parent.joinpath("resources")
 
         valid_results = []

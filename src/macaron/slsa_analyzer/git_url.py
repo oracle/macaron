@@ -9,6 +9,7 @@ import os
 import re
 import string
 import urllib.parse
+from typing import Optional
 
 from git import GitCommandError
 from git.objects import Commit
@@ -61,7 +62,7 @@ def reset_git_repo(git_obj: Git, stash: bool = True, index: bool = True, working
         return False
 
 
-def check_out_repo_target(git_obj: Git, branch_name: str = None, digest: str = None) -> bool:
+def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "") -> bool:
     """Checkout the branch and commit specified by the user.
 
     If no branch name is provided, this method will checkout the default branch
@@ -195,7 +196,7 @@ def commit_exists(git_obj: Git, digest: str) -> bool:
     bool
     """
     try:
-        return git_obj.repo.is_ancestor(digest, "HEAD")
+        return bool(git_obj.repo.is_ancestor(digest, "HEAD"))
     except GitCommandError as error:
         # The exception could be raised because the digest does not exist in the history of the branch
         # or the digest is not a valid digest.
@@ -255,7 +256,7 @@ def get_default_branch(git_obj: Git) -> str:
         # This command will return origin/<default-branch-name>.
         # It can also work after we checkout a specific commit making HEAD into a detached state.
         # This is suitable for running multiple times on a repo.
-        default_branch_full = git_obj.repo.git.rev_parse("--abbrev-ref", "origin/HEAD")
+        default_branch_full: str = git_obj.repo.git.rev_parse("--abbrev-ref", "origin/HEAD")
         return default_branch_full[7:]
     except GitCommandError as error:
         logger.error("Error when getting default branch. Error: %s", error)
@@ -313,7 +314,7 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
                 "The clone dir %s is empty. It has been deleted for cloning the repo.",
                 clone_dir,
             )
-        except (FileNotFoundError, OSError):
+        except OSError:
             logger.info("The clone dir %s is not empty. No cloning is proceeded.", clone_dir)
             return None
 
@@ -464,7 +465,7 @@ def get_remote_vcs_url(url: str, clean_up: bool = True) -> str:
     return url_as_str
 
 
-def parse_remote_url(url: str, git_hosts: list = None) -> urllib.parse.ParseResult | None:
+def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse.ParseResult | None:
     """Verify if the given repository path is a valid vcs.
 
     This method converts the url to a ``https://`` url and return a
@@ -475,7 +476,7 @@ def parse_remote_url(url: str, git_hosts: list = None) -> urllib.parse.ParseResu
     ----------
     url: str
         The path of the repository to check.
-    git_hosts: list
+    git_hosts: Optional[list]
         The list of allowed network locations (default: None).
 
     Returns

@@ -31,6 +31,7 @@ class ProvenanceL3Check(BaseCheck):
     """This Check checks whether the target repo has SLSA provenance level 3."""
 
     def __init__(self) -> None:
+        """Initialize instance."""
         check_id = "mcn_provenance_level_three_1"
         description = "Check whether the target has SLSA provenance level 3."
         depends_on: list[tuple[str, CheckResultType]] = [("mcn_provenance_available_1", CheckResultType.PASSED)]
@@ -99,7 +100,7 @@ class ProvenanceL3Check(BaseCheck):
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
             logger.error(error)
             errors.append(error.output.decode("utf-8"))
-        except (FileNotFoundError, OSError) as error:
+        except OSError as error:
             logger.error(error)
             errors.append(str(error))
 
@@ -113,7 +114,7 @@ class ProvenanceL3Check(BaseCheck):
                     log_file.write(f"SLSA verifier output for cmd: {' '.join(cmd)}\n")
                     log_file.writelines(errors)
                     log_file.write("--------------------------------\n")
-            except (FileNotFoundError, OSError) as error:
+            except OSError as error:
                 logger.error(error)
 
         return feedback
@@ -185,6 +186,20 @@ class ProvenanceL3Check(BaseCheck):
         return None
 
     def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+        """Implement the check in this method.
+
+        Parameters
+        ----------
+        ctx : AnalyzeContext
+            The object containing processed data for the target repo.
+        check_result : CheckResult
+            The object containing result data of a check.
+
+        Returns
+        -------
+        CheckResultType
+            The result type of the check (e.g. PASSED).
+        """
         # TODO: During verification, we need to fetch the workflow and verify that it's not
         # using self-hosted runners, custom containers or services, etc.
         all_feedback = []

@@ -31,14 +31,12 @@ class TestRegistry(TestCase):
 
     def test_exit_on_duplicated(self) -> None:
         """Test registering a duplicated check_id Check."""
-
         with self.assertRaises(SystemExit):
             self.REGISTRY.register(BaseCheck("mcn_duplicated_check_1", ""))  # type: ignore
             self.REGISTRY.register(BaseCheck("mcn_duplicated_check_1", ""))  # type: ignore
 
     def test_exit_on_empty_check_id(self) -> None:
         """Test registering an empty check_id Check."""
-
         with self.assertRaises(SystemExit):
             self.REGISTRY.register(BaseCheck("", ""))  # type: ignore
 
@@ -50,7 +48,6 @@ class TestRegistry(TestCase):
 
     def test_add_successfully(self) -> None:
         """Test registering a Check correctly."""
-
         self.REGISTRY.register(BaseCheck("mcn_correct_check_1", "This check is a correct Check."))  # type: ignore
         assert self.REGISTRY.get_all_checks_mapping().get("mcn_correct_check_1")
 

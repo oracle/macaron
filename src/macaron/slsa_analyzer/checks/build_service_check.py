@@ -65,6 +65,20 @@ class BuildServiceCheck(BaseCheck):
         return ""
 
     def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+        """Implement the check in this method.
+
+        Parameters
+        ----------
+        ctx : AnalyzeContext
+            The object containing processed data for the target repo.
+        check_result : CheckResult
+            The object containing result data of a check.
+
+        Returns
+        -------
+        CheckResultType
+            The result type of the check (e.g. PASSED).
+        """
         build_tool = ctx.dynamic_data["build_spec"].get("tool")
         ci_services = ctx.dynamic_data["ci_services"]
 

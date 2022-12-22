@@ -8,6 +8,7 @@ import os
 import subprocess  # nosec B404
 import sys
 from datetime import datetime
+from typing import Optional
 
 from git import InvalidGitRepositoryError
 from pydriller.git import Git
@@ -26,7 +27,7 @@ from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 from macaron.slsa_analyzer.build_tool.maven import Maven
 
 # To load all checks into the registry
-from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
 from macaron.slsa_analyzer.checks.check_result import CheckResult, SkippedInfo
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
@@ -39,15 +40,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Analyzer:
-    """This class is used to analyze SLSA levels of a Git repo.
-
-    Parameters
-    ----------
-    output_path : str
-        The path to the output directory.
-    build_log_path : str
-        The path to store the build logs.
-    """
+    """This class is used to analyze SLSA levels of a Git repo."""
 
     GIT_REPOS_DIR = "git_repos"
     """The directory in the output dir to store all cloned repositories."""
@@ -56,6 +49,15 @@ class Analyzer:
     """The name of the SQLite table which stores the analyze results."""
 
     def __init__(self, output_path: str, build_log_path: str) -> None:
+        """Initialize instance.
+
+        Parameters
+        ----------
+        output_path : str
+            The path to the output directory.
+        build_log_path : str
+            The path to store the build logs.
+        """
         if not os.path.isdir(output_path):
             logger.critical("%s is not a valid directory. Exiting ...", output_path)
             sys.exit(1)
@@ -238,7 +240,7 @@ class Analyzer:
                     ).split(":")
                 )
                 if tool_name == DependencyTools.CYCLONEDX_MAVEN:
-                    dep_analyzer = CycloneDxMaven(  # type: ignore
+                    dep_analyzer = CycloneDxMaven(
                         resources_path=global_config.resources_path,
                         file_name="bom.json",
                         debug_path=os.path.join(self.output_path, "cdx_debug.json"),
@@ -301,7 +303,7 @@ class Analyzer:
 
         return deps_resolved
 
-    def run_single(self, config: Configuration, existing_records: dict[str, Record] = None) -> Record:
+    def run_single(self, config: Configuration, existing_records: Optional[dict[str, Record]] = None) -> Record:
         """Run the checks for a single repository target.
 
         Please use Analyzer.run if you want to run the analysis for a config parsed from
@@ -312,7 +314,7 @@ class Analyzer:
         config : str
             The configuration for running Macaron.
 
-        existing_records : dict[str, Record]
+        existing_records : Optional[dict[str, Record]]
             The mapping of existing records that the analysis has run successfully.
 
         Returns
