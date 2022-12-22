@@ -8,6 +8,7 @@ import logging
 import os
 import pathlib
 import shutil
+from typing import Optional
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -16,7 +17,12 @@ class ConfigParser(configparser.ConfigParser):
     """This class extends ConfigParser with useful methods."""
 
     def get_list(
-        self, section: str, item: str, delimiter: str = None, fallback: list = None, duplicated_ok: bool = False
+        self,
+        section: str,
+        item: str,
+        delimiter: Optional[str] = None,
+        fallback: Optional[list] = None,
+        duplicated_ok: bool = False,
     ) -> list:
         """Parse and return a list of strings from an item in ``defaults.ini``.
 
@@ -34,9 +40,9 @@ class ConfigParser(configparser.ConfigParser):
             The section in ``defaults.ini``.
         item : str
             The item to parse the list.
-        delimiter : str
+        delimiter : Optional[str]
             The delimiter used to split the strings.
-        fallback : list
+        fallback : Optional[list]
             The fallback value in case of errors.
         duplicated_ok : bool
             If True allow duplicate values.
@@ -70,13 +76,11 @@ class ConfigParser(configparser.ConfigParser):
 
                 distinct_values = set()
                 distinct_values.update(content)
-
                 return list(distinct_values)
-
-            return fallback or []
         except configparser.NoOptionError as error:
             logger.error(error)
-            return fallback or []
+
+        return fallback or []
 
 
 defaults = ConfigParser()

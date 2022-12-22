@@ -54,7 +54,6 @@ class TestVCSCheck(MacaronTestCase):
 
     def test_vcs_check(self) -> None:
         """Test the vcs check."""
-
         check = VCSCheck()
         git_repo = initiate_repo(REPO_DIR)
         check_result = CheckResult(justification=[])  # type: ignore

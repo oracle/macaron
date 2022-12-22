@@ -21,7 +21,7 @@ class MacaronTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        """Setup the necessary values for the tests."""
+        """Set up the necessary values for the tests."""
         # Load values from defaults.ini.
         if not cls.macaron_test_dir.joinpath("defaults.ini").exists():
             create_defaults(str(cls.macaron_test_dir), str(cls.macaron_path))

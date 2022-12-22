@@ -7,7 +7,7 @@ import logging
 import os
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import Any, Callable, Generic, TypeVar, Union
+from typing import Any, Callable, Generic, Optional, TypeVar, Union
 
 import yamale
 from yamale.schema import Schema
@@ -22,7 +22,7 @@ POLICY_SCHEMA: Schema = yamale.make_schema(SCHEMA_DIR)
 
 SubscriptPathType = list[Union[str, int]]
 Primitive = Union[str, bool, int, float]
-PolicyDef = Union[Primitive, dict, list]
+PolicyDef = Union[Primitive, dict, list, None]
 PolicyFn = Callable[[Any], bool]
 GPolicy = TypeVar("GPolicy", bound="Policy")
 
@@ -81,14 +81,14 @@ def _get_path_as_str(path: SubscriptPathType) -> str:
     return result.lstrip(".")
 
 
-def _gen_policy_func(policy: PolicyDef, path: SubscriptPathType = None) -> PolicyFn:
+def _gen_policy_func(policy: PolicyDef, path: Optional[SubscriptPathType] = None) -> PolicyFn:
     """Get the policy verify function from the policy data.
 
     Parameters
     ----------
     policy : PolicyType
         The policy data.
-    path : SubscriptPathType
+    path : Optional[SubscriptPathType]
         Describe the path taken to get to the current ``policy``.
 
     Returns
@@ -101,7 +101,7 @@ def _gen_policy_func(policy: PolicyDef, path: SubscriptPathType = None) -> Polic
     InvalidPolicyError
         If the provided policy is invalid.
     """
-    res_path: SubscriptPathType = [] if not path else path
+    res_path: SubscriptPathType = path or []
     match policy:
         case str() | bool() | int() | float():
             logger.debug("%sPrimitive(policy=%s, path=%s)", "\t" * len(res_path), str(policy), res_path)

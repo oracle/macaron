@@ -20,6 +20,7 @@ class Gradle(BaseBuildTool):
     """This class contains the information of the Gradle build tool."""
 
     def __init__(self) -> None:
+        """Initialize instance."""
         super().__init__(name="gradle")
 
     def load_defaults(self) -> None:
@@ -40,6 +41,18 @@ class Gradle(BaseBuildTool):
                     self.ci_deploy_kws[item] = defaults.get_list("builder.gradle.ci.deploy", item)
 
     def is_detected(self, repo_path: str) -> bool:
+        """Return True if this build tool is used in the target repo.
+
+        Parameters
+        ----------
+        repo_path : str
+            The path to the target repo.
+
+        Returns
+        -------
+        bool
+            True if this build tool is detected, else False.
+        """
         gradle_config_files = self.build_configs + self.entry_conf
         for file in gradle_config_files:
             if file_exists(repo_path, file):

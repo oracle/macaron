@@ -24,10 +24,10 @@ COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
 RESULT_CODE=0
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the resolved dependency output with config for osint maven plugin (default)."
+echo "apache/maven: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/osint_maven_apache_maven.json
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 
 $RUN_MACARON -C $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || RESULT_CODE=1
 $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || RESULT_CODE=1

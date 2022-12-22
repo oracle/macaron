@@ -38,12 +38,12 @@ class YamlLoader:
         """
         try:
             logger.debug("Loading yaml from file %s", path)
-            return yamale.make_data(path)
+            return list(yamale.make_data(path))
         except YAMLError as error:
             abs_path = os.path.abspath(path)
 
             if hasattr(error, "problem_mark"):
-                mark = error.problem_mark  # type: ignore
+                mark = error.problem_mark
                 line_number = mark.line + 1
                 column_number = mark.column + 1
                 err_pos = f"{line_number}:{column_number}"

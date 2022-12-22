@@ -40,7 +40,7 @@ class CheckResult(TypedDict):
 class SkippedInfo(TypedDict):
     """This class stores the information about a skipped check."""
 
-    id: str
+    check_id: str
     suppress_comment: str
 
 

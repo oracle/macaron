@@ -41,29 +41,7 @@ class ChecksOutputs(TypedDict):
 
 
 class AnalyzeContext:
-    """This class contains data of the current analyzed repository.
-
-    Parameters
-    ----------
-    full_name : str
-        Repository name in ``<owner>/<repo_name>`` format.
-    repo_path : str
-        Target repository path.
-    git_obj : Git
-        The Git object for the target path.
-    branch_name : str
-        The target branch.
-    commit_sha : str
-        The commit sha of the target repo.
-    commit_date : str
-        The commit date of the target repo.
-    macaron_path : str
-        The Macaron's root path.
-    output_dir : str
-        The output dir.
-    remote_path : str
-        The remote path for the target repo.
-    """
+    """This class contains data of the current analyzed repository."""
 
     def __init__(
         self,
@@ -77,6 +55,29 @@ class AnalyzeContext:
         output_dir: str = "",
         remote_path: str = "",
     ):
+        """Initialize instance.
+
+        Parameters
+        ----------
+        full_name : str
+            Repository name in ``<owner>/<repo_name>`` format.
+        repo_path : str
+            Target repository path.
+        git_obj : Git
+            The Git object for the target path.
+        branch_name : str
+            The target branch.
+        commit_sha : str
+            The commit sha of the target repo.
+        commit_date : str
+            The commit date of the target repo.
+        macaron_path : str
+            The Macaron's root path.
+        output_dir : str
+            The output dir.
+        remote_path : str
+            The remote path for the target repo.
+        """
         # <owner>/<repo_name>
         self.repo_full_name = full_name
 

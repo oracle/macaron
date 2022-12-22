@@ -6,7 +6,7 @@
 import logging
 from abc import abstractmethod
 from enum import Enum
-from typing import Optional, TypedDict  # pylint: disable=unused-import
+from typing import TypedDict
 
 from packaging import version
 
@@ -190,7 +190,7 @@ class DependencyAnalyzer:
                 dep.set_value("available", SCMStatus.AVAILABLE)
                 merged_deps.append(dep)
 
-        if resolved_deps is None:
+        if not resolved_deps:
             return merged_deps
 
         for key, value in resolved_deps.items():

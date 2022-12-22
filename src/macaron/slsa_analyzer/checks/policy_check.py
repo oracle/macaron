@@ -22,6 +22,7 @@ class PolicyCheck(BaseCheck):
     """This check compares a SLSA provenance with a given policy and checks whether they match."""
 
     def __init__(self) -> None:
+        """Initialize instance."""
         check_id = "mcn_policy_check_1"
         description = "Check whether the SLSA provenance for the produced artifact conforms to the policy."
         depends_on: list[tuple[str, CheckResultType]] = [("mcn_provenance_level_three_1", CheckResultType.PASSED)]
@@ -35,6 +36,20 @@ class PolicyCheck(BaseCheck):
         )
 
     def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+        """Implement the check in this method.
+
+        Parameters
+        ----------
+        ctx : AnalyzeContext
+            The object containing processed data for the target repo.
+        check_result : CheckResult
+            The object containing result data of a check.
+
+        Returns
+        -------
+        CheckResultType
+            The result type of the check (e.g. PASSED).
+        """
         policy = ctx.dynamic_data["policy"]
         if not policy:
             check_result["justification"].append("Could not verify policy against the provenance.")

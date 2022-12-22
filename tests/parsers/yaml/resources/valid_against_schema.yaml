@@ -5,5 +5,5 @@
 
 target:
   # Missing id and path.
-  branch: "master"
-  digest: "aac3b3bcb608e1e8451d4beedd38ecbe6306e7e7"
+  branch: master
+  digest: aac3b3bcb608e1e8451d4beedd38ecbe6306e7e7

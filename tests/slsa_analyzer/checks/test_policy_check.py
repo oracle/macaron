@@ -59,7 +59,6 @@ class TestPolicyCheck(MacaronTestCase):
 
     def test_policy_check(self) -> None:
         """Test the policy check."""
-
         check = PolicyCheck()
         check_result = CheckResult(justification=[])  # type: ignore
         github_actions = MockGitHubActions()

@@ -15,19 +15,7 @@ from ...macaron_testcase import MacaronTestCase
 
 
 class EmptyCheck(BaseCheck):
-    """An empty check to test the runners.
-
-    Parameters:
-    -----------
-    check_id: str
-        The id of the check
-
-    should_return: CheckResultType
-        The result status returned by this check
-
-    parent: list[tuple[str, CheckResultType]]
-        The list of parent checks that this check depends on.
-    """
+    """An empty check to test the runners."""
 
     def __init__(
         self,
@@ -35,6 +23,19 @@ class EmptyCheck(BaseCheck):
         should_return: CheckResultType,
         parent: list[tuple[str, CheckResultType]],
     ) -> None:
+        """Initialize the instance.
+
+        Parameters
+        ----------
+        check_id: str
+            The id of the check
+
+        should_return: CheckResultType
+            The result status returned by this check
+
+        parent: list[tuple[str, CheckResultType]]
+            The list of parent checks that this check depends on.
+        """
         super().__init__(check_id, "This is an empty check.", parent, [])
         self.should_return = should_return
 

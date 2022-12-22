@@ -13,11 +13,12 @@ class GitHub(BaseGitService):
     """This class contains the spec of the GitHub service."""
 
     def __init__(self) -> None:
+        """Initialize instance."""
         super().__init__("github")
         self._api_client: GhAPIClient = None  # type: ignore
 
     def load_defaults(self) -> None:
-        pass
+        """Load the default values from defaults.ini."""
 
     @property
     def api_client(self) -> GhAPIClient:
@@ -31,6 +32,18 @@ class GitHub(BaseGitService):
         return self._api_client
 
     def can_clone_remote_repo(self, url: str) -> bool:
+        """Return True if the remote repository can be cloned.
+
+        Parameters
+        ----------
+        url : str
+            The remote url.
+
+        Returns
+        -------
+        bool
+            True if the repo can be cloned, else False.
+        """
         remote_url = git_url.get_remote_vcs_url(url)
         full_name = git_url.get_repo_full_name_from_url(remote_url)
         if not self.api_client.get_repo_data(full_name):
@@ -39,6 +52,18 @@ class GitHub(BaseGitService):
         return True
 
     def is_detected(self, url: str) -> bool:
+        """Return True if the remote repo is using this git service.
+
+        Parameters
+        ----------
+        url : str
+            The url of the remote repo.
+
+        Returns
+        -------
+        bool
+            True if this git service is detected else False.
+        """
         parsed_url = git_url.parse_remote_url(url)
         if not parsed_url or self.name not in parsed_url.netloc:
             return False

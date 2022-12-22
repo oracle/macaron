@@ -18,47 +18,18 @@ Macaron uses [SLSA requirements specifications v0.1](https://slsa.dev/spec/v0.1/
 ## Getting started
 
 **Prerequisites**
-- Python 3.10.5
+- Python 3.11
 - Go 1.18
 - JDK 11
 
 **Prepare the environment**
 
-```bash
-python -m venv .venv
-. .venv/bin/activate
-```
-
 Clone the project and install Macaron.
 
 ```bash
-python -m pip install --editable .
-```
-
-Build Macaron's Go modules:
-
-```bash
-go build -o ./bin/ ./golang/cmd/...
-```
-
-Download and build [slsa-verifer](https://github.com/slsa-framework/slsa-verifier):
-
-```bash
-MACARON_PATH=$(pwd)
-git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b <version>
-cd slsa-verifier/cli/slsa-verifier && go build -o $MACARON_PATH/bin/
-cd $MACARON_PATH && rm -rf slsa-verifier
-```
-
-Download and install Maven wrapper:
-
-```bash
-cd resources \
-  && wget https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper-distribution/3.1.1/maven-wrapper-distribution-3.1.1-bin.zip \
-  && unzip maven-wrapper-distribution-3.1.1-bin.zip \
-  && rm -r maven-wrapper-distribution-3.1.1-bin.zip \
-  && echo -e "distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.8.6/apache-maven-3.8.6-bin.zip\nwrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.1.1/maven-wrapper-3.1.1.jar" > .mvn/wrapper/maven-wrapper.properties \
-  && cd ..
+make venv
+. .venv/bin/activate
+make setup
 ```
 
 ## Running Macaron
@@ -163,10 +134,98 @@ python -m macaron -po <path_to_policy.yaml> verify -pr <path_to_prov_file>
 
 **Note.** The policy engine is under active development and will support more complex policies soon. Stay tuned.
 
-
 ## How to Contribute
 
-We welcome contributions! See our [contribution guidelines](./CONTRIBUTING.md).
+We welcome contributions! See our [general contribution guidelines](./CONTRIBUTING.md).
+
+To contribute to Macaron, first create a [virtual environment](https://docs.python.org/3/tutorial/venv.html) by either using the [Makefile](https://www.gnu.org/software/make/manual/make.html#toc-An-Introduction-to-Makefiles):
+
+```bash
+make venv  # Create a new virtual environment in .venv folder using Python 3.11.
+```
+
+or for a specific version of Python:
+
+```bash
+PYTHON=python3.11 make venv  # Same virtual environment for a different Python version.
+```
+
+Activate the virtual environment:
+
+```bash
+. .venv/bin/activate
+```
+
+Finally, set up Macaron with all of its extras and initialize the local git hooks:
+
+```bash
+make setup
+```
+
+With that in place, you’re ready to build and contribute to Macaron!
+
+### Updating dependent packages
+
+It’s likely that during development you’ll add or update dependent packages in the `pyproject.toml` file, which requires an update to the virtual environment:
+
+```bash
+make upgrade
+```
+
+### Git hooks
+
+Using the pre-commit tool and its `.pre-commit-config.yaml` configuration, the following git hooks are active in this repository:
+
+- When committing code, a number of [pre-commit hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#_committing_workflow_hooks) ensure that your code is formatted according to [PEP 8](https://www.python.org/dev/peps/pep-0008/) using the [`black`](https://github.com/psf/black) tool, and they’ll invoke [`flake8`](https://github.com/PyCQA/flake8) (and various plugins), [`pylint`](https://github.com/PyCQA/pylint) and [`mypy`](https://github.com/python/mypy) to check for lint and correct types. There are more checks, but those two are the important ones. You can adjust the settings for these tools in the `pyproject.toml` or `.flake8` configuration files.
+- The [commit message hook](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#_committing_workflow_hooks) enforces [conventional commit messages](https://www.conventionalcommits.org/) and that, in turn, enables a _semantic release_ of this package on the Github side: upon merging changes into the `main` branch, the [release action](https://github.com/github.com/oracle-samples/blob/main/.github/workflows/release.yaml) uses the [Commitizen tool](https://commitizen-tools.github.io/commitizen/) to produce a [changelog](https://en.wikipedia.org/wiki/Changelog) and it computes the next version of this package and publishes a release — all based on the commit messages of a release.
+- Using a [pre-push hook](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#_other_client_hooks) this package is also set up to run [`pytest`](https://github.com/pytest-dev/pytest); in addition, the [`coverage`](https://github.com/nedbat/coveragepy) plugin makes sure that _all_ of your package’s code is covered by tests and [Hypothesis](https://hypothesis.works/) is already installed to help with generating test payloads.
+
+You can also run these hooks manually, which comes in very handy during daily development tasks. For example
+
+```bash
+make check-code
+```
+
+runs all the code checks (i.e. `bandit`, `flake8`, `pylint` and `mypy`), whereas
+
+```bash
+make check
+```
+
+runs _all_ installed git hooks over your code. For more control over the code checks, the Makefile also implements the `check-bandit`, `check-flake8`, `check-lint`, `check-mypy`, and `check-go` goals.
+
+### Testing
+
+As mentioned above, this repository is set up to use [pytest](https://pytest.org/) either standalone or as a pre-push git hook. Tests are stored in the `tests/` folder, and you can run them manually like so:
+```bash
+make test
+```
+
+which runs all tests in both your local Python virtual environment. For more options, see the [pytest command-line flags](https://docs.pytest.org/en/6.2.x/reference.html#command-line-flags). Also note that pytest includes [doctest](https://docs.python.org/3/library/doctest.html), which means that module and function [docstrings](https://www.python.org/dev/peps/pep-0257/#what-is-a-docstring) may contain test code that executes as part of the unit tests.
+
+Test code coverage is already tracked using [coverage](https://github.com/nedbat/coveragepy) and the [pytest-cov](https://github.com/pytest-dev/pytest-cov) plugin for pytest, and it measures how much code in the `src/macaron/` folder is covered by tests.
+
+Hypothesis is a package that implements [property based testing](https://en.wikipedia.org/wiki/QuickCheck) and that provides payload generation for your tests based on strategy descriptions ([more](https://hypothesis.works/#what-is-hypothesis)). Using its [pytest plugin](https://hypothesis.readthedocs.io/en/latest/details.html#the-hypothesis-pytest-plugin) Hypothesis is ready to be used for this package.
+
+To run integration tests run:
+
+```bash
+make integration-test
+```
+
+### Generating documentation
+
+As mentioned above, all package code should make use of [Python docstrings](https://www.python.org/dev/peps/pep-0257/) in [reStructured text format](https://www.python.org/dev/peps/pep-0287/). Using these docstrings and the documentation template in the `docs/source/` folder, you can then generate proper documentation in different formats using the [Sphinx](https://github.com/sphinx-doc/sphinx/) tool:
+
+```bash
+make docs
+```
+
+This example generates documentation in HTML, which can then be found here:
+
+```bash
+open docs/_build/html/index.html
+```
 
 ## Security issue reports
 

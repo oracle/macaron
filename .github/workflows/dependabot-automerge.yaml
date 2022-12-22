@@ -1,0 +1,24 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# Automatically merge Dependabot PRs upon approval by leaving
+# a comment on Dependabot's pull-request.
+
+name: Automerge Dependabot PR
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  comment:
+    if: ${{ github.event.review.state == 'approved' && github.event.pull_request.user.login == 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Merge Dependabot PR
+      run: gh pr comment --body "@dependabot squash and merge" "$PR_URL"
+      env:
+        PR_URL: ${{ github.event.pull_request.html_url }}
+        GITHUB_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}
