@@ -64,7 +64,7 @@ dev = [
     # Exclude pip-audit v2.4.9 because it has a bug.
     # See https://github.com/pypa/pip-audit/commit/22d7e4c7f5acd20852c57b52b46e861a716ab09f.
     "pip-audit >=2.4.8,<3.0.0,!=2.4.9",
-    "pylint >=2.9.3,<2.15.8",
+    "pylint >=2.9.3,<2.15.10",
     "cyclonedx-bom >=3.5.0,<4.0.0",
 ]
 docs = [
