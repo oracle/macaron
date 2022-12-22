@@ -42,6 +42,7 @@ class ProvenanceAvailableCheck(BaseCheck):
     """This Check checks whether the target repo has intoto provenance."""
 
     def __init__(self) -> None:
+        """Initialize instance."""
         check_id = "mcn_provenance_available_1"
         description = "Check whether the target has intoto provenance."
         depends_on: list[tuple[str, CheckResultType]] = []
@@ -54,6 +55,20 @@ class ProvenanceAvailableCheck(BaseCheck):
         super().__init__(check_id=check_id, description=description, depends_on=depends_on, eval_reqs=eval_reqs)
 
     def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+        """Implement the check in this method.
+
+        Parameters
+        ----------
+        ctx : AnalyzeContext
+            The object containing processed data for the target repo.
+        check_result : CheckResult
+            The object containing result data of a check.
+
+        Returns
+        -------
+        CheckResultType
+            The result type of the check (e.g. PASSED).
+        """
         ci_services = ctx.dynamic_data["ci_services"]
         for ci_info in ci_services:
             ci_service = ci_info["service"]

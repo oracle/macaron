@@ -99,7 +99,7 @@
               "Quoted": false,
               "Pos": {
                 "Line": 18,
-                "Col": 15
+                "Col": 13
               }
             },
             "Inputs": null,
@@ -111,7 +111,7 @@
           "TimeoutMinutes": null,
           "Pos": {
             "Line": 18,
-            "Col": 9
+            "Col": 7
           }
         },
         {
@@ -124,7 +124,7 @@
               "Quoted": false,
               "Pos": {
                 "Line": 19,
-                "Col": 15
+                "Col": 13
               }
             },
             "Inputs": {
@@ -134,15 +134,15 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 23,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
                   "Value": "maven",
-                  "Quoted": true,
+                  "Quoted": false,
                   "Pos": {
                     "Line": 23,
-                    "Col": 18
+                    "Col": 16
                   }
                 }
               },
@@ -152,15 +152,15 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 22,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
                   "Value": "temurin",
-                  "Quoted": true,
+                  "Quoted": false,
                   "Pos": {
                     "Line": 22,
-                    "Col": 25
+                    "Col": 23
                   }
                 }
               },
@@ -170,7 +170,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 21,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -178,7 +178,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 21,
-                    "Col": 25
+                    "Col": 23
                   }
                 }
               }
@@ -191,7 +191,7 @@
           "TimeoutMinutes": null,
           "Pos": {
             "Line": 19,
-            "Col": 9
+            "Col": 7
           }
         },
         {
@@ -202,7 +202,7 @@
             "Quoted": false,
             "Pos": {
               "Line": 25,
-              "Col": 15
+              "Col": 13
             }
           },
           "Exec": {
@@ -211,14 +211,14 @@
               "Quoted": false,
               "Pos": {
                 "Line": 26,
-                "Col": 14
+                "Col": 12
               }
             },
             "Shell": null,
             "WorkingDirectory": null,
             "RunPos": {
               "Line": 26,
-              "Col": 9
+              "Col": 7
             }
           },
           "Env": null,
@@ -226,7 +226,7 @@
           "TimeoutMinutes": null,
           "Pos": {
             "Line": 25,
-            "Col": 9
+            "Col": 7
           }
         },
         {
@@ -236,7 +236,7 @@
             "Quoted": false,
             "Pos": {
               "Line": 30,
-              "Col": 13
+              "Col": 11
             }
           },
           "Name": {
@@ -244,7 +244,7 @@
             "Quoted": false,
             "Pos": {
               "Line": 28,
-              "Col": 15
+              "Col": 13
             }
           },
           "Exec": {
@@ -253,7 +253,7 @@
               "Quoted": false,
               "Pos": {
                 "Line": 29,
-                "Col": 15
+                "Col": 13
               }
             },
             "Inputs": {
@@ -263,7 +263,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 32,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -271,7 +271,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 32,
-                    "Col": 17
+                    "Col": 15
                   }
                 }
               },
@@ -281,7 +281,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 33,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -289,7 +289,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 33,
-                    "Col": 17
+                    "Col": 15
                   }
                 }
               }
@@ -302,7 +302,7 @@
           "TimeoutMinutes": null,
           "Pos": {
             "Line": 28,
-            "Col": 9
+            "Col": 7
           }
         }
       ],
@@ -411,7 +411,7 @@
             "Quoted": false,
             "Pos": {
               "Line": 46,
-              "Col": 15
+              "Col": 13
             }
           },
           "Exec": {
@@ -420,7 +420,7 @@
               "Quoted": false,
               "Pos": {
                 "Line": 50,
-                "Col": 14
+                "Col": 12
               }
             },
             "Shell": {
@@ -428,13 +428,13 @@
               "Quoted": false,
               "Pos": {
                 "Line": 47,
-                "Col": 16
+                "Col": 14
               }
             },
             "WorkingDirectory": null,
             "RunPos": {
               "Line": 50,
-              "Col": 9
+              "Col": 7
             }
           },
           "Env": {
@@ -445,7 +445,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 49,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -453,7 +453,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 49,
-                    "Col": 26
+                    "Col": 24
                   }
                 }
               }
@@ -464,7 +464,7 @@
           "TimeoutMinutes": null,
           "Pos": {
             "Line": 46,
-            "Col": 9
+            "Col": 7
           }
         },
         {
@@ -475,7 +475,7 @@
             "Quoted": false,
             "Pos": {
               "Line": 77,
-              "Col": 15
+              "Col": 13
             }
           },
           "Exec": {
@@ -484,7 +484,7 @@
               "Quoted": false,
               "Pos": {
                 "Line": 78,
-                "Col": 15
+                "Col": 13
               }
             },
             "Inputs": {
@@ -494,7 +494,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 81,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -502,7 +502,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 81,
-                    "Col": 17
+                    "Col": 15
                   }
                 }
               },
@@ -512,7 +512,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 82,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -520,7 +520,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 82,
-                    "Col": 16
+                    "Col": 14
                   }
                 }
               },
@@ -530,7 +530,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 80,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -538,7 +538,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 80,
-                    "Col": 23
+                    "Col": 21
                   }
                 }
               }
@@ -551,7 +551,7 @@
           "TimeoutMinutes": null,
           "Pos": {
             "Line": 77,
-            "Col": 9
+            "Col": 7
           }
         },
         {
@@ -562,7 +562,7 @@
             "Quoted": false,
             "Pos": {
               "Line": 84,
-              "Col": 15
+              "Col": 13
             }
           },
           "Exec": {
@@ -571,7 +571,7 @@
               "Quoted": false,
               "Pos": {
                 "Line": 85,
-                "Col": 15
+                "Col": 13
               }
             },
             "Inputs": {
@@ -581,7 +581,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 88,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -589,7 +589,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 88,
-                    "Col": 16
+                    "Col": 14
                   }
                 }
               },
@@ -599,7 +599,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 87,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -607,7 +607,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 87,
-                    "Col": 17
+                    "Col": 15
                   }
                 }
               },
@@ -617,7 +617,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 89,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -625,7 +625,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 89,
-                    "Col": 25
+                    "Col": 23
                   }
                 }
               }
@@ -638,7 +638,7 @@
           "TimeoutMinutes": null,
           "Pos": {
             "Line": 84,
-            "Col": 9
+            "Col": 7
           }
         },
         {
@@ -649,7 +649,7 @@
             "Quoted": false,
             "Pos": {
               "Line": 92,
-              "Col": 15
+              "Col": 13
             }
           },
           "Exec": {
@@ -658,7 +658,7 @@
               "Quoted": false,
               "Pos": {
                 "Line": 93,
-                "Col": 15
+                "Col": 13
               }
             },
             "Inputs": {
@@ -668,7 +668,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 95,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -676,7 +676,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 95,
-                    "Col": 17
+                    "Col": 15
                   }
                 }
               },
@@ -686,7 +686,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 96,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -694,7 +694,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 96,
-                    "Col": 17
+                    "Col": 15
                   }
                 }
               }
@@ -707,7 +707,7 @@
           "TimeoutMinutes": null,
           "Pos": {
             "Line": 92,
-            "Col": 9
+            "Col": 7
           }
         },
         {
@@ -718,7 +718,7 @@
             "Quoted": false,
             "Pos": {
               "Line": 98,
-              "Col": 15
+              "Col": 13
             }
           },
           "Exec": {
@@ -727,7 +727,7 @@
               "Quoted": false,
               "Pos": {
                 "Line": 99,
-                "Col": 15
+                "Col": 13
               }
             },
             "Inputs": {
@@ -737,15 +737,15 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 103,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
                   "Value": "maven",
-                  "Quoted": true,
+                  "Quoted": false,
                   "Pos": {
                     "Line": 103,
-                    "Col": 18
+                    "Col": 16
                   }
                 }
               },
@@ -755,15 +755,15 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 102,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
                   "Value": "temurin",
-                  "Quoted": true,
+                  "Quoted": false,
                   "Pos": {
                     "Line": 102,
-                    "Col": 25
+                    "Col": 23
                   }
                 }
               },
@@ -773,7 +773,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 101,
-                    "Col": 11
+                    "Col": 9
                   }
                 },
                 "Value": {
@@ -781,7 +781,7 @@
                   "Quoted": false,
                   "Pos": {
                     "Line": 101,
-                    "Col": 25
+                    "Col": 23
                   }
                 }
               }
@@ -794,7 +794,7 @@
           "TimeoutMinutes": null,
           "Pos": {
             "Line": 98,
-            "Col": 9
+            "Col": 7
           }
         },
         {
@@ -805,7 +805,7 @@
             "Quoted": false,
             "Pos": {
               "Line": 105,
-              "Col": 15
+              "Col": 13
             }
           },
           "Exec": {
@@ -814,7 +814,7 @@
               "Quoted": false,
               "Pos": {
                 "Line": 107,
-                "Col": 14
+                "Col": 12
               }
             },
             "Shell": {
@@ -822,13 +822,13 @@
               "Quoted": false,
               "Pos": {
                 "Line": 106,
-                "Col": 16
+                "Col": 14
               }
             },
             "WorkingDirectory": null,
             "RunPos": {
               "Line": 107,
-              "Col": 9
+              "Col": 7
             }
           },
           "Env": null,
@@ -836,7 +836,7 @@
           "TimeoutMinutes": null,
           "Pos": {
             "Line": 105,
-            "Col": 9
+            "Col": 7
           }
         }
       ],

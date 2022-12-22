@@ -36,7 +36,7 @@ class TestAnalyzeContext(TestCase):
 
     def setUp(self) -> None:
         """
-        Setup the sample AnalyzeContext instance
+        Set up the sample AnalyzeContext instance
         """
         self.analyze_ctx = AnalyzeContext("owner/repo_name", self.MOCK_REPO_PATH, self.MOCK_GIT_OBJ)
         self.analyze_ctx.ctx_data = self.MOCK_CTX_DATA
@@ -78,7 +78,6 @@ class TestAnalyzeContext(TestCase):
         """
         Test the gen_create_table_query method
         """
-
         expect_query = [
             "CREATE TABLE IF NOT EXISTS analyze_result "
             + "(full_name TEXT PRIMARY KEY, branch_name TEXT, commit_sha TEXT, commit_date TEXT, "

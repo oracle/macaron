@@ -20,6 +20,7 @@ class Maven(BaseBuildTool):
     """This class contains the information of the Maven build tool."""
 
     def __init__(self) -> None:
+        """Initialize instance."""
         super().__init__(name="maven")
 
     def load_defaults(self) -> None:
@@ -40,6 +41,18 @@ class Maven(BaseBuildTool):
                     self.ci_deploy_kws[item] = defaults.get_list("builder.maven.ci.deploy", item)
 
     def is_detected(self, repo_path: str) -> bool:
+        """Return True if this build tool is used in the target repo.
+
+        Parameters
+        ----------
+        repo_path : str
+            The path to the target repo.
+
+        Returns
+        -------
+        bool
+            True if this build tool is detected, else False.
+        """
         maven_config_files = self.build_configs
         for file in maven_config_files:
             if file_exists(repo_path, file):

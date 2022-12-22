@@ -1,7 +1,7 @@
 {
   "Name": {
     "Value": "CodeQL",
-    "Quoted": true,
+    "Quoted": false,
     "Pos": {
       "Line": 4,
       "Col": 7
@@ -13,10 +13,10 @@
       "Cron": [
         {
           "Value": "40 21 * * 2",
-          "Quoted": true,
+          "Quoted": false,
           "Pos": {
             "Line": 8,
-            "Col": 13
+            "Col": 11
           }
         }
       ],
@@ -95,7 +95,7 @@
         "Values": [
           {
             "Value": "README.md",
-            "Quoted": true,
+            "Quoted": false,
             "Pos": {
               "Line": 16,
               "Col": 7
@@ -103,7 +103,7 @@
           },
           {
             "Value": "release-notes/*",
-            "Quoted": true,
+            "Quoted": false,
             "Pos": {
               "Line": 17,
               "Col": 7
@@ -187,7 +187,7 @@
         "Values": [
           {
             "Value": "README.md",
-            "Quoted": true,
+            "Quoted": false,
             "Pos": {
               "Line": 25,
               "Col": 7
@@ -195,7 +195,7 @@
           },
           {
             "Value": "release-notes/*",
-            "Quoted": true,
+            "Quoted": false,
             "Pos": {
               "Line": 26,
               "Col": 7

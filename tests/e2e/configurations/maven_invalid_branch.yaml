@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 target:
-  id: "apache/maven"
-  branch: "This-branch-does-not-exist"
-  digest: ""
-  path: "https://github.com/apache/maven.git"
+  id: apache/maven
+  branch: This-branch-does-not-exist
+  digest: ''
+  path: https://github.com/apache/maven.git

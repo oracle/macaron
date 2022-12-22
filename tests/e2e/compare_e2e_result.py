@@ -31,8 +31,8 @@ def compare_check_results(result: dict, expected: dict) -> int:
             fail_count += 1
 
     # Compare check results
-    res_sorted_reqs = sorted(result["results"], key=lambda item: item["check_id"])
-    exp_sorted_reqs = sorted(expected["results"], key=lambda item: item["check_id"])
+    res_sorted_reqs = sorted(result["results"], key=lambda item: str(item["check_id"]))
+    exp_sorted_reqs = sorted(expected["results"], key=lambda item: str(item["check_id"]))
 
     if len(res_sorted_reqs) < len(exp_sorted_reqs):
         for req in exp_sorted_reqs[len(res_sorted_reqs) :]:

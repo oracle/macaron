@@ -13,7 +13,8 @@ import json
 import logging
 import os
 import subprocess  # nosec B404
-from typing import Iterable, TypedDict
+from collections.abc import Iterable
+from typing import TypedDict
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
@@ -34,7 +35,7 @@ class BashCommands(TypedDict):
     """Parsed bash commands."""
 
 
-def parse_file(file_path: str, macaron_path: str = None) -> dict:
+def parse_file(file_path: str, macaron_path: str = "") -> dict:
     """Parse a bash script file.
 
     Parameters
@@ -49,7 +50,7 @@ def parse_file(file_path: str, macaron_path: str = None) -> dict:
     dict
         The parsed bash script in JSON (dict) format.
     """
-    if macaron_path is None:
+    if not macaron_path:
         macaron_path = global_config.macaron_path
     try:
         with open(file_path, encoding="utf8") as file:
@@ -60,7 +61,7 @@ def parse_file(file_path: str, macaron_path: str = None) -> dict:
         return {}
 
 
-def parse(bash_content: str, macaron_path: str = None) -> dict:
+def parse(bash_content: str, macaron_path: str = "") -> dict:
     """Parse a bash script's content.
 
     Parameters
@@ -75,7 +76,7 @@ def parse(bash_content: str, macaron_path: str = None) -> dict:
     dict
         The parsed bash script in JSON (dict) format.
     """
-    if macaron_path is None:
+    if not macaron_path:
         macaron_path = global_config.macaron_path
     cmd = [
         os.path.join(macaron_path, "bin", "bashparser"),
@@ -101,7 +102,7 @@ def parse(bash_content: str, macaron_path: str = None) -> dict:
 
     try:
         if result.returncode == 0:
-            return json.loads(result.stdout.decode("utf-8"))
+            return dict(json.loads(result.stdout.decode("utf-8")))
 
         logger.error("Bash script parser failed: %s", result.stderr)
         return {}
@@ -114,7 +115,7 @@ def extract_bash_from_ci(
     bash_content: str,
     ci_file: str,
     ci_type: str,
-    macaron_path: str = None,
+    macaron_path: str = "",
     recursive: bool = False,
     repo_path: str = "",
     working_dir: str = "",
@@ -145,7 +146,7 @@ def extract_bash_from_ci(
     BashCommands
         The parsed bash script objects.
     """
-    if macaron_path is None:
+    if not macaron_path:
         macaron_path = global_config.macaron_path
 
     parsed_parent = parse(bash_content)

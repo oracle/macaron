@@ -90,7 +90,7 @@
           }
         },
         "Value": {
-          "Value": "artifact-ubuntu-latest-3.10",
+          "Value": "artifact-ubuntu-latest-3.11",
           "Quoted": false,
           "Pos": {
             "Line": 12,

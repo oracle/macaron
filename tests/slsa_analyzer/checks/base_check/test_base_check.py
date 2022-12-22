@@ -14,7 +14,6 @@ class TestConfiguration(TestCase):
 
     def test_raise_implementation_error(self) -> None:
         """Test raising errors if child class does not override abstract method(s)."""
-
         # pylint: disable=abstract-method
         class ChildCheck(BaseCheck):
             """This class is a child class that does not implement abstract methods in Base Check."""

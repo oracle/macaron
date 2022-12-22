@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 target:
-  id: "jackson-databind"
-  branch: "2.14"
-  digest: "6e9193f069d1cf5e9590afeaeb2907a9e43fb143"
-  path: "https://github.com/FasterXML/jackson-databind"
+  id: jackson-databind
+  branch: '2.14'
+  digest: 6e9193f069d1cf5e9590afeaeb2907a9e43fb143
+  path: https://github.com/FasterXML/jackson-databind

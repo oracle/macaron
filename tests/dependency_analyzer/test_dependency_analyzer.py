@@ -22,7 +22,6 @@ class TestDependencyAnalyzer(MacaronTestCase):
 
     def test_merge_config(self) -> None:
         """Test merging the manual and automatically resolved configurations."""
-
         # Mock automatically resolved dependencies.
         auto_deps = {
             "com.fasterxml.jackson.core:jackson-annotations": DependencyInfo(

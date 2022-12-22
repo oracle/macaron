@@ -13,6 +13,8 @@ from datetime import datetime
 import requests
 from requests.models import Response
 
+from macaron.config.defaults import defaults
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -34,7 +36,7 @@ def send_get_http(url: str, headers: dict) -> dict:
         The response's json data or an empty dict if there is an error.
     """
     logger.debug("GET - %s", url)
-    response = requests.get(url=url, headers=headers)
+    response = requests.get(url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10))
     while response.status_code != 200:
         logger.error(
             "Receiving error code %s from server. Message: %s.",
@@ -45,9 +47,9 @@ def send_get_http(url: str, headers: dict) -> dict:
             check_rate_limit(response)
         else:
             return {}
-        response = requests.get(url=url, headers=headers)
+        response = requests.get(url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10))
 
-    return response.json()
+    return dict(response.json())
 
 
 def send_get_http_raw(url: str, headers: dict) -> Response | None:
@@ -68,7 +70,7 @@ def send_get_http_raw(url: str, headers: dict) -> Response | None:
         The response object or None if there is an error.
     """
     logger.debug("GET - %s", url)
-    response = requests.get(url=url, headers=headers)
+    response = requests.get(url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10))
     while response.status_code != 200:
         logger.error(
             "Receiving error code %s from server. Message: %s.",
@@ -79,7 +81,7 @@ def send_get_http_raw(url: str, headers: dict) -> Response | None:
             check_rate_limit(response)
         else:
             return None
-        response = requests.get(url=url, headers=headers)
+        response = requests.get(url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10))
 
     return response
 
@@ -153,7 +155,7 @@ def download_github_build_log(url: str, headers: dict) -> str:
         The content of the downloaded build log or empty if error.
     """
     logger.debug("Downloading content at link %s", url)
-    response = requests.get(url=url, headers=headers)
+    response = requests.get(url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10))
 
     return response.content.decode("utf-8")
 

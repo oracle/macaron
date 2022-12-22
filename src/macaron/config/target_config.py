@@ -5,7 +5,7 @@
 
 import logging
 import os
-from typing import Any
+from typing import Any, Optional
 
 import yamale
 from yamale.schema import Schema
@@ -21,12 +21,12 @@ TARGET_CONFIG_SCHEMA: Schema = yamale.make_schema(_SCHEMA_DIR)
 class Configuration:
     """This class contains the configuration for an analyzed repo in Macaron."""
 
-    def __init__(self, data: dict = None) -> None:
+    def __init__(self, data: Optional[dict] = None) -> None:
         """Construct the Configuration object.
 
         Parameters
         ----------
-        data : dict
+        data : Optional[dict]
             The dictionary contains the data to analyze a repository.
         """
         self.options = {"id": "", "path": "", "branch": "", "digest": "", "note": "", "available": ""}

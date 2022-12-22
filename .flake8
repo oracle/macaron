@@ -1,0 +1,36 @@
+# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# Unfortunately, flake8 does not support pyproject.toml configuration.
+# https://github.com/PyCQA/flake8/issues/234
+[flake8]
+# Disabling the following:
+# E203: whitespace before ':'. Conflict with black.
+# E266: too many leading '#' for block comment
+# W503: line break before binary operator
+# D105: Missing docstring in magic method
+# D104: Missing docstring in public package
+# D404: First word of the docstring should not be `This`
+# PT009: use a regular assert instead of unittest-style
+ignore = E203,E266,W503,D105,D404,PT009
+# Disabling the following for tests:
+# D400: First line should end with a period
+# D200: One-line docstring should fit on one line with quotes
+# D102: Missing docstring in public method
+# D104: Missing docstring in public package
+# D107: Missing docstring in __init__
+per-file-ignores =
+    __init__.py:D104
+    tests/*:D400,D200,D102,D104,D107
+max-line-length = 120
+show-source = true
+
+# Enable Bugbear's extended opinionated checks.
+# https://github.com/PyCQA/flake8-bugbear#how-to-enable-opinionated-warnings
+extend-select = B9
+
+# Ensure that flake8 warnings are silenced correctly.
+# https://github.com/plinss/flake8-noqa#options
+noqa-require-code = true
+
+docstring-convention = numpy

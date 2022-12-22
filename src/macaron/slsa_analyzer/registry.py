@@ -172,7 +172,7 @@ class Registry:
             return False
 
         if check_file_abs_path:
-            if not isinstance(check.result_on_skip, CheckResultType):
+            if not (hasattr(check, "result_on_skip") and isinstance(check.result_on_skip, CheckResultType)):
                 logger.error("The status_on_skipped in the Check at %s is invalid.", str(check.check_id))
                 return False
 
@@ -556,7 +556,7 @@ class Registry:
                     f"Check {check.check_id} is set to {check.result_on_skip.value} "
                     f"because {parent_id} {got_status.value}."
                 )
-                skipped_info = SkippedInfo(id=check.check_id, suppress_comment=suppress_comment)
+                skipped_info = SkippedInfo(check_id=check.check_id, suppress_comment=suppress_comment)
                 return skipped_info
 
         return None

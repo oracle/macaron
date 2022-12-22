@@ -206,7 +206,7 @@ def j2_filter_get_check_result_color(result_type: str) -> str:
 
 
 filter_extensions: dict[str, str] = {
-    filter.replace("j2_filter_", ""): filter for filter in dir() if filter.startswith("j2_filter_")
+    filter_str.replace("j2_filter_", ""): filter_str for filter_str in dir() if filter_str.startswith("j2_filter_")
 }
 """The mappings between the name of a filter and its function's name as defined in this module."""
 

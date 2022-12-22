@@ -31,7 +31,6 @@ class TestPolicyParser(TestCase):
     # pylint: disable=not-callable
     def test_validating_data(self) -> None:
         """Test validating data using the function returned by gen_policy_func."""
-
         # float('nan') is not equal to itself.
         assert not _gen_policy_func({"A": float("nan")})({"A": float("nan")})
 

@@ -315,21 +315,22 @@ BUILD_REQ_DESC = {
 
 
 class SLSAReq:
-    """This class represents a SLSA requirement (e.g Version Controlled).
-
-    Parameters
-    ----------
-    name : str
-        The name of the SLSA requirement.
-    desc : str
-        The description of the SLSA requirement.
-    category : Category
-        The category of the SLSA requirement.
-    req_level : SLSALevels
-        The SLSA level that this requirement belongs to.
-    """
+    """This class represents a SLSA requirement (e.g Version Controlled)."""
 
     def __init__(self, name: str, desc: str, category: Category, req_level: SLSALevels):
+        """Initialize instance.
+
+        Parameters
+        ----------
+        name : str
+            The name of the SLSA requirement.
+        desc : str
+            The description of the SLSA requirement.
+        category : Category
+            The category of the SLSA requirement.
+        req_level : SLSALevels
+            The SLSA level that this requirement belongs to.
+        """
         self.name = name
         self.desc = desc
         self.category = category

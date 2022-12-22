@@ -8,6 +8,7 @@ class Provenance:
     """This class implements the inferred SLSA provenance."""
 
     def __init__(self) -> None:
+        """Initialize instance."""
         self.payload = {
             "_type": "https://in-toto.io/Statement/v0.1",
             "subject": [],
