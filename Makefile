@@ -160,14 +160,12 @@ requirements.txt: pyproject.toml
 # editable mode (like the one in development here) because they may not have
 # a PyPI entry; also print out CVE description and potential fixes if audit
 # found an issue.
-# TODO: do not ignore GHSA-hcpj-qp55-gfph once the patch is out.
-# See: https://github.com/gitpython-developers/GitPython/issues/1515.
 .PHONY: audit
 audit:
 	if ! $$(python -c "import pip_audit" &> /dev/null); then \
 	  echo "No package pip_audit installed, upgrade your environment!" && exit 1; \
 	fi;
-	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln GHSA-hcpj-qp55-gfph
+	python -m pip_audit --skip-editable --desc on --fix --dry-run
 
 # Run some or all checks over the package code base.
 .PHONY: check check-code check-bandit check-flake8 check-lint check-mypy check-go
