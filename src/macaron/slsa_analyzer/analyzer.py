@@ -1,4 +1,5 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles the cloning and analyzing a Git repo."""
@@ -22,7 +23,7 @@ from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.policy_engine.policy import Policy
 from macaron.slsa_analyzer import git_url
-from macaron.slsa_analyzer.analyze_context import AnalyzeContext
+from macaron.slsa_analyzer.analyze_context import AnalysisTable, AnalyzeContext, PolicyTable, RepositoryTable
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 from macaron.slsa_analyzer.build_tool.maven import Maven
 
@@ -74,8 +75,7 @@ class Analyzer:
         if not os.path.isdir(self.build_log_path):
             os.makedirs(self.build_log_path)
 
-        database_path = os.path.join(output_path, defaults.get("database", "db_name", fallback="macaron.db"))
-        self.db_man = DatabaseManager(database_path)
+        self.database_path = os.path.join(output_path, defaults.get("database", "db_name", fallback="macaron.db"))
 
         # If provided with local_repos_path, we resolve the path of the target repo
         # to the path within local_repos_path.
@@ -677,16 +677,31 @@ class Analyzer:
             analyze_ctx.repo_full_name,
             defaults.get("database", "db_name", fallback="macaron.db"),
         )
-        if not self.db_man.is_init:
-            self.init_database()
-        insert_data = analyze_ctx.get_insert_data()
-        insert_query = AnalyzeContext.gen_insert_analyze_result_query(Analyzer.TABLE_NAME)
-        self.db_man.execute_insert_query(insert_query, insert_data)
 
-    def init_database(self) -> None:
-        """Initiate the database connection and create the table to store the analyze result."""
-        self.db_man.init_conn()
+        with DatabaseManager(self.database_path) as db_man:
+            result_table = AnalyzeContext.get_analysis_result_table(self.TABLE_NAME)
+            db_man.create_tables()
+            ## TODO: fix so analysis and policy have correct information
 
-        # Create the table for storing analyze result
-        analyze_result_table = AnalyzeContext.gen_create_table_query(Analyzer.TABLE_NAME)
-        self.db_man.execute_multi_queries(analyze_result_table)
+            repository = RepositoryTable(**analyze_ctx.get_repository_data())
+            db_man.add(repository)
+            analysis = AnalysisTable()
+            analysis.repository = repository.id
+            analysis.analysis_time = datetime.now().isoformat(sep="T", timespec="seconds")
+            analysis.macaron_version = "3000"
+            analysis.invocation_parameters = "unknown"
+            analysis.configuration = "unknown"
+            db_man.session.add(analysis)
+
+            results = analyze_ctx.get_analysis_result_data()
+            results["analysis_id"] = analysis.id
+            db_man.insert(result_table, results)
+
+            policy = PolicyTable()
+            policy.sha = "sha"
+            policy.policy_type = "POC"
+            policy.text = str(self.policy)
+            db_man.add(policy)
+            analysis.policy = policy.id
+
+            db_man.session.commit()

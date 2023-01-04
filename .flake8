@@ -22,6 +22,8 @@ ignore = E203,E266,W503,D105,D404,PT009
 per-file-ignores =
     __init__.py:D104
     tests/*:D400,D200,D102,D104,D107
+    src/macaron/database/views.py:B903
+    src/macaron/slsa_analyzer/analyze_context.py:A003
 max-line-length = 120
 show-source = true
 

@@ -1,18 +1,26 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This DatabaseManager module handles the sqlite database connection."""
-
 import logging
-import sqlite3
+from types import TracebackType
+from typing import Optional
+
+from sqlalchemy import Table, create_engine, insert, select
+from sqlalchemy.orm import Session, declarative_base
+
+from macaron.database.views import create_view
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+ORMBase = declarative_base()
 
 
 class DatabaseManager:
     """This class handles and manages the connection to sqlite database during the search session."""
 
-    def __init__(self, db_path: str):
+    def __init__(self, db_name: str):
         """Initialize instance.
 
         Parameters
@@ -20,93 +28,48 @@ class DatabaseManager:
         db_path : str
             The path to the target database.
         """
-        self.db_path = db_path
-        self.is_init = False
-        self.db_con = None
-        self.db_cursor = None
+        self.engine = create_engine(f"sqlite+pysqlite:///{db_name}", echo=True, future=True)
+        self.db_name = db_name
+        self.session = Session(self.engine)
 
-    def init_conn(self) -> None:
-        """Initiate the connection to the target database."""
-        logger.debug("Connecting to database at %s", self.db_path)
-        self.db_con = sqlite3.connect(self.db_path)  # type: ignore[assignment]
-        self.db_cursor = self.db_con.cursor()  # type: ignore[attr-defined]
-        self.is_init = True
-
-    def execute_query(self, query: str, commit: bool = True) -> None:
-        """Execute a single query against the sqlite database and commit it.
-
-        Parameters
-        ----------
-        query : str
-            The SQLite query to perform.
-        commit : bool
-            If True, the result of this query is committed to the database.
-        """
-        logger.debug("Executing DB query: %s", query)
-        self.db_cursor.execute(query)  # type: ignore[attr-defined]
-        if commit:
-            self.db_con.commit()  # type: ignore[attr-defined]
-
-    def execute_multi_queries(self, queries: list, commit: bool = True) -> None:
-        """Execute multiple queries and ignore sqlite3.Operational Errors.
-
-        Parameters
-        ----------
-        queries : list
-            The list of queries to perform.
-        commit : bool
-            If True, the result of this query is committed to the database.
-        """
-        logger.debug("Executing multiple queries")
-        for query in queries:
-            try:
-                self.execute_query(query, commit)
-            except sqlite3.OperationalError as error:
-                logger.debug("Sqlite3.OperationalError: %s. Continue", error)
-
-    def execute_select_query(self, query: str) -> list:
-        """Execute the select query and return the list of results.
-
-        Parameters
-        ----------
-        query : str
-            The SELECT query to execute.
-
-        Returns
-        -------
-        list
-        """
-        logger.debug("Executing DB query: %s", query)
-        try:
-            result: list = self.db_cursor.execute(query).fetchall()  # type: ignore
-            return result
-        except sqlite3.OperationalError as error:
-            logger.error(
-                "Sqlite3.OperationalError while performing SELECT query: %s. Continue",
-                error,
-            )
-            return []
-
-    def execute_insert_query(self, placeholder_query: str, data: dict) -> None:
-        """Execute the insert query using the named style query from sqlite3.
-
-        Parameters
-        ----------
-        placeholder_query : str
-            The named style INSERT query.
-        data : str
-            The data dictionary to be inserted into the final query.
-        """
-        logger.debug("Executing insert query on data %s", data)
-        try:
-            self.db_cursor.execute(placeholder_query, data)  # type: ignore
-            self.db_con.commit()  # type: ignore
-        except sqlite3.OperationalError as error:
-            logger.error(
-                "Sqlite3.OperationalError while performing INSERT query: %s. Continue",
-                error,
-            )
+        ORMBase.metadata.create_all(self.engine)
 
     def terminate(self) -> None:
         """Terminate the connection to the sqlite database."""
-        self.db_con.close()  # type: ignore
+        self.session.close()
+
+    def __enter__(self) -> "DatabaseManager":
+        return self
+
+    def __exit__(
+        self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
+    ) -> None:
+        self.session.commit()
+        self.session.close()
+
+    def add(self, item) -> None:  # type: ignore
+        """Add an ORM object to the session and commit it."""
+        self.session.add(item)
+        self.session.commit()
+
+    def insert(self, table: Table, values: dict) -> None:
+        """Add an ORM object to the session and commit it."""
+        self.execute(insert(table).values(**values))
+
+    def execute(self, query) -> None:  # type: ignore
+        """Execute a sqlalchemy core api query."""
+        with self.engine.connect() as conn:
+            conn.execute(query)
+            conn.commit()
+
+    def create_tables(self) -> None:
+        """
+        Automatically create views for all tables known to _base.metadata.
+
+        (declared using both core and declarative) which begin with an underscore.
+        """
+        for table_name, table in ORMBase.metadata.tables.items():
+            if table_name[0] == "_":
+                create_view(table_name[1:], ORMBase.metadata, select([table]))
+
+        ORMBase.metadata.create_all(self.engine, checkfirst=True)
