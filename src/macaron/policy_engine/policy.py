@@ -1,18 +1,20 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the parser for provenance policy."""
 
+import hashlib
 import logging
 import os
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import Any, Callable, Generic, Optional, TypeVar, Union
+from typing import Any, Callable, Optional, Union
 
 import yamale
 from yamale.schema import Schema
 
 from macaron.parsers.yaml.loader import YamlLoader
+from macaron.slsa_analyzer.table_definitions import PolicyTable
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -24,7 +26,6 @@ SubscriptPathType = list[Union[str, int]]
 Primitive = Union[str, bool, int, float]
 PolicyDef = Union[Primitive, dict, list, None]
 PolicyFn = Callable[[Any], bool]
-GPolicy = TypeVar("GPolicy", bound="Policy")
 
 
 class InvalidPolicyError(Exception):
@@ -149,7 +150,7 @@ def _gen_policy_func(policy: PolicyDef, path: Optional[SubscriptPathType] = None
 
 # pylint: disable=invalid-name
 @dataclass
-class Policy(Generic[GPolicy]):
+class Policy:
     """The policy is used to validate a target provenance.
 
     Parameters
@@ -162,11 +163,20 @@ class Policy(Generic[GPolicy]):
 
     ID: str
     description: str
+    text: str | None
+    sha: str | None
     _definition: PolicyDef | None = field(default=None)
     _validator: PolicyFn | None = field(default=None)
+    POLICY_TYPE = "YAML_DIFF"
+
+    def get_policy_table(self) -> PolicyTable:
+        """Get the bound ORM object for the policy."""
+        return PolicyTable(
+            policy_id=self.ID, description=self.description, policy_type=self.POLICY_TYPE, sha=self.sha, text=self.text
+        )
 
     @classmethod
-    def make_policy(cls, file_path: os.PathLike | str) -> GPolicy | None:
+    def make_policy(cls, file_path: os.PathLike | str) -> Optional["Policy"]:
         """Generate a Policy from a policy yaml file.
 
         Parameters
@@ -176,18 +186,23 @@ class Policy(Generic[GPolicy]):
 
         Returns
         -------
-        GPolicy | None
+        Policy | None
             The Policy instance that has been initialized.
         """
         logger.info("Generating a policy from file %s", file_path)
-        policy: Policy = Policy("", "", None, None)
+        policy: Policy = Policy("", "", None, None, None, None)
 
         # First load from the policy yaml file. We also validate the policy
         # against the schema.
         policy_content = YamlLoader.load(file_path, POLICY_SCHEMA)
+
         if not policy_content:
             logger.error("Cannot load the policy yaml file at %s.", file_path)
             return None
+
+        with open(file_path, encoding="utf-8") as f:
+            policy.text = f.read()
+            policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
 
         policy.ID = policy_content.get("metadata").get("id")
         policy.description = policy_content.get("metadata").get("description")
@@ -203,8 +218,8 @@ class Policy(Generic[GPolicy]):
         logger.info("Successfully loaded %s", policy)
 
         # Ignore mypy because mypy flag policy as not having the same type
-        # as GPolicy.
-        return policy  # type: ignore
+        # as Policy.
+        return policy
 
     def __str__(self) -> str:
         return f"Policy(id='{self.ID}', description='{self.description}')"

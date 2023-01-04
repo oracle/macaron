@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseCheck class to be inherited by other concrete Checks."""
@@ -7,6 +7,11 @@ import logging
 from abc import abstractmethod
 from typing import Optional
 
+from sqlalchemy import Column, ForeignKey
+from sqlalchemy.orm import declarative_mixin, declared_attr
+from sqlalchemy.sql.sqltypes import Boolean, Integer, String
+
+from macaron.database.database_manager import ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType, SkippedInfo, get_result_as_bool
 from macaron.slsa_analyzer.slsa_req import ReqName, get_requirements_dict
@@ -85,6 +90,7 @@ class BaseCheck:
             slsa_requirements=[str(self.SLSA_REQ_DATA.get(req)) for req in self.eval_reqs],
             justification=[],
             result_type=CheckResultType.SKIPPED,
+            result_tables=[],
         )
 
         if skipped_info:
@@ -138,3 +144,40 @@ class BaseCheck:
             The result type of the check (e.g. PASSED).
         """
         raise NotImplementedError
+
+
+class CheckResultTable(ORMBase):
+    """Table to store the result of a check, is automatically added for each check."""
+
+    __tablename__ = "_check_result"
+    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003 # pylint: disable=invalid-name
+    check_id = Column(String, nullable=False)
+    repository = Column(Integer, ForeignKey("_repository.id"), nullable=False)
+    passed = Column(Boolean, nullable=False)
+    skipped = Column(Boolean, nullable=False)
+
+
+@declarative_mixin
+class CheckFactsTable:
+    """
+    Declarative mixin for check results.
+
+    All tables for check results must inherit this class, these fields are automatically filled in by the analyzer.
+    """
+
+    # pylint: disable=no-member
+
+    @declared_attr  # type: ignore
+    def id(self) -> Column:  # noqa: A003 # pylint: disable=invalid-name
+        """Check result id."""
+        return Column(Integer, primary_key=True, autoincrement=True)
+
+    @declared_attr  # type: ignore
+    def check_result(self) -> Column:
+        """Store the id of the repository to which the analysis pertains."""
+        return Column(Integer, ForeignKey("_check_result.id"), nullable=False)
+
+    @declared_attr  # type: ignore
+    def repository(self) -> Column:
+        """Store the id of the repository to which the analysis pertains."""
+        return Column(Integer, ForeignKey("_repository.id"), nullable=False)

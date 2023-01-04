@@ -6,7 +6,7 @@
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Generic, TypedDict, TypeVar
+from typing import Generic, Optional, TypedDict, TypeVar
 
 from macaron.config.target_config import Configuration
 from macaron.output_reporter.scm import SCMStatus
@@ -226,6 +226,23 @@ class Report:
         for record in self.root_record.dependencies:
             if record.context:
                 yield record.context
+
+    def get_dependencies(self, root_record: Optional[Record] = None) -> Iterable[tuple[AnalyzeContext, AnalyzeContext]]:
+        """Get the generator for all AnalyzeContext instances.
+
+        Yields
+        ------
+        Tuple[AnalyzeContext, AnalyzeContext]
+            Dependency
+        """
+        if root_record is None:
+            root_record = self.root_record
+        if root_record.context:
+            for record in root_record.dependencies:
+                if record.context:
+                    yield root_record.context, record.context
+                    # for transitive_dep in self.get_dependencies(record):
+                    #    yield transitive_dep
 
     def find_ctx(self, remote_path: str) -> AnalyzeContext | None:
         """Find the context instance from a given remote path.

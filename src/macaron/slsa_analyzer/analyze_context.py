@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Analyze Context class.
@@ -11,7 +11,9 @@ import os
 from typing import TypedDict
 
 from pydriller.git import Git
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
 
+from macaron.database.database_manager import ORMBase
 from macaron.policy_engine.policy import Policy
 from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
@@ -21,6 +23,7 @@ from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReq, get_requirements_dict
 from macaron.slsa_analyzer.specs.build_spec import BuildSpec
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from macaron.slsa_analyzer.table_definitions import RepositoryTable, SLSALevelTable
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -54,6 +57,7 @@ class AnalyzeContext:
         macaron_path: str = "",
         output_dir: str = "",
         remote_path: str = "",
+        current_date: str = "",
     ):
         """Initialize instance.
 
@@ -100,6 +104,7 @@ class AnalyzeContext:
         self.branch_name = branch_name
         self.commit_sha = commit_sha
         self.commit_date = commit_date
+        self.current_date = current_date
         self.remote_path = remote_path
 
         # The Macaron root path where the wrapper files exist.
@@ -119,6 +124,8 @@ class AnalyzeContext:
             is_inferred_prov=True,
             policy=None,
         )
+
+        self.repository_table = RepositoryTable(**self.get_repository_data())
 
     @property
     def provenances(self) -> dict:
@@ -188,72 +195,69 @@ class AnalyzeContext:
             self.update_req_status(req, status, feedback)
 
     @staticmethod
-    def gen_create_table_query(table_name: str) -> list:
-        """Generate a list of sqlite queries to create a table for storing the analysis result.
+    def get_analysis_result_table(table_name: str) -> Table:
+        """Get the table definition to store an analysis result.
 
         Parameters
         ----------
-        table_name : str
-            The table name to create.
-
-        Returns
-        -------
-        list
-            The list of generated queries.
+        table_name: str
+            Name of the table to create.
         """
-        result = [
-            f"CREATE TABLE IF NOT EXISTS {table_name} "
-            + "(full_name TEXT PRIMARY KEY, branch_name TEXT, commit_sha TEXT, "
-            + "commit_date TEXT, slsa_level TEXT, is_full_reach BOOLEAN);"
-        ]
-        result += [
-            f'ALTER TABLE {table_name} ADD "{key.name}" BOOLEAN DEFAULT FALSE;' for key in get_requirements_dict()
-        ]
-        return result
-
-    @staticmethod
-    def gen_insert_analyze_result_query(table_name: str) -> str:
-        """Generate an sqlite INSERT query to insert the ci usage data.
-
-        The query generated will use the named style placeholders.
-
-        Parameters
-        ----------
-        table_name : str
-            The name of the table to insert into.
-
-        Returns
-        -------
-        str
-            The generated query.
-        """
-        result = (
-            f"INSERT OR REPLACE INTO {table_name} VALUES "
-            + "(:full_name,:branch_name,:commit_sha,:commit_date,:slsa_level,:is_full_reach,"
+        return Table(
+            table_name,
+            ORMBase.metadata,
+            Column("repository_id", Integer, ForeignKey("_repository.id")),
+            Column("full_name", String, unique=False),
+            Column("branch_name", String),
+            Column("commit_sha", String),
+            Column("commit_date", String),
+            Column("slsa_level", String),
+            Column("is_full_reach", Boolean),
+            *(Column(key.name, Boolean) for key in get_requirements_dict()),
+            extend_existing=True,
         )
-        values = [f":{key.name}" for key in get_requirements_dict()]
-        result += ",".join(values) + ")"
-        return result
 
-    def get_insert_data(self) -> dict:
+    def get_slsa_level_table(self) -> dict:
+        """Return filled ORM table storing the level for this repository."""
+        return SLSALevelTable(
+            repository=self.repository_table.id,
+            slsa_level=int(self.slsa_level),
+            reached=self.is_full_reach,
+        )
+
+    def get_repository_data(self) -> dict:
+        """Get the data for the repository table."""
+        return {
+            "full_name": self.repo_full_name,
+            "commit_date": self.commit_date,
+            "branch_name": self.branch_name,
+            "commit_sha": self.commit_sha,
+            "remote_path": self.remote_path,
+        }
+
+    def get_analysis_result_data(self) -> dict:
         """Get the dictionary of all the necessary data to be inserted into the database."""
-        result = {
+        return {
             "full_name": self.repo_full_name,
             "branch_name": self.branch_name,
             "commit_sha": self.commit_sha,
             "commit_date": self.commit_date,
             "slsa_level": str(self.slsa_level.value),
             "is_full_reach": self.is_full_reach,
+            **{key.name: value.is_pass for key, value in self.ctx_data.items()},
         }
-        for key, value in self.ctx_data.items():
-            result[key.name] = value.is_pass
-
-        return result
 
     def get_dict(self) -> dict:
         """Return the dictionary representation of the AnalyzeContext instance."""
         rel_local_clone_path = os.path.relpath(self.repo_path, self.output_dir)
-        sorted_on_id = sorted(self.check_results.values(), key=lambda item: item["check_id"])
+        _sorted_on_id = sorted(self.check_results.values(), key=lambda item: item["check_id"])
+        # Remove result_tables since we don't have a good json representation for them.
+        sorted_on_id = []
+        for res in _sorted_on_id:
+            # res is CheckResult(TypedDict)
+            res: dict = dict(res.copy())  # type: ignore
+            res.pop("result_tables")  # type: ignore
+            sorted_on_id.append(res)
         sorted_results = sorted(sorted_on_id, key=lambda item: item["result_type"], reverse=True)
         check_summary = {
             result_type.value: len(result_list) for result_type, result_list in self.get_check_summary().items()

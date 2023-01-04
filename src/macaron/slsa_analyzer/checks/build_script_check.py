@@ -1,13 +1,17 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildScriptCheck class."""
 
 import logging
 
+from sqlalchemy import Column
+from sqlalchemy.sql.sqltypes import String
+
+from macaron.database.database_manager import ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
-from macaron.slsa_analyzer.checks.base_check import BaseCheck
+from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckFactsTable
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
@@ -17,6 +21,12 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 class BuildScriptCheck(BaseCheck):
     """This Check checks whether the target repo has a valid build script."""
+
+    class ResultTable(CheckFactsTable, ORMBase):
+        """Check result table for build_script."""
+
+        __tablename__ = "_build_script_check"
+        build_tool_name = Column(String)
 
     def __init__(self) -> None:
         """Initiate the BuildScriptCheck instance."""
@@ -55,6 +65,7 @@ class BuildScriptCheck(BaseCheck):
         if build_tool and not isinstance(build_tool, NoneBuildTool):
             pass_msg = f"The target repository uses build tool {build_tool.name}."
             check_result["justification"].append(pass_msg)
+            check_result["result_tables"] = [BuildScriptCheck.ResultTable(build_tool_name=build_tool.name)]
             return CheckResultType.PASSED
 
         failed_msg = "The target repository does not have a build tool."

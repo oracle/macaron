@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildAsCodeCheck class."""
@@ -6,9 +6,13 @@
 import logging
 import os
 
+from sqlalchemy import Column
+from sqlalchemy.sql.sqltypes import String
+
+from macaron.database.database_manager import ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, NoneBuildTool
-from macaron.slsa_analyzer.checks.base_check import BaseCheck
+from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckFactsTable
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -27,9 +31,18 @@ class BuildAsCodeCheck(BaseCheck):
     See https://slsa.dev/spec/v0.1/requirements#build-as-code.
     """
 
+    class ResultTable(CheckFactsTable, ORMBase):
+        """Check justification table for build_as_code."""
+
+        __tablename__ = "_build_as_code_check"
+        build_tool_name = Column(String)
+        ci_service_name = Column(String)
+        build_trigger = Column(String)
+        deploy_command = Column(String)
+        build_status_url = Column(String)
+
     def __init__(self) -> None:
         """Initiate the BuildAsCodeCheck instance."""
-        check_id = "mcn_build_as_code_1"
         description = (
             "The build definition and configuration executed by the build "
             "service is verifiably derived from text file definitions "
@@ -40,7 +53,7 @@ class BuildAsCodeCheck(BaseCheck):
         ]
         eval_reqs = [ReqName.BUILD_AS_CODE]
         super().__init__(
-            check_id=check_id,
+            check_id="mcn_build_as_code_1",
             description=description,
             depends_on=depends_on,
             eval_reqs=eval_reqs,
@@ -55,7 +68,7 @@ class BuildAsCodeCheck(BaseCheck):
                 continue
             # The first argument in a bash command is the program name.
             # So first check that the program name is a supported build tool name.
-            # We need to handle cases where the the first argument is a path to the program.
+            # We need to handle cases where the first argument is a path to the program.
             cmd_program_name = os.path.basename(com[0])
             if not cmd_program_name:
                 logger.debug("Found invalid program name %s.", com[0])
@@ -142,6 +155,15 @@ class BuildAsCodeCheck(BaseCheck):
                             predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
                             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                             predicate["metadata"]["buildInvocationId"] = html_url
+                            check_result["result_tables"] = [
+                                BuildAsCodeCheck.ResultTable(
+                                    build_tool_name=build_tool.name,
+                                    ci_service_name=ci_service.name,
+                                    build_trigger=trigger_link,
+                                    deploy_command=deploy_cmd,
+                                    build_status_url=html_url,
+                                )
+                            ]
                         return CheckResultType.PASSED
 
                 # We currently don't parse these CI configuration files.
@@ -168,12 +190,21 @@ class BuildAsCodeCheck(BaseCheck):
                                 ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
                                 predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = config_name
+                            check_result["result_tables"] = [
+                                BuildAsCodeCheck.ResultTable(
+                                    build_tool_name=build_tool.name,
+                                    ci_service_name=ci_service.name,
+                                    deploy_command=deploy_cmd,
+                                )
+                            ]
                             return CheckResultType.PASSED
 
             pass_msg = f"The target repository does not use {build_tool.name} to deploy."
             check_result["justification"].append(pass_msg)
+            check_result["result_tables"] = [BuildAsCodeCheck.ResultTable(build_tool_name=build_tool.name)]
             return CheckResultType.FAILED
 
+        check_result["result_tables"] = [BuildAsCodeCheck.ResultTable()]
         failed_msg = "The target repository does not have a build tool."
         check_result["justification"].append(failed_msg)
         return CheckResultType.FAILED

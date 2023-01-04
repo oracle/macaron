@@ -15,6 +15,7 @@ from typing import Optional
 from git import InvalidGitRepositoryError
 from pydriller.git import Git
 
+from macaron import __version__
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
@@ -35,13 +36,20 @@ from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 
 # To load all checks into the registry
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
-from macaron.slsa_analyzer.checks.check_result import CheckResult, SkippedInfo
+from macaron.slsa_analyzer.checks.base_check import CheckFactsTable, CheckResultTable
+from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType, SkippedInfo
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
+from macaron.slsa_analyzer.table_definitions import (
+    AnalysisTable,
+    RepositoryAnalysis,
+    RepositoryDependency,
+    SLSARequirement,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -81,8 +89,7 @@ class Analyzer:
         if not os.path.isdir(self.build_log_path):
             os.makedirs(self.build_log_path)
 
-        database_path = os.path.join(output_path, defaults.get("database", "db_name", fallback="macaron.db"))
-        self.db_man = DatabaseManager(database_path)
+        self.database_path = os.path.join(output_path, defaults.get("database", "db_name", fallback="macaron.db"))
 
         # If provided with local_repos_path, we resolve the path of the target repo
         # to the path within local_repos_path.
@@ -97,11 +104,13 @@ class Analyzer:
 
         # Get the policy from global config.
         self.policy: Policy | None = None
-        if global_config.policy_path:
-            self.policy = Policy.make_policy(global_config.policy_path)
+        self.policy = Policy.make_policy(global_config.policy_path)
 
         # Initialize the reporters to store analysis data to files.
         self.reporters: list[FileReporter] = []
+
+        self.db_man = DatabaseManager(self.database_path)
+        self.db_man.create_tables()
 
     def run(self, user_config: dict, skip_deps: bool = False) -> int:
         """Run the analysis and write results to the output path.
@@ -174,9 +183,22 @@ class Analyzer:
             find_ctx = report.find_ctx(dup_record.pre_config.get_value("path"))
             dup_record.context = find_ctx
 
-        # Store the analysis result into the SQLite database.
+        # Store the analysis result(s) into the SQLite database.
+        self.db_man.create_tables()
+
+        analysis = self.store_analysis_to_db(self.db_man, main_record)
+
         for ctx in report.get_ctxs():
-            self.store_result_to_db(ctx)
+            self.store_result_to_db(self.db_man, analysis, ctx)
+
+        # Store dependency relations
+        for parent, child in report.get_dependencies():
+            dependency = RepositoryDependency(
+                dependent_repository=parent.repository_table.id, dependency_repository=child.repository_table.id
+            )
+            self.db_man.add_and_commit(dependency)
+
+        self.db_man.session.commit()
 
         # Store the analysis result into report files.
         self.generate_reports(report)
@@ -428,6 +450,8 @@ class Analyzer:
             remote_path,
         )
 
+        self.db_man.add(analyze_ctx.repository_table)
+
         return analyze_ctx
 
     def _prepare_repo(
@@ -654,11 +678,37 @@ class Analyzer:
 
         return results
 
-    def store_result_to_db(self, analyze_ctx: AnalyzeContext) -> None:
+    def store_analysis_to_db(self, db_man: DatabaseManager, main_record: Record) -> AnalysisTable:
+        """Store the analysis to the database."""
+        db_man.create_tables()
+
+        analysis = AnalysisTable(
+            analysis_time=datetime.now().isoformat(sep="T", timespec="seconds"),
+            macaron_version=__version__,
+        )
+        if main_record.context is not None:
+            analysis.repository = main_record.context.repository_table.id
+        else:
+            return analysis
+
+        db_man.add_and_commit(analysis)
+
+        if self.policy is not None:
+            policy_table = self.policy.get_policy_table()
+            db_man.add_and_commit(policy_table)
+            analysis.policy = policy_table.id
+
+        return analysis
+
+    def store_result_to_db(self, db_man: DatabaseManager, analysis: AnalysisTable, analyze_ctx: AnalyzeContext) -> dict:
         """Store the content of an analyzed context into the database.
 
         Parameters
         ----------
+        db_man : DatabaseManager
+            The database manager object managing the session to which to add the results.
+        analysis: AnalysisTable
+            The analysis record which this result belongs to.
         analyze_ctx : AnalyzeContext
             The analyze context to store into the database.
         """
@@ -667,16 +717,46 @@ class Analyzer:
             analyze_ctx.repo_full_name,
             defaults.get("database", "db_name", fallback="macaron.db"),
         )
-        if not self.db_man.is_init:
-            self.init_database()
-        insert_data = analyze_ctx.get_insert_data()
-        insert_query = AnalyzeContext.gen_insert_analyze_result_query(Analyzer.TABLE_NAME)
-        self.db_man.execute_insert_query(insert_query, insert_data)
 
-    def init_database(self) -> None:
-        """Initiate the database connection and create the table to store the analyze result."""
-        self.db_man.init_conn()
+        # Ensure result table is created
+        result_table = AnalyzeContext.get_analysis_result_table(self.TABLE_NAME)
+        db_man.create_tables()
 
-        # Create the table for storing analyze result
-        analyze_result_table = AnalyzeContext.gen_create_table_query(Analyzer.TABLE_NAME)
-        self.db_man.execute_multi_queries(analyze_result_table)
+        # Store old result format
+        repository_analysis = RepositoryAnalysis(repository_id=analyze_ctx.repository_table.id, analysis_id=analysis.id)
+        db_man.add_and_commit(repository_analysis)
+
+        # Store the context's slsa level
+        db_man.add_and_commit(analyze_ctx.get_slsa_level_table())
+
+        # Store check result table
+        for check in analyze_ctx.check_results.values():
+
+            check_table = CheckResultTable()
+            check_table.check_id = check["check_id"]
+            check_table.repository = analyze_ctx.repository_table.id
+            check_table.passed = check["result_type"] == CheckResultType.PASSED
+            check_table.skipped = check["result_type"] == CheckResultType.SKIPPED
+            db_man.add(check_table)
+
+            if "result_tables" in check:
+                for table in check["result_tables"]:
+                    if isinstance(table, CheckFactsTable):
+                        table.repository = analyze_ctx.repository_table.id
+                        table.check_result = check_table.id
+                    db_man.add_and_commit(table)
+
+        # Store SLSA Requirements
+        results = analyze_ctx.get_analysis_result_data()
+        for key, value in analyze_ctx.ctx_data.items():
+            if value.is_pass:
+                requirement = SLSARequirement(
+                    repository=analyze_ctx.repository_table.id,
+                    requirement=key.name,
+                    requirement_name=value.name,
+                    feedback=value.feedback,
+                )
+                db_man.add_and_commit(requirement)
+
+        db_man.insert(result_table, results)
+        return results
