@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # Use bash as the shell when executing a rule's recipe. For more details:
@@ -83,25 +83,27 @@ venv:
 # The _build.yaml GitHub Actions workflow expects dist directory to exist.
 # So we create the dist dir if it doesn't exist in the setup target.
 # See https://packaging.python.org/en/latest/tutorials/packaging-projects/#generating-distribution-archives.
-# We also install SLSA verifier, mvnw, cyclonedx-go, and compile the Go modules.
+# We also install cyclonedx-go to generate SBOM for Go, compile the Go modules,
+# install SLSA verifier binary, and download mvnw.
 .PHONY: setup
-setup: force-upgrade setup-go
+setup: force-upgrade setup-go setup-binaries
 	pre-commit install
 	mkdir -p dist
+	go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.3.0
+setup-go:
+	go build -o $(MACARON_PATH)/bin/ $(MACARON_PATH)/golang/cmd/...
+setup-binaries: $(MACARON_PATH)/bin/slsa-verifier $(MACARON_PATH)/resources/mvnw
+$(MACARON_PATH)/bin/slsa-verifier:
 	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.0.1
 	cd slsa-verifier/cli/slsa-verifier && go build -o $(MACARON_PATH)/bin/
 	cd $(MACARON_PATH) && rm -rf slsa-verifier
-	go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.3.0
-	echo "GOPATH=$$GOPATH"
-	ls $$HOME/go/bin
+$(MACARON_PATH)/resources/mvnw:
 	cd resources \
 		&& wget https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper-distribution/3.1.1/maven-wrapper-distribution-3.1.1-bin.zip \
 		&& unzip -o maven-wrapper-distribution-3.1.1-bin.zip \
 		&& rm -r maven-wrapper-distribution-3.1.1-bin.zip \
 		&& echo -e "distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.8.6/apache-maven-3.8.6-bin.zip\nwrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.1.1/maven-wrapper-3.1.1.jar" > .mvn/wrapper/maven-wrapper.properties \
 		&& cd $(MACARON_PATH)
-setup-go:
-	go build -o $(MACARON_PATH)/bin/ $(MACARON_PATH)/golang/cmd/...
 
 # Install or upgrade an existing virtual environment based on the
 # package dependencies declared in pyproject.toml and go.mod.
@@ -258,7 +260,11 @@ clean: dist-clean bin-clean
 nuke-caches: clean
 	find src/ -type d -name __pycache__ -exec rm -fr {} +
 	find tests/ -type d -name __pycache__ -exec rm -fr {} +
-nuke: nuke-caches
+nuke-mvnw:
+	cd $(MACARON_PATH)/resources \
+	&& rm mvnw mvnw.cmd mvnwDebug mvnwDebug.cmd \
+	&& cd $(MACARON_PATH)
+nuke: nuke-caches nuke-mvnw
 	if [ ! -z "${VIRTUAL_ENV}" ]; then \
 	  echo "Please deactivate the virtual environment first!" && exit 1; \
 	fi
