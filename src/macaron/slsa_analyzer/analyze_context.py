@@ -28,21 +28,6 @@ from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class AnalysisTable(ORMBase):
-    """
-    ORM Class for the analysis information.
-
-    This information pertains to a single invocation of the macaron tool.
-    """
-
-    __tablename__ = "_analysis"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    analysis_time = Column(String, nullable=False)
-    repository = Column(Integer, ForeignKey("_repository.id"), nullable=False)
-    policy = Column(Integer, ForeignKey("_policy.id"), nullable=True)  # to be foreign key
-    macaron_version = Column(String, nullable=False)
-
-
 class RepositoryTable(ORMBase):
     """ORM Class for a repository."""
 

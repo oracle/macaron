@@ -1,4 +1,5 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildAsCodeCheck class."""
@@ -6,6 +7,10 @@
 import logging
 import os
 
+from sqlalchemy import Column
+from sqlalchemy.sql.sqltypes import String
+
+from macaron.database.database_manager import CheckResultTable, ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, NoneBuildTool
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
@@ -19,6 +24,17 @@ from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+class BuildAsCodeJustification(CheckResultTable, ORMBase):
+    """Check justification table for build_as_code."""
+
+    __tablename__ = "_build_as_code_check"
+    build_tool_name = Column(String)
+    ci_service = Column(String)
+    build_trigger = Column(String)
+    deploy_command = Column(String)
+    build_status_url = Column(String)
 
 
 class BuildAsCodeCheck(BaseCheck):
@@ -142,6 +158,13 @@ class BuildAsCodeCheck(BaseCheck):
                             predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
                             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                             predicate["metadata"]["buildInvocationId"] = html_url
+                            check_result["result_table"] = BuildAsCodeJustification(
+                                build_tool_name=build_tool.name,
+                                ci_service=ci_service.name,
+                                build_trigger=trigger_link,
+                                deploy_command=deploy_cmd,
+                                build_status_url=html_url,
+                            )
                         return CheckResultType.PASSED
 
                 # We currently don't parse these CI configuration files.
@@ -168,14 +191,21 @@ class BuildAsCodeCheck(BaseCheck):
                                 ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
                                 predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = config_name
+                            check_result["result_table"] = BuildAsCodeJustification(
+                                build_tool_name=build_tool.name,
+                                ci_service=ci_service.name,
+                                deploy_command=deploy_cmd,
+                            )
                             return CheckResultType.PASSED
 
             pass_msg = f"The target repository does not use {build_tool.name} to deploy."
             check_result["justification"].append(pass_msg)
+            check_result["result_table"] = BuildAsCodeJustification(build_tool_name=build_tool.name)
             return CheckResultType.FAILED
 
         failed_msg = "The target repository does not have a build tool."
         check_result["justification"].append(failed_msg)
+        check_result["result_table"] = BuildAsCodeJustification()
         return CheckResultType.FAILED
 
 

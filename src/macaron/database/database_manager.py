@@ -7,8 +7,9 @@ import logging
 from types import TracebackType
 from typing import Optional
 
-from sqlalchemy import Table, create_engine, insert, select
-from sqlalchemy.orm import Session, declarative_base
+from sqlalchemy import Column, ForeignKey, Table, create_engine, insert, select
+from sqlalchemy.orm import Session, declarative_base, declarative_mixin, declared_attr
+from sqlalchemy.sql.sqltypes import Boolean, Integer
 
 from macaron.database.views import create_view
 
@@ -73,3 +74,36 @@ class DatabaseManager:
                 create_view(table_name[1:], ORMBase.metadata, select([table]))
 
         ORMBase.metadata.create_all(self.engine, checkfirst=True)
+
+
+@declarative_mixin
+class CheckResultTable:
+    """
+    Declarative mixin for check results.
+
+    All tables for check results must inherit this class, these fields are automatically filled in by the analyzer.
+    """
+
+    @declared_attr  # type: ignore
+    def id(self) -> Column:  # noqa: A003 # pylint: disable=invalid-name
+        """Check result id."""
+        return Column(Integer, primary_key=True, autoincrement=True)
+
+    @declared_attr  # type: ignore
+    def repository_id(self) -> Column:
+        """Store the id of the repository to which the analysis pertains."""
+        return Column(Integer, ForeignKey("_repository.id"), nullable=False)
+
+    @declared_attr  # type: ignore
+    def passed(self) -> Column:
+        """Whether the check passed (whether or not it was skipped)."""
+        return Column(Boolean, nullable=False)
+
+    @declared_attr  # type: ignore
+    def skipped(self) -> Column:
+        """Whether the check was skipped."""
+        return Column(Boolean, nullable=False)
+
+    def columns(self):  # type: ignore
+        """Return the list of columns in this table."""
+        return self.metadata.tables[self.__tablename__].columns.keys()  # type: ignore # pylint: disable=no-member

@@ -13,24 +13,25 @@ from typing import Optional
 
 from git import InvalidGitRepositoryError
 from pydriller.git import Git
+from sqlalchemy import Column, ForeignKey, Integer, String
 
 from macaron import __version__
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
-from macaron.database.database_manager import DatabaseManager
+from macaron.database.database_manager import DatabaseManager, ORMBase
 from macaron.dependency_analyzer import CycloneDxMaven, DependencyAnalyzer, DependencyInfo, DependencyTools
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.policy_engine.policy import Policy
 from macaron.slsa_analyzer import git_url
-from macaron.slsa_analyzer.analyze_context import AnalysisTable, AnalyzeContext, RepositoryTable
+from macaron.slsa_analyzer.analyze_context import AnalyzeContext, RepositoryTable
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 from macaron.slsa_analyzer.build_tool.maven import Maven
 
 # To load all checks into the registry
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
-from macaron.slsa_analyzer.checks.check_result import CheckResult, SkippedInfo
+from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType, SkippedInfo
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
@@ -39,6 +40,29 @@ from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+class AnalysisTable(ORMBase):
+    """
+    ORM Class for the analysis information.
+
+    This information pertains to a single invocation of the macaron tool.
+    """
+
+    __tablename__ = "_analysis"
+    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    analysis_time = Column(String, nullable=False)
+    repository = Column(Integer, ForeignKey("_repository.id"), nullable=True)
+    policy = Column(Integer, ForeignKey("_policy.id"), nullable=True)  # to be foreign key
+    macaron_version = Column(String, nullable=False)
+
+
+class RepositoryAnalysis(ORMBase):
+    """Relates repositories to the analysis in which they were scanned."""
+
+    __tablename__ = "_repository_analysis"
+    analysis_id = Column(Integer, ForeignKey("_analysis.id"), nullable=False, primary_key=True)
+    repository_id = Column(Integer, ForeignKey("_repository.id"), nullable=False, primary_key=True)
 
 
 class Analyzer:
@@ -168,9 +192,13 @@ class Analyzer:
             find_ctx = report.find_ctx(dup_record.pre_config.get_value("path"))
             dup_record.context = find_ctx
 
-        # Store the analysis result into the SQLite database.
-        for ctx in report.get_ctxs():
-            self.store_result_to_db(ctx)
+        # Store the analysis result(s) into the SQLite database.
+        with DatabaseManager(self.database_path) as db_man:
+            analysis = self.store_analysis_to_db(db_man, main_record)
+            for ctx in report.get_ctxs():
+                if ctx is not None and ctx != main_record.context:
+                    self.store_result_to_db(db_man, analysis, ctx)
+            db_man.session.commit()
 
         # Store the analysis result into report files.
         self.generate_reports(report)
@@ -665,11 +693,37 @@ class Analyzer:
 
         return results
 
-    def store_result_to_db(self, analyze_ctx: AnalyzeContext) -> None:
+    def store_analysis_to_db(self, db_man: DatabaseManager, main_record: Record) -> AnalysisTable:
+        """Store the analysis to the database."""
+        db_man.create_tables()
+        analysis = AnalysisTable(
+            analysis_time=datetime.now().isoformat(sep="T", timespec="seconds"),
+            macaron_version=__version__,
+        )
+        db_man.add_and_commit(analysis)
+
+        if self.policy is not None:
+            policy_table = self.policy.get_policy_table()
+            db_man.add_and_commit(policy_table)
+            analysis.policy = policy_table.id
+
+        if main_record.context is not None:
+            repository, _ = self.store_result_to_db(db_man, analysis, main_record.context)
+            analysis.repository = repository.id
+
+        return analysis
+
+    def store_result_to_db(
+        self, db_man: DatabaseManager, analysis: AnalysisTable, analyze_ctx: AnalyzeContext
+    ) -> tuple[RepositoryTable, dict]:
         """Store the content of an analyzed context into the database.
 
         Parameters
         ----------
+        db_man : DatabaseManager
+            The database manager object managing the session to which to add the results.
+        analysis: AnalysisTable
+            The analysis record which this result belongs to.
         analyze_ctx : AnalyzeContext
             The analyze context to store into the database.
         """
@@ -679,26 +733,29 @@ class Analyzer:
             defaults.get("database", "db_name", fallback="macaron.db"),
         )
 
-        with DatabaseManager(self.database_path) as db_man:
-            result_table = AnalyzeContext.get_analysis_result_table(self.TABLE_NAME)
-            db_man.create_tables()
+        # Ensure result table is created
+        result_table = AnalyzeContext.get_analysis_result_table(self.TABLE_NAME)
+        db_man.create_tables()
 
-            repository = RepositoryTable(**analyze_ctx.get_repository_data())
-            db_man.add_and_commit(repository)
-            analysis = AnalysisTable(
-                repository=repository.id,
-                analysis_time=datetime.now().isoformat(sep="T", timespec="seconds"),
-                macaron_version=__version__,
-            )
-            db_man.session.add(analysis)
+        # Store repository
+        repository = RepositoryTable(**analyze_ctx.get_repository_data())
+        db_man.add_and_commit(repository)
+        repository_analysis = RepositoryAnalysis(repository_id=repository.id, analysis_id=analysis.id)
 
-            results = analyze_ctx.get_analysis_result_data()
-            results["analysis_id"] = analysis.id
-            db_man.insert(result_table, results)
+        db_man.add_and_commit(repository_analysis)
 
-            if self.policy:
-                policy_table = self.policy.get_policy_table()
-                db_man.add_and_commit(policy_table)
-                analysis.policy = policy_table.id
+        # Store check result table
+        for check in analyze_ctx.check_results.values():
+            table = check["result_table"]
+            if table is not None:
+                table.repository_id = repository.id
+                table.passed = check["result_type"] == CheckResultType.PASSED
+                table.skipped = check["result_type"] == CheckResultType.SKIPPED
+                db_man.session.add(table)
+                db_man.session.commit()
+        db_man.session.commit()
 
-            db_man.session.commit()
+        # Store SLSA Levels
+        results = analyze_ctx.get_analysis_result_data()
+        db_man.insert(result_table, results)
+        return repository, results
