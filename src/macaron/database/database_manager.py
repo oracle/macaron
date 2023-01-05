@@ -47,7 +47,7 @@ class DatabaseManager:
         self.session.commit()
         self.session.close()
 
-    def add(self, item) -> None:  # type: ignore
+    def add_and_commit(self, item) -> None:  # type: ignore
         """Add an ORM object to the session and commit it."""
         self.session.add(item)
         self.session.commit()

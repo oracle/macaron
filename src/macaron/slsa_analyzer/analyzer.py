@@ -14,6 +14,7 @@ from typing import Optional
 from git import InvalidGitRepositoryError
 from pydriller.git import Git
 
+from macaron import __version__
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
@@ -681,16 +682,14 @@ class Analyzer:
         with DatabaseManager(self.database_path) as db_man:
             result_table = AnalyzeContext.get_analysis_result_table(self.TABLE_NAME)
             db_man.create_tables()
-            ## TODO: fix so analysis and policy have correct information
 
             repository = RepositoryTable(**analyze_ctx.get_repository_data())
-            db_man.add(repository)
-            analysis = AnalysisTable()
-            analysis.repository = repository.id
-            analysis.analysis_time = datetime.now().isoformat(sep="T", timespec="seconds")
-            analysis.macaron_version = "3000"
-            analysis.invocation_parameters = "unknown"
-            analysis.configuration = "unknown"
+            db_man.add_and_commit(repository)
+            analysis = AnalysisTable(
+                repository=repository.id,
+                analysis_time=datetime.now().isoformat(sep="T", timespec="seconds"),
+                macaron_version=__version__,
+            )
             db_man.session.add(analysis)
 
             results = analyze_ctx.get_analysis_result_data()
@@ -699,7 +698,7 @@ class Analyzer:
 
             if self.policy:
                 policy_table = self.policy.get_policy_table()
-                db_man.add(policy_table)
+                db_man.add_and_commit(policy_table)
                 analysis.policy = policy_table.id
 
             db_man.session.commit()

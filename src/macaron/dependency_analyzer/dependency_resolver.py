@@ -1,4 +1,5 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module processes and collects the dependencies to be processed by Macaron."""
@@ -110,7 +111,7 @@ class DependencyAnalyzer:
             else:
                 item["note"] = f"{item['url']} is already analyzed."
                 item["available"] = SCMStatus.DUPLICATED_SCM
-                self.url_to_artifact[item["url"]].add(key)
+                self.url_to_artifact[item["url"]].add_and_commit(key)
                 logger.info(item["note"])
         else:
             logger.debug("Could not find SCM URL for %s. Skipping...", key)

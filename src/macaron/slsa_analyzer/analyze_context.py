@@ -40,9 +40,7 @@ class AnalysisTable(ORMBase):
     analysis_time = Column(String, nullable=False)
     repository = Column(Integer, ForeignKey("_repository.id"), nullable=False)
     policy = Column(Integer, ForeignKey("_policy.id"), nullable=True)  # to be foreign key
-    invocation_parameters = Column(String, nullable=False)
     macaron_version = Column(String, nullable=False)
-    configuration = Column(String, nullable=False)
 
 
 class RepositoryTable(ORMBase):
