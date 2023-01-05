@@ -45,16 +45,6 @@ class AnalysisTable(ORMBase):
     configuration = Column(String, nullable=False)
 
 
-class PolicyTable(ORMBase):
-    """ORM Class for a Policy."""
-
-    __tablename__ = "_policy"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    policy_type = Column(String, nullable=False)
-    sha = Column(String, nullable=False)
-    text = Column(String, nullable=False)
-
-
 class RepositoryTable(ORMBase):
     """ORM Class for a repository."""
 

@@ -23,7 +23,7 @@ from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.policy_engine.policy import Policy
 from macaron.slsa_analyzer import git_url
-from macaron.slsa_analyzer.analyze_context import AnalysisTable, AnalyzeContext, PolicyTable, RepositoryTable
+from macaron.slsa_analyzer.analyze_context import AnalysisTable, AnalyzeContext, RepositoryTable
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 from macaron.slsa_analyzer.build_tool.maven import Maven
 
@@ -697,11 +697,9 @@ class Analyzer:
             results["analysis_id"] = analysis.id
             db_man.insert(result_table, results)
 
-            policy = PolicyTable()
-            policy.sha = "sha"
-            policy.policy_type = "POC"
-            policy.text = str(self.policy)
-            db_man.add(policy)
-            analysis.policy = policy.id
+            if self.policy:
+                policy_table = self.policy.get_policy_table()
+                db_man.add(policy_table)
+                analysis.policy = policy_table.id
 
             db_man.session.commit()

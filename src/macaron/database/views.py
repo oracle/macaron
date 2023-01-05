@@ -1,6 +1,8 @@
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
+# pylint: skip-file
+
 """
 SQLAlchemy View creation.
 
@@ -29,15 +31,12 @@ class DropView(DDLElement):
 
 
 @compiler.compiles(CreateView)
-def _create_view(element, compiler, **kw):  # type: ignore
-    return "CREATE VIEW {} AS {}".format(
-        element.name,
-        compiler.sql_compiler.process(element.selectable, literal_binds=True),
-    )
+def _create_view(element, comp, **kw):  # type: ignore
+    return f"CREATE VIEW {element.name} AS {comp.sql_compiler.process(element.selectable, literal_binds=True)}"
 
 
 @compiler.compiles(DropView)
-def _drop_view(element, compiler, **kw):  # type: ignore
+def _drop_view(element, comp, **kw):  # type: ignore
     return "DROP VIEW %s" % (element.name)
 
 

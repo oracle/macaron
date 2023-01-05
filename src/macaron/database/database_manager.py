@@ -20,7 +20,7 @@ ORMBase = declarative_base()
 class DatabaseManager:
     """This class handles and manages the connection to sqlite database during the search session."""
 
-    def __init__(self, db_name: str):
+    def __init__(self, db_path: str):
         """Initialize instance.
 
         Parameters
@@ -28,8 +28,8 @@ class DatabaseManager:
         db_path : str
             The path to the target database.
         """
-        self.engine = create_engine(f"sqlite+pysqlite:///{db_name}", echo=True, future=True)
-        self.db_name = db_name
+        self.engine = create_engine(f"sqlite+pysqlite:///{db_path}", echo=True, future=True)
+        self.db_name = db_path
         self.session = Session(self.engine)
 
         ORMBase.metadata.create_all(self.engine)
