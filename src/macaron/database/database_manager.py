@@ -20,7 +20,7 @@ ORMBase = declarative_base()
 class DatabaseManager:
     """This class handles and manages the connection to sqlite database during the search session."""
 
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str, base=ORMBase):  # type: ignore
         """Initialize instance.
 
         Parameters
@@ -28,14 +28,13 @@ class DatabaseManager:
         db_path : str
             The path to the target database.
         """
-        self.engine = create_engine(f"sqlite+pysqlite:///{db_path}", echo=True, future=True)
+        self.engine = create_engine(f"sqlite+pysqlite:///{db_path}", echo=False, future=True)
         self.db_name = db_path
         self.session = Session(self.engine)
-
-        ORMBase.metadata.create_all(self.engine)
+        self._base = base
 
     def terminate(self) -> None:
-        """Terminate the connection to the sqlite database."""
+        """Terminate the connection to the database, discarding any transaction in progress."""
         self.session.close()
 
     def __enter__(self) -> "DatabaseManager":
@@ -44,8 +43,7 @@ class DatabaseManager:
     def __exit__(
         self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
     ) -> None:
-        self.session.commit()
-        self.session.close()
+        self.terminate()
 
     def add_and_commit(self, item) -> None:  # type: ignore
         """Add an ORM object to the session and commit it."""
@@ -53,7 +51,7 @@ class DatabaseManager:
         self.session.commit()
 
     def insert(self, table: Table, values: dict) -> None:
-        """Add an ORM object to the session and commit it."""
+        """Add a table row and commit it using the core api."""
         self.execute(insert(table).values(**values))
 
     def execute(self, query) -> None:  # type: ignore
@@ -61,15 +59,16 @@ class DatabaseManager:
         with self.engine.connect() as conn:
             conn.execute(query)
             conn.commit()
+        self.session.commit()
 
     def create_tables(self) -> None:
         """
         Automatically create views for all tables known to _base.metadata.
 
-        (declared using both core and declarative) which begin with an underscore.
+        Creates all explicitly declared tables, and creates views proxying all tables beginning with an underscore.
         """
-        for table_name, table in ORMBase.metadata.tables.items():
+        for table_name, table in self._base.metadata.tables.items():
             if table_name[0] == "_":
-                create_view(table_name[1:], ORMBase.metadata, select([table]))
+                create_view(table_name[1:], self._base.metadata, select([table]))
 
-        ORMBase.metadata.create_all(self.engine, checkfirst=True)
+        self._base.metadata.create_all(self.engine, checkfirst=True)
