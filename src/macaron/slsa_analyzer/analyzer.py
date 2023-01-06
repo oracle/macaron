@@ -31,6 +31,7 @@ from macaron.slsa_analyzer.build_tool.maven import Maven
 
 # To load all checks into the registry
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
+from macaron.slsa_analyzer.checks.base_check import CheckResultTable
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType, SkippedInfo
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
@@ -746,8 +747,9 @@ class Analyzer:
 
         # Store check result table
         for check in analyze_ctx.check_results.values():
-            table = check["result_table"]
-            if table is not None:
+            table_class = registry.get_all_checks_mapping()[check["check_id"]].ResultTable
+            if issubclass(table_class, CheckResultTable):
+                table: CheckResultTable = table_class(**check["result_values"])  # type: ignore
                 table.repository_id = repository.id
                 table.passed = check["result_type"] == CheckResultType.PASSED
                 table.skipped = check["result_type"] == CheckResultType.SKIPPED

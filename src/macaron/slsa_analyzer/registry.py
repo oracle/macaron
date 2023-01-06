@@ -374,7 +374,7 @@ class Registry:
                             slsa_requirements=[],
                             justification=[message],
                             result_type=CheckResultType.UNKNOWN,
-                            result_table=None,
+                            result_values={},
                         )
                         graph.done(check_id)
                     else:

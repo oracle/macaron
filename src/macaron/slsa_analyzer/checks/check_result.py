@@ -4,7 +4,7 @@
 
 """This module contains the CheckResult class for storing the result of a check."""
 from enum import Enum
-from typing import Any, TypedDict
+from typing import TypedDict
 
 
 class CheckResultType(str, Enum):
@@ -33,9 +33,10 @@ class CheckResult(TypedDict):
     # it will be displayed as a string, if it is a mapping,
     # the value will be rendered as a hyperlink in the html report.
     justification: list[str | dict[str, str]]
+    # human_readable_justification: str
+    result_values: dict[str, str | float | int]
     # recommendation: str
     result_type: CheckResultType
-    result_table: Any
 
 
 class SkippedInfo(TypedDict):

@@ -111,7 +111,7 @@ class DependencyAnalyzer:
             else:
                 item["note"] = f"{item['url']} is already analyzed."
                 item["available"] = SCMStatus.DUPLICATED_SCM
-                self.url_to_artifact[item["url"]].add_and_commit(key)
+                self.url_to_artifact[item["url"]].add(key)
                 logger.info(item["note"])
         else:
             logger.debug("Could not find SCM URL for %s. Skipping...", key)

@@ -225,6 +225,7 @@ class AnalyzeContext:
             Column("slsa_level", String),
             Column("is_full_reach", Boolean),
             *(Column(key.name, Boolean) for key in get_requirements_dict()),
+            extend_existing=True,
         )
 
     def get_repository_data(self) -> dict:
