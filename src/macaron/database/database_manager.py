@@ -7,6 +7,7 @@ import logging
 from types import TracebackType
 from typing import Optional
 
+import sqlalchemy.exc
 from sqlalchemy import Table, create_engine, insert, select
 from sqlalchemy.orm import Session, declarative_base
 
@@ -47,12 +48,18 @@ class DatabaseManager:
 
     def add_and_commit(self, item) -> None:  # type: ignore
         """Add an ORM object to the session and commit it."""
-        self.session.add(item)
-        self.session.commit()
+        try:
+            self.session.add(item)
+            self.session.commit()
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            logger.error("Database error %s", error)
 
     def insert(self, table: Table, values: dict) -> None:
         """Add a table row and commit it using the core api."""
-        self.execute(insert(table).values(**values))
+        try:
+            self.execute(insert(table).values(**values))
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            logger.error("Database error %s", error)
 
     def execute(self, query) -> None:  # type: ignore
         """Execute a sqlalchemy core api query."""
@@ -67,8 +74,11 @@ class DatabaseManager:
 
         Creates all explicitly declared tables, and creates views proxying all tables beginning with an underscore.
         """
-        for table_name, table in self._base.metadata.tables.items():
-            if table_name[0] == "_":
-                create_view(table_name[1:], self._base.metadata, select([table]))
+        try:
+            for table_name, table in self._base.metadata.tables.items():
+                if table_name[0] == "_":
+                    create_view(table_name[1:], self._base.metadata, select([table]))
 
-        self._base.metadata.create_all(self.engine, checkfirst=True)
+            self._base.metadata.create_all(self.engine, checkfirst=True)
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            logger.error("Database error on create tables %s", error)
