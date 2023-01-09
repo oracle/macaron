@@ -93,7 +93,7 @@ setup: force-upgrade setup-go setup-binaries
 	go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.3.0
 setup-go:
 	go build -o $(PACKAGE_PATH)/bin/ $(REPO_PATH)/golang/cmd/...
-setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier $(PACKAGE_PATH)/resources/mvnw
+setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier $(PACKAGE_PATH)/resources/mvnw $(PACKAGE_PATH)/resources/gradlew
 $(PACKAGE_PATH)/bin/slsa-verifier:
 	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.0.1
 	cd slsa-verifier/cli/slsa-verifier && go build -o $(PACKAGE_PATH)/bin/
@@ -105,6 +105,15 @@ $(PACKAGE_PATH)/resources/mvnw:
 		&& rm -r maven-wrapper-distribution-3.1.1-bin.zip \
 		&& echo -e "distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.8.6/apache-maven-3.8.6-bin.zip\nwrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.1.1/maven-wrapper-3.1.1.jar" > .mvn/wrapper/maven-wrapper.properties \
 		&& cd $(REPO_PATH)
+$(PACKAGE_PATH)/resources/gradlew:
+	cd resources \
+	&& export GRADLE_VERSION=7.6 \
+	&& wget https://services.gradle.org/distributions/gradle-$$GRADLE_VERSION-bin.zip \
+	&& unzip -o gradle-$$GRADLE_VERSION-bin.zip \
+	&& rm -r gradle-$$GRADLE_VERSION-bin.zip \
+	&& gradle-$$GRADLE_VERSION/bin/gradle wrapper \
+	&& rm -rf gradle-$$GRADLE_VERSION \
+	&& cd $(REPO_PATH)
 
 # Install or upgrade an existing virtual environment based on the
 # package dependencies declared in pyproject.toml and go.mod.

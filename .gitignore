@@ -160,6 +160,9 @@ maven-wrapper-distribution-*
 build_log
 macaron.db
 gradlew
+gradle-wrapper.properties
+gradle-wrapper.jar
+gradlew.bat
 .gradle
 .macaron
 reports

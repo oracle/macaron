@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseBuildTool class to be inherited by other specific Build Tools."""
@@ -6,7 +6,9 @@
 import glob
 import logging
 import os
-from abc import abstractmethod
+from abc import ABC, abstractmethod
+
+from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, NoneDependencyAnalyzer
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -36,7 +38,7 @@ def file_exists(path: str, file_name: str) -> bool:
     return False
 
 
-class BaseBuildTool:
+class BaseBuildTool(ABC):
     """This abstract class is used to implement Build Tools."""
 
     def __init__(self, name: str) -> None:
@@ -87,7 +89,6 @@ class BaseBuildTool:
         bool
             True if this build tool is detected, else False.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
@@ -107,12 +108,26 @@ class BaseBuildTool:
         bool
             True if succeed else False.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
-        raise NotImplementedError
+
+    @abstractmethod
+    def get_dep_analyzer(self, repo_path: str) -> DependencyAnalyzer:
+        """
+        Create a DependencyAnalyzer for the build tool.
+
+        Parameters
+        ----------
+        repo_path: str
+            The path to the target repo.
+
+        Returns
+        -------
+        DependencyAnalyzer
+            The DependencyAnalyzer object.
+        """
 
 
 class NoneBuildTool(BaseBuildTool):
@@ -158,3 +173,19 @@ class NoneBuildTool(BaseBuildTool):
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
+
+    def get_dep_analyzer(self, repo_path: str) -> DependencyAnalyzer:
+        """
+        Create an invalid DependencyAnalyzer for the empty build tool.
+
+        Parameters
+        ----------
+        repo_path: str
+            The path to the target repo.
+
+        Returns
+        -------
+        DependencyAnalyzer
+            The DependencyAnalyzer object.
+        """
+        return NoneDependencyAnalyzer()

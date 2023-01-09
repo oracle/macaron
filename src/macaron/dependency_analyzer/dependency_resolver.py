@@ -1,16 +1,17 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module processes and collects the dependencies to be processed by Macaron."""
 
 import logging
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from enum import Enum
 from typing import TypedDict
 
 from packaging import version
 
 from macaron.config.target_config import Configuration
+from macaron.errors import MacaronError
 from macaron.output_reporter.results import SCMStatus
 from macaron.slsa_analyzer.git_url import get_remote_vcs_url, get_repo_full_name_from_url
 
@@ -34,10 +35,14 @@ class DependencyInfo(TypedDict):
     available: SCMStatus
 
 
-class DependencyAnalyzer:
+class DependencyAnalyzerError(MacaronError):
+    """The DependencyAnalyzer error class."""
+
+
+class DependencyAnalyzer(ABC):
     """This abstract class is used to implement dependency analyzers."""
 
-    def __init__(self, resources_path: str, file_name: str, debug_path: str, tool_version: str) -> None:
+    def __init__(self, resources_path: str, file_name: str, debug_path: str, tool_version: str, repo_path: str) -> None:
         """Initialize the dependency analyzer instance.
 
         Parameters
@@ -50,11 +55,14 @@ class DependencyAnalyzer:
             The file path where all the dependencies will be stored for debugging.
         tool_version : str
             The version of the dependency analyzer.
+        repo_path: str
+            The path to the target repo.
         """
         self.resources_path: str = resources_path
         self.file_name: str = file_name
         self.debug_path: str = debug_path
         self.tool_version: str = tool_version
+        self.repo_path: str = repo_path
         self.all_versions: dict = {}  # Stores all the versions of dependencies for debugging.
         self.latest_versions: dict[str, DependencyInfo] = {}  # Stores the latest version of dependencies.
         self.url_to_artifact: dict = {}  # Used to detect artifacts that have similar repos.
@@ -75,7 +83,6 @@ class DependencyAnalyzer:
         dict[str, DependencyInfo]
             A dictionary where artifacts are grouped based on "artifactId:groupId".
         """
-        raise NotImplementedError
 
     @abstractmethod
     def get_cmd(self) -> list:
@@ -86,7 +93,6 @@ class DependencyAnalyzer:
         list
             The command line arguments.
         """
-        raise NotImplementedError
 
     def _add_latest_version(
         self,
@@ -252,3 +258,36 @@ class DependencyAnalyzer:
             logger.error("Dependency analyzer: %s.", error)
             return False
         return True
+
+
+class NoneDependencyAnalyzer(DependencyAnalyzer):
+    """This class is used to implement an empty dependency analyzers."""
+
+    def __init__(self) -> None:
+        """Initialize the dependency analyzer instance."""
+        super().__init__(resources_path="", file_name="", debug_path="", tool_version="", repo_path="")
+
+    def collect_dependencies(self, dir_path: str) -> dict[str, DependencyInfo]:
+        """Process the dependency JSON files and collect direct dependencies.
+
+        Parameters
+        ----------
+        dir_path : str
+            Path to the repo.
+
+        Returns
+        -------
+        dict[str, DependencyInfo]
+            A dictionary where artifacts are grouped based on "artifactId:groupId".
+        """
+        return {}
+
+    def get_cmd(self) -> list:
+        """Return the CLI command to run the dependency analyzer.
+
+        Returns
+        -------
+        list
+            The command line arguments.
+        """
+        return []

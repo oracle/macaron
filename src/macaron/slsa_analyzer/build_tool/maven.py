@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Maven class which inherits BaseBuildTool.
@@ -10,6 +10,9 @@ import logging
 import os
 
 from macaron.config.defaults import defaults
+from macaron.config.global_config import global_config
+from macaron.dependency_analyzer.cyclonedx_mvn import CycloneDxMaven
+from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, DependencyAnalyzerError, DependencyTools
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 from macaron.util import copy_file_bulk
 
@@ -90,3 +93,46 @@ class Maven(BaseBuildTool):
             return True
 
         return False
+
+    def get_dep_analyzer(self, repo_path: str) -> CycloneDxMaven:
+        """
+        Create a DependencyAnalyzer for the Maven build tool.
+
+        Parameters
+        ----------
+        repo_path: str
+            The path to the target repo.
+
+        Returns
+        -------
+        CycloneDxMaven
+            The CycloneDxMaven object.
+
+        Raises
+        ------
+        DependencyAnalyzerError
+        """
+        if "dependency.resolver" not in defaults or "dep_tool_maven" not in defaults["dependency.resolver"]:
+            raise DependencyAnalyzerError("No default dependency analyzer is found.")
+        if not DependencyAnalyzer.tool_valid(defaults.get("dependency.resolver", "dep_tool_maven")):
+            raise DependencyAnalyzerError(
+                f"Dependency analyzer {defaults.get('dependency.resolver','dep_tool_maven')} is not valid.",
+            )
+
+        tool_name, tool_version = tuple(
+            defaults.get(
+                "dependency.resolver",
+                "dep_tool_maven",
+                fallback="cyclonedx-maven:2.6.2",
+            ).split(":")
+        )
+        if tool_name == DependencyTools.CYCLONEDX_MAVEN:
+            return CycloneDxMaven(
+                resources_path=global_config.resources_path,
+                file_name="bom.json",
+                debug_path=os.path.join(global_config.output_path, "cdx_debug.json"),
+                tool_version=tool_version,
+                repo_path=repo_path,
+            )
+
+        raise DependencyAnalyzerError(f"Unsupported SBOM generator for Maven: {tool_name}.")
