@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for the Trusted Builder Level three check."""
@@ -6,7 +6,6 @@
 import os
 from unittest.mock import MagicMock
 
-from macaron.__main__ import MACARON_PATH
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.parsers.actionparser import parse as parse_action
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -53,7 +52,7 @@ class TestTrustedBuilderL3Check(MacaronTestCase):
         root = GitHubNode(name="root", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
         gh_cg = CallGraph(root, "")
         workflow_path = os.path.join(workflows_dir, "slsa_verifier.yaml")
-        parsed_obj = parse_action(workflow_path, macaron_path=MACARON_PATH)
+        parsed_obj = parse_action(workflow_path, macaron_path=str(MacaronTestCase.macaron_path))
         callee = GitHubNode(
             name=os.path.basename(workflow_path),
             node_type=GHWorkflowType.INTERNAL,
@@ -70,7 +69,7 @@ class TestTrustedBuilderL3Check(MacaronTestCase):
         root = GitHubNode(name="root", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
         gh_cg = CallGraph(root, "")
         workflow_path = os.path.join(workflows_dir, "maven_build_itself.yml")
-        parsed_obj = parse_action(workflow_path, macaron_path=MACARON_PATH)
+        parsed_obj = parse_action(workflow_path, macaron_path=str(MacaronTestCase.macaron_path))
         callee = GitHubNode(
             name=os.path.basename(workflow_path),
             node_type=GHWorkflowType.INTERNAL,
