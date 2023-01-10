@@ -753,12 +753,16 @@ class Analyzer:
         for check in analyze_ctx.check_results.values():
             table_class = registry.get_all_checks_mapping()[check["check_id"]].ResultTable
             if issubclass(table_class, CheckResultTable):
-                table: CheckResultTable = table_class(**check["result_values"])  # type: ignore
-                table.repository_id = repository.id
-                table.passed = check["result_type"] == CheckResultType.PASSED
-                table.skipped = check["result_type"] == CheckResultType.SKIPPED
-                db_man.session.add(table)
-                db_man.session.commit()
+                result_values: list[dict] = (
+                    [check["result_values"]] if isinstance(check["result_values"], dict) else check["result_values"]
+                )
+                for result in result_values:
+                    table: CheckResultTable = table_class(**result)  # type: ignore
+                    table.repository_id = repository.id
+                    table.passed = check["result_type"] == CheckResultType.PASSED
+                    table.skipped = check["result_type"] == CheckResultType.SKIPPED
+                    db_man.session.add(table)
+                    db_man.session.commit()
         db_man.session.commit()
 
         # Store SLSA Levels

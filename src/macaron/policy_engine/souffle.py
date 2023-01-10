@@ -49,6 +49,8 @@ class SouffleWrapper:
     include_dir: str
     fact_dir: str
     library_dir: str
+    souffle_stdout: Optional[str] = None
+
     TEMP_SOURCEFILE_NAME = "source.dl"
 
     def __init__(
@@ -87,6 +89,7 @@ class SouffleWrapper:
         # Souffle doesn't exit with non-zero when the datalog program contains errors, but check anyway
         if result.returncode != 0 or len(result.stderr) > 0:
             raise SouffleError(message=str(result.stderr), command=cmd)
+        self.souffle_stdout = str(result.stdout)
 
     def interpret_file(self, filename: str, with_prelude: str = "") -> dict:
         """

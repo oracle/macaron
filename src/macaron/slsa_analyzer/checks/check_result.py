@@ -34,7 +34,7 @@ class CheckResult(TypedDict):
     # the value will be rendered as a hyperlink in the html report.
     justification: list[str | dict[str, str]]
     # human_readable_justification: str
-    result_values: dict[str, str | float | int]
+    result_values: dict[str, str | float | int] | list[dict[str, str | float | int]]
     # recommendation: str
     result_type: CheckResultType
 

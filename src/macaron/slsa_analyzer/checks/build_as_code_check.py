@@ -37,7 +37,7 @@ class BuildAsCodeCheck(BaseCheck):
 
         __tablename__ = "_build_as_code_check"
         build_tool_name = Column(String)
-        ci_service = Column(String)
+        ci_service_name = Column(String)
         build_trigger = Column(String)
         deploy_command = Column(String)
         build_status_url = Column(String)
@@ -159,7 +159,7 @@ class BuildAsCodeCheck(BaseCheck):
                             predicate["metadata"]["buildInvocationId"] = html_url
                             check_result["result_values"] = {
                                 "build_tool_name": build_tool.name,
-                                "ci_service": ci_service.name,
+                                "ci_service_name": ci_service.name,
                                 "build_trigger": trigger_link,
                                 "deploy_command": deploy_cmd,
                                 "build_status_url": html_url,
@@ -192,7 +192,7 @@ class BuildAsCodeCheck(BaseCheck):
                                 predicate["invocation"]["configSource"]["entryPoint"] = config_name
                             check_result["result_values"] = {
                                 "build_tool_name": build_tool.name,
-                                "ci_service": ci_service.name,
+                                "ci_service_name": ci_service.name,
                                 "deploy_command": deploy_cmd,
                             }
                             return CheckResultType.PASSED
@@ -204,7 +204,6 @@ class BuildAsCodeCheck(BaseCheck):
 
         failed_msg = "The target repository does not have a build tool."
         check_result["justification"].append(failed_msg)
-        check_result["result_values"] = {}
         return CheckResultType.FAILED
 
 

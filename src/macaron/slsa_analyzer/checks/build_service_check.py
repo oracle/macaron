@@ -1,4 +1,5 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildServiceCheck class."""
@@ -6,9 +7,13 @@
 import logging
 import os
 
+from sqlalchemy import Column
+from sqlalchemy.sql.sqltypes import String
+
+from macaron.database.database_manager import ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, NoneBuildTool
-from macaron.slsa_analyzer.checks.base_check import BaseCheck
+from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckResultTable
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -23,6 +28,14 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 class BuildServiceCheck(BaseCheck):
     """This Check checks whether the target repo has a valid build service."""
+
+    class ResultTable(CheckResultTable, ORMBase):
+        """Check justification table for build_service."""
+
+        __tablename__ = "_build_service_check"
+        build_tool_name = Column(String)
+        ci_service_name = Column(String)
+        build_trigger = Column(String)
 
     def __init__(self) -> None:
         """Initiate the BuildServiceCheck instance."""
@@ -122,6 +135,12 @@ class BuildServiceCheck(BaseCheck):
                             else "However, could not find a passing workflow run.",
                         ]
                         check_result["justification"].extend(justification)
+                        check_result["result_values"] = {
+                            "build_tool_name": build_tool.name,
+                            "build_trigger": trigger_link,
+                            "ci_service_name": ci_service.name,
+                        }
+
                         if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
                             predicate = ci_info["provenances"][0]["predicate"]
                             predicate["buildType"] = f"Custom {ci_service.name}"
@@ -150,6 +169,11 @@ class BuildServiceCheck(BaseCheck):
                                 f"build tool {build_tool.name} in {ci_service.name} to "
                                 f"build."
                             )
+                            check_result["result_values"] = {
+                                "build_tool_name": build_tool.name,
+                                "ci_service_name": ci_service.name,
+                            }
+
                             if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
                                 predicate = ci_info["provenances"][0]["predicate"]
                                 predicate["buildType"] = f"Custom {ci_service.name}"

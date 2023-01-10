@@ -1,4 +1,5 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the implementation of the Provenance Available check."""
@@ -6,9 +7,13 @@
 import logging
 import re
 
+from sqlalchemy import Column
+from sqlalchemy.sql.sqltypes import String
+
 from macaron.config.defaults import defaults
+from macaron.database.database_manager import ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.checks.base_check import BaseCheck
+from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckResultTable
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.registry import registry
@@ -20,7 +25,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 def is_in_toto_file(file_name: str) -> bool:
     """Return true if the file name matches the in-toto file format.
 
-    The format for thoes files is ``<stage_name>.<6_bytes_key_id>.link``.
+    The format for those files is ``<stage_name>.<6_bytes_key_id>.link``.
 
     Parameters
     ----------
@@ -40,6 +45,13 @@ def is_in_toto_file(file_name: str) -> bool:
 
 class ProvenanceAvailableCheck(BaseCheck):
     """This Check checks whether the target repo has intoto provenance."""
+
+    class ResultTable(CheckResultTable, ORMBase):
+        """Check justification table for provenance_available."""
+
+        __tablename__ = "_provenance_available_check"
+        asset_name = Column(String)
+        asset_url = Column(String)
 
     def __init__(self) -> None:
         """Initialize instance."""
@@ -92,6 +104,14 @@ class ProvenanceAvailableCheck(BaseCheck):
 
                     check_result["justification"].append("Found provenance in release assets:")
                     check_result["justification"].extend([asset["name"] for asset in assets])
+                    asset_results = [
+                        {
+                            "asset_name": asset["name"],
+                            "asset_url": asset["url"],
+                        }
+                        for asset in assets
+                    ]
+                    check_result["result_values"] = asset_results
 
                     return CheckResultType.PASSED
 
