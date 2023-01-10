@@ -24,6 +24,7 @@ from macaron.dependency_analyzer import CycloneDxMaven, DependencyAnalyzer, Depe
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.policy_engine.policy import Policy
+from macaron.policy_engine.souffle_code_generator import get_fact_attributes, get_souffle_import_prelude
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext, RepositoryTable
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
@@ -200,6 +201,9 @@ class Analyzer:
                 if ctx is not None and ctx != main_record.context:
                     self.store_result_to_db(db_man, analysis, ctx)
             db_man.session.commit()
+
+        print(get_souffle_import_prelude(self.database_path, ORMBase.metadata))
+        print(get_fact_attributes(ORMBase))
 
         # Store the analysis result into report files.
         self.generate_reports(report)

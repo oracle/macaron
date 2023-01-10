@@ -183,6 +183,6 @@ class CheckResultTable(BaseCheck.ResultTable):
         """Return the table object self belongs to."""
         return self.metadata.tables[self.__tablename__]  # type: ignore
 
-    def columns(self) -> list:
+    def columns(self) -> list[Column]:
         """Return the list of columns in this table."""
-        return self._table().columns.keys()  # type: ignore # pylint: disable=no-member
+        return self._table().columns  # type: ignore # pylint: disable=no-member
