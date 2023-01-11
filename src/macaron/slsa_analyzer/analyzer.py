@@ -23,10 +23,9 @@ from macaron.database.database_manager import DatabaseManager, ORMBase
 from macaron.dependency_analyzer import CycloneDxMaven, DependencyAnalyzer, DependencyInfo, DependencyTools
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
-from macaron.policy_engine.policy import Policy
-from macaron.policy_engine.souffle_code_generator import get_fact_attributes, get_souffle_import_prelude
+from macaron.policy_engine.policy import Policy, SoufflePolicy
 from macaron.slsa_analyzer import git_url
-from macaron.slsa_analyzer.analyze_context import AnalyzeContext, RepositoryTable
+from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 from macaron.slsa_analyzer.build_tool.maven import Maven
 
@@ -42,6 +41,24 @@ from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+class SLSARequirement(ORMBase):
+    """Table storing the SLSA requirements a repository satisfies."""
+
+    __tablename__ = "_slsa_requirement"
+    repository = Column(Integer, ForeignKey("_repository.id"), primary_key=True)
+    requirement = Column(String, primary_key=True)
+    requirement_name = Column(String, primary_key=False)
+    feedback = Column(String, nullable=True)
+
+
+class RepositoryDependency(ORMBase):
+    """Identifies dependencies between repositories."""
+
+    __tablename__ = "_dependency"
+    dependent_repository = Column(Integer, ForeignKey("_repository.id"), primary_key=True)
+    dependency_repository = Column(Integer, ForeignKey("_repository.id"), primary_key=True)
 
 
 class AnalysisTable(ORMBase):
@@ -117,7 +134,11 @@ class Analyzer:
 
         # Get the policy from global config.
         self.policy: Policy | None = None
-        if global_config.policy_path:
+        self.souffle_policy: SoufflePolicy
+        if global_config.policy_path[global_config.policy_path.rfind(".") :] == ".dl":
+            self.souffle_policy = SoufflePolicy.make_policy(global_config.policy_path, self.database_path)
+        else:
+            self.souffle_policy = SoufflePolicy.make_policy(None, self.database_path)
             self.policy = Policy.make_policy(global_config.policy_path)
 
         # Initialize the reporters to store analysis data to files.
@@ -197,13 +218,18 @@ class Analyzer:
         # Store the analysis result(s) into the SQLite database.
         with DatabaseManager(self.database_path) as db_man:
             analysis = self.store_analysis_to_db(db_man, main_record)
+
             for ctx in report.get_ctxs():
                 if ctx is not None and ctx != main_record.context:
                     self.store_result_to_db(db_man, analysis, ctx)
-            db_man.session.commit()
 
-        print(get_souffle_import_prelude(self.database_path, ORMBase.metadata))
-        print(get_fact_attributes(ORMBase))
+            for parent, child in report.get_dependencies():
+                dependency = RepositoryDependency(
+                    dependent_repository=parent.repository_table.id, dependency_repository=child.repository_table.id
+                )
+                db_man.add_and_commit(dependency)
+
+            db_man.session.commit()
 
         # Store the analysis result into report files.
         self.generate_reports(report)
@@ -711,16 +737,17 @@ class Analyzer:
             policy_table = self.policy.get_policy_table()
             db_man.add_and_commit(policy_table)
             analysis.policy = policy_table.id
+            souffle_table = self.souffle_policy.get_policy_table()
+            souffle_table.analysis = analysis.id
+            db_man.add_and_commit(souffle_table)
 
         if main_record.context is not None:
-            repository, _ = self.store_result_to_db(db_man, analysis, main_record.context)
-            analysis.repository = repository.id
+            self.store_result_to_db(db_man, analysis, main_record.context)
+            analysis.repository = main_record.context.repository_table.id
 
         return analysis
 
-    def store_result_to_db(
-        self, db_man: DatabaseManager, analysis: AnalysisTable, analyze_ctx: AnalyzeContext
-    ) -> tuple[RepositoryTable, dict]:
+    def store_result_to_db(self, db_man: DatabaseManager, analysis: AnalysisTable, analyze_ctx: AnalyzeContext) -> dict:
         """Store the content of an analyzed context into the database.
 
         Parameters
@@ -743,10 +770,8 @@ class Analyzer:
         db_man.create_tables()
 
         # Store repository
-        repository = RepositoryTable(**analyze_ctx.get_repository_data())
-        db_man.add_and_commit(repository)
-        repository_analysis = RepositoryAnalysis(repository_id=repository.id, analysis_id=analysis.id)
-
+        db_man.add_and_commit(analyze_ctx.repository_table)
+        repository_analysis = RepositoryAnalysis(repository_id=analyze_ctx.repository_table.id, analysis_id=analysis.id)
         db_man.add_and_commit(repository_analysis)
 
         # Store check result table
@@ -758,14 +783,24 @@ class Analyzer:
                 )
                 for result in result_values:
                     table: CheckResultTable = table_class(**result)  # type: ignore
-                    table.repository_id = repository.id
+                    table.repository_id = analyze_ctx.repository_table.id
                     table.passed = check["result_type"] == CheckResultType.PASSED
                     table.skipped = check["result_type"] == CheckResultType.SKIPPED
                     db_man.session.add(table)
                     db_man.session.commit()
         db_man.session.commit()
 
-        # Store SLSA Levels
+        # Store SLSA Requirements
         results = analyze_ctx.get_analysis_result_data()
+        for key, value in analyze_ctx.ctx_data.items():
+            if value.is_pass:
+                requirement = SLSARequirement(
+                    repository=analyze_ctx.repository_table.id,
+                    requirement=str(key),
+                    requirement_name=value.name,
+                    feedback=value.feedback,
+                )
+                db_man.add_and_commit(requirement)
+
         db_man.insert(result_table, results)
-        return repository, results
+        return results

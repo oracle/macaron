@@ -50,6 +50,7 @@ class SouffleWrapper:
     fact_dir: str
     library_dir: str
     souffle_stdout: Optional[str] = None
+    souffle_stderr: Optional[str] = None
 
     TEMP_SOURCEFILE_NAME = "source.dl"
 
@@ -65,7 +66,10 @@ class SouffleWrapper:
         self.orig_dir = os.path.abspath(os.curdir)
         self._souffle = souffle_full_path
         if output_dir is not None:
-            self.output_dir = os.path.abspath(output_dir)
+            if output_dir != "-":
+                self.output_dir = os.path.abspath(output_dir)
+            else:
+                self.output_dir = output_dir
         else:
             self.output_dir = os.path.join(self.temp_dir, "output")
             os.mkdir(self.output_dir)
@@ -87,9 +91,14 @@ class SouffleWrapper:
         logger.info("Executing souffle: %s", " ".join(cmd))
         result = subprocess.run(cmd, shell=False, capture_output=True, cwd=self.temp_dir, check=False)  # nosec B603
         # Souffle doesn't exit with non-zero when the datalog program contains errors, but check anyway
-        if result.returncode != 0 or len(result.stderr) > 0:
-            raise SouffleError(message=str(result.stderr), command=cmd)
-        self.souffle_stdout = str(result.stdout)
+        self.souffle_stderr = result.stderr.decode("utf-8")
+        if result.returncode != 0:
+            raise SouffleError(message=self.souffle_stderr, command=cmd)
+        if len(result.stderr) > 0:
+            for line in self.souffle_stderr.split("\n"):
+                if "Error" in line:
+                    raise SouffleError(message=self.souffle_stderr, command=cmd)
+        self.souffle_stdout = str(result.stdout.decode("utf-8"))
 
     def interpret_file(self, filename: str, with_prelude: str = "") -> dict:
         """
@@ -124,6 +133,8 @@ class SouffleWrapper:
     def load_csv_output(self) -> dict:
         """Load and return all the csv files from the temporary working directory."""
         result: dict = {}
+        if self.output_dir == "-":
+            return result
         for file_name in glob.glob("*.csv", root_dir=self.output_dir):
             with open(os.path.join(self.output_dir, file_name), encoding="utf-8") as file:
                 reader = csv.reader(file.readlines(), delimiter="\t")

@@ -54,8 +54,11 @@ def get_souffle_import_prelude(db_name: str, metadata: MetaData) -> str:
 
 def get_fact_attributes(base=ORMBase) -> str:  # type: ignore
     """Generate datalog rules which extract individual attributes from the columns of all check result tables."""
-    base_decl = ".decl attribute(repository:number, check_id:symbol, attribute:symbol, value:symbol)\n "
-    result = [base_decl]
+    result = [
+        ".decl number_attribute(repository:number, check_id:symbol, attribute:symbol, value:number)",
+        ".decl symbol_attribute(repository:number, check_id:symbol, attribute:symbol, value:symbol)",
+        ".decl attribute(repository:number, check_id:symbol, attribute:symbol)",
+    ]
 
     for table_name in base.metadata.tables.keys():
         table = base.metadata.tables[table_name]
@@ -72,9 +75,13 @@ def get_fact_attributes(base=ORMBase) -> str:  # type: ignore
 
             pattern = []
             col_name = cols[cid].name
+            col_type = column_to_souffle_type(cols[cid])
             for col in cols:
                 if col.name == col_name:
-                    pattern.append("value")
+                    if isinstance(col.type, Boolean):
+                        pattern.append("1")
+                    else:
+                        pattern.append("value")
                 elif col.name in meta:
                     res = meta[col.name]
                     res = "_" if res is None else res
@@ -82,8 +89,80 @@ def get_fact_attributes(base=ORMBase) -> str:  # type: ignore
                 else:
                     pattern.append("_")
 
-            inference = f'attribute(repository, "{table_name[1:]}", "{col_name}", value) :- '
+            if col_type == "symbol":
+                inference = f'symbol_attribute(repository, "{table_name[1:]}", "{col_name}", value) :- '
+            elif isinstance(cols[cid].type, Boolean):
+                inference = f'attribute(repository, "{table_name[1:]}", "{col_name}") :- '
+            elif col_type == "number":
+                inference = f'number_attribute(repository, "{table_name[1:]}", "{col_name}", value) :- '
+            else:
+                raise ValueError("not reachable")
+
             sfl_pattern = ",".join(pattern)
             inference += f"{table_name[1:]}({sfl_pattern})."
             result.append(inference)
     return "\n".join(result)
+
+
+def get_table_rules_per_column(
+    rule_name: str, table: Table, common_fields: dict[str, str], ignore_columns: list, value_type: str = "symbol"
+) -> str:
+    """Generate datalog rules to create subject-predicate relations from a set of columns of a table.
+
+    Parameters
+    ----------
+    rule_name: str
+        The name of the resulting souffle rule
+    table: Table
+        The sqlalchemy table to read from
+    common_fields: dict[str, str]
+        The table columns to be included in the relation (as the subject)
+        key: the column name
+        value: the corresponding relation field name
+    ignore_columns: list[str]
+        List of column names to be excluded from the relation
+    value_type: str
+        The datalog type that the value (predicate) field will have.
+            Note: Symbol is nullable, number is not, numbers can be implicitly converted to symbols but not vice versa.
+
+    """
+    # Construct declaration statement
+    base_decl = f".decl {rule_name} ("
+    base_decl += ", ".join(
+        [
+            f"{field_name}:{column_to_souffle_type(table.columns[column_name])}"
+            for column_name, field_name in common_fields.items()
+        ]
+    )
+    base_decl += f", key:symbol, value:{value_type})"
+    # TODO: Support all souffle types
+    # This can be done by creating strValue(id, symbol), numValue(id, symbol) relations where id is created using ord()
+    # on the value
+
+    generated_lines = [base_decl]
+
+    # Construct rule to create relations based on table
+    for value_column in table.columns:
+        # Loop over each column that gets treated as a value
+        if value_column.name in ignore_columns:
+            continue
+        if value_column.name in common_fields:
+            continue
+
+        # Construct the relation statement containing all common_fields and the cid bound to value
+        pattern = []
+        for column in table.columns:
+            if column.name == value_column.name:
+                pattern.append("value")
+            elif column.name in ignore_columns:
+                pattern.append("_")
+            elif column.name in common_fields:
+                pattern.append(common_fields[column.name])
+            else:
+                pattern.append("_")
+
+        lhs = f"{rule_name}(" + ",".join(common_fields.values()) + f',"{value_column.name}",value)'
+        rhs = f"{table.name[1:]}(" + ",".join(pattern) + ")"
+        generated_lines.append(lhs + " :- " + rhs + ".")
+
+    return "\n".join(generated_lines)

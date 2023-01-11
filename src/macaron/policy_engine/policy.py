@@ -9,14 +9,15 @@ import logging
 import os
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import Any, Callable, Generic, Optional, TypeVar, Union
+from typing import Any, Callable, Optional, Union
 
 import yamale
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String
 from yamale.schema import Schema
 
 from macaron.database.database_manager import ORMBase
 from macaron.parsers.yaml.loader import YamlLoader
+from macaron.policy_engine.souffle_code_generator import get_fact_attributes, get_souffle_import_prelude
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -28,7 +29,6 @@ SubscriptPathType = list[Union[str, int]]
 Primitive = Union[str, bool, int, float]
 PolicyDef = Union[Primitive, dict, list, None]
 PolicyFn = Callable[[Any], bool]
-GPolicy = TypeVar("GPolicy", bound="Policy")
 
 
 class InvalidPolicyError(Exception):
@@ -163,9 +163,55 @@ class PolicyTable(ORMBase):
     text = Column(String, nullable=False)
 
 
+class SoufflePolicyTable(ORMBase):
+    """ORM Class for a Policy."""
+
+    __tablename__ = "souffle_policy"
+    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    analysis = Column(Integer, ForeignKey("_analysis.id"))
+    file_sha = Column(String, nullable=True)
+    file_text = Column(String, nullable=True)
+    prelude = Column(String, nullable=False)
+
+
+@dataclass
+class SoufflePolicy:
+    """Dataclass for storing souffle policies."""
+
+    text: str | None
+    sha: str | None
+    prelude: str
+
+    @classmethod
+    def make_policy(cls, file_path: os.PathLike | str | None, database_path: str) -> "SoufflePolicy":
+        """Construct the souffle policy and prelude.
+
+        Parameters
+        ----------
+        file_path: os.PathLike | str | None
+            Optional file path for the datalog file
+
+        database_path: str
+            The path to the database souffle will use to import relations, as used in the prelude.
+        """
+        policy: SoufflePolicy = SoufflePolicy(None, None, "")
+        policy.prelude = get_souffle_import_prelude(database_path, ORMBase.metadata)
+        policy.prelude += get_fact_attributes(ORMBase)
+        if file_path:
+            with open(file_path, encoding="utf-8") as file:
+                policy.text = file.read()
+                policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
+
+        return policy
+
+    def get_policy_table(self) -> SoufflePolicyTable:
+        """Get the bound ORM object for the policy."""
+        return SoufflePolicyTable(file_sha=self.sha, file_text=self.text, prelude=self.prelude)
+
+
 # pylint: disable=invalid-name
 @dataclass
-class Policy(Generic[GPolicy]):
+class Policy:
     """The policy is used to validate a target provenance.
 
     Parameters
@@ -182,15 +228,16 @@ class Policy(Generic[GPolicy]):
     sha: str | None
     _definition: PolicyDef | None = field(default=None)
     _validator: PolicyFn | None = field(default=None)
+    POLICY_TYPE = "YAML_DIFF"
 
     def get_policy_table(self) -> PolicyTable:
         """Get the bound ORM object for the policy."""
         return PolicyTable(
-            policy_id=self.ID, description=self.description, policy_type="POC", sha=self.sha, text=self.text
+            policy_id=self.ID, description=self.description, policy_type=self.POLICY_TYPE, sha=self.sha, text=self.text
         )
 
     @classmethod
-    def make_policy(cls, file_path: os.PathLike | str) -> GPolicy | None:
+    def make_policy(cls, file_path: os.PathLike | str) -> Optional["Policy"]:
         """Generate a Policy from a policy yaml file.
 
         Parameters
@@ -200,7 +247,7 @@ class Policy(Generic[GPolicy]):
 
         Returns
         -------
-        GPolicy | None
+        Policy | None
             The Policy instance that has been initialized.
         """
         logger.info("Generating a policy from file %s", file_path)
@@ -232,8 +279,8 @@ class Policy(Generic[GPolicy]):
         logger.info("Successfully loaded %s", policy)
 
         # Ignore mypy because mypy flag policy as not having the same type
-        # as GPolicy.
-        return policy  # type: ignore
+        # as Policy.
+        return policy
 
     def __str__(self) -> str:
         return f"Policy(id='{self.ID}', description='{self.description}')"

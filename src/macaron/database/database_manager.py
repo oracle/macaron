@@ -53,6 +53,7 @@ class DatabaseManager:
             self.session.commit()
         except sqlalchemy.exc.SQLAlchemyError as error:
             logger.error("Database error %s", error)
+            self.session.rollback()
 
     def insert(self, table: Table, values: dict) -> None:
         """Add a table row and commit it using the core api."""

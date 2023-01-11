@@ -138,6 +138,8 @@ class AnalyzeContext:
             policy=None,
         )
 
+        self.repository_table = RepositoryTable(**self.get_repository_data())
+
     @property
     def provenances(self) -> dict:
         """Return the provenances data as a dictionary.
@@ -217,7 +219,7 @@ class AnalyzeContext:
         return Table(
             table_name,
             ORMBase.metadata,
-            Column("analysis_id", Integer, ForeignKey("_analysis.id"), primary_key=True),
+            Column("repository_id", Integer, ForeignKey("_repository.id"), primary_key=True),
             Column("full_name", String, unique=False),
             Column("branch_name", String),
             Column("commit_sha", String),
