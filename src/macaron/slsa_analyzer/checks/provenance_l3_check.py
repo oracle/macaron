@@ -5,6 +5,7 @@
 
 import glob
 import hashlib
+import json
 import logging
 import os
 import subprocess  # nosec B404
@@ -15,10 +16,14 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
+from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.checks.base_check import BaseCheck
+from macaron.database.database_manager import ORMBase
+from macaron.slsa_analyzer.analyze_context import AnalyzeContext, RepositoryTable
+from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckResultTable
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
 from macaron.slsa_analyzer.git_url import get_repo_dir_name
@@ -48,6 +53,57 @@ class _VerifyArtefactResult:
 
     def __str__(self) -> str:
         return str(self.result.value) + ": " + self.artefact_name
+
+
+class ProvenanceResultTable(CheckResultTable, ORMBase):
+    """Result table for provenenance l3 check."""
+
+    __tablename__ = "_provenance_l3_check"
+
+
+class ReleaseArtefact(ORMBase):
+    """Table to store artefacts."""
+
+    __tablename__ = "_release_artefact"
+    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    name = Column(String)
+
+
+class ArtefactDigest(ORMBase):
+    """Table to store artefact digests."""
+
+    __tablename__ = "_artefact_digest"
+    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    artefact = Column(Integer, ForeignKey(ReleaseArtefact.id))
+    digest = Column(String)
+    digest_algorithm = Column(String)
+
+    _artefact = relationship(ReleaseArtefact)
+
+
+class Provenance(ORMBase):
+    """Table to store the information about a provenance document."""
+
+    __tablename__ = "_provenance"
+    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    repository = Column(Integer, ForeignKey(RepositoryTable.id), nullable=False)
+    release_commit_sha = Column(String)
+    release_tag = Column(String)
+    origin = Column(String)
+    json_text = Column(String, nullable=False)
+
+
+class ProvenanceInformation(ORMBase):
+    """Table to store the SLSA provenance information, compulsory values, for a specific artefact."""
+
+    __tablename__ = "_provenance_attestation"
+    provenance = Column(Integer, ForeignKey(Provenance.id), primary_key=True)
+    artefact = Column(Integer, ForeignKey(ReleaseArtefact.id), primary_key=True)
+    builder_id = Column(String)
+    build_type = Column(String)
+
+    _artefact = relationship(ReleaseArtefact)
+    _provenance = relationship(Provenance)
 
 
 class ProvenanceL3Check(BaseCheck):
@@ -232,6 +288,7 @@ class ProvenanceL3Check(BaseCheck):
         # using self-hosted runners, custom containers or services, etc.
         all_feedback: list[tuple[str, str, _VerifyArtefactResult]] = []
         ci_services = ctx.dynamic_data["ci_services"]
+        check_result["result_tables"] = [ProvenanceResultTable()]
         for ci_info in ci_services:
             ci_service = ci_info["service"]
 
@@ -334,10 +391,39 @@ class ProvenanceL3Check(BaseCheck):
                                 logger.info("Could not verify SLSA Level three integrity for: %s.", sub_asset["name"])
 
                 if downloaded_provs:
+
                     # Store the provenance available results for other checks.
                     # Note: this flag should only be turned off here.
                     ctx.dynamic_data["is_inferred_prov"] = False
                     ci_info["provenances"] = downloaded_provs
+
+                    for provenance in ci_info["provenances"]:
+                        prov = Provenance()
+                        prov.json_text = json.dumps(provenance)
+                        prov.release_tag = ci_info["latest_release"]["tag_name"]
+                        prov.repository = ctx.repository_table.id
+                        prov.origin = self.check_id
+
+                        check_result["result_tables"].append(prov)
+
+                        for thing in provenance["subject"]:
+                            release_artefact = ReleaseArtefact()
+                            release_artefact.name = thing["name"]
+                            check_result["result_tables"].append(release_artefact)
+
+                            for k, val in thing["digest"].items():
+                                digest = ArtefactDigest()
+                                digest._artefact = release_artefact  # pylint: disable=protected-access
+                                digest.digest_algorithm = k
+                                digest.digest = val
+                                check_result["result_tables"].append(digest)
+
+                            prov_info = ProvenanceInformation()
+                            prov_info._artefact = release_artefact  # pylint: disable=protected-access
+                            prov_info._provenance = prov  # pylint: disable=protected-access
+                            prov_info.build_type = provenance["predicate"]["buildType"]
+                            prov_info.builder_id = provenance["predicate"]["builder"]["id"]
+                            check_result["result_tables"].append(prov_info)
 
             except (OSError, SLSAProvenanceError) as error:
                 logger.error(" %s: %s.", self.check_id, error)

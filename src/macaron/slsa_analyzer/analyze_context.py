@@ -41,6 +41,15 @@ class RepositoryTable(ORMBase):
     commit_date = Column(String, nullable=False)
 
 
+class SLSALevelTable(ORMBase):
+    """Table to store the slsa level of a repository."""
+
+    __tablename__ = "_slsa_level"
+    repository = Column(Integer, ForeignKey("_repository.id"), primary_key=True)
+    slsa_level = Column(Integer, nullable=False)
+    reached = Column(Boolean, nullable=False)
+
+
 class ChecksOutputs(TypedDict):
     """Data computed at runtime by checks."""
 
@@ -228,6 +237,14 @@ class AnalyzeContext:
             Column("is_full_reach", Boolean),
             *(Column(key.name, Boolean) for key in get_requirements_dict()),
             extend_existing=True,
+        )
+
+    def get_slsa_level_table(self) -> dict:
+        """Return filled ORM table storing the level for this repository."""
+        return SLSALevelTable(
+            repository=self.repository_table.id,
+            slsa_level=int(self.slsa_level),
+            reached=self.is_full_reach,
         )
 
     def get_repository_data(self) -> dict:

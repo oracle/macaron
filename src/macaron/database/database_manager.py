@@ -55,6 +55,19 @@ class DatabaseManager:
             logger.error("Database error %s", error)
             self.session.rollback()
 
+    def add(self, item) -> None:  # type: ignore
+        """Add an item to the database and flush it.
+
+        Once added the table remains accessible and modifiable, and the primary key field is populated to reflect its
+        record in the database.
+        """
+        try:
+            self.session.add(item)
+            self.session.flush()
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            logger.error("Database error %s", error)
+            self.session.rollback()
+
     def insert(self, table: Table, values: dict) -> None:
         """Add a table row and commit it using the core api."""
         try:

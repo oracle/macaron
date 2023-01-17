@@ -6,6 +6,8 @@
 from enum import Enum
 from typing import TypedDict
 
+from sqlalchemy import Table
+
 
 class CheckResultType(str, Enum):
     """This class contains the types of a check result."""
@@ -34,7 +36,8 @@ class CheckResult(TypedDict):
     # the value will be rendered as a hyperlink in the html report.
     justification: list[str | dict[str, str]]
     # human_readable_justification: str
-    result_values: dict[str, str | float | int] | list[dict[str, str | float | int]]
+    # result_values: dict[str, str | float | int] | list[dict[str, str | float | int]]
+    result_tables: list[Table]
     # recommendation: str
     result_type: CheckResultType
 

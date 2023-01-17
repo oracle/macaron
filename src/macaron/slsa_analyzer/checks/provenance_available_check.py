@@ -111,7 +111,9 @@ class ProvenanceAvailableCheck(BaseCheck):
                         }
                         for asset in assets
                     ]
-                    check_result["result_values"] = asset_results
+                    check_result["result_tables"] = [
+                        ProvenanceAvailableCheck.ResultTable(**res) for res in asset_results
+                    ]
 
                     return CheckResultType.PASSED
 

@@ -17,7 +17,12 @@ from yamale.schema import Schema
 
 from macaron.database.database_manager import ORMBase
 from macaron.parsers.yaml.loader import YamlLoader
-from macaron.policy_engine.souffle_code_generator import get_fact_attributes, get_souffle_import_prelude
+from macaron.policy_engine.souffle_code_generator import (
+    SouffleProgram,
+    get_adhoc_rules,
+    get_fact_attributes,
+    get_souffle_import_prelude,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -180,7 +185,7 @@ class SoufflePolicy:
 
     text: str | None
     sha: str | None
-    prelude: str
+    prelude: SouffleProgram
 
     @classmethod
     def make_policy(cls, file_path: os.PathLike | str | None, database_path: str) -> "SoufflePolicy":
@@ -194,9 +199,10 @@ class SoufflePolicy:
         database_path: str
             The path to the database souffle will use to import relations, as used in the prelude.
         """
-        policy: SoufflePolicy = SoufflePolicy(None, None, "")
-        policy.prelude = get_souffle_import_prelude(database_path, ORMBase.metadata)
-        policy.prelude += get_fact_attributes(ORMBase)
+        policy: SoufflePolicy = SoufflePolicy(None, None, SouffleProgram())
+        policy.prelude.update(get_souffle_import_prelude(database_path, ORMBase.metadata))
+        policy.prelude.update(get_fact_attributes(ORMBase.metadata))
+        policy.prelude.rules.union(get_adhoc_rules())
         if file_path:
             with open(file_path, encoding="utf-8") as file:
                 policy.text = file.read()
@@ -206,7 +212,7 @@ class SoufflePolicy:
 
     def get_policy_table(self) -> SoufflePolicyTable:
         """Get the bound ORM object for the policy."""
-        return SoufflePolicyTable(file_sha=self.sha, file_text=self.text, prelude=self.prelude)
+        return SoufflePolicyTable(file_sha=self.sha, file_text=self.text, prelude=str(self.prelude))
 
 
 # pylint: disable=invalid-name

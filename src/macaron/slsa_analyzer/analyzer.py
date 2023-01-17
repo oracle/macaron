@@ -71,7 +71,7 @@ class AnalysisTable(ORMBase):
     __tablename__ = "_analysis"
     id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
     analysis_time = Column(String, nullable=False)
-    repository = Column(Integer, ForeignKey("_repository.id"), nullable=True)
+    repository = Column(Integer, ForeignKey("_repository.id"), nullable=False)
     policy = Column(Integer, ForeignKey("_policy.id"), nullable=True)  # to be foreign key
     macaron_version = Column(String, nullable=False)
 
@@ -143,6 +143,9 @@ class Analyzer:
 
         # Initialize the reporters to store analysis data to files.
         self.reporters: list[FileReporter] = []
+
+        self.db_man = DatabaseManager(self.database_path)
+        self.db_man.create_tables()
 
     def run(self, user_config: dict, skip_deps: bool = False) -> int:
         """Run the analysis and write results to the output path.
@@ -216,20 +219,21 @@ class Analyzer:
             dup_record.context = find_ctx
 
         # Store the analysis result(s) into the SQLite database.
-        with DatabaseManager(self.database_path) as db_man:
-            analysis = self.store_analysis_to_db(db_man, main_record)
+        self.db_man.create_tables()
 
-            for ctx in report.get_ctxs():
-                if ctx is not None and ctx != main_record.context:
-                    self.store_result_to_db(db_man, analysis, ctx)
+        analysis = self.store_analysis_to_db(self.db_man, main_record)
 
-            for parent, child in report.get_dependencies():
-                dependency = RepositoryDependency(
-                    dependent_repository=parent.repository_table.id, dependency_repository=child.repository_table.id
-                )
-                db_man.add_and_commit(dependency)
+        for ctx in report.get_ctxs():
+            self.store_result_to_db(self.db_man, analysis, ctx)
 
-            db_man.session.commit()
+        # Store dependency relations
+        for parent, child in report.get_dependencies():
+            dependency = RepositoryDependency(
+                dependent_repository=parent.repository_table.id, dependency_repository=child.repository_table.id
+            )
+            self.db_man.add_and_commit(dependency)
+
+        self.db_man.session.commit()
 
         # Store the analysis result into report files.
         self.generate_reports(report)
@@ -498,6 +502,8 @@ class Analyzer:
             remote_path,
         )
 
+        self.db_man.add(analyze_ctx.repository_table)
+
         return analyze_ctx
 
     def _prepare_repo(
@@ -727,10 +733,16 @@ class Analyzer:
     def store_analysis_to_db(self, db_man: DatabaseManager, main_record: Record) -> AnalysisTable:
         """Store the analysis to the database."""
         db_man.create_tables()
+
         analysis = AnalysisTable(
             analysis_time=datetime.now().isoformat(sep="T", timespec="seconds"),
             macaron_version=__version__,
         )
+        if main_record.context is not None:
+            analysis.repository = main_record.context.repository_table.id
+        else:
+            return analysis
+
         db_man.add_and_commit(analysis)
 
         if self.policy is not None:
@@ -740,10 +752,6 @@ class Analyzer:
             souffle_table = self.souffle_policy.get_policy_table()
             souffle_table.analysis = analysis.id
             db_man.add_and_commit(souffle_table)
-
-        if main_record.context is not None:
-            self.store_result_to_db(db_man, analysis, main_record.context)
-            analysis.repository = main_record.context.repository_table.id
 
         return analysis
 
@@ -769,26 +777,25 @@ class Analyzer:
         result_table = AnalyzeContext.get_analysis_result_table(self.TABLE_NAME)
         db_man.create_tables()
 
-        # Store repository
-        db_man.add_and_commit(analyze_ctx.repository_table)
+        # Store old result format
         repository_analysis = RepositoryAnalysis(repository_id=analyze_ctx.repository_table.id, analysis_id=analysis.id)
         db_man.add_and_commit(repository_analysis)
 
+        # Store the context's slsa level
+        db_man.add_and_commit(analyze_ctx.get_slsa_level_table())
+
         # Store check result table
         for check in analyze_ctx.check_results.values():
-            table_class = registry.get_all_checks_mapping()[check["check_id"]].ResultTable
-            if issubclass(table_class, CheckResultTable):
-                result_values: list[dict] = (
-                    [check["result_values"]] if isinstance(check["result_values"], dict) else check["result_values"]
-                )
-                for result in result_values:
-                    table: CheckResultTable = table_class(**result)  # type: ignore
-                    table.repository_id = analyze_ctx.repository_table.id
-                    table.passed = check["result_type"] == CheckResultType.PASSED
-                    table.skipped = check["result_type"] == CheckResultType.SKIPPED
-                    db_man.session.add(table)
-                    db_man.session.commit()
-        db_man.session.commit()
+
+            if "result_tables" in check:
+                for table in check["result_tables"]:
+                    if isinstance(table, CheckResultTable):
+                        table.repository_id = analyze_ctx.repository_table.id
+                        table.passed = check["result_type"] == CheckResultType.PASSED
+                        table.skipped = check["result_type"] == CheckResultType.SKIPPED
+                        db_man.add_and_commit(table)
+                    else:
+                        db_man.add_and_commit(table)
 
         # Store SLSA Requirements
         results = analyze_ctx.get_analysis_result_data()
@@ -796,7 +803,7 @@ class Analyzer:
             if value.is_pass:
                 requirement = SLSARequirement(
                     repository=analyze_ctx.repository_table.id,
-                    requirement=str(key),
+                    requirement=key.name,
                     requirement_name=value.name,
                     feedback=value.feedback,
                 )

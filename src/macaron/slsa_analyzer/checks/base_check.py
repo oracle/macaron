@@ -93,7 +93,7 @@ class BaseCheck:
             slsa_requirements=[str(self.SLSA_REQ_DATA.get(req)) for req in self.eval_reqs],
             justification=[],
             result_type=CheckResultType.SKIPPED,
-            result_values={},
+            result_tables=[],
         )
 
         if skipped_info:

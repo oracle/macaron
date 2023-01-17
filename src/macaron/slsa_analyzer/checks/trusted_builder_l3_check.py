@@ -24,16 +24,17 @@ from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+class ResultTable(CheckResultTable, ORMBase):
+    """Check justification table for trusted_builder."""
+
+    __tablename__ = "_trusted_builder_check"
+    build_tool_name = Column(String)
+    ci_service_name = Column(String)
+    build_trigger = Column(String)
+
+
 class TrustedBuilderL3Check(BaseCheck):
     """This Check checks whether the target repo uses level 3 builders."""
-
-    class ResultTable(CheckResultTable, ORMBase):
-        """Check justification table for trusted_builder."""
-
-        __tablename__ = "_trusted_builder_check"
-        build_tool_name = Column(String)
-        ci_service_name = Column(String)
-        build_trigger = Column(String)
 
     def __init__(self) -> None:
         """Initialize instance."""
@@ -87,6 +88,7 @@ class TrustedBuilderL3Check(BaseCheck):
         found_builder = False
         ci_services = ctx.dynamic_data["ci_services"]
         result_values = []
+        check_result["result_tables"] = []
 
         for ci_info in ci_services:
             inferred_provenances = []
@@ -154,8 +156,9 @@ class TrustedBuilderL3Check(BaseCheck):
             if inferred_provenances:
                 ci_info["provenances"] = inferred_provenances
 
+        check_result["result_tables"] = [ResultTable(**result) for result in result_values]
+
         if found_builder:
-            check_result["result_values"] = result_values
             return CheckResultType.PASSED
 
         check_result["justification"].append("Could not find a trusted level 3 builder as a GitHub Actions workflow.")

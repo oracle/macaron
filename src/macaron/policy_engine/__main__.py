@@ -8,15 +8,25 @@ This program runs souffle against a macaron output sqlite database.
 """
 
 import argparse
+import json
 import logging
+import os
 import sys
+import time
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import MetaData, create_engine, select
+from sqlalchemy.orm import sessionmaker
 
 from macaron.database.database_manager import DatabaseManager
 from macaron.policy_engine.policy import SoufflePolicyTable
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
+from macaron.policy_engine.souffle_code_generator import (
+    convert_json_to_adt_row,
+    get_adhoc_rules,
+    get_fact_attributes,
+    get_souffle_import_prelude,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -28,33 +38,98 @@ class Config:
     interactive: bool = False
     policy_id: int | None = None
     policy_file: str | None = None
+    show_preamble: bool = False
 
 
-config = Config()
+global_config = Config()
+
+
+class Timer:
+    """Time an operation using context manager."""
+
+    def __init__(self, name: str) -> None:
+        self.start: float = time.perf_counter()
+        self.name: str = name
+        self.delta: float = 0.0
+        self.stop: float = 0.0
+
+    def __enter__(self) -> "Timer":
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
+        self.stop = time.perf_counter()
+        self.delta = self.stop - self.start
+        print(self.name, f"delta: {self.delta:0.4f}")
+
+
+def get_generated() -> tuple[str, str]:
+    """Get generated souffle code from database specified by configuration."""
+    metadata = MetaData()
+    engine = create_engine(f"sqlite:///{global_config.database_path}", echo=False)
+    metadata.reflect(engine)
+    session_maker = sessionmaker(bind=engine)
+    session = session_maker()
+
+    prelude = get_souffle_import_prelude(global_config.database_path, metadata)
+    prelude.update(get_fact_attributes(metadata))
+
+    result: str = str(prelude)
+    result += get_adhoc_rules()
+    this_id = 0
+    json_facts = ""
+    for table_name in metadata.tables.keys():
+        this_id += 1
+        table = metadata.tables[table_name]
+        for column in table.columns:
+            if "json" in column.name.lower():
+                stmt = select(table)
+                relation_name = table_name.lower().replace("_json", "").replace("json_", "")
+                if relation_name[0] == "_":
+                    relation_name = relation_name[1:]
+                for row in session.execute(stmt):
+                    res = row[column.name]
+                    row_id = row["id"]
+                    json_facts += (
+                        "\n".join(convert_json_to_adt_row(json.loads(res), prefix=relation_name, ident=row_id)) + "\n"
+                    )
+    return result, json_facts
 
 
 def policy_engine(policy: SoufflePolicyTable, override_file: Optional[str]) -> None:
     """Invoke souffle and report result."""
-    with SouffleWrapper() as sfl:
-        text: str = ""
-        if override_file:
-            with open(override_file, encoding="utf-8") as file:
-                text = file.read()
-        elif policy.file_text:
-            text = policy.file_text
-        else:
-            text = ".output repository"
+    with Timer("Codegen"):
+        prelude, facts = get_generated()
+    sfl = SouffleWrapper()
+    text: str = ""
+    if override_file:
+        with open(override_file, encoding="utf-8") as file:
+            text = file.read()
+    elif policy.file_text:
+        text = policy.file_text
+    else:
+        text = ".output repository"
 
-        try:
-            res = sfl.interpret_text(policy.prelude + text)
-        except SouffleError as error:
-            print(error.command)
-            print(error.message)
-            sys.exit(1)
-        for key, values in res.items():
-            print(key)
-            for value in values:
-                print("    ", value)
+    with open(os.path.join(sfl.fact_dir, "json.facts"), "w", encoding="utf-8") as file:
+        file.write(facts)
+
+    prelude += '\n.input json (filename="json.facts")\n'
+
+    if global_config.show_preamble:
+        print(prelude)
+        return
+
+    try:
+        with Timer("Souffle"):
+            res = sfl.interpret_text(prelude + text)
+    except SouffleError as error:
+        print(error.command)
+        print(error.message)
+        sys.exit(1)
+
+    for key, values in res.items():
+        print(key)
+        for value in values:
+            print("    ", value)
 
 
 def interactive() -> None:
@@ -62,7 +137,7 @@ def interactive() -> None:
     raise NotImplementedError()
 
 
-def non_interactive() -> None:
+def non_interactive(config: Config = global_config) -> None:
     """Evaluate a policy based on configuration and exit."""
     with DatabaseManager(config.database_path) as dbman:
         stmt = select(SoufflePolicyTable)
@@ -80,19 +155,22 @@ def main() -> int:
     main_parser.add_argument("-i", "--interactive", help="Run in interactive mode", required=False, action="store_true")
     main_parser.add_argument("-po", "--policy-id", help="The policy id to evaluate", required=False, action="store")
     main_parser.add_argument("-f", "--file", help="Replace policy file", required=False, action="store")
+    main_parser.add_argument("-s", "--show-preamble", help="Show preamble", required=False, action="store_true")
 
     args = main_parser.parse_args(sys.argv[1:])
 
-    config.database_path = args.database
+    global_config.database_path = args.database
 
     if args.interactive:
-        config.interactive = args.interactive
+        global_config.interactive = args.interactive
     if args.policy_id:
-        config.policy_id = args.policy_id
+        global_config.policy_id = args.policy_id
     if args.file:
-        config.policy_file = args.file
+        global_config.policy_file = args.file
+    if args.show_preamble:
+        global_config.show_preamble = args.show_preamble
 
-    if config.interactive:
+    if global_config.interactive:
         interactive()
     else:
         non_interactive()

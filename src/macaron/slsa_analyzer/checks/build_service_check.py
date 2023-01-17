@@ -135,11 +135,13 @@ class BuildServiceCheck(BaseCheck):
                             else "However, could not find a passing workflow run.",
                         ]
                         check_result["justification"].extend(justification)
-                        check_result["result_values"] = {
-                            "build_tool_name": build_tool.name,
-                            "build_trigger": trigger_link,
-                            "ci_service_name": ci_service.name,
-                        }
+                        check_result["result_tables"] = [
+                            BuildServiceCheck.ResultTable(
+                                build_tool_name=build_tool.name,
+                                build_trigger=trigger_link,
+                                ci_service_name=ci_service.name,
+                            )
+                        ]
 
                         if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
                             predicate = ci_info["provenances"][0]["predicate"]
@@ -169,10 +171,12 @@ class BuildServiceCheck(BaseCheck):
                                 f"build tool {build_tool.name} in {ci_service.name} to "
                                 f"build."
                             )
-                            check_result["result_values"] = {
-                                "build_tool_name": build_tool.name,
-                                "ci_service_name": ci_service.name,
-                            }
+                            check_result["result_tables"] = [
+                                BuildServiceCheck.ResultTable(
+                                    build_tool_name=build_tool.name,
+                                    ci_service_name=ci_service.name,
+                                )
+                            ]
 
                             if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
                                 predicate = ci_info["provenances"][0]["predicate"]

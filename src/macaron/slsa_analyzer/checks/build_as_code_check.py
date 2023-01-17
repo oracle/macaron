@@ -44,7 +44,6 @@ class BuildAsCodeCheck(BaseCheck):
 
     def __init__(self) -> None:
         """Initiate the BuildAsCodeCheck instance."""
-        check_id = "mcn_build_as_code_1"
         description = (
             "The build definition and configuration executed by the build "
             "service is verifiably derived from text file definitions "
@@ -55,7 +54,7 @@ class BuildAsCodeCheck(BaseCheck):
         ]
         eval_reqs = [ReqName.BUILD_AS_CODE]
         super().__init__(
-            check_id=check_id,
+            check_id="mcn_build_as_code_1",
             description=description,
             depends_on=depends_on,
             eval_reqs=eval_reqs,
@@ -70,7 +69,7 @@ class BuildAsCodeCheck(BaseCheck):
                 continue
             # The first argument in a bash command is the program name.
             # So first check that the program name is a supported build tool name.
-            # We need to handle cases where the the first argument is a path to the program.
+            # We need to handle cases where the first argument is a path to the program.
             cmd_program_name = os.path.basename(com[0])
             if not cmd_program_name:
                 logger.debug("Found invalid program name %s.", com[0])
@@ -157,13 +156,15 @@ class BuildAsCodeCheck(BaseCheck):
                             predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
                             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                             predicate["metadata"]["buildInvocationId"] = html_url
-                            check_result["result_values"] = {
-                                "build_tool_name": build_tool.name,
-                                "ci_service_name": ci_service.name,
-                                "build_trigger": trigger_link,
-                                "deploy_command": deploy_cmd,
-                                "build_status_url": html_url,
-                            }
+                            check_result["result_tables"] = [
+                                BuildAsCodeCheck.ResultTable(
+                                    build_tool_name=build_tool.name,
+                                    ci_service_name=ci_service.name,
+                                    build_trigger=trigger_link,
+                                    deploy_command=deploy_cmd,
+                                    build_status_url=html_url,
+                                )
+                            ]
                         return CheckResultType.PASSED
 
                 # We currently don't parse these CI configuration files.
@@ -190,16 +191,18 @@ class BuildAsCodeCheck(BaseCheck):
                                 ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
                                 predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = config_name
-                            check_result["result_values"] = {
-                                "build_tool_name": build_tool.name,
-                                "ci_service_name": ci_service.name,
-                                "deploy_command": deploy_cmd,
-                            }
+                            check_result["result_tables"] = [
+                                BuildAsCodeCheck.ResultTable(
+                                    build_tool_name=build_tool.name,
+                                    ci_service_name=ci_service.name,
+                                    deploy_command=deploy_cmd,
+                                )
+                            ]
                             return CheckResultType.PASSED
 
             pass_msg = f"The target repository does not use {build_tool.name} to deploy."
             check_result["justification"].append(pass_msg)
-            check_result["result_values"] = {"build_tool_name": build_tool.name}
+            check_result["result_tables"] = [BuildAsCodeCheck.ResultTable(build_tool_name=build_tool.name)]
             return CheckResultType.FAILED
 
         failed_msg = "The target repository does not have a build tool."

@@ -66,7 +66,7 @@ class BuildScriptCheck(BaseCheck):
         if build_tool and not isinstance(build_tool, NoneBuildTool):
             pass_msg = f"The target repository uses build tool {build_tool.name}."
             check_result["justification"].append(pass_msg)
-            check_result["result_values"] = {"build_tool_name": build_tool.name}
+            check_result["result_tables"] = [BuildScriptCheck.ResultTable(build_tool_name=build_tool.name)]
             return CheckResultType.PASSED
 
         failed_msg = "The target repository does not have a build tool."

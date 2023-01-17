@@ -1,4 +1,5 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains reporter classes for creating reports of Macaron analyzed results."""
@@ -81,6 +82,11 @@ class FileReporter:
         raise NotImplementedError
 
 
+def json_convert(obj) -> dict | str | int | float | list:  # type: ignore
+    """Convert an object to json representation for json report."""
+    return str(obj)
+
+
 class JSONReporter(FileReporter):
     """This class handles writing reports to JSON files."""
 
@@ -122,7 +128,7 @@ class JSONReporter(FileReporter):
             for record in report.get_records():
                 if record.context and record.status == SCMStatus.AVAILABLE:
                     file_name = os.path.join(target_dir, f"{record.context.repo_name}.json")
-                    json_data = json.dumps(record.get_dict(), indent=self.indent)
+                    json_data = json.dumps(record.get_dict(), indent=self.indent, default=json_convert)
                     self.write_file(file_name, json_data)
         except TypeError as error:
             logger.critical("Cannot serialize output report to JSON: %s", error)
