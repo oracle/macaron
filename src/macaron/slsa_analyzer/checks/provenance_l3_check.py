@@ -44,6 +44,14 @@ class _VerifyArtefactResultType(Enum):
     NO_DOWNLOAD = "unable to download asset"
     TOO_LARGE = "asset file too large to download"
 
+    def is_skip(self) -> bool:
+        """Return whether the verification was skipped."""
+        return self in (_VerifyArtefactResultType.NO_DOWNLOAD, _VerifyArtefactResultType.TOO_LARGE)
+
+    def is_fail(self) -> bool:
+        """Return whether the verification failed."""
+        return self in (_VerifyArtefactResultType.FAILED, _VerifyArtefactResultType.ERROR)
+
 
 @dataclass
 class _VerifyArtefactResult:
@@ -67,7 +75,6 @@ class ReleaseArtefact(ORMBase):
 
     __tablename__ = "_release_artefact"
     id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    name = Column(String)
 
 
 class DigestSet(ORMBase):
@@ -79,18 +86,6 @@ class DigestSet(ORMBase):
     digest_algorithm = Column(String, nullable=False)
 
 
-class ArtefactDigest(ORMBase):
-    """Table to store artefact digests."""
-
-    __tablename__ = "_artefact_digest"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    artefact = Column(Integer, ForeignKey(ReleaseArtefact.id))
-    digest = Column(Integer, ForeignKey(DigestSet.id))
-
-    _artefact = relationship(ReleaseArtefact)
-    _digest = relationship(DigestSet)
-
-
 class Provenance(ORMBase):
     """Table to store the information about a provenance document."""
 
@@ -99,8 +94,7 @@ class Provenance(ORMBase):
     repository = Column(Integer, ForeignKey(RepositoryTable.id), nullable=False)
     release_commit_sha = Column(String)
     release_tag = Column(String)
-    verified = Column(Boolean)
-    json_text = Column(Boolean)
+    provenance_json = Column(String, nullable=False)
 
     # predicate stored here as there is one predicate per provenance
     builder_id = Column(String)
@@ -108,18 +102,29 @@ class Provenance(ORMBase):
     config_source_uri = Column(String)
     config_source_entry_point = Column(String)
 
-    provenance_json = Column(String, nullable=False)
-
 
 class ProvenanceArtefact(ORMBase):
     """Mapping artefacts to the containing provenance."""
 
     __tablename__ = "_provenance_artefact"
-    artefact = Column(Integer, ForeignKey(ReleaseArtefact.id), primary_key=True, autoincrement=True)
-    provenance = Column(Integer, ForeignKey(Provenance.id), primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    name = Column(String)
+    verified = Column(Boolean, nullable=False)
 
-    _artefact = relationship(ReleaseArtefact)
+    provenance = Column(Integer, ForeignKey(Provenance.id))
     _provenance = relationship(Provenance)
+
+
+class ArtefactDigest(ORMBase):
+    """Table to store artefact digests."""
+
+    __tablename__ = "_artefact_digest"
+    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    artefact = Column(Integer, ForeignKey(ProvenanceArtefact.id))
+    digest = Column(Integer, ForeignKey(DigestSet.id))
+
+    _artefact = relationship(ProvenanceArtefact)
+    _digest = relationship(DigestSet)
 
 
 class ProvenanceL3Check(BaseCheck):
@@ -349,103 +354,86 @@ class ProvenanceL3Check(BaseCheck):
                         # Add the provenance file.
                         downloaded_provs.append(payload)
 
-                        # Iterate through the subjects and verify.
-                        for subject in payload["subject"]:
-                            sub_asset = self._find_asset(subject, all_assets, temp_path, ci_service)
-
-                            if not sub_asset:
-                                logger.info("Could not find provenance subject %s. Skip verifying...", subject)
-                                all_feedback.append(
-                                    (
-                                        ci_service.name,
-                                        prov_asset["url"],
-                                        _VerifyArtefactResult(
-                                            result=_VerifyArtefactResultType.NO_DOWNLOAD, artefact_name=subject["name"]
-                                        ),
-                                    )
-                                )
-                                continue
-
-                            if not Path(temp_path, sub_asset["name"]).is_file():
-                                if "size" in sub_asset and self._size_large(sub_asset["size"]):
-                                    logger.info(
-                                        "Skip verifying the artifact %s: asset size too large.", sub_asset["name"]
-                                    )
-                                    all_feedback.append(
-                                        (
-                                            ci_service.name,
-                                            prov_asset["url"],
-                                            _VerifyArtefactResult(
-                                                result=_VerifyArtefactResultType.TOO_LARGE,
-                                                artefact_name=sub_asset["name"],
-                                            ),
-                                        )
-                                    )
-                                    continue
-
-                                if "url" in sub_asset and not ci_service.api_client.download_asset(
-                                    sub_asset["url"], os.path.join(temp_path, sub_asset["name"])
-                                ):
-                                    logger.info("Could not download artifact %s. Skip verifying...", sub_asset["name"])
-                                    all_feedback.append(
-                                        (
-                                            ci_service.name,
-                                            prov_asset["url"],
-                                            _VerifyArtefactResult(
-                                                result=_VerifyArtefactResultType.NO_DOWNLOAD,
-                                                artefact_name=sub_asset["name"],
-                                            ),
-                                        )
-                                    )
-                                    continue
-
-                            feedback = self._verify_slsa(
-                                ctx.macaron_path, temp_path, prov_asset, sub_asset["name"], ctx.remote_path
-                            )
-                            all_feedback.append((ci_service.name, prov_asset["url"], feedback))
-                            if feedback.result != _VerifyArtefactResultType.PASSED:
-                                logger.info("Could not verify SLSA Level three integrity for: %s.", sub_asset["name"])
-
-                if downloaded_provs:
-
-                    # Store the provenance available results for other checks.
-                    # Note: this flag should only be turned off here.
-                    ctx.dynamic_data["is_inferred_prov"] = False
-                    ci_info["provenances"] = downloaded_provs
-
-                    for provenance in ci_info["provenances"]:
+                        # Output provenance
                         prov = Provenance()
-                        prov.json_text = json.dumps(provenance)
+                        prov.provenance_json = json.dumps(payload)
                         prov.release_tag = ci_info["latest_release"]["tag_name"]
                         prov.repository = ctx.repository_table.id
 
                         # predicate
-                        prov.build_type = provenance["predicate"]["buildType"]
-                        prov.builder_id = provenance["predicate"]["builder"]["id"]
-                        prov.config_source_uri = get_if_exists(provenance, ["predicate", "invocation", "uri"])
+                        prov.build_type = payload["predicate"]["buildType"]
+                        prov.builder_id = payload["predicate"]["builder"]["id"]
+                        prov.config_source_uri = get_if_exists(payload, ["predicate", "invocation", "uri"])
                         prov.config_source_entry_point = get_if_exists(
-                            provenance, ["predicate", "invocation", "entryPoint"]
+                            payload, ["predicate", "invocation", "entryPoint"]
                         )
 
                         check_result["result_tables"].append(prov)
 
-                        # artefacts
-                        for thing in provenance["subject"]:
-                            release_artefact = ReleaseArtefact()
-                            release_artefact.name = thing["name"]
-                            check_result["result_tables"].append(release_artefact)
+                        # Iterate through the subjects and verify.
+                        for subject in payload["subject"]:
+                            sub_asset = self._find_asset(subject, all_assets, temp_path, ci_service)
 
-                            prov_artefact = ProvenanceArtefact(_artefact=release_artefact, _provenance=prov)
-                            check_result["result_tables"].append(prov_artefact)
+                            result: None | _VerifyArtefactResult = None
+                            for _ in range(1):
+                                if not sub_asset:
+                                    result = _VerifyArtefactResult(
+                                        result=_VerifyArtefactResultType.NO_DOWNLOAD, artefact_name=subject["name"]
+                                    )
+                                    break
+                                if not Path(temp_path, sub_asset["name"]).is_file():
+                                    if "size" in sub_asset and self._size_large(sub_asset["size"]):
+                                        result = _VerifyArtefactResult(
+                                            result=_VerifyArtefactResultType.TOO_LARGE,
+                                            artefact_name=sub_asset["name"],
+                                        )
+                                        break
+                                    if "url" in sub_asset and not ci_service.api_client.download_asset(
+                                        sub_asset["url"], os.path.join(temp_path, sub_asset["name"])
+                                    ):
+                                        result = _VerifyArtefactResult(
+                                            result=_VerifyArtefactResultType.NO_DOWNLOAD,
+                                            artefact_name=sub_asset["name"],
+                                        )
+                                        break
 
-                            for k, val in thing["digest"].items():
-                                digest = DigestSet()
-                                artefact_digest = ArtefactDigest()
-                                digest.digest_algorithm = k
-                                digest.digest = val
-                                artefact_digest._artefact = release_artefact  # pylint: disable=protected-access
-                                artefact_digest._digest = digest  # pylint: disable=protected-access
-                                check_result["result_tables"].append(digest)
+                                result = self._verify_slsa(
+                                    ctx.macaron_path, temp_path, prov_asset, sub_asset["name"], ctx.remote_path
+                                )
+
+                            if result:
+                                if result.result.is_skip():
+                                    logger.info("Skipped verifying artifact: %s", result.result)
+                                if result.result.is_fail():
+                                    logger.info("Error verifying artifact: %s", result.result)
+                                if result.result == _VerifyArtefactResultType.FAILED:
+                                    logger.info("Failed verifying artifact: %s", result.result)
+                                if result.result == _VerifyArtefactResultType.PASSED:
+                                    logger.info("Successfully verified artifact: %s", result.result)
+
+                                all_feedback.append((ci_service.name, prov_asset["url"], result))
+
+                                # Store artifact information result to database
+                                artifact = ProvenanceArtefact()
+                                artifact.name = subject["name"]
+                                artifact.verified = result.result == _VerifyArtefactResultType.PASSED
+                                artifact._provenance = prov  # pylint: disable=protected-access
+                                check_result["result_tables"].append(artifact)
+
+                                for k, val in subject["digest"].items():
+                                    digest = DigestSet()
+                                    artefact_digest = ArtefactDigest()
+                                    digest.digest_algorithm = k
+                                    digest.digest = val
+                                    artefact_digest._artefact = artifact  # pylint: disable=protected-access
+                                    artefact_digest._digest = digest  # pylint: disable=protected-access
+                                    check_result["result_tables"].append(digest)
+
+                if downloaded_provs:
+                    # Store the provenance available results for other checks.
+                    # Note: this flag should only be turned off here.
+                    ctx.dynamic_data["is_inferred_prov"] = False
+                    ci_info["provenances"] = downloaded_provs
 
             except (OSError, SLSAProvenanceError) as error:
                 logger.error(" %s: %s.", self.check_id, error)
@@ -454,28 +442,15 @@ class ProvenanceL3Check(BaseCheck):
 
         result_value = CheckResultType.FAILED
         if all_feedback:
-            failed = [
-                result
-                for ci_name, prov_url, result in all_feedback
-                if result.result == _VerifyArtefactResultType.FAILED
-            ]
-            passed = [
-                result
-                for ci_name, prov_url, result in all_feedback
-                if result.result == _VerifyArtefactResultType.PASSED
-            ]
-            skipped = [
-                result for ci_name, prov_url, result in all_feedback if result not in passed and result not in failed
-            ]
+            failed = [result for _, _, result in all_feedback if result.result == _VerifyArtefactResultType.FAILED]
+            passed = [result for _, _, result in all_feedback if result.result == _VerifyArtefactResultType.PASSED]
+            skipped = [result for _, _, result in all_feedback if result not in passed and result not in failed]
 
             if failed or skipped:
                 result_value = CheckResultType.FAILED
 
             if passed:
-                check_result["justification"].append(
-                    "Successfully verified level 3: ",
-                )
-                check_result["justification"].append(",".join(map(str, passed)))
+                check_result["justification"].append("Successfully verified level 3: " + ",".join(map(str, passed)))
             if failed or skipped:
                 check_result["justification"].append("\nFailed/Skipped: " + ",".join(map(str, failed + skipped)))
 
