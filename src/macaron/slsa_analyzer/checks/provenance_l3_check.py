@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from macaron.config.defaults import defaults
@@ -30,6 +30,7 @@ from macaron.slsa_analyzer.git_url import get_repo_dir_name
 from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader, SLSAProvenanceError
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
+from macaron.util import get_if_exists
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -69,16 +70,25 @@ class ReleaseArtefact(ORMBase):
     name = Column(String)
 
 
+class DigestSet(ORMBase):
+    """Table to store artefact digests."""
+
+    __tablename__ = "_digest_set"
+    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    digest = Column(String, nullable=False)
+    digest_algorithm = Column(String, nullable=False)
+
+
 class ArtefactDigest(ORMBase):
     """Table to store artefact digests."""
 
     __tablename__ = "_artefact_digest"
     id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
     artefact = Column(Integer, ForeignKey(ReleaseArtefact.id))
-    digest = Column(String)
-    digest_algorithm = Column(String)
+    digest = Column(Integer, ForeignKey(DigestSet.id))
 
     _artefact = relationship(ReleaseArtefact)
+    _digest = relationship(DigestSet)
 
 
 class Provenance(ORMBase):
@@ -89,18 +99,24 @@ class Provenance(ORMBase):
     repository = Column(Integer, ForeignKey(RepositoryTable.id), nullable=False)
     release_commit_sha = Column(String)
     release_tag = Column(String)
-    origin = Column(String)
-    json_text = Column(String, nullable=False)
+    verified = Column(Boolean)
+    json_text = Column(Boolean)
 
-
-class ProvenanceInformation(ORMBase):
-    """Table to store the SLSA provenance information, compulsory values, for a specific artefact."""
-
-    __tablename__ = "_provenance_attestation"
-    provenance = Column(Integer, ForeignKey(Provenance.id), primary_key=True)
-    artefact = Column(Integer, ForeignKey(ReleaseArtefact.id), primary_key=True)
+    # predicate stored here as there is one predicate per provenance
     builder_id = Column(String)
     build_type = Column(String)
+    config_source_uri = Column(String)
+    config_source_entry_point = Column(String)
+
+    provenance_json = Column(String, nullable=False)
+
+
+class ProvenanceArtefact(ORMBase):
+    """Mapping artefacts to the containing provenance."""
+
+    __tablename__ = "_provenance_artefact"
+    artefact = Column(Integer, ForeignKey(ReleaseArtefact.id), primary_key=True, autoincrement=True)
+    provenance = Column(Integer, ForeignKey(Provenance.id), primary_key=True, autoincrement=True)
 
     _artefact = relationship(ReleaseArtefact)
     _provenance = relationship(Provenance)
@@ -402,28 +418,34 @@ class ProvenanceL3Check(BaseCheck):
                         prov.json_text = json.dumps(provenance)
                         prov.release_tag = ci_info["latest_release"]["tag_name"]
                         prov.repository = ctx.repository_table.id
-                        prov.origin = self.check_id
+
+                        # predicate
+                        prov.build_type = provenance["predicate"]["buildType"]
+                        prov.builder_id = provenance["predicate"]["builder"]["id"]
+                        prov.config_source_uri = get_if_exists(provenance, ["predicate", "invocation", "uri"])
+                        prov.config_source_entry_point = get_if_exists(
+                            provenance, ["predicate", "invocation", "entryPoint"]
+                        )
 
                         check_result["result_tables"].append(prov)
 
+                        # artefacts
                         for thing in provenance["subject"]:
                             release_artefact = ReleaseArtefact()
                             release_artefact.name = thing["name"]
                             check_result["result_tables"].append(release_artefact)
 
+                            prov_artefact = ProvenanceArtefact(_artefact=release_artefact, _provenance=prov)
+                            check_result["result_tables"].append(prov_artefact)
+
                             for k, val in thing["digest"].items():
-                                digest = ArtefactDigest()
-                                digest._artefact = release_artefact  # pylint: disable=protected-access
+                                digest = DigestSet()
+                                artefact_digest = ArtefactDigest()
                                 digest.digest_algorithm = k
                                 digest.digest = val
+                                artefact_digest._artefact = release_artefact  # pylint: disable=protected-access
+                                artefact_digest._digest = digest  # pylint: disable=protected-access
                                 check_result["result_tables"].append(digest)
-
-                            prov_info = ProvenanceInformation()
-                            prov_info._artefact = release_artefact  # pylint: disable=protected-access
-                            prov_info._provenance = prov  # pylint: disable=protected-access
-                            prov_info.build_type = provenance["predicate"]["buildType"]
-                            prov_info.builder_id = provenance["predicate"]["builder"]["id"]
-                            check_result["result_tables"].append(prov_info)
 
             except (OSError, SLSAProvenanceError) as error:
                 logger.error(" %s: %s.", self.check_id, error)

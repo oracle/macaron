@@ -13,15 +13,16 @@ import logging
 import os
 import sys
 import time
-from typing import Optional
+from typing import Any, Optional
 
-from sqlalchemy import MetaData, create_engine, select
+from sqlalchemy import MetaData, Table, create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 from macaron.database.database_manager import DatabaseManager
 from macaron.policy_engine.policy import SoufflePolicyTable
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
 from macaron.policy_engine.souffle_code_generator import (
+    JsonType,
     convert_json_to_adt_row,
     get_adhoc_rules,
     get_fact_attributes,
@@ -62,6 +63,53 @@ class Timer:
         print(self.name, f"delta: {self.delta:0.4f}")
 
 
+class JsonConverter:
+    """Convert an SQLite database to json."""
+
+    def __init__(self) -> None:
+        self.metadata = MetaData()
+        self.engine = create_engine(f"sqlite:///{global_config.database_path}", echo=False)
+        self.metadata.reflect(self.engine)
+        self.session_maker = sessionmaker(bind=self.engine)
+        self.session = self.session_maker()
+
+    def statement_to_json(self, table: Table, stmt: Any) -> JsonType:
+        """Convert query result to json, back-filling foreign keys."""
+        results = []
+
+        for row in self.session.execute(stmt):
+            result = {}
+            for i, val in enumerate(row):
+                # print(table.columns[i].name, val)
+
+                if len(table.columns[i].foreign_keys) > 0:
+                    for fork in table.columns[i].foreign_keys:
+                        stmt = select(fork.column.table).where(fork.column == val)
+                        result[table.columns[i].name] = self.statement_to_json(fork.column.table, stmt)
+                elif "json" in table.columns[i].name.lower():
+                    result[table.columns[i].name] = json.loads(val)
+                else:
+                    result[table.columns[i].name] = val
+            results.append(result)
+        if len(results) == 1:
+            return results[0]
+        if len(results) == 0:
+            return None
+        return results  # type: ignore
+
+    def generate_json(self) -> dict:
+        """Get generated souffle code from database specified by configuration."""
+        prelude = get_souffle_import_prelude(global_config.database_path, self.metadata)
+        prelude.update(get_fact_attributes(self.metadata))
+
+        result: dict = {}
+        for table_name in self.metadata.tables.keys():
+            table = self.metadata.tables[table_name]
+            result[table_name] = self.statement_to_json(table, select(table))
+
+        return result
+
+
 def get_generated() -> tuple[str, str]:
     """Get generated souffle code from database specified by configuration."""
     metadata = MetaData()
@@ -75,10 +123,8 @@ def get_generated() -> tuple[str, str]:
 
     result: str = str(prelude)
     result += get_adhoc_rules()
-    this_id = 0
     json_facts = ""
     for table_name in metadata.tables.keys():
-        this_id += 1
         table = metadata.tables[table_name]
         for column in table.columns:
             if "json" in column.name.lower():

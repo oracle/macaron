@@ -1,4 +1,5 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module includes utilities functions for Macaron."""
@@ -230,3 +231,17 @@ def copy_file_bulk(file_list: list, src_path: str, target_path: str) -> bool:
                 return False
 
     return True
+
+
+JsonType = int | float | str | None | bool | list["JsonType"] | dict[str, "JsonType"]
+
+
+def get_if_exists(doc: JsonType, path: list[str | int]) -> JsonType | None:
+    """Get a json dict value if it exists."""
+    while len(path) > 0:
+        this: str | int = path.pop(0)
+        if isinstance(doc, (dict, list)) and this in doc:
+            doc = doc[this]  # type: ignore
+        else:
+            return None
+    return doc

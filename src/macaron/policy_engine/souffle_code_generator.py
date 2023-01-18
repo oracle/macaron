@@ -7,6 +7,8 @@ from typing import TypeGuard
 from sqlalchemy import Column, MetaData, Table
 from sqlalchemy.sql.sqltypes import Boolean, Integer, String, Text
 
+from macaron.util import JsonType
+
 
 def get_adhoc_rules() -> str:
     """Get special souffle rules for preamble."""
@@ -52,11 +54,11 @@ json_path(a, b,key) :- json_path(a,c,_), json_path(c, b, kb), key=kb.
 any_terminal(s,k) :- json(_,_,r), json_path(r, $String(s), k).
 
 
-.decl json_number(json:number, addr: symbol, k:number)
-.decl json_symbol(json:number, addr: symbol, k:symbol)
+.decl json_number(name: symbol, json:number, addr: symbol, k:number)
+.decl json_symbol(name:symbol, json:number, addr: symbol, k:symbol)
 
-json_number(js, addr, val) :- json(name, js, r), json_path(r, $Int(val), addr).
-json_symbol(js, addr, val) :- json(name, js, r), json_path(r, $String(val), addr).
+json_number(name, js, addr, val) :- json(name, js, r), json_path(r, $Int(val), addr).
+json_symbol(name, js, addr, val) :- json(name, js, r), json_path(r, $String(val), addr).
 
 """
 
@@ -131,9 +133,6 @@ def get_fact_input_statements(db_name: str, metadata: MetaData) -> SouffleProgra
             if table_name[0] == "_"
         }
     )
-
-
-JsonType = int | float | str | None | bool | list | dict
 
 
 def get_souffle_import_prelude(db_name: str, metadata: MetaData) -> SouffleProgram:
