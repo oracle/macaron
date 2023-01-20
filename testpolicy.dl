@@ -4,7 +4,7 @@
 
 /* ----------------------------- prelude ----------------------------------- */
 
-.decl _policy(policy_id: symbol, repo: number, message: symbol)
+.decl Policy(policy_id: symbol, repo: number, message: symbol)
 .decl apply_policy_to(policy_id: symbol, repo: number)
 
 /* for outputting debugging information or feedback */
@@ -12,12 +12,12 @@
 // policy applies to the repo and failed
 failed_policies(policy_id, repo) :-
     apply_policy_to(policy_id, repo),
-    !_policy(policy_id, repo, _).
+    !Policy(policy_id, repo, _).
 
 
 .decl passed_policies(policy_id:symbol, repo:number, msg:symbol)
 passed_policies(policy_id, repo, msg):-
-    _policy(policy_id, repo, msg),
+    Policy(policy_id, repo, msg),
     // policy passes on all repos it applies to
     0 = count: {failed_policies(policy_id, _)}.
 
@@ -46,7 +46,7 @@ accept(repo, feedback) :-
         all(dependency(repo, _),
             (dependency(repo, dep), rule(dep, _))).
 
-_policy("trusted_git_server", repo, info) :-
+Policy("trusted_git_server", repo, info) :-
         repository(repo, _,_,_,_,_,_),
         not_self_hosted_git(repo, info).
 
@@ -68,7 +68,7 @@ is_trusted_builder(builder) :-  provenance(_, _, _, _, _, builder, _, _, _),
  *      of their build systems.
     fix: Build using github actions
  */
-_policy("trusted_builder", repo, builder) :-
+Policy("trusted_builder", repo, builder) :-
         repository(repo, name,_,_,_,_,_),
         provenance(prov, repo, _, _, _, builder, _, _, _),
         is_trusted_builder(builder).
@@ -80,7 +80,7 @@ apply_policy_to("trusted_builder", repo) :-
 
 
 // Rule that applies to a specific repository and passes all others
-_policy("specific_rule", repo, feedback) :-
+Policy("specific_rule", repo, feedback) :-
             repository(repo, name,_,_,_,_,_),
             accept(repo, result), feedback = cat(cat(name, ":  "), result).
 
@@ -89,7 +89,6 @@ _policy("specific_rule", repo, feedback) :-
 apply_policy_to("specific_rule", repo) :-
     repository(repo, name,_,_,_,_,_),
     name = "slsa-framework/slsa-verifier".
-
 
 
 .decl accept_artefact(artefact: number, repo: number, name: symbol)
@@ -101,7 +100,7 @@ accept_artefact(art, repo, name) :-
 
 
 .decl defined_policies(policy_name: symbol)
-defined_policies(policy_name) :- _policy(policy_name, _, _).
+defined_policies(policy_name) :- Policy(policy_name, _, _).
 
 
 .output failed_policies
