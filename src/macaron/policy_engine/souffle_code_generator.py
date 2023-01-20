@@ -7,16 +7,14 @@ from typing import TypeGuard
 from sqlalchemy import Column, MetaData, Table
 from sqlalchemy.sql.sqltypes import Boolean, Integer, String, Text
 
-from macaron.util import JsonType
+from macaron.util import JsonType, logger
 
 
 def get_adhoc_rules() -> str:
     """Get special souffle rules for preamble."""
     return """.decl check_passed(repository: number, check_name: symbol)
-check_passed(repo, check) :- attribute(repo, check, "passed").
+            check_passed(repo, check) :- check_name(check), repository_attribute(repo, cat(check, ".passed"), $Bool(1)).
 
-.decl accept(repo:number, feedback:symbol)
-.decl rule(repo:number, feedback:symbol)
 
 .decl transitive_dependency(repo: number, dependency: number)
 
@@ -66,13 +64,16 @@ json_symbol(name, js, addr, val) :- json(name, js, r), json_path(r, $String(val)
 class SouffleProgram:
     """Class to store generated souffle datalog program."""
 
-    declarations: set[str] = set()
-    directives: set[str] = set()
-    rules: set[str] = set()
+    declarations: set[str]
+    directives: set[str]
+    rules: set[str]
 
     def __init__(
         self, declarations: None | set[str] = None, directives: None | set[str] = None, rules: None | set[str] = None
     ):
+        self.declarations = set()
+        self.directives = set()
+        self.rules = set()
         if rules is not None:
             self.rules = rules
         if directives is not None:
@@ -89,16 +90,16 @@ class SouffleProgram:
         return self
 
     def __str__(self) -> str:
-        return "\n".join(self.declarations) + "\n".join(self.directives) + "\n".join(self.rules)
+        return "\n".join(list(self.declarations) + list(self.directives) + list(self.rules))
 
 
 def column_to_souffle_type(column: Column) -> str:
     """Return a souffle type string for a SQLAlchemy Column."""
     sql_type = column.type
     souffle_type: str
-    if isinstance(sql_type, Integer) and not column.nullable:
+    if isinstance(sql_type, Integer):
         souffle_type = "number"
-    elif isinstance(sql_type, String) or column.nullable:
+    elif isinstance(sql_type, String):
         souffle_type = "symbol"
     elif isinstance(sql_type, Text):
         souffle_type = "symbol"
@@ -144,9 +145,10 @@ def get_fact_attributes(metadata: MetaData) -> SouffleProgram:
     """Generate datalog rules which extract individual attributes from the columns of all check result tables."""
     result = SouffleProgram(
         declarations={
-            ".decl number_attribute(repository:number, check_id:symbol, attribute:symbol, value:number)",
-            ".decl symbol_attribute(repository:number, check_id:symbol, attribute:symbol, value:symbol)",
-            ".decl attribute(repository:number, check_id:symbol, attribute:symbol)",
+            ".decl repository_attribute (id:number, key:symbol, value:JsonType)",
+            ".decl check_name(name:symbol)"
+            # ".decl symbol_attribute(repository:number, check_id:symbol, attribute:symbol, value:symbol)",
+            # ".decl attribute(repository:number, check_id:symbol, attribute:symbol)",
         }
     )
 
@@ -166,12 +168,20 @@ def get_fact_attributes(metadata: MetaData) -> SouffleProgram:
             pattern = []
             col_name = cols[cid].name
             col_type = column_to_souffle_type(cols[cid])
+            value_statement = "value"
             for col in cols:
                 if col.name == col_name:
-                    if isinstance(col.type, Boolean):
-                        pattern.append("1")
+
+                    if col.nullable or isinstance(col.type, String):
+                        value_statement = "$String(value)"
+                    elif isinstance(col.type, Integer):
+                        value_statement = "$Int(value)"
+                    elif isinstance(col.type, Boolean):
+                        value_statement = "$Bool(value)"
                     else:
-                        pattern.append("value")
+                        logger.error("Unknown column type in codegen.")
+                        value_statement = "$String(value)"
+                    pattern.append("value")
                 elif col.name in meta:
                     res = meta[col.name]
                     res = "_" if res is None else res
@@ -179,14 +189,10 @@ def get_fact_attributes(metadata: MetaData) -> SouffleProgram:
                 else:
                     pattern.append("_")
 
+            result.rules.add(f'check_name("{table_name[1:]}").')
+            inference = f'repository_attribute(repository, "{table_name[1:]}.{col_name}", {value_statement}) :- '
             if col_type == "symbol":
-                inference = f'symbol_attribute(repository, "{table_name[1:]}", "{col_name}", value) :- value != "n/a", '
-            elif isinstance(cols[cid].type, Boolean):
-                inference = f'attribute(repository, "{table_name[1:]}", "{col_name}") :- '
-            elif col_type == "number":
-                inference = f'number_attribute(repository, "{table_name[1:]}", "{col_name}", value) :- '
-            else:
-                raise ValueError("not reachable")
+                inference += 'value != "n/a", '
 
             sfl_pattern = ",".join(pattern)
             inference += f"{table_name[1:]}({sfl_pattern})."
@@ -195,8 +201,8 @@ def get_fact_attributes(metadata: MetaData) -> SouffleProgram:
 
 
 def get_table_rules_per_column(
-    rule_name: str, table: Table, common_fields: dict[str, str], ignore_columns: list, value_type: str = "symbol"
-) -> str:
+    rule_name: str, table: Table, common_fields: dict[str, str], ignore_columns: list
+) -> SouffleProgram:
     """Generate datalog rules to create subject-predicate relations from a set of columns of a table.
 
     Parameters
@@ -217,19 +223,19 @@ def get_table_rules_per_column(
 
     """
     # Construct declaration statement
-    base_decl = f".decl {rule_name} ("
-    base_decl += ", ".join(
-        [
-            f"{field_name}:{column_to_souffle_type(table.columns[column_name])}"
-            for column_name, field_name in common_fields.items()
-        ]
-    )
-    base_decl += f", key:symbol, value:{value_type})"
-    # TODO: Support all souffle types
-    # This can be done by creating strValue(id, symbol), numValue(id, symbol) relations where id is created using ord()
-    # on the value
 
-    generated_lines = [base_decl]
+    result = SouffleProgram(
+        declarations={
+            f".decl {rule_name} ("
+            + ", ".join(
+                [
+                    f"{field_name}:{column_to_souffle_type(table.columns[column_name])}"
+                    for column_name, field_name in common_fields.items()
+                ]
+            )
+            + ", key:symbol, value:JsonType)"
+        }
+    )
 
     # Construct rule to create relations based on table
     for value_column in table.columns:
@@ -241,9 +247,23 @@ def get_table_rules_per_column(
 
         # Construct the relation statement containing all common_fields and the cid bound to value
         pattern = []
+        value_statement = ""
         for column in table.columns:
             if column.name == value_column.name:
-                pattern.append("value")
+                if isinstance(column.type, String):
+                    value_statement = "$String(value)"
+                    pattern.append("value")
+                elif isinstance(column.type, Integer):
+                    value_statement = "$Int(value)"
+                    pattern.append("value")
+                elif isinstance(column.type, Boolean):
+                    value_statement = "$Bool(value)"
+                    pattern.append("value")
+                else:
+                    logger.error("Unknown column type in codegen.")
+                    value_statement = "$String(value)"
+                    pattern.append("value")
+
             elif column.name in ignore_columns:
                 pattern.append("_")
             elif column.name in common_fields:
@@ -251,17 +271,45 @@ def get_table_rules_per_column(
             else:
                 pattern.append("_")
 
-        lhs = f"{rule_name}(" + ",".join(common_fields.values()) + f',"{value_column.name}",value)'
+        lhs = f"{rule_name}(" + ",".join(common_fields.values()) + f',"{value_column.name}",{value_statement})'
         rhs = f"{table.name[1:]}(" + ",".join(pattern) + ")"
-        generated_lines.append(lhs + " :- " + rhs + ".")
+        rule_stmt = lhs + " :- " + rhs + "."
+        result.rules.add(rule_stmt)
 
-    return "\n".join(generated_lines)
+    return result
+
+
+def project_table_to_key(relation_name: str, table: Table) -> SouffleProgram:
+    """Create rules to convert a table to an attribute that maps its primary keys to its columns."""
+    common_fields: dict[str, str] = {col.name: col.name for col in table.primary_key.columns}
+    ignore_columns: list = []
+
+    return get_table_rules_per_column(relation_name, table, common_fields, ignore_columns)
 
 
 # We generate ADT facts for inputting a json document to souffle as a text inclusion.
 #
-# This is the best option since, as far as I can tell souffle only supports csv input for ADTs, and the csv
-# representation is the souffle datalog literal representation.
+# For example: {"index": ["value"]} becomes
+#
+#       $Object("index", $Array(0, $String("value")))
+#
+# Directly generating these facts is the best option since souffle only supports csv input for ADTs, and the csv
+# representation of ADTs is their literal representation in souffle datalog.
+# Json can alternatively be represented simply as the leaves and their corresponding addresses in the document,
+#
+#       jsonDocument(id, "input.index[0]", "value")
+#
+# This representation is also automatically inferred from the ADT representation.
+#
+# Note: since it is advantageous to be able to refer to any element in the document, an alternative representation to
+# consider could be using relations between each element in the document:
+#
+#       object(id0)
+#       objectElem(id0, "index", id1),
+#       array(id1)
+#       arrayElem(id1, 0, stringElement(id2))
+#       stringElem(id2, "value")
+#
 
 
 class Matcher:

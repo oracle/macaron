@@ -205,6 +205,7 @@ class BuildAsCodeCheck(BaseCheck):
             check_result["result_tables"] = [BuildAsCodeCheck.ResultTable(build_tool_name=build_tool.name)]
             return CheckResultType.FAILED
 
+        check_result["result_tables"] = [BuildAsCodeCheck.ResultTable()]
         failed_msg = "The target repository does not have a build tool."
         check_result["justification"].append(failed_msg)
         return CheckResultType.FAILED

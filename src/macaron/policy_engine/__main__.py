@@ -27,6 +27,7 @@ from macaron.policy_engine.souffle_code_generator import (
     get_adhoc_rules,
     get_fact_attributes,
     get_souffle_import_prelude,
+    project_table_to_key,
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -121,11 +122,19 @@ def get_generated() -> tuple[str, str]:
     prelude = get_souffle_import_prelude(global_config.database_path, metadata)
     prelude.update(get_fact_attributes(metadata))
 
+    for table_name in metadata.tables.keys():
+        table = metadata.tables[table_name]
+        if table_name[0] == "_":
+            if len(table.columns) > len(table.primary_key.columns):
+                prelude.update(project_table_to_key(f"{table_name[1:]}_attribute", table))
+
     result: str = str(prelude)
     result += get_adhoc_rules()
     json_facts = ""
+
     for table_name in metadata.tables.keys():
         table = metadata.tables[table_name]
+
         for column in table.columns:
             if "json" in column.name.lower():
                 stmt = select(table)

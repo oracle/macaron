@@ -1,0 +1,108 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+
+/* ----------------------------- prelude ----------------------------------- */
+
+.decl _policy(policy_id: symbol, repo: number, message: symbol)
+.decl apply_policy_to(policy_id: symbol, repo: number)
+
+/* for outputting debugging information or feedback */
+.decl failed_policies(policy_id:symbol, repo:number)
+// policy applies to the repo and failed
+failed_policies(policy_id, repo) :-
+    apply_policy_to(policy_id, repo),
+    !_policy(policy_id, repo, _).
+
+
+.decl passed_policies(policy_id:symbol, repo:number, msg:symbol)
+passed_policies(policy_id, repo, msg):-
+    _policy(policy_id, repo, msg),
+    // policy passes on all repos it applies to
+    0 = count: {failed_policies(policy_id, _)}.
+
+/* ---------------------------- helper rules ------------------------------ */
+
+
+.decl rule(repo:number, feedback:symbol)
+rule(repo, feedback) :- slsa_requirement(repo, _, "Version controlled", fa),
+                    slsa_requirement(repo, _, "Scripted Build", fb),
+                    slsa_requirement(repo, _, "Build service", fc),
+                    slsa_requirement(repo, _, "Build as code", fd),
+                    check_passed(repo, "trusted_builder_check"),
+                    check_passed(repo, "provenance_available_check"),
+                    check_passed(repo, "build_as_code_check"),
+                    feedback = cat(cat(cat(cat(fa, fb), fc), fd)).
+
+.decl not_self_hosted_git(repo:number, message:symbol)
+not_self_hosted_git(repo, message) :- repository(repo, name, remote, branch, release, commit_sha, commit_date),
+    match("^.*(github.com|gitlab.com).*$", remote), message=remote.
+
+
+.decl accept(repo:number, feedback:symbol)
+accept(repo, feedback) :-
+        repository(repo, _,_,_,_,_,_),
+        rule(repo, feedback),
+        all(dependency(repo, _),
+            (dependency(repo, dep), rule(dep, _))).
+
+_policy("trusted_git_server", repo, info) :-
+        repository(repo, _,_,_,_,_,_),
+        not_self_hosted_git(repo, info).
+
+apply_policy_to("trusted_git_server", repo) :- repository(repo, _,_,_,_,_,_).
+
+.decl is_trusted_builder(builder_id:symbol)
+is_trusted_builder(builder) :-  provenance(_, _, _, _, _, builder, _, _, _),
+                                match("https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.[2-9]+.[0-9]+", builder).
+
+/* ------------------------------- policies ------------------------------- */
+
+/** METADATA
+ *  scope: repository
+ *  title: Trusted Builder
+ *  description: Repository builds artefacts using a trusted builder, a trusted
+ *      builder; github actions.
+ *  threat:
+ *      Trusted builders are trusted to implement ephemerality, isolation ...
+ *      of their build systems.
+    fix: Build using github actions
+ */
+_policy("trusted_builder", repo, builder) :-
+        repository(repo, name,_,_,_,_,_),
+        provenance(prov, repo, _, _, _, builder, _, _, _),
+        is_trusted_builder(builder).
+
+
+apply_policy_to("trusted_builder", repo) :-
+    repository(repo, name,_,_,_,_,_),
+    provenance(prov, repo, _, _, _, _, _, _, _).
+
+
+// Rule that applies to a specific repository and passes all others
+_policy("specific_rule", repo, feedback) :-
+            repository(repo, name,_,_,_,_,_),
+            accept(repo, result), feedback = cat(cat(name, ":  "), result).
+
+
+// apply specific_rule only to repository with id 1
+apply_policy_to("specific_rule", repo) :-
+    repository(repo, name,_,_,_,_,_),
+    name = "slsa-framework/slsa-verifier".
+
+
+
+.decl accept_artefact(artefact: number, repo: number, name: symbol)
+accept_artefact(art, repo, name) :-
+    provenance(prov, repo, _, _, _, builder_id, _, _, _),
+    provenance_artefact(art, name, verified, prov),
+    verified != 0,
+    is_trusted_builder(builder_id).
+
+
+.decl defined_policies(policy_name: symbol)
+defined_policies(policy_name) :- _policy(policy_name, _, _).
+
+
+.output failed_policies
+.output passed_policies

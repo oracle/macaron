@@ -108,10 +108,10 @@ class ProvenanceArtefact(ORMBase):
 
     __tablename__ = "_provenance_artefact"
     id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    name = Column(String)
+    name = Column(String, nullable=False)
     verified = Column(Boolean, nullable=False)
 
-    provenance = Column(Integer, ForeignKey(Provenance.id))
+    provenance = Column(Integer, ForeignKey(Provenance.id), nullable=False)
     _provenance = relationship(Provenance)
 
 
@@ -119,9 +119,9 @@ class ArtefactDigest(ORMBase):
     """Table to store artefact digests."""
 
     __tablename__ = "_artefact_digest"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    artefact = Column(Integer, ForeignKey(ProvenanceArtefact.id))
-    digest = Column(Integer, ForeignKey(DigestSet.id))
+    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)  # noqa: A003
+    artefact = Column(Integer, ForeignKey(ProvenanceArtefact.id), nullable=False)
+    digest = Column(Integer, ForeignKey(DigestSet.id), nullable=False)
 
     _artefact = relationship(ProvenanceArtefact)
     _digest = relationship(DigestSet)
