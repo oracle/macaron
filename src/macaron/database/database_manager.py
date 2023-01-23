@@ -19,7 +19,12 @@ ORMBase = declarative_base()
 
 
 class DatabaseManager:
-    """This class handles and manages the connection to sqlite database during the search session."""
+    """This class handles and manages the connection to sqlite database during the session.
+
+    Note that since SQLAlchemy lazy-loads the fiels of mapped ORM objects, if the databse connection is closed any
+    orm-mapped objects will become invalid. As such the lifetime of the database manager must be longer than any of the
+    objects you add to the database (using add() or add_and_commit()).
+    """
 
     def __init__(self, db_path: str, base=ORMBase):  # type: ignore
         """Initialize instance.
@@ -47,7 +52,15 @@ class DatabaseManager:
         self.terminate()
 
     def add_and_commit(self, item) -> None:  # type: ignore
-        """Add an ORM object to the session and commit it."""
+        """Add an ORM object to the session and commit it.
+
+        Following commit any auto-updated primary key values in the object will be populated and readable.
+        The object can still be modified and read after being committed.
+
+        Parameters
+        ----------
+        item: the orm-mapped object to add to the database.
+        """
         try:
             self.session.add(item)
             self.session.commit()
@@ -58,8 +71,13 @@ class DatabaseManager:
     def add(self, item) -> None:  # type: ignore
         """Add an item to the database and flush it.
 
-        Once added the table remains accessible and modifiable, and the primary key field is populated to reflect its
+        Once added the row remains accessible and modifiable, and the primary key field is populated to reflect its
         record in the database.
+
+        Parameters
+        ----------
+        item:
+            the orm-mapped object to add to the database.
         """
         try:
             self.session.add(item)
@@ -69,14 +87,22 @@ class DatabaseManager:
             self.session.rollback()
 
     def insert(self, table: Table, values: dict) -> None:
-        """Add a table row and commit it using the core api."""
+        """Populate the table with provided values and add it to the database using the core api.
+
+        Parameters
+        ----------
+        table: Table
+            The Table to insert to
+        values: dict
+            The mapping from column names to values to insert into the Table
+        """
         try:
             self.execute(insert(table).values(**values))
         except sqlalchemy.exc.SQLAlchemyError as error:
             logger.error("Database error %s", error)
 
     def execute(self, query) -> None:  # type: ignore
-        """Execute a sqlalchemy core api query."""
+        """Execute a sqlalchemy core api query using a short-lived engine connection."""
         with self.engine.connect() as conn:
             conn.execute(query)
             conn.commit()
@@ -87,6 +113,9 @@ class DatabaseManager:
         Automatically create views for all tables known to _base.metadata.
 
         Creates all explicitly declared tables, and creates views proxying all tables beginning with an underscore.
+
+        Note: this is specifically to allow the tables to be loaded into souffle:
+            https://souffle-lang.github.io/directives#input-directive
         """
         try:
             for table_name, table in self._base.metadata.tables.items():

@@ -5,16 +5,6 @@
 Wrapper classes for invoking souffle by subprocess and getting the resulting tables.
 
 Implements a context manager to create and clean up temporary directories.
-
-Example
--------
-with SouffleWrapper(fact_dir="facts", output_dir="output") as sfl:
-    text = "<souffle program>"
-    result = sfl.interpret_text(text)
-    assert result == {"path": [["1", "2"], ["1", "3"], ["2", "3"]]}
-
-    new_result = sfl.interpret_file("filename", with_prelude="<souffle snippet>")
-
 """
 
 import csv
@@ -42,7 +32,16 @@ class SouffleError(Exception):
 
 
 class SouffleWrapper:
-    """Wrapper class for managing the temporary working directory of the souffle interpreter."""
+    """Wrapper class for managing the temporary working directory of the souffle interpreter.
+
+    Example
+    -------
+    with SouffleWrapper(fact_dir="facts", output_dir="output") as sfl:
+        text = "<souffle program>"
+        result = sfl.interpret_text(text)
+        assert result == {"path": [["1", "2"], ["1", "3"], ["2", "3"]]}
+
+    """
 
     _souffle: str
     output_dir: str

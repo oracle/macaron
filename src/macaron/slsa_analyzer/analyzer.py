@@ -23,7 +23,7 @@ from macaron.database.database_manager import DatabaseManager, ORMBase
 from macaron.dependency_analyzer import CycloneDxMaven, DependencyAnalyzer, DependencyInfo, DependencyTools
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
-from macaron.policy_engine.policy import Policy, SoufflePolicy
+from macaron.policy_engine.policy import Policy
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
@@ -134,12 +134,7 @@ class Analyzer:
 
         # Get the policy from global config.
         self.policy: Policy | None = None
-        self.souffle_policy: SoufflePolicy
-        if global_config.policy_path[global_config.policy_path.rfind(".") :] == ".dl":
-            self.souffle_policy = SoufflePolicy.make_policy(global_config.policy_path, self.database_path)
-        else:
-            self.souffle_policy = SoufflePolicy.make_policy(None, self.database_path)
-            self.policy = Policy.make_policy(global_config.policy_path)
+        self.policy = Policy.make_policy(global_config.policy_path)
 
         # Initialize the reporters to store analysis data to files.
         self.reporters: list[FileReporter] = []
@@ -749,9 +744,6 @@ class Analyzer:
             policy_table = self.policy.get_policy_table()
             db_man.add_and_commit(policy_table)
             analysis.policy = policy_table.id
-            souffle_table = self.souffle_policy.get_policy_table()
-            souffle_table.analysis = analysis.id
-            db_man.add_and_commit(souffle_table)
 
         return analysis
 

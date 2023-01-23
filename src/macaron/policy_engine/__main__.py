@@ -10,16 +10,13 @@ This program runs souffle against a macaron output sqlite database.
 import argparse
 import json
 import logging
-import os
 import sys
 import time
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import MetaData, Table, create_engine, select
 from sqlalchemy.orm import sessionmaker
 
-from macaron.database.database_manager import DatabaseManager
-from macaron.policy_engine.policy import SoufflePolicyTable
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
 from macaron.policy_engine.souffle_code_generator import (
     JsonType,
@@ -40,7 +37,7 @@ class Config:
     interactive: bool = False
     policy_id: int | None = None
     policy_file: str | None = None
-    show_preamble: bool = False
+    show_prelude: bool = False
 
 
 global_config = Config()
@@ -81,8 +78,6 @@ class JsonConverter:
         for row in self.session.execute(stmt):
             result = {}
             for i, val in enumerate(row):
-                # print(table.columns[i].name, val)
-
                 if len(table.columns[i].foreign_keys) > 0:
                     for fork in table.columns[i].foreign_keys:
                         stmt = select(fork.column.table).where(fork.column == val)
@@ -111,25 +106,11 @@ class JsonConverter:
         return result
 
 
-def get_generated() -> tuple[str, str]:
-    """Get generated souffle code from database specified by configuration."""
-    metadata = MetaData()
-    engine = create_engine(f"sqlite:///{global_config.database_path}", echo=False)
-    metadata.reflect(engine)
-    session_maker = sessionmaker(bind=engine)
-    session = session_maker()
+def generate_facts_from_json_columns(metadata: MetaData, session: Any) -> str:
+    """Create facts for json data in ADT representation, from any text columns with names containing "json".
 
-    prelude = get_souffle_import_prelude(global_config.database_path, metadata)
-    prelude.update(get_fact_attributes(metadata))
-
-    for table_name in metadata.tables.keys():
-        table = metadata.tables[table_name]
-        if table_name[0] == "_":
-            if len(table.columns) > len(table.primary_key.columns):
-                prelude.update(project_table_to_key(f"{table_name[1:]}_attribute", table))
-
-    result: str = str(prelude)
-    result += get_adhoc_rules()
+    See: souffle_code_generator.py
+    """
     json_facts = ""
 
     for table_name in metadata.tables.keys():
@@ -142,36 +123,51 @@ def get_generated() -> tuple[str, str]:
                 if relation_name[0] == "_":
                     relation_name = relation_name[1:]
                 for row in session.execute(stmt):
+                    # TODO: fix; row[] is deprecated in sqlalchemy v2.0
                     res = row[column.name]
                     row_id = row["id"]
                     json_facts += (
                         "\n".join(convert_json_to_adt_row(json.loads(res), prefix=relation_name, ident=row_id)) + "\n"
                     )
-    return result, json_facts
+    return json_facts
 
 
-def policy_engine(policy: SoufflePolicyTable, override_file: Optional[str]) -> None:
+def get_generated(database_path: str) -> tuple[str, str]:
+    """Get generated souffle code from database specified by configuration."""
+    metadata = MetaData()
+    engine = create_engine(f"sqlite:///{database_path}", echo=False)
+    metadata.reflect(engine)
+    session_maker = sessionmaker(bind=engine)
+    session = session_maker()
+
+    prelude = get_souffle_import_prelude(database_path, metadata)
+    prelude.update(get_fact_attributes(metadata))
+
+    for table_name in metadata.tables.keys():
+        table = metadata.tables[table_name]
+        if table_name[0] == "_":
+            prelude.update(project_table_to_key(f"{table_name[1:]}_attribute", table))
+
+    result: str = str(prelude)
+    result += get_adhoc_rules()
+
+    facts = generate_facts_from_json_columns(metadata, session)
+    return result, facts
+
+
+def policy_engine(config: type[Config], policy_file: str) -> dict:
     """Invoke souffle and report result."""
     with Timer("Codegen"):
-        prelude, facts = get_generated()
+        prelude, _ = get_generated(config.database_path)
     sfl = SouffleWrapper()
-    text: str = ""
-    if override_file:
-        with open(override_file, encoding="utf-8") as file:
-            text = file.read()
-    elif policy.file_text:
-        text = policy.file_text
-    else:
-        text = ".output repository"
-
-    with open(os.path.join(sfl.fact_dir, "json.facts"), "w", encoding="utf-8") as file:
-        file.write(facts)
+    with open(policy_file, encoding="utf-8") as file:
+        text = file.read()
 
     prelude += '\n.input json (filename="json.facts")\n'
 
-    if global_config.show_preamble:
+    if config.show_prelude:
         print(prelude)
-        return
+        return {}
 
     try:
         with Timer("Souffle"):
@@ -181,10 +177,7 @@ def policy_engine(policy: SoufflePolicyTable, override_file: Optional[str]) -> N
         print(error.message)
         sys.exit(1)
 
-    for key, values in res.items():
-        print(key)
-        for value in values:
-            print("    ", value)
+    return res
 
 
 def interactive() -> None:
@@ -194,14 +187,16 @@ def interactive() -> None:
 
 def non_interactive(config: Config = global_config) -> None:
     """Evaluate a policy based on configuration and exit."""
-    with DatabaseManager(config.database_path) as dbman:
-        stmt = select(SoufflePolicyTable)
-        if config.policy_id:
-            stmt = select(SoufflePolicyTable).where(SoufflePolicyTable.id == config.policy_id)
+    if config.policy_file:
+        res = policy_engine(config, config.policy_file)  # type: ignore
 
-        for result in dbman.session.scalars(stmt):
-            policy_engine(result, override_file=config.policy_file)
-            return
+        for key, values in res.items():
+            print(key)
+            for value in values:
+                print("    ", value)
+        return
+
+    raise ValueError("No policy file specified.")
 
 
 def main() -> int:
@@ -224,7 +219,7 @@ def main() -> int:
     if args.file:
         global_config.policy_file = args.file
     if args.show_preamble:
-        global_config.show_preamble = args.show_preamble
+        global_config.show_prelude = args.show_preamble
 
     if global_config.interactive:
         interactive()

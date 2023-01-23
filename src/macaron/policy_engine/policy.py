@@ -12,17 +12,11 @@ from functools import reduce
 from typing import Any, Callable, Optional, Union
 
 import yamale
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, Integer, String
 from yamale.schema import Schema
 
 from macaron.database.database_manager import ORMBase
 from macaron.parsers.yaml.loader import YamlLoader
-from macaron.policy_engine.souffle_code_generator import (
-    SouffleProgram,
-    get_adhoc_rules,
-    get_fact_attributes,
-    get_souffle_import_prelude,
-)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -166,53 +160,6 @@ class PolicyTable(ORMBase):
     policy_type = Column(String, nullable=False)
     sha = Column(String, nullable=False)
     text = Column(String, nullable=False)
-
-
-class SoufflePolicyTable(ORMBase):
-    """ORM Class for a Policy."""
-
-    __tablename__ = "souffle_policy"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    analysis = Column(Integer, ForeignKey("_analysis.id"))
-    file_sha = Column(String, nullable=True)
-    file_text = Column(String, nullable=True)
-    prelude = Column(String, nullable=False)
-
-
-@dataclass
-class SoufflePolicy:
-    """Dataclass for storing souffle policies."""
-
-    text: str | None
-    sha: str | None
-    prelude: SouffleProgram
-
-    @classmethod
-    def make_policy(cls, file_path: os.PathLike | str | None, database_path: str) -> "SoufflePolicy":
-        """Construct the souffle policy and prelude.
-
-        Parameters
-        ----------
-        file_path: os.PathLike | str | None
-            Optional file path for the datalog file
-
-        database_path: str
-            The path to the database souffle will use to import relations, as used in the prelude.
-        """
-        policy: SoufflePolicy = SoufflePolicy(None, None, SouffleProgram())
-        policy.prelude.update(get_souffle_import_prelude(database_path, ORMBase.metadata))
-        policy.prelude.update(get_fact_attributes(ORMBase.metadata))
-        policy.prelude.rules.union(get_adhoc_rules())
-        if file_path:
-            with open(file_path, encoding="utf-8") as file:
-                policy.text = file.read()
-                policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
-
-        return policy
-
-    def get_policy_table(self) -> SoufflePolicyTable:
-        """Get the bound ORM object for the policy."""
-        return SoufflePolicyTable(file_sha=self.sha, file_text=self.text, prelude=str(self.prelude))
 
 
 # pylint: disable=invalid-name

@@ -32,7 +32,7 @@ class RepositoryTable(ORMBase):
     """ORM Class for a repository."""
 
     __tablename__ = "_repository"
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
     full_name = Column(String, nullable=False)
     remote_path = Column(String, nullable=True)
     branch_name = Column(String, nullable=False)

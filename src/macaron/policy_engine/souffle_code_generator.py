@@ -12,8 +12,9 @@ from macaron.util import JsonType, logger
 
 def get_adhoc_rules() -> str:
     """Get special souffle rules for preamble."""
-    return """.decl check_passed(repository: number, check_name: symbol)
-            check_passed(repo, check) :- check_name(check), repository_attribute(repo, cat(check, ".passed"), $Bool(1)).
+    return """
+.decl check_passed(repository: number, check_name: symbol)
+check_passed(repo, check) :- check_name(check), repository_attribute(repo, cat(check, ".passed"), $Bool(1)).
 
 
 .decl transitive_dependency(repo: number, dependency: number)
@@ -24,8 +25,6 @@ transitive_dependency(repo, dependency) :-
 
 #define any(x) count: {x} > 1
 #define all(x, y) count: {x} = count: {x, y}
-
-// json stuff
 
 .type JsonType = Int {x : number}
          | String {x : symbol}
@@ -51,13 +50,11 @@ json_path(a, b,key) :- json_path(a,c,_), json_path(c, b, kb), key=kb.
 
 any_terminal(s,k) :- json(_,_,r), json_path(r, $String(s), k).
 
-
 .decl json_number(name: symbol, json:number, addr: symbol, k:number)
 .decl json_symbol(name:symbol, json:number, addr: symbol, k:symbol)
 
 json_number(name, js, addr, val) :- json(name, js, r), json_path(r, $Int(val), addr).
 json_symbol(name, js, addr, val) :- json(name, js, r), json_path(r, $String(val), addr).
-
 """
 
 
@@ -281,6 +278,9 @@ def get_table_rules_per_column(
 
 def project_table_to_key(relation_name: str, table: Table) -> SouffleProgram:
     """Create rules to convert a table to an attribute that maps its primary keys to its columns."""
+    if len(table.columns) <= len(table.primary_key.columns):
+        return SouffleProgram()
+
     common_fields: dict[str, str] = {col.name: col.name for col in table.primary_key.columns}
     ignore_columns: list = []
 
@@ -312,7 +312,7 @@ def project_table_to_key(relation_name: str, table: Table) -> SouffleProgram:
 #
 
 
-class Matcher:
+class WalkerState:
     """Class to store a stack of the json field address and convert it to an ADT."""
 
     docname: str
@@ -377,30 +377,30 @@ def _is_json_object(obj: JsonType) -> TypeGuard[dict[str, JsonType]]:
     return isinstance(obj, dict)
 
 
-def _walk_ast(matcher: Matcher, ast: JsonType | dict[str, JsonType] | list[JsonType]) -> list[str]:
+def _json_to_facts(state: WalkerState, ast: JsonType | dict[str, JsonType] | list[JsonType]) -> list[str]:
     """Walk the json document (ast) and return the list of leaves and their addresses."""
     results = []
     if _is_json_array(ast):
         for k, val in enumerate(ast):
-            matcher.add(k)
-            results += _walk_ast(matcher, val)
-            matcher.remove()
+            state.add(k)
+            results += _json_to_facts(state, val)
+            state.remove()
     elif _is_json_object(ast):
         for i, val2 in ast.items():
-            matcher.add(i)
-            results += _walk_ast(matcher, val2)
-            matcher.remove()
+            state.add(i)
+            results += _json_to_facts(state, val2)
+            state.remove()
     else:
-        return [matcher.get_adt(ast)]
+        return [state.get_adt(ast)]
 
     return results
 
 
 def convert_json_to_adt_row(data: JsonType, prefix: str = "input", ident: int = 0) -> list[str]:
     """Convert a json document to the souffle ADT fact in csv format."""
-    return [f'"{prefix}"\t{ident}\t{adt}' for adt in _walk_ast(Matcher(), data)]
+    return [f'"{prefix}"\t{ident}\t{adt}' for adt in _json_to_facts(WalkerState(), data)]
 
 
 def convert_json_to_adt_fact(data: JsonType, prefix: str = "input", ident: int = 0) -> list[str]:
     """Convert a json document to the souffle ADT fact literal."""
-    return [f'json("{prefix}",{ident},{adt}).' for adt in _walk_ast(Matcher(), data)]
+    return [f'json("{prefix}",{ident},{adt}).' for adt in _json_to_facts(WalkerState(), data)]
