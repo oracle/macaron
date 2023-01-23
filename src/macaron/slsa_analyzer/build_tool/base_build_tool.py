@@ -8,7 +8,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 
-from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, NoneDependencyAnalyzer
+from macaron.dependency_analyzer import DependencyAnalyzer, NoneDependencyAnalyzer
 
 logger: logging.Logger = logging.getLogger(__name__)
 

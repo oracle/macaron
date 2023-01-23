@@ -1,0 +1,210 @@
+[
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-alexa",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-alexa@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-alexa@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-parameter-store",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-parameter-store@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-parameter-store@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "function-aws-test",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/function-aws-test@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/function-aws-test@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "function-aws",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/function-aws@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/function-aws@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "function-aws-api-proxy",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/function-aws-api-proxy@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/function-aws-api-proxy@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-sdk-v2",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-sdk-v2@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-sdk-v2@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "test-suite",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/test-suite@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/test-suite@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "function-client-aws",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/function-client-aws@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/function-client-aws@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-common",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-common@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-common@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "test-suite-groovy",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/test-suite-groovy@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/test-suite-groovy@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "test-suite-kotlin",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/test-suite-kotlin@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/test-suite-kotlin@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "test-suite-http-server-tck-function-aws-api-proxy",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/test-suite-http-server-tck-function-aws-api-proxy@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/test-suite-http-server-tck-function-aws-api-proxy@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-apigateway",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-apigateway@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-apigateway@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-cloudwatch-logging",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-cloudwatch-logging@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-cloudwatch-logging@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-ua",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-ua@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-ua@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-alexa-httpserver",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-alexa-httpserver@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-alexa-httpserver@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-cdk",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-cdk@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-cdk@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "function-aws-alexa",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/function-aws-alexa@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/function-aws-alexa@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-sdk-v1",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-sdk-v1@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-sdk-v1@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "function-aws-custom-runtime",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/function-aws-custom-runtime@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/function-aws-custom-runtime@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-distributed-configuration",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-distributed-configuration@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-distributed-configuration@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "function-aws-api-proxy-test",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/function-aws-api-proxy-test@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/function-aws-api-proxy-test@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-service-discovery",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-service-discovery@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-service-discovery@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-secretsmanager",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-secretsmanager@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-secretsmanager@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "test-suite-aws-sdk-v2",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/test-suite-aws-sdk-v2@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/test-suite-aws-sdk-v2@4.0.0-SNAPSHOT?type=jar"
+  },
+  {
+    "group": "io.micronaut.aws",
+    "name": "aws-bom",
+    "version": "4.0.0-SNAPSHOT",
+    "purl": "pkg:maven/io.micronaut.aws/aws-bom@4.0.0-SNAPSHOT?type=jar",
+    "type": "library",
+    "bom-ref": "pkg:maven/io.micronaut.aws/aws-bom@4.0.0-SNAPSHOT?type=jar"
+  }
+]

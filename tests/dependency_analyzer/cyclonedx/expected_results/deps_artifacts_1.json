@@ -1,0 +1,1242 @@
+{
+  "org.apache.httpcomponents:httpcore": {
+    "version": "4.4.13",
+    "group": "org.apache.httpcomponents",
+    "name": "httpcore",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "commons-logging:commons-logging": {
+    "version": "1.2",
+    "group": "commons-logging",
+    "name": "commons-logging",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "commons-codec:commons-codec": {
+    "version": "1.15",
+    "group": "commons-codec",
+    "name": "commons-codec",
+    "url": "https://github.com/apache/commons-codec",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "software.amazon.awssdk:netty-nio-client": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "netty-nio-client",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:aws-json-protocol": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "aws-json-protocol",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:protocol-core": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "protocol-core",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:aws-core": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "aws-core",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:auth": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "auth",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:regions": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "regions",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:sdk-core": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "sdk-core",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:apache-client": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "apache-client",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:http-client-spi": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "http-client-spi",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:metrics-spi": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "metrics-spi",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:json-utils": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "json-utils",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:utils": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "utils",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:endpoints-spi": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "endpoints-spi",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:annotations": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "annotations",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "org.jetbrains.kotlin:kotlin-stdlib-jdk7": {
+    "version": "1.7.21",
+    "group": "org.jetbrains.kotlin",
+    "name": "kotlin-stdlib-jdk7",
+    "url": "https://github.com/JetBrains/kotlin",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "org.jetbrains.kotlin:kotlin-stdlib": {
+    "version": "1.7.21",
+    "group": "org.jetbrains.kotlin",
+    "name": "kotlin-stdlib",
+    "url": "https://github.com/JetBrains/kotlin",
+    "note": "https://github.com/JetBrains/kotlin is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.micronaut.aws:aws-common": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-common",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:aws-ua": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-ua",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut:micronaut-inject": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-inject",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "io.micronaut:micronaut-http": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-http",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "org.slf4j:slf4j-api": {
+    "version": "1.7.36",
+    "group": "org.slf4j",
+    "name": "slf4j-api",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.serde:micronaut-serde-api": {
+    "version": "1.5.0",
+    "group": "io.micronaut.serde",
+    "name": "micronaut-serde-api",
+    "url": "https://github.com/micronaut-projects/micronaut-serialization",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "io.micronaut:micronaut-context": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-context",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "org.reactivestreams:reactive-streams": {
+    "version": "1.0.4",
+    "group": "org.reactivestreams",
+    "name": "reactive-streams",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut:micronaut-core": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-core",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.netty:netty-common": {
+    "version": "4.1.86.Final",
+    "group": "io.netty",
+    "name": "netty-common",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:profiles": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "profiles",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.eventstream:eventstream": {
+    "version": "1.0.1",
+    "group": "software.amazon.eventstream",
+    "name": "eventstream",
+    "url": "https://github.com/awslabs/aws-eventstream-java",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "com.googlecode.javaewah:JavaEWAH": {
+    "version": "1.1.7",
+    "group": "com.googlecode.javaewah",
+    "name": "JavaEWAH",
+    "url": "https://github.com/lemire/javaewah",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "com.amazon.alexa:ask-sdk-lambda-support": {
+    "version": "2.49.0",
+    "group": "com.amazon.alexa",
+    "name": "ask-sdk-lambda-support",
+    "url": "https://github.com/amzn/alexa-skills-kit-java",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "io.micronaut.aws:aws-alexa": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-alexa",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut:micronaut-runtime": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-runtime",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.micronaut:micronaut-validation": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-validation",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.micronaut.aws:function-aws": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "function-aws",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "org.slf4j:jcl-over-slf4j": {
+    "version": "1.7.36",
+    "group": "org.slf4j",
+    "name": "jcl-over-slf4j",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "org.jetbrains.kotlin:kotlin-stdlib-jdk8": {
+    "version": "1.7.21",
+    "group": "org.jetbrains.kotlin",
+    "name": "kotlin-stdlib-jdk8",
+    "url": "https://github.com/JetBrains/kotlin",
+    "note": "https://github.com/JetBrains/kotlin is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.micronaut:micronaut-json-core": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-json-core",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "software.amazon.awscdk:cdk-asset-awscli-v1": {
+    "version": "2.2.52",
+    "group": "software.amazon.awscdk",
+    "name": "cdk-asset-awscli-v1",
+    "url": "https://github.com/cdklabs/awscdk-asset-awscli",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "software.amazon.awscdk:cdk-asset-kubectl-v20": {
+    "version": "2.1.1",
+    "group": "software.amazon.awscdk",
+    "name": "cdk-asset-kubectl-v20",
+    "url": "https://github.com/cdklabs/awscdk-asset-kubectl",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "software.amazon.awscdk:cdk-asset-node-proxy-agent-v5": {
+    "version": "2.0.42",
+    "group": "software.amazon.awscdk",
+    "name": "cdk-asset-node-proxy-agent-v5",
+    "url": "https://github.com/cdklabs/awscdk-asset-node-proxy-agent",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "software.constructs:constructs": {
+    "version": "10.1.232",
+    "group": "software.constructs",
+    "name": "constructs",
+    "url": "https://github.com/aws/constructs",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "software.amazon.jsii:jsii-runtime": {
+    "version": "1.73.0",
+    "group": "software.amazon.jsii",
+    "name": "jsii-runtime",
+    "url": "https://github.com/aws/jsii",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "javax.annotation:javax.annotation-api": {
+    "version": "1.3.2",
+    "group": "javax.annotation",
+    "name": "javax.annotation-api",
+    "url": "https://github.com/javaee/javax.annotation",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "org.jetbrains:annotations": {
+    "version": "19.0.0",
+    "group": "org.jetbrains",
+    "name": "annotations",
+    "url": "https://github.com/JetBrains/java-annotations",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "io.projectreactor:reactor-core": {
+    "version": "3.5.0",
+    "group": "io.projectreactor",
+    "name": "reactor-core",
+    "url": "https://github.com/reactor/reactor-core",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "io.micronaut:micronaut-core-reactive": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-core-reactive",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "org.eclipse.jetty:jetty-io": {
+    "version": "9.4.50.v20221201",
+    "group": "org.eclipse.jetty",
+    "name": "jetty-io",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "org.eclipse.jetty:jetty-util": {
+    "version": "9.4.50.v20221201",
+    "group": "org.eclipse.jetty",
+    "name": "jetty-util",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "com.amazon.alexa:ask-sdk-core": {
+    "version": "2.49.0",
+    "group": "com.amazon.alexa",
+    "name": "ask-sdk-core",
+    "url": "https://github.com/amzn/alexa-skills-kit-java",
+    "note": "https://github.com/amzn/alexa-skills-kit-java is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.netty:netty-codec-http2": {
+    "version": "4.1.86.Final",
+    "group": "io.netty",
+    "name": "netty-codec-http2",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.netty:netty-codec-http": {
+    "version": "4.1.86.Final",
+    "group": "io.netty",
+    "name": "netty-codec-http",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.netty:netty-handler": {
+    "version": "4.1.86.Final",
+    "group": "io.netty",
+    "name": "netty-handler",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.netty:netty-codec": {
+    "version": "4.1.86.Final",
+    "group": "io.netty",
+    "name": "netty-codec",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.netty:netty-transport-classes-epoll": {
+    "version": "4.1.86.Final",
+    "group": "io.netty",
+    "name": "netty-transport-classes-epoll",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.netty:netty-transport": {
+    "version": "4.1.86.Final",
+    "group": "io.netty",
+    "name": "netty-transport",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.netty:netty-buffer": {
+    "version": "4.1.86.Final",
+    "group": "io.netty",
+    "name": "netty-buffer",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:aws-parameter-store": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-parameter-store",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:function-aws-test": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "function-aws-test",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:aws-sdk-v2": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-sdk-v2",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:test-suite": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "test-suite",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:function-client-aws": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "function-client-aws",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:test-suite-groovy": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "test-suite-groovy",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:test-suite-kotlin": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "test-suite-kotlin",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:test-suite-http-server-tck-function-aws-api-proxy": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "test-suite-http-server-tck-function-aws-api-proxy",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:aws-cloudwatch-logging": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-cloudwatch-logging",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:aws-alexa-httpserver": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-alexa-httpserver",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:aws-cdk": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-cdk",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:function-aws-alexa": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "function-aws-alexa",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:aws-sdk-v1": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-sdk-v1",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:function-aws-custom-runtime": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "function-aws-custom-runtime",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:aws-distributed-configuration": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-distributed-configuration",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:function-aws-api-proxy-test": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "function-aws-api-proxy-test",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:aws-service-discovery": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-service-discovery",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:aws-secretsmanager": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-secretsmanager",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:test-suite-aws-sdk-v2": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "test-suite-aws-sdk-v2",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.aws:aws-bom": {
+    "version": "4.0.0-SNAPSHOT",
+    "group": "io.micronaut.aws",
+    "name": "aws-bom",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:secretsmanager": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "secretsmanager",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "com.fasterxml.jackson.core:jackson-databind": {
+    "version": "2.14.1",
+    "group": "com.fasterxml.jackson.core",
+    "name": "jackson-databind",
+    "url": "https://github.com/FasterXML/jackson-databind",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "com.amazonaws:aws-lambda-java-core": {
+    "version": "1.2.2",
+    "group": "com.amazonaws",
+    "name": "aws-lambda-java-core",
+    "url": "https://github.com/aws/aws-lambda-java-libs",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "commons-fileupload:commons-fileupload": {
+    "version": "1.4",
+    "group": "commons-fileupload",
+    "name": "commons-fileupload",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "commons-io:commons-io": {
+    "version": "2.11.0",
+    "group": "commons-io",
+    "name": "commons-io",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "org.apache.httpcomponents:httpmime": {
+    "version": "4.5.13",
+    "group": "org.apache.httpcomponents",
+    "name": "httpmime",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "ch.qos.logback:logback-classic": {
+    "version": "1.2.11",
+    "group": "ch.qos.logback",
+    "name": "logback-classic",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "ch.qos.logback.contrib:logback-json-core": {
+    "version": "0.1.5",
+    "group": "ch.qos.logback.contrib",
+    "name": "logback-json-core",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut:micronaut-function": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-function",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.micronaut.test:micronaut-test-junit5": {
+    "version": "3.8.0",
+    "group": "io.micronaut.test",
+    "name": "micronaut-test-junit5",
+    "url": "https://github.com/micronaut-projects/micronaut-test",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "software.amazon.awssdk:third-party-jackson-core": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "third-party-jackson-core",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "org.apache.logging.log4j:log4j-core": {
+    "version": "2.19.0",
+    "group": "org.apache.logging.log4j",
+    "name": "log4j-core",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "org.apache.logging.log4j:log4j-api": {
+    "version": "2.19.0",
+    "group": "org.apache.logging.log4j",
+    "name": "log4j-api",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.netty:netty-resolver": {
+    "version": "4.1.86.Final",
+    "group": "io.netty",
+    "name": "netty-resolver",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut:micronaut-http-client": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-http-client",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "com.amazonaws:aws-lambda-java-events": {
+    "version": "3.11.0",
+    "group": "com.amazonaws",
+    "name": "aws-lambda-java-events",
+    "url": "https://github.com/aws/aws-lambda-java-libs",
+    "note": "https://github.com/aws/aws-lambda-java-libs is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "com.fasterxml.jackson.core:jackson-annotations": {
+    "version": "2.14.1",
+    "group": "com.fasterxml.jackson.core",
+    "name": "jackson-annotations",
+    "url": "https://github.com/FasterXML/jackson-annotations",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "com.fasterxml.jackson.core:jackson-core": {
+    "version": "2.14.1",
+    "group": "com.fasterxml.jackson.core",
+    "name": "jackson-core",
+    "url": "https://github.com/FasterXML/jackson-core",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "javax.servlet:javax.servlet-api": {
+    "version": "4.0.1",
+    "group": "javax.servlet",
+    "name": "javax.servlet-api",
+    "url": "https://github.com/javaee/servlet-spec",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "org.eclipse.jetty:jetty-http": {
+    "version": "9.4.50.v20221201",
+    "group": "org.eclipse.jetty",
+    "name": "jetty-http",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "ch.qos.logback.contrib:logback-json-classic": {
+    "version": "0.1.5",
+    "group": "ch.qos.logback.contrib",
+    "name": "logback-json-classic",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:cloudwatchlogs": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "cloudwatchlogs",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.serde:micronaut-serde-jackson": {
+    "version": "1.5.0",
+    "group": "io.micronaut.serde",
+    "name": "micronaut-serde-jackson",
+    "url": "https://github.com/micronaut-projects/micronaut-serialization",
+    "note": "https://github.com/micronaut-projects/micronaut-serialization is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.micronaut:micronaut-http-client-core": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-http-client-core",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.micronaut:micronaut-aop": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-aop",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
+    "version": "2.14.1",
+    "group": "com.fasterxml.jackson.dataformat",
+    "name": "jackson-dataformat-cbor",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "org.apache.httpcomponents:httpclient": {
+    "version": "4.5.13",
+    "group": "org.apache.httpcomponents",
+    "name": "httpclient",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.ion:ion-java": {
+    "version": "1.0.2",
+    "group": "software.amazon.ion",
+    "name": "ion-java",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "joda-time:joda-time": {
+    "version": "2.8.1",
+    "group": "joda-time",
+    "name": "joda-time",
+    "url": "https://github.com/JodaOrg/joda-time",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": {
+    "version": "2.14.1",
+    "group": "com.fasterxml.jackson.datatype",
+    "name": "jackson-datatype-jsr310",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "org.apache.logging.log4j:log4j-slf4j-impl": {
+    "version": "2.19.0",
+    "group": "org.apache.logging.log4j",
+    "name": "log4j-slf4j-impl",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "javax.validation:validation-api": {
+    "version": "2.0.1.Final",
+    "group": "javax.validation",
+    "name": "validation-api",
+    "url": "https://github.com/beanvalidation/beanvalidation-api",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "jakarta.annotation:jakarta.annotation-api": {
+    "version": "2.1.1",
+    "group": "jakarta.annotation",
+    "name": "jakarta.annotation-api",
+    "url": "https://github.com/eclipse-ee4j/common-annotations-api",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "org.yaml:snakeyaml": {
+    "version": "1.33",
+    "group": "org.yaml",
+    "name": "snakeyaml",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "jakarta.inject:jakarta.inject-api": {
+    "version": "2.0.1",
+    "group": "jakarta.inject",
+    "name": "jakarta.inject-api",
+    "url": "https://github.com/eclipse-ee4j/injection-api",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "io.micronaut:micronaut-http-server": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-http-server",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "software.amazon.awscdk:aws-cdk-lib": {
+    "version": "2.59.0",
+    "group": "software.amazon.awscdk",
+    "name": "aws-cdk-lib",
+    "url": "https://github.com/aws/aws-cdk",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "io.micronaut.starter:micronaut-starter-api": {
+    "version": "3.8.0",
+    "group": "io.micronaut.starter",
+    "name": "micronaut-starter-api",
+    "url": "https://github.com/micronaut-projects/micronaut-starter",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "ch.qos.logback:logback-core": {
+    "version": "1.2.11",
+    "group": "ch.qos.logback",
+    "name": "logback-core",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.discovery:micronaut-discovery-client": {
+    "version": "3.2.0",
+    "group": "io.micronaut.discovery",
+    "name": "micronaut-discovery-client",
+    "url": "https://github.com/micronaut-projects/micronaut-discovery-client",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "io.micronaut.testresources:micronaut-test-resources-build-tools": {
+    "version": "1.2.3",
+    "group": "io.micronaut.testresources",
+    "name": "micronaut-test-resources-build-tools",
+    "url": "https://github.com/micronaut-projects/micronaut-test-resources",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "com.fizzed:rocker-runtime": {
+    "version": "1.3.0",
+    "group": "com.fizzed",
+    "name": "rocker-runtime",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "org.eclipse.jgit:org.eclipse.jgit": {
+    "version": "5.11.1.202105131744-r",
+    "group": "org.eclipse.jgit",
+    "name": "org.eclipse.jgit",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "com.typesafe:config": {
+    "version": "1.4.1",
+    "group": "com.typesafe",
+    "name": "config",
+    "url": "https://github.com/lightbend/config",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "org.apache.commons:commons-compress": {
+    "version": "1.21",
+    "group": "org.apache.commons",
+    "name": "commons-compress",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.github.java-diff-utils:java-diff-utils": {
+    "version": "4.10",
+    "group": "io.github.java-diff-utils",
+    "name": "java-diff-utils",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "org.jetbrains.kotlin:kotlin-stdlib-common": {
+    "version": "1.7.21",
+    "group": "org.jetbrains.kotlin",
+    "name": "kotlin-stdlib-common",
+    "url": "https://github.com/JetBrains/kotlin",
+    "note": "https://github.com/JetBrains/kotlin is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "com.amazonaws.serverless:aws-serverless-java-container-core": {
+    "version": "1.9.1",
+    "group": "com.amazonaws.serverless",
+    "name": "aws-serverless-java-container-core",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut.test:micronaut-test-core": {
+    "version": "3.8.0",
+    "group": "io.micronaut.test",
+    "name": "micronaut-test-core",
+    "url": "https://github.com/micronaut-projects/micronaut-test",
+    "note": "https://github.com/micronaut-projects/micronaut-test is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "org.junit.jupiter:junit-jupiter-api": {
+    "version": "5.9.1",
+    "group": "org.junit.jupiter",
+    "name": "junit-jupiter-api",
+    "url": "https://github.com/junit-team/junit5",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "org.junit.platform:junit-platform-commons": {
+    "version": "1.9.1",
+    "group": "org.junit.platform",
+    "name": "junit-platform-commons",
+    "url": "https://github.com/junit-team/junit5",
+    "note": "https://github.com/junit-team/junit5 is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "org.opentest4j:opentest4j": {
+    "version": "1.2.0",
+    "group": "org.opentest4j",
+    "name": "opentest4j",
+    "url": "https://github.com/ota4j-team/opentest4j",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "io.micronaut.starter:micronaut-starter-core": {
+    "version": "3.8.0",
+    "group": "io.micronaut.starter",
+    "name": "micronaut-starter-core",
+    "url": "https://github.com/micronaut-projects/micronaut-starter",
+    "note": "https://github.com/micronaut-projects/micronaut-starter is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.swagger.core.v3:swagger-annotations": {
+    "version": "2.2.7",
+    "group": "io.swagger.core.v3",
+    "name": "swagger-annotations",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "javax.inject:javax.inject": {
+    "version": "1",
+    "group": "javax.inject",
+    "name": "javax.inject",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "com.amazon.alexa:ask-sdk-model-runtime": {
+    "version": "1.0.5",
+    "group": "com.amazon.alexa",
+    "name": "ask-sdk-model-runtime",
+    "url": "https://github.com/amzn/alexa-skills-kit-java",
+    "note": "https://github.com/amzn/alexa-skills-kit-java is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "org.eclipse.jetty:jetty-server": {
+    "version": "9.4.50.v20221201",
+    "group": "org.eclipse.jetty",
+    "name": "jetty-server",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "software.amazon.awssdk:servicediscovery": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "servicediscovery",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "com.amazonaws:aws-java-sdk-core": {
+    "version": "1.12.382",
+    "group": "com.amazonaws",
+    "name": "aws-java-sdk-core",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "com.amazonaws:jmespath-java": {
+    "version": "1.12.382",
+    "group": "com.amazonaws",
+    "name": "jmespath-java",
+    "url": "https://github.com/aws/aws-sdk-java",
+    "note": "",
+    "available": "AVAILABLE"
+  },
+  "io.netty:netty-codec-socks": {
+    "version": "4.1.86.Final",
+    "group": "io.netty",
+    "name": "netty-codec-socks",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut:micronaut-websocket": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-websocket",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.micronaut:micronaut-router": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-router",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.micronaut:micronaut-jackson-core": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-jackson-core",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "com.fasterxml.jackson.datatype:jackson-datatype-jdk8": {
+    "version": "2.14.1",
+    "group": "com.fasterxml.jackson.datatype",
+    "name": "jackson-datatype-jdk8",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut:micronaut-buffer-netty": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-buffer-netty",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.micronaut.serde:micronaut-serde-support": {
+    "version": "1.5.0",
+    "group": "io.micronaut.serde",
+    "name": "micronaut-serde-support",
+    "url": "https://github.com/micronaut-projects/micronaut-serialization",
+    "note": "https://github.com/micronaut-projects/micronaut-serialization is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.micronaut:micronaut-http-netty": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-http-netty",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "io.netty:netty-handler-proxy": {
+    "version": "4.1.86.Final",
+    "group": "io.netty",
+    "name": "netty-handler-proxy",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut:micronaut-function-client": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-function-client",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "com.amazonaws:aws-java-sdk-lambda": {
+    "version": "1.12.382",
+    "group": "com.amazonaws",
+    "name": "aws-java-sdk-lambda",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.netty:netty-transport-native-unix-common": {
+    "version": "4.1.86.Final",
+    "group": "io.netty",
+    "name": "netty-transport-native-unix-common",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "com.amazon.alexa:ask-sdk-runtime": {
+    "version": "2.49.0",
+    "group": "com.amazon.alexa",
+    "name": "ask-sdk-runtime",
+    "url": "https://github.com/amzn/alexa-skills-kit-java",
+    "note": "https://github.com/amzn/alexa-skills-kit-java is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "com.amazon.alexa:ask-sdk-model": {
+    "version": "1.43.0",
+    "group": "com.amazon.alexa",
+    "name": "ask-sdk-model",
+    "url": "https://github.com/amzn/alexa-skills-kit-java",
+    "note": "https://github.com/amzn/alexa-skills-kit-java is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  },
+  "software.amazon.awssdk:ssm": {
+    "version": "2.19.14",
+    "group": "software.amazon.awssdk",
+    "name": "ssm",
+    "url": "",
+    "note": "Manual configuration required. Could not find SCM URL.",
+    "available": "MISSING REPO URL"
+  },
+  "io.micronaut:micronaut-jackson-databind": {
+    "version": "3.8.0",
+    "group": "io.micronaut",
+    "name": "micronaut-jackson-databind",
+    "url": "https://github.com/micronaut-projects/micronaut-core",
+    "note": "https://github.com/micronaut-projects/micronaut-core is already analyzed.",
+    "available": "DUPLICATED REPO URL"
+  }
+}

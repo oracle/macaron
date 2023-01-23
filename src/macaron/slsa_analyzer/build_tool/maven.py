@@ -11,8 +11,8 @@ import os
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
+from macaron.dependency_analyzer import DependencyAnalyzer, DependencyAnalyzerError, DependencyTools
 from macaron.dependency_analyzer.cyclonedx_mvn import CycloneDxMaven
-from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, DependencyAnalyzerError, DependencyTools
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 from macaron.util import copy_file_bulk
 
@@ -56,6 +56,14 @@ class Maven(BaseBuildTool):
         bool
             True if this build tool is detected, else False.
         """
+        # The repo path can be pointed to the same directory as the macaron root path.
+        # However, there shouldn't be any pom.xml in the macaron root path.
+        if os.path.isfile(os.path.join(global_config.macaron_path, "pom.xml")):
+            logger.error(
+                "Please remove pom.xml file in %s.",
+                global_config.macaron_path,
+            )
+            return False
         maven_config_files = self.build_configs
         for file in maven_config_files:
             if file_exists(repo_path, file):
@@ -130,7 +138,7 @@ class Maven(BaseBuildTool):
             return CycloneDxMaven(
                 resources_path=global_config.resources_path,
                 file_name="bom.json",
-                debug_path=os.path.join(global_config.output_path, "cdx_debug.json"),
+                tool_name=tool_name,
                 tool_version=tool_version,
                 repo_path=repo_path,
             )

@@ -8,12 +8,17 @@ See https://github.com/CycloneDX/cyclonedx-maven-plugin.
 """
 
 import glob
-import json
 import logging
 import os
+from pathlib import Path
 
-from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, DependencyInfo
-from macaron.output_reporter.results import SCMStatus
+from macaron.config.defaults import defaults
+from macaron.dependency_analyzer import DependencyAnalyzer
+from macaron.dependency_analyzer.cyclonedx import (
+    convert_components_to_artifacts,
+    get_dep_components,
+    get_root_component,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -51,7 +56,7 @@ class CycloneDxMaven(DependencyAnalyzer):
         Parameters
         ----------
         dir_path : str
-            Path to the repo.
+            Local path to the target repo.
 
         Returns
         -------
@@ -59,66 +64,47 @@ class CycloneDxMaven(DependencyAnalyzer):
             A dictionary where artifacts are grouped based on "artifactId:groupId".
         """
         # Load the top level file separately as it has different content.
-        top_path = os.path.join(dir_path, "target", self.file_name)
-
-        try:
-            with open(top_path, encoding="utf8") as file:
-                components = json.load(file).get("components")
-        except FileNotFoundError:
-            logger.error("Could not find dependency analysis %s file.", self.file_name)
-        except ValueError:
-            logger.error("Could not process the top level dependencies at %s", top_path)
+        top_path = Path(os.path.join(dir_path, "target", self.file_name))
 
         # Collect all the dependency files recursively.
-        file_paths = glob.glob(os.path.join(dir_path, "**", "target", self.file_name), recursive=True)
+        child_paths = [
+            Path(path)
+            for path in glob.glob(os.path.join(dir_path, "**", "target", self.file_name), recursive=True)
+            if Path(path) != top_path
+        ]
 
-        direct_deps = []
-        for file_path in file_paths:
-            with open(file_path, encoding="utf8") as file:
-                try:
-                    deps = json.load(file)
-                except ValueError:
-                    logger.error("Could not process the dependencies at %s", file_path)
+        root_component = get_root_component(top_path)
+        components = get_dep_components(
+            top_path,
+            child_paths,
+            recursive=defaults.getboolean(
+                "dependency.resolver",
+                "recursive",
+                fallback=False,
+            ),
+        )
+        return convert_components_to_artifacts(components, root_component)
 
-            bom_ref = deps.get("metadata").get("component").get("bom-ref")
-            self.submodules.add(bom_ref)
-            for node in deps.get("dependencies"):
-                if node.get("ref") == bom_ref:
-                    direct_deps.extend(node.get("dependsOn"))
+    def remove_sboms(self, dir_path: str) -> bool:
+        """Remove all the SBOM files in the provided directory recursively.
 
-        for dependency in direct_deps:
-            if dependency in self.submodules:
-                continue
-            key = ""
-            for component in components:
-                if dependency == component.get("bom-ref"):
-                    key = f"{component.get('group')}:{component.get('name')}"
-                    item = DependencyInfo(
-                        version=component.get("version"),
-                        group=component.get("group"),
-                        name=component.get("name"),
-                        url="",
-                        note="",
-                        available=SCMStatus.AVAILABLE,
-                    )
+        Parameters
+        ----------
+        dir_path : str
+            Path to the repo.
 
-                    # Some of the components, such as submodules don't have external references.
-                    if component.get("externalReferences") is None:
-                        logger.debug(
-                            "Could not find external references for %s. Skipping...",
-                            component.get("bom-ref"),
-                        )
-                    else:
-                        # Find a valid URL.
-                        item["url"] = self._find_valid_url(
-                            [link.get("url") for link in component.get("externalReferences")]
-                        )
+        Returns
+        -------
+        bool
+            Returns True if all the files are removed successfully.
+        """
+        removed_all = True
+        for path in glob.glob(os.path.join(dir_path, "**", "target", self.file_name), recursive=True):
+            try:
+                os.remove(path=path)
+                logger.debug("Successfully removed %s.", path)
+            except OSError as error:
+                logger.error(error)
+                removed_all = False
 
-                    self._add_latest_version(item, key)
-                    break
-
-        if self.debug:
-            with open(self.debug_path, "w", encoding="utf8") as debug_file:
-                debug_file.write(json.dumps(self.all_versions))
-
-        return self.latest_versions
+        return removed_all

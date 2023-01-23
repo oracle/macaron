@@ -17,14 +17,19 @@ from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager
-from macaron.dependency_analyzer import CycloneDxMaven, DependencyAnalyzer, DependencyInfo, DependencyTools
+from macaron.dependency_analyzer import (
+    DependencyAnalyzer,
+    DependencyAnalyzerError,
+    DependencyInfo,
+    NoneDependencyAnalyzer,
+)
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.policy_engine.policy import Policy
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
-from macaron.slsa_analyzer.build_tool.maven import Maven
+from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 
 # To load all checks into the registry
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
@@ -215,91 +220,67 @@ class Analyzer:
         """
         deps_resolved = {}
 
-        if "dependency.resolver" not in defaults or "dep_tool_maven" not in defaults["dependency.resolver"]:
-            logger.info("No default dependency analyzer is found. Skipping automatic dependency analysis...")
-        elif not DependencyAnalyzer.tool_valid(
-            defaults.get("dependency.resolver", "dep_tool_maven", fallback="cyclonedx-maven:2.6.2")
-        ):
+        build_tool = main_ctx.dynamic_data["build_spec"]["tool"]
+        if not build_tool or isinstance(build_tool, NoneBuildTool):
+            logger.info("Unable to find a valid build tool.")
+            return {}
+
+        try:
+            dep_analyzer = build_tool.get_dep_analyzer(main_ctx.repo_path)
+        except DependencyAnalyzerError as error:
+            logger.error("Unable to find a dependency analyzer: %s", error)
+            return {}
+
+        if isinstance(dep_analyzer, NoneDependencyAnalyzer):
             logger.info(
-                "Dependency analyzer %s is not valid. Skipping automatic dependency analysis...",
-                defaults.get(
-                    "dependency.resolver",
-                    "dep_tool_maven",
-                    fallback="cyclonedx-maven:2.6.2",
-                ),
+                "Dependency analyzer is not available for %s",
+                main_ctx.dynamic_data["build_spec"]["tool"].name,
             )
-        else:
-            try:
-                # Load the default values for the dependency analyzer tool.
-                # TODO: add support for Gradle dependency resolvers.
-                tool_name, tool_version = tuple(
-                    defaults.get(
-                        "dependency.resolver",
-                        "dep_tool_maven",
-                        fallback="cyclonedx-maven:2.6.2",
-                    ).split(":")
-                )
-                if tool_name == DependencyTools.CYCLONEDX_MAVEN:
-                    dep_analyzer = CycloneDxMaven(
-                        resources_path=global_config.resources_path,
-                        file_name="bom.json",
-                        debug_path=os.path.join(self.output_path, "cdx_debug.json"),
-                        tool_version=tool_version,
-                    )
+            return {}
 
-                # The repo path can be pointed to the same directory as the macaron root path.
-                # However, there shouldn't be any pom.xml in the macaron root path.
-                if not os.path.isfile(os.path.join(global_config.macaron_path, "pom.xml")):
-                    if isinstance(main_ctx.dynamic_data["build_spec"]["tool"], Maven):
-                        logger.info(
-                            "Running %s version %s dependency analyzer on %s",
-                            tool_name,
-                            tool_version,
-                            main_ctx.repo_path,
-                        )
+        # Start resolving dependencies.
+        logger.info(
+            "Running %s version %s dependency analyzer on %s",
+            dep_analyzer.tool_name,
+            dep_analyzer.tool_version,
+            main_ctx.repo_path,
+        )
 
-                        log_path = os.path.join(
-                            global_config.build_log_path,
-                            f"{main_ctx.repo_name}.{tool_name}.log",
-                        )
+        log_path = os.path.join(
+            global_config.build_log_path,
+            f"{main_ctx.repo_name}.{dep_analyzer.tool_name}.log",
+        )
 
-                        commands = dep_analyzer.get_cmd()
-                        # We are using this flag because we are running
-                        # mvnw in the macaron root path, not in the target repo directory.
-                        commands.extend(["-f", main_ctx.repo_path])
-                        # Suppressing Bandit's B603 report because the repo paths are validated.
-                        analyzer_output = subprocess.run(  # nosec B603
-                            commands,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
-                            check=True,
-                            cwd=global_config.resources_path,
-                            timeout=defaults.getint("dependency.resolver", "timeout", fallback=1200),
-                        )
-                        with open(log_path, mode="w", encoding="utf-8") as log_file:
-                            logger.info("Storing dependency resolver log to %s", log_path)
-                            log_file.write(analyzer_output.stdout.decode("utf-8"))
+        # Clean up existing SBOM files.
+        dep_analyzer.remove_sboms(main_ctx.repo_path)
 
-                        deps_resolved = dep_analyzer.collect_dependencies(main_ctx.repo_path)
-                    else:
-                        logger.info(
-                            "Dependency analyzer is not available for %s",
-                            main_ctx.dynamic_data["build_spec"]["tool"].name,
-                        )
-                else:
-                    logger.error(
-                        "Please remove pom.xml file in %s.",
-                        global_config.macaron_path,
-                    )
+        commands = dep_analyzer.get_cmd()
+        try:
+            # Suppressing Bandit's B603 report because the repo paths are validated.
+            analyzer_output = subprocess.run(  # nosec B603
+                commands,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=True,
+                cwd=main_ctx.repo_path,
+                timeout=defaults.getint("dependency.resolver", "timeout", fallback=1200),
+            )
+            with open(log_path, mode="w", encoding="utf-8") as log_file:
+                logger.info("Storing dependency resolver log to %s", log_path)
+                log_file.write(analyzer_output.stdout.decode("utf-8"))
 
-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
-                logger.error(error)
-                with open(log_path, mode="w", encoding="utf-8") as log_file:
-                    logger.info("Storing dependency resolver log to %s", log_path)
-                    log_file.write(error.output.decode("utf-8"))
-            except FileNotFoundError as error:
-                # Only happen if the gradlew at the repo dir has an invalid format
-                logger.error(error)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+            logger.error(error)
+            with open(log_path, mode="w", encoding="utf-8") as log_file:
+                logger.info("Storing dependency resolver log to %s", log_path)
+                log_file.write(error.output.decode("utf-8"))
+        except FileNotFoundError as error:
+            # Only happen if the gradlew at the repo dir has an invalid format
+            logger.error(error)
+
+        # We collect the generated SBOM as a best effort, even if the build exits with errors.
+        # TODO: add improvements to help the SBOM build succeed as much as possible.
+        deps_resolved = dep_analyzer.collect_dependencies(main_ctx.repo_path)
 
         return deps_resolved
 
