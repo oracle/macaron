@@ -362,18 +362,17 @@ class ProvenanceL3Check(BaseCheck):
             ]
 
             if failed or skipped:
-                result_value = CheckResultType.FAILED
-
-            if passed:
-                check_result["justification"].append("Successfully verified level 3: ")
-            else:
                 check_result["justification"].append("Failed verification for level 3: ")
+                result_value = CheckResultType.FAILED
+            else:
+                check_result["justification"].append("Successfully verified level 3: ")
+                result_value = CheckResultType.PASSED
 
             check_result["justification"].append(",".join(map(str, all_results)))
             return result_value
 
         check_result["justification"].append("Could not verify level 3 provenance.")
-        return CheckResultType.FAILED
+        return result_value
 
 
 registry.register(ProvenanceL3Check())
