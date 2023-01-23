@@ -201,6 +201,7 @@ def non_interactive(config: Config = global_config) -> None:
 
         for result in dbman.session.scalars(stmt):
             policy_engine(result, override_file=config.policy_file)
+            return
 
 
 def main() -> int:

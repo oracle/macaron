@@ -52,9 +52,11 @@ Policy("trusted_git_server", repo, info) :-
 
 apply_policy_to("trusted_git_server", repo) :- repository(repo, _,_,_,_,_,_).
 
-.decl is_trusted_builder(builder_id:symbol)
-is_trusted_builder(builder) :-  provenance(_, _, _, _, _, builder, _, _, _),
+.decl is_trusted_builder_typeuri(builder_id:symbol)
+is_trusted_builder_typeuri(builder) :-  provenance(_, _, _, _, _, builder, _, _, _),
                                 match("https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.[2-9]+.[0-9]+", builder).
+
+
 
 /* ------------------------------- policies ------------------------------- */
 
@@ -68,10 +70,30 @@ is_trusted_builder(builder) :-  provenance(_, _, _, _, _, builder, _, _, _),
  *      of their build systems.
     fix: Build using github actions
  */
-Policy("trusted_builder", repo, builder) :-
+Policy("trusted_builder", repo, name) :-
         repository(repo, name,_,_,_,_,_),
         provenance(prov, repo, _, _, _, builder, _, _, _),
-        is_trusted_builder(builder).
+        is_trusted_builder_typeuri(builder).
+
+
+Policy("trusted_builder", repo, name) :-
+        repository(repo, name,_,_,_,_,_),
+        trusted_builder_check(build_tool_name, ci_service, build_trigger,
+        result_id, repo, passed, skipped),
+        passed = 1.
+
+Policy("trusted_builder", repo, name) :-
+        repository(repo, name,_,_,_,_,_),
+        build_service_check(build_tool_name, ci_service, build_trigger,
+        result_id, repo, passed, skipped),
+        passed = 1,
+        match("github-actions", build_tool_name).
+
+Policy("trusted_builder", repo, name) :-
+        repository(repo, name,_,_,_,_,_),
+        build_script_check(build_tool_name, result_id, repo, passed, skipped),
+        passed = 1,
+        match("github-actions", build_tool_name).
 
 
 apply_policy_to("trusted_builder", repo) :-
@@ -85,22 +107,12 @@ Policy("specific_rule", repo, feedback) :-
             accept(repo, result), feedback = cat(cat(name, ":  "), result).
 
 
-// apply specific_rule only to repository with id 1
+// apply specific_rule only to repository slsa-framework/slsa-verifier
 apply_policy_to("specific_rule", repo) :-
     repository(repo, name,_,_,_,_,_),
-    name = "slsa-framework/slsa-verifier".
+    (name = "slsa-framework/slsa-verifier";
+    match(".*google.*", name)).
 
-
-.decl accept_artefact(artefact: number, repo: number, name: symbol)
-accept_artefact(art, repo, name) :-
-    provenance(prov, repo, _, _, _, builder_id, _, _, _),
-    provenance_artefact(art, name, verified, prov),
-    verified != 0,
-    is_trusted_builder(builder_id).
-
-
-.decl defined_policies(policy_name: symbol)
-defined_policies(policy_name) :- Policy(policy_name, _, _).
 
 
 .output failed_policies
