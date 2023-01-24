@@ -448,11 +448,10 @@ class ProvenanceL3Check(BaseCheck):
 
             if failed or skipped:
                 result_value = CheckResultType.FAILED
-
-            if passed:
-                check_result["justification"].append("Successfully verified level 3: " + ",".join(map(str, passed)))
-            if failed or skipped:
                 check_result["justification"].append("\nFailed/Skipped: " + ",".join(map(str, failed + skipped)))
+            else:
+                result_value = CheckResultType.PASSED
+                check_result["justification"].append("Successfully verified level 3: " + ",".join(map(str, passed)))
 
             return result_value
 

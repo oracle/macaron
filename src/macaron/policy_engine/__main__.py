@@ -118,14 +118,10 @@ def generate_facts_from_json_columns(metadata: MetaData, session: Any) -> str:
 
         for column in table.columns:
             if "json" in column.name.lower():
-                stmt = select(table)
                 relation_name = table_name.lower().replace("_json", "").replace("json_", "")
                 if relation_name[0] == "_":
                     relation_name = relation_name[1:]
-                for row in session.execute(stmt):
-                    # TODO: fix; row[] is deprecated in sqlalchemy v2.0
-                    res = row[column.name]
-                    row_id = row["id"]
+                for res, row_id in session.execute(select(table.columns[column.name], table.columns["id"])):
                     json_facts += (
                         "\n".join(convert_json_to_adt_row(json.loads(res), prefix=relation_name, ident=row_id)) + "\n"
                     )

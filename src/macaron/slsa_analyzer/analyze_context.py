@@ -228,7 +228,7 @@ class AnalyzeContext:
         return Table(
             table_name,
             ORMBase.metadata,
-            Column("repository_id", Integer, ForeignKey("_repository.id"), primary_key=True),
+            Column("repository_id", Integer, ForeignKey("_repository.id")),
             Column("full_name", String, unique=False),
             Column("branch_name", String),
             Column("commit_sha", String),
