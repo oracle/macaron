@@ -272,7 +272,14 @@ class AnalyzeContext:
     def get_dict(self) -> dict:
         """Return the dictionary representation of the AnalyzeContext instance."""
         rel_local_clone_path = os.path.relpath(self.repo_path, self.output_dir)
-        sorted_on_id = sorted(self.check_results.values(), key=lambda item: item["check_id"])
+        _sorted_on_id = sorted(self.check_results.values(), key=lambda item: item["check_id"])
+        # Remove result_tables since we don't have a good json representation for them.
+        sorted_on_id = []
+        for res in _sorted_on_id:
+            # res is CheckResult(TypedDict)
+            res: dict = dict(res.deepcopy())  # type: ignore
+            res.pop("result_tables")  # type: ignore
+            sorted_on_id.append(res)
         sorted_results = sorted(sorted_on_id, key=lambda item: item["result_type"], reverse=True)
         check_summary = {
             result_type.value: len(result_list) for result_type, result_list in self.get_check_summary().items()

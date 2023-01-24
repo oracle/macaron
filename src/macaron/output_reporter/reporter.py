@@ -81,11 +81,6 @@ class FileReporter:
         raise NotImplementedError
 
 
-def json_convert(obj) -> dict | str | int | float | list:  # type: ignore
-    """Convert an object to json representation for json report."""
-    return str(obj)
-
-
 class JSONReporter(FileReporter):
     """This class handles writing reports to JSON files."""
 
@@ -127,7 +122,7 @@ class JSONReporter(FileReporter):
             for record in report.get_records():
                 if record.context and record.status == SCMStatus.AVAILABLE:
                     file_name = os.path.join(target_dir, f"{record.context.repo_name}.json")
-                    json_data = json.dumps(record.get_dict(), indent=self.indent, default=json_convert)
+                    json_data = json.dumps(record.get_dict(), indent=self.indent)
                     self.write_file(file_name, json_data)
         except TypeError as error:
             logger.critical("Cannot serialize output report to JSON: %s", error)

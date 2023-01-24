@@ -456,7 +456,7 @@ class ProvenanceL3Check(BaseCheck):
             return result_value
 
         check_result["justification"].append("Could not verify level 3 provenance.")
-        return CheckResultType.FAILED
+        return result_value
 
 
 registry.register(ProvenanceL3Check())
