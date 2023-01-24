@@ -24,6 +24,7 @@ from macaron.policy_engine.souffle_code_generator import (
     get_adhoc_rules,
     get_souffle_import_prelude,
     project_table_to_key,
+    project_with_fk_join,
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -138,6 +139,7 @@ def get_generated(database_path: str) -> tuple[str, str]:
         table = metadata.tables[table_name]
         if table_name[0] == "_":
             prelude.update(project_table_to_key(f"{table_name[1:]}_attribute", table))
+            prelude.update(project_with_fk_join(table))
 
     result: str = str(prelude)
     result += get_adhoc_rules()

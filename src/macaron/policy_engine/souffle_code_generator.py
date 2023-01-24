@@ -194,6 +194,118 @@ def get_fact_attributes(metadata: MetaData) -> SouffleProgram:
     return result
 
 
+def project_join_table_souffle_relation(
+    rule_name: str,
+    left_table: Table,
+    left_common_fields: dict[str, str],
+    right_table: Table,
+    right_common_fields: dict[str, str],
+    right_ignore_fields: list[str],
+    prefix_table_name_to_key: bool = True,
+) -> SouffleProgram:
+    """Generate souffle datalog to join two tables together.
+
+    This creates a relation that will appear as
+
+        rule_name(left, common, fields, "right_column_name", right_column_value) :-
+            left_relation(left, common, _, fields, _), right_relation(right_column_value, _ ...).
+        rule_name(left, common, fields, "right_column_name_2", right_column_value) :-
+            left_relation(left, common, _, fields, _), right_relation(_, right_column_value, ...).
+
+    Parameters
+    ----------
+    rule_name: str
+        The name of the rule to generate
+    left_table: Table
+        The table to appear on the left of the relation (the "subject")
+    left_common_fields: dict[str, str]
+        The columns to include on the left of the relation, mapped to the names they should have in the declaration
+    right_table: Table
+        The table on the right hand side of the relation (the "predicate")
+    right_common_fields: dict[str, str]
+        The columns from the right table that should appear on the left of the relation
+    right_ignore_fields: list[str]
+        The columns that should not appear in the relation
+    prefix_table_name_to_key: bool
+        Should the key field of the relation be prefixed with the table name: so that it appears as
+        "tableName.columnName"
+    """
+    result = SouffleProgram(
+        declarations={
+            f".decl {rule_name} ("
+            + ", ".join(
+                [
+                    f"{field_name}:{column_to_souffle_type(left_table.columns[column_name])}"
+                    for column_name, field_name in left_common_fields.items()
+                ]
+                + [
+                    f"{field_name}:{column_to_souffle_type(left_table.columns[column_name])}"
+                    for column_name, field_name in right_common_fields.items()
+                ]
+            )
+            + ", key:symbol, value:JsonType)"
+        }
+    )
+
+    # Construct rule to create relations based on table
+    for value_column in right_table.columns:
+        # Loop over each column that gets treated as a value
+        if value_column.name in right_ignore_fields:
+            continue
+        if value_column.name in right_common_fields:
+            continue
+
+        # Construct the relation statement containing all common_fields and the cid bound to value
+        right_pattern = []
+        left_pattern = []
+        value_statement = ""
+
+        # Construct the relation statement containing all common_fields and the cid bound to value
+        for column in left_table.columns:
+            if column.name in left_common_fields:
+                left_pattern.append(left_common_fields[column.name])
+            else:
+                left_pattern.append("_")
+
+        value_statement = ""
+        for column in right_table.columns:
+            if column.name == value_column.name:
+                if isinstance(column.type, String):
+                    value_statement = "$String(value)"
+                    right_pattern.append("value")
+                elif isinstance(column.type, Integer):
+                    value_statement = "$Int(value)"
+                    right_pattern.append("value")
+                elif isinstance(column.type, Boolean):
+                    value_statement = "$Bool(value)"
+                    right_pattern.append("value")
+                else:
+                    logger.error("Unknown column type in codegen.")
+                    value_statement = "$String(value)"
+                    right_pattern.append("value")
+
+            elif column.name in right_ignore_fields:
+                right_pattern.append("_")
+            elif column.name in right_common_fields:
+                right_pattern.append(right_common_fields[column.name])
+            else:
+                right_pattern.append("_")
+
+        key_literal = value_column.name
+        if prefix_table_name_to_key:
+            key_literal = value_column.table.name[1:] + "." + key_literal
+        lhs = (
+            f"{rule_name}("
+            + ",".join(list(left_common_fields.values()) + list(right_common_fields.values()))
+            + f',"{key_literal}", {value_statement})'
+        )
+        rhs_left_table = f"{left_table.name[1:]}(" + ",".join(left_pattern) + ")"
+        rhs_right_table = f"{right_table.name[1:]}(" + ",".join(right_pattern) + ")"
+        rule_stmt = lhs + " :- " + rhs_left_table + ", " + rhs_right_table + "."
+        result.rules.add(rule_stmt)
+    return result
+
+
 def get_table_rules_per_column(
     rule_name: str, table: Table, common_fields: dict[str, str], ignore_columns: list
 ) -> SouffleProgram:
@@ -271,6 +383,29 @@ def get_table_rules_per_column(
         result.rules.add(rule_stmt)
 
     return result
+
+
+def project_with_fk_join(table: Table) -> SouffleProgram:
+    """Create attribute relations joining on foreign keys.
+
+    For each foreign key in this table, creates a relation for the reference table which receives this table's values.
+    """
+    if len(table.columns) <= len(table.primary_key.columns):
+        return SouffleProgram()
+
+    program = SouffleProgram()
+
+    for foreign_key in table.foreign_keys:
+        left_table = foreign_key.column.table
+        left_common_fields: dict[str, str] = {col.name: col.name for col in left_table.primary_key.columns}
+        right_ignore_fields: list[str] = [col.name for col in table.primary_key.columns]
+        program.update(
+            project_join_table_souffle_relation(
+                f"{left_table.name[1:]}_attribute", left_table, left_common_fields, table, {}, right_ignore_fields
+            )
+        )
+
+    return program
 
 
 def project_table_to_key(relation_name: str, table: Table) -> SouffleProgram:

@@ -48,8 +48,8 @@ class SouffleWrapper:
     include_dir: str
     fact_dir: str
     library_dir: str
-    souffle_stdout: Optional[str] = None
-    souffle_stderr: Optional[str] = None
+    souffle_stdout: Optional[str]
+    souffle_stderr: Optional[str]
 
     TEMP_SOURCEFILE_NAME = "source.dl"
 
@@ -61,6 +61,8 @@ class SouffleWrapper:
         fact_dir: str = os.curdir,
         library_dir: str = os.curdir,
     ):
+        self.souffle_stdout = None
+        self.souffle_stderr = None
         self.temp_dir = tempfile.mkdtemp()
         self.orig_dir = os.path.abspath(os.curdir)
         self._souffle = souffle_full_path
