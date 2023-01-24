@@ -13,9 +13,6 @@ from macaron.util import JsonType, logger
 def get_adhoc_rules() -> str:
     """Get special souffle rules for preamble."""
     return """
-.decl check_passed(repository: number, check_name: symbol)
-check_passed(repo, check) :- check_name(check), repository_attribute(repo, cat(check, ".passed"), $Bool(1)).
-
 
 .decl transitive_dependency(repo: number, dependency: number)
 

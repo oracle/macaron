@@ -23,7 +23,7 @@ from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.database.database_manager import ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext, RepositoryTable
-from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckResultTable
+from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckFactsTable
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
 from macaron.slsa_analyzer.git_url import get_repo_dir_name
@@ -64,7 +64,7 @@ class _VerifyArtefactResult:
         return str(self.result.value) + ": " + self.artefact_name
 
 
-class ProvenanceResultTable(CheckResultTable, ORMBase):
+class ProvenanceResultTable(CheckFactsTable, ORMBase):
     """Result table for provenenance l3 check."""
 
     __tablename__ = "_provenance_l3_check"

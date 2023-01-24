@@ -21,7 +21,11 @@ passed_policies(policy_id, repo, msg):-
     // policy passes on all repos it applies to
     0 = count: {failed_policies(policy_id, _)}.
 
-/* ---------------------------- helper rules ------------------------------ */
+.decl check_passed(repo:number, id:symbol)
+check_passed(repo, id) :- check_result(_, id, repo, 1, _).
+
+
+/* ----------------------------- helper rules ------------------------------- */
 
 
 .decl rule(repo:number, feedback:symbol)
@@ -46,9 +50,9 @@ accept(repo, feedback) :-
         all(dependency(repo, _),
             (dependency(repo, dep), rule(dep, _))).
 
-Policy("trusted_git_server", repo, info) :-
-        repository(repo, _,_,_,_,_,_),
-        not_self_hosted_git(repo, info).
+Policy("trusted_git_server", repo, reponame) :-
+        repository(repo, reponame,_,_,_,_,_),
+        not_self_hosted_git(repo, _).
 
 apply_policy_to("trusted_git_server", repo) :- repository(repo, _,_,_,_,_,_).
 
@@ -78,20 +82,18 @@ Policy("trusted_builder", repo, name) :-
 
 Policy("trusted_builder", repo, name) :-
         repository(repo, name,_,_,_,_,_),
-        trusted_builder_check(build_tool_name, ci_service, build_trigger,
-        result_id, repo, passed, skipped),
-        passed = 1.
+        check_passed(repo, "mcn_trusted_builder_level_three_1").
 
 Policy("trusted_builder", repo, name) :-
         repository(repo, name,_,_,_,_,_),
         build_service_check(build_tool_name, ci_service, build_trigger,
-        result_id, repo, passed, skipped),
+        result_id, result, repo),
         passed = 1,
         match("github-actions", build_tool_name).
 
 Policy("trusted_builder", repo, name) :-
         repository(repo, name,_,_,_,_,_),
-        build_script_check(build_tool_name, result_id, repo, passed, skipped),
+        build_script_check(build_tool_name, result_id, result, repo),
         passed = 1,
         match("github-actions", build_tool_name).
 

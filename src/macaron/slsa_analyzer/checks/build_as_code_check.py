@@ -13,7 +13,7 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.database.database_manager import ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, NoneBuildTool
-from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckResultTable
+from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckFactsTable
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -32,7 +32,7 @@ class BuildAsCodeCheck(BaseCheck):
     See https://slsa.dev/spec/v0.1/requirements#build-as-code.
     """
 
-    class ResultTable(CheckResultTable, ORMBase):
+    class ResultTable(CheckFactsTable, ORMBase):
         """Check justification table for build_as_code."""
 
         __tablename__ = "_build_as_code_check"

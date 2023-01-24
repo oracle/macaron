@@ -31,7 +31,7 @@ class TestSoufflePolicyEngineMain(TestCase):
         res = policy_engine(conf, conf.policy_file)
         assert res == {
             "passed_policies": [
-                ["trusted_git_server", "1", "https://github.com/slsa-framework/slsa-verifier"],
+                ["trusted_git_server", "1", "slsa-framework/slsa-verifier"],
                 ["trusted_builder", "1", "slsa-framework/slsa-verifier"],
             ],
             "failed_policies": [["specific_rule", "1"]],

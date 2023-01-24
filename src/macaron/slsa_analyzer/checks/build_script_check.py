@@ -12,7 +12,7 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.database.database_manager import ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
-from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckResultTable
+from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckFactsTable
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
@@ -23,7 +23,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 class BuildScriptCheck(BaseCheck):
     """This Check checks whether the target repo has a valid build script."""
 
-    class ResultTable(CheckResultTable, ORMBase):
+    class ResultTable(CheckFactsTable, ORMBase):
         """Check result table for build_script."""
 
         __tablename__ = "_build_script_check"

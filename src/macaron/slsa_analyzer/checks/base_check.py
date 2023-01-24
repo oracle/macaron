@@ -8,10 +8,11 @@ import logging
 from abc import abstractmethod
 from typing import Optional
 
-from sqlalchemy import Column, ForeignKey, Table
+from sqlalchemy import Column, ForeignKey
 from sqlalchemy.orm import declarative_mixin, declared_attr
-from sqlalchemy.sql.sqltypes import Boolean, Integer
+from sqlalchemy.sql.sqltypes import Boolean, Integer, String
 
+from macaron.database.database_manager import ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType, SkippedInfo, get_result_as_bool
 from macaron.slsa_analyzer.slsa_req import ReqName, get_requirements_dict
@@ -24,9 +25,6 @@ class BaseCheck:
 
     # The dictionary that contains the data of all SLSA requirements.
     SLSA_REQ_DATA = get_requirements_dict()
-
-    class ResultTable:
-        """Orm Mapped table definition for the check result values."""
 
     def __init__(
         self,
@@ -149,8 +147,19 @@ class BaseCheck:
         raise NotImplementedError
 
 
+class CheckResultTable(ORMBase):
+    """Table to store the result of a check, is automatically added for each check."""
+
+    __tablename__ = "_check_result"
+    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003 # pylint: disable=invalid-name
+    check_id = Column(String, nullable=False)
+    repository = Column(Integer, ForeignKey("_repository.id"), nullable=False)
+    passed = Column(Boolean, nullable=False)
+    skipped = Column(Boolean, nullable=False)
+
+
 @declarative_mixin
-class CheckResultTable(BaseCheck.ResultTable):
+class CheckFactsTable:
     """
     Declarative mixin for check results.
 
@@ -165,24 +174,11 @@ class CheckResultTable(BaseCheck.ResultTable):
         return Column(Integer, primary_key=True, autoincrement=True)
 
     @declared_attr  # type: ignore
-    def repository_id(self) -> Column:
+    def check_result(self) -> Column:
+        """Store the id of the repository to which the analysis pertains."""
+        return Column(Integer, ForeignKey("_check_result.id"), nullable=False)
+
+    @declared_attr  # type: ignore
+    def repository(self) -> Column:
         """Store the id of the repository to which the analysis pertains."""
         return Column(Integer, ForeignKey("_repository.id"), nullable=False)
-
-    @declared_attr  # type: ignore
-    def passed(self) -> Column:
-        """Whether the check passed (whether or not it was skipped)."""
-        return Column(Boolean, nullable=False)
-
-    @declared_attr  # type: ignore
-    def skipped(self) -> Column:
-        """Whether the check was skipped."""
-        return Column(Boolean, nullable=False)
-
-    def _table(self) -> Table:
-        """Return the table object self belongs to."""
-        return self.metadata.tables[self.__tablename__]  # type: ignore
-
-    def columns(self) -> list[Column]:
-        """Return the list of columns in this table."""
-        return self._table().columns  # type: ignore # pylint: disable=no-member

@@ -31,7 +31,7 @@ from macaron.slsa_analyzer.build_tool.maven import Maven
 
 # To load all checks into the registry
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
-from macaron.slsa_analyzer.checks.base_check import CheckResultTable
+from macaron.slsa_analyzer.checks.base_check import CheckFactsTable, CheckResultTable
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType, SkippedInfo
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
@@ -779,15 +779,19 @@ class Analyzer:
         # Store check result table
         for check in analyze_ctx.check_results.values():
 
+            check_table = CheckResultTable()
+            check_table.check_id = check["check_id"]
+            check_table.repository = analyze_ctx.repository_table.id
+            check_table.passed = check["result_type"] == CheckResultType.PASSED
+            check_table.skipped = check["result_type"] == CheckResultType.SKIPPED
+            db_man.add(check_table)
+
             if "result_tables" in check:
                 for table in check["result_tables"]:
-                    if isinstance(table, CheckResultTable):
-                        table.repository_id = analyze_ctx.repository_table.id
-                        table.passed = check["result_type"] == CheckResultType.PASSED
-                        table.skipped = check["result_type"] == CheckResultType.SKIPPED
-                        db_man.add_and_commit(table)
-                    else:
-                        db_man.add_and_commit(table)
+                    if isinstance(table, CheckFactsTable):
+                        table.repository = analyze_ctx.repository_table.id
+                        table.check_result = check_table.id
+                    db_man.add_and_commit(table)
 
         # Store SLSA Requirements
         results = analyze_ctx.get_analysis_result_data()

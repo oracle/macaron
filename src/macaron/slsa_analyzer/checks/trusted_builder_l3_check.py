@@ -14,7 +14,7 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.config.defaults import defaults
 from macaron.database.database_manager import ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckResultTable
+from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckFactsTable
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType, GitHubActions
 from macaron.slsa_analyzer.registry import registry
@@ -24,7 +24,7 @@ from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class ResultTable(CheckResultTable, ORMBase):
+class ResultTable(CheckFactsTable, ORMBase):
     """Check justification table for trusted_builder."""
 
     __tablename__ = "_trusted_builder_check"

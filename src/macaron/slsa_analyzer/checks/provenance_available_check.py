@@ -12,7 +12,7 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.config.defaults import defaults
 from macaron.database.database_manager import ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckResultTable
+from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckFactsTable
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.registry import registry
@@ -45,7 +45,7 @@ def is_in_toto_file(file_name: str) -> bool:
 class ProvenanceAvailableCheck(BaseCheck):
     """This Check checks whether the target repo has intoto provenance."""
 
-    class ResultTable(CheckResultTable, ORMBase):
+    class ResultTable(CheckFactsTable, ORMBase):
         """Check justification table for provenance_available."""
 
         __tablename__ = "_provenance_available_check"

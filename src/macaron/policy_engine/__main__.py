@@ -22,7 +22,6 @@ from macaron.policy_engine.souffle_code_generator import (
     JsonType,
     convert_json_to_adt_row,
     get_adhoc_rules,
-    get_fact_attributes,
     get_souffle_import_prelude,
     project_table_to_key,
 )
@@ -95,9 +94,6 @@ class JsonConverter:
 
     def generate_json(self) -> dict:
         """Get generated souffle code from database specified by configuration."""
-        prelude = get_souffle_import_prelude(global_config.database_path, self.metadata)
-        prelude.update(get_fact_attributes(self.metadata))
-
         result: dict = {}
         for table_name in self.metadata.tables.keys():
             table = self.metadata.tables[table_name]
@@ -137,7 +133,6 @@ def get_generated(database_path: str) -> tuple[str, str]:
     session = session_maker()
 
     prelude = get_souffle_import_prelude(database_path, metadata)
-    prelude.update(get_fact_attributes(metadata))
 
     for table_name in metadata.tables.keys():
         table = metadata.tables[table_name]
@@ -158,8 +153,6 @@ def policy_engine(config: type[Config], policy_file: str) -> dict:
     sfl = SouffleWrapper()
     with open(policy_file, encoding="utf-8") as file:
         text = file.read()
-
-    prelude += '\n.input json (filename="json.facts")\n'
 
     if config.show_prelude:
         print(prelude)
