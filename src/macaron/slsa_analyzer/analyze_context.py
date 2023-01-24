@@ -277,7 +277,7 @@ class AnalyzeContext:
         sorted_on_id = []
         for res in _sorted_on_id:
             # res is CheckResult(TypedDict)
-            res: dict = dict(res.deepcopy())  # type: ignore
+            res: dict = dict(res.copy())  # type: ignore
             res.pop("result_tables")  # type: ignore
             sorted_on_id.append(res)
         sorted_results = sorted(sorted_on_id, key=lambda item: item["result_type"], reverse=True)
