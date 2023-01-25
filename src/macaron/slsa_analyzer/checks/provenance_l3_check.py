@@ -14,6 +14,7 @@ import zipfile
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import NamedTuple
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
@@ -32,10 +33,15 @@ logger: logging.Logger = logging.getLogger(__name__)
 class _VerifyArtefactResultType(Enum):
     """Result of attempting to verify an asset."""
 
+    # slsa-verifier succeeded and the artefact passed verification
     PASSED = "verify passed"
+    # slsa-verifier succeeded and the artefact failed verification
     FAILED = "verify failed"
+    # An error occured running slsa-verifier or downloading the artefact
     ERROR = "verify error"
+    # The artefact was unable to be downloaded because the url was missing or malformed
     NO_DOWNLOAD = "unable to download asset"
+    # The artefact was unable to be downloaded because the file was too large
     TOO_LARGE = "asset file too large to download"
 
 
@@ -230,7 +236,15 @@ class ProvenanceL3Check(BaseCheck):
         """
         # TODO: During verification, we need to fetch the workflow and verify that it's not
         # using self-hosted runners, custom containers or services, etc.
-        all_feedback: list[tuple[str, str, _VerifyArtefactResult]] = []
+
+        class Feedback(NamedTuple):
+            """Store feedback item."""
+
+            ci_service_name: str
+            asset_url: str
+            verify_result: _VerifyArtefactResult
+
+        all_feedback: list[Feedback] = []
         ci_services = ctx.dynamic_data["ci_services"]
         for ci_info in ci_services:
             ci_service = ci_info["service"]
@@ -283,10 +297,10 @@ class ProvenanceL3Check(BaseCheck):
                             if not sub_asset:
                                 logger.info("Could not find provenance subject %s. Skip verifying...", subject)
                                 all_feedback.append(
-                                    (
-                                        ci_service.name,
-                                        prov_asset["url"],
-                                        _VerifyArtefactResult(
+                                    Feedback(
+                                        ci_service_name=ci_service.name,
+                                        asset_url=prov_asset["url"],
+                                        verify_result=_VerifyArtefactResult(
                                             result=_VerifyArtefactResultType.NO_DOWNLOAD, artefact_name=subject["name"]
                                         ),
                                     )
@@ -299,10 +313,10 @@ class ProvenanceL3Check(BaseCheck):
                                         "Skip verifying the artifact %s: asset size too large.", sub_asset["name"]
                                     )
                                     all_feedback.append(
-                                        (
-                                            ci_service.name,
-                                            prov_asset["url"],
-                                            _VerifyArtefactResult(
+                                        Feedback(
+                                            ci_service_name=ci_service.name,
+                                            asset_url=prov_asset["url"],
+                                            verify_result=_VerifyArtefactResult(
                                                 result=_VerifyArtefactResultType.TOO_LARGE,
                                                 artefact_name=sub_asset["name"],
                                             ),
@@ -315,10 +329,10 @@ class ProvenanceL3Check(BaseCheck):
                                 ):
                                     logger.info("Could not download artifact %s. Skip verifying...", sub_asset["name"])
                                     all_feedback.append(
-                                        (
-                                            ci_service.name,
-                                            prov_asset["url"],
-                                            _VerifyArtefactResult(
+                                        Feedback(
+                                            ci_service_name=ci_service.name,
+                                            asset_url=prov_asset["url"],
+                                            verify_result=_VerifyArtefactResult(
                                                 result=_VerifyArtefactResultType.NO_DOWNLOAD,
                                                 artefact_name=sub_asset["name"],
                                             ),
@@ -329,7 +343,11 @@ class ProvenanceL3Check(BaseCheck):
                             feedback = self._verify_slsa(
                                 ctx.macaron_path, temp_path, prov_asset, sub_asset["name"], ctx.remote_path
                             )
-                            all_feedback.append((ci_service.name, prov_asset["url"], feedback))
+                            all_feedback.append(
+                                Feedback(
+                                    ci_service_name=ci_service.name, asset_url=prov_asset["url"], verify_result=feedback
+                                )
+                            )
                             if feedback.result != _VerifyArtefactResultType.PASSED:
                                 logger.info("Could not verify SLSA Level three integrity for: %s.", sub_asset["name"])
 
@@ -346,7 +364,7 @@ class ProvenanceL3Check(BaseCheck):
 
         result_value = CheckResultType.FAILED
         if all_feedback:
-            all_results = [result for _, _, result in all_feedback]
+            all_results = [feedback.verify_result for feedback in all_feedback]
             failed = [
                 result
                 for ci_name, prov_url, result in all_feedback
