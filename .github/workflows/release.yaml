@@ -59,8 +59,11 @@ jobs:
         git config --global user.email "$USER_EMAIL"
         git config --list --global # For debug purposes.
 
+    # In some cases a user may merge commits that don't cause a version bump, which causes commitizen
+    # to fail with error code 21 (NoneIncrementExit). Thus we silence that particular error to avoid
+    # failing this job: https://commitizen-tools.github.io/commitizen/bump/#avoid-raising-errors
     - name: Create changelog and bump
-      run: cz bump --changelog --yes
+      run: cz --no-raise 21 bump --changelog --yes
 
     - name: Push the release
       run: |
