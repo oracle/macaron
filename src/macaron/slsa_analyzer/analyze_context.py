@@ -23,30 +23,9 @@ from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReq, get_requirements_dict
 from macaron.slsa_analyzer.specs.build_spec import BuildSpec
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from macaron.slsa_analyzer.table_definitions import RepositoryTable, SLSALevelTable
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-
-class RepositoryTable(ORMBase):
-    """ORM Class for a repository."""
-
-    __tablename__ = "_repository"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    full_name = Column(String, nullable=False)
-    remote_path = Column(String, nullable=True)
-    branch_name = Column(String, nullable=False)
-    release_tag = Column(String, nullable=True)
-    commit_sha = Column(String, nullable=False)
-    commit_date = Column(String, nullable=False)
-
-
-class SLSALevelTable(ORMBase):
-    """Table to store the slsa level of a repository."""
-
-    __tablename__ = "_slsa_level"
-    repository = Column(Integer, ForeignKey("_repository.id"), primary_key=True)
-    slsa_level = Column(Integer, nullable=False)
-    reached = Column(Boolean, nullable=False)
 
 
 class ChecksOutputs(TypedDict):

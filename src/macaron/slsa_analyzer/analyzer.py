@@ -12,13 +12,12 @@ from typing import Optional
 
 from git import InvalidGitRepositoryError
 from pydriller.git import Git
-from sqlalchemy import Column, ForeignKey, Integer, String
 
 from macaron import __version__
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
-from macaron.database.database_manager import DatabaseManager, ORMBase
+from macaron.database.database_manager import DatabaseManager
 from macaron.dependency_analyzer import CycloneDxMaven, DependencyAnalyzer, DependencyInfo, DependencyTools
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
@@ -38,49 +37,14 @@ from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
+from macaron.slsa_analyzer.table_definitions import (
+    AnalysisTable,
+    RepositoryAnalysis,
+    RepositoryDependency,
+    SLSARequirement,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-
-class SLSARequirement(ORMBase):
-    """Table storing the SLSA requirements a repository satisfies."""
-
-    __tablename__ = "_slsa_requirement"
-    repository = Column(Integer, ForeignKey("_repository.id"), primary_key=True)
-    requirement = Column(String, primary_key=True)
-    requirement_name = Column(String, primary_key=False)
-    feedback = Column(String, nullable=True)
-
-
-class RepositoryDependency(ORMBase):
-    """Identifies dependencies between repositories."""
-
-    __tablename__ = "_dependency"
-    dependent_repository = Column(Integer, ForeignKey("_repository.id"), primary_key=True)
-    dependency_repository = Column(Integer, ForeignKey("_repository.id"), primary_key=True)
-
-
-class AnalysisTable(ORMBase):
-    """
-    ORM Class for the analysis information.
-
-    This information pertains to a single invocation of the macaron tool.
-    """
-
-    __tablename__ = "_analysis"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    analysis_time = Column(String, nullable=False)
-    repository = Column(Integer, ForeignKey("_repository.id"), nullable=False)
-    policy = Column(Integer, ForeignKey("_policy.id"), nullable=True)  # to be foreign key
-    macaron_version = Column(String, nullable=False)
-
-
-class RepositoryAnalysis(ORMBase):
-    """Relates repositories to the analysis in which they were scanned."""
-
-    __tablename__ = "_repository_analysis"
-    analysis_id = Column(Integer, ForeignKey("_analysis.id"), nullable=False, primary_key=True)
-    repository_id = Column(Integer, ForeignKey("_repository.id"), nullable=False, primary_key=True)
 
 
 class Analyzer:

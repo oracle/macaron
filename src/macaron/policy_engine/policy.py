@@ -11,11 +11,10 @@ from functools import reduce
 from typing import Any, Callable, Optional, Union
 
 import yamale
-from sqlalchemy import Column, Integer, String
 from yamale.schema import Schema
 
-from macaron.database.database_manager import ORMBase
 from macaron.parsers.yaml.loader import YamlLoader
+from macaron.slsa_analyzer.table_definitions import PolicyTable
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -147,18 +146,6 @@ def _gen_policy_func(policy: PolicyDef, path: Optional[SubscriptPathType] = None
 
         case _:
             raise InvalidPolicyError(f"No support for policy {policy}")
-
-
-class PolicyTable(ORMBase):
-    """ORM Class for a Policy."""
-
-    __tablename__ = "_policy"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    policy_id = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    policy_type = Column(String, nullable=False)
-    sha = Column(String, nullable=False)
-    text = Column(String, nullable=False)
 
 
 # pylint: disable=invalid-name
