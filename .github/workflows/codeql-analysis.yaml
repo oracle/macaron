@@ -37,7 +37,6 @@ jobs:
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
         # Learn more about CodeQL language support at https://git.io/codeql-language-support
         language: [python, go]
-        python: ['3.11']
     steps:
 
     - name: Checkout repository
@@ -46,7 +45,7 @@ jobs:
     - name: Set up Python ${{ matrix.python }}
       uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # v4.5.0
       with:
-        python-version: ${{ matrix.python }}
+        python-version: '3.11'
 
     # For more details see the comment in _build.yaml.
     - name: Create empty virtual environment for Actions
