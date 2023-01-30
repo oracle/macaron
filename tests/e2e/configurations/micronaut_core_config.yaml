@@ -1,12 +1,12 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 target:
   id: micronaut-core
-  # For version 3.5.5
-  # https://github.com/micronaut-projects/micronaut-core/commit/08357218ce6d6347c4d1e3ff74a8b2936fe3c3dc
-  branch: 3.5.x
-  digest: 08357218ce6d6347c4d1e3ff74a8b2936fe3c3dc
+  # For version 3.8.3
+  # https://github.com/micronaut-projects/micronaut-core/commit/68f9bb0a78fa930865d37fca39252b9ec66e4a43
+  branch: 3.8.x
+  digest: 68f9bb0a78fa930865d37fca39252b9ec66e4a43
   path: https://github.com/micronaut-projects/micronaut-core
 
 dependencies:
