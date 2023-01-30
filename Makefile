@@ -86,13 +86,14 @@ venv:
 # We also install cyclonedx-go to generate SBOM for Go, compile the Go modules,
 # install SLSA verifier binary, and download mvnw.
 .PHONY: setup
+.PHONY: souffle
 setup: force-upgrade setup-go setup-binaries
 	pre-commit install
 	mkdir -p dist
 	go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.3.0
 setup-go:
 	go build -o $(MACARON_PATH)/bin/ $(MACARON_PATH)/golang/cmd/...
-setup-binaries: $(MACARON_PATH)/bin/slsa-verifier $(MACARON_PATH)/resources/mvnw
+setup-binaries: $(MACARON_PATH)/bin/slsa-verifier $(MACARON_PATH)/resources/mvnw souffle
 $(MACARON_PATH)/bin/slsa-verifier:
 	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.0.1
 	cd slsa-verifier/cli/slsa-verifier && go build -o $(MACARON_PATH)/bin/
@@ -104,6 +105,28 @@ $(MACARON_PATH)/resources/mvnw:
 		&& rm -r maven-wrapper-distribution-3.1.1-bin.zip \
 		&& echo -e "distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.8.6/apache-maven-3.8.6-bin.zip\nwrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.1.1/maven-wrapper-3.1.1.jar" > .mvn/wrapper/maven-wrapper.properties \
 		&& cd $(MACARON_PATH)
+
+# Supports OL8+, Fedora 34+, and Ubuntu 20.04+
+LINUX_DISTRO := "$(shell grep '^NAME=' /etc/os-release | sed 's/^NAME=//' | sed 's/"//g')"
+souffle:
+	if ! [ `which souffle` ]; then                                                                                                                        \
+		echo "Installing system dependency: souffle" &&                                                                                                    \
+	    case $(LINUX_DISTRO) in                                                                                                                            \
+	        "Oracle Linux")                                                                                                                                \
+                sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.3/x86_64-oraclelinux-8-souffle-2.3-Linux.rpm                  \
+                ;;                                                                                                                                         \
+	        "Fedora Linux")                                                                                                                                \
+                sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.3/x86_64-fedora-34-souffle-2.3-Linux.rpm                      \
+                ;;                                                                                                                                         \
+            "Ubuntu")                                                                                                                                      \
+				wget https://github.com/souffle-lang/souffle/releases/download/2.3/x86_64-ubuntu-2004-souffle-2.3-Linux.deb           \
+					-o souffle.deb;                                                                                                                   \
+                sudo apt-get -y install ./souffle.deb;                                                                                                     \
+                rm ./souffle.deb                                                                                                                            \
+                ;;                                                                                                                                         \
+	esac;                                                                                                                                                  \
+	fi
+
 
 # Install or upgrade an existing virtual environment based on the
 # package dependencies declared in pyproject.toml and go.mod.
