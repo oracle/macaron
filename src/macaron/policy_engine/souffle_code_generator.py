@@ -2,12 +2,11 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Generate souffle datalog for policy prelude."""
-from typing import TypeGuard
 
 from sqlalchemy import Column, MetaData, Table
 from sqlalchemy.sql.sqltypes import Boolean, Integer, String, Text
 
-from macaron.util import JsonType, logger
+from macaron.util import logger
 
 
 def get_adhoc_rules() -> str:
@@ -411,122 +410,3 @@ def project_table_to_key(relation_name: str, table: Table) -> SouffleProgram:
     ignore_columns: list = []
 
     return get_table_rules_per_column(relation_name, table, common_fields, ignore_columns)
-
-
-# We generate ADT facts for inputting a json document to souffle as a text inclusion.
-#
-# For example: {"index": ["value"]} becomes
-#
-#       $Object("index", $Array(0, $String("value")))
-#
-# Directly generating these facts is the best option since souffle only supports csv input for ADTs, and the csv
-# representation of ADTs is their literal representation in souffle datalog.
-# Json can alternatively be represented simply as the leaves and their corresponding addresses in the document,
-#
-#       jsonDocument(id, "input.index[0]", "value")
-#
-# This representation is also automatically inferred from the ADT representation.
-#
-# Note: since it is advantageous to be able to refer to any element in the document, an alternative representation to
-# consider could be using relations between each element in the document:
-#
-#       object(id0)
-#       objectElem(id0, "index", id1),
-#       array(id1)
-#       arrayElem(id1, 0, stringElement(id2))
-#       stringElem(id2, "value")
-#
-
-
-class WalkerState:
-    """Class to store a stack of the json field address and convert it to an ADT."""
-
-    docname: str
-    state_sequence: list[str | int]
-
-    def __init__(self) -> None:
-        self.state_sequence = []
-
-    def get_str_state_sequence(self) -> str:
-        """Get object/array the dereference sequence for the current leaf, as a string."""
-        return "".join([f"[{x}]" if isinstance(x, int) else f".{x}" for x in self.state_sequence])[1:]
-
-    def wrap_sequence_adt(self, state_sequence: list[int | str], value: str) -> str:
-        """Wrap the value in the recursive ADT JSON Type literal specified by state_sequence."""
-        if len(state_sequence) == 0:
-            return value
-
-        last = state_sequence.pop()
-        if isinstance(last, int):
-            return self.wrap_sequence_adt(state_sequence, f"$Array({last}, {value})")
-
-        return self.wrap_sequence_adt(state_sequence, f'$Object("{last}", {value})')
-
-    def escape_string(self, string: str) -> str:
-        """Escape a string for souffle fact."""
-        # More recent souffle supports string escaping, but currently does not
-        return string.replace("\n", "\\n").replace('"', "'")
-
-    def wrap_value(self, value: JsonType) -> str:
-        """Wrap a python value in the souffle ADT type for that value (not array or object)."""
-        val_adt = {int: "$Int", float: "$Float", str: "$String", type(None): "$null", bool: "$Bool"}[type(value)]
-        if isinstance(value, str):
-            val_adt += f'("{self.escape_string(value)}")'
-        elif isinstance(value, bool):
-            val_adt += f"({int(value)})"
-        elif value is None:
-            val_adt += ""
-        else:
-            val_adt += f"({value})"
-        return val_adt
-
-    def get_adt(self, value: JsonType) -> str:
-        """Get the adt literal for the value using the current state sequence."""
-        val_adt = self.wrap_value(value)
-        return self.wrap_sequence_adt(self.state_sequence.copy(), val_adt)
-
-    def add(self, elems: int | str) -> None:
-        """Push an object/array lookup onto the stack."""
-        self.state_sequence.append(elems)
-
-    def remove(self, num: int = 1) -> None:
-        """Remove n object/array lookups from the stack."""
-        for _i in range(num):
-            self.state_sequence.pop()
-
-
-def _is_json_array(obj: JsonType) -> TypeGuard[list[int]]:
-    return isinstance(obj, list)
-
-
-def _is_json_object(obj: JsonType) -> TypeGuard[dict[str, JsonType]]:
-    return isinstance(obj, dict)
-
-
-def _json_to_facts(state: WalkerState, ast: JsonType | dict[str, JsonType] | list[JsonType]) -> list[str]:
-    """Walk the json document (ast) and return the list of leaves and their addresses."""
-    results = []
-    if _is_json_array(ast):
-        for k, val in enumerate(ast):
-            state.add(k)
-            results += _json_to_facts(state, val)
-            state.remove()
-    elif _is_json_object(ast):
-        for i, val2 in ast.items():
-            state.add(i)
-            results += _json_to_facts(state, val2)
-            state.remove()
-    else:
-        return [state.get_adt(ast)]
-
-    return results
-
-
-def convert_json_to_adt_row(data: JsonType, prefix: str = "input", ident: int = 0) -> list[str]:
-    """Convert a json document to the souffle ADT fact in csv format."""
-    return [f'"{prefix}"\t{ident}\t{adt}' for adt in _json_to_facts(WalkerState(), data)]
-
-
-def convert_json_to_adt_fact(data: JsonType, prefix: str = "input", ident: int = 0) -> list[str]:
-    """Convert a json document to the souffle ADT fact literal."""
-    return [f'json("{prefix}",{ident},{adt}).' for adt in _json_to_facts(WalkerState(), data)]

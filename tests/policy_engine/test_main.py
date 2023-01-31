@@ -19,7 +19,7 @@ class TestSoufflePolicyEngineMain(TestCase):
 
     def test_dump_prelude(self) -> None:
         """Test loading the policy from file."""
-        res, _ = get_generated(self.DATABASE_FILE)
+        res = get_generated(self.DATABASE_FILE)
         assert len(res) > 10
 
     def test_eval_policy(self) -> None:
