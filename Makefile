@@ -114,11 +114,9 @@ souffle:
 	    case $(LINUX_DISTRO) in                                                                                                                            \
 	        "Oracle Linux")                                                                                                                                \
                 sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.3/x86_64-oraclelinux-8-souffle-2.3-Linux.rpm                  \
-                sudo dnf install souffle \
                 ;;                                                                                                                                         \
 	        "Fedora Linux")                                                                                                                                \
                 sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.3/x86_64-fedora-34-souffle-2.3-Linux.rpm                      \
-                sudo dnf install souffle \
                 ;;                                                                                                                                         \
             "Ubuntu")                                                                                                                                      \
                 sudo wget https://souffle-lang.github.io/ppa/souffle-key.public -O /usr/share/keyrings/souffle-archive-keyring.gpg; \
