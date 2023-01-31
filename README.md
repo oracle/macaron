@@ -164,6 +164,12 @@ make setup
 
 With that in place, you’re ready to build and contribute to Macaron!
 
+### Defining checks
+
+After cloning a repository, Macaron parses the CI configuration files and bash scripts that are triggered by the CI, creates call graphs and other intermediate representations as abstractions. Using such abstractions, Macaron implements concrete checks to gather facts and metadata based on a security specification.
+
+To learn how to define your own checks, see the steps in the [checks documentation](/src/macaron/slsa_analyzer/checks/README.md).
+
 ### Updating dependent packages
 
 It’s likely that during development you’ll add or update dependent packages in the `pyproject.toml` file, which requires an update to the virtual environment:
