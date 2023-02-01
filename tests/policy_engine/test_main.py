@@ -22,7 +22,7 @@ class TestSoufflePolicyEngineMain(TestCase):
     def setUpClass(cls) -> None:
         if not os.path.exists(cls.DATABASE_FILE):
             if os.path.exists(cls.DATABASE_FILE + ".gz"):
-                subprocess.run(["gunzip", cls.DATABASE_FILE + ".gz"], check=True, shell=False)  # nosec B603 B607
+                subprocess.run(["gunzip", "-k", cls.DATABASE_FILE + ".gz"], check=True, shell=False)  # nosec B603 B607
 
     def test_dump_prelude(self) -> None:
         """Test loading the policy from file."""
