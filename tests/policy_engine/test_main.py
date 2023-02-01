@@ -4,6 +4,7 @@
 """This module tests the policy parser."""
 
 import os
+import subprocess  # nosec B404
 from pathlib import Path
 from unittest import TestCase
 
@@ -16,6 +17,12 @@ class TestSoufflePolicyEngineMain(TestCase):
     POLICY_DIR = Path(__file__).parent.joinpath("resources").joinpath("policies")
     POLICY_FILE = os.path.join(POLICY_DIR, "testpolicy.dl")
     DATABASE_FILE = os.path.join(Path(__file__).parent.joinpath("resources", "facts", "macaron.db"))
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not os.path.exists(cls.DATABASE_FILE):
+            if os.path.exists(cls.DATABASE_FILE + ".gz"):
+                subprocess.run(["gunzip", cls.DATABASE_FILE + ".gz"], check=True, shell=False)  # nosec B603 B607
 
     def test_dump_prelude(self) -> None:
         """Test loading the policy from file."""
