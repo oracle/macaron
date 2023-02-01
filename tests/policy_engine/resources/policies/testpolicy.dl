@@ -6,9 +6,11 @@
 
 #define none(x) 0 = count: {x}
 
-.decl seq(n: number)
-seq(0).
-seq(n+1) :- n <= 10, seq(n).
+.functor print_number(x:number) : number
+
+.decl agg_levels(n: number)
+agg_levels(0).
+agg_levels(n+1) :- n <= 4, agg_levels(n).
 
 
 .decl Policy(policy_id: symbol, repo: number, message: symbol)
@@ -155,51 +157,64 @@ Policy("specific_rule", repo, feedback) :-
 .decl aggregate_level(level: number, repo: number)
 .decl aggregate_level_requirement(level: number, repo: number)
 .decl aggregate_level_dependency_requirement(level: number, repo: number)
+.decl aggregate_level_min_dependency_level(level: number, dep_level:number)
 
-/* Everything has a repository */
+/* Everything has a repository and uses a scripted build service. */
 aggregate_level_requirement(1, repo) :-
     repository(repo, _,_,_,_,_,_),
-    check_passed(repo, "mcn_build_script_1"),
+    check_passed(repo, "mcn_build_service_1"),
     check_passed(repo, "mcn_version_control_system_1").
 
 aggregate_level_dependency_requirement(1, repo)  :-
     aggregate_level_requirement(1, repo).
 
 
+/**
+    The build is verifiably automated and .
+ */
 aggregate_level_requirement(2, repo) :-
     repository(repo, _,_,_,_,_,_),
     check_passed(repo, "mcn_build_script_1"),
-    check_passed(repo, "mcn_build_as_code_1"),
-    check_passed(repo, "mcn_provenance_available_1").
+    check_passed(repo, "mcn_build_service_1"),
+    check_passed(repo, "mcn_build_as_code_1").
 
 
+aggregate_level_min_dependency_level(1, 1).
+aggregate_level_min_dependency_level(2, 2).
+aggregate_level_min_dependency_level(3, 2).
+aggregate_level_min_dependency_level(4, 4).
+
+/**
+ *  All dependencies use some sort of CI build.
+ */
 aggregate_level_dependency_requirement(2, repo)  :-
-    aggregate_level_requirement(1, repo).
+    aggregate_level_requirement(1, repo),
+    check_passed(repo, "mcn_build_service_1").
 
 
+/**
+ *  The repository uses a trusted build service that outputs verifiable
+ *   provenance information.
+ */
 aggregate_level_requirement(3, repo) :-
     repository(repo, _,_,_,_,_,_),
     check_passed(repo, "mcn_provenance_level_three_1"),
-    Policy("trusted_builder", repo, name).
-
-
-aggregate_level_dependency_requirement(3, repo)  :-
     aggregate_level_requirement(2, repo),
     aggregate_level_requirement(1, repo).
 
 
-aggregate_level_dependency_requirement(3, repo)  :-
-    aggregate_level_requirement(2, repo),
-    aggregate_level_requirement(1, repo).
-
+/**
+ *   The release provenance verifies
+ */
 aggregate_level_requirement(4, repo) :-
     repository(repo, _,_,_,_,_,_),
     check_passed(repo, "mcn_provenance_level_three_1"),
     check_passed(repo, "mcn_trusted_builder_level_three_1"),
-    Policy("trusted_git_server", repo, _).
+    not_self_hosted_git(repo, _).
 
 aggregate_level_dependency_requirement(4, repo) :-
-    aggregate_level_requirement(4, repo).
+    check_passed(repo, "mcn_provenance_level_three_1"),
+    check_passed(repo, "mcn_trusted_builder_level_three_1").
 
 
 /* ------------------------------------------------------------------------- */
@@ -212,16 +227,21 @@ aggregate_level(0, repo) :-
 
 aggregate_level(level, repo) :-
     repository(repo, name,_,_,_,_,_),
-    seq(level), level <= 4, level >= 1,
-    aggregate_level(level - 1, repo),
+    agg_levels(level), level >= 1,
+    //aggregate_level(level - 1, repo),
     aggregate_level_requirement(level, repo),
     // requirements met for all levels below
     // all deps have requirements for all levels below
-    none((dependency(repo, dep), n <= level, seq(n),
-        !aggregate_level_dependency_requirement(n, dep))).
+    none((dependency(repo, dep),
+        aggregate_level_min_dependency_level(level, deplevel),
+        !aggregate_level_requirement(deplevel, dep))).
 
 
+//aggregate_level(level - 1, repo) :-
+//    aggregate_level(level, repo), level > 0.
+//
+//.output aggregate_level
+
+// only allowed outputs for test
 .output passed_policies
 .output failed_policies
-// .output aggregate_level
-//.output check_passed
