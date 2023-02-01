@@ -88,8 +88,9 @@ rel(b, a) :- a = sum c : {relationname(b,_, c)}. // b is not grounded
 But the below _does_ work:
 
 ```
-.decl rel(a:number)
-rel(a) :- a = min c : relationname(_,_, c).
+rel(b, a) :-
+    relationname(b,_,_),  // b is grounded
+    a = sum c : {relationname(b,_, c)}.
 ```
 
 ### No nested aggregates
