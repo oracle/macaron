@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains classes that represent the result of the Macaron analysis."""
@@ -25,7 +25,7 @@ class SCMStatus(str, Enum):
     MISSING_SCM = "MISSING REPO URL"
     """Cannot find the SCM url for this artifact."""
     DUPLICATED_SCM = "DUPLICATED REPO URL"
-    """The SCM url is available but has been already analyzed for another artifact."""
+    """The SCM url is available but has already been analyzed for another artifact."""
     ANALYSIS_FAILED = "FAILED"
     """When the SCM is available but the analysis could not finish for this artifact."""
 
