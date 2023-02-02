@@ -66,7 +66,7 @@ class DependencyAnalyzer(ABC):
         self.repo_path: str = repo_path
 
     @abstractmethod
-    def collect_dependencies(self, dir_path: str) -> dict:
+    def collect_dependencies(self, dir_path: str) -> dict[str, DependencyInfo]:
         """Process the dependency JSON files and collect direct dependencies.
 
         Parameters
@@ -137,7 +137,7 @@ class DependencyAnalyzer(ABC):
                 item["note"] = f"{item['url']} is already analyzed."
                 item["available"] = SCMStatus.DUPLICATED_SCM
                 url_to_artifact[item["url"]].add(key)
-                logger.info(item["note"])
+                logger.debug(item["note"])
         else:
             logger.debug("Could not find SCM URL for %s. Skipping...", key)
             item["note"] = "Manual configuration required. Could not find SCM URL."
@@ -287,7 +287,7 @@ class NoneDependencyAnalyzer(DependencyAnalyzer):
         """Initialize the dependency analyzer instance."""
         super().__init__(resources_path="", file_name="", tool_name="", tool_version="", repo_path="")
 
-    def collect_dependencies(self, dir_path: str) -> dict:
+    def collect_dependencies(self, dir_path: str) -> dict[str, DependencyInfo]:
         """Process the dependency JSON files and collect direct dependencies.
 
         Parameters

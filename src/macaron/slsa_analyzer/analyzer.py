@@ -8,6 +8,7 @@ import os
 import subprocess  # nosec B404
 import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 from git import InvalidGitRepositoryError
@@ -218,7 +219,7 @@ class Analyzer:
         dict[str, DependencyInfo]
             A dictionary where artifacts are grouped based on ``artifactId:groupId``.
         """
-        deps_resolved = {}
+        deps_resolved: dict[str, DependencyInfo] = {}
 
         build_tool = main_ctx.dynamic_data["build_spec"]["tool"]
         if not build_tool or isinstance(build_tool, NoneBuildTool):
@@ -255,33 +256,35 @@ class Analyzer:
         dep_analyzer.remove_sboms(main_ctx.repo_path)
 
         commands = dep_analyzer.get_cmd()
-        try:
-            # Suppressing Bandit's B603 report because the repo paths are validated.
-            analyzer_output = subprocess.run(  # nosec B603
-                commands,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                check=True,
-                cwd=main_ctx.repo_path,
-                timeout=defaults.getint("dependency.resolver", "timeout", fallback=1200),
-            )
-            with open(log_path, mode="w", encoding="utf-8") as log_file:
-                logger.info("Storing dependency resolver log to %s", log_path)
-                log_file.write(analyzer_output.stdout.decode("utf-8"))
+        working_dirs: set[Path] = build_tool.get_build_dirs(main_ctx.repo_path)
+        for working_dir in working_dirs:
+            try:
+                # Suppressing Bandit's B603 report because the repo paths are validated.
+                analyzer_output = subprocess.run(  # nosec B603
+                    commands,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    check=True,
+                    cwd=str(working_dir),
+                    timeout=defaults.getint("dependency.resolver", "timeout", fallback=1200),
+                )
+                with open(log_path, mode="a", encoding="utf-8") as log_file:
+                    log_file.write(analyzer_output.stdout.decode("utf-8"))
 
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
-            logger.error(error)
-            with open(log_path, mode="w", encoding="utf-8") as log_file:
-                logger.info("Storing dependency resolver log to %s", log_path)
-                log_file.write(error.output.decode("utf-8"))
-        except FileNotFoundError as error:
-            # Only happen if the gradlew at the repo dir has an invalid format
-            logger.error(error)
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+                logger.error(error)
+                with open(log_path, mode="a", encoding="utf-8") as log_file:
+                    log_file.write(error.output.decode("utf-8"))
+            except FileNotFoundError as error:
+                # Only happen if the gradlew at the repo dir has an invalid format
+                logger.error(error)
 
-        # We collect the generated SBOM as a best effort, even if the build exits with errors.
-        # TODO: add improvements to help the SBOM build succeed as much as possible.
-        deps_resolved = dep_analyzer.collect_dependencies(main_ctx.repo_path)
+            # We collect the generated SBOM as a best effort, even if the build exits with errors.
+            # TODO: add improvements to help the SBOM build succeed as much as possible.
+            # Update deps_resolved with new dependencies.
+            deps_resolved |= dep_analyzer.collect_dependencies(str(working_dir))
 
+        logger.info("Stored dependency resolver log to %s.", log_path)
         return deps_resolved
 
     def run_single(self, config: Configuration, existing_records: Optional[dict[str, Record]] = None) -> Record:

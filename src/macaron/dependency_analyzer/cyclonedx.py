@@ -132,7 +132,9 @@ def get_dep_components(
                 logger.debug(error)
 
 
-def convert_components_to_artifacts(components: Iterable[dict], root_component: Optional[dict | None] = None) -> dict:
+def convert_components_to_artifacts(
+    components: Iterable[dict], root_component: Optional[dict | None] = None
+) -> dict[str, DependencyInfo]:
     """Convert CycloneDX components using internal artifact representation.
 
     Parameters

@@ -19,6 +19,7 @@ from macaron.dependency_analyzer.cyclonedx import (
     get_dep_components,
     get_root_component,
 )
+from macaron.dependency_analyzer.dependency_resolver import DependencyInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class CycloneDxMaven(DependencyAnalyzer):
             self.repo_path,
         ]
 
-    def collect_dependencies(self, dir_path: str) -> dict:
+    def collect_dependencies(self, dir_path: str) -> dict[str, DependencyInfo]:
         """Process the dependency JSON files and collect direct dependencies.
 
         Parameters

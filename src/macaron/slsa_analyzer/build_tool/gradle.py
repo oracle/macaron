@@ -6,8 +6,10 @@
 This module is used to work with repositories that use Gradle build tool.
 """
 
+import glob
 import logging
 import os
+from pathlib import Path
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
@@ -95,8 +97,7 @@ class Gradle(BaseBuildTool):
         return False
 
     def get_dep_analyzer(self, repo_path: str) -> CycloneDxGradle:
-        """
-        Create a DependencyAnalyzer for the Gradle build tool.
+        """Create a DependencyAnalyzer for the Gradle build tool.
 
         Parameters
         ----------
@@ -136,3 +137,24 @@ class Gradle(BaseBuildTool):
             )
 
         raise DependencyAnalyzerError(f"Unsupported SBOM generator for Gradle: {tool_name}.")
+
+    def get_build_dirs(self, repo_path: str) -> set[Path]:
+        """Find directories in the repository that have their own build scripts.
+
+        This is especially important for applications that consist of multiple services.
+
+        Parameters
+        ----------
+        repo_path: str
+            The path to the target repo.
+
+        Returns
+        -------
+        set[Path]
+            The list of paths that contain build scripts.
+        """
+        config_paths: set[str] = set()
+        for build_cfg in self.build_configs:
+            config_paths.update(glob.glob(os.path.join(repo_path, "**", build_cfg), recursive=True))
+
+        return {Path(path).parent for path in config_paths}

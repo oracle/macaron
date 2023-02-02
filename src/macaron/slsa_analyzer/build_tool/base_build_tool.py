@@ -7,6 +7,7 @@ import glob
 import logging
 import os
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 from macaron.dependency_analyzer import DependencyAnalyzer, NoneDependencyAnalyzer
 
@@ -115,8 +116,7 @@ class BaseBuildTool(ABC):
 
     @abstractmethod
     def get_dep_analyzer(self, repo_path: str) -> DependencyAnalyzer:
-        """
-        Create a DependencyAnalyzer for the build tool.
+        """Create a DependencyAnalyzer for the build tool.
 
         Parameters
         ----------
@@ -127,6 +127,23 @@ class BaseBuildTool(ABC):
         -------
         DependencyAnalyzer
             The DependencyAnalyzer object.
+        """
+
+    @abstractmethod
+    def get_build_dirs(self, repo_path: str) -> set[Path]:
+        """Find directories in the repository that have their own build scripts.
+
+        This is especially important for applications that consist of multiple services.
+
+        Parameters
+        ----------
+        repo_path: str
+            The path to the target repo.
+
+        Returns
+        -------
+        set[Path]
+            The list of paths that contain build scripts.
         """
 
 
@@ -175,8 +192,7 @@ class NoneBuildTool(BaseBuildTool):
         """Load the default values from defaults.ini."""
 
     def get_dep_analyzer(self, repo_path: str) -> DependencyAnalyzer:
-        """
-        Create an invalid DependencyAnalyzer for the empty build tool.
+        """Create an invalid DependencyAnalyzer for the empty build tool.
 
         Parameters
         ----------
@@ -189,3 +205,20 @@ class NoneBuildTool(BaseBuildTool):
             The DependencyAnalyzer object.
         """
         return NoneDependencyAnalyzer()
+
+    def get_build_dirs(self, repo_path: str) -> set[Path]:
+        """Find directories in the repository that have their own build scripts.
+
+        This is especially important for applications that consist of multiple services.
+
+        Parameters
+        ----------
+        repo_path: str
+            The path to the target repo.
+
+        Returns
+        -------
+        set[Path]
+            The list of paths that contain build scripts.
+        """
+        return set()
