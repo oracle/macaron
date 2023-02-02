@@ -3,6 +3,8 @@
 
 """Generate souffle datalog for policy prelude."""
 
+import os
+
 from sqlalchemy import Column, MetaData, Table
 from sqlalchemy.sql.sqltypes import Boolean, Integer, String, Text
 
@@ -118,7 +120,7 @@ def get_fact_declarations(metadata: MetaData) -> SouffleProgram:
     )
 
 
-def get_fact_input_statements(db_name: str, metadata: MetaData) -> SouffleProgram:
+def get_fact_input_statements(db_name: os.PathLike | str, metadata: MetaData) -> SouffleProgram:
     """Return a list of input directives for all the mapped tables beginning with an '_'."""
     return SouffleProgram(
         directives={
@@ -129,7 +131,7 @@ def get_fact_input_statements(db_name: str, metadata: MetaData) -> SouffleProgra
     )
 
 
-def get_souffle_import_prelude(db_name: str, metadata: MetaData) -> SouffleProgram:
+def get_souffle_import_prelude(db_name: os.PathLike | str, metadata: MetaData) -> SouffleProgram:
     """Return souffle datalog code to import all relevant mapped tables."""
     return get_fact_declarations(metadata).update(get_fact_input_statements(db_name, metadata))
 

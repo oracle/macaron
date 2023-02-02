@@ -28,7 +28,7 @@ from macaron.dependency_analyzer import (
 )
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
-from macaron.policy_engine.policy import Policy
+from macaron.policy_engine.policy import Policy, SoufflePolicy
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
@@ -102,9 +102,22 @@ class Analyzer:
         if not os.path.exists(self.local_repos_path):
             os.makedirs(self.local_repos_path, exist_ok=True)
 
-        # Get the policy from global config.
-        self.policy: Policy | None = None
-        self.policy = Policy.make_policy(global_config.policy_path)
+        # Get the policies from global config.
+        self.policy: dict[str, Policy] = {}
+        self.souffle_policy: list[SoufflePolicy] = []
+
+        for policy_path in global_config.policy_paths:
+            _, ext = os.path.splitext(policy_path)
+            if ext == ".yaml":
+                policy = Policy.make_policy(policy_path)
+                if policy:
+                    self.policy[policy.target] = policy
+            elif ext == ".dl":
+                sfl_policy = SoufflePolicy.make_policy(policy_path)
+                if sfl_policy:
+                    self.souffle_policy.append(sfl_policy)
+            else:
+                logger.error("Unsupported policy format: %s", policy_path)
 
         # Initialize the reporters to store analysis data to files.
         self.reporters: list[FileReporter] = []
@@ -164,6 +177,8 @@ class Analyzer:
                     dep_record: Record = Record(
                         record_id=config.get_value("id"),
                         description=config.get_value("note"),
+                        policies_failed=[],
+                        policies_passed=[],
                         pre_config=config,
                         status=config.get_value("available"),
                     )
@@ -200,6 +215,25 @@ class Analyzer:
 
         self.db_man.session.commit()
 
+        # Evaluate policy
+        policy_failed = False
+
+        for policy in self.souffle_policy:
+            if not policy.evaluate(database_path=self.database_path):
+                policy_failed = True
+                logger.info("FAILED POLICY")
+                logger.info(policy.failed)
+
+        for record in report.get_records():
+            for policy in self.souffle_policy:
+                if record.context:
+                    policy.evaluate(self.database_path)
+                    passed, failed = policy.result_for_repo(record.context.repository_table.id)
+                    record.policies_passed += passed
+                    record.policies_failed += failed
+                    if failed:
+                        policy_failed = True
+
         # Store the analysis result into report files.
         self.generate_reports(report)
 
@@ -207,7 +241,7 @@ class Analyzer:
         logger.info(str(report))
 
         logger.info("Analysis Completed!")
-        return 0
+        return policy_failed
 
     def generate_reports(self, report: Report) -> None:
         """Generate the report of the analysis to all registered reporters.
@@ -352,6 +386,8 @@ class Analyzer:
             return Record(
                 record_id=repo_id,
                 description=error_msg,
+                policies_failed=[],
+                policies_passed=[],
                 pre_config=config,
                 status=SCMStatus.ANALYSIS_FAILED,
             )
@@ -369,6 +405,8 @@ class Analyzer:
                 pre_config=config,
                 status=SCMStatus.DUPLICATED_SCM,
                 context=existing_record.context,
+                policies_failed=[],
+                policies_passed=[],
             )
 
         analyze_ctx = self.get_analyze_ctx(req_branch, git_obj)
@@ -379,6 +417,8 @@ class Analyzer:
             description="Analysis Completed.",
             pre_config=config,
             status=SCMStatus.AVAILABLE,
+            policies_failed=[],
+            policies_passed=[],
             context=analyze_ctx,
         )
 
@@ -672,7 +712,10 @@ class Analyzer:
         skipped_checks: list[SkippedInfo] = []
 
         # Get the reference to the policy.
-        analyze_ctx.dynamic_data["policy"] = self.policy
+        if analyze_ctx.repo_full_name in self.policy:
+            analyze_ctx.dynamic_data["policy"] = self.policy[analyze_ctx.repo_full_name]
+        elif "any" in self.policy:
+            analyze_ctx.dynamic_data["policy"] = self.policy["any"]
 
         results = registry.scan(analyze_ctx, skipped_checks)
 
@@ -693,8 +736,8 @@ class Analyzer:
 
         db_man.add_and_commit(analysis)
 
-        if self.policy is not None:
-            policy_table = self.policy.get_policy_table()
+        for policy in self.policy.values():
+            policy_table = policy.get_policy_table()
             db_man.add_and_commit(policy_table)
             analysis.policy = policy_table.id
 

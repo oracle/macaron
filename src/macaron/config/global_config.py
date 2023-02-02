@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the GlobalConfig class to be used globally."""
@@ -13,14 +13,17 @@ logger: logging.Logger = logging.getLogger(__name__)
 class GlobalConfig:
     """Class for keeping track of global configurations."""
 
+    policy_paths: list[str]
     macaron_path: str = ""
     output_path: str = ""
     build_log_path: str = ""
     local_repos_path: str = ""
     gh_token: str = ""
     debug_level: int = logging.DEBUG
-    policy_path: str = ""
     resources_path: str = ""
+
+    def __init__(self) -> None:
+        self.policy_paths = []
 
     def load(
         self,
@@ -30,7 +33,7 @@ class GlobalConfig:
         debug_level: int,
         local_repos_path: str,
         gh_token: str,
-        policy_path: str,
+        policy_paths: list[str],
         resources_path: str,
     ) -> None:
         """Initiate the GlobalConfig object.
@@ -49,7 +52,7 @@ class GlobalConfig:
             The directory to look for local repositories.
         gh_token : str
             The GitHub personal access token.
-        policy_path : str
+        policy_paths : str
             The path to the policy file.
         resources_path : str
             The path to the resources files needed for the analysis (i.e. mvnw, gradlew, etc.)
@@ -60,7 +63,7 @@ class GlobalConfig:
         self.debug_level = debug_level
         self.local_repos_path = local_repos_path
         self.gh_token = gh_token
-        self.policy_path = policy_path
+        self.policy_paths = policy_paths
         self.resources_path = resources_path
 
 

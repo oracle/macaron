@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -34,6 +34,8 @@ class MockRecord(Record):
             status=SCMStatus.AVAILABLE,
             context=MagicMock(),
             dependencies=[],
+            policies_failed=[],
+            policies_passed=[],
         )
         self.mock_data = mock_data
 

@@ -156,8 +156,6 @@ Policy("specific_rule", repo, feedback) :-
 /* aggregate verifying a level */
 .decl aggregate_level(level: number, repo: number)
 .decl aggregate_level_requirement(level: number, repo: number)
-.decl aggregate_level_dependency_requirement(level: number, repo: number)
-.decl aggregate_level_min_dependency_level(level: number, dep_level:number)
 
 /* Everything has a repository and uses a scripted build service. */
 aggregate_level_requirement(1, repo) :-
@@ -165,8 +163,6 @@ aggregate_level_requirement(1, repo) :-
     check_passed(repo, "mcn_build_service_1"),
     check_passed(repo, "mcn_version_control_system_1").
 
-aggregate_level_dependency_requirement(1, repo)  :-
-    aggregate_level_requirement(1, repo).
 
 
 /**
@@ -179,17 +175,11 @@ aggregate_level_requirement(2, repo) :-
     check_passed(repo, "mcn_build_as_code_1").
 
 
+.decl aggregate_level_min_dependency_level(level: number, dep_level:number)
 aggregate_level_min_dependency_level(1, 1).
 aggregate_level_min_dependency_level(2, 2).
 aggregate_level_min_dependency_level(3, 2).
 aggregate_level_min_dependency_level(4, 4).
-
-/**
- *  All dependencies use some sort of CI build.
- */
-aggregate_level_dependency_requirement(2, repo)  :-
-    aggregate_level_requirement(1, repo),
-    check_passed(repo, "mcn_build_service_1").
 
 
 /**
@@ -210,17 +200,11 @@ aggregate_level_requirement(4, repo) :-
     repository(repo, _,_,_,_,_,_),
     check_passed(repo, "mcn_provenance_level_three_1"),
     check_passed(repo, "mcn_trusted_builder_level_three_1"),
+    check_passed(repo, "mcn_policy_check_1"),
     not_self_hosted_git(repo, _).
-
-aggregate_level_dependency_requirement(4, repo) :-
-    check_passed(repo, "mcn_provenance_level_three_1"),
-    check_passed(repo, "mcn_trusted_builder_level_three_1").
 
 
 /* ------------------------------------------------------------------------- */
-
-aggregate_level_dependency_requirement(0, repo) :-
-    repository(repo, _,_,_,_,_,_).
 
 aggregate_level(0, repo) :-
     repository(repo, _,_,_,_,_,_).
@@ -235,6 +219,7 @@ aggregate_level(level, repo) :-
     none((dependency(repo, dep),
         aggregate_level_min_dependency_level(level, deplevel),
         !aggregate_level_requirement(deplevel, dep))).
+
 
 
 //aggregate_level(level - 1, repo) :-

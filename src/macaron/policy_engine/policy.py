@@ -8,13 +8,16 @@ import logging
 import os
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, NamedTuple, Optional, Union
 
 import yamale
 from yamale.schema import Schema
 
 from macaron.parsers.yaml.loader import YamlLoader
+from macaron.policy_engine.__main__ import get_generated
+from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
 from macaron.slsa_analyzer.table_definitions import PolicyTable
+from macaron.util import JsonType
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -148,6 +151,132 @@ def _gen_policy_func(policy: PolicyDef, path: Optional[SubscriptPathType] = None
             raise InvalidPolicyError(f"No support for policy {policy}")
 
 
+@dataclass
+class SoufflePolicy:
+    """
+
+    A high level for about the analysis described in souffle datalog.
+
+    Parameters
+    ----------
+    text: str
+        The full text content of the policy
+    sha: str
+        The sha256 sum digest for the policy text
+    failed:
+        The list of repositories, policy pairs failing
+    passed:
+        The list of repository, policy pairs passing
+
+    """
+
+    text: str
+    sha: str
+    _result: dict | None
+    failed: list["SoufflePolicy.PolicyResult"]
+    passed: list["SoufflePolicy.PolicyResult"]
+
+    class PolicyResult(NamedTuple):
+        """Stores the result of a souffle policy."""
+
+        policy: str
+        repo: int
+        reason: str | None
+
+        @staticmethod
+        def from_row(row: list[str]) -> "SoufflePolicy.PolicyResult":
+            """
+            Construct a policy result from a row returned by souffle.
+
+            NOTE: Dependent on the souffle output type.
+
+            Parameters
+            ----------
+            row: list[str]
+                A list conforming to ["policy name", "repo primary key"], and optionally a third value storing feedback.
+            """
+            policy = row[0]
+            repo = int(row[1])
+            reason = None
+            if len(row) >= 3:
+                reason = row[2]
+            return SoufflePolicy.PolicyResult(policy, repo, reason)
+
+    @classmethod
+    def make_policy(cls, file_path: os.PathLike | str) -> Optional["SoufflePolicy"]:
+        """
+        Create a souffle policy.
+
+        Parameters
+        ----------
+        file_path: os.PathLike | str
+            The file path to the policy
+        """
+        policy = SoufflePolicy(text="", sha="", _result=None, failed=[], passed=[])
+        with open(file_path, encoding="utf-8") as file:
+            policy.text = file.read()
+            policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
+        return policy
+
+    def result_for_repo(
+        self, repository: int
+    ) -> tuple[list["SoufflePolicy.PolicyResult"], list["SoufflePolicy.PolicyResult"]]:
+        """
+        Get the passing and failing policies for a repository.
+
+        Parameters
+        ----------
+        repository: int
+            The primary key for the repository record
+
+        Returns
+        -------
+        tuple[list, list]
+            list of passing policy results, list of failing policy results
+        """
+        if self._result is None:
+            raise ValueError("Policy not evaluated yet.")
+
+        failed = list(filter(lambda x: x.repo == repository, self.failed))
+        passed = list(filter(lambda x: x.repo == repository, self.passed))
+        return passed, failed
+
+    def evaluate(self, database_path: os.PathLike | str, repo: int | None = None) -> bool:
+        """
+        Evaluate this policy against a database.
+
+        Parameters
+        ----------
+        database_path: os.PathLike | str
+            The file path to the database
+        repo: int | None
+            Optional, the repository to check for policy compliance
+
+        Returns
+        -------
+        int
+            If a repo is passed: true iff the repo is compliant to the policy
+            Otherwise: true iff the whole database is compliant: no policies fail.
+        """
+        try:
+            with SouffleWrapper() as sfl:
+                prelude = get_generated(database_path)
+                res = sfl.interpret_text(prelude + self.text)
+                self._result = res
+        except SouffleError as err:
+            logger.error("Unable to evaluate policy %s", err)
+            return False
+
+        all_failed = list(map(SoufflePolicy.PolicyResult.from_row, self._result["failed_policies"]))
+        all_passed = list(map(SoufflePolicy.PolicyResult.from_row, self._result["passed_policies"]))
+        self.failed = all_failed
+        self.passed = all_passed
+        if repo:
+            failed = list(filter(lambda x: x.repo == repo, all_failed))
+            return any(failed)
+        return any(all_failed)
+
+
 # pylint: disable=invalid-name
 @dataclass
 class Policy:
@@ -159,10 +288,18 @@ class Policy:
         The ID of the policy.
     description : str
         The description of the policy.
+    target: str
+        The full repository name this policy applies to
+    text: str
+        The full text content of the policy
+    sha:
+        The sha256sum digest of the policy
+
     """
 
     ID: str
     description: str
+    target: str
     text: str | None
     sha: str | None
     _definition: PolicyDef | None = field(default=None)
@@ -190,7 +327,7 @@ class Policy:
             The Policy instance that has been initialized.
         """
         logger.info("Generating a policy from file %s", file_path)
-        policy: Policy = Policy("", "", None, None, None, None)
+        policy: Policy = Policy("", "", "", None, None, None, None)
 
         # First load from the policy yaml file. We also validate the policy
         # against the schema.
@@ -206,6 +343,10 @@ class Policy:
 
         policy.ID = policy_content.get("metadata").get("id")
         policy.description = policy_content.get("metadata").get("description")
+        if "target" in policy_content.get("metadata"):
+            policy.target = policy_content.get("metadata").get("target")
+        else:
+            policy.target = "any"
 
         # Then we parse the policy content.
         try:
@@ -224,7 +365,7 @@ class Policy:
     def __str__(self) -> str:
         return f"Policy(id='{self.ID}', description='{self.description}')"
 
-    def validate(self, prov: Any) -> bool:
+    def validate(self, prov: JsonType) -> bool:
         """Validate the provenance against this policy.
 
         Parameters

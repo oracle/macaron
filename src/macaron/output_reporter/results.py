@@ -73,6 +73,8 @@ class Record(Generic[RecordNode]):
         The context instance for this repo.
     dependencies : list[RecordNode]
         The list of Records for the analyzed dependencies of this repo.
+    policy_violation: bool
+        The verification status of this record
 
     See Also
     --------
@@ -85,6 +87,8 @@ class Record(Generic[RecordNode]):
     description: str
     pre_config: Configuration
     status: SCMStatus
+    policies_passed: list
+    policies_failed: list
     context: AnalyzeContext | None = field(default=None)
     dependencies: list[RecordNode] = field(default_factory=list)
 
@@ -122,6 +126,8 @@ class Record(Generic[RecordNode]):
             },
             "target": self.context.get_dict() if self.context else {},
             "dependencies": self.get_dep_summary(),
+            "policies_passed": self.policies_passed,
+            "policies_failed": self.policies_failed,
         }
         return result
 

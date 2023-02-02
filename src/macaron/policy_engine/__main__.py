@@ -9,6 +9,7 @@ This program runs souffle against a macaron output sqlite database.
 
 import argparse
 import logging
+import os
 import sys
 import time
 
@@ -56,7 +57,7 @@ class Timer:
         print(self.name, f"delta: {self.delta:0.4f}")
 
 
-def get_generated(database_path: str) -> str:
+def get_generated(database_path: os.PathLike | str) -> str:
     """Get generated souffle code from database specified by configuration."""
     metadata = MetaData()
     engine = create_engine(f"sqlite:///{database_path}", echo=False)

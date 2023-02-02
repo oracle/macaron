@@ -7,6 +7,7 @@ import argparse
 import logging
 import os
 import sys
+from typing import NoReturn
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from yamale.schema.validationresults import ValidationResult
@@ -74,15 +75,20 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     sys.exit(status_code)
 
 
-def verify_prov(verify_args: argparse.Namespace) -> None:
+def verify_prov(verify_args: argparse.Namespace) -> NoReturn:
     """Verify a provenance against a user defined policy."""
     prov_file = verify_args.provenance
-    policy_file = verify_args.policy
+    policy_files = list(filter(lambda path: ".yaml" == os.path.splitext(path)[1], global_config.policy_paths))
 
-    if not policy_file:
+    if not policy_files:
         logger.error("The policy is not provided to complete this action.")
         sys.exit(1)
 
+    if len(policy_files) > 1:
+        logger.error("Exactly one policy must be provided to complete this action.")
+        sys.exit(1)
+
+    policy_file = policy_files[0]
     try:
         prov_content = ProvPayloadLoader.load(prov_file)
         policy: Policy | None = Policy.make_policy(policy_file)
@@ -157,7 +163,12 @@ def main() -> None:
     )
 
     main_parser.add_argument(
-        "-po", "--policy", required=False, default="", type=str, help=("The path to the policy yaml file.")
+        "-po",
+        "--policy",
+        required=False,
+        default=[],
+        help=("The path to a policy yaml file or directory."),
+        action="append",
     )
 
     # Add sub parsers for each action
@@ -267,6 +278,19 @@ def main() -> None:
     logging.getLogger().addHandler(log_file_handler)
     logger.info("The log file of Macaron will be stored in debug.log")
 
+    # Find policies
+    policy_files = []
+    for policy_path in args.policy:
+        if os.path.isdir(policy_path):
+            for file_name in os.listdir(policy_path):
+                policy_file_path = os.path.join(policy_path, file_name)
+                if os.path.isfile(policy_file_path):
+                    policy_files.append(policy_file_path)
+                    logger.info("Added policy file %s", policy_file_path)
+        else:
+            policy_files.append(policy_path)
+            logger.info("Added policy file %s", policy_path)
+
     # Set Macaron's global configuration.
     global_config.load(
         macaron_path=macaron.MACARON_PATH,
@@ -275,7 +299,7 @@ def main() -> None:
         debug_level=log_level,
         local_repos_path=args.local_repos_path,
         gh_token=args.personal_access_token or "",
-        policy_path=args.policy,
+        policy_paths=policy_files,
         resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
     )
 
