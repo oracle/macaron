@@ -11,51 +11,6 @@ from sqlalchemy.sql.sqltypes import Boolean, Integer, String, Text
 from macaron.util import logger
 
 
-def get_adhoc_rules() -> str:
-    """Get special souffle rules for preamble."""
-    return """
-
-.decl transitive_dependency(repo: number, dependency: number)
-
-transitive_dependency(repo, dependency) :- dependency(repo, dependency).
-transitive_dependency(repo, dependency) :-
-    transitive_dependency(repo, a), transitive_dependency(a, dependency).
-
-#define any(x) count: {x} > 1
-#define all(x, y) count: {x} = count: {x, y}
-
-.type JsonType = Int {x : number}
-         | String {x : symbol}
-         | Float {x : float}
-         | Bool {x : number}
-         | null {}
-         | Object {x: symbol, y : JsonType}
-         | Array {x : number, y : JsonType}
-
-.decl json(name: symbol, id: number, root: JsonType)
-
-.decl any_terminal(s:symbol, k:symbol)
-
-.decl json_path(j: JsonType, a: JsonType, key:symbol)
-
-json_path(a, b, key) :- a = $Object(k, b), json(name,_,a), key=cat(name, cat(".", k)).
-json_path(a, b, key) :- a = $Array(k, b), json(name,_,a), key=cat(name, cat("[", cat(to_string(k), "]"))).
-
-json_path(a, b, key) :- a = $Object(k, b), json(_,_,c), json_path(c,a,kb), key=cat(cat(kb, "."),k).
-json_path(a, b, key) :- a = $Array(k, b), json(_,_,c), json_path(c,a,kb),key=cat(kb, cat(cat("[",to_string(k)), "]")).
-
-json_path(a, b,key) :- json_path(a,c,_), json_path(c, b, kb), key=kb.
-
-any_terminal(s,k) :- json(_,_,r), json_path(r, $String(s), k).
-
-.decl json_number(name: symbol, json:number, addr: symbol, k:number)
-.decl json_symbol(name:symbol, json:number, addr: symbol, k:symbol)
-
-json_number(name, js, addr, val) :- json(name, js, r), json_path(r, $Int(val), addr).
-json_symbol(name, js, addr, val) :- json(name, js, r), json_path(r, $String(val), addr).
-"""
-
-
 class SouffleProgram:
     """Class to store generated souffle datalog program."""
 

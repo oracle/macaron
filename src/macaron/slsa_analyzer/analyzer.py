@@ -108,7 +108,7 @@ class Analyzer:
 
         for policy_path in global_config.policy_paths:
             _, ext = os.path.splitext(policy_path)
-            if ext == ".yaml":
+            if ext in (".yaml", ".yml"):
                 policy = Policy.make_policy(policy_path)
                 if policy:
                     self.policy[policy.target] = policy

@@ -17,7 +17,6 @@ from sqlalchemy import MetaData, create_engine
 
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
 from macaron.policy_engine.souffle_code_generator import (
-    get_adhoc_rules,
     get_souffle_import_prelude,
     project_table_to_key,
     project_with_fk_join,
@@ -63,7 +62,7 @@ def get_generated(database_path: os.PathLike | str) -> str:
     engine = create_engine(f"sqlite:///{database_path}", echo=False)
     metadata.reflect(engine)
 
-    prelude = get_souffle_import_prelude(database_path, metadata)
+    prelude = get_souffle_import_prelude(os.path.abspath(database_path), metadata)
 
     for table_name in metadata.tables.keys():
         table = metadata.tables[table_name]
@@ -72,26 +71,35 @@ def get_generated(database_path: os.PathLike | str) -> str:
             prelude.update(project_with_fk_join(table))
 
     result: str = str(prelude)
-    result += get_adhoc_rules()
 
     return result
 
 
+def copy_prelude(database_path: os.PathLike | str, sfl: SouffleWrapper) -> None:
+    """Generate and copy the prelude into the souffle instance's include directory."""
+    prelude = get_generated(database_path)
+    sfl.copy_to_includes("import_data.dl", prelude)
+
+    folder = os.path.join(os.path.dirname(__file__), "prelude")
+    for file_name in os.listdir(folder):
+        full_file_name = os.path.join(folder, file_name)
+        if not os.path.isfile(full_file_name):
+            continue
+        with open(full_file_name, encoding="utf-8") as file:
+            text = file.read()
+            sfl.copy_to_includes(file_name, text)
+
+
 def policy_engine(config: type[Config], policy_file: str) -> dict:
     """Invoke souffle and report result."""
-    with Timer("Codegen"):
-        prelude = get_generated(config.database_path)
     sfl = SouffleWrapper()
+    copy_prelude(config.database_path, sfl)
     with open(policy_file, encoding="utf-8") as file:
         text = file.read()
 
-    if config.show_prelude:
-        print(prelude)
-        return {}
-
     try:
         with Timer("Souffle"):
-            res = sfl.interpret_text(prelude + text)
+            res = sfl.interpret_text(text)
     except SouffleError as error:
         print(error.command)
         print(error.message)
@@ -108,6 +116,12 @@ def interactive() -> None:
 def non_interactive(config: Config = global_config) -> None:
     """Evaluate a policy based on configuration and exit."""
     if config.policy_file:
+
+        if config.show_prelude:
+            prelude = get_generated(config.database_path)
+            print(prelude)
+            return
+
         res = policy_engine(config, config.policy_file)  # type: ignore
 
         for key, values in res.items():

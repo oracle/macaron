@@ -57,8 +57,8 @@ class SouffleWrapper:
         self,
         souffle_full_path: str = "souffle",
         output_dir: Optional[str] = None,
-        include_dir: str = os.curdir,
-        fact_dir: str = os.curdir,
+        include_dir: Optional[str] = None,
+        fact_dir: Optional[str] = None,
         library_dir: str = os.curdir,
     ):
         self.souffle_stdout = None
@@ -75,8 +75,18 @@ class SouffleWrapper:
             self.output_dir = os.path.join(self.temp_dir, "output")
             os.mkdir(self.output_dir)
 
-        self.include_dir = os.path.abspath(include_dir)
-        self.fact_dir = os.path.abspath(fact_dir)
+        if include_dir is not None:
+            self.include_dir = os.path.abspath(include_dir)
+        else:
+            self.include_dir = os.path.join(self.temp_dir, "include")
+            os.mkdir(self.include_dir)
+
+        if fact_dir is not None:
+            self.fact_dir = os.path.abspath(fact_dir)
+        else:
+            self.fact_dir = os.path.join(self.temp_dir, "facts")
+            os.mkdir(self.fact_dir)
+
         self.library_dir = os.path.abspath(library_dir)
 
     def _invoke_souffle(self, source_file: str, additional_args: Optional[list[str]] = None) -> None:
@@ -100,6 +110,19 @@ class SouffleWrapper:
                 if "Error" in line:
                     raise SouffleError(message=self.souffle_stderr, command=cmd)
         self.souffle_stdout = str(result.stdout.decode("utf-8"))
+
+    def copy_to_includes(self, filename: str, text: str) -> None:
+        """Create a file with in the include directory.
+
+        Parameters
+        ----------
+        filename: str
+            The base name of the file
+        text:
+            The text of the file to create
+        """
+        with open(os.path.join(self.include_dir, filename), "w", encoding="utf-8") as file:
+            file.write(text)
 
     def interpret_file(self, filename: str, with_prelude: str = "") -> dict:
         """
