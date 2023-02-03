@@ -14,7 +14,9 @@ import yamale
 from yamale.schema import Schema
 
 from macaron.parsers.yaml.loader import YamlLoader
+from macaron.policy_engine import cue
 from macaron.policy_engine.__main__ import get_generated
+from macaron.policy_engine.exceptions import InvalidPolicyError, PolicyRuntimeError
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
 from macaron.slsa_analyzer.table_definitions import PolicyTable
 from macaron.util import JsonType
@@ -29,14 +31,6 @@ SubscriptPathType = list[Union[str, int]]
 Primitive = Union[str, bool, int, float]
 PolicyDef = Union[Primitive, dict, list, None]
 PolicyFn = Callable[[Any], bool]
-
-
-class InvalidPolicyError(Exception):
-    """Happen when the policy is invalid."""
-
-
-class PolicyRuntimeError(Exception):
-    """Happen if there are errors while validating the policy against a target."""
 
 
 def _get_val(data: Any, path: SubscriptPathType, default: Any = None) -> Any:
@@ -320,6 +314,27 @@ class Policy:
         return PolicyTable(
             policy_id=self.ID, description=self.description, policy_type=self.POLICY_TYPE, sha=self.sha, text=self.text
         )
+
+    @classmethod
+    def make_cue_policy(cls, macaron_path: os.PathLike | str, policy_path: os.PathLike | str) -> Optional["Policy"]:
+        """Construct a cue policy."""
+        logger.info("Generating a policy from file %s", policy_path)
+        policy: Policy = Policy("", "", "", None, None, None, None)
+
+        with open(policy_path, encoding="utf-8") as f:
+            policy.text = f.read()
+            policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
+
+        try:
+            cue.init(macaron_path)
+        except PolicyRuntimeError:
+            return None
+
+        policy.ID = "?"
+        policy.target = "any"
+        policy.description = "?"
+        policy._validator = lambda provenance: cue.validate(policy.text, provenance)  # type: ignore
+        return policy
 
     @classmethod
     def make_policy(cls, file_path: os.PathLike | str) -> Optional["Policy"]:

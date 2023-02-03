@@ -112,6 +112,10 @@ class Analyzer:
                 policy = Policy.make_policy(policy_path)
                 if policy:
                     self.policy[policy.target] = policy
+            elif ext in (".cue",):
+                policy = Policy.make_cue_policy(global_config.macaron_path, policy_path)
+                if policy:
+                    self.policy[policy.target] = policy
             elif ext == ".dl":
                 sfl_policy = SoufflePolicy.make_policy(policy_path)
                 if sfl_policy:
@@ -223,6 +227,8 @@ class Analyzer:
                 policy_failed = True
                 logger.info("FAILED POLICY")
                 logger.info(policy.failed)
+            else:
+                logger.info("PASSED POLICY")
 
         for record in report.get_records():
             for policy in self.souffle_policy:
