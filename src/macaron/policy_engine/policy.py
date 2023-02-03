@@ -177,7 +177,18 @@ class SoufflePolicy:
     passed: list["SoufflePolicy.PolicyResult"]
 
     class PolicyResult(NamedTuple):
-        """Stores the result of a souffle policy."""
+        """
+        Stores the result of a souffle policy.
+
+        Parameters
+        ----------
+        policy: str
+            The unique identifier for the policy
+        repo: int
+            The primary key of the repository the result applies to
+        reason: str | None
+            Optional justification for the result
+        """
 
         policy: str
         repo: int
@@ -187,8 +198,6 @@ class SoufflePolicy:
         def from_row(row: list[str]) -> "SoufflePolicy.PolicyResult":
             """
             Construct a policy result from a row returned by souffle.
-
-            NOTE: Dependent on the souffle output type.
 
             Parameters
             ----------

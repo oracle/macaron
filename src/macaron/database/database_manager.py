@@ -4,7 +4,7 @@
 """This DatabaseManager module handles the sqlite database connection."""
 import logging
 from types import TracebackType
-from typing import Optional
+from typing import Any, Optional
 
 import sqlalchemy.exc
 from sqlalchemy import Table, create_engine, insert, select
@@ -22,7 +22,7 @@ class DatabaseManager:
 
     Note that since SQLAlchemy lazy-loads the fiels of mapped ORM objects, if the databse connection is closed any
     orm-mapped objects will become invalid. As such the lifetime of the database manager must be longer than any of the
-    objects you add to the database (using add() or add_and_commit()).
+    objects added to the database (using add() or add_and_commit()).
     """
 
     def __init__(self, db_path: str, base=ORMBase):  # type: ignore
@@ -73,6 +73,8 @@ class DatabaseManager:
         Once added the row remains accessible and modifiable, and the primary key field is populated to reflect its
         record in the database.
 
+        If terminate is called before commit the object will be lost.
+
         Parameters
         ----------
         item:
@@ -100,8 +102,15 @@ class DatabaseManager:
         except sqlalchemy.exc.SQLAlchemyError as error:
             logger.error("Database error %s", error)
 
-    def execute(self, query) -> None:  # type: ignore
-        """Execute a sqlalchemy core api query using a short-lived engine connection."""
+    def execute(self, query: Any) -> None:
+        """
+        Execute a sqlalchemy core api query using a short-lived engine connection.
+
+        Parameters
+        ----------
+        query: Any
+            The SQLalchemy query to execute
+        """
         with self.engine.connect() as conn:
             conn.execute(query)
             conn.commit()
