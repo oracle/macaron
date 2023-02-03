@@ -4,8 +4,6 @@
 
 /* ----------------------------- prelude ----------------------------------- */
 
-#define none(x) 0 = count: {x}
-
 .functor print_number(x:number) : number
 
 .decl agg_levels(n: number)
@@ -212,15 +210,36 @@ aggregate_level(0, repo) :-
 aggregate_level(level, repo) :-
     repository(repo, name,_,_,_,_,_),
     agg_levels(level), level >= 1,
-    //aggregate_level(level - 1, repo),
+    // assert all lower level requirements to be satisfied as well
+    aggregate_level(level - 1, repo),
+    // assert this level requriements
     aggregate_level_requirement(level, repo),
-    // requirements met for all levels below
-    // all deps have requirements for all levels below
-    none((dependency(repo, dep),
-        aggregate_level_min_dependency_level(level, deplevel),
-        !aggregate_level_requirement(deplevel, dep))).
+    // dependency case
+    aggregate_level_min_dependency_level(level, required_deplevel),
+    min_dep_level(actual_deplevel, repo),
+    actual_deplevel >= required_deplevel.
 
+aggregate_level(level, repo) :-
+    repository(repo, name,_,_,_,_,_),
+    agg_levels(level), level >= 1,
+    aggregate_level_requirement(level, repo),
+    !dependency(repo, _).
 
+.decl min_dep_level(level:number, repo:number)
+
+min_dep_level(level, repo) :-
+    repository(repo, _,_,_,_,_,_),
+    dependency(repo, dep),
+    aggregate_level(level, dep).
+
+// minimum dep level
+min_dep_level(level, repo) <= min_dep_level(mlevel, repo) :- mlevel < level.
+
+// get maximum aggregate_level
+aggregate_level(level, repo) <=  aggregate_level(glevel, repo) :- glevel > level.
+
+//.output aggregate_level
+//.output min_dep_level
 
 //aggregate_level(level - 1, repo) :-
 //    aggregate_level(level, repo), level > 0.
