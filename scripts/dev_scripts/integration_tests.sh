@@ -1,11 +1,12 @@
 #!/bin/bash
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This script runs the integration tests using Macaron as a python package.
 
 WORKSPACE=$1
 HOMEDIR=$2
+RESOURCES=$WORKSPACE/src/macaron/resources
 COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
 RUN_MACARON="python -m macaron -o $WORKSPACE/output -t $GITHUB_TOKEN"
@@ -17,7 +18,7 @@ then
     then
         mkdir -p $HOMEDIR/.m2
     fi
-    cp $WORKSPACE/resources/settings.xml $HOMEDIR/.m2/
+    cp $RESOURCES/settings.xml $HOMEDIR/.m2/
 fi
 
 # Running Macaron without config files

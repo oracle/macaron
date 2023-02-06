@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This is the main entrypoint to run Macaron."""
@@ -7,11 +7,11 @@ import argparse
 import logging
 import os
 import sys
-from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from yamale.schema.validationresults import ValidationResult
 
+import macaron
 from macaron.config.defaults import create_defaults, load_defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import TARGET_CONFIG_SCHEMA
@@ -20,8 +20,6 @@ from macaron.parsers.yaml.loader import YamlLoader
 from macaron.policy_engine.policy import Policy, PolicyRuntimeError
 from macaron.slsa_analyzer.analyzer import Analyzer
 from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader, SLSAProvenanceError
-
-MACARON_PATH = str(Path(os.path.dirname(os.path.abspath(__file__))).parent.parent)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -110,7 +108,7 @@ def perform_action(action_args: argparse.Namespace) -> None:
     """Perform the indicated action of Macaron."""
     if action_args.action == "dump_defaults":
         # Create the defaults.ini file in the output dir and exit.
-        create_defaults(global_config.output_path, MACARON_PATH)
+        create_defaults(action_args.output_dir, os.getcwd())
         sys.exit(0)
 
     # Check that the GitHub token is enabled.
@@ -140,8 +138,15 @@ def main() -> None:
     main_parser.add_argument(
         "-o",
         "--output-dir",
-        default=MACARON_PATH,
+        default=os.path.join(os.getcwd(), "output"),
         help="The output destination path for Macaron",
+    )
+
+    main_parser.add_argument(
+        "-dp",
+        "--defaults-path",
+        default=os.path.join(os.getcwd(), "defaults.ini"),
+        help="The path to the defaults configuration file.",
     )
 
     main_parser.add_argument(
@@ -218,7 +223,7 @@ def main() -> None:
     )
 
     # Dump the default values.
-    sub_parser.add_parser(name="dump_defaults")
+    sub_parser.add_parser(name="dump_defaults", description="Dumps the defaults.ini file to the output directory.")
 
     # Verifying a provenance against a policy.
     verify_parser = sub_parser.add_parser(name="verify")
@@ -264,18 +269,20 @@ def main() -> None:
 
     # Set Macaron's global configuration.
     global_config.load(
-        macaron_path=MACARON_PATH,
+        macaron_path=macaron.MACARON_PATH,
         output_path=args.output_dir,
         build_log_path=os.path.join(args.output_dir, "build_log"),
         debug_level=log_level,
         local_repos_path=args.local_repos_path,
         gh_token=args.personal_access_token or "",
         policy_path=args.policy,
-        resources_path=os.path.join(MACARON_PATH, "resources"),
+        resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
     )
 
     # Load the default values from defaults.ini files.
-    load_defaults(MACARON_PATH)
+    if not load_defaults(args.defaults_path):
+        logger.error("Exiting because the defaults configuration could not be loaded.")
+        sys.exit(1)
 
     perform_action(args)
 

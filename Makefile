@@ -8,7 +8,8 @@ SHELL := bash
 # Set the package's name, version, and path for use throughout the Makefile.
 PACKAGE_NAME := macaron
 PACKAGE_VERSION := $(shell python -c $$'try: import $(PACKAGE_NAME); print($(PACKAGE_NAME).__version__);\nexcept: print("unknown");')
-MACARON_PATH := $(shell pwd)
+PACKAGE_PATH := $(shell pwd)/src/$(PACKAGE_NAME)
+REPO_PATH := $(shell pwd)
 PYTHON ?= python3.11
 
 # This variable contains the first goal that matches any of the listed goals
@@ -91,19 +92,19 @@ setup: force-upgrade setup-go setup-binaries
 	mkdir -p dist
 	go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.3.0
 setup-go:
-	go build -o $(MACARON_PATH)/bin/ $(MACARON_PATH)/golang/cmd/...
-setup-binaries: $(MACARON_PATH)/bin/slsa-verifier $(MACARON_PATH)/resources/mvnw
-$(MACARON_PATH)/bin/slsa-verifier:
+	go build -o $(PACKAGE_PATH)/bin/ $(REPO_PATH)/golang/cmd/...
+setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier $(PACKAGE_PATH)/resources/mvnw
+$(PACKAGE_PATH)/bin/slsa-verifier:
 	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.0.1
-	cd slsa-verifier/cli/slsa-verifier && go build -o $(MACARON_PATH)/bin/
-	cd $(MACARON_PATH) && rm -rf slsa-verifier
-$(MACARON_PATH)/resources/mvnw:
-	cd resources \
+	cd slsa-verifier/cli/slsa-verifier && go build -o $(PACKAGE_PATH)/bin/
+	cd $(REPO_PATH) && rm -rf slsa-verifier
+$(PACKAGE_PATH)/resources/mvnw:
+	cd $(PACKAGE_PATH)/resources \
 		&& wget https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper-distribution/3.1.1/maven-wrapper-distribution-3.1.1-bin.zip \
 		&& unzip -o maven-wrapper-distribution-3.1.1-bin.zip \
 		&& rm -r maven-wrapper-distribution-3.1.1-bin.zip \
 		&& echo -e "distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.8.6/apache-maven-3.8.6-bin.zip\nwrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.1.1/maven-wrapper-3.1.1.jar" > .mvn/wrapper/maven-wrapper.properties \
-		&& cd $(MACARON_PATH)
+		&& cd $(REPO_PATH)
 
 # Install or upgrade an existing virtual environment based on the
 # package dependencies declared in pyproject.toml and go.mod.
@@ -127,7 +128,7 @@ upgrade-go:
 .PHONY: sbom
 sbom: requirements
 	cyclonedx-bom --force --requirements --format json --output dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-sbom.json
-	$$HOME/go/bin/cyclonedx-gomod mod -json -output dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-sbom-go.json $(MACARON_PATH)
+	$$HOME/go/bin/cyclonedx-gomod mod -json -output dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-sbom-go.json $(REPO_PATH)
 
 # Generate a requirements.txt file containing version and integrity hashes for all
 # packages currently installed in the virtual environment. There's no easy way to
@@ -207,7 +208,7 @@ test-go:
 # Run the integration tests.
 .PHONY: integration-test
 integration-test:
-	scripts/dev_scripts/integration_tests.sh $(MACARON_PATH) $$HOME
+	scripts/dev_scripts/integration_tests.sh $(REPO_PATH) $$HOME
 
 # Build a source distribution package and a binary wheel distribution artifact.
 # When building these artifacts, we need the environment variable SOURCE_DATE_EPOCH
@@ -261,9 +262,9 @@ nuke-caches: clean
 	find src/ -type d -name __pycache__ -exec rm -fr {} +
 	find tests/ -type d -name __pycache__ -exec rm -fr {} +
 nuke-mvnw:
-	cd $(MACARON_PATH)/resources \
+	cd $(PACKAGE_PATH)/resources \
 	&& rm mvnw mvnw.cmd mvnwDebug mvnwDebug.cmd \
-	&& cd $(MACARON_PATH)
+	&& cd $(REPO_PATH)
 nuke: nuke-caches nuke-mvnw
 	if [ ! -z "${VIRTUAL_ENV}" ]; then \
 	  echo "Please deactivate the virtual environment first!" && exit 1; \

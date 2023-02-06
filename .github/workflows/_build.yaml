@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This is a trusted builder implemented as a reusable workflow that can be called by other
@@ -34,6 +34,7 @@ permissions:
 env:
   ARTIFACT_OS: ubuntu-latest # The default OS for release.
   ARTIFACT_PYTHON: '3.11' # The default Python version for release.
+  PACKAGE_PATH: src/macaron   # The relative Python package path to the repo.
 
 jobs:
   build:
@@ -107,8 +108,8 @@ jobs:
         set -euo pipefail
         TARBALL_PATH=$(find dist/ -type f -name "*.tar.gz")
         WHEEL_PATH=$(find dist/ -type f -name "*.whl")
-        GO_ACTION_PARSER=$(find bin/ -type f -name "actionparser")
-        GO_BASH_PARSER=$(find bin/ -type f -name "bashparser")
+        GO_ACTION_PARSER=$(find ${{ env.PACKAGE_PATH }}/bin/ -type f -name "actionparser")
+        GO_BASH_PARSER=$(find ${{ env.PACKAGE_PATH }}/bin/ -type f -name "bashparser")
         REQUIREMENTS_PATH=$(find dist/ -type f -name "*-requirements.txt")
         SBOM_PATH=$(find dist/ -type f -name "*-sbom.json")
         SBOM_GO_PATH=$(find dist/ -type f -name "*-sbom-go.json")
@@ -128,7 +129,7 @@ jobs:
         name: artifact-${{ matrix.os }}-python-${{ matrix.python }}
         path: |
           dist
-          bin/actionparser
-          bin/bashparser
+          ${{ env.PACKAGE_PATH }}/bin/actionparser
+          ${{ env.PACKAGE_PATH }}/bin/bashparser
         if-no-files-found: error
         retention-days: 7

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides functions to manage default values."""
@@ -86,13 +86,13 @@ class ConfigParser(configparser.ConfigParser):
 defaults = ConfigParser()
 
 
-def load_defaults(macaron_path: str) -> bool:
+def load_defaults(user_config_path: str) -> bool:
     """Read the default values from ``defaults.ini`` file and store them in the defaults global object.
 
     Parameters
     ----------
-    macaron_path : str
-        The path to Macaron's root dir.
+    user_defaults_path : str
+        The path to the user's defaults configuration file.
 
     Returns
     -------
@@ -101,26 +101,27 @@ def load_defaults(macaron_path: str) -> bool:
     """
     curr_dir = pathlib.Path(__file__).parent.absolute()
     config_files = [os.path.join(curr_dir, "defaults.ini")]
-    if os.path.exists(os.path.join(macaron_path, "defaults.ini")):
-        config_files.append(os.path.join(macaron_path, "defaults.ini"))
+    if os.path.exists(user_config_path):
+        config_files.append(user_config_path)
 
     try:
         defaults.read(config_files, encoding="utf8")
         return True
-    except ValueError:
+    except (configparser.Error, ValueError) as error:
         logger.error("Failed to read the defaults.ini files.")
+        logger.error(error)
         return False
 
 
-def create_defaults(output_path: str, macaron_path: str) -> bool:
+def create_defaults(output_path: str, cwd_path: str) -> bool:
     """Create the ``defaults.ini`` file at the Macaron's root dir for end users.
 
     Parameters
     ----------
     output_path : str
         The path where the ``defaults.ini`` will be created.
-    macaron_path : str
-        The path to Macaron's root dir.
+    cwd_path : str
+        The path to the current working directory.
 
     Returns
     -------
@@ -131,7 +132,7 @@ def create_defaults(output_path: str, macaron_path: str) -> bool:
     try:
         user_defaults = ConfigParser()
         user_defaults.read(src_path, encoding="utf8")
-    except ValueError as error:
+    except (configparser.Error, ValueError) as error:
         logger.error(error)
         return False
 
@@ -142,11 +143,11 @@ def create_defaults(output_path: str, macaron_path: str) -> bool:
         shutil.copy2(src_path, dest_path)
         logger.info(
             "Dumped the default values in %s.",
-            os.path.relpath(os.path.join(output_path, "defaults.ini"), macaron_path),
+            os.path.relpath(os.path.join(output_path, "defaults.ini"), cwd_path),
         )
         return True
     except shutil.Error as error:
-        logger.error("Failed to create %s: %s.", os.path.relpath(dest_path, macaron_path), error)
+        logger.error("Failed to create %s: %s.", os.path.relpath(dest_path, cwd_path), error)
         return False
     except PermissionError as error:
         logger.error(error)
