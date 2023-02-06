@@ -278,19 +278,6 @@ def main() -> None:
     logging.getLogger().addHandler(log_file_handler)
     logger.info("The log file of Macaron will be stored in debug.log")
 
-    # Find policies
-    policy_files = []
-    for policy_path in args.policy:
-        if os.path.isdir(policy_path):
-            for file_name in os.listdir(policy_path):
-                policy_file_path = os.path.join(policy_path, file_name)
-                if os.path.isfile(policy_file_path):
-                    policy_files.append(policy_file_path)
-                    logger.info("Added policy file %s", policy_file_path)
-        else:
-            policy_files.append(policy_path)
-            logger.info("Added policy file %s", policy_path)
-
     # Set Macaron's global configuration.
     global_config.load(
         macaron_path=macaron.MACARON_PATH,
@@ -299,7 +286,7 @@ def main() -> None:
         debug_level=log_level,
         local_repos_path=args.local_repos_path,
         gh_token=args.personal_access_token or "",
-        policy_paths=policy_files,
+        policy_paths=args.policy,
         resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
     )
 

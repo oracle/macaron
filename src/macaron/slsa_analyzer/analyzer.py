@@ -15,7 +15,6 @@ from typing import Optional
 from git import InvalidGitRepositoryError
 from pydriller.git import Git
 
-from macaron import __version__
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
@@ -28,7 +27,7 @@ from macaron.dependency_analyzer import (
 )
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
-from macaron.policy_engine.policy import Policy, SoufflePolicy
+from macaron.policy_engine.policy_registry import PolicyRegistry
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
@@ -36,20 +35,15 @@ from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 
 # To load all checks into the registry
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
-from macaron.slsa_analyzer.checks.base_check import CheckFactsTable, CheckResultTable
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType, SkippedInfo
+from macaron.slsa_analyzer.checks.check_result import CheckResult, SkippedInfo
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
+from macaron.slsa_analyzer.database_store import store_analysis_to_db, store_analyze_context_to_db
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
-from macaron.slsa_analyzer.table_definitions import (
-    AnalysisTable,
-    RepositoryAnalysis,
-    RepositoryDependency,
-    SLSARequirement,
-)
+from macaron.slsa_analyzer.table_definitions import RepositoryDependency
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -102,26 +96,8 @@ class Analyzer:
         if not os.path.exists(self.local_repos_path):
             os.makedirs(self.local_repos_path, exist_ok=True)
 
-        # Get the policies from global config.
-        self.policy: dict[str, Policy] = {}
-        self.souffle_policy: list[SoufflePolicy] = []
-
-        for policy_path in global_config.policy_paths:
-            _, ext = os.path.splitext(policy_path)
-            if ext in (".yaml", ".yml"):
-                policy = Policy.make_policy(policy_path)
-                if policy:
-                    self.policy[policy.target] = policy
-            elif ext in (".cue",):
-                policy = Policy.make_cue_policy(global_config.macaron_path, policy_path)
-                if policy:
-                    self.policy[policy.target] = policy
-            elif ext == ".dl":
-                sfl_policy = SoufflePolicy.make_policy(policy_path)
-                if sfl_policy:
-                    self.souffle_policy.append(sfl_policy)
-            else:
-                logger.error("Unsupported policy format: %s", policy_path)
+        # Load the policies from global config.
+        self.policies = PolicyRegistry(global_config.macaron_path, global_config.policy_paths)
 
         # Initialize the reporters to store analysis data to files.
         self.reporters: list[FileReporter] = []
@@ -205,10 +181,12 @@ class Analyzer:
         # Store the analysis result(s) into the SQLite database.
         self.db_man.create_tables()
 
-        analysis = self.store_analysis_to_db(self.db_man, main_record)
+        analysis = store_analysis_to_db(self.db_man, main_record)
 
-        for ctx in report.get_ctxs():
-            self.store_result_to_db(self.db_man, analysis, ctx)
+        for record in report.get_records():
+            if not record.status == SCMStatus.DUPLICATED_SCM:
+                if record.context:
+                    store_analyze_context_to_db(self.TABLE_NAME, self.db_man, analysis, record.context)
 
         # Store dependency relations
         for parent, child in report.get_dependencies():
@@ -220,34 +198,23 @@ class Analyzer:
         self.db_man.session.commit()
 
         # Evaluate policy
-        policy_failed = False
-
-        for policy in self.souffle_policy:
-            if not policy.evaluate(database_path=self.database_path):
-                policy_failed = True
-                logger.info("FAILED POLICY")
-                logger.info(policy.failed)
-            else:
-                logger.info("PASSED POLICY")
+        self.policies.evaluate_souffle_policies(self.database_path)
 
         for record in report.get_records():
-            for policy in self.souffle_policy:
-                if record.context:
-                    policy.evaluate(self.database_path)
-                    passed, failed = policy.result_for_repo(record.context.repository_table.id)
-                    record.policies_passed += passed
-                    record.policies_failed += failed
-                    if failed:
-                        policy_failed = True
+            if record.context:
+                passed, failed = self.policies.get_souffle_results(repo_id=record.context.repository_table.id)
+                record.policies_passed += passed
+                record.policies_failed += failed
 
+        _, failed_policies = self.policies.get_souffle_results()
         # Store the analysis result into report files.
         self.generate_reports(report)
 
         # Print the analysis result into the console output.
         logger.info(str(report))
 
-        logger.info("Analysis Completed!")
-        return policy_failed
+        logger.info("Analysis Completed! Policy %s", "FAILED" if any(failed_policies) else "PASSED")
+        return any(failed_policies)
 
     def generate_reports(self, report: Report) -> None:
         """Generate the report of the analysis to all registered reporters.
@@ -718,94 +685,7 @@ class Analyzer:
         skipped_checks: list[SkippedInfo] = []
 
         # Get the reference to the policy.
-        if analyze_ctx.repo_full_name in self.policy:
-            analyze_ctx.dynamic_data["policy"] = self.policy[analyze_ctx.repo_full_name]
-        elif "any" in self.policy:
-            analyze_ctx.dynamic_data["policy"] = self.policy["any"]
 
         results = registry.scan(analyze_ctx, skipped_checks)
 
-        return results
-
-    def store_analysis_to_db(self, db_man: DatabaseManager, main_record: Record) -> AnalysisTable:
-        """Store the analysis to the database."""
-        db_man.create_tables()
-
-        analysis = AnalysisTable(
-            analysis_time=datetime.now().isoformat(sep="T", timespec="seconds"),
-            macaron_version=__version__,
-        )
-        if main_record.context is not None:
-            analysis.repository = main_record.context.repository_table.id
-        else:
-            return analysis
-
-        db_man.add_and_commit(analysis)
-
-        for policy in self.policy.values():
-            policy_table = policy.get_policy_table()
-            db_man.add_and_commit(policy_table)
-            analysis.policy = policy_table.id
-
-        return analysis
-
-    def store_result_to_db(self, db_man: DatabaseManager, analysis: AnalysisTable, analyze_ctx: AnalyzeContext) -> dict:
-        """Store the content of an analyzed context into the database.
-
-        Parameters
-        ----------
-        db_man : DatabaseManager
-            The database manager object managing the session to which to add the results.
-        analysis: AnalysisTable
-            The analysis record which this result belongs to.
-        analyze_ctx : AnalyzeContext
-            The analyze context to store into the database.
-        """
-        logger.info(
-            "Inserting result of %s to %s",
-            analyze_ctx.repo_full_name,
-            defaults.get("database", "db_name", fallback="macaron.db"),
-        )
-
-        # Ensure result table is created
-        result_table = AnalyzeContext.get_analysis_result_table(self.TABLE_NAME)
-        db_man.create_tables()
-
-        # Store old result format
-        repository_analysis = RepositoryAnalysis(repository_id=analyze_ctx.repository_table.id, analysis_id=analysis.id)
-        db_man.add_and_commit(repository_analysis)
-
-        # Store the context's slsa level
-        db_man.add_and_commit(analyze_ctx.get_slsa_level_table())
-
-        # Store check result table
-        for check in analyze_ctx.check_results.values():
-
-            check_table = CheckResultTable()
-            check_table.check_id = check["check_id"]
-            check_table.repository = analyze_ctx.repository_table.id
-            check_table.passed = check["result_type"] == CheckResultType.PASSED
-            check_table.skipped = check["result_type"] == CheckResultType.SKIPPED
-            db_man.add(check_table)
-
-            if "result_tables" in check:
-                for table in check["result_tables"]:
-                    if isinstance(table, CheckFactsTable):
-                        table.repository = analyze_ctx.repository_table.id
-                        table.check_result = check_table.id
-                    db_man.add_and_commit(table)
-
-        # Store SLSA Requirements
-        results = analyze_ctx.get_analysis_result_data()
-        for key, value in analyze_ctx.ctx_data.items():
-            if value.is_pass:
-                requirement = SLSARequirement(
-                    repository=analyze_ctx.repository_table.id,
-                    requirement=key.name,
-                    requirement_name=value.name,
-                    feedback=value.feedback,
-                )
-                db_man.add_and_commit(requirement)
-
-        db_man.insert(result_table, results)
         return results

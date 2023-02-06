@@ -157,18 +157,19 @@ class SoufflePolicy:
         The full text content of the policy
     sha: str
         The sha256 sum digest for the policy text
-    failed:
+    _failed:
         The list of repositories, policy pairs failing
-    passed:
+    _passed:
         The list of repository, policy pairs passing
 
     """
 
     text: str
     sha: str
+    filename: str
     _result: dict | None
-    failed: list["SoufflePolicy.PolicyResult"]
-    passed: list["SoufflePolicy.PolicyResult"]
+    _failed: list["SoufflePolicy.PolicyResult"]
+    _passed: list["SoufflePolicy.PolicyResult"]
 
     class PolicyResult(NamedTuple):
         """
@@ -215,7 +216,9 @@ class SoufflePolicy:
         file_path: os.PathLike | str
             The file path to the policy
         """
-        policy = SoufflePolicy(text="", sha="", _result=None, failed=[], passed=[])
+        policy = SoufflePolicy(
+            text="", sha="", filename=str(os.path.basename(file_path)), _result=None, _failed=[], _passed=[]
+        )
         with open(file_path, encoding="utf-8") as file:
             policy.text = file.read()
             policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
@@ -240,8 +243,8 @@ class SoufflePolicy:
         if self._result is None:
             raise ValueError("Policy not evaluated yet.")
 
-        failed = list(filter(lambda x: x.repo == repository, self.failed))
-        passed = list(filter(lambda x: x.repo == repository, self.passed))
+        failed = list(filter(lambda x: x.repo == repository, self._failed))
+        passed = list(filter(lambda x: x.repo == repository, self._passed))
         return passed, failed
 
     def evaluate(self, database_path: os.PathLike | str, repo: int | None = None) -> bool:
@@ -272,12 +275,20 @@ class SoufflePolicy:
 
         all_failed = list(map(SoufflePolicy.PolicyResult.from_row, self._result["failed_policies"]))
         all_passed = list(map(SoufflePolicy.PolicyResult.from_row, self._result["passed_policies"]))
-        self.failed = all_failed
-        self.passed = all_passed
+        self._failed = all_failed
+        self._passed = all_passed
         if repo:
             failed = list(filter(lambda x: x.repo == repo, all_failed))
             return any(failed)
         return any(all_failed)
+
+    def get_failed(self) -> list["SoufflePolicy.PolicyResult"]:
+        """Return the results for failing policies."""
+        return list(self._failed)
+
+    def get_passed(self) -> list["SoufflePolicy.PolicyResult"]:
+        """Return the results for passing policies."""
+        return list(self._passed)
 
 
 # pylint: disable=invalid-name

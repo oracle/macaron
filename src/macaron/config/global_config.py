@@ -4,6 +4,7 @@
 """This module contains the GlobalConfig class to be used globally."""
 
 import logging
+import os
 from dataclasses import dataclass
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -63,8 +64,22 @@ class GlobalConfig:
         self.debug_level = debug_level
         self.local_repos_path = local_repos_path
         self.gh_token = gh_token
-        self.policy_paths = policy_paths
         self.resources_path = resources_path
+
+        # Find the policies
+        policy_files = []
+        for policy_path in policy_paths:
+            if os.path.isdir(policy_path):
+                for file_name in os.listdir(policy_path):
+                    policy_file_path = os.path.join(policy_path, file_name)
+                    if os.path.isfile(policy_file_path):
+                        policy_files.append(policy_file_path)
+                        logger.info("Added policy file %s", policy_file_path)
+            else:
+                policy_files.append(policy_path)
+                logger.info("Added policy file %s", policy_path)
+
+        self.policy_paths = policy_files
 
 
 global_config = GlobalConfig()
