@@ -40,15 +40,15 @@ logger: logging.Logger = logging.getLogger(__name__)
 class _VerifyArtefactResultType(Enum):
     """Result of attempting to verify an asset."""
 
-    # slsa-verifier succeeded and the artefact passed verification
+    # slsa-verifier succeeded and the artifact passed verification
     PASSED = "verify passed"
-    # slsa-verifier succeeded and the artefact failed verification
+    # slsa-verifier succeeded and the artifact failed verification
     FAILED = "verify failed"
-    # An error occured running slsa-verifier or downloading the artefact
+    # An error occured running slsa-verifier or downloading the artifact
     ERROR = "verify error"
-    # The artefact was unable to be downloaded because the url was missing or malformed
+    # The artifact was unable to be downloaded because the url was missing or malformed
     NO_DOWNLOAD = "unable to download asset"
-    # The artefact was unable to be downloaded because the file was too large
+    # The artifact was unable to be downloaded because the file was too large
     TOO_LARGE = "asset file too large to download"
 
     def is_skip(self) -> bool:
@@ -65,10 +65,10 @@ class _VerifyArtefactResult:
     """Dataclass storing the result of verifying a single asset."""
 
     result: _VerifyArtefactResultType
-    artefact_name: str
+    artifact_name: str
 
     def __str__(self) -> str:
-        return str(self.result.value) + ": " + self.artefact_name
+        return str(self.result.value) + ": " + self.artifact_name
 
 
 class ProvenanceResultTable(CheckFactsTable, ORMBase):
@@ -78,14 +78,14 @@ class ProvenanceResultTable(CheckFactsTable, ORMBase):
 
 
 class ReleaseArtefact(ORMBase):
-    """Table to store artefacts."""
+    """Table to store artifacts."""
 
-    __tablename__ = "_release_artefact"
+    __tablename__ = "_release_artifact"
     id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
 
 
 class DigestSet(ORMBase):
-    """Table to store artefact digests."""
+    """Table to store artifact digests."""
 
     __tablename__ = "_digest_set"
     id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
@@ -111,9 +111,9 @@ class Provenance(ORMBase):
 
 
 class ProvenanceArtefact(ORMBase):
-    """Mapping artefacts to the containing provenance."""
+    """Mapping artifacts to the containing provenance."""
 
-    __tablename__ = "_provenance_artefact"
+    __tablename__ = "_provenance_artifact"
     id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
     name = Column(String, nullable=False)
     verified = Column(Boolean, nullable=False)
@@ -123,14 +123,14 @@ class ProvenanceArtefact(ORMBase):
 
 
 class ArtefactDigest(ORMBase):
-    """Table to store artefact digests."""
+    """Table to store artifact digests."""
 
-    __tablename__ = "_artefact_digest"
+    __tablename__ = "_artifact_digest"
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)  # noqa: A003
-    artefact = Column(Integer, ForeignKey(ProvenanceArtefact.id), nullable=False)
+    artifact = Column(Integer, ForeignKey(ProvenanceArtefact.id), nullable=False)
     digest = Column(Integer, ForeignKey(DigestSet.id), nullable=False)
 
-    _artefact = relationship(ProvenanceArtefact)
+    _artifact = relationship(ProvenanceArtefact)
     _digest = relationship(DigestSet)
 
 
@@ -216,7 +216,7 @@ class ProvenanceL3Check(BaseCheck):
             errors.append(str(error))
 
         if errors:
-            result = _VerifyArtefactResult(result=_VerifyArtefactResultType.ERROR, artefact_name=asset_name)
+            result = _VerifyArtefactResult(result=_VerifyArtefactResultType.ERROR, artifact_name=asset_name)
             try:
                 error_log_path = os.path.join(
                     global_config.build_log_path, f"{os.path.basename(source_path)}.slsa_verifier.errors"
@@ -393,14 +393,14 @@ class ProvenanceL3Check(BaseCheck):
                             for _ in range(1):
                                 if not sub_asset:
                                     result = _VerifyArtefactResult(
-                                        result=_VerifyArtefactResultType.NO_DOWNLOAD, artefact_name=subject["name"]
+                                        result=_VerifyArtefactResultType.NO_DOWNLOAD, artifact_name=subject["name"]
                                     )
                                     break
                                 if not Path(temp_path, sub_asset["name"]).is_file():
                                     if "size" in sub_asset and self._size_large(sub_asset["size"]):
                                         result = _VerifyArtefactResult(
                                             result=_VerifyArtefactResultType.TOO_LARGE,
-                                            artefact_name=sub_asset["name"],
+                                            artifact_name=sub_asset["name"],
                                         )
                                         break
                                     if "url" in sub_asset and not ci_service.api_client.download_asset(
@@ -408,7 +408,7 @@ class ProvenanceL3Check(BaseCheck):
                                     ):
                                         result = _VerifyArtefactResult(
                                             result=_VerifyArtefactResultType.NO_DOWNLOAD,
-                                            artefact_name=sub_asset["name"],
+                                            artifact_name=sub_asset["name"],
                                         )
                                         break
 
@@ -443,12 +443,12 @@ class ProvenanceL3Check(BaseCheck):
 
                                 for k, val in subject["digest"].items():
                                     digest = DigestSet()
-                                    artefact_digest = ArtefactDigest()
+                                    artifact_digest = ArtefactDigest()
                                     digest.digest_algorithm = k
                                     digest.digest = val
                                     # foreign key relations
-                                    artefact_digest._artefact = artifact  # pylint: disable=protected-access
-                                    artefact_digest._digest = digest  # pylint: disable=protected-access
+                                    artifact_digest._artifact = artifact  # pylint: disable=protected-access
+                                    artifact_digest._digest = digest  # pylint: disable=protected-access
                                     check_result["result_tables"].append(digest)
 
                 if downloaded_provs:

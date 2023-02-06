@@ -8,7 +8,7 @@
 /** METADATA
  *  scope: repository
  *  title: Trusted Builder
- *  description: Repository builds artefacts using a trusted builder, a trusted
+ *  description: Repository builds artifacts using a trusted builder, a trusted
  *      builder; github actions.
  *  threat:
  *      Trusted builders are trusted to implement ephemerality, isolation ...
