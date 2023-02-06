@@ -79,7 +79,6 @@ repos:
     types: [text, python]
     args: [--rcfile, pyproject.toml]
 
-
 # Type-check all Python code.
 - repo: local
   hooks:
