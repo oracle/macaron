@@ -78,7 +78,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
 def verify_prov(verify_args: argparse.Namespace) -> NoReturn:
     """Verify a provenance against a user defined policy."""
     prov_file = verify_args.provenance
-    policy_files = list(filter(lambda path: ".yaml" == os.path.splitext(path)[1], global_config.policy_paths))
+    policy_files = list(filter(lambda path: os.path.splitext(path)[1] in (".yaml", ".yml"), global_config.policy_paths))
 
     if not policy_files:
         logger.error("The policy is not provided to complete this action.")

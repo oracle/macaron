@@ -296,6 +296,16 @@ class SoufflePolicy:
 class Policy:
     """The policy is used to validate a target provenance.
 
+    TODO: Refactor this into separate policy classes for cue, yaml, souffle.
+        Add abstract method Policy.match(filename) which returns whether this policy can be constructed from the file
+        The policy framework (policy_registry.py) iterates filenames and calls match on each policy class, if a policy
+        wants to use it that policy is constructed on that file.
+    TODO: Refactor to allow more precise policy to provenance matching
+        - Metadata for CUE policies
+        - Method to resolve multiple policies applying to the same repository-full-name: select policy using provenance
+          content and/or commit sha? (However probably want to avoid something too complex like a priority hierarchy)
+
+
     Parameters
     ----------
     ID : str
