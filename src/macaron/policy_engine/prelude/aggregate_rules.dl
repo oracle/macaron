@@ -1,6 +1,13 @@
 /* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
+/**
+ *  Souffle datalog rules defining an aggregate approximate security level for a repository.
+ *  This is not a SLSA level, but is based on Macaron checks which are inspired by SLSA requirements.
+ *
+ *  For a repository to meet one level, it must meet the requirements of all lower levels.
+ *  These levels do consider the level of a repository's dependencies.
+ */
 
 /* aggregate verifying a level */
 .decl aggregate_level(level: number, repo: number)
@@ -20,8 +27,8 @@ aggregate_level_requirement(1, repo) :-
 
 
 /**
-  * The build is verifiably automated and .
-  */
+ * The build is verifiably automated and deployable.
+ */
 aggregate_level_requirement(2, repo) :-
     repository(repo, _,_,_,_,_,_),
     check_passed(repo, "mcn_build_script_1"),
@@ -29,7 +36,9 @@ aggregate_level_requirement(2, repo) :-
     check_passed(repo, "mcn_build_as_code_1").
 
 
-// The minimum aggregate level a reposotories dependencies have
+/**
+ * The minimum aggregate level the dependencies of a repository should have.
+ */
 .decl aggregate_level_min_dependency_level(level: number, dep_level:number)
 aggregate_level_min_dependency_level(1, 1).
 aggregate_level_min_dependency_level(2, 2).
@@ -39,7 +48,7 @@ aggregate_level_min_dependency_level(4, 4).
 
 /**
  *  The repository uses a trusted build service that outputs verifiable
- *   provenance information.
+ *  provenance information.
  */
 aggregate_level_requirement(3, repo) :-
     repository(repo, _,_,_,_,_,_),
@@ -49,7 +58,7 @@ aggregate_level_requirement(3, repo) :-
 
 
 /**
- *   The release provenance verifies
+ *   The release provenance passes verification.
  */
 aggregate_level_requirement(4, repo) :-
     repository(repo, _,_,_,_,_,_),

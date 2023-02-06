@@ -21,7 +21,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class SouffleError(Exception):
-    """An exception occurring with the call to souffle."""
+    """Occurs when the souffle program contains errors, or there is an error invoking souffle."""
+
+    # TODO: Use generic Macaron error class
 
     def __init__(
         self, command: Optional[list[str] | str] = None, message: str = "An error occurred with calling Souffle."

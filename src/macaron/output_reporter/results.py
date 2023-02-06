@@ -236,10 +236,15 @@ class Report:
     def get_dependencies(self, root_record: Optional[Record] = None) -> Iterable[tuple[AnalyzeContext, AnalyzeContext]]:
         """Get the generator for all AnalyzeContext instances.
 
+        Parameters
+        ----------
+        root_record: Optional[Record]
+            The root record to find the dependencies of, if none is provided self.root_record is used.
+
         Yields
         ------
         Tuple[AnalyzeContext, AnalyzeContext]
-            Dependency
+            The tuple containing first the parent context followed by the child context.
         """
         if root_record is None:
             root_record = self.root_record
@@ -247,8 +252,6 @@ class Report:
             for record in root_record.dependencies:
                 if record.context:
                     yield root_record.context, record.context
-                    # for transitive_dep in self.get_dependencies(record):
-                    #    yield transitive_dep
 
     def find_ctx(self, remote_path: str) -> AnalyzeContext | None:
         """Find the context instance from a given remote path.

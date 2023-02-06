@@ -7,6 +7,10 @@
 class InvalidPolicyError(Exception):
     """Happen when the policy is invalid."""
 
+    # TODO: Use generic Macaron error class
+
 
 class PolicyRuntimeError(Exception):
     """Happen if there are errors while validating the policy against a target."""
+
+    # TODO: Use generic Macaron error class

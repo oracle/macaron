@@ -214,7 +214,7 @@ all_y() :- count : nums(x,2) = count : nums(_,_).
 
 If you want to define a partial order: for example to find a maximum or minimum.
 
-It has the syntax `atom <= atom2 :- disjunction`. It replaces atom1 with atom2 if disjunction holds. The fact `atom1` is
+It has the syntax `atom1 <= atom2 :- disjunction`. It replaces atom1 with atom2 if disjunction holds. The fact `atom1` is
 actually removed.
 
 - `min(x max(y nums))`

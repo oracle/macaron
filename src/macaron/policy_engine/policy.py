@@ -403,8 +403,6 @@ class Policy:
 
         logger.info("Successfully loaded %s", policy)
 
-        # Ignore mypy because mypy flag policy as not having the same type
-        # as Policy.
         return policy
 
     def __str__(self) -> str:

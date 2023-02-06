@@ -1,11 +1,28 @@
 /* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
+/**
+ *  Relations for creating policies about repositories, and controlling which repositories must satisfy their
+ *  requirements.
+ */
 
+/**
+ *   A policy that specifies a set of rules about repositories.
+ *
+ *      policy_id: The unique identifier for this policy.
+ *      repo: the id field of a repository relation.
+ */
 .decl Policy(policy_id: symbol, repo: number, message: symbol)
+
+/**
+ *  Specifies that a repository repo must satisfy the policy policy_id: that the fact Policy(policy_id, repo)
+ *  must exist.
+ */
 .decl apply_policy_to(policy_id: symbol, repo: number)
 
-/* for outputting debugging information or feedback */
+/**
+ *  Policies that are applied to a repository and the requirements are not met.
+ */
 .decl failed_policies(policy_id:symbol, repo:number)
 failed_policies(policy_id, repo) :-
     // policy applies to the repo and failed
@@ -13,7 +30,10 @@ failed_policies(policy_id, repo) :-
     !Policy(policy_id, repo, _).
 
 
-.decl passed_policies(policy_id:symbol, repo:number, msg:symbol)
+/**
+ *  Policies that are applied to a repository and all requirements are met.
+ */
+.decl passed_policies(policy_id: symbol, repo: number, msg: symbol)
 passed_policies(policy_id, repo, msg):-
     Policy(policy_id, repo, msg),
     // policy passes on all repos it applies to
