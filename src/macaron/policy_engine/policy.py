@@ -316,9 +316,10 @@ class Policy:
         The full repository name this policy applies to
     text: str
         The full text content of the policy
-    sha:
+    sha: str
         The sha256sum digest of the policy
-
+    policy_type: str
+        The kind of policy: YAML_DIFF or CUE
     """
 
     ID: str
@@ -326,21 +327,22 @@ class Policy:
     target: str
     text: str | None
     sha: str | None
+    policy_type: str
     _definition: PolicyDef | None = field(default=None)
     _validator: PolicyFn | None = field(default=None)
-    POLICY_TYPE = "YAML_DIFF"
 
     def get_policy_table(self) -> PolicyTable:
         """Get the bound ORM object for the policy."""
         return PolicyTable(
-            policy_id=self.ID, description=self.description, policy_type=self.POLICY_TYPE, sha=self.sha, text=self.text
+            policy_id=self.ID, description=self.description, policy_type=self.policy_type, sha=self.sha, text=self.text
         )
 
     @classmethod
     def make_cue_policy(cls, macaron_path: os.PathLike | str, policy_path: os.PathLike | str) -> Optional["Policy"]:
         """Construct a cue policy."""
         logger.info("Generating a policy from file %s", policy_path)
-        policy: Policy = Policy("", "", "", None, None, None, None)
+        policy: Policy = Policy("", "", "", None, None, "", None)
+        policy.policy_type = "CUE"
 
         with open(policy_path, encoding="utf-8") as f:
             policy.text = f.read()
@@ -372,7 +374,8 @@ class Policy:
             The Policy instance that has been initialized.
         """
         logger.info("Generating a policy from file %s", file_path)
-        policy: Policy = Policy("", "", "", None, None, None, None)
+        policy: Policy = Policy("", "", "", None, None, "", None)
+        policy.policy_type = "YAML_DIFF"
 
         # First load from the policy yaml file. We also validate the policy
         # against the schema.

@@ -3,7 +3,6 @@
 
 """This module checks if a SLSA provenances conforms to a given policy."""
 
-
 import logging
 
 from macaron.policy_engine.policy import PolicyRuntimeError
@@ -71,7 +70,9 @@ class PolicyCheck(BaseCheck):
                 try:
                     logger.info("Validating the provenance against %s.", policy)
 
+                    # TODO: Is it worth returning more information rather than returning early?
                     if policy.validate(payload):
+                        check_result["result_tables"].append(policy.get_policy_table())
                         check_result["justification"].append("Successfully verified the policy against provenance.")
                         return CheckResultType.PASSED
 

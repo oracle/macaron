@@ -10,9 +10,14 @@ from macaron.config.defaults import defaults
 from macaron.database.database_manager import DatabaseManager
 from macaron.output_reporter.results import Record
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.checks.base_check import CheckFactsTable, CheckResultTable
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
-from macaron.slsa_analyzer.table_definitions import AnalysisTable, RepositoryAnalysis, SLSARequirement
+from macaron.slsa_analyzer.table_definitions import (
+    AnalysisTable,
+    CheckFactsTable,
+    CheckResultTable,
+    RepositoryAnalysis,
+    SLSARequirement,
+)
 from macaron.util import logger
 
 

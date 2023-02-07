@@ -8,6 +8,7 @@ For tables associated with checks see base_check.py.
 """
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy.orm import declarative_mixin, declared_attr
 
 from macaron.database.database_manager import ORMBase
 
@@ -84,13 +85,48 @@ class SLSALevelTable(ORMBase):
     reached = Column(Boolean, nullable=False)
 
 
-################################################################################
-# Policy
-################################################################################
+class CheckResultTable(ORMBase):
+    """Table to store the result of a check, is automatically added for each check."""
+
+    __tablename__ = "_check_result"
+    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003 # pylint: disable=invalid-name
+    check_id = Column(String, nullable=False)
+    repository = Column(Integer, ForeignKey("_repository.id"), nullable=False)
+    passed = Column(Boolean, nullable=False)
+    skipped = Column(Boolean, nullable=False)
 
 
-class PolicyTable(ORMBase):
+@declarative_mixin
+class CheckFactsTable:
+    """
+    Declarative mixin for check results.
+
+    All tables for check results must inherit this class, these fields are automatically filled in by the analyzer.
+    """
+
+    # pylint: disable=no-member
+
+    @declared_attr  # type: ignore
+    def id(self) -> Column:  # noqa: A003 # pylint: disable=invalid-name
+        """Check result id."""
+        return Column(Integer, primary_key=True, autoincrement=True)
+
+    @declared_attr  # type: ignore
+    def check_result(self) -> Column:
+        """Store the id of the repository to which the analysis pertains."""
+        return Column(Integer, ForeignKey("_check_result.id"), nullable=False)
+
+    @declared_attr  # type: ignore
+    def repository(self) -> Column:
+        """Store the id of the repository to which the analysis pertains."""
+        return Column(Integer, ForeignKey("_repository.id"), nullable=False)
+
+
+class PolicyTable(CheckFactsTable, ORMBase):
     """ORM Class for a Policy."""
+
+    # TODO: policy_check should store the policy, its evaluation result, and which PROVENANCE it was applied to
+    #       rather than only linking to the repository
 
     __tablename__ = "_policy"
     id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003

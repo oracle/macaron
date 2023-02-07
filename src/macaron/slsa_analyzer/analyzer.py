@@ -383,6 +383,7 @@ class Analyzer:
             )
 
         analyze_ctx = self.get_analyze_ctx(req_branch, git_obj)
+        analyze_ctx.dynamic_data["policy"] = self.policies.get_policy_for_target(analyze_ctx.repo_full_name)
         analyze_ctx.check_results = self.perform_checks(analyze_ctx)
 
         return Record(
@@ -685,7 +686,6 @@ class Analyzer:
         skipped_checks: list[SkippedInfo] = []
 
         # Get the reference to the policy.
-
         results = registry.scan(analyze_ctx, skipped_checks)
 
         return results

@@ -12,11 +12,12 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.config.defaults import defaults
 from macaron.database.database_manager import ORMBase
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckFactsTable
+from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
+from macaron.slsa_analyzer.table_definitions import CheckFactsTable
 
 logger: logging.Logger = logging.getLogger(__name__)
 
