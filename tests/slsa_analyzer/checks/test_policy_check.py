@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This modules contains tests for the policy check."""
@@ -60,7 +60,7 @@ class TestPolicyCheck(MacaronTestCase):
     def test_policy_check(self) -> None:
         """Test the policy check."""
         check = PolicyCheck()
-        check_result = CheckResult(justification=[])  # type: ignore
+        check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
         github_actions = MockGitHubActions()
         api_client = MockGhAPIClient({"headers": {}, "query": []})
         github_actions.api_client = api_client
