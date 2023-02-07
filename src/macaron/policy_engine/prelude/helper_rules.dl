@@ -3,23 +3,30 @@
 
 /* Souffle datalog rules to assist in policy authoring */
 
+/**
+ * Existence of this fact indicates a check with the id check_name was passed on the repository with the id repo.
+ */
 .decl check_passed(repo: number, check_name: symbol)
 check_passed(repo, check_name) :- check_result(_, check_name, repo, 1, skipped).
 
+/**
+ * Existence of this fact indicates a check with the id check_name was skipped on the repository with the id repo.
+ */
 .decl check_skipped(repo: number, check_name: symbol)
 check_skipped(repo, check_name) :- check_result(_, check_name, repo, passed, 1).
 
 
+/**
+ *  This fact exists iff a repository is hosted on a trusted public platform.
+ */
 .decl not_self_hosted_git(repo:number, message:symbol)
 not_self_hosted_git(repo, message) :- repository(repo, name, remote, branch, release, commit_sha, commit_date),
     match("^.*(github.com|gitlab.com).*$", remote), message=remote.
 
-.decl is_trusted_builder_typeuri(builder_id:symbol)
-is_trusted_builder_typeuri(builder) :-  provenance(_, _, _, _, _, builder, _, _, _),
-    match("https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.[2-9]+.[0-9]+", builder).
-
+/**
+ *  This fact exists iff a repository with id dependency is a dependency of repository with id repo.
+ */
 .decl transitive_dependency(repo: number, dependency: number)
-
 transitive_dependency(repo, dependency) :- dependency(repo, dependency).
 transitive_dependency(repo, dependency) :-
     transitive_dependency(repo, a), transitive_dependency(a, dependency).
@@ -27,6 +34,9 @@ transitive_dependency(repo, dependency) :-
 #define any(x) count: {x} > 1
 #define all(x, y) count: {x} = count: {x, y}
 
+/**
+ *  ADT recursively describing a JSON object.
+ */
 .type JsonType = Int {x : number}
          | String {x : symbol}
          | Float {x : float}
@@ -35,10 +45,12 @@ transitive_dependency(repo, dependency) :-
          | Object {x: symbol, y : JsonType}
          | Array {x : number, y : JsonType}
 
-/*
+/**
+ * Rules for referring to parts of a json type using the full path name.
+ */
+
 .decl json(name: symbol, id: number, root: JsonType)
 
-.decl any_terminal(s:symbol, k:symbol)
 
 .decl json_path(j: JsonType, a: JsonType, key:symbol)
 
@@ -50,12 +62,8 @@ json_path(a, b, key) :- a = $Array(k, b), json(_,_,c), json_path(c,a,kb),key=cat
 
 json_path(a, b,key) :- json_path(a,c,_), json_path(c, b, kb), key=kb.
 
-any_terminal(s,k) :- json(_,_,r), json_path(r, $String(s), k).
-
 .decl json_number(name: symbol, json:number, addr: symbol, k:number)
 .decl json_symbol(name:symbol, json:number, addr: symbol, k:symbol)
 
 json_number(name, js, addr, val) :- json(name, js, r), json_path(r, $Int(val), addr).
 json_symbol(name, js, addr, val) :- json(name, js, r), json_path(r, $String(val), addr).
-
-*/

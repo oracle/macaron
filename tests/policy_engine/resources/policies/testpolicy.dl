@@ -5,21 +5,6 @@
 
 /* ------------------------------- policies ------------------------------- */
 
-/** METADATA
- *  scope: repository
- *  title: Trusted Builder
- *  description: Repository builds artifacts using a trusted builder, a trusted
- *      builder; github actions.
- *  threat:
- *      Trusted builders are trusted to implement ephemerality, isolation ...
- *      of their build systems.
-    fix: Build using github actions
- */
-Policy("trusted_builder", repo, name) :-
-        repository(repo, name,_,_,_,_,_),
-        provenance(prov, repo, _, _, _, builder, _, _, _),
-        is_trusted_builder_typeuri(builder).
-
 
 Policy("trusted_builder", repo, name) :-
         repository(repo, name,_,_,_,_,_),
