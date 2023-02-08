@@ -106,7 +106,7 @@ $(PACKAGE_PATH)/resources/mvnw:
 		&& echo -e "distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.8.6/apache-maven-3.8.6-bin.zip\nwrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.1.1/maven-wrapper-3.1.1.jar" > .mvn/wrapper/maven-wrapper.properties \
 		&& cd $(REPO_PATH)
 $(PACKAGE_PATH)/resources/gradlew:
-	cd resources \
+	cd $(PACKAGE_PATH)/resources \
 	&& export GRADLE_VERSION=7.6 \
 	&& wget https://services.gradle.org/distributions/gradle-$$GRADLE_VERSION-bin.zip \
 	&& unzip -o gradle-$$GRADLE_VERSION-bin.zip \
