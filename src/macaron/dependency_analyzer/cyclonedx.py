@@ -102,6 +102,11 @@ def get_dep_components(
     except (CycloneDXParserError, KeyError) as error:
         logger.error(error)
         return
+
+    if components is None:
+        logger.error("The BOM file at %s misses components.", str(root_bom_path))
+        return
+
     dependencies = []
     modules = set()  # Stores all module dependencies.
     for child_path in child_bom_paths or []:
@@ -124,7 +129,7 @@ def get_dep_components(
     for dependency in dependencies:
         if dependency in modules:
             continue
-        for component in components:  # type: ignore
+        for component in components:
             try:
                 if dependency == component.get("bom-ref"):
                     yield component

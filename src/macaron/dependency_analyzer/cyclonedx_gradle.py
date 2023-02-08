@@ -71,6 +71,12 @@ class CycloneDxGradle(DependencyAnalyzer):
             for path in glob.glob(os.path.join(dir_path, "**", "build", "reports", self.file_name), recursive=True)
             if Path(path) != top_path
         ]
+
+        # Check if the root BOM has been analyzed before as a child BOM.
+        self.visited_deps.update(child_paths)
+        if top_path in self.visited_deps:
+            return {}
+
         root_component = get_root_component(top_path)
         components = get_dep_components(
             top_path,

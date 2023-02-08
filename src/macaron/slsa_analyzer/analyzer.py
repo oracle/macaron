@@ -7,6 +7,7 @@ import logging
 import os
 import subprocess  # nosec B404
 import sys
+from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -256,8 +257,10 @@ class Analyzer:
         dep_analyzer.remove_sboms(main_ctx.repo_path)
 
         commands = dep_analyzer.get_cmd()
-        working_dirs: set[Path] = build_tool.get_build_dirs(main_ctx.repo_path)
+        working_dirs: Iterable[Path] = build_tool.get_build_dirs(main_ctx.repo_path)
         for working_dir in working_dirs:
+            # Get the absolute path to use as the working dir in the subprocess.
+            working_dir = Path(main_ctx.repo_path).joinpath(working_dir)
             try:
                 # Suppressing Bandit's B603 report because the repo paths are validated.
                 analyzer_output = subprocess.run(  # nosec B603

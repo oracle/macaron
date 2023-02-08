@@ -64,6 +64,7 @@ class DependencyAnalyzer(ABC):
         self.tool_name: str = tool_name
         self.tool_version: str = tool_version
         self.repo_path: str = repo_path
+        self.visited_deps: set = set()
 
     @abstractmethod
     def collect_dependencies(self, dir_path: str) -> dict[str, DependencyInfo]:

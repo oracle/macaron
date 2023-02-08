@@ -83,6 +83,7 @@ test = [
     "pytest-custom_exit_code >=0.3.0,<1.0.0",
     "pytest-cov >=4.0.0,<5.0.0",
     "pytest-env >=0.8.1,<1.0.0",
+    "syrupy >=4.0.0,<5.0.0",
 ]
 
 [project.urls]

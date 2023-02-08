@@ -85,7 +85,7 @@ venv:
 # So we create the dist dir if it doesn't exist in the setup target.
 # See https://packaging.python.org/en/latest/tutorials/packaging-projects/#generating-distribution-archives.
 # We also install cyclonedx-go to generate SBOM for Go, compile the Go modules,
-# install SLSA verifier binary, and download mvnw.
+# install SLSA verifier binary, download mvnw, and gradlew.
 .PHONY: setup
 setup: force-upgrade setup-go setup-binaries
 	pre-commit install

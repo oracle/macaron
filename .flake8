@@ -19,9 +19,10 @@ ignore = E203,E266,W503,D105,D404,PT009
 # D102: Missing docstring in public method
 # D104: Missing docstring in public package
 # D107: Missing docstring in __init__
+# PT004: Fixture does not return anything, add leading underscore
 per-file-ignores =
     __init__.py:D104
-    tests/*:D400,D200,D102,D104,D107
+    tests/*:D400,D200,D102,D104,D107,PT004
 max-line-length = 120
 show-source = true
 
