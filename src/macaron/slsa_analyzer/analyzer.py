@@ -198,7 +198,7 @@ class Analyzer:
         self.db_man.session.commit()
 
         # Evaluate policy
-        self.policies.evaluate_souffle_policies(self.database_path)
+        self.policies.evaluate_souffle_policies(self.database_path, restrict_to_analysis=analysis.id)
 
         for record in report.get_records():
             if record.context:
@@ -207,6 +207,9 @@ class Analyzer:
                 record.policies_failed += failed
 
         _, failed_policies = self.policies.get_souffle_results()
+        for policy in failed_policies:
+            logger.error("Policy Failed: %s", policy)
+
         # Store the analysis result into report files.
         self.generate_reports(report)
 

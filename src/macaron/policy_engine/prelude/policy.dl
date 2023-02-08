@@ -6,6 +6,19 @@
  *  requirements.
  */
 
+/*
+ * Restrict the policy evaluation to a specific set of analyses.
+ */
+.decl restrict_to_analysis(analysis_id: number)
+.decl apply_to_analysis(analysis_id: number)
+apply_to_analysis(analysis) :-
+    analysis(analysis, _, _, _),
+    restrict_to_analysis(analysis).
+apply_to_analysis(analysis) :-
+    analysis(analysis, _, _, _),
+    !restrict_to_analysis(_).
+
+
 /**
  *   A policy that specifies a set of rules about repositories.
  *
@@ -20,21 +33,47 @@
  */
 .decl apply_policy_to(policy_id: symbol, repo: number)
 
+/*
+ * Check policy constraints IFF it is applied to the repo AND the repo is part of the analysis being checked.
+ */
+.decl policy_applies_to(policy_id: symbol, repo: number)
+policy_applies_to(policy_id, repo) :-
+    apply_policy_to(policy_id, repo),
+    apply_to_analysis(analysis),
+    repository_analysis(analysis, repo).
+
 /**
  *  Policies that are applied to a repository and the requirements are not met.
  */
-.decl failed_policies(policy_id:symbol, repo:number)
-failed_policies(policy_id, repo) :-
+.decl failed_policies(policy_id:symbol)
+failed_policies(policy_id) :-
     // policy applies to the repo and failed
-    apply_policy_to(policy_id, repo),
+    policy_applies_to(policy_id, repo),
     !Policy(policy_id, repo, _).
-
 
 /**
  *  Policies that are applied to a repository and all requirements are met.
  */
-.decl passed_policies(policy_id: symbol, repo: number, msg: symbol)
-passed_policies(policy_id, repo, msg):-
+.decl passed_policies(policy_id: symbol)
+passed_policies(policy_id) :-
     Policy(policy_id, repo, msg),
     // policy passes on all repos it applies to
-    0 = count: {failed_policies(policy_id, _)}.
+    !failed_policies(policy_id).
+
+.decl repo_satisfies_policy(repo: number, repo_full_name: symbol, policy_id: symbol)
+.decl repo_violates_policy(repo: number, repo_full_name: symbol, policy_id: symbol)
+
+repo_satisfies_policy(repo, repo_full_name, policy_id) :-
+    policy_applies_to(policy_id, repo),
+    Policy(policy_id, repo, _),
+    is_repo(repo, repo_full_name).
+
+repo_violates_policy(repo, repo_full_name, policy_id) :-
+    policy_applies_to(policy_id, repo),
+    is_repo(repo, repo_full_name),
+    !Policy(policy_id, repo, _).
+
+.output passed_policies
+.output failed_policies
+.output repo_satisfies_policy
+.output repo_violates_policy

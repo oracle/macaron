@@ -15,9 +15,10 @@ from yamale.schema import Schema
 
 from macaron.parsers.yaml.loader import YamlLoader
 from macaron.policy_engine import cue
-from macaron.policy_engine.__main__ import get_generated
+from macaron.policy_engine.__main__ import copy_prelude, get_generated
 from macaron.policy_engine.exceptions import InvalidPolicyError, PolicyRuntimeError
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
+from macaron.policy_engine.souffle_code_generator import restrict_to_analysis
 from macaron.slsa_analyzer.table_definitions import PolicyTable
 from macaron.util import JsonType
 
@@ -199,11 +200,9 @@ class SoufflePolicy:
             row: list[str]
                 A list conforming to ["policy name", "repo primary key"], and optionally a third value storing feedback.
             """
-            policy = row[0]
-            repo = int(row[1])
-            reason = None
-            if len(row) >= 3:
-                reason = row[2]
+            repo = int(row[0])
+            reason = row[1]
+            policy = row[2]
             return SoufflePolicy.PolicyResult(policy, repo, reason)
 
     @classmethod
@@ -247,7 +246,9 @@ class SoufflePolicy:
         passed = list(filter(lambda x: x.repo == repository, self._passed))
         return passed, failed
 
-    def evaluate(self, database_path: os.PathLike | str, repo: int | None = None) -> bool:
+    def evaluate(
+        self, database_path: os.PathLike | str, analysis_id: int | None = None, repo: int | None = None
+    ) -> bool:
         """
         Evaluate this policy against a database.
 
@@ -255,6 +256,8 @@ class SoufflePolicy:
         ----------
         database_path: os.PathLike | str
             The file path to the database
+        analysis_id: int | None
+            Optional, the analysis instance to restrict the policy analysis to.
         repo: int | None
             Optional, the repository to check for policy compliance
 
@@ -267,14 +270,17 @@ class SoufflePolicy:
         try:
             with SouffleWrapper() as sfl:
                 prelude = get_generated(database_path)
-                res = sfl.interpret_text(prelude + self.text)
+                if analysis_id is not None:
+                    prelude.update(restrict_to_analysis([analysis_id]))
+                copy_prelude(database_path, sfl, prelude=prelude)
+                res = sfl.interpret_text(self.text)
                 self._result = res
         except SouffleError as err:
             logger.error("Unable to evaluate policy %s", err)
             return False
 
-        all_failed = list(map(SoufflePolicy.PolicyResult.from_row, self._result["failed_policies"]))
-        all_passed = list(map(SoufflePolicy.PolicyResult.from_row, self._result["passed_policies"]))
+        all_failed = list(map(SoufflePolicy.PolicyResult.from_row, self._result["repo_violates_policy"]))
+        all_passed = list(map(SoufflePolicy.PolicyResult.from_row, self._result["repo_satisfies_policy"]))
         self._failed = all_failed
         self._passed = all_passed
         if repo:

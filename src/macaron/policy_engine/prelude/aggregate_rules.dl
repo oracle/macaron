@@ -35,17 +35,6 @@ aggregate_level_requirement(2, repo) :-
     check_passed(repo, "mcn_build_service_1"),
     check_passed(repo, "mcn_build_as_code_1").
 
-
-/**
- * The minimum aggregate level the dependencies of a repository should have.
- */
-.decl aggregate_level_min_dependency_level(level: number, dep_level:number)
-aggregate_level_min_dependency_level(1, 1).
-aggregate_level_min_dependency_level(2, 2).
-aggregate_level_min_dependency_level(3, 2).
-aggregate_level_min_dependency_level(4, 4).
-
-
 /**
  *  The repository uses a trusted build service that outputs verifiable
  *  provenance information.
@@ -66,3 +55,33 @@ aggregate_level_requirement(4, repo) :-
     check_passed(repo, "mcn_trusted_builder_level_three_1"),
     check_passed(repo, "mcn_policy_check_1"),
     not_self_hosted_git(repo, _).
+
+/**
+ * The minimum aggregate level the dependencies of a repository should have.
+ */
+.decl aggregate_level_min_dependency_level(level: number, dep_level:number)
+aggregate_level_min_dependency_level(1, 1).
+aggregate_level_min_dependency_level(2, 2).
+aggregate_level_min_dependency_level(3, 2).
+aggregate_level_min_dependency_level(4, 4).
+
+
+
+.decl meets_aggregate_level(level: number, repo: number)
+meets_aggregate_level(level, repo) :- aggregate_level(real_level, repo), agg_levels(level), level >= real_level.
+
+Policy("aggregate_level_4", repo, reponame) :-
+        repository(repo, reponame,_,_,_,_,_),
+        meets_aggregate_level(4, repo).
+
+Policy("aggregate_level_3", repo, reponame) :-
+        repository(repo, reponame,_,_,_,_,_),
+        meets_aggregate_level(3, repo).
+
+Policy("aggregate_level_2", repo, reponame) :-
+        repository(repo, reponame,_,_,_,_,_),
+        meets_aggregate_level(2, repo).
+
+Policy("aggregate_level_1", repo, reponame) :-
+        repository(repo, reponame,_,_,_,_,_),
+        meets_aggregate_level(1, repo).

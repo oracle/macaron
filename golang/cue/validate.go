@@ -22,6 +22,7 @@ func validate_json(_policy *C.char, _document *C.char) int32 {
 	resolved_value := ctx.CompileString(document, cue.Scope(value))
 	err2 := resolved_value.Err()
 	if err2 != nil {
+		// TODO: Return error message, do not directly print it
 		fmt.Println("CUE: ", err2)
 		return 0
 	}

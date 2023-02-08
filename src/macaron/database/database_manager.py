@@ -18,9 +18,10 @@ ORMBase = declarative_base()
 
 
 class DatabaseManager:
-    """This class handles and manages the connection to sqlite database during the session.
+    """
+    This class handles and manages the connection to sqlite database during the session.
 
-    Note that since SQLAlchemy lazy-loads the fiels of mapped ORM objects, if the databse connection is closed any
+    Note that since SQLAlchemy lazy-loads the fields of mapped ORM objects, if the database connection is closed any
     orm-mapped objects will become invalid. As such the lifetime of the database manager must be longer than any of the
     objects added to the database (using add() or add_and_commit()).
     """
@@ -104,7 +105,7 @@ class DatabaseManager:
 
     def execute(self, query: Any) -> None:
         """
-        Execute a sqlalchemy core api query using a short-lived engine connection.
+        Execute a SQLAlchemy core api query using a short-lived engine connection.
 
         Parameters
         ----------

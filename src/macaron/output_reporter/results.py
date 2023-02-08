@@ -234,7 +234,7 @@ class Report:
                 yield record.context
 
     def get_dependencies(self, root_record: Optional[Record] = None) -> Iterable[tuple[AnalyzeContext, AnalyzeContext]]:
-        """Get the generator for all AnalyzeContext instances.
+        """Get the generator for the dependency relations between repositories.
 
         Parameters
         ----------
@@ -306,5 +306,15 @@ class Report:
             output = "".join([output, f"\n{level.value}:\n"])
             for mesg in mesg_list:
                 output = "".join([output, f"- {mesg}\n"])
+
+        for record in self.get_records():
+            if not record.context:
+                continue
+            output += f"\n\nTARGET: {record.context.repo_full_name}"
+            if any(record.policies_failed):
+                output += "\n\tPOLICIES FAILED: " + ", ".join([f"{p.policy}" for p in record.policies_failed])
+            if any(record.policies_passed):
+                output += "\n\tPOLICIES PASSED: " + ", ".join([f"{p.policy}" for p in record.policies_passed])
+            output += "\n"
 
         return output

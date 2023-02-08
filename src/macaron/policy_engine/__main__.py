@@ -17,6 +17,7 @@ from sqlalchemy import MetaData, create_engine
 
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
 from macaron.policy_engine.souffle_code_generator import (
+    SouffleProgram,
     get_souffle_import_prelude,
     project_table_to_key,
     project_with_fk_join,
@@ -56,7 +57,7 @@ class Timer:
         print(self.name, f"delta: {self.delta:0.4f}")
 
 
-def get_generated(database_path: os.PathLike | str) -> str:
+def get_generated(database_path: os.PathLike | str) -> SouffleProgram:
     """Get generated souffle code from database specified by configuration."""
     metadata = MetaData()
     engine = create_engine(f"sqlite:///{database_path}", echo=False)
@@ -70,15 +71,26 @@ def get_generated(database_path: os.PathLike | str) -> str:
             prelude.update(project_table_to_key(f"{table_name[1:]}_attribute", table))
             prelude.update(project_with_fk_join(table))
 
-    result: str = str(prelude)
-
-    return result
+    return prelude
 
 
-def copy_prelude(database_path: os.PathLike | str, sfl: SouffleWrapper) -> None:
-    """Generate and copy the prelude into the souffle instance's include directory."""
-    prelude = get_generated(database_path)
-    sfl.copy_to_includes("import_data.dl", prelude)
+def copy_prelude(database_path: os.PathLike | str, sfl: SouffleWrapper, prelude: SouffleProgram | None = None) -> None:
+    """
+    Generate and copy the prelude into the souffle instance's include directory.
+
+    Parameters
+    ----------
+    database_path: os.PathLike | str
+        The path to the database the facts will be imported from
+    sfl: SouffleWrapper
+        The souffle execution context object
+    prelude: SouffleProgram | None
+        Optional, the prelude to use for the souffle program, if none is given the default prelude is generated from
+        the database at database_path.
+    """
+    if prelude is None:
+        prelude = get_generated(database_path)
+    sfl.copy_to_includes("import_data.dl", str(prelude))
 
     folder = os.path.join(os.path.dirname(__file__), "prelude")
     for file_name in os.listdir(folder):
@@ -92,20 +104,19 @@ def copy_prelude(database_path: os.PathLike | str, sfl: SouffleWrapper) -> None:
 
 def policy_engine(config: type[Config], policy_file: str) -> dict:
     """Invoke souffle and report result."""
-    sfl = SouffleWrapper()
-    copy_prelude(config.database_path, sfl)
-    with open(policy_file, encoding="utf-8") as file:
-        text = file.read()
+    with SouffleWrapper() as sfl:
+        copy_prelude(config.database_path, sfl)
+        with open(policy_file, encoding="utf-8") as file:
+            text = file.read()
 
-    try:
-        with Timer("Souffle"):
+        try:
             res = sfl.interpret_text(text)
-    except SouffleError as error:
-        print(error.command)
-        print(error.message)
-        sys.exit(1)
+        except SouffleError as error:
+            print(error.command)
+            print(error.message)
+            sys.exit(1)
 
-    return res
+        return res
 
 
 def interactive() -> None:

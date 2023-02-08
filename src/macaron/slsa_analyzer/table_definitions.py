@@ -47,7 +47,6 @@ class AnalysisTable(ORMBase):
     id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
     analysis_time = Column(String, nullable=False)
     repository = Column(Integer, ForeignKey("_repository.id"), nullable=False)
-    policy = Column(Integer, ForeignKey("_policy.id"), nullable=True)  # to be foreign key
     macaron_version = Column(String, nullable=False)
 
 

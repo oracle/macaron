@@ -26,7 +26,7 @@ class TestSoufflePolicyEngineMain(TestCase):
 
     def test_dump_prelude(self) -> None:
         """Test loading the policy from file."""
-        res = get_generated(self.DATABASE_FILE)
+        res = str(get_generated(self.DATABASE_FILE))
         assert len(res) > 10
 
     def test_eval_policy(self) -> None:
@@ -36,10 +36,9 @@ class TestSoufflePolicyEngineMain(TestCase):
         conf.show_prelude = False
         conf.policy_file = self.POLICY_FILE
         res = policy_engine(conf, conf.policy_file)
+        res.pop("repo_satisfies_policy")
+        res.pop("repo_violates_policy")
         assert res == {
-            "passed_policies": [
-                ["trusted_builder", "1", "slsa-framework/slsa-verifier"],
-                ["trusted_git_server", "1", "slsa-framework/slsa-verifier"],
-            ],
-            "failed_policies": [],
+            "passed_policies": [["trusted_builder"]],
+            "failed_policies": [["aggregate_l4"], ["aggregate_l2"]],
         }

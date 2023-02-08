@@ -28,29 +28,6 @@ apply_policy_to("trusted_builder", repo) :-
     repository(repo, name,_,_,_,_,_),
     provenance(prov, repo, _, _, _, _, _, _, _).
 
-    Policy("trusted_git_server", repo, reponame) :-
-        repository(repo, reponame,_,_,_,_,_),
-        not_self_hosted_git(repo, _).
-
-apply_policy_to("trusted_git_server", repo) :- repository(repo, _,_,_,_,_,_).
-
-/*
-Policy("aggregate_l4", repo, reponame) :-
-        repository(repo, reponame,_,_,_,_,_),
-        meets_aggregate_level(4, repo).
-
-Policy("aggregate_l3", repo, reponame) :-
-        repository(repo, reponame,_,_,_,_,_),
-        meets_aggregate_level(3, repo).
-
-Policy("aggregate_l3", repo, reponame) :-
-        repository(repo, reponame,_,_,_,_,_),
-        meets_aggregate_level(2, repo).
-
-Policy("aggregate_l3", repo, reponame) :-
-        repository(repo, reponame,_,_,_,_,_),
-        meets_aggregate_level(1, repo).
-
 apply_policy_to("aggregate_l4", repo) :-
     repository(repo,"slsa-framework/slsa-verifier",_,_,_,_,_).
 
@@ -59,9 +36,3 @@ apply_policy_to("aggregate_l3", repo) :-
 
 apply_policy_to("aggregate_l2", repo) :-
     repository(repo,_ ,_,_,_,_,_).
-*/
-
-// only allowed outputs for test
-//.output aggregate_info
-.output passed_policies
-.output failed_policies

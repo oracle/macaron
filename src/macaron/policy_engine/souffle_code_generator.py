@@ -12,7 +12,18 @@ from macaron.util import logger
 
 
 class SouffleProgram:
-    """Class to store generated souffle datalog program."""
+    """
+    Class to store generated souffle datalog program.
+
+    Parameters
+    ----------
+    declarations: None | set[str]
+        Set of declaration souffle statements (begin with .decl token)
+    directives: None | set[str]
+        Set of directives (begin with ".", e.g. .input)
+    rules: None | set[str]
+        Set of datalog rules (statements containing ":-" )
+    """
 
     declarations: set[str]
     directives: set[str]
@@ -32,7 +43,18 @@ class SouffleProgram:
             self.declarations = declarations
 
     def update(self, other: "SouffleProgram") -> "SouffleProgram":
-        """Merge another program into this one."""
+        """Merge another program into this one.
+
+        Parameters
+        ----------
+        other: SouffleProgram
+            The program to merge into self
+
+        Returns
+        -------
+        SouffleProgram
+            self, after other has been merged into it
+        """
         self.declarations = self.declarations.union(other.declarations)
         self.directives = self.directives.union(other.directives)
         self.rules = self.rules.union(other.rules)
@@ -40,6 +62,13 @@ class SouffleProgram:
         return self
 
     def __str__(self) -> str:
+        """Get string representation of self.
+
+        Returns
+        -------
+        str
+            List of declarations followed by directives followed by rules, newline-separated.
+        """
         return "\n".join(list(self.declarations) + list(self.directives) + list(self.rules))
 
 
@@ -61,13 +90,42 @@ def column_to_souffle_type(column: Column) -> str:
 
 
 def table_to_declaration(table: Table) -> str:
-    """Return the souffle datalog declaration for an SQLAlchemy table."""
+    """Return the souffle datalog declaration for an SQLAlchemy table.
+
+    Example
+    -------
+    >>> tbl = Table("example", Column("id", Integer), Column("hello", String)
+    >>> assert table_to_declaration(tbl) == '.decl "example" (id: number, hello: symbol)'
+
+    Parameters
+    ----------
+    table: Table
+        The sqlalchemy Table to generate a .decl statement for
+
+    Returns
+    -------
+    str
+        Datalog declaration corresponding to table
+    """
     columns = [f"{col.name}: {column_to_souffle_type(col)}" for col in table.c]
     return f".decl {table.fullname[1:]} (" + ", ".join(columns) + ")"
 
 
 def get_fact_declarations(metadata: MetaData) -> SouffleProgram:
-    """Return a list of fact declarations for all the mapped tables whose names begin with an '_'."""
+    """
+    Get declarations for all mapped tables with names beginning with an underscore and therefore importable by souffle.
+
+    Parameters
+    ----------
+    metadata: MetaData
+        SqlAlchemy orm metadata object
+
+    Returns
+    -------
+    SouffleProgram
+        The set of fact declaration statements, in its declaration field, for all the mapped tables (known to metadata)
+        whose names begin with an '_'.
+    """
     return SouffleProgram(
         declarations={
             table_to_declaration(table) for table_name, table in metadata.tables.items() if table_name[0] == "_"
@@ -76,7 +134,23 @@ def get_fact_declarations(metadata: MetaData) -> SouffleProgram:
 
 
 def get_fact_input_statements(db_name: os.PathLike | str, metadata: MetaData) -> SouffleProgram:
-    """Return a list of input directives for all the mapped tables beginning with an '_'."""
+    """
+    Return a list of input directives for all the mapped tables beginning with an '_'.
+
+    Parameters
+    ----------
+    db_name: os.PathLike | str
+        The database path to import the data from into souffle (absolute path recommended).
+    metadata: MetaData
+        The SQLAlchemy MetaData object containing the table definitions to generate input statements for.
+
+    Returns
+    -------
+    SouffleProgram
+        Program containing the set of .input statements, in the directive field, for all tables known to metadata that
+        with an '_'.
+
+    """
     return SouffleProgram(
         directives={
             f'.input {table_name[1:]} (IO=sqlite, filename="{db_name}")'
@@ -87,65 +161,17 @@ def get_fact_input_statements(db_name: os.PathLike | str, metadata: MetaData) ->
 
 
 def get_souffle_import_prelude(db_name: os.PathLike | str, metadata: MetaData) -> SouffleProgram:
-    """Return souffle datalog code to import all relevant mapped tables."""
+    """
+    Return souffle datalog code to import all relevant mapped tables.
+
+    Parameters
+    ----------
+    db_name: os.PathLike | str
+        The path to the database the souffle program will import facts from (absolute path recommended)
+    metadata: MetaData
+        SQLAlchemy MetaData object containing table information
+    """
     return get_fact_declarations(metadata).update(get_fact_input_statements(db_name, metadata))
-
-
-def get_fact_attributes(metadata: MetaData) -> SouffleProgram:
-    """Generate datalog rules which extract individual attributes from the columns of all check result tables."""
-    result = SouffleProgram(
-        declarations={
-            ".decl repository_attribute (id:number, key:symbol, value:JsonType)",
-            ".decl check_name(name:symbol)"
-            # ".decl symbol_attribute(repository:number, check_id:symbol, attribute:symbol, value:symbol)",
-            # ".decl attribute(repository:number, check_id:symbol, attribute:symbol)",
-        }
-    )
-
-    for table_name in metadata.tables.keys():
-        table = metadata.tables[table_name]
-        if "check" not in table_name:
-            continue
-
-        cols = table.columns
-        meta = {"repository_id": "repository", "check_id": None, "id": None}
-
-        total_num_columns = len(cols)
-        for cid in range(total_num_columns):
-            if cols[cid].name in meta:
-                continue
-
-            pattern = []
-            col_name = cols[cid].name
-            col_type = column_to_souffle_type(cols[cid])
-            value_statement = "value"
-            for col in cols:
-                if col.name == col_name:
-
-                    if col_type == "symbol":
-                        value_statement = "$String(value)"
-                    elif col_type == "number":
-                        value_statement = "$Int(value)"
-                    else:
-                        logger.error("Unknown column type in codegen.")
-                        value_statement = "$String(value)"
-                    pattern.append("value")
-                elif col.name in meta:
-                    res = meta[col.name]
-                    res = "_" if res is None else res
-                    pattern.append(res)
-                else:
-                    pattern.append("_")
-
-            result.rules.add(f'check_name("{table_name[1:]}").')
-            inference = f'repository_attribute(repository, "{table_name[1:]}.{col_name}", {value_statement}) :- '
-            if col_type == "symbol":
-                inference += 'value != "n/a", '
-
-            sfl_pattern = ",".join(pattern)
-            inference += f"{table_name[1:]}({sfl_pattern})."
-            result.rules.add(inference)
-    return result
 
 
 def project_join_table_souffle_relation(
@@ -157,7 +183,7 @@ def project_join_table_souffle_relation(
     right_ignore_fields: list[str],
     prefix_table_name_to_key: bool = True,
 ) -> SouffleProgram:
-    """Generate souffle datalog to join two tables together.
+    r"""Generate souffle datalog to join two tables together.
 
     This creates a relation that will appear as
 
@@ -183,6 +209,15 @@ def project_join_table_souffle_relation(
     prefix_table_name_to_key: bool
         Should the key field of the relation be prefixed with the table name: so that it appears as
         "tableName.columnName"
+
+    Returns
+    -------
+    SouffleProgram
+        A program containing rules to declare and derive the relations containing the fields:
+            (left_common_fields \\cup right_common_fields)
+                \times ((right_table.columns - right_ignore_fields - right_table.foreign_key_columns) +
+                (foreign_columns where foreign_columns in right_table.foreign_key_columns.tables,
+                and foreign_columns not primary keys))
     """
     result = SouffleProgram(
         declarations={
@@ -261,7 +296,7 @@ def project_join_table_souffle_relation(
 def get_table_rules_per_column(
     rule_name: str, table: Table, common_fields: dict[str, str], ignore_columns: list
 ) -> SouffleProgram:
-    """Generate datalog rules to create subject-predicate relations from a set of columns of a table.
+    r"""Generate datalog rules to create subject-predicate relations from a set of columns of a table.
 
     Parameters
     ----------
@@ -275,13 +310,14 @@ def get_table_rules_per_column(
         value: the corresponding relation field name
     ignore_columns: list[str]
         List of column names to be excluded from the relation
-    value_type: str
-        The datalog type that the value (predicate) field will have.
-            Note: Symbol is nullable, number is not, numbers can be implicitly converted to symbols but not vice versa.
 
+    Returns
+    -------
+    SouffleProgram
+        Program to declare and construct the rules
+            common_fields \times (table.columns - common_fields - ignore_columns)
     """
     # Construct declaration statement
-
     result = SouffleProgram(
         declarations={
             f".decl {rule_name} ("
@@ -339,11 +375,26 @@ def project_with_fk_join(table: Table) -> SouffleProgram:
     """Create attribute relations joining on foreign keys.
 
     For each foreign key in this table, creates a relation for the reference table which receives this table's values.
+    See: project_join_table_souffle_relation
+
+    Parameters
+    ----------
+    table: Table
+        The table to create the projected rules for
+
+    Returns
+    -------
+    SouffleProgram
+        The program containing declarations and rules to derive subject-predicate "attribute" relations from the
+        importable tables (tables beginning with '_').
     """
     if len(table.columns) <= len(table.primary_key.columns):
         return SouffleProgram()
 
     program = SouffleProgram()
+
+    # TODO: In all codegen, create a Type <: number, for each table for the primary key column so that souffle
+    #  type-checks foreign key relations in some cases.
 
     for foreign_key in table.foreign_keys:
         left_table = foreign_key.column.table
@@ -367,3 +418,15 @@ def project_table_to_key(relation_name: str, table: Table) -> SouffleProgram:
     ignore_columns: list = []
 
     return get_table_rules_per_column(relation_name, table, common_fields, ignore_columns)
+
+
+def restrict_to_analysis(analyses: list[int]) -> SouffleProgram:
+    """
+    Create relations to restrict the policy analysis to a specific analysis instance (an invocation of souffle).
+
+    Parameters
+    ----------
+    analyses: list[int]
+        The list of analysis IDs (the primary key of the _analysis table) to evaluate the policy for.
+    """
+    return SouffleProgram(rules={f"restrict_to_analysis({x})." for x in analyses})

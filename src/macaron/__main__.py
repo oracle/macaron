@@ -7,7 +7,7 @@ import argparse
 import logging
 import os
 import sys
-from typing import NoReturn
+from typing import Never
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from yamale.schema.validationresults import ValidationResult
@@ -75,7 +75,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     sys.exit(status_code)
 
 
-def verify_prov(verify_args: argparse.Namespace) -> NoReturn:
+def verify_prov(verify_args: argparse.Namespace) -> Never:
     """Verify a provenance against a user defined policy."""
     prov_file = verify_args.provenance
     policy_files = list(filter(lambda path: os.path.splitext(path)[1] in (".yaml", ".yml"), global_config.policy_paths))

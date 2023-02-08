@@ -31,8 +31,11 @@ transitive_dependency(repo, dependency) :- dependency(repo, dependency).
 transitive_dependency(repo, dependency) :-
     transitive_dependency(repo, a), transitive_dependency(a, dependency).
 
-#define any(x) count: {x} > 1
-#define all(x, y) count: {x} = count: {x, y}
+/**
+ *  Extract the id and full name from the repository relation.
+ */
+.decl is_repo(repo: number, repo_full_name: symbol)
+ is_repo(repo, name) :- repository(repo, name,_,_,_,_,_).
 
 /**
  *  ADT recursively describing a JSON object.

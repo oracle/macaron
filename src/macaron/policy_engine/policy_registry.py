@@ -68,13 +68,16 @@ class PolicyRegistry:
             return self.policies["any"]
         return None
 
-    def evaluate_souffle_policies(self, database_path: str) -> list[Any]:
+    def evaluate_souffle_policies(self, database_path: str, restrict_to_analysis: int | None = None) -> list[Any]:
         """Evaluate all known souffle policies.
 
         Parameters
         ----------
         database_path: str
             The path to the database file to evaluate the policy against
+        restrict_to_analysis: int | None
+            Optional, if is not None then restrict policy evaluation to the repositories associated with the analysis id
+            restrict_to_analysis.
 
         Return
         ------
@@ -83,7 +86,7 @@ class PolicyRegistry:
         """
         fail_results = []
         for policy in self.souffle_policies:
-            policy.evaluate(database_path=database_path)
+            policy.evaluate(database_path=database_path, analysis_id=restrict_to_analysis)
             if any(policy.get_failed()):
                 logger.info("Failed policy %s", policy.get_failed())
                 fail_results += policy.get_failed()
