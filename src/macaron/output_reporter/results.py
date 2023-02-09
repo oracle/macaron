@@ -62,7 +62,10 @@ class DepSummary(TypedDict):
 
 
 RecordNode = TypeVar("RecordNode", bound="Record")
-"""This binds type ``RecordNode`` to ``Record`` and any of its subclasses."""
+# The documentation below for `TypeVar` is commented out due to a breaking
+# change in Sphinx version (^=6.1.0).
+# Reported at: https://github.com/oracle-samples/macaron/issues/58.
+# """This binds type ``RecordNode`` to ``Record`` and any of its subclasses."""
 
 
 @dataclass
