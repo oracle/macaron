@@ -183,7 +183,7 @@ def project_join_table_souffle_relation(
     right_ignore_fields: list[str],
     prefix_table_name_to_key: bool = True,
 ) -> SouffleProgram:
-    r"""Generate souffle datalog to join two tables together.
+    """Generate souffle datalog to join two tables together.
 
     This creates a relation that will appear as
 
@@ -214,8 +214,8 @@ def project_join_table_souffle_relation(
     -------
     SouffleProgram
         A program containing rules to declare and derive the relations containing the fields:
-            (left_common_fields \\cup right_common_fields)
-                \times ((right_table.columns - right_ignore_fields - right_table.foreign_key_columns) +
+            (left_common_fields UNION right_common_fields)
+                PRODUCT ((right_table.columns - right_ignore_fields - right_table.foreign_key_columns) +
                 (foreign_columns where foreign_columns in right_table.foreign_key_columns.tables,
                 and foreign_columns not primary keys))
     """
@@ -296,7 +296,7 @@ def project_join_table_souffle_relation(
 def get_table_rules_per_column(
     rule_name: str, table: Table, common_fields: dict[str, str], ignore_columns: list
 ) -> SouffleProgram:
-    r"""Generate datalog rules to create subject-predicate relations from a set of columns of a table.
+    """Generate datalog rules to create subject-predicate relations from a set of columns of a table.
 
     Parameters
     ----------
@@ -315,7 +315,7 @@ def get_table_rules_per_column(
     -------
     SouffleProgram
         Program to declare and construct the rules
-            common_fields \times (table.columns - common_fields - ignore_columns)
+            common_fields PRODUCT (table.columns - common_fields - ignore_columns)
     """
     # Construct declaration statement
     result = SouffleProgram(

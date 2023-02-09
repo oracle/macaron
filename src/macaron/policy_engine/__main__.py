@@ -12,6 +12,7 @@ import logging
 import os
 import sys
 import time
+from typing import Never
 
 from sqlalchemy import MetaData, create_engine
 
@@ -24,6 +25,7 @@ from macaron.policy_engine.souffle_code_generator import (
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
+LOG_FORMAT = "[%(levelname)s] %(message)s"
 
 
 class Config:
@@ -54,7 +56,7 @@ class Timer:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
         self.stop = time.perf_counter()
         self.delta = self.stop - self.start
-        print(self.name, f"delta: {self.delta:0.4f}")
+        logger.info("%s %s", self.name, f"delta: {self.delta:0.4f}")
 
 
 def get_generated(database_path: os.PathLike | str) -> SouffleProgram:
@@ -102,76 +104,62 @@ def copy_prelude(database_path: os.PathLike | str, sfl: SouffleWrapper, prelude:
             sfl.copy_to_includes(file_name, text)
 
 
-def policy_engine(config: type[Config], policy_file: str) -> dict:
+def policy_engine(database_path: str, policy_file: str) -> dict:
     """Invoke souffle and report result."""
     with SouffleWrapper() as sfl:
-        copy_prelude(config.database_path, sfl)
+        copy_prelude(database_path, sfl)
         with open(policy_file, encoding="utf-8") as file:
             text = file.read()
 
         try:
             res = sfl.interpret_text(text)
         except SouffleError as error:
-            print(error.command)
-            print(error.message)
+            logger.info("%s", error.command)
+            logger.info("%s", error.message)
             sys.exit(1)
 
         return res
 
 
-def interactive() -> None:
-    """Interactively evaluate a policy file, REPL."""
-    raise NotImplementedError()
-
-
-def non_interactive(config: Config = global_config) -> None:
+def non_interactive(database_path: str, show_prelude: bool, policy_file: str) -> bool:
     """Evaluate a policy based on configuration and exit."""
-    if config.policy_file:
+    if show_prelude:
+        prelude = get_generated(database_path)
+        logger.info("%s", prelude)
+        return False
 
-        if config.show_prelude:
-            prelude = get_generated(config.database_path)
-            print(prelude)
-            return
+    res = policy_engine(database_path, policy_file)
 
-        res = policy_engine(config, config.policy_file)  # type: ignore
+    for key, values in res.items():
+        logger.info("%s", key)
+        for value in values:
+            logger.info("    %s", value)
 
-        for key, values in res.items():
-            print(key)
-            for value in values:
-                print("    ", value)
-        return
-
-    raise ValueError("No policy file specified.")
+    return any(res["failed_policies"])
 
 
-def main() -> int:
+def main() -> Never:
     """Parse arguments and start policy engine."""
+    logging.basicConfig(format=LOG_FORMAT, handlers=[logging.StreamHandler()], force=True, level=logging.INFO)
+
     main_parser = argparse.ArgumentParser(prog="policy_engine")
     main_parser.add_argument("-d", "--database", help="Database path", required=True, action="store")
-    main_parser.add_argument("-i", "--interactive", help="Run in interactive mode", required=False, action="store_true")
-    main_parser.add_argument("-po", "--policy-id", help="The policy id to evaluate", required=False, action="store")
     main_parser.add_argument("-f", "--file", help="Replace policy file", required=False, action="store")
-    main_parser.add_argument("-s", "--show-preamble", help="Show preamble", required=False, action="store_true")
+    main_parser.add_argument("-s", "--show-prelude", help="Show policy prelude", required=False, action="store_true")
 
     args = main_parser.parse_args(sys.argv[1:])
 
-    global_config.database_path = args.database
+    database_path = args.database
+    policy_file = ""
+    show_prelude = False
 
-    if args.interactive:
-        global_config.interactive = args.interactive
-    if args.policy_id:
-        global_config.policy_id = args.policy_id
     if args.file:
-        global_config.policy_file = args.file
-    if args.show_preamble:
-        global_config.show_prelude = args.show_preamble
+        policy_file = args.file
+    if args.show_prelude:
+        show_prelude = args.show_prelude
 
-    if global_config.interactive:
-        interactive()
-    else:
-        non_interactive()
-
-    return 0
+    res = non_interactive(database_path, show_prelude, policy_file)
+    sys.exit(res)
 
 
 if __name__ == "__main__":

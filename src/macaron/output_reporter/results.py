@@ -311,10 +311,10 @@ class Report:
             if not record.context:
                 continue
             output += f"\n\nTARGET: {record.context.repo_full_name}"
-            if any(record.policies_failed):
-                output += "\n\tPOLICIES FAILED: " + ", ".join([f"{p.policy}" for p in record.policies_failed])
-            if any(record.policies_passed):
-                output += "\n\tPOLICIES PASSED: " + ", ".join([f"{p.policy}" for p in record.policies_passed])
+            output += "\n\tPOLICIES FAILED: "
+            output += ", ".join([f"{p.policy}" for p in record.policies_failed])
+            output += "\n\tPOLICIES PASSED: "
+            output += ", ".join([f"{p.policy}" for p in record.policies_passed])
             output += "\n"
 
         return output

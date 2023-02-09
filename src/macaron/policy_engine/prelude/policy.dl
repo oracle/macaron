@@ -57,6 +57,7 @@ failed_policies(policy_id) :-
 .decl passed_policies(policy_id: symbol)
 passed_policies(policy_id) :-
     Policy(policy_id, repo, msg),
+    policy_applies_to(policy_id, repo),
     // policy passes on all repos it applies to
     !failed_policies(policy_id).
 

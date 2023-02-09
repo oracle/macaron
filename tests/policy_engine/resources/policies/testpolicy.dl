@@ -31,8 +31,6 @@ apply_policy_to("trusted_builder", repo) :-
 apply_policy_to("aggregate_l4", repo) :-
     repository(repo,"slsa-framework/slsa-verifier",_,_,_,_,_).
 
-apply_policy_to("aggregate_l3", repo) :-
-    repository(repo,"micronaut_projects/micronaut-core",_,_,_,_,_).
 
 apply_policy_to("aggregate_l2", repo) :-
     repository(repo,_ ,_,_,_,_,_).
