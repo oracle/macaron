@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains classes to generate build call graphs for the target repository."""
@@ -7,11 +7,14 @@ from collections.abc import Iterable
 from typing import Generic, TypeVar
 
 Node = TypeVar("Node", bound="BaseNode")
-"""This binds type ``Node`` to ``BaseNode`` and any of its subclasses.
+# The documentation below for `TypeVar` is commented out due to a breaking
+# change in Sphinx version (^=6.1.0).
+# Reported at: https://github.com/oracle-samples/macaron/issues/58.
+# """This binds type ``Node`` to ``BaseNode`` and any of its subclasses.
 
-Therefore, any node of type ``Node`` that is stored in the call graph
-container will be a subtype of ``BaseNode``.
-"""
+# Therefore, any node of type ``Node`` that is stored in the call graph
+# container will be a subtype of ``BaseNode``.
+# """
 
 
 class BaseNode(Generic[Node]):
