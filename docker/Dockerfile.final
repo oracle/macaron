@@ -38,9 +38,15 @@ RUN mkdir -p $BUILD_DIR/python && \
 # the runtime library (i.e openssl, git and jdk11) and the Python dependencies of Macaron.
 FROM container-registry.oracle.com/os/oraclelinux:9-slim
 
+# Build time ARG. This argument specifies the path of dist from the host machine.
+ARG DIST_PATH
+ARG WHEEL_PATH
+
 ENV HOME="/home/macaron" \
     INSTALL_DIR="/usr/local" \
     JAVA_HOME="/usr/lib/jvm/java-11-openjdk"
+
+ENV PACKAGE_PATH=$HOME/src/macaron
 
 # Append the path with the directory of the Python installation from the first
 # Docker build stage and the JAVA_HOME directory.
@@ -73,15 +79,15 @@ WORKDIR $HOME
 # the warning of not having correct ownership of /home/macaron is not raised.
 # TODO: resolve hardcoded file names.
 USER macaron:macaron
-COPY --chown=macaron:macaron ./artifact-ubuntu-latest-python-3.11/dist $HOME/dist
+COPY --chown=macaron:macaron $WHEEL_PATH $HOME/macaron.whl
 RUN /usr/local/bin/python3.11 -m venv --copies $HOME/.venv && \
     . .venv/bin/activate && \
-    pip install $HOME/dist/macaron-0.0.0-py3-none-any.whl && \
-    rm -rf $HOME/dist && \
+    pip install macaron.whl && \
+    rm -rf $HOME/macaron.whl && \
     deactivate
 
-COPY --chown=macaron:macaron ./src/macaron/resources $HOME/src/macaron/resources
-COPY --chown=macaron:macaron ./src/macaron/bin $HOME/src/macaron/bin
+COPY --chown=macaron:macaron $DIST_PATH/resources PACKAGE_PATH/resources
+COPY --chown=macaron:macaron $DIST_PATH/bin PACKAGE_PATH/bin
 
 COPY --chown=macaron:macaron docker/user.sh $HOME/user.sh
 
