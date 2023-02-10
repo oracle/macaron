@@ -86,8 +86,8 @@ RUN /usr/local/bin/python3.11 -m venv --copies $HOME/.venv && \
     rm -rf $HOME/macaron.whl && \
     deactivate
 
-COPY --chown=macaron:macaron $DIST_PATH/resources PACKAGE_PATH/resources
-COPY --chown=macaron:macaron $DIST_PATH/bin PACKAGE_PATH/bin
+COPY --chown=macaron:macaron $DIST_PATH/resources $PACKAGE_PATH/resources
+COPY --chown=macaron:macaron $DIST_PATH/bin $PACKAGE_PATH/bin
 
 COPY --chown=macaron:macaron docker/user.sh $HOME/user.sh
 
