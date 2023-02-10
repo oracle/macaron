@@ -41,6 +41,7 @@ FROM container-registry.oracle.com/os/oraclelinux:9-slim
 # Build time ARG. This argument specifies the path of dist from the host machine.
 ARG DIST_PATH
 ARG WHEEL_PATH
+ARG WHEEL_FILE_NAME
 
 ENV HOME="/home/macaron" \
     INSTALL_DIR="/usr/local" \
@@ -79,11 +80,11 @@ WORKDIR $HOME
 # the warning of not having correct ownership of /home/macaron is not raised.
 # TODO: resolve hardcoded file names.
 USER macaron:macaron
-COPY --chown=macaron:macaron $WHEEL_PATH $HOME/macaron.whl
+COPY --chown=macaron:macaron $WHEEL_PATH/$WHEEL_FILE_NAME $HOME/$WHEEL_FILE_NAME
 RUN /usr/local/bin/python3.11 -m venv --copies $HOME/.venv && \
     . .venv/bin/activate && \
-    pip install macaron.whl && \
-    rm -rf $HOME/macaron.whl && \
+    pip install $HOME/$WHEEL_FILE_NAME && \
+    rm -rf $HOME/$WHEEL_FILE_NAME && \
     deactivate
 
 COPY --chown=macaron:macaron $DIST_PATH/resources $PACKAGE_PATH/resources

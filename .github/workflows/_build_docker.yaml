@@ -65,6 +65,7 @@ jobs:
         # PARAMETERIZE THIS.
         build-args: |
           DIST_PATH=./download_artifact/artifact-ubuntu-latest-python-3.11/src/macaron
-          WHEEL_PATH=./download_artifact/artifact-ubuntu-latest-python-3.11/dist/macaron-0.0.0-py3-none-any.whl
+          WHEEL_PATH=./download_artifact/artifact-ubuntu-latest-python-3.11/dist/
+          WHEEL_FILE_NAME=macaron-0.0.0-py3-none-any.whl
         tags: ${{ inputs.image-tag }}
         file: docker/Dockerfile.final
