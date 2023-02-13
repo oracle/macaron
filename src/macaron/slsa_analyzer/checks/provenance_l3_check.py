@@ -23,6 +23,7 @@ from sqlalchemy.orm import relationship
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.database.database_manager import ORMBase
+from macaron.database.table_definitions import CheckFactsTable, RepositoryTable
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
@@ -31,7 +32,6 @@ from macaron.slsa_analyzer.git_url import get_repo_dir_name
 from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader, SLSAProvenanceError
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
-from macaron.slsa_analyzer.table_definitions import CheckFactsTable, RepositoryTable
 from macaron.util import get_if_exists
 
 logger: logging.Logger = logging.getLogger(__name__)

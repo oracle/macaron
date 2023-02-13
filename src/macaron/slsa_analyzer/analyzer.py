@@ -25,6 +25,7 @@ from macaron.dependency_analyzer import (
     DependencyInfo,
     NoneDependencyAnalyzer,
 )
+from macaron.database.table_definitions import RepositoryDependency
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.policy_engine.policy_registry import PolicyRegistry
@@ -43,7 +44,6 @@ from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
-from macaron.slsa_analyzer.table_definitions import RepositoryDependency
 
 logger: logging.Logger = logging.getLogger(__name__)
 

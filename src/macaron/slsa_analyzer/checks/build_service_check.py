@@ -10,6 +10,7 @@ from sqlalchemy import Column
 from sqlalchemy.sql.sqltypes import String
 
 from macaron.database.database_manager import ORMBase
+from macaron.database.table_definitions import CheckFactsTable
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, NoneBuildTool
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
@@ -21,7 +22,6 @@ from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
-from macaron.slsa_analyzer.table_definitions import CheckFactsTable
 
 logger: logging.Logger = logging.getLogger(__name__)
 

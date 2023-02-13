@@ -14,6 +14,7 @@ from pydriller.git import Git
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
 
 from macaron.database.database_manager import ORMBase
+from macaron.database.table_definitions import RepositoryTable, SLSALevelTable
 from macaron.policy_engine.policy import Policy
 from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
@@ -23,7 +24,6 @@ from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReq, get_requirements_dict
 from macaron.slsa_analyzer.specs.build_spec import BuildSpec
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.table_definitions import RepositoryTable, SLSALevelTable
 
 logger: logging.Logger = logging.getLogger(__name__)
 
