@@ -86,8 +86,9 @@ aggregate_level_min_dependency_level(level, repo) :-
     is_repo(repo, _),
     dependency(repo, dep),
     aggregate_level(level, dep).
+
 aggregate_level_min_dependency_level(level, repo) <= aggregate_level_min_dependency_level(smaller_level, repo) :-
-    smaller_level <= level.
+    smaller_level < level.
 
 
 /**
