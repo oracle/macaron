@@ -12,9 +12,11 @@ import logging
 import os
 import sys
 import time
+import traceback
 from typing import Never
 
 from sqlalchemy import MetaData, create_engine
+from sqlalchemy.exc import SQLAlchemyError
 
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
 from macaron.policy_engine.souffle_code_generator import (
@@ -25,7 +27,6 @@ from macaron.policy_engine.souffle_code_generator import (
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
-LOG_FORMAT = "[%(levelname)s] %(message)s"
 
 
 class Config:
@@ -56,14 +57,18 @@ class Timer:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
         self.stop = time.perf_counter()
         self.delta = self.stop - self.start
-        logger.info("%s %s", self.name, f"delta: {self.delta:0.4f}")
+        logger.debug("%s delta: %s", self.name, f"{self.delta:0.4f}")
 
 
 def get_generated(database_path: os.PathLike | str) -> SouffleProgram:
     """Get generated souffle code from database specified by configuration."""
     metadata = MetaData()
-    engine = create_engine(f"sqlite:///{database_path}", echo=False)
-    metadata.reflect(engine)
+    try:
+        engine = create_engine(f"sqlite:///{database_path}", echo=False)
+        metadata.reflect(engine)
+    except SQLAlchemyError:
+        logger.error("Unable to open database %s", traceback.format_exc())
+        sys.exit(1)
 
     prelude = get_souffle_import_prelude(os.path.abspath(database_path), metadata)
 
@@ -114,8 +119,8 @@ def policy_engine(database_path: str, policy_file: str) -> dict:
         try:
             res = sfl.interpret_text(text)
         except SouffleError as error:
-            logger.info("%s", error.command)
-            logger.info("%s", error.message)
+            logger.error("COMMAND: %s", error.command)
+            logger.error("ERROR: %s", error.message)
             sys.exit(1)
 
         return res
@@ -125,29 +130,39 @@ def non_interactive(database_path: str, show_prelude: bool, policy_file: str) ->
     """Evaluate a policy based on configuration and exit."""
     if show_prelude:
         prelude = get_generated(database_path)
-        logger.info("%s", prelude)
+        logger.info("\n%s", prelude)
         return False
 
     res = policy_engine(database_path, policy_file)
 
+    output = []
     for key, values in res.items():
-        logger.info("%s", key)
+        output.append(str(key))
         for value in values:
-            logger.info("    %s", value)
+            output.append(f"    {value}")
+
+    logger.info("Policy results:\n%s", "\n".join(output))
 
     return any(res["failed_policies"])
 
 
 def main() -> Never:
     """Parse arguments and start policy engine."""
-    logging.basicConfig(format=LOG_FORMAT, handlers=[logging.StreamHandler()], force=True, level=logging.INFO)
-
     main_parser = argparse.ArgumentParser(prog="policy_engine")
     main_parser.add_argument("-d", "--database", help="Database path", required=True, action="store")
     main_parser.add_argument("-f", "--file", help="Replace policy file", required=False, action="store")
     main_parser.add_argument("-s", "--show-prelude", help="Show policy prelude", required=False, action="store_true")
+    main_parser.add_argument("-v", "--verbose", help="Enable verbose logging", required=False, action="store_true")
 
     args = main_parser.parse_args(sys.argv[1:])
+
+    if args.verbose:
+        log_level = logging.DEBUG
+        log_format = "%(asctime)s [%(name)s:%(funcName)s:%(lineno)d] [%(levelname)s] %(message)s"
+    else:
+        log_level = logging.INFO
+        log_format = "%(asctime)s [%(levelname)s] %(message)s"
+    logging.basicConfig(format=log_format, handlers=[logging.StreamHandler()], force=True, level=log_level)
 
     database_path = args.database
     policy_file = ""

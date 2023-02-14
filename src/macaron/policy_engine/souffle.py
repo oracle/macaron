@@ -107,7 +107,7 @@ class SouffleWrapper:
             f"--fact-dir={self.fact_dir}",
             f"--library-dir={self.library_dir}",
         ] + additional_args
-        logger.info("Executing souffle: %s", " ".join(cmd))
+        logger.debug("Executing souffle: %s", " ".join(cmd))
         result = subprocess.run(cmd, shell=False, capture_output=True, cwd=self.temp_dir, check=False)  # nosec B603
         # Souffle doesn't exit with non-zero when the datalog program contains errors, but check anyway
         self.souffle_stderr = result.stderr.decode("utf-8")
