@@ -153,6 +153,7 @@ def main() -> Never:
     main_parser.add_argument("-f", "--file", help="Replace policy file", required=False, action="store")
     main_parser.add_argument("-s", "--show-prelude", help="Show policy prelude", required=False, action="store_true")
     main_parser.add_argument("-v", "--verbose", help="Enable verbose logging", required=False, action="store_true")
+    main_parser.add_argument("-l", "--log-path", help="Log file path", required=False, action="store")
 
     args = main_parser.parse_args(sys.argv[1:])
 
@@ -163,6 +164,13 @@ def main() -> Never:
         log_level = logging.INFO
         log_format = "%(asctime)s [%(levelname)s] %(message)s"
     logging.basicConfig(format=log_format, handlers=[logging.StreamHandler()], force=True, level=log_level)
+
+    if args.log_path:
+        debug_log_path = os.path.abspath(args.log_path)
+        log_file_handler = logging.FileHandler(debug_log_path, "w")
+        log_file_handler.setFormatter(logging.Formatter(log_format))
+        logging.getLogger().addHandler(log_file_handler)
+        logger.info("The log file of the policy engine be stored in %s", debug_log_path)
 
     database_path = args.database
     policy_file = ""

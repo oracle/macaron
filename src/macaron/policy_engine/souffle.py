@@ -111,6 +111,8 @@ class SouffleWrapper:
         result = subprocess.run(cmd, shell=False, capture_output=True, cwd=self.temp_dir, check=False)  # nosec B603
         # Souffle doesn't exit with non-zero when the datalog program contains errors, but check anyway
         self.souffle_stderr = result.stderr.decode("utf-8")
+        logger.debug("Souffle stdout: \n%s", result.stdout.decode("utf-8"))
+        logger.debug("Souffle stderr: \n%s", result.stderr.decode("utf-8"))
         if result.returncode != 0:
             raise SouffleError(message=self.souffle_stderr, command=cmd)
         if len(result.stderr) > 0:
