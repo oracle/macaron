@@ -45,14 +45,20 @@ class SouffleWrapper:
 
     """
 
+    # The Souffle command
     _souffle: str
+    # The directory to store outputted facts in
     output_dir: str
+    # The directory for Souffle to search for datalog files in when using #include
     include_dir: str
+    # The directory for Souffle to load facts from
     fact_dir: str
+    # The directory to link Souffle functor shared libraries from
     library_dir: str
     souffle_stdout: Optional[str]
     souffle_stderr: Optional[str]
 
+    # The temporary file to store the datalog program in when executing from the temporary directory
     TEMP_SOURCEFILE_NAME = "source.dl"
 
     def __init__(

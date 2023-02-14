@@ -203,8 +203,8 @@ class Analyzer:
         for record in report.get_records():
             if record.context:
                 passed, failed = self.policies.get_souffle_results(repo_id=record.context.repository_table.id)
-                record.policies_passed += passed
-                record.policies_failed += failed
+                record.policies_passed += [x.policy for x in passed]
+                record.policies_failed += [x.policy for x in failed]
 
         _, failed_policies = self.policies.get_souffle_results()
         for policy in failed_policies:

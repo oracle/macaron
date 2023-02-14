@@ -158,18 +158,18 @@ class SoufflePolicy:
         The full text content of the policy
     sha: str
         The sha256 sum digest for the policy text
-    _failed:
-        The list of repositories, policy pairs failing
-    _passed:
-        The list of repository, policy pairs passing
+
 
     """
 
     text: str
     sha: str
     filename: str
+    # The result returned by souffle
     _result: dict | None
+    # The list of repository, policy pairs failing
     _failed: list["SoufflePolicy.PolicyResult"]
+    # The list of repository, policy pairs passing
     _passed: list["SoufflePolicy.PolicyResult"]
 
     class PolicyResult(NamedTuple):

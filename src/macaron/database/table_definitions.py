@@ -11,6 +11,9 @@ from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import declarative_mixin, declared_attr
 
 from macaron.database.database_manager import ORMBase
+from macaron.database.rfc3339_datetime import RFC3339DateTime
+
+# TODO: Use GUIDs as primary keys rather than incremental
 
 ################################################################################
 # Analyzer
@@ -45,7 +48,7 @@ class AnalysisTable(ORMBase):
 
     __tablename__ = "_analysis"
     id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    analysis_time = Column(String, nullable=False)
+    analysis_time = Column(RFC3339DateTime, nullable=False)
     repository = Column(Integer, ForeignKey("_repository.id"), nullable=False)
     macaron_version = Column(String, nullable=False)
 

@@ -95,7 +95,9 @@ class PolicyRegistry:
         self.evaluated = True
         return fail_results
 
-    def get_souffle_results(self, repo_id: Optional[int] = None) -> tuple[list[Any], list[Any]]:
+    def get_souffle_results(
+        self, repo_id: Optional[int] = None
+    ) -> tuple[list[SoufflePolicy.PolicyResult], list[SoufflePolicy.PolicyResult]]:
         """
         Return the passing and failing policy results for all known souffle policies.
 

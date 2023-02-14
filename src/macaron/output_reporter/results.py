@@ -73,8 +73,11 @@ class Record(Generic[RecordNode]):
         The context instance for this repo.
     dependencies : list[RecordNode]
         The list of Records for the analyzed dependencies of this repo.
-    policy_violation: bool
-        The verification status of this record
+
+    policies_passed: list[str]
+        The list of policy IDs that this repository failed.
+    policies_failed: list[str]
+        The list of policy IDs that this repository failed.
 
     See Also
     --------
@@ -87,8 +90,8 @@ class Record(Generic[RecordNode]):
     description: str
     pre_config: Configuration
     status: SCMStatus
-    policies_passed: list
-    policies_failed: list
+    policies_passed: list[str]
+    policies_failed: list[str]
     context: AnalyzeContext | None = field(default=None)
     dependencies: list[RecordNode] = field(default_factory=list)
 
@@ -312,9 +315,9 @@ class Report:
                 continue
             output += f"\n\nTARGET: {record.context.repo_full_name}"
             output += "\n\tPOLICIES FAILED: "
-            output += ", ".join([f"{p.policy}" for p in record.policies_failed])
+            output += ", ".join(record.policies_failed)
             output += "\n\tPOLICIES PASSED: "
-            output += ", ".join([f"{p.policy}" for p in record.policies_passed])
+            output += ", ".join(record.policies_passed)
             output += "\n"
 
         return output

@@ -14,14 +14,14 @@
 <polygon fill="none" stroke="black" points="295,-1628 295,-1656 487,-1656 487,-1628 295,-1628"/>
 <text text-anchor="start" x="354.5" y="-1639.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">_analysis</text>
 <polygon fill="none" stroke="black" points="295,-1603 295,-1628 487,-1628 487,-1603 295,-1603"/>
-<text text-anchor="start" x="300" y="-1612.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
-<text text-anchor="start" x="360" y="-1612.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="300" y="-1612.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
+<text text-anchor="start" x="311" y="-1612.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="295,-1578 295,-1603 487,-1603 487,-1578 295,-1578"/>
-<text text-anchor="start" x="300" y="-1587.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
-<text text-anchor="start" x="311" y="-1587.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="300" y="-1587.8" font-family="Helvetica,sans-Serif" font-size="14.00">macaron_version</text>
+<text text-anchor="start" x="405" y="-1587.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="295,-1553 295,-1578 487,-1578 487,-1553 295,-1553"/>
-<text text-anchor="start" x="300" y="-1562.8" font-family="Helvetica,sans-Serif" font-size="14.00">macaron_version</text>
-<text text-anchor="start" x="405" y="-1562.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="300" y="-1562.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
+<text text-anchor="start" x="360" y="-1562.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="295,-1528 295,-1553 487,-1553 487,-1528 295,-1528"/>
 <text text-anchor="start" x="300" y="-1537.8" font-family="Helvetica,sans-Serif" font-size="14.00">analysis_time</text>
 <text text-anchor="start" x="383" y="-1537.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
@@ -51,26 +51,26 @@
 <polygon fill="none" stroke="black" points="8.5,-761 8.5,-789 179.5,-789 179.5,-761 8.5,-761"/>
 <text text-anchor="start" x="50" y="-772.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">_repository</text>
 <polygon fill="none" stroke="black" points="8.5,-736 8.5,-761 179.5,-761 179.5,-736 8.5,-736"/>
-<text text-anchor="start" x="13.5" y="-745.8" font-family="Helvetica,sans-Serif" font-size="14.00">branch_name</text>
-<text text-anchor="start" x="97.5" y="-745.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="13.5" y="-745.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
+<text text-anchor="start" x="24.5" y="-745.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="8.5,-711 8.5,-736 179.5,-736 179.5,-711 8.5,-711"/>
-<text text-anchor="start" x="13.5" y="-720.8" font-family="Helvetica,sans-Serif" font-size="14.00">commit_sha</text>
-<text text-anchor="start" x="88.5" y="-720.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="13.5" y="-720.8" font-family="Helvetica,sans-Serif" font-size="14.00">remote_path</text>
+<text text-anchor="start" x="90.5" y="-720.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="8.5,-686 8.5,-711 179.5,-711 179.5,-686 8.5,-686"/>
-<text text-anchor="start" x="13.5" y="-695.8" font-family="Helvetica,sans-Serif" font-size="14.00">release_tag</text>
-<text text-anchor="start" x="84.5" y="-695.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="13.5" y="-695.8" font-family="Helvetica,sans-Serif" font-size="14.00">commit_date</text>
+<text text-anchor="start" x="92.5" y="-695.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="8.5,-661 8.5,-686 179.5,-686 179.5,-661 8.5,-661"/>
-<text text-anchor="start" x="13.5" y="-670.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
-<text text-anchor="start" x="24.5" y="-670.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="13.5" y="-670.8" font-family="Helvetica,sans-Serif" font-size="14.00">full_name</text>
+<text text-anchor="start" x="73.5" y="-670.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="8.5,-636 8.5,-661 179.5,-661 179.5,-636 8.5,-636"/>
-<text text-anchor="start" x="13.5" y="-645.8" font-family="Helvetica,sans-Serif" font-size="14.00">full_name</text>
-<text text-anchor="start" x="73.5" y="-645.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="13.5" y="-645.8" font-family="Helvetica,sans-Serif" font-size="14.00">commit_sha</text>
+<text text-anchor="start" x="88.5" y="-645.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="8.5,-611 8.5,-636 179.5,-636 179.5,-611 8.5,-611"/>
-<text text-anchor="start" x="13.5" y="-620.8" font-family="Helvetica,sans-Serif" font-size="14.00">commit_date</text>
-<text text-anchor="start" x="92.5" y="-620.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="13.5" y="-620.8" font-family="Helvetica,sans-Serif" font-size="14.00">branch_name</text>
+<text text-anchor="start" x="97.5" y="-620.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="8.5,-586 8.5,-611 179.5,-611 179.5,-586 8.5,-586"/>
-<text text-anchor="start" x="13.5" y="-595.8" font-family="Helvetica,sans-Serif" font-size="14.00">remote_path</text>
-<text text-anchor="start" x="90.5" y="-595.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="13.5" y="-595.8" font-family="Helvetica,sans-Serif" font-size="14.00">release_tag</text>
+<text text-anchor="start" x="84.5" y="-595.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 </g>
 <!-- _repository&#45;&#45;_analysis -->
 <g id="edge2" class="edge">
@@ -92,32 +92,32 @@
 <polygon fill="none" stroke="black" points="268,-1442 268,-1470 514,-1470 514,-1442 268,-1442"/>
 <text text-anchor="start" x="341" y="-1453.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">_provenance</text>
 <polygon fill="none" stroke="black" points="268,-1417 268,-1442 514,-1442 514,-1417 268,-1417"/>
-<text text-anchor="start" x="273" y="-1426.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_type</text>
-<text text-anchor="start" x="335" y="-1426.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="273" y="-1426.8" font-family="Helvetica,sans-Serif" font-size="14.00">config_source_entry_point</text>
+<text text-anchor="start" x="432" y="-1426.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="268,-1392 268,-1417 514,-1417 514,-1392 268,-1392"/>
-<text text-anchor="start" x="273" y="-1401.8" font-family="Helvetica,sans-Serif" font-size="14.00">config_source_uri</text>
-<text text-anchor="start" x="380" y="-1401.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="273" y="-1401.8" font-family="Helvetica,sans-Serif" font-size="14.00">provenance_json</text>
+<text text-anchor="start" x="376" y="-1401.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="268,-1367 268,-1392 514,-1392 514,-1367 268,-1367"/>
-<text text-anchor="start" x="273" y="-1376.8" font-family="Helvetica,sans-Serif" font-size="14.00">release_tag</text>
-<text text-anchor="start" x="344" y="-1376.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="273" y="-1376.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
+<text text-anchor="start" x="284" y="-1376.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="268,-1342 268,-1367 514,-1367 514,-1342 268,-1342"/>
-<text text-anchor="start" x="273" y="-1351.8" font-family="Helvetica,sans-Serif" font-size="14.00">release_commit_sha</text>
-<text text-anchor="start" x="400" y="-1351.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="273" y="-1351.8" font-family="Helvetica,sans-Serif" font-size="14.00">builder_id</text>
+<text text-anchor="start" x="332" y="-1351.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="268,-1317 268,-1342 514,-1342 514,-1317 268,-1317"/>
-<text text-anchor="start" x="273" y="-1326.8" font-family="Helvetica,sans-Serif" font-size="14.00">builder_id</text>
-<text text-anchor="start" x="332" y="-1326.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="273" y="-1326.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_type</text>
+<text text-anchor="start" x="335" y="-1326.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="268,-1292 268,-1317 514,-1317 514,-1292 268,-1292"/>
-<text text-anchor="start" x="273" y="-1301.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
-<text text-anchor="start" x="333" y="-1301.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="273" y="-1301.8" font-family="Helvetica,sans-Serif" font-size="14.00">config_source_uri</text>
+<text text-anchor="start" x="380" y="-1301.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="268,-1267 268,-1292 514,-1292 514,-1267 268,-1267"/>
-<text text-anchor="start" x="273" y="-1276.8" font-family="Helvetica,sans-Serif" font-size="14.00">config_source_entry_point</text>
-<text text-anchor="start" x="432" y="-1276.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="273" y="-1276.8" font-family="Helvetica,sans-Serif" font-size="14.00">release_tag</text>
+<text text-anchor="start" x="344" y="-1276.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="268,-1242 268,-1267 514,-1267 514,-1242 268,-1242"/>
-<text text-anchor="start" x="273" y="-1251.8" font-family="Helvetica,sans-Serif" font-size="14.00">provenance_json</text>
-<text text-anchor="start" x="376" y="-1251.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="273" y="-1251.8" font-family="Helvetica,sans-Serif" font-size="14.00">release_commit_sha</text>
+<text text-anchor="start" x="400" y="-1251.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="268,-1217 268,-1242 514,-1242 514,-1217 268,-1217"/>
-<text text-anchor="start" x="273" y="-1226.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
-<text text-anchor="start" x="284" y="-1226.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="273" y="-1226.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
+<text text-anchor="start" x="333" y="-1226.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 </g>
 <!-- _repository&#45;&#45;_provenance -->
 <g id="edge3" class="edge">
@@ -141,20 +141,20 @@
 <text text-anchor="start" x="631" y="-1264.8" font-family="Helvetica,sans-Serif" font-size="14.00">ci_service_name</text>
 <text text-anchor="start" x="734" y="-1264.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="626,-1230 626,-1255 822,-1255 822,-1230 626,-1230"/>
-<text text-anchor="start" x="631" y="-1239.8" font-family="Helvetica,sans-Serif" font-size="14.00">deploy_command</text>
-<text text-anchor="start" x="740" y="-1239.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="631" y="-1239.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_status_url</text>
+<text text-anchor="start" x="726" y="-1239.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="626,-1205 626,-1230 822,-1230 822,-1205 626,-1205"/>
-<text text-anchor="start" x="631" y="-1214.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_status_url</text>
-<text text-anchor="start" x="726" y="-1214.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="631" y="-1214.8" font-family="Helvetica,sans-Serif" font-size="14.00">deploy_command</text>
+<text text-anchor="start" x="740" y="-1214.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="626,-1180 626,-1205 822,-1205 822,-1180 626,-1180"/>
 <text text-anchor="start" x="631" y="-1189.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_trigger</text>
 <text text-anchor="start" x="706" y="-1189.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="626,-1155 626,-1180 822,-1180 822,-1155 626,-1155"/>
-<text text-anchor="start" x="631" y="-1164.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
-<text text-anchor="start" x="642" y="-1164.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="631" y="-1164.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
+<text text-anchor="start" x="707" y="-1164.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="626,-1130 626,-1155 822,-1155 822,-1130 626,-1130"/>
-<text text-anchor="start" x="631" y="-1139.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
-<text text-anchor="start" x="707" y="-1139.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="631" y="-1139.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
+<text text-anchor="start" x="642" y="-1139.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 </g>
 <!-- _repository&#45;&#45;_build_as_code_check -->
 <g id="edge4" class="edge">
@@ -169,17 +169,17 @@
 <polygon fill="none" stroke="black" points="320,-736 320,-764 463,-764 463,-736 320,-736"/>
 <text text-anchor="start" x="337.5" y="-747.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">_check_result</text>
 <polygon fill="none" stroke="black" points="320,-711 320,-736 463,-736 463,-711 320,-711"/>
-<text text-anchor="start" x="325" y="-720.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
-<text text-anchor="start" x="336" y="-720.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="325" y="-720.8" font-family="Helvetica,sans-Serif" font-size="14.00">skipped</text>
+<text text-anchor="start" x="372" y="-720.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [BOOLEAN]</text>
 <polygon fill="none" stroke="black" points="320,-686 320,-711 463,-711 463,-686 320,-686"/>
-<text text-anchor="start" x="325" y="-695.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
-<text text-anchor="start" x="385" y="-695.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="325" y="-695.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
+<text text-anchor="start" x="336" y="-695.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="320,-661 320,-686 463,-686 463,-661 320,-661"/>
-<text text-anchor="start" x="325" y="-670.8" font-family="Helvetica,sans-Serif" font-size="14.00">passed</text>
-<text text-anchor="start" x="369" y="-670.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [BOOLEAN]</text>
+<text text-anchor="start" x="325" y="-670.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
+<text text-anchor="start" x="385" y="-670.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="320,-636 320,-661 463,-661 463,-636 320,-636"/>
-<text text-anchor="start" x="325" y="-645.8" font-family="Helvetica,sans-Serif" font-size="14.00">skipped</text>
-<text text-anchor="start" x="372" y="-645.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [BOOLEAN]</text>
+<text text-anchor="start" x="325" y="-645.8" font-family="Helvetica,sans-Serif" font-size="14.00">passed</text>
+<text text-anchor="start" x="369" y="-645.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [BOOLEAN]</text>
 <polygon fill="none" stroke="black" points="320,-611 320,-636 463,-636 463,-611 320,-611"/>
 <text text-anchor="start" x="325" y="-620.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_id</text>
 <text text-anchor="start" x="379" y="-620.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
@@ -200,14 +200,14 @@
 <text text-anchor="start" x="636" y="-1060.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_tool_name</text>
 <text text-anchor="start" x="736" y="-1060.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="631,-1026 631,-1051 818,-1051 818,-1026 631,-1026"/>
-<text text-anchor="start" x="636" y="-1035.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
-<text text-anchor="start" x="712" y="-1035.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="636" y="-1035.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
+<text text-anchor="start" x="696" y="-1035.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="631,-1001 631,-1026 818,-1026 818,-1001 631,-1001"/>
-<text text-anchor="start" x="636" y="-1010.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
-<text text-anchor="start" x="647" y="-1010.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="636" y="-1010.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
+<text text-anchor="start" x="712" y="-1010.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="631,-976 631,-1001 818,-1001 818,-976 631,-976"/>
-<text text-anchor="start" x="636" y="-985.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
-<text text-anchor="start" x="696" y="-985.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="636" y="-985.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
+<text text-anchor="start" x="647" y="-985.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 </g>
 <!-- _repository&#45;&#45;_build_script_check -->
 <g id="edge6" class="edge">
@@ -222,23 +222,23 @@
 <polygon fill="none" stroke="black" points="629,-742 629,-770 819,-770 819,-742 629,-742"/>
 <text text-anchor="start" x="640.5" y="-753.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">_build_service_check</text>
 <polygon fill="none" stroke="black" points="629,-717 629,-742 819,-742 819,-717 629,-717"/>
-<text text-anchor="start" x="634" y="-726.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
-<text text-anchor="start" x="694" y="-726.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="634" y="-726.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
+<text text-anchor="start" x="710" y="-726.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="629,-692 629,-717 819,-717 819,-692 629,-692"/>
-<text text-anchor="start" x="634" y="-701.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
-<text text-anchor="start" x="645" y="-701.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="634" y="-701.8" font-family="Helvetica,sans-Serif" font-size="14.00">ci_service_name</text>
+<text text-anchor="start" x="737" y="-701.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="629,-667 629,-692 819,-692 819,-667 629,-667"/>
-<text text-anchor="start" x="634" y="-676.8" font-family="Helvetica,sans-Serif" font-size="14.00">ci_service_name</text>
-<text text-anchor="start" x="737" y="-676.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="634" y="-676.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_trigger</text>
+<text text-anchor="start" x="709" y="-676.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="629,-642 629,-667 819,-667 819,-642 629,-642"/>
-<text text-anchor="start" x="634" y="-651.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_tool_name</text>
-<text text-anchor="start" x="734" y="-651.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="634" y="-651.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
+<text text-anchor="start" x="694" y="-651.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="629,-617 629,-642 819,-642 819,-617 629,-617"/>
-<text text-anchor="start" x="634" y="-626.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_trigger</text>
-<text text-anchor="start" x="709" y="-626.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="634" y="-626.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_tool_name</text>
+<text text-anchor="start" x="734" y="-626.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="629,-592 629,-617 819,-617 819,-592 629,-592"/>
-<text text-anchor="start" x="634" y="-601.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
-<text text-anchor="start" x="710" y="-601.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="634" y="-601.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
+<text text-anchor="start" x="645" y="-601.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 </g>
 <!-- _repository&#45;&#45;_build_service_check -->
 <g id="edge7" class="edge">
@@ -253,11 +253,11 @@
 <polygon fill="none" stroke="black" points="279,-405 279,-433 503,-433 503,-405 279,-405"/>
 <text text-anchor="start" x="339.5" y="-416.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">_dependency</text>
 <polygon fill="none" stroke="black" points="279,-380 279,-405 503,-405 503,-380 279,-380"/>
-<text text-anchor="start" x="284" y="-389.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">dependency_repository</text>
-<text text-anchor="start" x="425" y="-389.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="284" y="-389.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">dependent_repository</text>
+<text text-anchor="start" x="415" y="-389.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="279,-355 279,-380 503,-380 503,-355 279,-355"/>
-<text text-anchor="start" x="284" y="-364.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">dependent_repository</text>
-<text text-anchor="start" x="415" y="-364.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="284" y="-364.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">dependency_repository</text>
+<text text-anchor="start" x="425" y="-364.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 </g>
 <!-- _repository&#45;&#45;_dependency -->
 <g id="edge8" class="edge">
@@ -282,26 +282,26 @@
 <text text-anchor="start" x="650" y="-522.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
 <text text-anchor="start" x="661" y="-522.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="645,-488 645,-513 804,-513 804,-488 645,-488"/>
-<text text-anchor="start" x="650" y="-497.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
-<text text-anchor="start" x="726" y="-497.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="650" y="-497.8" font-family="Helvetica,sans-Serif" font-size="14.00">policy_type</text>
+<text text-anchor="start" x="718" y="-497.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="645,-463 645,-488 804,-488 804,-463 645,-463"/>
-<text text-anchor="start" x="650" y="-472.8" font-family="Helvetica,sans-Serif" font-size="14.00">policy_id</text>
-<text text-anchor="start" x="703" y="-472.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="650" y="-472.8" font-family="Helvetica,sans-Serif" font-size="14.00">text</text>
+<text text-anchor="start" x="672" y="-472.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="645,-438 645,-463 804,-463 804,-438 645,-438"/>
-<text text-anchor="start" x="650" y="-447.8" font-family="Helvetica,sans-Serif" font-size="14.00">policy_type</text>
-<text text-anchor="start" x="718" y="-447.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="650" y="-447.8" font-family="Helvetica,sans-Serif" font-size="14.00">policy_id</text>
+<text text-anchor="start" x="703" y="-447.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="645,-413 645,-438 804,-438 804,-413 645,-413"/>
-<text text-anchor="start" x="650" y="-422.8" font-family="Helvetica,sans-Serif" font-size="14.00">description</text>
-<text text-anchor="start" x="716" y="-422.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="650" y="-422.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
+<text text-anchor="start" x="726" y="-422.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="645,-388 645,-413 804,-413 804,-388 645,-388"/>
-<text text-anchor="start" x="650" y="-397.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
-<text text-anchor="start" x="710" y="-397.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="650" y="-397.8" font-family="Helvetica,sans-Serif" font-size="14.00">sha</text>
+<text text-anchor="start" x="672" y="-397.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="645,-363 645,-388 804,-388 804,-363 645,-363"/>
-<text text-anchor="start" x="650" y="-372.8" font-family="Helvetica,sans-Serif" font-size="14.00">sha</text>
-<text text-anchor="start" x="672" y="-372.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="650" y="-372.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
+<text text-anchor="start" x="710" y="-372.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="645,-338 645,-363 804,-363 804,-338 645,-338"/>
-<text text-anchor="start" x="650" y="-347.8" font-family="Helvetica,sans-Serif" font-size="14.00">text</text>
-<text text-anchor="start" x="672" y="-347.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="650" y="-347.8" font-family="Helvetica,sans-Serif" font-size="14.00">description</text>
+<text text-anchor="start" x="716" y="-347.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 </g>
 <!-- _repository&#45;&#45;_policy -->
 <g id="edge10" class="edge">
@@ -316,20 +316,20 @@
 <polygon fill="none" stroke="black" points="603,-921 603,-949 845,-949 845,-921 603,-921"/>
 <text text-anchor="start" x="608" y="-932.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">_provenance_available_check</text>
 <polygon fill="none" stroke="black" points="603,-896 603,-921 845,-921 845,-896 603,-896"/>
-<text text-anchor="start" x="608" y="-905.8" font-family="Helvetica,sans-Serif" font-size="14.00">asset_name</text>
-<text text-anchor="start" x="683" y="-905.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="608" y="-905.8" font-family="Helvetica,sans-Serif" font-size="14.00">asset_url</text>
+<text text-anchor="start" x="663" y="-905.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="603,-871 603,-896 845,-896 845,-871 603,-871"/>
-<text text-anchor="start" x="608" y="-880.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
-<text text-anchor="start" x="668" y="-880.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="608" y="-880.8" font-family="Helvetica,sans-Serif" font-size="14.00">asset_name</text>
+<text text-anchor="start" x="683" y="-880.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="603,-846 603,-871 845,-871 845,-846 603,-846"/>
-<text text-anchor="start" x="608" y="-855.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
-<text text-anchor="start" x="619" y="-855.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="608" y="-855.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
+<text text-anchor="start" x="684" y="-855.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="603,-821 603,-846 845,-846 845,-821 603,-821"/>
-<text text-anchor="start" x="608" y="-830.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
-<text text-anchor="start" x="684" y="-830.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="608" y="-830.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
+<text text-anchor="start" x="668" y="-830.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="603,-796 603,-821 845,-821 845,-796 603,-796"/>
-<text text-anchor="start" x="608" y="-805.8" font-family="Helvetica,sans-Serif" font-size="14.00">asset_url</text>
-<text text-anchor="start" x="663" y="-805.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="608" y="-805.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
+<text text-anchor="start" x="619" y="-805.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 </g>
 <!-- _repository&#45;&#45;_provenance_available_check -->
 <g id="edge11" class="edge">
@@ -347,11 +347,11 @@
 <text text-anchor="start" x="636" y="-267.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
 <text text-anchor="start" x="712" y="-267.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="631,-233 631,-258 818,-258 818,-233 631,-233"/>
-<text text-anchor="start" x="636" y="-242.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
-<text text-anchor="start" x="696" y="-242.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="636" y="-242.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
+<text text-anchor="start" x="647" y="-242.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="631,-208 631,-233 818,-233 818,-208 631,-208"/>
-<text text-anchor="start" x="636" y="-217.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
-<text text-anchor="start" x="647" y="-217.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="636" y="-217.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
+<text text-anchor="start" x="696" y="-217.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 </g>
 <!-- _repository&#45;&#45;_provenance_l3_check -->
 <g id="edge12" class="edge">
@@ -369,11 +369,11 @@
 <text text-anchor="start" x="325" y="-284.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">repository</text>
 <text text-anchor="start" x="385" y="-284.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="320,-250 320,-275 463,-275 463,-250 320,-250"/>
-<text text-anchor="start" x="325" y="-259.8" font-family="Helvetica,sans-Serif" font-size="14.00">reached</text>
-<text text-anchor="start" x="374" y="-259.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [BOOLEAN]</text>
+<text text-anchor="start" x="325" y="-259.8" font-family="Helvetica,sans-Serif" font-size="14.00">slsa_level</text>
+<text text-anchor="start" x="385" y="-259.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="320,-225 320,-250 463,-250 463,-225 320,-225"/>
-<text text-anchor="start" x="325" y="-234.8" font-family="Helvetica,sans-Serif" font-size="14.00">slsa_level</text>
-<text text-anchor="start" x="385" y="-234.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="325" y="-234.8" font-family="Helvetica,sans-Serif" font-size="14.00">reached</text>
+<text text-anchor="start" x="374" y="-234.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [BOOLEAN]</text>
 </g>
 <!-- _repository&#45;&#45;_slsa_level -->
 <g id="edge14" class="edge">
@@ -388,17 +388,17 @@
 <polygon fill="none" stroke="black" points="290,-171 290,-199 492,-199 492,-171 290,-171"/>
 <text text-anchor="start" x="320" y="-182.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">_slsa_requirement</text>
 <polygon fill="none" stroke="black" points="290,-146 290,-171 492,-171 492,-146 290,-146"/>
-<text text-anchor="start" x="295" y="-155.8" font-family="Helvetica,sans-Serif" font-size="14.00">requirement_name</text>
-<text text-anchor="start" x="410" y="-155.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="295" y="-155.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">requirement</text>
+<text text-anchor="start" x="368" y="-155.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="290,-121 290,-146 492,-146 492,-121 290,-121"/>
-<text text-anchor="start" x="295" y="-130.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">requirement</text>
-<text text-anchor="start" x="368" y="-130.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="295" y="-130.8" font-family="Helvetica,sans-Serif" font-size="14.00">feedback</text>
+<text text-anchor="start" x="350" y="-130.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="290,-96 290,-121 492,-121 492,-96 290,-96"/>
 <text text-anchor="start" x="295" y="-105.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">repository</text>
 <text text-anchor="start" x="355" y="-105.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="290,-71 290,-96 492,-96 492,-71 290,-71"/>
-<text text-anchor="start" x="295" y="-80.8" font-family="Helvetica,sans-Serif" font-size="14.00">feedback</text>
-<text text-anchor="start" x="350" y="-80.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="295" y="-80.8" font-family="Helvetica,sans-Serif" font-size="14.00">requirement_name</text>
+<text text-anchor="start" x="410" y="-80.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 </g>
 <!-- _repository&#45;&#45;_slsa_requirement -->
 <g id="edge15" class="edge">
@@ -413,20 +413,20 @@
 <polygon fill="none" stroke="black" points="629,-154 629,-182 820,-182 820,-154 629,-154"/>
 <text text-anchor="start" x="634" y="-165.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">_trusted_builder_check</text>
 <polygon fill="none" stroke="black" points="629,-129 629,-154 820,-154 820,-129 629,-129"/>
-<text text-anchor="start" x="634" y="-138.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
-<text text-anchor="start" x="710" y="-138.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="634" y="-138.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_tool_name</text>
+<text text-anchor="start" x="734" y="-138.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="629,-104 629,-129 820,-129 820,-104 629,-104"/>
-<text text-anchor="start" x="634" y="-113.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
-<text text-anchor="start" x="694" y="-113.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="634" y="-113.8" font-family="Helvetica,sans-Serif" font-size="14.00">ci_service_name</text>
+<text text-anchor="start" x="737" y="-113.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="629,-79 629,-104 820,-104 820,-79 629,-79"/>
-<text text-anchor="start" x="634" y="-88.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
-<text text-anchor="start" x="645" y="-88.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="634" y="-88.8" font-family="Helvetica,sans-Serif" font-size="14.00">repository</text>
+<text text-anchor="start" x="694" y="-88.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="629,-54 629,-79 820,-79 820,-54 629,-54"/>
-<text text-anchor="start" x="634" y="-63.8" font-family="Helvetica,sans-Serif" font-size="14.00">ci_service_name</text>
-<text text-anchor="start" x="737" y="-63.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="634" y="-63.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
+<text text-anchor="start" x="645" y="-63.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="629,-29 629,-54 820,-54 820,-29 629,-29"/>
-<text text-anchor="start" x="634" y="-38.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_tool_name</text>
-<text text-anchor="start" x="734" y="-38.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="634" y="-38.8" font-family="Helvetica,sans-Serif" font-size="14.00">check_result</text>
+<text text-anchor="start" x="710" y="-38.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="629,-4 629,-29 820,-29 820,-4 629,-4"/>
 <text text-anchor="start" x="634" y="-13.8" font-family="Helvetica,sans-Serif" font-size="14.00">build_trigger</text>
 <text text-anchor="start" x="709" y="-13.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
@@ -444,17 +444,17 @@
 <polygon fill="none" stroke="black" points="638,-1614 638,-1642 810,-1642 810,-1614 638,-1614"/>
 <text text-anchor="start" x="643" y="-1625.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">_provenance_artifact</text>
 <polygon fill="none" stroke="black" points="638,-1589 638,-1614 810,-1614 810,-1589 638,-1589"/>
-<text text-anchor="start" x="643" y="-1598.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
-<text text-anchor="start" x="654" y="-1598.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="643" y="-1598.8" font-family="Helvetica,sans-Serif" font-size="14.00">provenance</text>
+<text text-anchor="start" x="714" y="-1598.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="638,-1564 638,-1589 810,-1589 810,-1564 638,-1564"/>
-<text text-anchor="start" x="643" y="-1573.8" font-family="Helvetica,sans-Serif" font-size="14.00">provenance</text>
-<text text-anchor="start" x="714" y="-1573.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="643" y="-1573.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
+<text text-anchor="start" x="654" y="-1573.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="638,-1539 638,-1564 810,-1564 810,-1539 638,-1539"/>
-<text text-anchor="start" x="643" y="-1548.8" font-family="Helvetica,sans-Serif" font-size="14.00">verified</text>
-<text text-anchor="start" x="687" y="-1548.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [BOOLEAN]</text>
+<text text-anchor="start" x="643" y="-1548.8" font-family="Helvetica,sans-Serif" font-size="14.00">name</text>
+<text text-anchor="start" x="678" y="-1548.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
 <polygon fill="none" stroke="black" points="638,-1514 638,-1539 810,-1539 810,-1514 638,-1514"/>
-<text text-anchor="start" x="643" y="-1523.8" font-family="Helvetica,sans-Serif" font-size="14.00">name</text>
-<text text-anchor="start" x="678" y="-1523.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [VARCHAR]</text>
+<text text-anchor="start" x="643" y="-1523.8" font-family="Helvetica,sans-Serif" font-size="14.00">verified</text>
+<text text-anchor="start" x="687" y="-1523.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [BOOLEAN]</text>
 </g>
 <!-- _provenance&#45;&#45;_provenance_artifact -->
 <g id="edge18" class="edge">
@@ -521,11 +521,11 @@
 <text text-anchor="start" x="939.5" y="-1462.8" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
 <text text-anchor="start" x="950.5" y="-1462.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="934.5,-1428 934.5,-1453 1063.5,-1453 1063.5,-1428 934.5,-1428"/>
-<text text-anchor="start" x="939.5" y="-1437.8" font-family="Helvetica,sans-Serif" font-size="14.00">artifact</text>
-<text text-anchor="start" x="980.5" y="-1437.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="939.5" y="-1437.8" font-family="Helvetica,sans-Serif" font-size="14.00">digest</text>
+<text text-anchor="start" x="976.5" y="-1437.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 <polygon fill="none" stroke="black" points="934.5,-1403 934.5,-1428 1063.5,-1428 1063.5,-1403 934.5,-1403"/>
-<text text-anchor="start" x="939.5" y="-1412.8" font-family="Helvetica,sans-Serif" font-size="14.00">digest</text>
-<text text-anchor="start" x="976.5" y="-1412.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
+<text text-anchor="start" x="939.5" y="-1412.8" font-family="Helvetica,sans-Serif" font-size="14.00">artifact</text>
+<text text-anchor="start" x="980.5" y="-1412.8" font-family="Helvetica,sans-Serif" font-size="14.00"> [INTEGER]</text>
 </g>
 <!-- _provenance_artifact&#45;&#45;_artifact_digest -->
 <g id="edge17" class="edge">

@@ -3,7 +3,7 @@
 
 """The database_store module contains the methods to store analysis results to the database."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from macaron import __version__
 from macaron.config.defaults import defaults
@@ -92,7 +92,7 @@ def store_analysis_to_db(db_man: DatabaseManager, main_record: Record) -> Analys
     db_man.create_tables()
 
     analysis = AnalysisTable(
-        analysis_time=datetime.now().isoformat(sep="T", timespec="seconds"),
+        analysis_time=datetime.now(tz=timezone.utc),
         macaron_version=__version__,
     )
     if main_record.context is not None:
