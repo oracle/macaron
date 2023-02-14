@@ -19,7 +19,7 @@ class PolicyRegistry:
     macaron_path: str
         The path to the macaron module
     policy_paths: list[str]
-        The list of policy file paths. all((os.isfile(path) for path in policy_paths)) must be true.
+        The list of policy file paths. ``all((os.isfile(path) for path in policy_paths))`` must be True.
     """
 
     policies: dict[str, Policy]
@@ -77,7 +77,7 @@ class PolicyRegistry:
             The path to the database file to evaluate the policy against
         restrict_to_analysis: int | None
             Optional, if is not None then restrict policy evaluation to the repositories associated with the analysis id
-            restrict_to_analysis.
+            ``restrict_to_analysis``.
 
         Return
         ------

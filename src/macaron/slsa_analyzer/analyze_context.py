@@ -11,9 +11,7 @@ import os
 from typing import TypedDict
 
 from pydriller.git import Git
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
 
-from macaron.database.database_manager import ORMBase
 from macaron.database.table_definitions import RepositoryTable, SLSALevelTable
 from macaron.policy_engine.policy import Policy
 from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
@@ -194,30 +192,7 @@ class AnalyzeContext:
         for req in req_list:
             self.update_req_status(req, status, feedback)
 
-    @staticmethod
-    def get_analysis_result_table(table_name: str) -> Table:
-        """Get the table definition to store an analysis result.
-
-        Parameters
-        ----------
-        table_name: str
-            Name of the table to create.
-        """
-        return Table(
-            table_name,
-            ORMBase.metadata,
-            Column("repository_id", Integer, ForeignKey("_repository.id")),
-            Column("full_name", String, unique=False),
-            Column("branch_name", String),
-            Column("commit_sha", String),
-            Column("commit_date", String),
-            Column("slsa_level", String),
-            Column("is_full_reach", Boolean),
-            *(Column(key.name, Boolean) for key in get_requirements_dict()),
-            extend_existing=True,
-        )
-
-    def get_slsa_level_table(self) -> dict:
+    def get_slsa_level_table(self) -> SLSALevelTable:
         """Return filled ORM table storing the level for this repository."""
         return SLSALevelTable(
             repository=self.repository_table.id,

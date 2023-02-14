@@ -13,7 +13,7 @@ from sqlalchemy.orm import declarative_mixin, declared_attr
 from macaron.database.database_manager import ORMBase
 from macaron.database.rfc3339_datetime import RFC3339DateTime
 
-# TODO: Use GUIDs as primary keys rather than incremental
+# TODO: Use UUIDs as primary keys rather than incremental
 
 ################################################################################
 # Analyzer

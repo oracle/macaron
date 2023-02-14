@@ -21,15 +21,11 @@ from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.util import logger
 
 
-def store_analyze_context_to_db(
-    table_name: str, db_man: DatabaseManager, analysis: AnalysisTable, analyze_ctx: AnalyzeContext
-) -> dict:
+def store_analyze_context_to_db(db_man: DatabaseManager, analysis: AnalysisTable, analyze_ctx: AnalyzeContext) -> dict:
     """Store the content of an analyzed context into the database.
 
     Parameters
     ----------
-    table_name: str
-        The name of the main analysis table
     db_man : DatabaseManager
         The database manager object managing the session to which to add the results.
     analysis: AnalysisTable
@@ -42,10 +38,6 @@ def store_analyze_context_to_db(
         analyze_ctx.repo_full_name,
         defaults.get("database", "db_name", fallback="macaron.db"),
     )
-
-    # Ensure result table is created
-    result_table = AnalyzeContext.get_analysis_result_table(table_name)
-    db_man.create_tables()
 
     # Store old result format
     repository_analysis = RepositoryAnalysis(repository_id=analyze_ctx.repository_table.id, analysis_id=analysis.id)
@@ -83,14 +75,11 @@ def store_analyze_context_to_db(
             )
             db_man.add_and_commit(requirement)
 
-    db_man.insert(result_table, results)
     return results
 
 
 def store_analysis_to_db(db_man: DatabaseManager, main_record: Record) -> AnalysisTable:
     """Store the analysis to the database."""
-    db_man.create_tables()
-
     analysis = AnalysisTable(
         analysis_time=datetime.now(tz=timezone.utc),
         macaron_version=__version__,

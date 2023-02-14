@@ -54,9 +54,6 @@ class Analyzer:
     GIT_REPOS_DIR = "git_repos"
     """The directory in the output dir to store all cloned repositories."""
 
-    TABLE_NAME = "analyze_result"
-    """The name of the SQLite table which stores the analyze results."""
-
     def __init__(self, output_path: str, build_log_path: str) -> None:
         """Initialize instance.
 
@@ -103,6 +100,7 @@ class Analyzer:
         self.reporters: list[FileReporter] = []
 
         self.db_man = DatabaseManager(self.database_path)
+        # Create database tables: all checks have been registered so all tables should be mapped now
         self.db_man.create_tables()
 
     def run(self, user_config: dict, skip_deps: bool = False) -> int:
@@ -178,15 +176,12 @@ class Analyzer:
             find_ctx = report.find_ctx(dup_record.pre_config.get_value("path"))
             dup_record.context = find_ctx
 
-        # Store the analysis result(s) into the SQLite database.
-        self.db_man.create_tables()
-
         analysis = store_analysis_to_db(self.db_man, main_record)
 
         for record in report.get_records():
             if not record.status == SCMStatus.DUPLICATED_SCM:
                 if record.context:
-                    store_analyze_context_to_db(self.TABLE_NAME, self.db_man, analysis, record.context)
+                    store_analyze_context_to_db(self.db_man, analysis, record.context)
 
         # Store dependency relations
         for parent, child in report.get_dependencies():
