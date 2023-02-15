@@ -45,19 +45,6 @@ class SouffleWrapper:
 
     """
 
-    # The Souffle command
-    _souffle: str
-    # The directory to store outputted facts in
-    output_dir: str
-    # The directory for Souffle to search for datalog files in when using #include
-    include_dir: str
-    # The directory for Souffle to load facts from
-    fact_dir: str
-    # The directory to link Souffle functor shared libraries from
-    library_dir: str
-    souffle_stdout: Optional[str]
-    souffle_stderr: Optional[str]
-
     # The temporary file to store the datalog program in when executing from the temporary directory
     TEMP_SOURCEFILE_NAME = "source.dl"
 
@@ -69,10 +56,25 @@ class SouffleWrapper:
         fact_dir: Optional[str] = None,
         library_dir: str = os.curdir,
     ):
-        self.souffle_stdout = None
-        self.souffle_stderr = None
+
+        # The Souffle command.
+        self._souffle: str = "souffle"
+        # Temporary execution directory.
         self.temp_dir = tempfile.mkdtemp()
-        self.orig_dir = os.path.abspath(os.curdir)
+        # The directory to store outputted facts in.
+        self.output_dir: str
+        # The directory for Souffle to search for datalog files in when using #include.
+        self.include_dir: str
+        # The directory for Souffle to load facts from.
+        self.fact_dir: str
+        # The directory to link Souffle functor shared libraries from.
+        self.library_dir: str
+
+        self.souffle_stdout: Optional[str] = None
+        self.souffle_stderr: Optional[str] = None
+
+        # The original execution directory when it is executed.
+        self._orig_dir = os.path.abspath(os.curdir)
         self._souffle = souffle_full_path
         if output_dir is not None:
             if output_dir != "-":

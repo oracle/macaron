@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
-Stand-alone policy engine.
+Policy engine Command Line Interface (CLI).
 
 This program runs souffle against a macaron output sqlite database.
 """
@@ -25,19 +25,6 @@ from macaron.policy_engine.souffle_code_generator import (
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-
-class Config:
-    """Policy engine configuration."""
-
-    database_path: str
-    interactive: bool = False
-    policy_id: int | None = None
-    policy_file: str | None = None
-    show_prelude: bool = False
-
-
-global_config = Config()
 
 
 class Timer:
