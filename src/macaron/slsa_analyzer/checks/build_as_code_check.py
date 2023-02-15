@@ -6,7 +6,7 @@
 import logging
 import os
 
-from sqlalchemy import Column
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
 from macaron.database.database_manager import ORMBase
@@ -26,21 +26,22 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+class BuildAsCodeTable(CheckFactsTable, ORMBase):
+    """Check justification table for build_as_code."""
+
+    __tablename__ = "_build_as_code_check"
+    build_tool_name: Mapped[str] = mapped_column(String)
+    ci_service_name: Mapped[str] = mapped_column(String)
+    build_trigger: Mapped[str] = mapped_column(String)
+    deploy_command: Mapped[str] = mapped_column(String)
+    build_status_url: Mapped[str] = mapped_column(String)
+
+
 class BuildAsCodeCheck(BaseCheck):
     """This class checks the build as code requirement.
 
     See https://slsa.dev/spec/v0.1/requirements#build-as-code.
     """
-
-    class ResultTable(CheckFactsTable, ORMBase):
-        """Check justification table for build_as_code."""
-
-        __tablename__ = "_build_as_code_check"
-        build_tool_name = Column(String)
-        ci_service_name = Column(String)
-        build_trigger = Column(String)
-        deploy_command = Column(String)
-        build_status_url = Column(String)
 
     def __init__(self) -> None:
         """Initiate the BuildAsCodeCheck instance."""
@@ -157,7 +158,7 @@ class BuildAsCodeCheck(BaseCheck):
                             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                             predicate["metadata"]["buildInvocationId"] = html_url
                             check_result["result_tables"] = [
-                                BuildAsCodeCheck.ResultTable(
+                                BuildAsCodeTable(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
                                     build_trigger=trigger_link,
@@ -192,7 +193,7 @@ class BuildAsCodeCheck(BaseCheck):
                                 predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = config_name
                             check_result["result_tables"] = [
-                                BuildAsCodeCheck.ResultTable(
+                                BuildAsCodeTable(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
                                     deploy_command=deploy_cmd,
@@ -202,10 +203,10 @@ class BuildAsCodeCheck(BaseCheck):
 
             pass_msg = f"The target repository does not use {build_tool.name} to deploy."
             check_result["justification"].append(pass_msg)
-            check_result["result_tables"] = [BuildAsCodeCheck.ResultTable(build_tool_name=build_tool.name)]
+            check_result["result_tables"] = [BuildAsCodeTable(build_tool_name=build_tool.name)]
             return CheckResultType.FAILED
 
-        check_result["result_tables"] = [BuildAsCodeCheck.ResultTable()]
+        check_result["result_tables"] = [BuildAsCodeTable()]
         failed_msg = "The target repository does not have a build tool."
         check_result["justification"].append(failed_msg)
         return CheckResultType.FAILED

@@ -6,9 +6,10 @@ ORM Table definitions used by macaron internally.
 
 For tables associated with checks see base_check.py.
 """
+from datetime import datetime
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
-from sqlalchemy.orm import declarative_mixin, declared_attr
+from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.database_manager import ORMBase
 from macaron.database.rfc3339_datetime import RFC3339DateTime
@@ -25,18 +26,18 @@ class SLSARequirement(ORMBase):
     """Table storing the SLSA requirements a repository satisfies."""
 
     __tablename__ = "_slsa_requirement"
-    repository = Column(Integer, ForeignKey("_repository.id"), primary_key=True)
-    requirement = Column(String, primary_key=True)
-    requirement_name = Column(String, primary_key=False)
-    feedback = Column(String, nullable=True)
+    repository: Mapped[int] = mapped_column(Integer, ForeignKey("_repository.id"), primary_key=True)
+    requirement: Mapped[str] = mapped_column(String, primary_key=True)
+    requirement_name: Mapped[str] = mapped_column(String, primary_key=False)
+    feedback: Mapped[str] = mapped_column(String, nullable=True)
 
 
 class RepositoryDependency(ORMBase):
     """Identifies dependencies between repositories."""
 
     __tablename__ = "_dependency"
-    dependent_repository = Column(Integer, ForeignKey("_repository.id"), primary_key=True)
-    dependency_repository = Column(Integer, ForeignKey("_repository.id"), primary_key=True)
+    dependent_repository: Mapped[int] = mapped_column(Integer, ForeignKey("_repository.id"), primary_key=True)
+    dependency_repository: Mapped[int] = mapped_column(Integer, ForeignKey("_repository.id"), primary_key=True)
 
 
 class AnalysisTable(ORMBase):
@@ -47,18 +48,18 @@ class AnalysisTable(ORMBase):
     """
 
     __tablename__ = "_analysis"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    analysis_time = Column(RFC3339DateTime, nullable=False)
-    repository = Column(Integer, ForeignKey("_repository.id"), nullable=False)
-    macaron_version = Column(String, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    analysis_time: Mapped[datetime] = mapped_column(RFC3339DateTime, nullable=False)
+    repository: Mapped[int] = mapped_column(Integer, ForeignKey("_repository.id"), nullable=False)
+    macaron_version: Mapped[str] = mapped_column(String, nullable=False)
 
 
 class RepositoryAnalysis(ORMBase):
     """Relates repositories to the analysis in which they were scanned."""
 
     __tablename__ = "_repository_analysis"
-    analysis_id = Column(Integer, ForeignKey("_analysis.id"), nullable=False, primary_key=True)
-    repository_id = Column(Integer, ForeignKey("_repository.id"), nullable=False, primary_key=True)
+    analysis_id: Mapped[int] = mapped_column(Integer, ForeignKey("_analysis.id"), nullable=False, primary_key=True)
+    repository_id: Mapped[int] = mapped_column(Integer, ForeignKey("_repository.id"), nullable=False, primary_key=True)
 
 
 ################################################################################
@@ -69,36 +70,37 @@ class RepositoryTable(ORMBase):
     """ORM Class for a repository."""
 
     __tablename__ = "_repository"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    full_name = Column(String, nullable=False)
-    remote_path = Column(String, nullable=True)
-    branch_name = Column(String, nullable=False)
-    release_tag = Column(String, nullable=True)
-    commit_sha = Column(String, nullable=False)
-    commit_date = Column(String, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    full_name: Mapped[str] = mapped_column(String, nullable=False)
+    remote_path: Mapped[str] = mapped_column(String, nullable=True)
+    branch_name: Mapped[str] = mapped_column(String, nullable=False)
+    release_tag: Mapped[str] = mapped_column(String, nullable=True)
+    commit_sha: Mapped[str] = mapped_column(String, nullable=False)
+    commit_date: Mapped[str] = mapped_column(String, nullable=False)
 
 
 class SLSALevelTable(ORMBase):
     """Table to store the slsa level of a repository."""
 
     __tablename__ = "_slsa_level"
-    repository = Column(Integer, ForeignKey("_repository.id"), primary_key=True)
-    slsa_level = Column(Integer, nullable=False)
-    reached = Column(Boolean, nullable=False)
+    repository: Mapped[int] = mapped_column(Integer, ForeignKey("_repository.id"), primary_key=True)
+    slsa_level: Mapped[int] = mapped_column(Integer, nullable=False)
+    reached: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
 
 class CheckResultTable(ORMBase):
     """Table to store the result of a check, is automatically added for each check."""
 
     __tablename__ = "_check_result"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003 # pylint: disable=invalid-name
-    check_id = Column(String, nullable=False)
-    repository = Column(Integer, ForeignKey("_repository.id"), nullable=False)
-    passed = Column(Boolean, nullable=False)
-    skipped = Column(Boolean, nullable=False)
+    id: Mapped[int] = mapped_column(  # noqa: A003 # pylint: disable=invalid-name
+        Integer, primary_key=True, autoincrement=True
+    )
+    check_id: Mapped[str] = mapped_column(String, nullable=False)
+    repository: Mapped[int] = mapped_column(Integer, ForeignKey("_repository.id"), nullable=False)
+    passed: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    skipped: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
 
-@declarative_mixin
 class CheckFactsTable:
     """
     Declarative mixin for check results.
@@ -106,22 +108,9 @@ class CheckFactsTable:
     All tables for check results must inherit this class, these fields are automatically filled in by the analyzer.
     """
 
-    # pylint: disable=no-member
-
-    @declared_attr  # type: ignore
-    def id(self) -> Column:  # noqa: A003 # pylint: disable=invalid-name
-        """Check result id."""
-        return Column(Integer, primary_key=True, autoincrement=True)
-
-    @declared_attr  # type: ignore
-    def check_result(self) -> Column:
-        """Store the id of the repository to which the analysis pertains."""
-        return Column(Integer, ForeignKey("_check_result.id"), nullable=False)
-
-    @declared_attr  # type: ignore
-    def repository(self) -> Column:
-        """Store the id of the repository to which the analysis pertains."""
-        return Column(Integer, ForeignKey("_repository.id"), nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    check_result: Mapped[int] = mapped_column(String, ForeignKey("_check_result.id"), nullable=False)
+    repository: Mapped[int] = mapped_column(Integer, ForeignKey("_repository.id"), nullable=False)
 
 
 class PolicyTable(CheckFactsTable, ORMBase):
@@ -131,9 +120,9 @@ class PolicyTable(CheckFactsTable, ORMBase):
     #       rather than only linking to the repository
 
     __tablename__ = "_policy"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    policy_id = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    policy_type = Column(String, nullable=False)
-    sha = Column(String, nullable=False)
-    text = Column(String, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    policy_id: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=True)
+    policy_type: Mapped[str] = mapped_column(String, nullable=False)
+    sha: Mapped[str] = mapped_column(String, nullable=False)
+    text: Mapped[str] = mapped_column(String, nullable=False)

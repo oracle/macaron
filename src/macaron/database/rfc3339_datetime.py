@@ -4,7 +4,7 @@
 """This module implements SQLAlchemy type for converting date format to RFC3339 string representation."""
 
 import datetime
-from typing import Any
+from typing import Any, Optional
 
 from sqlalchemy import String, TypeDecorator
 
@@ -20,7 +20,7 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
     impl = String
     cache_ok = True
 
-    def process_bind_param(self, value: None | datetime.datetime, dialect: Any) -> None | str:
+    def process_bind_param(self, value: Optional[Any], dialect: Any) -> None | str:
         """Process when storing.
 
         value: None | datetime.datetime
@@ -34,7 +34,7 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
             result = value.isoformat(sep="T", timespec="seconds") + "Z"
         return result
 
-    def process_result_value(self, value: str, dialect: Any) -> None | datetime.datetime:
+    def process_result_value(self, value: Optional[Any], dialect: Any) -> None | datetime.datetime:
         """Process when loading.
 
         value: None | str

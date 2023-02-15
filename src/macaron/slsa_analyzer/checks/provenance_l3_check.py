@@ -17,8 +17,8 @@ from enum import Enum
 from pathlib import Path
 from typing import NamedTuple
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
@@ -81,44 +81,44 @@ class ReleaseArtefact(ORMBase):
     """Table to store artifacts."""
 
     __tablename__ = "_release_artifact"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
 
 
 class DigestSet(ORMBase):
     """Table to store artifact digests."""
 
     __tablename__ = "_digest_set"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    digest = Column(String, nullable=False)
-    digest_algorithm = Column(String, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    digest: Mapped[str] = mapped_column(String, nullable=False)
+    digest_algorithm: Mapped[str] = mapped_column(String, nullable=False)
 
 
 class Provenance(ORMBase):
     """Table to store the information about a provenance document."""
 
     __tablename__ = "_provenance"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    repository = Column(Integer, ForeignKey(RepositoryTable.id), nullable=False)
-    release_commit_sha = Column(String)
-    release_tag = Column(String)
-    provenance_json = Column(String, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    repository: Mapped[int] = mapped_column(Integer, ForeignKey(RepositoryTable.id), nullable=False)
+    release_commit_sha: Mapped[str] = mapped_column(String)
+    release_tag: Mapped[str] = mapped_column(String)
+    provenance_json: Mapped[str] = mapped_column(String, nullable=False)
 
     # predicate stored here as there is one predicate per provenance
-    builder_id = Column(String)
-    build_type = Column(String)
-    config_source_uri = Column(String)
-    config_source_entry_point = Column(String)
+    builder_id: Mapped[str] = mapped_column(String)
+    build_type: Mapped[str] = mapped_column(String)
+    config_source_uri: Mapped[str] = mapped_column(String)
+    config_source_entry_point: Mapped[str] = mapped_column(String)
 
 
 class ProvenanceArtefact(ORMBase):
     """Mapping artifacts to the containing provenance."""
 
     __tablename__ = "_provenance_artifact"
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    name = Column(String, nullable=False)
-    verified = Column(Boolean, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    verified: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
-    provenance = Column(Integer, ForeignKey(Provenance.id), nullable=False)
+    provenance: Mapped[int] = mapped_column(Integer, ForeignKey(Provenance.id), nullable=False)
     _provenance = relationship(Provenance)
 
 
@@ -126,9 +126,9 @@ class ArtefactDigest(ORMBase):
     """Table to store artifact digests."""
 
     __tablename__ = "_artifact_digest"
-    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)  # noqa: A003
-    artifact = Column(Integer, ForeignKey(ProvenanceArtefact.id), nullable=False)
-    digest = Column(Integer, ForeignKey(DigestSet.id), nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, nullable=False)  # noqa: A003
+    artifact: Mapped[int] = mapped_column(Integer, ForeignKey(ProvenanceArtefact.id), nullable=False)
+    digest: Mapped[int] = mapped_column(Integer, ForeignKey(DigestSet.id), nullable=False)
 
     _artifact = relationship(ProvenanceArtefact)
     _digest = relationship(DigestSet)
@@ -371,6 +371,9 @@ class ProvenanceL3Check(BaseCheck):
 
                         # Output provenance
                         prov = Provenance()
+                        # TODO: fix commit reference for provenance when release/artefact as an analysis entrypoint is
+                        #  implemented ensure the provenance commit matches the actual release analyzed
+                        prov.release_commit_sha = ""
                         prov.provenance_json = json.dumps(payload)
                         prov.release_tag = ci_info["latest_release"]["tag_name"]
                         prov.repository = ctx.repository_table.id
@@ -378,9 +381,9 @@ class ProvenanceL3Check(BaseCheck):
                         # predicate
                         prov.build_type = payload["predicate"]["buildType"]
                         prov.builder_id = payload["predicate"]["builder"]["id"]
-                        prov.config_source_uri = get_if_exists(payload, ["predicate", "invocation", "uri"])
-                        prov.config_source_entry_point = get_if_exists(
-                            payload, ["predicate", "invocation", "entryPoint"]
+                        prov.config_source_uri = str(get_if_exists(payload, ["predicate", "invocation", "uri"]))
+                        prov.config_source_entry_point = str(
+                            get_if_exists(payload, ["predicate", "invocation", "entryPoint"])
                         )
 
                         check_result["result_tables"].append(prov)

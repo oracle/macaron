@@ -6,7 +6,7 @@
 import logging
 import os
 
-from sqlalchemy import Column
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
 from macaron.database.database_manager import ORMBase
@@ -26,16 +26,17 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+class BuildServiceTable(CheckFactsTable, ORMBase):
+    """Check justification table for build_service."""
+
+    __tablename__ = "_build_service_check"
+    build_tool_name: Mapped[str] = mapped_column(String)
+    ci_service_name: Mapped[str] = mapped_column(String)
+    build_trigger: Mapped[str] = mapped_column(String)
+
+
 class BuildServiceCheck(BaseCheck):
     """This Check checks whether the target repo has a valid build service."""
-
-    class ResultTable(CheckFactsTable, ORMBase):
-        """Check justification table for build_service."""
-
-        __tablename__ = "_build_service_check"
-        build_tool_name = Column(String)
-        ci_service_name = Column(String)
-        build_trigger = Column(String)
 
     def __init__(self) -> None:
         """Initiate the BuildServiceCheck instance."""
@@ -136,7 +137,7 @@ class BuildServiceCheck(BaseCheck):
                         ]
                         check_result["justification"].extend(justification)
                         check_result["result_tables"] = [
-                            BuildServiceCheck.ResultTable(
+                            BuildServiceTable(
                                 build_tool_name=build_tool.name,
                                 build_trigger=trigger_link,
                                 ci_service_name=ci_service.name,
@@ -172,7 +173,7 @@ class BuildServiceCheck(BaseCheck):
                                 f"build."
                             )
                             check_result["result_tables"] = [
-                                BuildServiceCheck.ResultTable(
+                                BuildServiceTable(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
                                 )

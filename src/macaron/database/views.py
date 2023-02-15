@@ -30,13 +30,13 @@ class DropView(DDLElement):
         self.name = name
 
 
-@compiler.compiles(CreateView)
-def _create_view(element, comp, **kw):  # type: ignore
+@compiler.compiles(CreateView)  # type: ignore
+def _create_view(element, comp, **kw):
     return f"CREATE VIEW {element.name} AS {comp.sql_compiler.process(element.selectable, literal_binds=True)}"
 
 
-@compiler.compiles(DropView)
-def _drop_view(element, comp, **kw):  # type: ignore
+@compiler.compiles(DropView)  # type: ignore
+def _drop_view(element, comp, **kw):
     return "DROP VIEW %s" % (element.name)
 
 

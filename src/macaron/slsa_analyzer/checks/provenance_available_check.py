@@ -6,7 +6,7 @@
 import logging
 import re
 
-from sqlalchemy import Column
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
 from macaron.config.defaults import defaults
@@ -43,15 +43,16 @@ def is_in_toto_file(file_name: str) -> bool:
     return False
 
 
+class ProvenanceAvailableTable(CheckFactsTable, ORMBase):
+    """Check justification table for provenance_available."""
+
+    __tablename__ = "_provenance_available_check"
+    asset_name: Mapped[str] = mapped_column(String)
+    asset_url: Mapped[str] = mapped_column(String)
+
+
 class ProvenanceAvailableCheck(BaseCheck):
     """This Check checks whether the target repo has intoto provenance."""
-
-    class ResultTable(CheckFactsTable, ORMBase):
-        """Check justification table for provenance_available."""
-
-        __tablename__ = "_provenance_available_check"
-        asset_name = Column(String)
-        asset_url = Column(String)
 
     def __init__(self) -> None:
         """Initialize instance."""
@@ -111,9 +112,7 @@ class ProvenanceAvailableCheck(BaseCheck):
                         }
                         for asset in assets
                     ]
-                    check_result["result_tables"] = [
-                        ProvenanceAvailableCheck.ResultTable(**res) for res in asset_results
-                    ]
+                    check_result["result_tables"] = [ProvenanceAvailableTable(**res) for res in asset_results]
 
                     return CheckResultType.PASSED
 

@@ -115,7 +115,6 @@ class DatabaseManager:
         with self.engine.connect() as conn:
             conn.execute(query)
             conn.commit()
-        self.session.commit()
 
     def create_tables(self) -> None:
         """
@@ -127,10 +126,10 @@ class DatabaseManager:
             https://souffle-lang.github.io/directives#input-directive
         """
         try:
+            self._base.metadata.create_all(self.engine, checkfirst=True)
             for table_name, table in self._base.metadata.tables.items():
                 if table_name[0] == "_":
                     create_view(table_name[1:], self._base.metadata, select(table))
-
             self._base.metadata.create_all(self.engine, checkfirst=True)
         except sqlalchemy.exc.SQLAlchemyError as error:
             logger.error("Database error on create tables %s", error)
