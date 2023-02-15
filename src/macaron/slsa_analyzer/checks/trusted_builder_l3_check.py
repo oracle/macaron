@@ -8,7 +8,7 @@ import logging
 import os
 from typing import Any
 
-from sqlalchemy import Column
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
 from macaron.config.defaults import defaults
@@ -29,9 +29,9 @@ class ResultTable(CheckFactsTable, ORMBase):
     """Check justification table for trusted_builder."""
 
     __tablename__ = "_trusted_builder_check"
-    build_tool_name = Column(String)
-    ci_service_name = Column(String)
-    build_trigger = Column(String)
+    build_tool_name: Mapped[str] = mapped_column(String)
+    ci_service_name: Mapped[str] = mapped_column(String)
+    build_trigger: Mapped[str] = mapped_column(String)
 
 
 class TrustedBuilderL3Check(BaseCheck):

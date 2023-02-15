@@ -27,7 +27,7 @@ dependencies = [
     "yamale >=4.0.3,<5.0.0",
     "packaging >=21.3,<24.0.0",
     "jinja2 >=3.1.2,<4.0.0",
-    "SQLAlchemy==2.0.3",
+    "SQLAlchemy>=2.0.0",
 ]
 keywords = []
 # https://pypi.org/classifiers/
@@ -162,6 +162,7 @@ skip_gitignore = true
 # https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml
 [tool.mypy]
 mypy_path = "src/macaron/:tests/"
+plugins = "sqlalchemy.ext.mypy.plugin"
 # exclude=
 show_error_codes = true
 show_column_numbers = true
@@ -185,7 +186,6 @@ module = [
     "pydriller.*",
     "gitdb.*",
     "yamale.*",
-    "sqlalchemy.*"
 ]
 ignore_missing_imports = true
 

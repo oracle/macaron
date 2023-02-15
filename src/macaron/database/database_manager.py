@@ -8,13 +8,15 @@ from typing import Any, Optional
 
 import sqlalchemy.exc
 from sqlalchemy import Table, create_engine, insert, select
-from sqlalchemy.orm import Session, declarative_base
+from sqlalchemy.orm import DeclarativeBase, Session
 
 from macaron.database.views import create_view
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-ORMBase = declarative_base()
+
+class ORMBase(DeclarativeBase):
+    """DeclarativeBase class https://docs.sqlalchemy.org/en/20/orm/mapping_api.html#sqlalchemy.orm.DeclarativeBase."""
 
 
 class DatabaseManager:
@@ -26,7 +28,7 @@ class DatabaseManager:
     objects added to the database (using add() or add_and_commit()).
     """
 
-    def __init__(self, db_path: str, base=ORMBase):  # type: ignore
+    def __init__(self, db_path: str, base: type[DeclarativeBase] = ORMBase):
         """Initialize instance.
 
         Parameters

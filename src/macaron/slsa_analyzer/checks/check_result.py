@@ -6,6 +6,7 @@ from enum import Enum
 from typing import TypedDict
 
 from sqlalchemy import Table
+from sqlalchemy.orm import DeclarativeBase
 
 
 class CheckResultType(str, Enum):
@@ -36,7 +37,7 @@ class CheckResult(TypedDict):
     justification: list[str | dict[str, str]]
     # human_readable_justification: str
     # result_values: dict[str, str | float | int] | list[dict[str, str | float | int]]
-    result_tables: list[Table]
+    result_tables: list[DeclarativeBase | Table]
     # recommendation: str
     result_type: CheckResultType
 

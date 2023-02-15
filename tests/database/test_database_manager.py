@@ -10,15 +10,17 @@ from pathlib import Path
 from unittest import TestCase
 
 from sqlalchemy import Column, Table
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql.sqltypes import Integer, String
 
 from macaron.database.database_manager import DatabaseManager
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    """Declarative base class for mapper."""
 
 
-class ORMMappedTable(Base):  # type: ignore
+class ORMMappedTable(Base):
     """Check justification table for build_as_code."""
 
     __tablename__ = "_test_orm_table"
