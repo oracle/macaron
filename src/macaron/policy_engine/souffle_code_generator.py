@@ -21,7 +21,7 @@ class SouffleProgram:
         Set of declaration souffle statements (begin with .decl token)
     directives: None | set[str]
         Set of directives (begin with ".", e.g. .input)
-    rules: None | set[str]
+    rules: None | set[str]-
         Set of datalog rules (statements containing ":-" )
     """
 
@@ -92,8 +92,8 @@ def column_to_souffle_type(column: Column) -> str:
 def table_to_declaration(table: Table) -> str:
     """Return the souffle datalog declaration for an SQLAlchemy table.
 
-    Example
-    -------
+    Examples
+    --------
     >>> tbl = Table("example", Column("id", Integer), Column("hello", String)
     >>> assert table_to_declaration(tbl) == '.decl "example" (id: number, hello: symbol)'
 

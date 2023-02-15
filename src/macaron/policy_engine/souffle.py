@@ -36,8 +36,8 @@ class SouffleError(Exception):
 class SouffleWrapper:
     """Wrapper class for managing the temporary working directory of the souffle interpreter.
 
-    Example
-    -------
+    Examples
+    --------
     with SouffleWrapper(fact_dir="facts", output_dir="output") as sfl:
         text = "<souffle program>"
         result = sfl.interpret_text(text)

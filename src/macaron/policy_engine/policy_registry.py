@@ -57,8 +57,8 @@ class PolicyRegistry:
         repo_full_name: str
             The full name of the repository, formatted "organization/repo-name"
 
-        Return
-        ------
+        Returns
+        -------
         Optional[Policy]
             A policy if one is found, otherwise None.
         """
@@ -79,8 +79,8 @@ class PolicyRegistry:
             Optional, if is not None then restrict policy evaluation to the repositories associated with the analysis id
             ``restrict_to_analysis``.
 
-        Return
-        ------
+        Returns
+        -------
         list[Any]
             The list of analysis results where the analysis failed.
         """

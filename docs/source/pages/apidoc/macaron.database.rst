@@ -13,7 +13,7 @@ Submodules
 ----------
 
 macaron.database.table\_definitions module
------------------------------------------
+------------------------------------------
 
 .. figure:: /assets/er-diagram.svg
 
