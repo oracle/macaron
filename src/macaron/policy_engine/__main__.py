@@ -12,11 +12,9 @@ import logging
 import os
 import sys
 import time
-import traceback
 from typing import Never
 
 from sqlalchemy import MetaData, create_engine
-from sqlalchemy.exc import SQLAlchemyError
 
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
 from macaron.policy_engine.souffle_code_generator import (
@@ -62,13 +60,13 @@ class Timer:
 
 def get_generated(database_path: os.PathLike | str) -> SouffleProgram:
     """Get generated souffle code from database specified by configuration."""
-    metadata = MetaData()
-    try:
-        engine = create_engine(f"sqlite:///{database_path}", echo=False)
-        metadata.reflect(engine)
-    except SQLAlchemyError:
-        logger.error("Unable to open database %s", traceback.format_exc())
+    if not os.path.isfile(database_path):
+        logger.error("Unable to open database %s", database_path)
         sys.exit(1)
+
+    metadata = MetaData()
+    engine = create_engine(f"sqlite:///{database_path}", echo=False)
+    metadata.reflect(engine)
 
     prelude = get_souffle_import_prelude(os.path.abspath(database_path), metadata)
 
