@@ -21,7 +21,7 @@ class SouffleProgram:
         Set of declaration souffle statements (begin with .decl token)
     directives: None | set[str]
         Set of directives (begin with ".", e.g. .input)
-    rules: None | set[str]-
+    rules: None | set[str]
         Set of datalog rules (statements containing ":-" )
     """
 

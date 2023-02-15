@@ -65,7 +65,7 @@ class GlobalConfig:
         self.gh_token = gh_token
         self.resources_path = resources_path
 
-        # Find the policies
+        # Find the policies.
         policy_files = []
         for policy_path in policy_paths:
             if os.path.isdir(policy_path):

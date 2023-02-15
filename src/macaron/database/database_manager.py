@@ -16,7 +16,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ORMBase(DeclarativeBase):
-    """DeclarativeBase class https://docs.sqlalchemy.org/en/20/orm/mapping_api.html#sqlalchemy.orm.DeclarativeBase."""
+    """ORM base class."""
 
 
 class DatabaseManager:
