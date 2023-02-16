@@ -3,6 +3,7 @@
 
 """The database_store module contains the methods to store analysis results to the database."""
 
+import logging
 from datetime import datetime, timezone
 
 from macaron import __version__
@@ -18,7 +19,8 @@ from macaron.database.table_definitions import (
 from macaron.output_reporter.results import Record
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
-from macaron.util import logger
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def store_analyze_context_to_db(db_man: DatabaseManager, analysis: AnalysisTable, analyze_ctx: AnalyzeContext) -> dict:

@@ -3,11 +3,13 @@
 
 """The policy registry module manages policies about provenances and the whole analysis."""
 
+import logging
 import os
 from typing import Any, Optional
 
 from macaron.policy_engine.policy import Policy, SoufflePolicy
-from macaron.util import logger
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class PolicyRegistry:

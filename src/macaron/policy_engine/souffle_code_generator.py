@@ -3,12 +3,13 @@
 
 """Generate souffle datalog for policy prelude."""
 
+import logging
 import os
 
 from sqlalchemy import Column, MetaData, Table
 from sqlalchemy.sql.sqltypes import Boolean, Integer, String, Text
 
-from macaron.util import logger
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class SouffleProgram:

@@ -3,6 +3,7 @@
 
 """This module handles invoking the souffle policy engine on a database."""
 
+import logging
 import os
 import sys
 
@@ -15,7 +16,8 @@ from macaron.policy_engine.souffle_code_generator import (
     project_table_to_key,
     project_with_fk_join,
 )
-from macaron.util import logger
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def get_generated(database_path: os.PathLike | str) -> SouffleProgram:
