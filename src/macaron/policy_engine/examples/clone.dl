@@ -1,0 +1,25 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+
+#include "prelude.dl"
+
+/**
+ * This example policies shows how to write an arbitrary assertion about a repository, and enforce it on some specific
+ * repositories.
+ */
+
+// Make sure we ran our analysis with the repo cloned using TLS
+Policy("clone-with-tls", repo, message) :-
+    is_repo(repo, message),
+    repository_attribute(repo,"remote_path", $String(url)),
+    match("^(ssh|https)://.*$", url).
+
+// enforce on micronaut and its dependencies
+apply_policy_to("clone-with-tls", repo) :-
+    is_repo(repo, "micronaut-projects/micronaut-core").
+
+// enforce on micronaut and its dependencies
+apply_policy_to("clone-with-tls", dependency) :-
+    is_repo(repo, "micronaut-projects/micronaut-core"),
+    dependency(repo, dependency).
