@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -8,9 +8,8 @@ This module tests the DependencyAnalyzer.
 from pathlib import Path
 
 from macaron.config.target_config import TARGET_CONFIG_SCHEMA, Configuration
-from macaron.dependency_analyzer import DependencyAnalyzer
-from macaron.dependency_analyzer.dependency_resolver import DependencyInfo
-from macaron.output_reporter.results import SCMStatus
+from macaron.dependency_analyzer import DependencyAnalyzer, DependencyInfo
+from macaron.output_reporter.scm import SCMStatus
 from macaron.parsers.yaml.loader import YamlLoader
 from tests.macaron_testcase import MacaronTestCase
 
@@ -98,7 +97,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
         ]
 
         # Get the mock config file with dependencies.
-        path = self.CONFIG_DIR.joinpath("valid_has_deps.yaml")
+        path = TestDependencyAnalyzer.CONFIG_DIR.joinpath("valid_has_deps.yaml")
         user_config = YamlLoader.load(path, TARGET_CONFIG_SCHEMA)
         user_dep_config = [Configuration(dep) for dep in user_config.get("dependencies", [])]
         merged_configs = DependencyAnalyzer.merge_configs(user_dep_config, auto_deps)
@@ -106,7 +105,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
         assert [dep.options for dep in merged_configs] == expected_result_with_deps
 
         # Get the mock config file without dependencies.
-        path = self.CONFIG_DIR.joinpath("valid_no_deps.yaml")
+        path = TestDependencyAnalyzer.CONFIG_DIR.joinpath("valid_no_deps.yaml")
         user_config = YamlLoader.load(path, TARGET_CONFIG_SCHEMA)
         merged_configs = DependencyAnalyzer.merge_configs(user_config.get("dependencies"), auto_deps)
 

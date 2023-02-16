@@ -1,19 +1,25 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 target:
   id: micronaut-core
-  branch: 3.5.x
-  digest: bf3f5e8f33b84160276acaa2b4f977e64730b8cd
+  # For version 3.8.3
+  # https://github.com/micronaut-projects/micronaut-core/commit/68f9bb0a78fa930865d37fca39252b9ec66e4a43
+  branch: 3.8.x
+  digest: 68f9bb0a78fa930865d37fca39252b9ec66e4a43
   path: https://github.com/micronaut-projects/micronaut-core
 
 dependencies:
 - id: slf4j
-  branch: ''
-  digest: ''
+    # For version 1.7.36
+    # https://github.com/qos-ch/slf4j/commit/e9ee55cca93c2bf26f14482a9bdf961c750d2a56
+  branch: v_1.7.36
+  digest: e9ee55cca93c2bf26f14482a9bdf961c750d2a56
   path: https://github.com/qos-ch/slf4j.git
 
 - id: caffeine
-  branch: ''
-  digest: ''
+    # For version 2.9.3
+    # https://github.com/ben-manes/caffeine/commit/05a040c2478341bab8a58a02b3dc1fe14d626d72
+  branch: v2.9.3
+  digest: 05a040c2478341bab8a58a02b3dc1fe14d626d72
   path: https://github.com/ben-manes/caffeine.git

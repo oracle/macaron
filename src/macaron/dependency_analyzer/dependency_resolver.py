@@ -1,17 +1,18 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module processes and collects the dependencies to be processed by Macaron."""
 
 import logging
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from enum import Enum
 from typing import TypedDict
 
 from packaging import version
 
 from macaron.config.target_config import Configuration
-from macaron.output_reporter.results import SCMStatus
+from macaron.errors import MacaronError
+from macaron.output_reporter.scm import SCMStatus
 from macaron.slsa_analyzer.git_url import get_remote_vcs_url, get_repo_full_name_from_url
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -21,10 +22,11 @@ class DependencyTools(str, Enum):
     """Dependency resolvers supported by Macaron."""
 
     CYCLONEDX_MAVEN = "cyclonedx-maven"
+    CYCLONEDX_GRADLE = "cyclonedx-gradle"
 
 
 class DependencyInfo(TypedDict):
-    """The information of a resolved Java dependency."""
+    """The information of a resolved dependency."""
 
     version: str
     group: str
@@ -34,10 +36,14 @@ class DependencyInfo(TypedDict):
     available: SCMStatus
 
 
-class DependencyAnalyzer:
+class DependencyAnalyzerError(MacaronError):
+    """The DependencyAnalyzer error class."""
+
+
+class DependencyAnalyzer(ABC):
     """This abstract class is used to implement dependency analyzers."""
 
-    def __init__(self, resources_path: str, file_name: str, debug_path: str, tool_version: str) -> None:
+    def __init__(self, resources_path: str, file_name: str, tool_name: str, tool_version: str, repo_path: str) -> None:
         """Initialize the dependency analyzer instance.
 
         Parameters
@@ -46,20 +52,19 @@ class DependencyAnalyzer:
             The path to the resources directory.
         file_name : str
             The name of dependency output file.
-        debug_path : str
-            The file path where all the dependencies will be stored for debugging.
+        tool_name: str
+            The name of the dependency analyzer.
         tool_version : str
             The version of the dependency analyzer.
+        repo_path: str
+            The path to the target repo.
         """
         self.resources_path: str = resources_path
         self.file_name: str = file_name
-        self.debug_path: str = debug_path
+        self.tool_name: str = tool_name
         self.tool_version: str = tool_version
-        self.all_versions: dict = {}  # Stores all the versions of dependencies for debugging.
-        self.latest_versions: dict[str, DependencyInfo] = {}  # Stores the latest version of dependencies.
-        self.url_to_artifact: dict = {}  # Used to detect artifacts that have similar repos.
-        self.submodules: set = set()  # Stores all the submodule dependencies.
-        self.debug: bool = bool(debug_path)
+        self.repo_path: str = repo_path
+        self.visited_deps: set = set()
 
     @abstractmethod
     def collect_dependencies(self, dir_path: str) -> dict[str, DependencyInfo]:
@@ -68,14 +73,28 @@ class DependencyAnalyzer:
         Parameters
         ----------
         dir_path : str
+            Local path to the target repo.
+
+        Returns
+        -------
+        dict
+            A dictionary where artifacts are grouped based on "artifactId:groupId".
+        """
+
+    @abstractmethod
+    def remove_sboms(self, dir_path: str) -> bool:
+        """Remove all the SBOM files in the provided directory recursively.
+
+        Parameters
+        ----------
+        dir_path : str
             Path to the repo.
 
         Returns
         -------
-        dict[str, DependencyInfo]
-            A dictionary where artifacts are grouped based on "artifactId:groupId".
+        bool
+            Returns True if all the files are removed successfully.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def get_cmd(self) -> list:
@@ -86,12 +105,14 @@ class DependencyAnalyzer:
         list
             The command line arguments.
         """
-        raise NotImplementedError
 
-    def _add_latest_version(
-        self,
+    @staticmethod
+    def add_latest_version(
         item: DependencyInfo,
         key: str,
+        all_versions: dict[str, list[DependencyInfo]],
+        latest_deps: dict[str, DependencyInfo],
+        url_to_artifact: dict[str, set],
     ) -> None:
         """Find and add the unique URL for the latest version of the artifact.
 
@@ -101,46 +122,52 @@ class DependencyAnalyzer:
             The dictionary containing info about the dependency to be added.
         key : str
             The ID of the artifact.
+        all_versions: dict[str, str]
+            Stores all the versions of dependencies for debugging.
+        latest_deps: dict[str, DependencyInfo]
+            Stores the latest version of dependencies.
+        url_to_artifact: dict[str, set]
+            Used to detect artifacts that have similar repos.
         """
         # Check if the URL is already seen for a different artifact.
         if item["url"] != "":
-            artifacts = self.url_to_artifact.get(item["url"])
+            artifacts = url_to_artifact.get(item["url"])
             if artifacts is None:
-                self.url_to_artifact[item["url"]] = {key}
+                url_to_artifact[item["url"]] = {key}
             else:
                 item["note"] = f"{item['url']} is already analyzed."
                 item["available"] = SCMStatus.DUPLICATED_SCM
-                self.url_to_artifact[item["url"]].add(key)
-                logger.info(item["note"])
+                url_to_artifact[item["url"]].add(key)
+                logger.debug(item["note"])
         else:
             logger.debug("Could not find SCM URL for %s. Skipping...", key)
             item["note"] = "Manual configuration required. Could not find SCM URL."
             item["available"] = SCMStatus.MISSING_SCM
 
-        if self.debug:
-            value = self.all_versions.get(key)
-            if not value:
-                self.all_versions[key] = [item]
-            else:
-                value.append(item)
+        # For debugging purposes.
+        value = all_versions.get(key)
+        if not value:
+            all_versions[key] = [item]
+        else:
+            value.append(item)
 
         # Only update the artifact if it has a newer version.
-        value = self.latest_versions.get(key)
-        if not value:
-            self.latest_versions[key] = item
+        latest_value = latest_deps.get(key)
+        if not latest_value:
+            latest_deps[key] = item
         else:
             try:
                 if (
-                    value["version"]
+                    latest_value["version"]
                     and item["version"]
-                    and version.Version(value["version"].lower()) < version.Version(item["version"].lower())
+                    and version.Version(latest_value["version"].lower()) < version.Version(item["version"].lower())
                 ):
-                    self.latest_versions[key] = item
+                    latest_deps[key] = item
             except ValueError as error:
                 logger.error("Could not parse dependency version number: %s", error)
 
     @staticmethod
-    def _find_valid_url(urls: list) -> str:
+    def find_valid_url(urls: list) -> str:
         """Find a valid URL from the list of URLs.
 
         Parameters
@@ -252,3 +279,51 @@ class DependencyAnalyzer:
             logger.error("Dependency analyzer: %s.", error)
             return False
         return True
+
+
+class NoneDependencyAnalyzer(DependencyAnalyzer):
+    """This class is used to implement an empty dependency analyzers."""
+
+    def __init__(self) -> None:
+        """Initialize the dependency analyzer instance."""
+        super().__init__(resources_path="", file_name="", tool_name="", tool_version="", repo_path="")
+
+    def collect_dependencies(self, dir_path: str) -> dict[str, DependencyInfo]:
+        """Process the dependency JSON files and collect direct dependencies.
+
+        Parameters
+        ----------
+        dir_path : str
+            Local path to the target repo.
+
+        Returns
+        -------
+        dict
+            A dictionary where artifacts are grouped based on "artifactId:groupId".
+        """
+        return {}
+
+    def remove_sboms(self, dir_path: str) -> bool:
+        """Remove all the SBOM files in the provided directory recursively.
+
+        Parameters
+        ----------
+        dir_path : str
+            Path to the repo.
+
+        Returns
+        -------
+        bool
+            Returns True if all the files are removed successfully.
+        """
+        return False
+
+    def get_cmd(self) -> list:
+        """Return the CLI command to run the dependency analyzer.
+
+        Returns
+        -------
+        list
+            The command line arguments.
+        """
+        return []

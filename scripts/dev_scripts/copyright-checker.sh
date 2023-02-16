@@ -4,7 +4,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 #
-# Checks if copyright header is valid
+# Checks if copyright header is valid.
 #
 
 files=$(git diff --cached --name-only)
@@ -22,7 +22,7 @@ for f in $files; do
         startyear=$currentyear
     fi
     if ! grep -i -e "Copyright (c) $startyear - $currentyear, Oracle and/or its affiliates. All rights reserved." "$f" 1>/dev/null;then
-        if [[ $f =~ .*\.(js$|py$|java$|tf$|go$|sh$|dl$|yaml$) ]] || [[ "${f##*/}" = "Dockerfile" ]] || [[ "${f##*/}" = "Makefile" ]];then
+        if [[ $f =~ .*\.(js$|py$|java$|tf$|go$|sh$|dl$|yaml$|gradle$|kts$|ini$|toml$) ]] || [[ "${f##*/}" = "Dockerfile" ]] || [[ "${f##*/}" = "Makefile" ]];then
           missing_copyright_files+=("$f")
         fi
     fi
@@ -41,12 +41,12 @@ if [ ${#missing_copyright_files[@]} -ne 0 ]; then
         if [[ -z "${startyear// }" ]]; then
             startyear=$currentyear
         fi
-        if [[ $f =~ .*\.(js$|java$|go$|dl$) ]]; then
+        if [[ $f =~ .*\.(js$|java$|go$|dl$|gradle$|kts$) ]]; then
             expected="\/\* Copyright \(c\) $startyear - $currentyear, Oracle and\/or its affiliates\. All rights reserved\. \*\/"
             if [ ${#missing_license_note} -eq 0 ]; then
                 expected="$expected\n\/\* $license_note \*\/"
             fi
-        elif [[ $f =~ .*\.(py$|tf$|sh$|yaml$) ]] || [[ "${f##*/}" = "Dockerfile" ]] || [[ "${f##*/}" = "Makefile" ]]; then
+        elif [[ $f =~ .*\.(py$|tf$|sh$|yaml$|ini$|toml$) ]] || [[ "${f##*/}" = "Dockerfile" ]] || [[ "${f##*/}" = "Makefile" ]]; then
             expected="# Copyright \(c\) $startyear - $currentyear, Oracle and\/or its affiliates\. All rights reserved\."
             if [ ${#missing_license_note} -eq 0 ]; then
                 expected="$expected\n# $license_note"

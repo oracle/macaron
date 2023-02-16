@@ -6,28 +6,15 @@
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
 from typing import Generic, TypedDict, TypeVar
 
 from macaron.config.target_config import Configuration
+from macaron.output_reporter.scm import SCMStatus
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
-
-
-class SCMStatus(str, Enum):
-    """The status type of each analyzed repository."""
-
-    AVAILABLE = "AVAILABLE"
-    """The SCM url is available for this artifact."""
-    MISSING_SCM = "MISSING REPO URL"
-    """Cannot find the SCM url for this artifact."""
-    DUPLICATED_SCM = "DUPLICATED REPO URL"
-    """The SCM url is available but has already been analyzed for another artifact."""
-    ANALYSIS_FAILED = "FAILED"
-    """When the SCM is available but the analysis could not finish for this artifact."""
 
 
 class DepSummary(TypedDict):

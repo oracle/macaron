@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseBuildTool class to be inherited by other specific Build Tools."""
@@ -6,7 +6,11 @@
 import glob
 import logging
 import os
-from abc import abstractmethod
+from abc import ABC, abstractmethod
+from collections.abc import Iterable
+from pathlib import Path
+
+from macaron.dependency_analyzer import DependencyAnalyzer, NoneDependencyAnalyzer
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -29,14 +33,15 @@ def file_exists(path: str, file_name: str) -> bool:
         True if file_name exists else False.
     """
     pattern = os.path.join(path, "**", file_name)
-    files_detected = glob.glob(pattern, recursive=True)
-    if files_detected:
+    files_detected = glob.iglob(pattern, recursive=True)
+    try:
+        next(files_detected)
         return True
+    except StopIteration:
+        return False
 
-    return False
 
-
-class BaseBuildTool:
+class BaseBuildTool(ABC):
     """This abstract class is used to implement Build Tools."""
 
     def __init__(self, name: str) -> None:
@@ -87,7 +92,6 @@ class BaseBuildTool:
         bool
             True if this build tool is detected, else False.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
@@ -107,12 +111,57 @@ class BaseBuildTool:
         bool
             True if succeed else False.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
-        raise NotImplementedError
+
+    @abstractmethod
+    def get_dep_analyzer(self, repo_path: str) -> DependencyAnalyzer:
+        """Create a DependencyAnalyzer for the build tool.
+
+        Parameters
+        ----------
+        repo_path: str
+            The path to the target repo.
+
+        Returns
+        -------
+        DependencyAnalyzer
+            The DependencyAnalyzer object.
+        """
+
+    def get_build_dirs(self, repo_path: str) -> Iterable[Path]:
+        """Find directories in the repository that have their own build scripts.
+
+        This is especially important for applications that consist of multiple services.
+
+        Parameters
+        ----------
+        repo_path: str
+            The path to the target repo.
+
+        Yields
+        ------
+        Path
+            The relative paths from the repo path that contain build scripts.
+        """
+        config_paths: set[str] = set()
+        for build_cfg in self.build_configs:
+            config_paths.update(glob.glob(os.path.join(repo_path, "**", build_cfg), recursive=True))
+
+        list_iter = iter(sorted(config_paths, key=lambda x: (str(Path(x).parent), len(Path(x).parts))))
+        try:
+            cfg_path = next(list_iter)
+            yield Path(cfg_path).parent.relative_to(repo_path)
+            while next_item := next(list_iter):
+                if str(Path(cfg_path).parent) in next_item:
+                    continue
+                cfg_path = next_item
+                yield Path(next_item).parent.relative_to(repo_path)
+
+        except StopIteration:
+            pass
 
 
 class NoneBuildTool(BaseBuildTool):
@@ -158,3 +207,18 @@ class NoneBuildTool(BaseBuildTool):
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
+
+    def get_dep_analyzer(self, repo_path: str) -> DependencyAnalyzer:
+        """Create an invalid DependencyAnalyzer for the empty build tool.
+
+        Parameters
+        ----------
+        repo_path: str
+            The path to the target repo.
+
+        Returns
+        -------
+        DependencyAnalyzer
+            The DependencyAnalyzer object.
+        """
+        return NoneDependencyAnalyzer()
