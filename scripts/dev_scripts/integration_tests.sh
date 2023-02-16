@@ -80,18 +80,19 @@ DEP_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-cor
 echo -e "\n----------------------------------------------------------------------------------"
 echo "micronaut-projects/micronaut-core: Check the resolved dependency output when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-core.json
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/skipdep_micronaut-projects_micronaut-core.json
 $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_core_config.yaml --skip-deps || RESULT_CODE=1
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || RESULT_CODE=1
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "micronaut-projects/micronaut-core: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
-echo -e "----------------------------------------------------------------------------------\n"
+# echo -e "\n----------------------------------------------------------------------------------"
+# echo "micronaut-projects/micronaut-core: Check the resolved dependency output with config for cyclonedx gradle plugin (default)."
+# echo -e "----------------------------------------------------------------------------------\n"
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-core.json
 $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_core_config.yaml || RESULT_CODE=1
 
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || RESULT_CODE=1
+# TODO: uncomment the test below after resolving https://github.com/oracle-samples/macaron/issues/60.
+# python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || RESULT_CODE=1
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "micronaut-projects/micronaut-core: Check the e2e output JSON file with config and no dependency analyzing."

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # https://flit.pypa.io/en/latest/pyproject_toml.html
@@ -26,7 +26,7 @@ dependencies = [
     "pydriller >=2.0,<3.0.0",
     "yamale >=4.0.3,<5.0.0",
     "packaging >=21.3,<24.0.0",
-    "jinja2 >=3.1.2,<4.0.0"
+    "jinja2 >=3.1.2,<4.0.0",
 ]
 keywords = []
 # https://pypi.org/classifiers/
@@ -83,6 +83,7 @@ test = [
     "pytest-custom_exit_code >=0.3.0,<1.0.0",
     "pytest-cov >=4.0.0,<5.0.0",
     "pytest-env >=0.8.1,<1.0.0",
+    "syrupy >=4.0.0,<5.0.0",
 ]
 
 [project.urls]

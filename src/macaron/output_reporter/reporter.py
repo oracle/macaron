@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains reporter classes for creating reports of Macaron analyzed results."""
@@ -19,7 +19,8 @@ from jinja2 import (
 )
 
 import macaron.output_reporter.jinja2_extensions as jinja2_extensions  # pylint: disable=consider-using-from-import
-from macaron.output_reporter.results import Report, SCMStatus
+from macaron.output_reporter.results import Report
+from macaron.output_reporter.scm import SCMStatus
 
 logger: logging.Logger = logging.getLogger(__name__)
 

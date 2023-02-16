@@ -40,7 +40,7 @@ jobs:
   build:
     outputs:
       artifacts-sha256: ${{ steps.compute-hash.outputs.artifacts-sha256 }}
-    name: Build Python ${{ matrix.python }} on ${{ matrix.os }}
+    name: Build Macaron
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -60,6 +60,13 @@ jobs:
       uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # v4.5.0
       with:
         python-version: ${{ matrix.python }}
+
+    # Install Java.
+    - name: Set up JDK
+      uses: actions/setup-java@3f07048e3d294f56e9b90ac5ea2c6f74e9ad0f98 # v3.10.0
+      with:
+        distribution: oracle
+        java-version: '17'
 
     # Using the Makefile assumes an activated virtual environment, which doesn't exist
     # when running in an Action environment (https://github.com/actions/setup-python/issues/359).

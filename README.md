@@ -20,7 +20,7 @@ Macaron uses [SLSA requirements specifications v0.1](https://slsa.dev/spec/v0.1/
 **Prerequisites**
 - Python 3.11
 - Go 1.18
-- JDK 11
+- JDK 17
 
 **Prepare the environment**
 
