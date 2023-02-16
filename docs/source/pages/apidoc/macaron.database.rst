@@ -34,6 +34,6 @@ macaron.database.database\_manager module
 -----------------------------------------
 
 .. automodule:: macaron.database.database_manager
-   :members:
+   :members: DatabaseManager
    :undoc-members:
    :show-inheritance:

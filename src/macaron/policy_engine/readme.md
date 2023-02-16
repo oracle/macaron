@@ -46,12 +46,12 @@ A policy consists of two statements, a definition clause and an enforcement clau
 requires that the repository has verified authenticated provenance we can write:
 
 ```c
-Policy("auth-provenance", repositoryid, "") :-    check_passed(repositoryid, "mcn_provenance_level_three_1").
+Policy("auth-provenance", repositoryid, "") :- check_passed(repositoryid, "mcn_provenance_level_three_1").
 ```
 
 Then to actually enforce this policy on some repositories we write:
 
-```
+```c
 apply_policy_to("auth-provenance", repo) :- is_repo(repo, _).
 ```
 
@@ -63,7 +63,7 @@ invocation. When being evaluated independently on a database, this means every r
 
 When we evaluate this policy with, for example
 
-```
+```sh
 python -m macaron.policy_engine -d output/macaron.db -f src/macaron/policy_engine/examples/simple_example.dl
 ```
 
@@ -88,4 +88,4 @@ failed_policies
 
 For the implementation of this see [prelude/policy.dl](prelude/policy.dl).
 
-When  any row in the `failed_policies` relation means policy failure, and the policy engine will exit nonzero.
+THe presence of any row in the `failed_policies` relation means policy failure, and the policy engine will exit non-zero.

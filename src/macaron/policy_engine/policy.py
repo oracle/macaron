@@ -16,8 +16,8 @@ from yamale.schema import Schema
 from macaron.database.table_definitions import PolicyTable
 from macaron.parsers.yaml.loader import YamlLoader
 from macaron.policy_engine import cue
-from macaron.policy_engine.__main__ import copy_prelude, get_generated
 from macaron.policy_engine.exceptions import InvalidPolicyError, PolicyRuntimeError
+from macaron.policy_engine.policy_engine import copy_prelude, get_generated
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
 from macaron.policy_engine.souffle_code_generator import restrict_to_analysis
 from macaron.util import JsonType

@@ -14,15 +14,7 @@ import sys
 import time
 from typing import Never
 
-from sqlalchemy import MetaData, create_engine
-
-from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
-from macaron.policy_engine.souffle_code_generator import (
-    SouffleProgram,
-    get_souffle_import_prelude,
-    project_table_to_key,
-    project_with_fk_join,
-)
+from macaron.policy_engine.policy_engine import get_generated, policy_engine
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -45,74 +37,18 @@ class Timer:
         logger.debug("%s delta: %s", self.name, f"{self.delta:0.4f}")
 
 
-def get_generated(database_path: os.PathLike | str) -> SouffleProgram:
-    """Get generated souffle code from database specified by configuration."""
-    if not os.path.isfile(database_path):
-        logger.error("Unable to open database %s", database_path)
-        sys.exit(1)
-
-    metadata = MetaData()
-    engine = create_engine(f"sqlite:///{database_path}", echo=False)
-    metadata.reflect(engine)
-
-    prelude = get_souffle_import_prelude(os.path.abspath(database_path), metadata)
-
-    for table_name in metadata.tables.keys():
-        table = metadata.tables[table_name]
-        if table_name[0] == "_":
-            prelude.update(project_table_to_key(f"{table_name[1:]}_attribute", table))
-            prelude.update(project_with_fk_join(table))
-
-    return prelude
-
-
-def copy_prelude(database_path: os.PathLike | str, sfl: SouffleWrapper, prelude: SouffleProgram | None = None) -> None:
-    """
-    Generate and copy the prelude into the souffle instance's include directory.
+def non_interactive(database_path: str, show_prelude: bool, policy_file: str) -> bool:
+    """Evaluate a policy based on configuration and exit.
 
     Parameters
     ----------
-    database_path: os.PathLike | str
-        The path to the database the facts will be imported from
-    sfl: SouffleWrapper
-        The souffle execution context object
-    prelude: SouffleProgram | None
-        Optional, the prelude to use for the souffle program, if none is given the default prelude is generated from
-        the database at database_path.
+    database_path: str
+        The SQLite database file to evaluate the policy against
+    show_prelude: bool
+        Just show the policy prelude and exit.
+    policy_file: str
+        The policy file to evaluate
     """
-    if prelude is None:
-        prelude = get_generated(database_path)
-    sfl.copy_to_includes("import_data.dl", str(prelude))
-
-    folder = os.path.join(os.path.dirname(__file__), "prelude")
-    for file_name in os.listdir(folder):
-        full_file_name = os.path.join(folder, file_name)
-        if not os.path.isfile(full_file_name):
-            continue
-        with open(full_file_name, encoding="utf-8") as file:
-            text = file.read()
-            sfl.copy_to_includes(file_name, text)
-
-
-def policy_engine(database_path: str, policy_file: str) -> dict:
-    """Invoke souffle and report result."""
-    with SouffleWrapper() as sfl:
-        copy_prelude(database_path, sfl)
-        with open(policy_file, encoding="utf-8") as file:
-            text = file.read()
-
-        try:
-            res = sfl.interpret_text(text)
-        except SouffleError as error:
-            logger.error("COMMAND: %s", error.command)
-            logger.error("ERROR: %s", error.message)
-            sys.exit(1)
-
-        return res
-
-
-def non_interactive(database_path: str, show_prelude: bool, policy_file: str) -> bool:
-    """Evaluate a policy based on configuration and exit."""
     if show_prelude:
         prelude = get_generated(database_path)
         logger.info("\n%s", prelude)
