@@ -61,7 +61,7 @@ class SouffleWrapper:
         souffle_full_path: str
             The path to the souffle executable.
         output_dir: Optional[str]
-            THe path to the souffle program's output directory.
+            The path to the souffle program's output directory.
         include_dir: Optional[str]
             The path to the directory to search for files when preprocessing the souffle program #include directives.
         fact_dir: Optional[str]

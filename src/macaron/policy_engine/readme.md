@@ -88,4 +88,4 @@ failed_policies
 
 For the implementation of this see [prelude/policy.dl](prelude/policy.dl).
 
-THe presence of any row in the `failed_policies` relation means policy failure, and the policy engine will exit non-zero.
+The presence of any row in the `failed_policies` relation means policy failure, and the policy engine will exit non-zero.
