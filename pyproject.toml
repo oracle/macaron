@@ -46,6 +46,7 @@ classifiers = [
 
 [project.scripts]
 macaron = 'macaron.__main__:main'
+policy = 'macaron.policy_engine.__main__:main'
 
 [project.entry-points]
 

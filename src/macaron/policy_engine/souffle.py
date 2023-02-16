@@ -45,9 +45,6 @@ class SouffleWrapper:
 
     """
 
-    # The temporary file to store the datalog program in when executing from the temporary directory
-    TEMP_SOURCEFILE_NAME = "source.dl"
-
     def __init__(
         self,
         souffle_full_path: str = "souffle",
@@ -56,7 +53,22 @@ class SouffleWrapper:
         fact_dir: Optional[str] = None,
         library_dir: str = os.curdir,
     ):
+        """
+        Create souffle wrapper object.
 
+        Parameters
+        ----------
+        souffle_full_path: str
+            The path to the souffle executable.
+        output_dir: Optional[str]
+            THe path to the souffle program's output directory.
+        include_dir: Optional[str]
+            The path to the directory to search for files when preprocessing the souffle program #include directives.
+        fact_dir: Optional[str]
+            The path to search for files to import facts from.
+        library_dir: str
+            The path to the directory to search for shared object files when linking souffle functors.
+        """
         # The Souffle command.
         self._souffle: str = "souffle"
         # Temporary execution directory.
@@ -111,7 +123,7 @@ class SouffleWrapper:
         ] + additional_args
         logger.debug("Executing souffle: %s", " ".join(cmd))
         result = subprocess.run(cmd, shell=False, capture_output=True, cwd=self.temp_dir, check=False)  # nosec B603
-        # Souffle doesn't exit with non-zero when the datalog program contains errors, but check anyway
+        # Souffle doesn't exit with non-zero when the datalog program contains errors, but check anyway.
         self.souffle_stderr = result.stderr.decode("utf-8")
         logger.debug("Souffle stdout: \n%s", result.stdout.decode("utf-8"))
         logger.debug("Souffle stderr: \n%s", result.stderr.decode("utf-8"))
@@ -142,8 +154,8 @@ class SouffleWrapper:
 
         Parameters
         ----------
-            filename: str the file to run
-            with_prelude: str string literal to append to the start of the file before running it
+            filename: str the file to run.
+            with_prelude: str string literal to append to the start of the file before running it.
         """
         with open(filename, encoding="utf-8") as file:
             text = file.read()
@@ -157,14 +169,13 @@ class SouffleWrapper:
         ----------
             text: str string literal to interpret
         """
-        source_file = os.path.join(self.temp_dir, self.TEMP_SOURCEFILE_NAME)
+        with tempfile.NamedTemporaryFile(dir=self.temp_dir, suffix=".dl", mode="w") as source_file:
+            source_file.write(text)
+            source_file.flush()
 
-        with open(source_file, "w", encoding="utf-8") as file:
-            file.write(text)
-
-        self._invoke_souffle(source_file)
-        output = self.load_csv_output()
-        return output
+            self._invoke_souffle(source_file.name)
+            output = self.load_csv_output()
+            return output
 
     def load_csv_output(self) -> dict:
         """Load and return all the csv files from the temporary working directory."""

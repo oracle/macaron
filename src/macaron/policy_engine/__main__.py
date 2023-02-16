@@ -128,7 +128,7 @@ def non_interactive(database_path: str, show_prelude: bool, policy_file: str) ->
 
     logger.info("Policy results:\n%s", "\n".join(output))
 
-    return any(res["failed_policies"])
+    return ("failed_policies" in res) and any(res["failed_policies"])
 
 
 def main() -> Never:
