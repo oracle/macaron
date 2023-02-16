@@ -107,13 +107,13 @@ $(PACKAGE_PATH)/resources/mvnw:
 		&& cd $(REPO_PATH)
 $(PACKAGE_PATH)/resources/gradlew:
 	cd $(PACKAGE_PATH)/resources \
-	&& export GRADLE_VERSION=7.6 \
-	&& wget https://services.gradle.org/distributions/gradle-$$GRADLE_VERSION-bin.zip \
-	&& unzip -o gradle-$$GRADLE_VERSION-bin.zip \
-	&& rm -r gradle-$$GRADLE_VERSION-bin.zip \
-	&& gradle-$$GRADLE_VERSION/bin/gradle wrapper \
-	&& rm -rf gradle-$$GRADLE_VERSION \
-	&& cd $(REPO_PATH)
+		&& export GRADLE_VERSION=7.6 \
+		&& wget https://services.gradle.org/distributions/gradle-$$GRADLE_VERSION-bin.zip \
+		&& unzip -o gradle-$$GRADLE_VERSION-bin.zip \
+		&& rm -r gradle-$$GRADLE_VERSION-bin.zip \
+		&& gradle-$$GRADLE_VERSION/bin/gradle wrapper \
+		&& rm -rf gradle-$$GRADLE_VERSION \
+		&& cd $(REPO_PATH)
 
 # Install or upgrade an existing virtual environment based on the
 # package dependencies declared in pyproject.toml and go.mod.

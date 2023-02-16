@@ -152,12 +152,12 @@ class BaseBuildTool(ABC):
 
         list_iter = iter(sorted(config_paths, key=lambda x: (str(Path(x).parent), len(Path(x).parts))))
         try:
-            prefix = next(list_iter)
-            yield Path(prefix).parent.relative_to(repo_path)
+            cfg_path = next(list_iter)
+            yield Path(cfg_path).parent.relative_to(repo_path)
             while next_item := next(list_iter):
-                if str(Path(prefix).parent) in next_item:
+                if str(Path(cfg_path).parent) in next_item:
                     continue
-                prefix = next_item
+                cfg_path = next_item
                 yield Path(next_item).parent.relative_to(repo_path)
 
         except StopIteration:

@@ -54,7 +54,7 @@ def deserialize_bom_json(file_path: Path) -> dict:
 
 
 def get_root_component(root_bom_path: Path) -> Optional[dict | None]:
-    """Get dependency components.
+    """Get the root dependency component.
 
     Parameters
     ----------
@@ -107,8 +107,8 @@ def get_dep_components(
         logger.error("The BOM file at %s misses components.", str(root_bom_path))
         return
 
-    dependencies = []
-    modules = set()  # Stores all module dependencies.
+    dependencies: list[str] = []
+    modules: set[str] = set()  # Stores all module dependencies.
     for child_path in child_bom_paths or []:
         try:
             bom_objects.append(deserialize_bom_json(child_path))

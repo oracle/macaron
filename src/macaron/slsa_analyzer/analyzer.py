@@ -279,7 +279,6 @@ class Analyzer:
                 with open(log_path, mode="a", encoding="utf-8") as log_file:
                     log_file.write(error.output.decode("utf-8"))
             except FileNotFoundError as error:
-                # Only happen if the gradlew at the repo dir has an invalid format
                 logger.error(error)
 
             # We collect the generated SBOM as a best effort, even if the build exits with errors.
