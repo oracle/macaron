@@ -1,0 +1,6 @@
+repo_violates_policy
+repo_satisfies_policy
+    ['1', 'slsa-framework/slsa-verifier', 'auth-provenance']
+passed_policies
+    ['auth-provenance']
+failed_policies

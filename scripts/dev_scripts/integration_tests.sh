@@ -12,6 +12,12 @@ COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
 RUN_MACARON="python -m macaron -o $WORKSPACE/output -t $GITHUB_TOKEN"
 RESULT_CODE=0
 
+if [[ -z "${GITHUB_TOKEN}" ]]
+then
+  echo "Environment variable GITHUB_TOKEN not set."
+  exit 1
+fi
+
 if [[ ! -d "$HOMEDIR/.m2/settings.xml" ]];
 then
     if [[ ! -d "$HOMEDIR/.m2" ]];
@@ -331,6 +337,29 @@ echo -e "-----------------------------------------------------------------------
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/invalid.yaml
 PROV_FILE=$WORKSPACE/tests/policy_engine/resources/provenances/slsa-verifier-linux-amd64.intoto.jsonl
 $RUN_MACARON -po $POLICY_FILE verify -pr $PROV_FILE
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "slsa-framework/slsa-verifier: Evaluating policy engine when analyzing the repo path when automatic dependency resolution is skipped ."
+echo -e "----------------------------------------------------------------------------------\n"
+rm -rf "$WORKSPACE/tmp-output"
+POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/simple_example.dl
+RUN_MACARON_PO="python -m macaron -o $WORKSPACE/tmp-output -t $GITHUB_TOKEN"
+$RUN_MACARON_PO -po $POLICY_FILE analyze -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps  2>&1 | grep 'POLICIES PASSED: auth-provenance' || RESULT_CODE=1
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Test policy CLI."
+echo -e "----------------------------------------------------------------------------------\n"
+
+RUN_POLICY="python -m macaron.policy_engine"
+POLICY_EXPECTED=$WORKSPACE/tests/e2e/expected_results/policy-engine/policy-output.txt
+$RUN_POLICY -f $POLICY_FILE -d  "$WORKSPACE/tmp-output/macaron.db" 2> "$WORKSPACE/tmp-output/policy-output.txt" || RESULT_CODE=1
+tail -n 6 < $WORKSPACE/tmp-output/policy-output.txt > $WORKSPACE/tmp-output/policy-output-nodate.txt
+diff "$WORKSPACE/tmp-output/policy-output-nodate.txt" $POLICY_EXPECTED || RESULT_CODE=1
+rm -rf "$WORKSPACE/tmp-output"
+
+
+
+
 
 if [ $? -eq 0 ];
 then

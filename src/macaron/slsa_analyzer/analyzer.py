@@ -19,13 +19,13 @@ from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager
+from macaron.database.table_definitions import RepositoryDependency
 from macaron.dependency_analyzer import (
     DependencyAnalyzer,
     DependencyAnalyzerError,
     DependencyInfo,
     NoneDependencyAnalyzer,
 )
-from macaron.database.table_definitions import RepositoryDependency
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.policy_engine.policy_registry import PolicyRegistry
