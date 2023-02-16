@@ -30,11 +30,11 @@ class BuildAsCodeTable(CheckFactsTable, ORMBase):
     """Check justification table for build_as_code."""
 
     __tablename__ = "_build_as_code_check"
-    build_tool_name: Mapped[str] = mapped_column(String)
-    ci_service_name: Mapped[str] = mapped_column(String)
-    build_trigger: Mapped[str] = mapped_column(String)
-    deploy_command: Mapped[str] = mapped_column(String)
-    build_status_url: Mapped[str] = mapped_column(String)
+    build_tool_name: Mapped[str] = mapped_column(String, nullable=True)
+    ci_service_name: Mapped[str] = mapped_column(String, nullable=True)
+    build_trigger: Mapped[str] = mapped_column(String, nullable=True)
+    deploy_command: Mapped[str] = mapped_column(String, nullable=True)
+    build_status_url: Mapped[str] = mapped_column(String, nullable=True)
 
 
 class BuildAsCodeCheck(BaseCheck):

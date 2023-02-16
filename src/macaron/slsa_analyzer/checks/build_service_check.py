@@ -30,9 +30,9 @@ class BuildServiceTable(CheckFactsTable, ORMBase):
     """Check justification table for build_service."""
 
     __tablename__ = "_build_service_check"
-    build_tool_name: Mapped[str] = mapped_column(String)
-    ci_service_name: Mapped[str] = mapped_column(String)
-    build_trigger: Mapped[str] = mapped_column(String)
+    build_tool_name: Mapped[str] = mapped_column(String, nullable=True)
+    ci_service_name: Mapped[str] = mapped_column(String, nullable=True)
+    build_trigger: Mapped[str] = mapped_column(String, nullable=True)
 
 
 class BuildServiceCheck(BaseCheck):
