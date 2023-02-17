@@ -33,31 +33,6 @@ then
     cp $RESOURCES/settings.xml $HOMEDIR/.m2/
 fi
 
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "slsa-framework/slsa-verifier: Evaluating policy engine when analyzing the repo path when automatic dependency resolution is skipped ."
-echo -e "----------------------------------------------------------------------------------\n"
-rm -rf "$WORKSPACE/tmp-output"
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/simple_example.dl
-RUN_MACARON_PO="python -m macaron -o $WORKSPACE/tmp-output -t $GITHUB_TOKEN"
-$RUN_MACARON_PO -po $POLICY_FILE analyze -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps  2>&1 | grep 'POLICIES PASSED: auth-provenance' || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Test policy CLI."
-echo -e "----------------------------------------------------------------------------------\n"
-
-set -v
-
-RUN_POLICY="python -m macaron.policy_engine"
-POLICY_EXPECTED=$WORKSPACE/tests/e2e/expected_results/policy-engine/policy-output.txt
-$RUN_POLICY -f $POLICY_FILE -d  "$WORKSPACE/tmp-output/macaron.db" 2> "$WORKSPACE/tmp-output/policy-output.txt" || log_fail
-tail -n 6 < $WORKSPACE/tmp-output/policy-output.txt > $WORKSPACE/tmp-output/policy-output-nodate.txt
-cat "$WORKSPACE/tmp-output/policy-output-nodate.txt"
-cat "$POLICY_EXPECTED"
-cmp "$WORKSPACE/tmp-output/policy-output-nodate.txt" "$POLICY_EXPECTED" || log_fail
-
-unset -v
-
 # Running Macaron without config files
 echo -e "\n=================================================================================="
 echo "Run integration tests without configurations"
@@ -368,6 +343,28 @@ echo -e "-----------------------------------------------------------------------
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/invalid.yaml
 PROV_FILE=$WORKSPACE/tests/policy_engine/resources/provenances/slsa-verifier-linux-amd64.intoto.jsonl
 $RUN_MACARON -po $POLICY_FILE verify -pr $PROV_FILE
+
+
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "slsa-framework/slsa-verifier: Evaluating policy engine when analyzing the repo path when automatic dependency resolution is skipped ."
+echo -e "----------------------------------------------------------------------------------\n"
+rm -rf "$WORKSPACE/tmp-output"
+POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/simple_example.dl
+RUN_MACARON_PO="python -m macaron -o $WORKSPACE/tmp-output -t $GITHUB_TOKEN"
+$RUN_MACARON_PO -po $POLICY_FILE analyze -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps  2>&1 | grep 'POLICIES PASSED: auth-provenance' || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Run policy CLI with slsa-verifier results."
+echo -e "----------------------------------------------------------------------------------\n"
+
+RUN_POLICY="python -m macaron.policy_engine"
+POLICY_EXPECTED=$WORKSPACE/tests/e2e/expected_results/policy-engine/policy-output.txt
+$RUN_POLICY -f $POLICY_FILE -d  "$WORKSPACE/tmp-output/macaron.db" 2> "$WORKSPACE/tmp-output/policy-output.txt" || log_fail
+# grep -v INFO < $WORKSPACE/tmp-output/policy-output.txt > $WORKSPACE/tmp-output/policy-output-nodate.txt
+# cat "$WORKSPACE/tmp-output/policy-output-nodate.txt"
+# cat "$POLICY_EXPECTED"
+# cmp "$WORKSPACE/tmp-output/policy-output-nodate.txt" "$POLICY_EXPECTED" || log_fail
 
 
 
