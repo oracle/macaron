@@ -344,6 +344,12 @@ POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/invalid.yaml
 PROV_FILE=$WORKSPACE/tests/policy_engine/resources/provenances/slsa-verifier-linux-amd64.intoto.jsonl
 $RUN_MACARON -po $POLICY_FILE verify -pr $PROV_FILE
 
+if [ $? -eq 0 ];
+then
+    echo -e "Expected non-zero status code but got $?."
+    log_fail
+fi
+
 
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -365,15 +371,6 @@ $RUN_POLICY -f $POLICY_FILE -d  "$WORKSPACE/tmp-output/macaron.db" 2> "$WORKSPAC
 # cat "$WORKSPACE/tmp-output/policy-output-nodate.txt"
 # cat "$POLICY_EXPECTED"
 # cmp "$WORKSPACE/tmp-output/policy-output-nodate.txt" "$POLICY_EXPECTED" || log_fail
-
-
-
-
-if [ $? -eq 0 ];
-then
-    echo -e "Expected non-zero status code but got $?."
-    log_fail
-fi
 
 if [ $RESULT_CODE -ne 0 ];
 then
