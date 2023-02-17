@@ -40,7 +40,6 @@ class TestDatabaseManager(TestCase):
     def setUp(self) -> None:
         """Set up the database and ensure it is empty."""
         self.db_path = str(Path(__file__).parent.joinpath("macaron.db"))
-        print(self.db_path)
         self.db_man = DatabaseManager(self.db_path, base=Base)
         con = sqlite3.connect(self.db_path)
         with con:

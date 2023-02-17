@@ -52,7 +52,7 @@ class ProvenanceAvailableTable(CheckFactsTable, ORMBase):
 
 
 class ProvenanceAvailableCheck(BaseCheck):
-    """This Check checks whether the target repo has intoto provenance."""
+    """This Check checks whether the target repo has in-toto provenance."""
 
     def __init__(self) -> None:
         """Initialize instance."""
