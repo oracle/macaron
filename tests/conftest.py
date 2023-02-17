@@ -10,6 +10,7 @@ import pytest
 from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
+from macaron.slsa_analyzer.build_tool.poetry import Poetry
 
 # We need to pass fixture names as arguments to maintain an order.
 # pylint: disable=redefined-outer-name
@@ -99,3 +100,22 @@ def gradle_tool(setup_test) -> Gradle:  # type: ignore # pylint: disable=unused-
     gradle = Gradle()
     gradle.load_defaults()
     return gradle
+
+
+@pytest.fixture(autouse=True)
+def poetry_tool(setup_test) -> Poetry:  # type: ignore # pylint: disable=unused-argument
+    """Create a Poetry tool instance.
+
+    Parameters
+    ----------
+    setup_test
+        Depends on setup_test fixture.
+
+    Returns
+    -------
+    Poetry
+        The Poetry instance.
+    """
+    poetry = Poetry()
+    poetry.load_defaults()
+    return poetry
