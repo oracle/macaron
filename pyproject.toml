@@ -65,7 +65,7 @@ dev = [
     # See https://github.com/pypa/pip-audit/commit/22d7e4c7f5acd20852c57b52b46e861a716ab09f.
     "pip-audit >=2.4.8,<3.0.0,!=2.4.9",
     "pylint >=2.9.3,<2.16.2",
-    "cyclonedx-bom >=3.5.0,<4.0.0",
+    "cyclonedx-bom >=3.11.0,<4.0.0",
 ]
 docs = [
     "sphinx >=5.3.0,<7.0.0",
