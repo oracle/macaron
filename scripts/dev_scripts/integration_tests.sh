@@ -13,7 +13,7 @@ RUN_MACARON="python -m macaron -o $WORKSPACE/output -t $GITHUB_TOKEN"
 RESULT_CODE=0
 
 function log_fail() {
-    printf "$(tput bold)$RED FAILED (line ${BASH_LINENO}) %s$(tput sgr0)\n" $@
+    printf "Error: FAILED integration test (line ${BASH_LINENO}) %s\n" $@
     RESULT_CODE=1
 }
 
@@ -46,13 +46,17 @@ echo -e "\n---------------------------------------------------------------------
 echo "Test policy CLI."
 echo -e "----------------------------------------------------------------------------------\n"
 
+set -v
+
 RUN_POLICY="python -m macaron.policy_engine"
 POLICY_EXPECTED=$WORKSPACE/tests/e2e/expected_results/policy-engine/policy-output.txt
 $RUN_POLICY -f $POLICY_FILE -d  "$WORKSPACE/tmp-output/macaron.db" 2> "$WORKSPACE/tmp-output/policy-output.txt" || log_fail
 tail -n 6 < $WORKSPACE/tmp-output/policy-output.txt > $WORKSPACE/tmp-output/policy-output-nodate.txt
-diff "$WORKSPACE/tmp-output/policy-output-nodate.txt" $POLICY_EXPECTED || log_fail
-rm -rf "$WORKSPACE/tmp-output"
+cat "$WORKSPACE/tmp-output/policy-output-nodate.txt"
+cat "$POLICY_EXPECTED"
+cmp "$WORKSPACE/tmp-output/policy-output-nodate.txt" "$POLICY_EXPECTED" || log_fail
 
+unset -v
 
 # Running Macaron without config files
 echo -e "\n=================================================================================="
