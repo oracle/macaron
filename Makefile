@@ -136,7 +136,7 @@ upgrade-go:
 # Generate a Software Bill of Materials (SBOM).
 .PHONY: sbom
 sbom: requirements
-	cyclonedx-bom --force --requirements --format json --output dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-sbom.json
+	cyclonedx-py --force --requirements --format json --output dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-sbom.json
 	$$HOME/go/bin/cyclonedx-gomod mod -json -output dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-sbom-go.json $(REPO_PATH)
 
 # Generate a requirements.txt file containing version and integrity hashes for all
