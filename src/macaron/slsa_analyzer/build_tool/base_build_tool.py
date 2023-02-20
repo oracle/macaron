@@ -15,29 +15,6 @@ from macaron.dependency_analyzer import DependencyAnalyzer, NoneDependencyAnalyz
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def find_files(path: str, file_name: str) -> list:
-    """Return a list of file paths that contain a certain file.
-
-    This method searches in the directory recursively.
-
-    Parameters
-    ----------
-    path : str
-        The path to search for the file.
-    file_name : str
-        The name of the file to search.
-
-    Returns
-    -------
-    list:
-        The result list of strings or empty if the file doesn't exist anywhere lower than the path.
-    """
-    pattern = os.path.join(path, "**", file_name)
-    files_detected = glob.glob(pattern, recursive=True)
-
-    return files_detected
-
-
 def file_exists(path: str, file_name: str) -> bool:
     """Return True if a file exists in a directory.
 

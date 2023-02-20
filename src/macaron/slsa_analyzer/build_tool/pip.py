@@ -3,7 +3,7 @@
 
 """This module contains the Pip class which inherits BaseBuildTool.
 
-This module is used to work with repositories that use Poetry for dependency management.
+This module is used to work with repositories that use pip for dependency management.
 """
 
 import logging

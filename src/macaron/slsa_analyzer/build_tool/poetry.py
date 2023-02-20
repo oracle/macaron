@@ -6,12 +6,15 @@
 This module is used to work with repositories that use Poetry for dependency management.
 """
 
+import glob
 import logging
+import os
 import tomllib
+from pathlib import Path
 
 from macaron.config.defaults import defaults
 from macaron.dependency_analyzer import DependencyAnalyzer, NoneDependencyAnalyzer
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists, find_files
+from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -49,18 +52,23 @@ class Poetry(BaseBuildTool):
 
         for conf in self.entry_conf:
             # Find the paths of all pyproject.toml files.
-            files_detected = find_files(repo_path, conf)
+            pattern = os.path.join(repo_path, "**", conf)
+            files_detected = glob.glob(pattern, recursive=True)
 
             if files_detected:
+                # Take the highest level file, if there are two at the same level, take the first in the list.
+                file_path = min(files_detected, key=lambda x: len(Path(x).parts))
                 try:
-                    # Take the highest level file (shortest file path)
-                    file_path = min(files_detected, key=len)
-
                     # Parse the .toml file
                     with open(file_path, "rb") as toml_file:
-                        data = tomllib.load(toml_file)
-                        if ("tool" in data) and ("poetry" in data["tool"]):
-                            return True
+                        try:
+                            data = tomllib.load(toml_file)
+                            # Check for the existence of a [tool.poetry] section.
+                            if ("tool" in data) and ("poetry" in data["tool"]):
+                                return True
+                        except tomllib.TOMLDecodeError:
+                            logger.error("Failed to read the %s file: invalid toml file.", conf)
+                            return False
                     return False
                 except FileNotFoundError:
                     logger.error("Failed to read the %s file.", conf)
@@ -71,7 +79,7 @@ class Poetry(BaseBuildTool):
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
         """Prepare the necessary wrapper files for running the build.
 
-        This method will return False if there is any errors happened during operation.
+        This method returns False on errors.
 
         Parameters
         ----------
@@ -83,7 +91,7 @@ class Poetry(BaseBuildTool):
         Returns
         -------
         bool
-            True if succeed else False.
+            True if succeeds else False.
         """
         return False
 
