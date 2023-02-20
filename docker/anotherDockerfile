@@ -1,0 +1,146 @@
+FROM container-registry.oracle.com/os/oraclelinux:9-slim
+
+ENV HOME="/home/macaron" \
+    BUILD_DIR="/root" \
+    INSTALL_DIR="/usr/local" \
+    PYTHON3_VERSION=3.11.1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Runtime dependencies
+RUN : \
+    set -eux; \
+    microdnf upgrade -y; \
+    microdnf install -y \
+        # what is the equivalent of netbase in oracle linux ?
+        # netbase
+        tzdata \
+        ca-certificates \
+        ; \
+    microdnf clean all;
+
+RUN : \
+    set -eux; \
+    # Example: https://yum.oracle.com/repo/OracleLinux/OL9/developer/EPEL/x86_64/index.html
+    # This is used for the package lcov.
+    microdnf install -y dnf; \
+    USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2)"; \
+    echo -e \
+"\
+[ol9_epel]\n\
+name=EPEL packages for test and development (\$basearch)\n\
+baseurl=https://yum\$ociregion.\$ocidomain/repo/OracleLinux/OL9/developer/EPEL/\$basearch/\n\
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle\n\
+gpgcheck=1\n\
+enabled=1\
+" >> /etc/yum.repos.d/epel-ol9.repo; \
+    # Clean all here so that when we run upgrade, the newly added repo is used.
+    microdnf clean all; \
+    microdnf upgrade -y; \
+    # The core ready builder repo is enabled for the package gdbm-devel.
+    microdnf --enablerepo=ol9_codeready_builder install -y \
+        # Python build dependencies.
+        # Note: there is an option to use `dnf builddep` to get all python build dependencies.
+        # However, there are a couple of issues:
+        # - A regular python installation may not need all of these packages. A lot of packages are
+        # optional packages, which are only required if some specific libraries are used.
+        # - When consulting open-source projects (e.g. official docker, deadsnakes), they do not use the `builddep` command.
+        # - We have to add one particular repository not available in the base image to get all packages
+        # that `dnf buildep` tries to install.
+        # - Running `dnf builddep` significantly increases the size of the image (to nearly 3GB).
+        # References:
+        # - https://devguide.python.org/getting-started/setup-building/index.html#linux
+        # - https://github.com/deadsnakes/runbooks/blob/main/dockerfiles/Dockerfile.jammy
+        # - https://github.com/docker-library/buildpack-deps/blob/master/debian/bullseye/Dockerfile
+        # which depends on: https://github.com/docker-library/python/blob/master/3.11/bullseye/Dockerfile
+        autoconf       \
+        bluez-libs     \
+        bzip2-devel    \
+        expat-devel    \
+        libdb-devel    \
+        libffi-devel   \
+        libuuid-devel  \
+        gcc            \
+        gdbm-devel     \
+        glibc-devel    \
+        gnupg          \
+        gpm-devel      \
+        lcov           \
+        make           \
+        ncurses-devel  \
+        openssl-devel  \
+        pkgconfig      \
+        readline-devel \
+        tk-devel       \
+        wget           \
+        xz             \
+        xz-devel       \
+        zlib-devel;    \
+    wget -O python.tar.xz https://www.python.org/ftp/python/$PYTHON3_VERSION/Python-$PYTHON3_VERSION.tgz; \
+    mkdir -p /usr/src/python; \
+	tar --extract --directory /usr/src/python --strip-components=1 --file python.tar.xz; \
+	rm python.tar.xz; \
+    cd /usr/src/python; \
+    ./configure \
+        --enable-loadable-sqlite-extensions \
+		--enable-optimizations \
+		--enable-option-checking=fatal \
+		--enable-shared \
+		--with-lto \
+		--with-system-expat \
+		--without-ensurepip \
+	; \
+    # What are they ddoing here?
+    nproc="$(nproc)"; \
+	LDFLAGS="-Wl,--strip-all"; \
+	make -j "$nproc" \
+		"EXTRA_CFLAGS=${EXTRA_CFLAGS:-}" \
+		"LDFLAGS=${LDFLAGS:-}" \
+		"PROFILE_TASK=${PROFILE_TASK:-}" \
+	; \
+# https://github.com/docker-library/python/issues/784
+# prevent accidental usage of a system installed libpython of the same version
+    rm python; \
+	make -j "$nproc" \
+		"EXTRA_CFLAGS=${EXTRA_CFLAGS:-}" \
+		"LDFLAGS=${LDFLAGS:--Wl},-rpath='\$\$ORIGIN/../lib'" \
+		"PROFILE_TASK=${PROFILE_TASK:-}" \
+		python \
+	; \
+	make install; \
+	\
+	cd /; \
+	rm -rf /usr/src/python; \
+	\
+	find /usr/local -depth \
+		\( \
+			\( -type d -a \( -name test -o -name tests -o -name idle_test \) \) \
+			-o \( -type f -a \( -name '*.pyc' -o -name '*.pyo' -o -name 'libpython*.a' \) \) \
+		\) -exec rm -rf '{}' + \
+	; \
+	\
+	ldconfig; \
+	\
+    # dnf mark remove does not accept wildcard, I think?
+	dnf list installed | tail -n +2 | cut -d' ' -f1 | xargs dnf mark remove > /dev/null; \
+	echo $USER_MANUAL_INSTALLED | xargs -r dnf mark install; \
+    # NEED TO FIND CORRESPONDING STUFFS FOR THIS
+    find /usr/local -type f -executable -not \( -name '*tkinter*' \) -exec ldd '{}' ';' \
+		| awk '/=>/ { print $(NF-1) }' \
+		| sort -u \
+        # Need further format of the results for it to work
+		| xargs -r rpm -q \
+		| cut -d: -f1 \
+		| sort -u \
+		| xargs -r dnf mark install \
+	; \
+	# apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+	# rm -rf /var/lib/apt/lists/*; \
+	# \
+	dnf autoremove; \
+    microdnf remove dnf; \
+    microdnf clean all; \
+    rm -rf /usr/share/doc; \
+    rm -rf /var/cache/yum; \
+    rm -rf /var/cache/dnf; \
+	python3 --version
