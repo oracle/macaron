@@ -1,8 +1,6 @@
-FROM container-registry.oracle.com/os/oraclelinux:9-slim
+FROM container-registry.oracle.com/os/oraclelinux:9-slim as base
 
 ENV HOME="/home/macaron" \
-    BUILD_DIR="/root" \
-    INSTALL_DIR="/usr/local" \
     PYTHON3_VERSION=3.11.1 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
@@ -12,19 +10,27 @@ RUN : \
     set -eux; \
     microdnf upgrade -y; \
     microdnf install -y \
+        # These are the runtime dependencies as specified by the official Python 3.11 slim-buster Dockerfile.
+        # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L17
         # what is the equivalent of netbase in oracle linux ?
         # netbase
         tzdata \
         ca-certificates \
-        ; \
-    microdnf clean all;
+        dnf; \
+    dnf remove -y microdnf; \
+    dnf clean all; \
+    rm -rf /var/cache/yum; \
+    rm -rf /var/cache/dnf;
 
 RUN : \
     set -eux; \
-    # Example: https://yum.oracle.com/repo/OracleLinux/OL9/developer/EPEL/x86_64/index.html
-    # This is used for the package lcov.
-    microdnf install -y dnf; \
-    USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2)"; \
+    # Store the list of runtime dependencies to preserve.
+    # https://dnf.readthedocs.io/en/latest/command_ref.html#history-command
+    # Include systemd and dnf to avoid the warning of removal of protected packages.
+    USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2) systemd dnf"; \
+    # We add an extra Yum repo that contains the package lcov.
+    # We are following the convention as existing repo definition in OL9.
+    # Example of a resolved URL: https://yum.oracle.com/repo/OracleLinux/OL9/developer/EPEL/x86_64/index.html
     echo -e \
 "\
 [ol9_epel]\n\
@@ -34,11 +40,11 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle\n\
 gpgcheck=1\n\
 enabled=1\
 " >> /etc/yum.repos.d/epel-ol9.repo; \
-    # Clean all here so that when we run upgrade, the newly added repo is used.
-    microdnf clean all; \
-    microdnf upgrade -y; \
-    # The core ready builder repo is enabled for the package gdbm-devel.
-    microdnf --enablerepo=ol9_codeready_builder install -y \
+    # Clean all here so that when we run upgrade, the newly added Yum repo is used.
+    dnf clean all; \
+    dnf upgrade -y; \
+    # The ol9_core_ready_builder repo is enabled for the package gdbm-devel.
+    dnf --enablerepo=ol9_codeready_builder install -y \
         # Python build dependencies.
         # Note: there is an option to use `dnf builddep` to get all python build dependencies.
         # However, there are a couple of issues:
@@ -71,11 +77,19 @@ enabled=1\
         openssl-devel  \
         pkgconfig      \
         readline-devel \
+        sqlite-devel   \
         tk-devel       \
         wget           \
         xz             \
         xz-devel       \
-        zlib-devel;    \
+        zlib-devel     \
+        # Used by the original Python Dockerfile to query for used shared libraries.
+        # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L34
+        # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L114
+        dpkg-dev;     \
+    # Pull the source code of Python, compile and install from source.
+    # We follow https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L29
+    # However, some modification are applied to make it suitable for Oracle Linux.
     wget -O python.tar.xz https://www.python.org/ftp/python/$PYTHON3_VERSION/Python-$PYTHON3_VERSION.tgz; \
     mkdir -p /usr/src/python; \
 	tar --extract --directory /usr/src/python --strip-components=1 --file python.tar.xz; \
@@ -90,7 +104,7 @@ enabled=1\
 		--with-system-expat \
 		--without-ensurepip \
 	; \
-    # What are they ddoing here?
+    # What are they doing here?
     nproc="$(nproc)"; \
 	LDFLAGS="-Wl,--strip-all"; \
 	make -j "$nproc" \
@@ -120,27 +134,65 @@ enabled=1\
 	; \
 	\
 	ldconfig; \
-	\
-    # dnf mark remove does not accept wildcard, I think?
+	# \
+    # # dnf mark remove does not accept wildcard, I think?
 	dnf list installed | tail -n +2 | cut -d' ' -f1 | xargs dnf mark remove > /dev/null; \
-	echo $USER_MANUAL_INSTALLED | xargs -r dnf mark install; \
-    # NEED TO FIND CORRESPONDING STUFFS FOR THIS
+    [ -z "$USER_MANUAL_INSTALLED" ] || dnf mark install $USER_MANUAL_INSTALLED; \
     find /usr/local -type f -executable -not \( -name '*tkinter*' \) -exec ldd '{}' ';' \
 		| awk '/=>/ { print $(NF-1) }' \
 		| sort -u \
-        # Need further format of the results for it to work
-		| xargs -r rpm -q \
+		| xargs -r dpkg-query --search \
 		| cut -d: -f1 \
 		| sort -u \
 		| xargs -r dnf mark install \
 	; \
-	# apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-	# rm -rf /var/lib/apt/lists/*; \
-	# \
-	dnf autoremove; \
-    microdnf remove dnf; \
-    microdnf clean all; \
-    rm -rf /usr/share/doc; \
+	# # apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+	# # rm -rf /var/lib/apt/lists/*; \
+	# # \
+	dnf autoremove -y; \
+    dnf clean all; \
     rm -rf /var/cache/yum; \
     rm -rf /var/cache/dnf; \
-	python3 --version
+    python3 --version
+
+# make some useful symlinks that are expected to exist ("/usr/local/bin/python" and friends)
+RUN set -eux; \
+	for src in idle3 pydoc3 python3 python3-config; do \
+		dst="$(echo "$src" | tr -d 3)"; \
+		[ -s "/usr/local/bin/$src" ]; \
+		[ ! -e "/usr/local/bin/$dst" ]; \
+		ln -svT "$src" "/usr/local/bin/$dst"; \
+	done
+
+# https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L133
+ENV PYTHON_PIP_VERSION=22.3.1 \
+    # https://github.com/docker-library/python/issues/365
+    PYTHON_SETUPTOOLS_VERSION=65.5.1 \
+    # https://github.com/pypa/get-pip
+    PYTHON_GET_PIP_URL="https://github.com/pypa/get-pip/raw/d5cb0afaf23b8520f1bbcfed521017b4a95f5c01/public/get-pip.py" \
+    PYTHON_GET_PIP_SHA256="394be00f13fa1b9aaa47e911bdb59a09c3b2986472130f30aa0bfaf7f3980637"
+
+RUN : \
+    set -eux; \
+    # Include systemd and dnf to avoid the warning of removal of protected packages.
+	USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2) systemd dnf"; \
+	dnf upgrade -y; \
+	dnf install -y wget; \
+	wget -O get-pip.py "$PYTHON_GET_PIP_URL"; \
+	echo "$PYTHON_GET_PIP_SHA256 *get-pip.py" | sha256sum -c -; \
+	dnf list installed | tail -n +2 | cut -d' ' -f1 | xargs dnf mark remove > /dev/null; \
+	[ -z "$USER_MANUAL_INSTALLED" ] || dnf mark install $USER_MANUAL_INSTALLED; > /dev/null; \
+	dnf autoremove -y; \
+	python get-pip.py \
+		--disable-pip-version-check \
+		--no-cache-dir \
+		--no-compile \
+		"pip==$PYTHON_PIP_VERSION" \
+		"setuptools==$PYTHON_SETUPTOOLS_VERSION" \
+	; \
+	rm -f get-pip.py; \
+	\
+    dnf clean all; \
+    rm -rf /var/cache/yum; \
+    rm -rf /var/cache/dnf; \
+	pip --version;
