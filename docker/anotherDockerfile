@@ -6,8 +6,7 @@ ENV HOME="/home/macaron" \
     PYTHONDONTWRITEBYTECODE=1
 
 # Runtime dependencies
-RUN : \
-    set -eux; \
+RUN set -eux; \
     microdnf upgrade -y; \
     microdnf install -y \
         # These are the runtime dependencies as specified by the official Python 3.11 slim-buster Dockerfile.
@@ -22,8 +21,7 @@ RUN : \
     rm -rf /var/cache/yum; \
     rm -rf /var/cache/dnf;
 
-RUN : \
-    set -eux; \
+RUN set -eux; \
     # Store the list of runtime dependencies to preserve.
     # https://dnf.readthedocs.io/en/latest/command_ref.html#history-command
     # Include systemd and dnf to avoid the warning of removal of protected packages.
@@ -172,8 +170,7 @@ ENV PYTHON_PIP_VERSION=22.3.1 \
     PYTHON_GET_PIP_URL="https://github.com/pypa/get-pip/raw/d5cb0afaf23b8520f1bbcfed521017b4a95f5c01/public/get-pip.py" \
     PYTHON_GET_PIP_SHA256="394be00f13fa1b9aaa47e911bdb59a09c3b2986472130f30aa0bfaf7f3980637"
 
-RUN : \
-    set -eux; \
+RUN set -eux; \
     # Include systemd and dnf to avoid the warning of removal of protected packages.
 	USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2) systemd dnf"; \
 	dnf upgrade -y; \
@@ -196,3 +193,96 @@ RUN : \
     rm -rf /var/cache/yum; \
     rm -rf /var/cache/dnf; \
 	pip --version;
+
+CMD [ "python3" ]
+
+FROM base as setup-binaries
+
+ENV GOROOT="/usr/local/go" \
+    GO_VERSION=1.18.3
+
+ENV PATH=$GOROOT/bin:$PATH
+
+RUN set -eux; \
+    dnf upgrade -y; \
+    dnf install -y \
+        git \
+        wget \
+        gzip \
+        unzip \
+        make; \
+    rm -rf $GOROOT; \
+    wget -O go.tar.gz https://go.dev/dl/go$GO_VERSION.linux-amd64.tar.gz; \
+    tar -C /usr/local -xzf go.tar.gz; \
+    rm go.tar.gz; \
+    go version; \
+    dnf clean all; \
+    rm -rf /var/cache/yum; \
+    rm -rf /var/cache/dnf;
+
+WORKDIR /root/setup-binaries
+COPY Makefile ./
+RUN mkdir -p ./src/macaron/resources && \
+    mkdir -p ./src/macaron/bin && \
+    make setup-binaries
+
+RUN rm /root/setup-binaries/Makefile
+
+# This stage is for the the final production image.
+# The final image contains the Python3.11.1 installation from the python-builder stage,
+# the runtime library (i.e openssl, git and jdk11) and the Python dependencies of Macaron.
+FROM base as final
+
+ENV HOME="/home/macaron" \
+    JAVA_HOME="/usr/lib/jvm/java-11-openjdk"
+
+ENV PACKAGE_PATH=$HOME/.venv/lib/python3.11/site-packages/macaron \
+    PATH=$JAVA_HOME/bin:$PATH
+
+# Create the macaron user and group with abritary UID and GID.
+# The macaron GID and UID in this image will be modified by the
+# user.sh script on startup to get the UID and GID of the user who started
+# the Docker container.
+RUN groupadd --gid 43147 macaron && \
+    useradd --uid 43147 --create-home --gid 43147 macaron
+
+RUN dnf upgrade -y && \
+    dnf install -y \
+        git \
+        java-11-openjdk-devel && \
+    dnf clean all -y && \
+    rm -rf /var/cache/yum && \
+    rm -rf /var/cache/dnf
+
+WORKDIR $HOME
+
+# Build time ARG. This argument specifies the path of dist from the host machine.
+ARG WHEEL_PATH
+ARG WHEEL_FILE_NAME
+
+# Installing the Python dependencies in the Python virtual environment.
+# We switch to user macaron so that when we install the dependencies using pip,
+# the warning of not having correct ownership of /home/macaron is not raised.
+# TODO: resolve hardcoded file names.
+USER macaron:macaron
+COPY --chown=macaron:macaron $WHEEL_PATH/$WHEEL_FILE_NAME $HOME/$WHEEL_FILE_NAME
+RUN python3 -m venv $HOME/.venv && \
+    . .venv/bin/activate && \
+    pip install --no-compile --no-cache-dir $HOME/$WHEEL_FILE_NAME && \
+    rm -rf $HOME/$WHEEL_FILE_NAME && \
+    deactivate
+
+COPY --chown=macaron:macaron docker/user.sh $HOME/user.sh
+
+COPY --from=setup-binaries --chown=macaron:macaron /root/setup-binaries/src/macaron $PACKAGE_PATH
+
+# We enable the root user here so that the user.sh script can modify the
+# GID and UID of user macaron at startup to match the GID and UID
+# of the current user in the host machine.
+USER root
+ENTRYPOINT [ "./user.sh" ]
+
+
+# TODO: Update usage of settings.xml in user.sh
+# Clean up and write docs
+# Should we remove pip and setup tools in the deploy image.
