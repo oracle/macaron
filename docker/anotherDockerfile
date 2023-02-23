@@ -1,15 +1,6 @@
-# Some notes, please clean it up later
-# - We must to clean up the dnf cache after each RUN layer ( I have tested it and it seems only run at the end won't efficiently reduce the size of the image).
-# -> We need ot make sure each layer we put in is the smallest
-# - We need to note in this Dockerfile that we are heavily inspired by the official python docker image.
-# We should use the GPG keys verification as documented in https://www.python.org/downloads/
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-# We need to clean up after install git and jdk in the final image too
-# We need to check if there is any pyc or pycache dir in the final image.
-
-# TODO: Update usage of settings.xml in user.sh
-# Clean up and write docs
-# Should we remove pip and setup tools in the deploy image.
 FROM container-registry.oracle.com/os/oraclelinux:9-slim as base
 
 ENV HOME="/home/macaron" \
@@ -23,7 +14,7 @@ ENV HOME="/home/macaron" \
     # following the instructions on https://www.python.org/downloads/
     PYTHON_SOURCE_GPG="A035C8C19219BA821ECEA86B64E628F8D684696D"
 
-ENV PATH="/usr/local/bin":$PATH
+ENV PATH=/usr/local/bin:$PATH
 
 # Python's runtime dependencies.
 RUN : \
@@ -266,6 +257,8 @@ FROM py311-jdk17 as py311-jdk17-souffle
 
 WORKDIR /souffle-src
 
+# The instructions to build Souffle in Oracle Linux is referenced from:
+#       https://github.com/souffle-lang/souffle/blob/master/.github/images/oraclelinux-8/Dockerfile
 RUN : \
     && set -eux \
     && USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2) systemd dnf" \
@@ -284,7 +277,9 @@ RUN : \
         libffi-devel \
         libtool \
         make \
-        # mcpp could not be found anywhere in oracle linux 9 repos.
+        # The package mcpp could not be found anywhere in available oracle linux 9 repos.
+        # However, souffle could be built without it.
+        # mcpp
         ncurses-devel \
         pkg-config \
         python39 \
@@ -338,11 +333,13 @@ ARG WHEEL_FILE_NAME
 # TODO: resolve hardcoded file names.
 USER macaron:macaron
 COPY --chown=macaron:macaron $WHEEL_PATH/$WHEEL_FILE_NAME $HOME/$WHEEL_FILE_NAME
-RUN python3 -m venv $HOME/.venv && \
-    . .venv/bin/activate && \
-    pip install --no-compile --no-cache-dir $HOME/$WHEEL_FILE_NAME && \
-    rm -rf $HOME/$WHEEL_FILE_NAME && \
-    deactivate
+RUN : \
+    && python3 -m venv $HOME/.venv \
+    && . .venv/bin/activate \
+    && pip install --no-compile --no-cache-dir --upgrade pip \
+    && pip install --no-compile --no-cache-dir $HOME/$WHEEL_FILE_NAME \
+    && rm -rf $HOME/$WHEEL_FILE_NAME \
+    && deactivate
 
 COPY --chown=macaron:macaron docker/user.sh $HOME/user.sh
 
