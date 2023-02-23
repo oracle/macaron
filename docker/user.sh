@@ -26,7 +26,7 @@ then
     then
         mkdir -p $HOME/.m2
     fi
-    cp $HOME/resources/settings.xml $HOME/.m2/
+    cp $PACKAGE_PATH/resources/settings.xml $HOME/.m2/
 fi
 
 # Prepare the output directory. The output directory will be already existed
