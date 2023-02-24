@@ -211,7 +211,7 @@ class Analyzer:
         # Print the analysis result into the console output.
         logger.info(str(report))
 
-        logger.info("Analysis Completed! Policy %s", "FAILED" if any(failed_policies) else "PASSED")
+        logger.info("Analysis Completed!")
         return any(failed_policies)
 
     def generate_reports(self, report: Report) -> None:

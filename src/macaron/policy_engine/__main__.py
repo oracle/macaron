@@ -12,12 +12,12 @@ import logging
 import os
 import sys
 import time
-from typing import Never
 
 from sqlalchemy import create_engine, select
 
 from macaron import __version__
 from macaron.database.table_definitions import AnalysisTable
+from macaron.output_reporter.reporter import PolicyReporter
 from macaron.policy_engine.policy_engine import get_generated, policy_engine
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ def check_version(database_path: str) -> None:
             sys.exit(1)
 
 
-def non_interactive(database_path: str, show_prelude: bool, policy_file: str) -> bool:
+def non_interactive(database_path: str, show_prelude: bool, policy_file: str) -> dict:
     """Evaluate a policy based on configuration and exit.
 
     Parameters
@@ -72,11 +72,16 @@ def non_interactive(database_path: str, show_prelude: bool, policy_file: str) ->
         Just show the policy prelude and exit.
     policy_file: str
         The policy file to evaluate
+
+    Returns
+    -------
+    dict
+        The policy engine result.
     """
     if show_prelude:
         prelude = get_generated(database_path)
         logger.info("\n%s", prelude)
-        return False
+        return {}
 
     check_version(database_path)
     res = policy_engine(database_path, policy_file)
@@ -89,10 +94,10 @@ def non_interactive(database_path: str, show_prelude: bool, policy_file: str) ->
 
     logger.info("Policy results:\n%s", "\n".join(output))
 
-    return ("failed_policies" in res) and any(res["failed_policies"])
+    return res
 
 
-def main() -> Never:
+def main() -> int:
     """Parse arguments and start policy engine."""
     main_parser = argparse.ArgumentParser(prog="policy_engine")
     main_parser.add_argument("-d", "--database", help="Database path", required=True, action="store")
@@ -100,6 +105,12 @@ def main() -> Never:
     main_parser.add_argument("-s", "--show-prelude", help="Show policy prelude", required=False, action="store_true")
     main_parser.add_argument("-v", "--verbose", help="Enable verbose logging", required=False, action="store_true")
     main_parser.add_argument("-l", "--log-path", help="Log file path", required=False, action="store")
+    main_parser.add_argument(
+        "-o",
+        "--output-dir",
+        default=os.path.join(os.getcwd(), "output"),
+        help="The output directory path for the policy report.",
+    )
 
     args = main_parser.parse_args(sys.argv[1:])
 
@@ -109,14 +120,28 @@ def main() -> Never:
     else:
         log_level = logging.INFO
         log_format = "%(asctime)s [%(levelname)s] %(message)s"
+
+    # Set logging config.
     logging.basicConfig(format=log_format, handlers=[logging.StreamHandler()], force=True, level=log_level)
 
-    if args.log_path:
-        debug_log_path = os.path.abspath(args.log_path)
-        log_file_handler = logging.FileHandler(debug_log_path, "w")
-        log_file_handler.setFormatter(logging.Formatter(log_format))
-        logging.getLogger().addHandler(log_file_handler)
-        logger.info("The log file of the policy engine be stored in %s", debug_log_path)
+    # Set the output directory.
+    if args.output_dir:
+        if os.path.isfile(args.output_dir):
+            logger.error("The output directory already exists. Exiting ...")
+            sys.exit(1)
+
+        if os.path.isdir(args.output_dir):
+            logger.info("Setting the output directory to %s", args.output_dir)
+        else:
+            logger.info("No directory at %s. Creating one ...", args.output_dir)
+            os.makedirs(args.output_dir)
+
+    # Set logging debug level. We only need to set for the root logger.
+    debug_log_path = os.path.join(args.output_dir, "debug_policy.log")
+    log_file_handler = logging.FileHandler(debug_log_path, "w")
+    log_file_handler.setFormatter(logging.Formatter(log_format))
+    logging.getLogger().addHandler(log_file_handler)
+    logger.info("The log file of the policy engine will be stored in %s", debug_log_path)
 
     database_path = args.database
     policy_file = ""
@@ -128,8 +153,14 @@ def main() -> Never:
         show_prelude = args.show_prelude
 
     res = non_interactive(database_path, show_prelude, policy_file)
-    sys.exit(res)
+    policy_reporter = PolicyReporter()
+    policy_reporter.generate(args.output_dir, res)
+
+    if ("failed_policies" in res) and any(res["failed_policies"]):
+        return 1
+
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

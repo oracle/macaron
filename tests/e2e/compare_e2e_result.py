@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module checks the result JSON files against the expected outputs."""
@@ -115,7 +115,30 @@ def compare_result_json(result_path: str, expect_path: str) -> int:
         fail_count = 0
         fail_count += compare_target_info(result["target"]["info"], expected["target"]["info"])
         fail_count += compare_check_results(result["target"]["checks"], expected["target"]["checks"])
+        fail_count += compare_policy_results(result["policies_failed"], expected["policies_failed"])
+        fail_count += compare_policy_results(result["policies_passed"], expected["policies_passed"])
         return fail_count
+
+
+def compare_policy_results(result: list, expected: list) -> int:
+    """Compare the policy results in policies_failed" and policies_passed attributes."""
+    res = set(result)
+    exp = set(expected)
+    fail_count = 0
+    if len(res) == len(exp):
+        if (fails := len(res.difference(exp))) > 0:
+            fail_count += fails
+    else:
+        fail_count += abs(len(res) - len(exp))
+
+    if fail_count > 0:
+        logger.error(
+            "Results do not match in %s item(s): Result is [%s] but expected [%s]",
+            fail_count,
+            ",".join(res),
+            ",".join(exp),
+        )
+    return fail_count
 
 
 def main() -> None:
@@ -133,7 +156,8 @@ def main() -> None:
     fail_count = compare_result_json(result_path, expect_path)
 
     if fail_count > 0:
-        raise ValueError(f"{fail_count} JSON results did not match the expected output.")
+        error_msg = f"{fail_count} JSON results did not match the expected output."
+        raise ValueError(error_msg)
 
 
 if __name__ == "__main__":

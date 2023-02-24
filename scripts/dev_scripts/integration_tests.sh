@@ -53,15 +53,6 @@ $RUN_MACARON analyze -rp https://github.com/jenkinsci/plot-plugin -b master -d 5
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "slsa-framework/slsa-verifier: Analyzing the repo path when automatic dependency resolution is skipped."
-echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
-$RUN_MACARON analyze -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
-
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.json
@@ -351,26 +342,30 @@ then
 fi
 
 
-
+# Testing the Souffle policy engine.
 echo -e "\n----------------------------------------------------------------------------------"
-echo "slsa-framework/slsa-verifier: Evaluating policy engine when analyzing the repo path when automatic dependency resolution is skipped ."
+echo "slsa-framework/slsa-verifier: Analyzing the repo path when automatic dependency resolution is skipped"
+echo "and Datalog policy is provided."
 echo -e "----------------------------------------------------------------------------------\n"
-rm -rf "$WORKSPACE/tmp-output"
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/simple_example.dl
-RUN_MACARON_PO="python -m macaron -o $WORKSPACE/tmp-output -t $GITHUB_TOKEN"
-$RUN_MACARON_PO -po $POLICY_FILE analyze -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps  2>&1 | grep 'POLICIES PASSED: auth-provenance' || log_fail
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
+POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
+$RUN_MACARON -po $POLICY_FILE analyze -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Run policy CLI with slsa-verifier results."
 echo -e "----------------------------------------------------------------------------------\n"
+RUN_POLICY="policy_engine"
+COMPARE_POLICIES=$WORKSPACE/tests/policy_engine/compare_policy_reports.py
+POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
+POLICY_RESULT=$WORKSPACE/output/policy_report.json
+POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/policy_report.json
 
-RUN_POLICY="python -m macaron.policy_engine"
-POLICY_EXPECTED=$WORKSPACE/tests/e2e/expected_results/policy-engine/policy-output.txt
-$RUN_POLICY -f $POLICY_FILE -d  "$WORKSPACE/tmp-output/macaron.db" 2> "$WORKSPACE/tmp-output/policy-output.txt" || log_fail
-# grep -v INFO < $WORKSPACE/tmp-output/policy-output.txt > $WORKSPACE/tmp-output/policy-output-nodate.txt
-# cat "$WORKSPACE/tmp-output/policy-output-nodate.txt"
-# cat "$POLICY_EXPECTED"
-# cmp "$WORKSPACE/tmp-output/policy-output-nodate.txt" "$POLICY_EXPECTED" || log_fail
+# Run policy engine on the database and compare results.
+$RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
+python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 
 if [ $RESULT_CODE -ne 0 ];
 then
