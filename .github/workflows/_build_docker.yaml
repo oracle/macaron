@@ -5,32 +5,29 @@ name: Build Docker image
 on:
   workflow_call:
     inputs:
-      image-tag:
+      image-name:
         required: true
         type: string
-    outputs:
-      artifacts-sha256:
-        description: The hash of the Docker image
-        value: ${{ jobs.build-docker.outputs.image-digest }}
+      release-tag:
+        required: true
+        type: string
+      artifact_name:
+        required: true
+        type: string
+    # outputs:
+    #   artifacts-sha256:
+    #     description: The hash of the Docker image
+    #     value: ${{ jobs.build-docker.outputs.image-digest }}
 permissions:
   contents: read
 
 jobs:
-  build:
-    uses: ./.github/workflows/_build.yaml
-    permissions:
-      contents: read
-
   build-docker:
-    needs: [build]
     runs-on: ubuntu-latest
-    outputs:
-      image-digest: ${{ steps.build_docker.outputs.digest }}
+    # outputs:
+    #   image-digest: ${{ steps.build_docker.outputs.digest }}
 
     steps:
-    - name: Print inputs variables
-      run: echo ${{ inputs.image-tag }}
-
     - name: Check out repository
       uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
       with:
@@ -39,7 +36,8 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3.0.1
       with:
-        path: download_artifact
+        name: ${{ inputs.artifact_name }}
+        path: download
 
     - name: Check downloaded artifact
       run: ls -R
@@ -61,11 +59,10 @@ jobs:
       uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5   # v3.2.0
       with:
         context: .
-        push: false
-        # PARAMETERIZE THIS.
+        push: true
         build-args: |
-          DIST_PATH=./download_artifact/artifact-ubuntu-latest-python-3.11/src/macaron
-          WHEEL_PATH=./download_artifact/artifact-ubuntu-latest-python-3.11/dist/
-          WHEEL_FILE_NAME=macaron-0.0.0-py3-none-any.whl
-        tags: ${{ inputs.image-tag }}
-        file: docker/Dockerfile.final
+          DIST_PATH=./download/${{ inputs.artifact_name }}/dist
+        tags:
+        - ${{ inputs.image-name }}/${{ inputs.release-tag }}
+        - ${{ inputs.image-name }}/latest
+        file: docker/Dockerfile.prod

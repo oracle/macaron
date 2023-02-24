@@ -324,21 +324,20 @@ RUN : \
 WORKDIR $HOME
 
 # Build time ARG. This argument specifies the path of dist from the host machine.
-ARG WHEEL_PATH
-ARG WHEEL_FILE_NAME
+ARG DIST_PATH
 
 # Installing the Python dependencies in the Python virtual environment.
 # We switch to user macaron so that when we install the dependencies using pip,
 # the warning of not having correct ownership of /home/macaron is not raised.
 # TODO: resolve hardcoded file names.
 USER macaron:macaron
-COPY --chown=macaron:macaron $WHEEL_PATH/$WHEEL_FILE_NAME $HOME/$WHEEL_FILE_NAME
+COPY --chown=macaron:macaron $DIST_PATH $HOME/dist/
 RUN : \
     && python3 -m venv $HOME/.venv \
     && . .venv/bin/activate \
     && pip install --no-compile --no-cache-dir --upgrade pip \
-    && pip install --no-compile --no-cache-dir $HOME/$WHEEL_FILE_NAME \
-    && rm -rf $HOME/$WHEEL_FILE_NAME \
+    && find $HOME/dist -depth \( -type f \( -name "macaron-*.whl" \) \) -exec pip install --no-compile --no-cache-dir '{}' \; \
+    && rm -rf $HOME/dist \
     && deactivate
 
 COPY --chown=macaron:macaron docker/user.sh $HOME/user.sh
