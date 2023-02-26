@@ -19,6 +19,7 @@ from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager
+from macaron.database.table_definitions import RepositoryDependency
 from macaron.dependency_analyzer import (
     DependencyAnalyzer,
     DependencyAnalyzerError,
@@ -27,7 +28,7 @@ from macaron.dependency_analyzer import (
 )
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
-from macaron.policy_engine.policy import Policy
+from macaron.policy_engine.policy_registry import PolicyRegistry
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
@@ -37,6 +38,7 @@ from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
 from macaron.slsa_analyzer.checks.check_result import CheckResult, SkippedInfo
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
+from macaron.slsa_analyzer.database_store import store_analysis_to_db, store_analyze_context_to_db
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.registry import registry
@@ -51,9 +53,6 @@ class Analyzer:
 
     GIT_REPOS_DIR = "git_repos"
     """The directory in the output dir to store all cloned repositories."""
-
-    TABLE_NAME = "analyze_result"
-    """The name of the SQLite table which stores the analyze results."""
 
     def __init__(self, output_path: str, build_log_path: str) -> None:
         """Initialize instance.
@@ -81,8 +80,7 @@ class Analyzer:
         if not os.path.isdir(self.build_log_path):
             os.makedirs(self.build_log_path)
 
-        database_path = os.path.join(output_path, defaults.get("database", "db_name", fallback="macaron.db"))
-        self.db_man = DatabaseManager(database_path)
+        self.database_path = os.path.join(output_path, defaults.get("database", "db_name", fallback="macaron.db"))
 
         # If provided with local_repos_path, we resolve the path of the target repo
         # to the path within local_repos_path.
@@ -95,13 +93,15 @@ class Analyzer:
         if not os.path.exists(self.local_repos_path):
             os.makedirs(self.local_repos_path, exist_ok=True)
 
-        # Get the policy from global config.
-        self.policy: Policy | None = None
-        if global_config.policy_path:
-            self.policy = Policy.make_policy(global_config.policy_path)
+        # Load the policies from global config.
+        self.policies = PolicyRegistry(global_config.macaron_path, global_config.policy_paths)
 
         # Initialize the reporters to store analysis data to files.
         self.reporters: list[FileReporter] = []
+
+        self.db_man = DatabaseManager(self.database_path)
+        # Create database tables: all checks have been registered so all tables should be mapped now
+        self.db_man.create_tables()
 
     def run(self, user_config: dict, skip_deps: bool = False) -> int:
         """Run the analysis and write results to the output path.
@@ -155,6 +155,8 @@ class Analyzer:
                     dep_record: Record = Record(
                         record_id=config.get_value("id"),
                         description=config.get_value("note"),
+                        policies_failed=[],
+                        policies_passed=[],
                         pre_config=config,
                         status=config.get_value("available"),
                     )
@@ -174,9 +176,34 @@ class Analyzer:
             find_ctx = report.find_ctx(dup_record.pre_config.get_value("path"))
             dup_record.context = find_ctx
 
-        # Store the analysis result into the SQLite database.
-        for ctx in report.get_ctxs():
-            self.store_result_to_db(ctx)
+        analysis = store_analysis_to_db(self.db_man, main_record)
+
+        for record in report.get_records():
+            if not record.status == SCMStatus.DUPLICATED_SCM:
+                if record.context:
+                    store_analyze_context_to_db(self.db_man, analysis, record.context)
+
+        # Store dependency relations
+        for parent, child in report.get_dependencies():
+            dependency = RepositoryDependency(
+                dependent_repository=parent.repository_table.id, dependency_repository=child.repository_table.id
+            )
+            self.db_man.add_and_commit(dependency)
+
+        self.db_man.session.commit()
+
+        # Evaluate policy
+        self.policies.evaluate_souffle_policies(self.database_path, restrict_to_analysis=analysis.id)
+
+        for record in report.get_records():
+            if record.context:
+                passed, failed = self.policies.get_souffle_results(repo_id=record.context.repository_table.id)
+                record.policies_passed += [x.policy for x in passed]
+                record.policies_failed += [x.policy for x in failed]
+
+        _, failed_policies = self.policies.get_souffle_results()
+        for policy in failed_policies:
+            logger.error("Policy Failed: %s", policy)
 
         # Store the analysis result into report files.
         self.generate_reports(report)
@@ -185,7 +212,7 @@ class Analyzer:
         logger.info(str(report))
 
         logger.info("Analysis Completed!")
-        return 0
+        return any(failed_policies)
 
     def generate_reports(self, report: Report) -> None:
         """Generate the report of the analysis to all registered reporters.
@@ -330,6 +357,8 @@ class Analyzer:
             return Record(
                 record_id=repo_id,
                 description=error_msg,
+                policies_failed=[],
+                policies_passed=[],
                 pre_config=config,
                 status=SCMStatus.ANALYSIS_FAILED,
             )
@@ -347,9 +376,12 @@ class Analyzer:
                 pre_config=config,
                 status=SCMStatus.DUPLICATED_SCM,
                 context=existing_record.context,
+                policies_failed=[],
+                policies_passed=[],
             )
 
         analyze_ctx = self.get_analyze_ctx(req_branch, git_obj)
+        analyze_ctx.dynamic_data["policy"] = self.policies.get_policy_for_target(analyze_ctx.repo_full_name)
         analyze_ctx.check_results = self.perform_checks(analyze_ctx)
 
         return Record(
@@ -357,6 +389,8 @@ class Analyzer:
             description="Analysis Completed.",
             pre_config=config,
             status=SCMStatus.AVAILABLE,
+            policies_failed=[],
+            policies_passed=[],
             context=analyze_ctx,
         )
 
@@ -427,6 +461,8 @@ class Analyzer:
             self.output_path,
             remote_path,
         )
+
+        self.db_man.add(analyze_ctx.repository_table)
 
         return analyze_ctx
 
@@ -648,35 +684,6 @@ class Analyzer:
         skipped_checks: list[SkippedInfo] = []
 
         # Get the reference to the policy.
-        analyze_ctx.dynamic_data["policy"] = self.policy
-
         results = registry.scan(analyze_ctx, skipped_checks)
 
         return results
-
-    def store_result_to_db(self, analyze_ctx: AnalyzeContext) -> None:
-        """Store the content of an analyzed context into the database.
-
-        Parameters
-        ----------
-        analyze_ctx : AnalyzeContext
-            The analyze context to store into the database.
-        """
-        logger.info(
-            "Inserting result of %s to %s",
-            analyze_ctx.repo_full_name,
-            defaults.get("database", "db_name", fallback="macaron.db"),
-        )
-        if not self.db_man.is_init:
-            self.init_database()
-        insert_data = analyze_ctx.get_insert_data()
-        insert_query = AnalyzeContext.gen_insert_analyze_result_query(Analyzer.TABLE_NAME)
-        self.db_man.execute_insert_query(insert_query, insert_data)
-
-    def init_database(self) -> None:
-        """Initiate the database connection and create the table to store the analyze result."""
-        self.db_man.init_conn()
-
-        # Create the table for storing analyze result
-        analyze_result_table = AnalyzeContext.gen_create_table_query(Analyzer.TABLE_NAME)
-        self.db_man.execute_multi_queries(analyze_result_table)

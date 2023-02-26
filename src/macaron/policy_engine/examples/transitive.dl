@@ -1,0 +1,23 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+
+#include "prelude.dl"
+
+/**
+ *  This example shows that policies can be written to enforce requirements on a repository's dependencies, and
+ *  transitive dependencies.
+ */
+
+Policy("example-transitive", parent, "") :-
+    check_passed(parent, "mcn_provenance_level_three_1"),
+    transitive_dependency(parent, repo), // note that since macaron by default does not traverse to transitive,
+                                         // dependencies, in most cases this is identical to `dependency(parent, repo)`.
+    check_passed(repo, "mcn_provenance_level_three_1").
+
+Policy("example-transitive", parent, "") :-
+    check_passed(parent, "mcn_provenance_level_three_1"),
+    !transitive_dependency(parent, _).
+
+// apply the policy to everything
+apply_policy_to("example-transitive", repo) :- is_repo(repo, _).

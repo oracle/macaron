@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains classes that handle the analysis of each SLSA levels."""
@@ -17,3 +17,6 @@ class SLSALevels(Enum):
     LEVEL2 = "SLSA Level 2"
     LEVEL3 = "SLSA Level 3"
     LEVEL4 = "SLSA Level 4"
+
+    def __int__(self) -> int:
+        return int(self.value[-1])

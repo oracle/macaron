@@ -1,4 +1,5 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the TrustedBuilderL3Check class."""
@@ -7,7 +8,12 @@ import logging
 import os
 from typing import Any
 
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql.sqltypes import String
+
 from macaron.config.defaults import defaults
+from macaron.database.database_manager import ORMBase
+from macaron.database.table_definitions import CheckFactsTable
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
@@ -17,6 +23,15 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+class ResultTable(CheckFactsTable, ORMBase):
+    """Check justification table for trusted_builder."""
+
+    __tablename__ = "_trusted_builder_check"
+    build_tool_name: Mapped[str] = mapped_column(String)
+    ci_service_name: Mapped[str] = mapped_column(String)
+    build_trigger: Mapped[str] = mapped_column(String)
 
 
 class TrustedBuilderL3Check(BaseCheck):
@@ -73,6 +88,8 @@ class TrustedBuilderL3Check(BaseCheck):
         # using self-hosted runners, custom containers or services, etc.
         found_builder = False
         ci_services = ctx.dynamic_data["ci_services"]
+        result_values = []
+        check_result["result_tables"] = []
 
         for ci_info in ci_services:
             inferred_provenances = []
@@ -127,11 +144,20 @@ class TrustedBuilderL3Check(BaseCheck):
                         ]
                     )
                     found_builder = True
+                    result_values.append(
+                        {
+                            "build_tool_name": callee.name,
+                            "build_trigger": caller_link,
+                            "ci_service_name": ci_service.name,
+                        }
+                    )
 
             # If inferred provenances is not empty, store them and replace existing inferred provenances
             # because trusted builders have the highest priority.
             if inferred_provenances:
                 ci_info["provenances"] = inferred_provenances
+
+        check_result["result_tables"] = [ResultTable(**result) for result in result_values]
 
         if found_builder:
             return CheckResultType.PASSED

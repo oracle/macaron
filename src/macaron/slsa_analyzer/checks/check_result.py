@@ -1,10 +1,12 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the CheckResult class for storing the result of a check."""
-
 from enum import Enum
 from typing import TypedDict
+
+from sqlalchemy import Table
+from sqlalchemy.orm import DeclarativeBase
 
 
 class CheckResultType(str, Enum):
@@ -33,6 +35,9 @@ class CheckResult(TypedDict):
     # it will be displayed as a string, if it is a mapping,
     # the value will be rendered as a hyperlink in the html report.
     justification: list[str | dict[str, str]]
+    # human_readable_justification: str
+    # result_values: dict[str, str | float | int] | list[dict[str, str | float | int]]
+    result_tables: list[DeclarativeBase | Table]
     # recommendation: str
     result_type: CheckResultType
 

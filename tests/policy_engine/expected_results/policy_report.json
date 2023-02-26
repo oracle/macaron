@@ -1,0 +1,21 @@
+{
+    "passed_policies": [
+        [
+            "auth-provenance"
+        ]
+    ],
+    "failed_policies": [],
+    "repo_violates_policy": [],
+    "repo_satisfies_policy": [
+        [
+            "1",
+            "slsa-framework/slsa-verifier",
+            "auth-provenance"
+        ],
+        [
+            "2",
+            "slsa-framework/slsa-verifier",
+            "auth-provenance"
+        ]
+    ]
+}
