@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the implementation of the Provenance Available check."""
@@ -6,7 +6,12 @@
 import logging
 import re
 
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql.sqltypes import String
+
 from macaron.config.defaults import defaults
+from macaron.database.database_manager import ORMBase
+from macaron.database.table_definitions import CheckFactsTable
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
@@ -20,7 +25,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 def is_in_toto_file(file_name: str) -> bool:
     """Return true if the file name matches the in-toto file format.
 
-    The format for thoes files is ``<stage_name>.<6_bytes_key_id>.link``.
+    The format for those files is ``<stage_name>.<6_bytes_key_id>.link``.
 
     Parameters
     ----------
@@ -38,8 +43,16 @@ def is_in_toto_file(file_name: str) -> bool:
     return False
 
 
+class ProvenanceAvailableTable(CheckFactsTable, ORMBase):
+    """Check justification table for provenance_available."""
+
+    __tablename__ = "_provenance_available_check"
+    asset_name: Mapped[str] = mapped_column(String)
+    asset_url: Mapped[str] = mapped_column(String)
+
+
 class ProvenanceAvailableCheck(BaseCheck):
-    """This Check checks whether the target repo has intoto provenance."""
+    """This Check checks whether the target repo has in-toto provenance."""
 
     def __init__(self) -> None:
         """Initialize instance."""
@@ -92,6 +105,14 @@ class ProvenanceAvailableCheck(BaseCheck):
 
                     check_result["justification"].append("Found provenance in release assets:")
                     check_result["justification"].extend([asset["name"] for asset in assets])
+                    asset_results = [
+                        {
+                            "asset_name": asset["name"],
+                            "asset_url": asset["url"],
+                        }
+                        for asset in assets
+                    ]
+                    check_result["result_tables"] = [ProvenanceAvailableTable(**res) for res in asset_results]
 
                     return CheckResultType.PASSED
 

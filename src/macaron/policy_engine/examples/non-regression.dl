@@ -1,0 +1,37 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+
+#include "prelude.dl"
+
+/**
+ * This example policy shows how to enforce that checks do not regress from a specific point.
+ *
+ * Here we specify that all checks that passed on the repositories in analysis 8, must always pass on the same
+ * repositories when they are later analysed later.
+ */
+
+ #define REFERENCE_ANALYSIS_ID 8
+
+Policy("non-regression", repo, "") :-
+   reference_analysis = REFERENCE_ANALYSIS_ID,
+   is_repo(repo, repo_name),
+   analysis(reference_analysis, timestamp, target_repo, macaron_ver),
+   // There are no checks that passed on the reference repo that did not pass on
+   // this repo
+   0 = count : {
+        repository_analysis(reference_analysis, analysis_repo),
+        is_repo(analysis_repo, repo_name),
+        check_passed(analysis_repo, check_id),
+        !check_passed(repo, check_id)
+    }.
+
+apply_policy_to("non-regression", repo) :-
+   reference_analysis = REFERENCE_ANALYSIS_ID,
+   // enforce any time we analyse a repo with the same name in a subsequent
+   // analysis
+   repository_analysis(reference_analysis, repo_in_ref_analysis),
+   is_repo(repo_in_ref_analysis, ref_repo_full_name),
+   repository_analysis(other_analysis, repo),
+   other_analysis > REFERENCE_ANALYSIS_ID, // depends on keys being sequential
+   is_repo(repo, ref_repo_full_name).

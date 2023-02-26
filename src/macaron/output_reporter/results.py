@@ -6,7 +6,7 @@
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Generic, TypedDict, TypeVar
+from typing import Generic, Optional, TypedDict, TypeVar
 
 from macaron.config.target_config import Configuration
 from macaron.output_reporter.scm import SCMStatus
@@ -74,6 +74,11 @@ class Record(Generic[RecordNode]):
     dependencies : list[RecordNode]
         The list of Records for the analyzed dependencies of this repo.
 
+    policies_passed: list[str]
+        The list of policy IDs that this repository failed.
+    policies_failed: list[str]
+        The list of policy IDs that this repository failed.
+
     See Also
     --------
     SCMStatus
@@ -85,6 +90,8 @@ class Record(Generic[RecordNode]):
     description: str
     pre_config: Configuration
     status: SCMStatus
+    policies_passed: list[str]
+    policies_failed: list[str]
     context: AnalyzeContext | None = field(default=None)
     dependencies: list[RecordNode] = field(default_factory=list)
 
@@ -122,6 +129,8 @@ class Record(Generic[RecordNode]):
             },
             "target": self.context.get_dict() if self.context else {},
             "dependencies": self.get_dep_summary(),
+            "policies_passed": self.policies_passed,
+            "policies_failed": self.policies_failed,
         }
         return result
 
@@ -227,6 +236,26 @@ class Report:
             if record.context:
                 yield record.context
 
+    def get_dependencies(self, root_record: Optional[Record] = None) -> Iterable[tuple[AnalyzeContext, AnalyzeContext]]:
+        """Get the generator for the dependency relations between repositories.
+
+        Parameters
+        ----------
+        root_record: Optional[Record]
+            The root record to find the dependencies of, if none is provided self.root_record is used.
+
+        Yields
+        ------
+        Tuple[AnalyzeContext, AnalyzeContext]
+            The tuple containing first the parent context followed by the child context.
+        """
+        if root_record is None:
+            root_record = self.root_record
+        if root_record.context:
+            for record in root_record.dependencies:
+                if record.context:
+                    yield root_record.context, record.context
+
     def find_ctx(self, remote_path: str) -> AnalyzeContext | None:
         """Find the context instance from a given remote path.
 
@@ -280,5 +309,15 @@ class Report:
             output = "".join([output, f"\n{level.value}:\n"])
             for mesg in mesg_list:
                 output = "".join([output, f"- {mesg}\n"])
+
+        for record in self.get_records():
+            if not record.context:
+                continue
+            output += f"\n\nTARGET: {record.context.repo_full_name}"
+            output += "\n\tPOLICIES FAILED: "
+            output += ", ".join(record.policies_failed)
+            output += "\n\tPOLICIES PASSED: "
+            output += ", ".join(record.policies_passed)
+            output += "\n"
 
         return output

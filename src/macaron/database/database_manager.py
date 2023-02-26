@@ -1,18 +1,34 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This DatabaseManager module handles the sqlite database connection."""
-
 import logging
-import sqlite3
+from types import TracebackType
+from typing import Any, Optional
+
+import sqlalchemy.exc
+from sqlalchemy import Table, create_engine, insert, select
+from sqlalchemy.orm import DeclarativeBase, Session
+
+from macaron.database.views import create_view
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class DatabaseManager:
-    """This class handles and manages the connection to sqlite database during the search session."""
+class ORMBase(DeclarativeBase):
+    """ORM base class."""
 
-    def __init__(self, db_path: str):
+
+class DatabaseManager:
+    """
+    This class handles and manages the connection to sqlite database during the session.
+
+    Note that since SQLAlchemy lazy-loads the fields of mapped ORM objects, if the database connection is closed any
+    orm-mapped objects will become invalid. As such the lifetime of the database manager must be longer than any of the
+    objects added to the database (using add() or add_and_commit()).
+    """
+
+    def __init__(self, db_path: str, base: type[DeclarativeBase] = ORMBase):
         """Initialize instance.
 
         Parameters
@@ -20,93 +36,102 @@ class DatabaseManager:
         db_path : str
             The path to the target database.
         """
-        self.db_path = db_path
-        self.is_init = False
-        self.db_con = None
-        self.db_cursor = None
-
-    def init_conn(self) -> None:
-        """Initiate the connection to the target database."""
-        logger.debug("Connecting to database at %s", self.db_path)
-        self.db_con = sqlite3.connect(self.db_path)  # type: ignore[assignment]
-        self.db_cursor = self.db_con.cursor()  # type: ignore[attr-defined]
-        self.is_init = True
-
-    def execute_query(self, query: str, commit: bool = True) -> None:
-        """Execute a single query against the sqlite database and commit it.
-
-        Parameters
-        ----------
-        query : str
-            The SQLite query to perform.
-        commit : bool
-            If True, the result of this query is committed to the database.
-        """
-        logger.debug("Executing DB query: %s", query)
-        self.db_cursor.execute(query)  # type: ignore[attr-defined]
-        if commit:
-            self.db_con.commit()  # type: ignore[attr-defined]
-
-    def execute_multi_queries(self, queries: list, commit: bool = True) -> None:
-        """Execute multiple queries and ignore sqlite3.Operational Errors.
-
-        Parameters
-        ----------
-        queries : list
-            The list of queries to perform.
-        commit : bool
-            If True, the result of this query is committed to the database.
-        """
-        logger.debug("Executing multiple queries")
-        for query in queries:
-            try:
-                self.execute_query(query, commit)
-            except sqlite3.OperationalError as error:
-                logger.debug("Sqlite3.OperationalError: %s. Continue", error)
-
-    def execute_select_query(self, query: str) -> list:
-        """Execute the select query and return the list of results.
-
-        Parameters
-        ----------
-        query : str
-            The SELECT query to execute.
-
-        Returns
-        -------
-        list
-        """
-        logger.debug("Executing DB query: %s", query)
-        try:
-            result: list = self.db_cursor.execute(query).fetchall()  # type: ignore
-            return result
-        except sqlite3.OperationalError as error:
-            logger.error(
-                "Sqlite3.OperationalError while performing SELECT query: %s. Continue",
-                error,
-            )
-            return []
-
-    def execute_insert_query(self, placeholder_query: str, data: dict) -> None:
-        """Execute the insert query using the named style query from sqlite3.
-
-        Parameters
-        ----------
-        placeholder_query : str
-            The named style INSERT query.
-        data : str
-            The data dictionary to be inserted into the final query.
-        """
-        logger.debug("Executing insert query on data %s", data)
-        try:
-            self.db_cursor.execute(placeholder_query, data)  # type: ignore
-            self.db_con.commit()  # type: ignore
-        except sqlite3.OperationalError as error:
-            logger.error(
-                "Sqlite3.OperationalError while performing INSERT query: %s. Continue",
-                error,
-            )
+        self.engine = create_engine(f"sqlite+pysqlite:///{db_path}", echo=False, future=True)
+        self.db_name = db_path
+        self.session = Session(self.engine)
+        self._base = base
 
     def terminate(self) -> None:
-        """Terminate the connection to the sqlite database."""
-        self.db_con.close()  # type: ignore
+        """Terminate the connection to the database, discarding any transaction in progress."""
+        self.session.close()
+
+    def __enter__(self) -> "DatabaseManager":
+        return self
+
+    def __exit__(
+        self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
+    ) -> None:
+        self.terminate()
+
+    def add_and_commit(self, item) -> None:  # type: ignore
+        """Add an ORM object to the session and commit it.
+
+        Following commit any auto-updated primary key values in the object will be populated and readable.
+        The object can still be modified and read after being committed.
+
+        Parameters
+        ----------
+        item: the orm-mapped object to add to the database.
+        """
+        try:
+            self.session.add(item)
+            self.session.commit()
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            logger.error("Database error %s", error)
+            self.session.rollback()
+
+    def add(self, item) -> None:  # type: ignore
+        """Add an item to the database and flush it.
+
+        Once added the row remains accessible and modifiable, and the primary key field is populated to reflect its
+        record in the database.
+
+        If terminate is called before commit the object will be lost.
+
+        Parameters
+        ----------
+        item:
+            the orm-mapped object to add to the database.
+        """
+        try:
+            self.session.add(item)
+            self.session.flush()
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            logger.error("Database error %s", error)
+            self.session.rollback()
+
+    def insert(self, table: Table, values: dict) -> None:
+        """Populate the table with provided values and add it to the database using the core api.
+
+        Parameters
+        ----------
+        table: Table
+            The Table to insert to
+        values: dict
+            The mapping from column names to values to insert into the Table
+        """
+        try:
+            self.execute(insert(table).values(**values))
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            logger.error("Database error %s", error)
+
+    def execute(self, query: Any) -> None:
+        """
+        Execute a SQLAlchemy core api query using a short-lived engine connection.
+
+        Parameters
+        ----------
+        query: Any
+            The SQLalchemy query to execute
+        """
+        with self.engine.connect() as conn:
+            conn.execute(query)
+            conn.commit()
+
+    def create_tables(self) -> None:
+        """
+        Automatically create views for all tables known to _base.metadata.
+
+        Creates all explicitly declared tables, and creates views proxying all tables beginning with an underscore.
+
+        Note: this is specifically to allow the tables to be loaded into souffle:
+            https://souffle-lang.github.io/directives#input-directive
+        """
+        try:
+            self._base.metadata.create_all(self.engine, checkfirst=True)
+            for table_name, table in self._base.metadata.tables.items():
+                if table_name[0] == "_":
+                    create_view(table_name[1:], self._base.metadata, select(table))
+            self._base.metadata.create_all(self.engine, checkfirst=True)
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            logger.error("Database error on create tables %s", error)

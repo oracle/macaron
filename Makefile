@@ -93,7 +93,8 @@ setup: force-upgrade setup-go setup-binaries
 	go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.3.0
 setup-go:
 	go build -o $(PACKAGE_PATH)/bin/ $(REPO_PATH)/golang/cmd/...
-setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier $(PACKAGE_PATH)/resources/mvnw $(PACKAGE_PATH)/resources/gradlew
+	go build -o $(PACKAGE_PATH)/bin/cuevalidate.so -buildmode=c-shared $(REPO_PATH)/golang/cue/validate.go
+setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier $(PACKAGE_PATH)/resources/mvnw $(PACKAGE_PATH)/resources/gradlew souffle
 $(PACKAGE_PATH)/bin/slsa-verifier:
 	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.0.1
 	cd slsa-verifier/cli/slsa-verifier && go build -o $(PACKAGE_PATH)/bin/
@@ -114,6 +115,30 @@ $(PACKAGE_PATH)/resources/gradlew:
 		&& gradle-$$GRADLE_VERSION/bin/gradle wrapper \
 		&& rm -rf gradle-$$GRADLE_VERSION \
 		&& cd $(REPO_PATH)
+
+# Supports OL8+, Fedora 34+, and Ubuntu 20.04+
+LINUX_DISTRO := "$(shell grep '^NAME=' /etc/os-release | sed 's/^NAME=//' | sed 's/"//g')"
+.PHONY: souffle
+souffle:
+	if ! command -v souffle; then \
+		echo "Installing system dependency: souffle" && \
+	    case $(LINUX_DISTRO) in \
+	        "Oracle Linux") \
+                sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.3/x86_64-oraclelinux-8-souffle-2.3-Linux.rpm \
+                ;; \
+	        "Fedora Linux") \
+                sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.3/x86_64-fedora-34-souffle-2.3-Linux.rpm \
+                ;; \
+            "Ubuntu") \
+                sudo wget https://souffle-lang.github.io/ppa/souffle-key.public -O /usr/share/keyrings/souffle-archive-keyring.gpg; \
+                echo "deb [signed-by=/usr/share/keyrings/souffle-archive-keyring.gpg] https://souffle-lang.github.io/ppa/ubuntu/ stable main" | sudo tee /etc/apt/sources.list.d/souffle.list; \
+                sudo apt update; \
+                sudo apt install souffle; \
+                ;; \
+	esac;                                                                                                                                                  \
+	fi && \
+    command -v souffle
+
 
 # Install or upgrade an existing virtual environment based on the
 # package dependencies declared in pyproject.toml and go.mod.

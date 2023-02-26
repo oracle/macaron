@@ -1,0 +1,146 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+/**
+ *  Souffle datalog rules defining an aggregate approximate security level for a repository.
+ *  This is not a SLSA level, but is based on Macaron checks which are inspired by SLSA requirements.
+ *
+ *  For a repository to meet one level, it must meet the requirements of all lower levels.
+ *  These levels do consider the level of a repository's dependencies.
+ */
+
+/* aggregate verifying a level */
+
+/**
+ * The level a repository meets: including dependencies.
+ */
+.decl aggregate_level(level: number, repo: number)
+
+/**
+ * The requirements that must be met to reach a level.
+ */
+.decl aggregate_level_requirement(level: number, repo: number)
+
+/**
+ * The minimum aggregate level "dep_level" a dependency must have for its parent to satisfy the aggregate_level "level".
+ */
+.decl aggregate_level_required_min_dependency_level(level: number, dep_level:number)
+
+/* The range of possible aggregate levels */
+.decl agg_levels(n: number)
+agg_levels(0).
+agg_levels(n+1) :- n <= 4, agg_levels(n).
+
+/**
+ * Everything has a repository and uses a scripted build service.
+ */
+aggregate_level_requirement(1, repo) :-
+    repository(repo, _,_,_,_,_,_),
+    check_passed(repo, "mcn_build_service_1"),
+    check_passed(repo, "mcn_version_control_system_1").
+
+
+/**
+ * The build is verifiably automated and deployable.
+ */
+aggregate_level_requirement(2, repo) :-
+    repository(repo, _,_,_,_,_,_),
+    aggregate_level_requirement(1, repo),
+    check_passed(repo, "mcn_build_script_1"),
+    check_passed(repo, "mcn_build_service_1"),
+    check_passed(repo, "mcn_build_as_code_1").
+
+/**
+ *  The repository uses a trusted build service that outputs verifiable
+ *  provenance information.
+ */
+aggregate_level_requirement(3, repo) :-
+    repository(repo, _,_,_,_,_,_),
+    check_passed(repo, "mcn_provenance_level_three_1"),
+    aggregate_level_requirement(2, repo).
+
+/**
+ *   The release provenance passes verification.
+ */
+aggregate_level_requirement(4, repo) :-
+    repository(repo, _,_,_,_,_,_),
+    aggregate_level_requirement(3, repo),
+    check_passed(repo, "mcn_provenance_level_three_1"),
+    check_passed(repo, "mcn_trusted_builder_level_three_1"),
+    check_passed(repo, "mcn_policy_check_1").
+
+/**
+ * The minimum aggregate level the dependencies of a repository should have.
+ */
+aggregate_level_required_min_dependency_level(0, 0).
+aggregate_level_required_min_dependency_level(1, 1).
+aggregate_level_required_min_dependency_level(2, 2).
+aggregate_level_required_min_dependency_level(3, 2).
+aggregate_level_required_min_dependency_level(4, 4).
+
+/**
+ * The minimum aggregate level of a repository's dependencies.
+ */
+.decl aggregate_level_min_dependency_level(level: number, repo: number)
+aggregate_level_min_dependency_level(level, repo) :-
+    is_repo(repo, _),
+    dependency(repo, dep),
+    aggregate_level(level, dep).
+
+aggregate_level_min_dependency_level(level, repo) <= aggregate_level_min_dependency_level(smaller_level, repo) :-
+    smaller_level < level.
+
+
+/**
+ *  The aggregate level for each repository that does not have any dependencies asserts the requirements are met.
+ */
+aggregate_level(0, repo) :- repository(repo, _,_,_,_,_,_).
+aggregate_level(level, repo) :-
+    repository(repo, name,_,_,_,_,_),
+    agg_levels(level),
+    // this level's requirements
+    aggregate_level_requirement(level, repo),
+    // no dependencies
+    !dependency(repo, _).
+
+/**
+ *  The aggregate level for each repository that has dependencies asserts the requirements are met and the dependencies
+ *  reach the required minimum level.
+ */
+aggregate_level(level, repo) :-
+    repository(repo, name,_,_,_,_,_),
+    agg_levels(level),
+    // this level's requirements
+    aggregate_level_requirement(level, repo),
+    // dependency level
+    aggregate_level_min_dependency_level(actual_dep_level, repo),
+    aggregate_level_required_min_dependency_level(level, required_dep_level),
+    required_dep_level <= actual_dep_level.
+
+/**
+ *  The aggregate level is defined as the maximum of the requirements satisfied.
+ */
+aggregate_level(level, repo) <= aggregate_level(higher_level, repo) :-
+    higher_level > level.
+
+/**
+ *  A repository's aggregate level is at least level.
+ */
+.decl meets_aggregate_level(level: number, repo: number)
+meets_aggregate_level(level, repo) :- aggregate_level(real_level, repo), agg_levels(level), level <= real_level.
+
+Policy("aggregate_level_4", repo, reponame) :-
+        repository(repo, reponame,_,_,_,_,_),
+        meets_aggregate_level(4, repo).
+
+Policy("aggregate_level_3", repo, reponame) :-
+        repository(repo, reponame,_,_,_,_,_),
+        meets_aggregate_level(3, repo).
+
+Policy("aggregate_level_2", repo, reponame) :-
+        repository(repo, reponame,_,_,_,_,_),
+        meets_aggregate_level(2, repo).
+
+Policy("aggregate_level_1", repo, reponame) :-
+        repository(repo, reponame,_,_,_,_,_),
+        meets_aggregate_level(1, repo).

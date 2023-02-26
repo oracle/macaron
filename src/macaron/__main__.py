@@ -7,6 +7,7 @@ import argparse
 import logging
 import os
 import sys
+from typing import Never
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from yamale.schema.validationresults import ValidationResult
@@ -74,15 +75,20 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     sys.exit(status_code)
 
 
-def verify_prov(verify_args: argparse.Namespace) -> None:
+def verify_prov(verify_args: argparse.Namespace) -> Never:
     """Verify a provenance against a user defined policy."""
     prov_file = verify_args.provenance
-    policy_file = verify_args.policy
+    policy_files = list(filter(lambda path: os.path.splitext(path)[1] in (".yaml", ".yml"), global_config.policy_paths))
 
-    if not policy_file:
+    if not policy_files:
         logger.error("The policy is not provided to complete this action.")
         sys.exit(1)
 
+    if len(policy_files) > 1:
+        logger.error("Exactly one policy must be provided to complete this action.")
+        sys.exit(1)
+
+    policy_file = policy_files[0]
     try:
         prov_content = ProvPayloadLoader.load(prov_file)
         policy: Policy | None = Policy.make_policy(policy_file)
@@ -157,7 +163,12 @@ def main() -> None:
     )
 
     main_parser.add_argument(
-        "-po", "--policy", required=False, default="", type=str, help=("The path to the policy yaml file.")
+        "-po",
+        "--policy",
+        required=False,
+        default=[],
+        help=("The path to a policy yaml file or directory."),
+        action="append",
     )
 
     # Add sub parsers for each action
@@ -275,7 +286,7 @@ def main() -> None:
         debug_level=log_level,
         local_repos_path=args.local_repos_path,
         gh_token=args.personal_access_token or "",
-        policy_path=args.policy,
+        policy_paths=args.policy,
         resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
     )
 

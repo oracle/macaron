@@ -1803,5 +1803,7 @@
                 "status": "AVAILABLE"
             }
         ]
-    }
+    },
+    "policies_passed": [],
+    "policies_failed": []
 }

@@ -12,10 +12,28 @@ macaron.database package
 Submodules
 ----------
 
+macaron.database.table\_definitions module
+------------------------------------------
+
+.. figure:: /assets/er-diagram.svg
+
+Diagram generated using `eralchemy <https://pypi.org/project/ERAlchemy/>`_.
+
+
+.. code-block:: sh
+
+    eralchemy -i 'sqlite:///output/macaron.db' -o docs/source/assets/er-diagram.svg
+
+.. automodule:: macaron.database.table_definitions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 macaron.database.database\_manager module
 -----------------------------------------
 
 .. automodule:: macaron.database.database_manager
-   :members:
+   :members: DatabaseManager
    :undoc-members:
    :show-inheritance:

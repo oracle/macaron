@@ -1,18 +1,26 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the parser for provenance policy."""
 
+import hashlib
 import logging
 import os
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import Any, Callable, Generic, Optional, TypeVar, Union
+from typing import Any, Callable, NamedTuple, Optional, Union
 
 import yamale
 from yamale.schema import Schema
 
+from macaron.database.table_definitions import PolicyTable
 from macaron.parsers.yaml.loader import YamlLoader
+from macaron.policy_engine import cue
+from macaron.policy_engine.exceptions import InvalidPolicyError, PolicyRuntimeError
+from macaron.policy_engine.policy_engine import copy_prelude, get_generated
+from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
+from macaron.policy_engine.souffle_code_generator import restrict_to_analysis
+from macaron.util import JsonType
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -24,15 +32,6 @@ SubscriptPathType = list[Union[str, int]]
 Primitive = Union[str, bool, int, float]
 PolicyDef = Union[Primitive, dict, list, None]
 PolicyFn = Callable[[Any], bool]
-GPolicy = TypeVar("GPolicy", bound="Policy")
-
-
-class InvalidPolicyError(Exception):
-    """Happen when the policy is invalid."""
-
-
-class PolicyRuntimeError(Exception):
-    """Happen if there are errors while validating the policy against a target."""
 
 
 def _get_val(data: Any, path: SubscriptPathType, default: Any = None) -> Any:
@@ -147,10 +146,171 @@ def _gen_policy_func(policy: PolicyDef, path: Optional[SubscriptPathType] = None
             raise InvalidPolicyError(f"No support for policy {policy}")
 
 
+@dataclass
+class SoufflePolicy:
+    """
+
+    A high level for about the analysis described in souffle datalog.
+
+    Parameters
+    ----------
+    text: str
+        The full text content of the policy
+    sha: str
+        The sha256 sum digest for the policy text
+
+
+    """
+
+    text: str
+    sha: str
+    filename: str
+    # The result returned by souffle
+    _result: dict | None
+    # The list of repository, policy pairs failing
+    _failed: list["SoufflePolicy.PolicyResult"]
+    # The list of repository, policy pairs passing
+    _passed: list["SoufflePolicy.PolicyResult"]
+
+    class PolicyResult(NamedTuple):
+        """
+        Stores the result of a souffle policy.
+
+        Parameters
+        ----------
+        policy: str
+            The unique identifier for the policy
+        repo: int
+            The primary key of the repository the result applies to
+        reason: str | None
+            Optional justification for the result
+        """
+
+        policy: str
+        repo: int
+        reason: str | None
+
+        @staticmethod
+        def from_row(row: list[str]) -> "SoufflePolicy.PolicyResult":
+            """
+            Construct a policy result from a row returned by souffle.
+
+            Parameters
+            ----------
+            row: list[str]
+                A list conforming to ["policy name", "repo primary key"], and optionally a third value storing feedback.
+            """
+            repo = int(row[0])
+            reason = row[1]
+            policy = row[2]
+            return SoufflePolicy.PolicyResult(policy, repo, reason)
+
+    @classmethod
+    def make_policy(cls, file_path: os.PathLike | str) -> Optional["SoufflePolicy"]:
+        """
+        Create a souffle policy.
+
+        Parameters
+        ----------
+        file_path: os.PathLike | str
+            The file path to the policy
+        """
+        policy = SoufflePolicy(
+            text="", sha="", filename=str(os.path.basename(file_path)), _result=None, _failed=[], _passed=[]
+        )
+        with open(file_path, encoding="utf-8") as file:
+            policy.text = file.read()
+            policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
+        return policy
+
+    def result_for_repo(
+        self, repository: int
+    ) -> tuple[list["SoufflePolicy.PolicyResult"], list["SoufflePolicy.PolicyResult"]]:
+        """
+        Get the passing and failing policies for a repository.
+
+        Parameters
+        ----------
+        repository: int
+            The primary key for the repository record
+
+        Returns
+        -------
+        tuple[list, list]
+            list of passing policy results, list of failing policy results
+        """
+        if self._result is None:
+            raise ValueError("Policy not evaluated yet.")
+
+        failed = list(filter(lambda x: x.repo == repository, self._failed))
+        passed = list(filter(lambda x: x.repo == repository, self._passed))
+        return passed, failed
+
+    def evaluate(
+        self, database_path: os.PathLike | str, analysis_id: int | None = None, repo: int | None = None
+    ) -> bool:
+        """
+        Evaluate this policy against a database.
+
+        Parameters
+        ----------
+        database_path: os.PathLike | str
+            The file path to the database
+        analysis_id: int | None
+            Optional, the analysis instance to restrict the policy analysis to.
+        repo: int | None
+            Optional, the repository to check for policy compliance
+
+        Returns
+        -------
+        int
+            If a repo is passed: true iff the repo is compliant to the policy
+            Otherwise: true iff the whole database is compliant: no policies fail.
+        """
+        try:
+            with SouffleWrapper() as sfl:
+                prelude = get_generated(database_path)
+                if analysis_id is not None:
+                    prelude.update(restrict_to_analysis([analysis_id]))
+                copy_prelude(database_path, sfl, prelude=prelude)
+                res = sfl.interpret_text(self.text)
+                self._result = res
+        except SouffleError as err:
+            logger.error("Unable to evaluate policy %s", err)
+            return False
+
+        all_failed = list(map(SoufflePolicy.PolicyResult.from_row, self._result["repo_violates_policy"]))
+        all_passed = list(map(SoufflePolicy.PolicyResult.from_row, self._result["repo_satisfies_policy"]))
+        self._failed = all_failed
+        self._passed = all_passed
+        if repo:
+            failed = list(filter(lambda x: x.repo == repo, all_failed))
+            return any(failed)
+        return any(all_failed)
+
+    def get_failed(self) -> list["SoufflePolicy.PolicyResult"]:
+        """Return the results for failing policies."""
+        return list(self._failed)
+
+    def get_passed(self) -> list["SoufflePolicy.PolicyResult"]:
+        """Return the results for passing policies."""
+        return list(self._passed)
+
+
 # pylint: disable=invalid-name
 @dataclass
-class Policy(Generic[GPolicy]):
+class Policy:
     """The policy is used to validate a target provenance.
+
+    TODO: Refactor this into separate policy classes for cue, yaml, souffle.
+        Add abstract method Policy.match(filename) which returns whether this policy can be constructed from the file
+        The policy framework (policy_registry.py) iterates filenames and calls match on each policy class, if a policy
+        wants to use it that policy is constructed on that file.
+    TODO: Refactor to allow more precise policy to provenance matching
+        - Metadata for CUE policies
+        - Method to resolve multiple policies applying to the same repository-full-name: select policy using provenance
+          content and/or commit sha? (However probably want to avoid something too complex like a priority hierarchy)
+
 
     Parameters
     ----------
@@ -158,15 +318,55 @@ class Policy(Generic[GPolicy]):
         The ID of the policy.
     description : str
         The description of the policy.
+    target: str
+        The full repository name this policy applies to
+    text: str
+        The full text content of the policy
+    sha: str
+        The sha256sum digest of the policy
+    policy_type: str
+        The kind of policy: YAML_DIFF or CUE
     """
 
     ID: str
     description: str
+    target: str
+    text: str | None
+    sha: str | None
+    policy_type: str
     _definition: PolicyDef | None = field(default=None)
     _validator: PolicyFn | None = field(default=None)
 
+    def get_policy_table(self) -> PolicyTable:
+        """Get the bound ORM object for the policy."""
+        return PolicyTable(
+            policy_id=self.ID, description=self.description, policy_type=self.policy_type, sha=self.sha, text=self.text
+        )
+
     @classmethod
-    def make_policy(cls, file_path: os.PathLike | str) -> GPolicy | None:
+    def make_cue_policy(cls, macaron_path: os.PathLike | str, policy_path: os.PathLike | str) -> Optional["Policy"]:
+        """Construct a cue policy."""
+        logger.info("Generating a policy from file %s", policy_path)
+        policy: Policy = Policy("", "", "", None, None, "", None)
+        policy.policy_type = "CUE"
+
+        with open(policy_path, encoding="utf-8") as f:
+            policy.text = f.read()
+            policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
+
+        try:
+            cue.init(macaron_path)
+        except PolicyRuntimeError:
+            return None
+
+        policy.ID = "?"
+        policy.target = "any"
+        policy.description = "?"
+        policy._validator = lambda provenance: cue.validate(policy.text, provenance)  # type: ignore
+        return policy
+
+    @classmethod
+    def make_policy(cls, file_path: os.PathLike | str) -> Optional["Policy"]:
         """Generate a Policy from a policy yaml file.
 
         Parameters
@@ -176,21 +376,31 @@ class Policy(Generic[GPolicy]):
 
         Returns
         -------
-        GPolicy | None
+        Policy | None
             The Policy instance that has been initialized.
         """
         logger.info("Generating a policy from file %s", file_path)
-        policy: Policy = Policy("", "", None, None)
+        policy: Policy = Policy("", "", "", None, None, "", None)
+        policy.policy_type = "YAML_DIFF"
 
         # First load from the policy yaml file. We also validate the policy
         # against the schema.
         policy_content = YamlLoader.load(file_path, POLICY_SCHEMA)
+
         if not policy_content:
             logger.error("Cannot load the policy yaml file at %s.", file_path)
             return None
 
+        with open(file_path, encoding="utf-8") as f:
+            policy.text = f.read()
+            policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
+
         policy.ID = policy_content.get("metadata").get("id")
         policy.description = policy_content.get("metadata").get("description")
+        if "target" in policy_content.get("metadata"):
+            policy.target = policy_content.get("metadata").get("target")
+        else:
+            policy.target = "any"
 
         # Then we parse the policy content.
         try:
@@ -202,14 +412,12 @@ class Policy(Generic[GPolicy]):
 
         logger.info("Successfully loaded %s", policy)
 
-        # Ignore mypy because mypy flag policy as not having the same type
-        # as GPolicy.
-        return policy  # type: ignore
+        return policy
 
     def __str__(self) -> str:
         return f"Policy(id='{self.ID}', description='{self.description}')"
 
-    def validate(self, prov: Any) -> bool:
+    def validate(self, prov: JsonType) -> bool:
         """Validate the provenance against this policy.
 
         Parameters

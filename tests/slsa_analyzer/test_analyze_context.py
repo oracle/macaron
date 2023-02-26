@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -6,7 +6,7 @@ This modules contains tests for the AnalyzeContext module
 """
 
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -74,38 +74,11 @@ class TestAnalyzeContext(TestCase):
             "bulk_update",
         )
 
-    def test_gen_create_table_query(self) -> None:
-        """
-        Test the gen_create_table_query method
-        """
-        expect_query = [
-            "CREATE TABLE IF NOT EXISTS analyze_result "
-            + "(full_name TEXT PRIMARY KEY, branch_name TEXT, commit_sha TEXT, commit_date TEXT, "
-            + "slsa_level TEXT, is_full_reach BOOLEAN);",
-            'ALTER TABLE analyze_result ADD "BUILD_SERVICE" BOOLEAN DEFAULT FALSE;',
-            'ALTER TABLE analyze_result ADD "VCS" BOOLEAN DEFAULT FALSE;',
-        ]
-        with patch(
-            "macaron.slsa_analyzer.analyze_context.get_requirements_dict",
-            return_value=self.MOCK_CTX_DATA,
-        ):
-            assert AnalyzeContext.gen_create_table_query("analyze_result") == expect_query
-
-    def test_gen_insert_analyze_result_query(self) -> None:
-        """
-        Test the gen_insert_analyze_result_query method
-        """
-        expect_query = (
-            "INSERT OR REPLACE INTO analyze_result VALUES "
-            + "(:full_name,:branch_name,:commit_sha,:commit_date,:slsa_level,:is_full_reach,"
-        )
-        assert self.analyze_ctx.gen_insert_analyze_result_query("analyze_result").startswith(expect_query)
-
     def test_get_insert_data(self) -> None:
         """
         Test get_insert_data method
         """
-        insert_data = self.analyze_ctx.get_insert_data()
+        insert_data = self.analyze_ctx.get_analysis_result_data()
         assert all(key.name in insert_data for key in self.analyze_ctx.ctx_data)
 
     def test_provenances(self) -> None:

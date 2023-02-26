@@ -3,6 +3,7 @@
 
 """This module contains reporter classes for creating reports of Macaron analyzed results."""
 
+import abc
 import json
 import logging
 import os
@@ -27,7 +28,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 
 
-class FileReporter:
+class FileReporter(abc.ABC):
     """The reporter that handles writing data to disk files."""
 
     def __init__(self, mode: str = "w", encoding: str = "utf-8"):
@@ -67,7 +68,8 @@ class FileReporter:
             logger.error("Cannot write to %s. Error: %s", file_path, error)
             return False
 
-    def generate(self, target_dir: str, report: Report) -> None:
+    @abc.abstractmethod
+    def generate(self, target_dir: str, report: Report | dict) -> None:
         """Generate a report file.
 
         This method is implemented in subclasses.
@@ -76,10 +78,9 @@ class FileReporter:
         ----------
         target_dir : str
             The directory to store all output files.
-        report : Report
+        report : Report | dict
             The report to be generated.
         """
-        raise NotImplementedError
 
 
 class JSONReporter(FileReporter):
@@ -100,7 +101,7 @@ class JSONReporter(FileReporter):
         super().__init__(mode, encoding)
         self.indent = indent
 
-    def generate(self, target_dir: str, report: Report) -> None:
+    def generate(self, target_dir: str, report: Report | dict) -> None:
         """Generate JSON report files.
 
         Each record is stored in a separate JSON file, the name of each
@@ -112,9 +113,11 @@ class JSONReporter(FileReporter):
         ----------
         target_dir : str
             The directory to store all output files.
-        report : Report
+        report: Report | dict
             The report to be generated.
         """
+        if not isinstance(report, Report):
+            return
         try:
             dep_file_name = os.path.join(target_dir, "dependencies.json")
             serialized_configs = list(report.get_serialized_configs())
@@ -189,7 +192,7 @@ class HTMLReporter(FileReporter):
         self.env.tests.update(tests)
         self.env.filters.update(filters)
 
-    def generate(self, target_dir: str, report: Report) -> None:
+    def generate(self, target_dir: str, report: Report | dict) -> None:
         """Generate HTML report files.
 
         Each record is stored in a separate HTML file, the name of each
@@ -202,10 +205,10 @@ class HTMLReporter(FileReporter):
         ----------
         target_dir : str
             The directory to store all output files.
-        report : Report
+        report: Report | dict
             The report to be generated.
         """
-        if not self.template:
+        if not self.template or not isinstance(report, Report):
             return
 
         try:
@@ -224,3 +227,44 @@ class HTMLReporter(FileReporter):
             logger.info("jinja2.TemplateSyntaxError: \n\t%s\n\t%s", error.message, location)
         except TemplateRuntimeError as error:
             logger.error("jinja2.TemplateRunTimeError: %s", error)
+
+
+class PolicyReporter(FileReporter):
+    """This class writes policy engine reports to a JSON file."""
+
+    def __init__(self, mode: str = "w", encoding: str = "utf-8", indent: int = 4):
+        """Initialize instance.
+
+        Parameters
+        ----------
+        mode: str, optional
+            The file operation mode.
+        encoding: str, optional
+            The encoding.
+        indent : int, optional
+            The indent for the JSON output, by default 4.
+        """
+        super().__init__(mode, encoding)
+        self.indent = indent
+
+    def generate(self, target_dir: str, report: Report | dict) -> None:
+        """Generate JSON report files.
+
+        Each record is stored in a separate JSON file, the name of each
+        file is the name of the repo.
+
+        A dependencies.json is also created to store the information of all resolved dependencies.
+
+        Parameters
+        ----------
+        target_dir : str
+            The directory to store all output files.
+        report: Report | dict
+            The report to be generated.
+        """
+        if not isinstance(report, dict):
+            return
+        try:
+            self.write_file(os.path.join(target_dir, "policy_report.json"), json.dumps(report, indent=self.indent))
+        except (TypeError, ValueError, OSError) as error:
+            logger.critical("Cannot serialize the policy report to JSON: %s", error)

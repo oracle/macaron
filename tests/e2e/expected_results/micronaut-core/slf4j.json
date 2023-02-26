@@ -207,5 +207,7 @@
             }
         ],
         "dep_status": []
-    }
+    },
+    "policies_passed": [],
+    "policies_failed": []
 }

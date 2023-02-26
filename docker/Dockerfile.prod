@@ -46,7 +46,7 @@ ENV PATH=$JAVA_HOME/bin:$VENV_PATH/bin:$INSTALL_DIR/bin:$PATH
 
 # We install openjdk directly in the production image as copying the installed directory from
 # macaron-builder can lead to unexpected errors.
-RUN microdnf install java-11-openjdk-devel && \
+RUN microdnf install java-11-openjdk-devel https://github.com/souffle-lang/souffle/releases/download/2.3/x86_64-oraclelinux-8-souffle-2.3-Linux.rpm && \
     microdnf clean all -y && \
     rm -rf /var/cache/yum && \
     rm -rf /var/cache/dnf
