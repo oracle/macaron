@@ -1,0 +1,28 @@
+# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+name: Build Macaron base image
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-macaron-base:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+      with:
+        fetch-depth: 0
+
+    - name: Log in to GitHub Container Registry
+      run: docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Macaron base image
+      run: |
+        docker build -t ghcr.io/oracle-samples/macaron-base:latest -f docker/Dockerfile.base docker/
+        docker push ghcr.io/oracle-samples/macaron-base:latest

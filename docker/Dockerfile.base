@@ -1,7 +1,7 @@
 # Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-FROM container-registry.oracle.com/os/oraclelinux:9-slim as base
+FROM container-registry.oracle.com/os/oraclelinux:9-slim
 
 ENV HOME="/home/macaron" \
     PYTHON3_VERSION=3.11.1 \
@@ -16,7 +16,7 @@ ENV HOME="/home/macaron" \
 
 ENV PATH=/usr/local/bin:$PATH
 
-# Python's runtime dependencies.
+# INSTALLING RUNTIME DEPENDENCIES.
 RUN : \
     && set -eux \
     && microdnf upgrade -y \
@@ -34,12 +34,12 @@ RUN : \
     && rm -rf /var/cache/yum \
     && rm -rf /var/cache/dnf
 
+# INSTALLING PYTHON3.11 and PIP.
 RUN : \
     && set -eux \
     # Store the list of user installed packages so that we could preserve it when we clean up unused packages.
-    # systemd and dnf is included to avoid warnings of protected packages.
     # https://dnf.readthedocs.io/en/latest/command_ref.html#history-command
-    && USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2) systemd dnf" \
+    && USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2)" \
     # We add an extra yum repo that contains the package lcov.
     # We are following the convention as existing repo definitions in OL9.
     # The following yum repo will be resolved to this URL in OL9:
@@ -94,8 +94,8 @@ enabled=1\
         #       https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L114
         dpkg-dev      \
     # Download the source tarball and verify its integrity.
-    && wget -O python.tar.xz https://www.python.org/ftp/python/$PYTHON3_VERSION/Python-$PYTHON3_VERSION.tar.xz \
-    && wget -O python.tar.xz.asc https://www.python.org/ftp/python/$PYTHON3_VERSION/Python-$PYTHON3_VERSION.tar.xz.asc \
+    && wget -O python.tar.xz "https://www.python.org/ftp/python/$PYTHON3_VERSION/Python-$PYTHON3_VERSION.tar.xz" \
+    && wget -O python.tar.xz.asc "https://www.python.org/ftp/python/$PYTHON3_VERSION/Python-$PYTHON3_VERSION.tar.xz.asc" \
 	&& GNUPGHOME="$(mktemp -d)" \
     && export GNUPGHOME \
 	&& gpg --recv-keys "$PYTHON_SOURCE_GPG" \
@@ -141,6 +141,7 @@ enabled=1\
 		\) -exec rm -rf '{}' + \
 	&& ldconfig \
     # We mark all unecessary packages to be removed while preserving the user installed packages.
+    # We must exclude protected packages because we couldn't remove it.
 	&& dnf list installed | tail -n +2 | cut -d' ' -f1 | xargs -r dnf mark remove > /dev/null \
     && [ -z "$USER_MANUAL_INSTALLED" ] || dnf mark install $USER_MANUAL_INSTALLED \
     # Look for share libraries that are used by looking through the executables in /usr/local.
@@ -182,8 +183,7 @@ ENV PYTHON_PIP_VERSION=22.3.1 \
 
 RUN : \
     && set -eux \
-    # Include systemd and dnf to avoid the warning of removal of protected packages.
-	&& USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2) systemd dnf" \
+	&& USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2)" \
 	&& dnf upgrade -y \
 	&& dnf install -y wget findutils \
 	&& wget -O get-pip.py "$PYTHON_GET_PIP_URL" \
@@ -204,64 +204,14 @@ RUN : \
     && rm -rf /var/cache/dnf \
 	&& pip --version
 
-CMD [ "python3" ]
-
-FROM base as py311-jdk17
-
-ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk"
-
-ENV PATH=$JAVA_HOME/bin:$PATH
-
-RUN : \
-    && set -eux \
-    && dnf upgrade -y \
-    && dnf install -y java-17-openjdk-devel \
-    && dnf clean all \
-    && rm -rf /var/cache/yum \
-    && rm -rf /var/cache/dnf
-
-FROM py311-jdk17 as setup-binaries
-
-ENV GOROOT="/usr/local/go" \
-    GO_VERSION=1.18.3
-
-ENV PATH=$GOROOT/bin:$PATH
-
-RUN : \
-    && set -eux \
-    && dnf upgrade -y \
-    && dnf install -y \
-        git \
-        wget \
-        gzip \
-        unzip \
-        make \
-    && rm -rf $GOROOT \
-    && wget -O go.tar.gz https://go.dev/dl/go$GO_VERSION.linux-amd64.tar.gz \
-    && tar -C /usr/local -xzf go.tar.gz \
-    && rm go.tar.gz \
-    && go version \
-    && dnf clean all \
-    && rm -rf /var/cache/yum \
-    && rm -rf /var/cache/dnf
-
-WORKDIR /root/setup-binaries
-COPY Makefile ./
-COPY src/macaron/resources src/macaron/resources
-RUN : \
-    && mkdir -p ./src/macaron/bin \
-    && make setup-binaries \
-    && rm /root/setup-binaries/Makefile
-
-FROM py311-jdk17 as py311-jdk17-souffle
-
-WORKDIR /souffle-src
-
+# INSTALLING SOUFFLE
 # The instructions to build Souffle in Oracle Linux is referenced from:
 #       https://github.com/souffle-lang/souffle/blob/master/.github/images/oraclelinux-8/Dockerfile
 RUN : \
     && set -eux \
-    && USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2) systemd dnf" \
+    && mkdir /souffle-src \
+    && cd /souffle-src \
+    && USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2)" \
     && dnf upgrade -y \
     && dnf --enablerepo=ol9_codeready_builder install -y \
         autoconf \
@@ -291,8 +241,12 @@ RUN : \
     && cmake -S . -B build -DSOUFFLE_DOMAIN_64BIT=ON -DCMAKE_INSTALL_PREFIX="/usr/local" \
     && nproc="$(nproc)" \
     && cmake --build build --target install -j "$nproc" \
+    && echo $USER_MANUAL_INSTALLED \
     && dnf list installed | tail -n +2 | cut -d' ' -f1 | xargs -r dnf mark remove > /dev/null \
 	&& [ -z "$USER_MANUAL_INSTALLED" ] || dnf mark install $USER_MANUAL_INSTALLED > /dev/null \
+    # We exclude systemd-udev because one of the build dependencies for Souffle pull this protected package.
+    # This command make sure that it won't break if systemd-udev is not pulled in the future.
+    && (dnf list installed systemd-udev && dnf mark install systemd-udev || true) \
 	&& dnf autoremove -y \
     && cd / \
     && rm -rf /souffle-src \
@@ -301,51 +255,23 @@ RUN : \
     && rm -rf /var/cache/dnf \
     && souffle --version
 
-FROM py311-jdk17-souffle as final
+# INSTALLING MACARON RUNTIME DEPENDENCIES AND OTHER UTILITIES PACKAGES.
+#   - java-17-openjdk-devel
+#   - git
+#   - findutils
+ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk"
 
-ENV HOME="/home/macaron"
+ENV PATH=$JAVA_HOME/bin:$PATH
 
-ENV PACKAGE_PATH=$HOME/.venv/lib/python3.11/site-packages/macaron
-
-# Create the macaron user and group with abritary UID and GID.
-# The macaron GID and UID in this image will be modified by the
-# user.sh script on startup to get the UID and GID of the user who started
-# the Docker container.
 RUN : \
-    && groupadd --gid 43147 macaron \
-    && useradd --uid 43147 --create-home --gid 43147 macaron \
+    && set -eux \
     && dnf upgrade -y \
     && dnf install -y \
+        https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.rpm \
         git \
-    && dnf clean all -y \
+        findutils \
+    && dnf clean all \
     && rm -rf /var/cache/yum \
     && rm -rf /var/cache/dnf
 
-WORKDIR $HOME
-
-# Build time ARG. This argument specifies the path of dist from the host machine.
-ARG DIST_PATH
-
-# Installing the Python dependencies in the Python virtual environment.
-# We switch to user macaron so that when we install the dependencies using pip,
-# the warning of not having correct ownership of /home/macaron is not raised.
-# TODO: resolve hardcoded file names.
-USER macaron:macaron
-COPY --chown=macaron:macaron $DIST_PATH $HOME/dist/
-RUN : \
-    && python3 -m venv $HOME/.venv \
-    && . .venv/bin/activate \
-    && pip install --no-compile --no-cache-dir --upgrade pip \
-    && find $HOME/dist -depth \( -type f \( -name "macaron-*.whl" \) \) -exec pip install --no-compile --no-cache-dir '{}' \; \
-    && rm -rf $HOME/dist \
-    && deactivate
-
-COPY --chown=macaron:macaron docker/user.sh $HOME/user.sh
-
-COPY --from=setup-binaries --chown=macaron:macaron /root/setup-binaries/src/macaron $PACKAGE_PATH
-
-# We enable the root user here so that the user.sh script can modify the
-# GID and UID of user macaron at startup to match the GID and UID
-# of the current user in the host machine.
-USER root
-ENTRYPOINT [ "./user.sh" ]
+CMD [ "/bin/bash" ]

@@ -100,17 +100,6 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push
-      uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5   # v3.2.0
-      with:
-        context: .
-        push: false
-        build-args: |
-          DIST_PATH=./dist/
-        tags: |
-          macaron:staging
-        file: docker/Dockerfile.prod
-
     # Generate the requirements.txt that contains the hash digests of the dependencies and
     # generate the SBOM using CyclonDX SBOM generator.
     - name: Generate requirements.txt and SBOM

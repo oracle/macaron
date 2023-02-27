@@ -1,0 +1,77 @@
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+FROM ghcr.io/oracle-samples/macaron-base as setup-binaries
+
+ENV GOROOT="/usr/local/go" \
+    GO_VERSION=1.18.3
+
+ENV PATH=$GOROOT/bin:$PATH
+
+RUN : \
+    && set -eux \
+    && dnf upgrade -y \
+    && dnf install -y \
+        git \
+        wget \
+        gzip \
+        unzip \
+        make \
+    && rm -rf $GOROOT \
+    && wget -O go.tar.gz https://go.dev/dl/go$GO_VERSION.linux-amd64.tar.gz \
+    && tar -C /usr/local -xzf go.tar.gz \
+    && rm go.tar.gz \
+    && go version \
+    && dnf clean all \
+    && rm -rf /var/cache/yum \
+    && rm -rf /var/cache/dnf
+
+WORKDIR /root/setup-binaries
+COPY Makefile ./
+COPY src/macaron/resources src/macaron/resources
+RUN : \
+    && mkdir -p ./src/macaron/bin \
+    && make setup-binaries \
+    && rm /root/setup-binaries/Makefile
+
+FROM ghcr.io/oracle-samples/macaron-base as final
+
+ENV HOME="/home/macaron"
+
+ENV PACKAGE_PATH=$HOME/.venv/lib/python3.11/site-packages/macaron
+
+# Create the macaron user and group with abritary UID and GID.
+# The macaron GID and UID in this image will be modified by the
+# user.sh script on startup to get the UID and GID of the user who started
+# the Docker container.
+RUN : \
+    && groupadd --gid 43147 macaron \
+    && useradd --uid 43147 --create-home --gid 43147 macaron
+
+WORKDIR $HOME
+
+# Build time ARG. This argument specifies the path of the wheel file from the host machine.
+ARG WHEEL_PATH
+
+# Installing the Python dependencies in the Python virtual environment.
+# We switch to user macaron so that when we install the dependencies using pip,
+# the warning of not having correct ownership of /home/macaron is not raised.
+USER macaron:macaron
+COPY --chown=macaron:macaron $WHEEL_PATH $HOME/dist/
+RUN : \
+    && python3 -m venv $HOME/.venv \
+    && . .venv/bin/activate \
+    && pip install --no-compile --no-cache-dir --upgrade pip \
+    && find $HOME/dist -depth \( -type f \( -name "macaron-*.whl" \) \) -exec pip install --no-compile --no-cache-dir '{}' \; \
+    && rm -rf $HOME/dist \
+    && deactivate
+
+COPY --chown=macaron:macaron docker/user.sh $HOME/user.sh
+
+COPY --from=setup-binaries --chown=macaron:macaron /root/setup-binaries/src/macaron $PACKAGE_PATH
+
+# We enable the root user here so that the user.sh script can modify the
+# GID and UID of user macaron at startup to match the GID and UID
+# of the current user in the host machine.
+USER root
+ENTRYPOINT [ "./user.sh" ]
