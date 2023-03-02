@@ -211,8 +211,22 @@ RUN : \
     && set -eux \
     && mkdir /souffle-src \
     && cd /souffle-src \
-    && USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2)" \
     && dnf upgrade -y \
+    # Runtime dependencies for Souffle.
+    # https://github.com/souffle-lang/souffle/blob/cc8ea091721fcfb60bed45a0edf571ad9d0c58a5/CMakeLists.txt#LL442C39-L442C129
+    && dnf --enablerepo=ol9_codeready_builder install -y \
+        gcc-c++ \
+        libffi \
+        libffi-devel \
+        # The package mcpp could not be found anywhere in available oracle linux 9 repos.
+        # We need more testing to see if it breaks anything.
+        # mcpp
+        ncurses-devel \
+        python39 \
+        sqlite-devel \
+        zlib-devel \
+    && USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2)" \
+    # The build dependencies.
     && dnf --enablerepo=ol9_codeready_builder install -y \
         autoconf \
         automake \
@@ -222,26 +236,16 @@ RUN : \
         cmake \
         doxygen \
         flex \
-        gcc-c++ \
         git \
-        libffi-devel \
         libtool \
         make \
-        # The package mcpp could not be found anywhere in available oracle linux 9 repos.
-        # However, souffle could be built without it.
-        # mcpp
-        ncurses-devel \
         pkg-config \
-        python39 \
         rpm-build \
-        sqlite-devel \
-        zlib-devel \
     && git clone --depth=1 https://github.com/souffle-lang/souffle/ -b 2.3 \
     && cd souffle \
     && cmake -S . -B build -DSOUFFLE_DOMAIN_64BIT=ON -DCMAKE_INSTALL_PREFIX="/usr/local" \
     && nproc="$(nproc)" \
     && cmake --build build --target install -j "$nproc" \
-    && echo $USER_MANUAL_INSTALLED \
     && dnf list installed | tail -n +2 | cut -d' ' -f1 | xargs -r dnf mark remove > /dev/null \
 	&& [ -z "$USER_MANUAL_INSTALLED" ] || dnf mark install $USER_MANUAL_INSTALLED > /dev/null \
     # We exclude systemd-udev because one of the build dependencies for Souffle pull this protected package.
