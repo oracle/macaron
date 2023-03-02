@@ -32,6 +32,8 @@ make venv
 make setup
 ```
 
+**Note**: Running the above command will prompt you for sudo access to install [Soufflé Datalog engine](https://github.com/souffle-lang/souffle). You can install Soufflé on your system before running `make setup` to avoid getting prompted.
+
 ## Running Macaron
 
 ```bash
