@@ -263,7 +263,7 @@ RUN : \
 #   - java-17-openjdk-devel
 #   - git
 #   - findutils
-ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk"
+ENV JAVA_HOME="/usr/lib/jvm/jdk-17-oracle-x64"
 
 ENV PATH=$JAVA_HOME/bin:$PATH
 
@@ -276,6 +276,9 @@ RUN : \
         findutils \
     && dnf clean all \
     && rm -rf /var/cache/yum \
-    && rm -rf /var/cache/dnf
+    && rm -rf /var/cache/dnf \
+    && java --version \
+    && javac --version \
+    && git --version
 
 CMD [ "/bin/bash" ]
