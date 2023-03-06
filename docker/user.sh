@@ -42,6 +42,7 @@ chown -R macaron:macaron "$HOME"/.m2
 chown -R macaron:macaron "$HOME"/output
 
 # Run the provided Macaron command with the user macaron.
+# TODO: add macaron entrypoint back in when we merge policy_engine with macaron entrypoint.
 MACARON_PARAMS=( "$@" )
-COMMAND="cd /home/macaron && . .venv/bin/activate && macaron ${MACARON_PARAMS[*]}"
+COMMAND="cd /home/macaron && . .venv/bin/activate && ${MACARON_PARAMS[*]}"
 su macaron -m -c "$COMMAND"
