@@ -161,8 +161,21 @@ while [[ $# -gt 0 ]]; do
             arg_provenance="$2"
             shift
             ;;
+
+        # This flag is duplicated for digest and database.
+        -d)
+            if [[ "${entrypoint[0]}" = "policy_engine" ]];
+            then
+                arg_database="$2"
+                shift
+            else
+                rest+=("$1" "$2")
+                shift
+            fi
+            ;;
+
         # Main Argv for policy_engine endpoint.
-        -d|--database)
+        --database)
             arg_database="$2"
             shift
             ;;
@@ -268,13 +281,13 @@ fi
 # Determine the config path to be mounted into ${MACARON_WORKSPACE}/config/${file_name}
 if [[ -n "${arg_config_path}" ]]; then
     config_path="${arg_config_path}"
-    err=$(check_file_exists "${config_path}" "-c/--config_path")
+    err=$(check_file_exists "${config_path}" "-c/--config-path")
     if [[ -n "${err}" ]]; then
         echo "${err}"
         exit 1
     fi
-    file_name=${config_path}
-    argv_action+=("--config_path" "${MACARON_WORKSPACE}/config/${file_name}")
+    file_name="$(basename "${config_path}")"
+    argv_action+=("--config-path" "${MACARON_WORKSPACE}/config/${file_name}")
 fi
 if [[ -n "${config_path}" ]]; then
     config_path="$(ensure_absolute_path "${config_path}")"
