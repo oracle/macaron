@@ -200,6 +200,16 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
 
+  build_push_docker_image:
+    needs: [build, release]
+    name: Build and push Docker image
+    permissions:
+      contents: read
+      packages: write # To push the Docker image to ghcr.io
+    uses: ./.github/workflows/_build_docker.yaml
+    with:
+      release-tag: ${{ needs.release.outputs.release-tag }}
+
   # Send out release notifications after the Release was published on GitHub.
   # Uncomment the `if` to disable sending release notifications.
   notifications:
