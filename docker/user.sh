@@ -9,8 +9,8 @@
 # the current user of the host machine as the owner.
 if [[ -n "$USER_GID" ]] && [[ -n "$USER_UID" ]];
 then
-    groupmod -o -g "$USER_GID" macaron
-    usermod -o -g "$USER_GID" -u "$USER_UID" macaron
+    groupmod --non-unique --gid "$USER_GID" macaron
+    usermod --non-unique --gid "$USER_GID" --uid "$USER_UID" macaron
 else
     echo "Cannot find the GID and UID of the host machine's user. The output files generated could not be modifiable from the host machine."
     echo "Consider providing the GID and UID via the env variables USER_GID and USER_UID respectively."
@@ -24,7 +24,7 @@ if [[ ! -f "$HOME/.m2/settings.xml" ]] && [[ -n "$PACKAGE_PATH" ]];
 then
     if [[ ! -d "$HOME/.m2" ]];
     then
-        mkdir -p "$HOME"/.m2
+        mkdir --parents "$HOME"/.m2
     fi
     cp "$PACKAGE_PATH"/resources/settings.xml "$HOME"/.m2/
 fi
@@ -33,16 +33,16 @@ fi
 # if we mount from the host machine.
 if [[ ! -d "$HOME/output" ]];
 then
-    mkdir -p "$HOME"/output
+    mkdir --parents "$HOME"/output
 fi
 
 # The directory that could be mounted to the host machine file systems should
 # have the owner as the current user in the host machine.
-chown -R macaron:macaron "$HOME"/.m2
-chown -R macaron:macaron "$HOME"/output
+chown --recursive macaron:macaron "$HOME"/.m2
+chown --recursive macaron:macaron "$HOME"/output
 
 # Run the provided Macaron command with the user macaron.
 # TODO: add macaron entrypoint back in when we merge policy_engine with macaron entrypoint.
 MACARON_PARAMS=( "$@" )
 COMMAND="cd /home/macaron && . .venv/bin/activate && ${MACARON_PARAMS[*]}"
-su macaron -m -c "$COMMAND"
+su macaron --preserve-environment --command "$COMMAND"
