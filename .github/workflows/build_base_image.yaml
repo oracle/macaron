@@ -4,10 +4,6 @@
 name: Build Macaron base image
 on:
   workflow_dispatch:
-  # For testing.
-  push:
-    branches:
-    - add-docker-images
 
 permissions:
   contents: read

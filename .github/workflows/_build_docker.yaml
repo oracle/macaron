@@ -1,6 +1,9 @@
 # Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
+# This reuseable workflow builds the Macaron Docker image.
+# If release-tag is provided. The final image will be tagged and push to ghcr.io/oracle-samples/macaron:release-tag
+
 name: Build and push Docker image
 on:
   workflow_call:
@@ -16,8 +19,6 @@ env:
 jobs:
   build-docker:
     runs-on: ubuntu-latest
-    # outputs:
-    #   image-digest: ${{ steps.build_docker.outputs.digest }}
 
     steps:
     - name: Check out repository
@@ -30,7 +31,25 @@ jobs:
       with:
         path: dist
 
+    - name: Log in to GitHub Container Registry
+      run: docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+
     - name: Build the Docker image
       run: |
-        docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
-        ./scripts/dev_scripts/build_push_docker.sh ${{ inputs.release-tag }}
+        ./scripts/dev_scripts/build_docker.sh ${{ env.IMAGE_NAME }} ${{ github.workspace }} ${{ inputs.release-tag }}
+
+    - name: Test the built Docker image
+      env:
+        # This will be picked up by run_macaron.sh
+        MACARON_IMAGE_TAG: test
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        ./scripts/dev_scripts/integration_tests_docker.sh ${{ github.workspace }} ./scripts/release_scripts/run_macaron.sh
+
+    - name: Push the built Docker image
+      run: |
+        if [[ -n "${{ inputs.release-tag }}" ]];
+        then
+          docker push "${{ env.IMAGE_NAME }}:latest"
+          docker push "${{ env.IMAGE_NAME }}:${{ inputs.release-tag }}"
+        fi

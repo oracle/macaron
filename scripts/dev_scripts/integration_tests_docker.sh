@@ -8,17 +8,20 @@
 # The current workspace.
 WORKSPACE=$1
 
-# The version of Macaron Docker image to run the integration tests.
-MACARON_IMAGE_TAG=$2
-
 # The location to the run_macaron.sh script.
-RUN_MACARON_SCRIPT=$3
+RUN_MACARON_SCRIPT=$2
 
 # The scripts to compare the results of the integration tests.
 COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
 
 RESULT_CODE=0
+
+if [[ -z "${GITHUB_TOKEN}" ]]
+then
+  echo "Environment variable GITHUB_TOKEN not set."
+  exit 1
+fi
 
 function log_fail() {
     printf "Error: FAILED integration test (line ${BASH_LINENO}) %s\n" $@
