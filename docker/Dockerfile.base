@@ -218,11 +218,11 @@ RUN : \
         gcc-c++ \
         libffi \
         libffi-devel \
-        # The package mcpp could not be found anywhere in available oracle linux 9 repos.
-        # We need more testing to see if it breaks anything.
+        # The package mcpp could not be found anywhere in available oracle linux 9 repos. However, we can still run Souffle without it.
         # mcpp
         ncurses-devel \
-        python39 \
+        # Souffle needs a Python3 installation. Because we already have Python3.11 installed, Souffle will pick that up.
+        # python39 \
         sqlite-devel \
         zlib-devel \
     && USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2)" \

@@ -210,6 +210,38 @@ jobs:
     with:
       release-tag: ${{ needs.release.outputs.release-tag }}
 
+  publish_docker_imabe_sbom:
+    name: Release the Docker image sbom
+    needs: [build_push_docker_image, release]
+    permissions:
+      contents: write # To publish the SBOM of the Docker image.
+    runs-on: ubuntu-latest
+    env:
+      SYFT_BIN: ${{ github.workspace }}/bin
+      SBOM_FILE_NAME: macaron-sbom-cyclonedx.json
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      with:
+        fetch-depth: 0
+
+    - name: Install Syft
+      # https://github.com/anchore/syft#installation
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b ${{ env.SYFT_BIN }} v0.74.1
+        ${{ env.SYFT_BIN }}/syft --version
+
+    - name: Generate sbom
+      run: |
+        ${{ env.SYFT_BIN }}/syft \
+          ghcr.io/oracle-samples/macaron:${{ needs.release.outputs.release-tag }} \
+          -o cyclonedx-json=${{ env.SBOM_FILE_NAME }}
+
+    - name: Push to release asset
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh release upload ${{ needs.release.outputs.release-tag }} ${{ env.SBOM_FILE_NAME }}
+
   # Send out release notifications after the Release was published on GitHub.
   # Uncomment the `if` to disable sending release notifications.
   notifications:
