@@ -4,7 +4,7 @@
 FROM container-registry.oracle.com/os/oraclelinux:9-slim
 
 ENV HOME="/home/macaron" \
-    PYTHON3_VERSION=3.11.1 \
+    PYTHON3_VERSION=3.11.2 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     # http://bugs.python.org/issue19846
