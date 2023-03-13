@@ -40,7 +40,7 @@ jobs:
 
     - name: Test the built Docker image
       env:
-        # This will be picked up by run_macaron.sh
+        # This will be picked up by run_macaron.sh.
         MACARON_IMAGE_TAG: test
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |

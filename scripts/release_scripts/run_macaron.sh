@@ -379,14 +379,14 @@ then
     entrypoint=("macaron")
 fi
 
-set -x
+echo "Running ${IMAGE}:${MACARON_IMAGE_TAG}"
 docker run \
     --network=host \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" -e "USER_GID=${USER_GID}" \
     "${proxy_vars[@]}" \
     "${mounts[@]}" \
-    "${IMAGE}" \
+    "${IMAGE}:${MACARON_IMAGE_TAG}" \
     "${entrypoint[@]}" \
     "${argv_main[@]}" \
     "${action[@]}" \

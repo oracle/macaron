@@ -1,40 +1,7 @@
 # Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-FROM ghcr.io/oracle-samples/macaron-base as setup-binaries
-
-ENV GOROOT="/usr/local/go" \
-    GO_VERSION=1.18.3
-
-ENV PATH=$GOROOT/bin:$PATH
-
-RUN : \
-    && set -eux \
-    && dnf upgrade -y \
-    && dnf install -y \
-        git \
-        wget \
-        gzip \
-        unzip \
-        make \
-    && rm -rf $GOROOT \
-    && wget -O go.tar.gz https://go.dev/dl/go$GO_VERSION.linux-amd64.tar.gz \
-    && tar -C /usr/local -xzf go.tar.gz \
-    && rm go.tar.gz \
-    && go version \
-    && dnf clean all \
-    && rm -rf /var/cache/yum \
-    && rm -rf /var/cache/dnf
-
-WORKDIR /root/setup-binaries
-COPY Makefile ./
-COPY src/macaron/resources src/macaron/resources
-RUN : \
-    && mkdir -p ./src/macaron/bin \
-    && make setup-binaries \
-    && rm /root/setup-binaries/Makefile
-
-FROM ghcr.io/oracle-samples/macaron-base as final
+FROM ghcr.io/oracle-samples/macaron-base
 
 ENV HOME="/home/macaron"
 
@@ -67,8 +34,6 @@ RUN : \
     && deactivate
 
 COPY --chown=macaron:macaron docker/user.sh $HOME/user.sh
-
-COPY --from=setup-binaries --chown=macaron:macaron /root/setup-binaries/src/macaron $PACKAGE_PATH
 
 # We enable the root user here so that the user.sh script can modify the
 # GID and UID of user macaron at startup to match the GID and UID

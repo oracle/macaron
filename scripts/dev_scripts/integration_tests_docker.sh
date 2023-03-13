@@ -3,7 +3,8 @@
 # Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-# This script runs the integration tests using Macaron as a Docker image.
+# This script runs the integration tests using Macaron as a Docker image. The image tag to run the integration tests
+# against will follow the environment variable MACARON_IMAGE_TAG.
 
 # The current workspace.
 WORKSPACE=$1
