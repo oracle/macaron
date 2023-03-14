@@ -19,6 +19,7 @@ env:
   # commit. In an organisation that should be a dedicated devops account.
   USER_NAME: behnazh-w
   USER_EMAIL: behnazh-w@users.noreply.github.com
+  IMAGE_NAME: ghcr.io/oracle-samples/macaron
 
 jobs:
   check:
@@ -88,6 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # To publish release notes.
+      packages: write # To push the Docker image.
     steps:
 
     - name: Check out repository
@@ -110,6 +112,34 @@ jobs:
         set -euo pipefail
         echo "Hash of package should be $ARTIFACT_HASH."
         echo "$ARTIFACT_HASH" | base64 --decode | sha256sum --strict --check --status || exit 1
+
+    - name: Log in to GitHub Container Registry
+      run: docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+
+    # The Docker image will be built with tags: latest and ${{ RELEASE_TAG }}
+    - name: Build the Docker image
+      run: |
+        RELEASE_TAG=$(git describe --tags --abbrev=0)
+        ./scripts/dev_scripts/build_docker.sh "${IMAGE_NAME}" ${{ github.workspace }} "${RELEASE_TAG}"
+
+    - name: Push the Docker image
+      run: |
+        RELEASE_TAG=$(git describe --tags --abbrev=0)
+        docker push "${IMAGE_NAME}:latest"
+        docker push "${IMAGE_NAME}:${RELEASE_TAG}"
+
+    # The Docker SBOM is generated under the dist/ directory which will be included in the release assets.
+    - name: Generate Docker sbom
+      env:
+        SYFT_BIN: ${{ github.workspace }}/bin
+      # https://github.com/anchore/syft#installation
+      run: |
+        RELEASE_TAG=$(git describe --tags --abbrev=0)
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b "${SYFT_BIN}" v0.74.1
+        ${SYFT_BIN}/syft --version
+        ${SYFT_BIN}/syft \
+          ghcr.io/oracle-samples/macaron:"${RELEASE_TAG}" \
+          -o cyclonedx-json=dist/macaron-"${RELEASE_TAG}"-sbom-docker.json
 
     # Create the Release Notes using commitizen.
     - name: Set up Python
@@ -199,48 +229,6 @@ jobs:
       run: gh release upload ${{ needs.release.outputs.release-tag }} ${{ needs.provenance.outputs.provenance-name }}
       env:
         GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
-
-  build_push_docker_image:
-    needs: [build, release]
-    name: Build and push Docker image
-    permissions:
-      contents: read
-      packages: write # To push the Docker image to ghcr.io
-    uses: ./.github/workflows/_build_docker.yaml
-    with:
-      release-tag: ${{ needs.release.outputs.release-tag }}
-
-  publish_docker_imabe_sbom:
-    name: Release the Docker image sbom
-    needs: [build_push_docker_image, release]
-    permissions:
-      contents: write # To publish the SBOM of the Docker image.
-    runs-on: ubuntu-latest
-    env:
-      SYFT_BIN: ${{ github.workspace }}/bin
-      SBOM_FILE_NAME: macaron-sbom-cyclonedx.json
-    steps:
-    - name: Check out repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-      with:
-        fetch-depth: 0
-
-    - name: Install Syft
-      # https://github.com/anchore/syft#installation
-      run: |
-        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b ${{ env.SYFT_BIN }} v0.74.1
-        ${{ env.SYFT_BIN }}/syft --version
-
-    - name: Generate sbom
-      run: |
-        ${{ env.SYFT_BIN }}/syft \
-          ghcr.io/oracle-samples/macaron:${{ needs.release.outputs.release-tag }} \
-          -o cyclonedx-json=${{ env.SBOM_FILE_NAME }}
-
-    - name: Push to release asset
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: gh release upload ${{ needs.release.outputs.release-tag }} ${{ env.SBOM_FILE_NAME }}
 
   # Send out release notifications after the Release was published on GitHub.
   # Uncomment the `if` to disable sending release notifications.

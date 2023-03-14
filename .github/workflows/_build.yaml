@@ -5,7 +5,7 @@
 # Actions workflows. It checks, tests, and builds the artifacts including SBOM and documentations,
 # and computes hash digests as output to be used by a SLSA provenance generator. The artifacts are
 # always uploaded for every job to be used for debugging purposes, but they will be removed within
-# the specified retention days.
+# the specified retention days. The Macaron Docker image is also built and tested in this workflow.
 #
 # Even though we run the build in a matrix to check against different platforms, due to a known
 # limitation of reusable workflows that do not support setting strategy property from the caller
@@ -136,5 +136,18 @@ jobs:
         name: artifact-${{ matrix.os }}-python-${{ matrix.python }}
         path: |
           dist
+          ${{ env.PACKAGE_PATH }}/bin/actionparser
+          ${{ env.PACKAGE_PATH }}/bin/bashparser
         if-no-files-found: error
         retention-days: 7
+
+  # For now only use the hard-coded artifact name.
+  build_docker_image:
+    needs: [build]
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/_build_docker.yaml
+    with:
+      artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
+      artifact-name: artifact-ubuntu-latest-python-3.11
