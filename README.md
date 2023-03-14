@@ -74,13 +74,13 @@ The main input parameters of the `analyze` command:
 Example I: Analyzing the GitHub repository [apache/maven](https://github.com/apache/maven) on **the latest commit of the default branch** without using a config file:
 
 ```bash
-python -m macaron -t $GH_TOKEN -o output analyze -rp https://github.com/apache/maven.git
+python -m macaron -t $GITHUB_TOKEN -o output analyze -rp https://github.com/apache/maven.git
 ```
 
 Example II: Doing the same thing as Example I, but using a config file:
 
 ```bash
-python -m macaron -t $GH_TOKEN -o output analyze -c <path-to-maven_config.yaml>
+python -m macaron -t $GITHUB_TOKEN -o output analyze -c <path-to-maven_config.yaml>
 ```
 
 ```yaml
@@ -103,7 +103,7 @@ The results of the examples above will be stored in ``output/reports/github_com/
 Macaron, currently, provides a PoC policy engine that checks a verified SLSA provenance against compliance requirements expressed as a policy. The result is reported in the JSON and HTML reports as a check called `mcn_policy_check_1`.
 
 ```bash
-python -m macaron -t $GH_TOKEN -po <path-to-policy.yaml> analyze -rp https://github.com/apache/maven.git
+python -m macaron -t $GITHUB_TOKEN -po <path-to-policy.yaml> analyze -rp https://github.com/apache/maven.git
 ```
 
 The policy is a YAML file that contains expected values of predicates in SLSA provenance v0.2. Here is an example policy file:
