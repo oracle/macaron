@@ -115,15 +115,13 @@ jobs:
         set -euo pipefail
         TARBALL_PATH=$(find dist/ -type f -name "*.tar.gz")
         WHEEL_PATH=$(find dist/ -type f -name "*.whl")
-        GO_ACTION_PARSER=$(find ${{ env.PACKAGE_PATH }}/bin/ -type f -name "actionparser")
-        GO_BASH_PARSER=$(find ${{ env.PACKAGE_PATH }}/bin/ -type f -name "bashparser")
         REQUIREMENTS_PATH=$(find dist/ -type f -name "*-requirements.txt")
         SBOM_PATH=$(find dist/ -type f -name "*-sbom.json")
         SBOM_GO_PATH=$(find dist/ -type f -name "*-sbom-go.json")
         HTML_DOCS_PATH=$(find dist/ -type f -name "*-docs-html.zip")
         BUILD_EPOCH_PATH=$(find dist/ -type f -name "*-build-epoch.txt")
         DIGEST=$(sha256sum "$TARBALL_PATH" "$WHEEL_PATH" "$REQUIREMENTS_PATH" "$SBOM_PATH" \
-          "$SBOM_GO_PATH" "$GO_ACTION_PARSER" "$GO_BASH_PARSER" "$HTML_DOCS_PATH" "$BUILD_EPOCH_PATH" | base64 -w0)
+          "$SBOM_GO_PATH" "$HTML_DOCS_PATH" "$BUILD_EPOCH_PATH" | base64 -w0)
         echo "Digest of artifacts is $DIGEST."
         echo "artifacts-sha256=$DIGEST" >> "$GITHUB_OUTPUT"
 
@@ -134,14 +132,12 @@ jobs:
       uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         name: artifact-${{ matrix.os }}-python-${{ matrix.python }}
-        path: |
-          dist
-          ${{ env.PACKAGE_PATH }}/bin/actionparser
-          ${{ env.PACKAGE_PATH }}/bin/bashparser
+        path: dist
         if-no-files-found: error
         retention-days: 7
 
-  # For now only use the hard-coded artifact name.
+  # This job called the reusable workflow _build_docker.yaml to build and test
+  # the Macaron Docker image. Note that the built image is not pushed to ghcr.io here.
   build_docker_image:
     needs: [build]
     permissions:
@@ -150,4 +146,6 @@ jobs:
     uses: ./.github/workflows/_build_docker.yaml
     with:
       artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
+      # TODO: use ${{ env.ARTIFACT_OS }} and ${{ env.ARTIFACT_PYTHON }}
+      # when this issue is addressed: https://github.com/actions/runner/issues/2394.
       artifact-name: artifact-ubuntu-latest-python-3.11

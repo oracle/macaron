@@ -3,6 +3,13 @@
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
+# This script is used to build the Macaron Docker image. The built image will always be tagged with `latest`.
+#   $1 IMAGE_NAME: The image name to tag the final built image.
+#   $2 WORKSPACE: The root path of the Macaron repository which contains the dist/ directory to search for
+#       the Macaron wheel file.
+#   $ RELEASE_TAG: The additionally release tag to tag the final built image. If it's empty, the built image
+#       will be additionally tagged with `test`.
+
 IMAGE_NAME=$1
 WORKSPACE=$2
 RELEASE_TAG=$3
@@ -13,7 +20,7 @@ REPO_PATH="${WORKSPACE}"
 WHEEL_PATH=$(find "$DIST_PATH" -depth -type f -name 'macaron-*.whl' | head -n 1)
 if [[ -z "${WHEEL_PATH}" ]];
 then
-    echo "Cannot find Macaron wheel file in ${DIST_PATH}."
+    echo "Unable to find Macaron wheel file in ${DIST_PATH}."
     exit 1
 fi
 

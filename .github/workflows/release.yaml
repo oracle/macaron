@@ -113,33 +113,37 @@ jobs:
         echo "Hash of package should be $ARTIFACT_HASH."
         echo "$ARTIFACT_HASH" | base64 --decode | sha256sum --strict --check --status || exit 1
 
+    # Log in to ghcr.io so that we could push the Macaron Docker image.
     - name: Log in to GitHub Container Registry
       run: docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
 
-    # The Docker image will be built with tags: latest and ${{ RELEASE_TAG }}
+    # Build the Docker image with tags: latest and RELEASE_TAG
     - name: Build the Docker image
       run: |
         RELEASE_TAG=$(git describe --tags --abbrev=0)
-        ./scripts/dev_scripts/build_docker.sh "${IMAGE_NAME}" ${{ github.workspace }} "${RELEASE_TAG}"
+        ./scripts/dev_scripts/build_docker.sh "$IMAGE_NAME" ${{ github.workspace }} "$RELEASE_TAG"
 
+    # Push the Docker image as part of the release pipeline.
     - name: Push the Docker image
       run: |
         RELEASE_TAG=$(git describe --tags --abbrev=0)
-        docker push "${IMAGE_NAME}:latest"
-        docker push "${IMAGE_NAME}:${RELEASE_TAG}"
+        docker push "$IMAGE_NAME":latest
+        docker push "$IMAGE_NAME":"$RELEASE_TAG"
 
-    # The Docker SBOM is generated under the dist/ directory which will be included in the release assets.
+    # Generate the Docker image SBOM under the dist/ directory which will be published as part of the release assets.
     - name: Generate Docker sbom
       env:
         SYFT_BIN: ${{ github.workspace }}/bin
-      # https://github.com/anchore/syft#installation
+      # We install Syft, which is an SBOM generator tool for Docker images, using the instructions from:
+      #   https://github.com/anchore/syft#installation
+      # We only generate SBOM in CycloneDX format.
       run: |
         RELEASE_TAG=$(git describe --tags --abbrev=0)
-        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b "${SYFT_BIN}" v0.74.1
-        ${SYFT_BIN}/syft --version
-        ${SYFT_BIN}/syft \
-          ghcr.io/oracle-samples/macaron:"${RELEASE_TAG}" \
-          -o cyclonedx-json=dist/macaron-"${RELEASE_TAG}"-sbom-docker.json
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b "$SYFT_BIN" v0.74.1
+        "$SYFT_BIN"/syft --version
+        "$SYFT_BIN"/syft \
+          ghcr.io/oracle-samples/macaron:"$RELEASE_TAG" \
+          -o cyclonedx-json=dist/macaron-"$RELEASE_TAG"-sbom-docker.json
 
     # Create the Release Notes using commitizen.
     - name: Set up Python
