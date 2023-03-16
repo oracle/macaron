@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-01-30 18:28:20"
+        "timestamps": "2023-03-16 18:15:28"
     },
     "target": {
         "info": {
@@ -20,1179 +20,1179 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "subject": [
                             {
-                                "name": "build/repo/io/micronaut/micronaut-aop/3.8.3/micronaut-aop-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-aop/3.8.7/micronaut-aop-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "a189c335e15e11de21639513f0881aa622042d8f28bea03b29e07859920438a3"
+                                    "sha256": "30ac2946268ea1ce74d4ffde678478b6fcc21258f2dac92ebd83aeac62e0dfb0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-aop/3.8.3/micronaut-aop-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-aop/3.8.7/micronaut-aop-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "45655e4b06c613f436e71e17f7368b29b3ad73c72ea00f74887d533a0785c6dd"
+                                    "sha256": "cc85d8be7932505e0c96c17df7a13151f20520a169f92ea2cfd4cdddcfc0fdd0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-aop/3.8.3/micronaut-aop-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-aop/3.8.7/micronaut-aop-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "42a8ff6d028d52162d747dabb1cd1ba519dc8235a98f9740f17716212999a8d8"
+                                    "sha256": "f0f104bd344472914d8b92db73b953c5780baf71bbd314a24ad1e6a4aaecfd20"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-aop/3.8.3/micronaut-aop-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-aop/3.8.7/micronaut-aop-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "54c76278894229a081d52ae733f28f4ecb0d712d8bfe801b28323e347cc75803"
+                                    "sha256": "9150d9900029fc5d4a627a614bd405e9596b66f177ed634c4095531138493b35"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-bom/3.8.3/micronaut-bom-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-bom/3.8.7/micronaut-bom-3.8.7.module",
                                 "digest": {
-                                    "sha256": "66135c9d040cc19a9458507a2dc31252c9aa7926502acbff151aa906679c8b27"
+                                    "sha256": "88df1f8b38b9d4c67fe3baadaf010b1bd954440a5977e49c4f130508338324c4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-bom/3.8.3/micronaut-bom-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-bom/3.8.7/micronaut-bom-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "6dfa0d4e233e48a4b3e0c3c7b66229b6320104a0d122a2f3c6872bed0dfe3f5b"
+                                    "sha256": "89b6385977c5a4bf68b84f342163537bc0bc075f3b201255565670cced8983f9"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-bom/3.8.3/micronaut-bom-3.8.3.toml",
+                                "name": "build/repo/io/micronaut/micronaut-bom/3.8.7/micronaut-bom-3.8.7.toml",
                                 "digest": {
-                                    "sha256": "c0299ff4be970ab51bd7e4958376487a8328fe15996238fb9c276faca9c78103"
+                                    "sha256": "79c6a921964290ea6b5a638799abd2d94845cfcaa2612872a44379e59d50e253"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.8.3/micronaut-buffer-netty-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.8.7/micronaut-buffer-netty-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "4d2e90b75db3e1d309a3d11fc8ccba1d3f7823612da5c3c1fbb362ad7c9f5b61"
+                                    "sha256": "3f884b2dc9040a98d5245d873d86464cfc8cafad12419376993b6a0ad7aedcd9"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.8.3/micronaut-buffer-netty-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.8.7/micronaut-buffer-netty-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "23f745a2dc8043691e02d27ac863068feabfc2764717a2872389cb26e304991b"
+                                    "sha256": "1a10e5ad386e7e620318edce3015fbe94bb058106161638aaad9ef4709e0c820"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.8.3/micronaut-buffer-netty-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.8.7/micronaut-buffer-netty-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "ab86a1b383ab7c6876bc606dafa4ec13812d5849ece490a0167527889b5c5b6d"
+                                    "sha256": "c7a966573d47d599aba29eff8678b13929c0b7a55cd3ad9ad53d6d5bc0014c15"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.8.3/micronaut-buffer-netty-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.8.7/micronaut-buffer-netty-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "382b7ffda3f225ab0f9604971776d03b7e9167cbae1bd50b7ec4f98025a38015"
+                                    "sha256": "3ce540ce3a2c3928010261a352da495d179493a7cdcbdd4db031382150e777b0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.8.3/micronaut-buffer-netty-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.8.7/micronaut-buffer-netty-3.8.7.module",
                                 "digest": {
-                                    "sha256": "776c30e69a21e835ed6da4164d84056c3cc7658a02ff0fd7ea9d629606e33cf0"
+                                    "sha256": "38d80b11f468c7f408d6509d0310ebb487db6e08a240b5304840656427c89ef1"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.8.3/micronaut-buffer-netty-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.8.7/micronaut-buffer-netty-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "a13e87d14e2567d76f7d6aafa795512bf08c5baff4ec7a4d91537b6b9e219f5b"
+                                    "sha256": "94a0c1d04d27a940fe26880ad9a923a952778aba3f39ac75791f62a9f701fd11"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-context/3.8.3/micronaut-context-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-context/3.8.7/micronaut-context-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "09cc4be66be66ec3449a4a63723185bb3fde10014fb4669c71926c322666f7fd"
+                                    "sha256": "b363d3b7e57067e6f4b8e78fd52129b8115d954efc555aa40fdb65848086fe0e"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-context/3.8.3/micronaut-context-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-context/3.8.7/micronaut-context-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "f11c739e702d7645fcd786f6028aff55e92e4e86af74ed1faf5a13a7b32319ad"
+                                    "sha256": "f5defe7f81d82c082dc247165d1563dc826c7e47d932954e419cd14a731a6feb"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-context/3.8.3/micronaut-context-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-context/3.8.7/micronaut-context-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "935d6479435675615c9090a5cdfadefb8448dee694d7d589dff0cb05985501ee"
+                                    "sha256": "d41bf83f8274b03a412fa08e1d4b5a9af98d9f1c5b86b8569795bd671fd8ef25"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-context/3.8.3/micronaut-context-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-context/3.8.7/micronaut-context-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "8d749d52838021cc88546ef486b086841a6e5072bdcd32c0f40673905b29d059"
+                                    "sha256": "8abd36d13ab751abe73d98573943470a5fd7746715acece1335954e4d4fa6047"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-context/3.8.3/micronaut-context-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-context/3.8.7/micronaut-context-3.8.7.module",
                                 "digest": {
-                                    "sha256": "bd8c65a21cd6d13e773d44f8500b2ecae3707af071d2d1a6529985cc52aab1da"
+                                    "sha256": "08b84632c55351678958590ed984f00f9083c195102d1745964a080b5dfb06a3"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-context/3.8.3/micronaut-context-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-context/3.8.7/micronaut-context-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "993c082b8a643257a523f9420c07cfbb8dc2da8f2a3df4b36b4fc166cb31f7f7"
+                                    "sha256": "7d9c0925e07303e8e02528eae677af9a6ae189ac7be07b761af398b4ecabb690"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.8.3/micronaut-core-reactive-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.8.7/micronaut-core-reactive-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "a03ed92fbf752b9f2af6fb582ef0125e4fb14c6aba77a855e03db6c867b40d59"
+                                    "sha256": "e1b4007ac472938987fa96d9adf331f55bb83f5c964a16d05e9905ee812e5421"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.8.3/micronaut-core-reactive-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.8.7/micronaut-core-reactive-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "7733bd7d0abd00797e6c623a0c85e752adc6698f9da1b3fee392cd70bb0ce321"
+                                    "sha256": "a9abe1d49014ef25aed60e2baa55c77d1fb54424f59304e9f16febb2ee38b091"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.8.3/micronaut-core-reactive-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.8.7/micronaut-core-reactive-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "f2027e376c16c3cef80b9b10085401b3b743ac74594b85e59d4d04a881589f17"
+                                    "sha256": "f41f2e8f790d9d84c853b0a4cba7613bb73dc6d70bf192026e8ce91d51285b59"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.8.3/micronaut-core-reactive-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.8.7/micronaut-core-reactive-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "6592b2d7db749021db83d9db459aa0b472924136d068805cfe8b13aa4b7594a4"
+                                    "sha256": "86297fd95160658ec3a122f7f56cf9f5aa3629b98367917c58fc62fe8645e0ef"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.8.3/micronaut-core-reactive-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.8.7/micronaut-core-reactive-3.8.7.module",
                                 "digest": {
-                                    "sha256": "0decd9b15f8306197b373693250734709c21cb0dd08fdec5f8895cbe314608ba"
+                                    "sha256": "733f83662573ac2e83f82dfd2dfa5fb511ea3cd587bd70ca6f5640341c8caa65"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.8.3/micronaut-core-reactive-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.8.7/micronaut-core-reactive-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "437356f156fba6f79bae543945eb7a9f41ea01b9ca5684c5ebc56ae74d6135db"
+                                    "sha256": "7f98d6d50512492352637a85ffc56f7bd427368f2bdc4b058395eacf41eab360"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core/3.8.3/micronaut-core-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-core/3.8.7/micronaut-core-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "1492851537e19cfac503e18f46d68a4bb70ea0d97007532d7d8a792c3ead9cb1"
+                                    "sha256": "e98397673cb57e01d5d40d850377ff8178e1c6e3e9ac4018a7012796e8401e82"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core/3.8.3/micronaut-core-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-core/3.8.7/micronaut-core-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "4381916ede563a306b5b88d5acc3a216482a57f89d604574419b0511a9cc64b0"
+                                    "sha256": "4ff4a94361524efcdf41d6f9b1ffd6a91d6000abfbcc34dd05bce97936b996df"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core/3.8.3/micronaut-core-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-core/3.8.7/micronaut-core-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "c82b69e7d98c8cccca0cf55b15f32802a18385a45af831f55b1f2fd0dc7b65bc"
+                                    "sha256": "c211d8ca8e0a3aa6b8d6df9bc83d8e913bac691c5328444088471381743f444e"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core/3.8.3/micronaut-core-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-core/3.8.7/micronaut-core-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "d586f66452522d1c572986209e4f18acfcfb6530d858cd42bb515c5d3663ab3c"
+                                    "sha256": "a760615d71ced093ddcf5a4633bbc55a9e4dc9a33db73b8678d7bc1fb12b61cb"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/3.8.3/micronaut-function-client-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function-client/3.8.7/micronaut-function-client-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "3ce2e2540d1895761a77e9d8d13bd8917ad306fd248159210556908601bbdc00"
+                                    "sha256": "302b3d8cd863c21a3e9ea874173afd53452c2f3d0a8452104c783067d2e0c056"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/3.8.3/micronaut-function-client-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function-client/3.8.7/micronaut-function-client-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "a7b2094d3665074c6a380da701d92d5b06a8040a13564f9c1669c743ea623583"
+                                    "sha256": "2ea2b863e6690aa0e0f7025fc023d9a4122f2bbb059495d64ea619cdcef170d9"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/3.8.3/micronaut-function-client-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function-client/3.8.7/micronaut-function-client-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "35a24aa14716895a89ccf980ed698f32ab8b53a38718ea86f9bcada53b12ace3"
+                                    "sha256": "2f63385b8bc4278703e0bb941265b1fab855c97c1dbf2b6d6ff93b0154245dcb"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/3.8.3/micronaut-function-client-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function-client/3.8.7/micronaut-function-client-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "28f081185efb71fb3b0fa617dc58caa88e0b04d0ea832d1657f2404a7b0ebe6f"
+                                    "sha256": "df29230b21962cfff8eaceb60e7f9e60a1ad3cb6746b2e882da331500fef7187"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/3.8.3/micronaut-function-client-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-function-client/3.8.7/micronaut-function-client-3.8.7.module",
                                 "digest": {
-                                    "sha256": "e02f8f3757f07d7f63be2f9e823a67ba668b73a36e8d38f4028ad6adac8836b0"
+                                    "sha256": "e971ad4a65eba8d921cc6a2f3ccd32aea6de90f1ee4b239316d20d5d2b93a544"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/3.8.3/micronaut-function-client-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-function-client/3.8.7/micronaut-function-client-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "dc6009c11c2ad15fc9da9bffcfafb899389e503e364b95a41ce33fe2c0e6ae95"
+                                    "sha256": "612aa84b6956b5f9100aadf78ae2b1fd58eaa9758314278ce50c13e67a3c28e8"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/3.8.3/micronaut-function-web-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function-web/3.8.7/micronaut-function-web-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "9983171578114d980a71cddaededf00808a0a2979d06e28fba4afab5da702fac"
+                                    "sha256": "708c10396af65c696f8ed0ebae3a3cf005ae07443cdea33eb1e62af9af6592f6"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/3.8.3/micronaut-function-web-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function-web/3.8.7/micronaut-function-web-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "c3f31fe588f7fcf447d92a533453d84f4ae27c5f9267ca71f7b2f51c1f58aafd"
+                                    "sha256": "4ee8c2a90ad3a85b09805ce5707e7b118ccf7615bf409691ad7355f0daa10854"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/3.8.3/micronaut-function-web-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function-web/3.8.7/micronaut-function-web-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "5081f4cbe808eff42cfb4c1a4d22112acb5356f44b8f2dba5c04f951662a89b2"
+                                    "sha256": "711d0139d358848c815a9557205a2de44467aa77630dd24d9f03ee05d4703274"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/3.8.3/micronaut-function-web-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function-web/3.8.7/micronaut-function-web-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "7d6155102d1925054a9f1aa2b6dc3ed03c297a9eacd26450f1dcb5ab83bb7e46"
+                                    "sha256": "410af1c417919e42654e1c7850a88dc0293cc1dc721cbc5e5344bbcc516325fc"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/3.8.3/micronaut-function-web-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-function-web/3.8.7/micronaut-function-web-3.8.7.module",
                                 "digest": {
-                                    "sha256": "35deb1c36a62f389bc11b3e41100784fc70a4d3422bb9f298a9ea2595ac4b031"
+                                    "sha256": "3e5fa1f6c69e1d941f621276a8783186c090d1a1cb509bbeaa49db6fb901b985"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/3.8.3/micronaut-function-web-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-function-web/3.8.7/micronaut-function-web-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "bad23bc7af2bd378f50cd36fc183109854b37399edbb2c7b816eed346393891c"
+                                    "sha256": "b5e3e942dce4bbdf6192eae0f8d8bd9584f8bc182a9546eede8706deee968b62"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function/3.8.3/micronaut-function-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function/3.8.7/micronaut-function-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "504df1c9ffe00b7faf7db8e3dfa6547255ac657c0991ad9f7dfd7a4eee29d638"
+                                    "sha256": "1f76983e7117514b6560a1cc7a3784faf77b3403e1a89a09056b1c805744879a"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function/3.8.3/micronaut-function-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function/3.8.7/micronaut-function-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "329518bb41745e4bd75279df4d986d8059aaa9444f4e1c5ef8b634f2632cad24"
+                                    "sha256": "4e21c57ed8b9592f79ef4bf7809056b87593ac43de58ec09e581b9d02bed21a4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function/3.8.3/micronaut-function-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function/3.8.7/micronaut-function-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "bc7969f65d26e11fed33fd670daf9ba701740c03c4ca959fb98450e787769834"
+                                    "sha256": "bff21665371421a592a62bdb36872a5f09aac5deb57558b6a62dc6aaf089a700"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function/3.8.3/micronaut-function-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function/3.8.7/micronaut-function-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "c4ff955ba2bd986607ef3916e6507a4c04bc7e51fbe82d41cc0be69c455f9a25"
+                                    "sha256": "3b1701e936f6898d2b25cd8153c2c0cd143ca1f6d287135b02f854dacedd0536"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function/3.8.3/micronaut-function-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-function/3.8.7/micronaut-function-3.8.7.module",
                                 "digest": {
-                                    "sha256": "16c9ebe625a520d806ab0ce1960d5ba5630f67e4cbd89fd8193c912de219acbb"
+                                    "sha256": "ce4e19625c3a563f29da58f2b2c6b3806c8cf0a556dc925a4c93a89c8adef1d2"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function/3.8.3/micronaut-function-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-function/3.8.7/micronaut-function-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "c82e1359f2a0a8ba110da238a366f8763d87b367d5ae21ee2c2b63ba637dabc7"
+                                    "sha256": "7b07b82da55bf792bfa903aeada36e2005be8a31c0612149fc3e52fd1be12a76"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-graal/3.8.3/micronaut-graal-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-graal/3.8.7/micronaut-graal-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "359cde2fd477c546e4a3eb712b86fef12896b6479677d4dfbfd4d73f811ceead"
+                                    "sha256": "7c3748d3694b8b7b3dd609fb6e10def3cfe4077f762cc7b8d31e8be67d6675fa"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-graal/3.8.3/micronaut-graal-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-graal/3.8.7/micronaut-graal-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "e4bcb44dc637f0e018cc213e8ac12c0a51422504776ed75a11d3a4bdaa474cc7"
+                                    "sha256": "445bbdd1f49a0b5b5097078d85c1ddd2993448a9dc4516c8d34e25a9396249ef"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-graal/3.8.3/micronaut-graal-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-graal/3.8.7/micronaut-graal-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "e7b7d272ba87b00116bd0e3720079469f537cfd7cdfd7b2abd2cc8807dcb77ce"
+                                    "sha256": "1108fb82ce6491a6924042993f4c264c28cdea2bf223e4f0e5861d895913e5f1"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-graal/3.8.3/micronaut-graal-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-graal/3.8.7/micronaut-graal-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "afb8a3904e2447d84a39eb9ab613a18bb9b1f072e3d5aa3cdec786720c22cb1d"
+                                    "sha256": "5555dd96dbc189b06e9e99ca204f17111e50c0dae4381f661a607ed14b0c669f"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.8.3/micronaut-http-client-core-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.8.7/micronaut-http-client-core-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "ee455fab1d73ec19f8ccdb3f5d347cc2064aaab36bfb74e008af1f9792a34790"
+                                    "sha256": "64755c0a9a60464169f3ac9d6a68bf951ea63ed53eb9b852fea97649a8cfac69"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.8.3/micronaut-http-client-core-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.8.7/micronaut-http-client-core-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "051ae5940a7541302c3ac0d78d819a320210447a4ab10b1425fae605c4139c5e"
+                                    "sha256": "bf6e851e46029cc3db1b6f0fa5cfc0b78d0c119fbd50330483bd6e5868df4470"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.8.3/micronaut-http-client-core-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.8.7/micronaut-http-client-core-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "fe9fe86ca810fa5365881c1f51e33705a8b833eec860f8259f02f58dfd0ed3f1"
+                                    "sha256": "0717831b1e4aaf16e4f6bf2efc3535d4990b8d9f54c33d368c44b667efe5bcd7"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.8.3/micronaut-http-client-core-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.8.7/micronaut-http-client-core-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "be2d0f0c883ffe5d38cdd69f1eb8f0706a8de50125efe52911bab065cf54bf51"
+                                    "sha256": "bf41d86c23798c6feb47517bf0c2b1b59b21ed724eba1476f4464509909a4f30"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.8.3/micronaut-http-client-core-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.8.7/micronaut-http-client-core-3.8.7.module",
                                 "digest": {
-                                    "sha256": "f7fbabf7fb3bb8bf92de0d90a29eb0239039b6c76638bf7345ce7c114bcccb23"
+                                    "sha256": "6e8a603180e069c6ad60418203929c5e3bd335521810adf184e3d7206a341a38"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.8.3/micronaut-http-client-core-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.8.7/micronaut-http-client-core-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "a640383466f9c42069e0080187b8a58c2b14b672ac916b120ac4d5626c320851"
+                                    "sha256": "f48375c2e0150efe6812f57f6848d49bb5f54d415c0fa7aeba3ffebfcc569aec"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/3.8.3/micronaut-http-client-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client/3.8.7/micronaut-http-client-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "5c3cad24d557b31c49ac8a490281ec0196898303ee13ef2e40dfb85acb5dfa69"
+                                    "sha256": "c3a70f864dc200597e8e99717f776a77a097fee1258b0329a6623ec81adf95da"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/3.8.3/micronaut-http-client-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client/3.8.7/micronaut-http-client-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "1457da02b369bbb601d57a851c5656b24a74489a087a8d655b3942fed43f80da"
+                                    "sha256": "38966afc25c0c6be017f7740977d76b286cc0a2cdf90c04116f278a492cac25e"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/3.8.3/micronaut-http-client-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client/3.8.7/micronaut-http-client-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "b880106cb5986debca0fbe31ace298265d2c5122703ecee47b3ee6e640a57637"
+                                    "sha256": "d8a608a36beca5c0bd47c8aec41089e90796e7b7e9f6e6480b7b4e6e9747c4fe"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/3.8.3/micronaut-http-client-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client/3.8.7/micronaut-http-client-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "4e20165cf825def663cce7a5b849c3368831251112b60d39c4495f5380a3b7da"
+                                    "sha256": "d2811b4b54ca8df1a633d1d06dc50dac8db57f7db63c0acb390f5351b7d4cda4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/3.8.3/micronaut-http-client-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-http-client/3.8.7/micronaut-http-client-3.8.7.module",
                                 "digest": {
-                                    "sha256": "80d7175de3ebd6e632409657fd482d42f5f7a1f32ecb8d7e1ef5a5e4683bf34c"
+                                    "sha256": "147319c4afb937c2549cb0356a992a7ebddb345e91e0b4c1f0c61d70a3318c01"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/3.8.3/micronaut-http-client-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-http-client/3.8.7/micronaut-http-client-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "7a01c140b28933cd04a5563058229d608e40463046c59c5ab96dceed948971ef"
+                                    "sha256": "7f9d6af5e0a0541d82dcac6422b9f285df07b18290d6ad581edc0a0baa607b15"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.8.3/micronaut-http-netty-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.8.7/micronaut-http-netty-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "c6e06b2d5373a9e471614bac114a197eeebde42525d22c704fedb6c92efeb0e9"
+                                    "sha256": "f9ef1e0a72d67a2bd317ae269050cbb118c74584d64930e34dd6baf290301aea"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.8.3/micronaut-http-netty-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.8.7/micronaut-http-netty-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "156f8e4e31f8096c54f4219c17eaae2ba7263e5925d1d9dfe9c7bd1339ca3016"
+                                    "sha256": "b0da97f1f35e7647ba84ec4f19dae53c202deda6198c13acca6e42d75768f385"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.8.3/micronaut-http-netty-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.8.7/micronaut-http-netty-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "9f063960aae29cf235c780a21431e07ec491e2d1b5b713ab0c7a1ddc03652d17"
+                                    "sha256": "8dad78ab12bdf7aa1e780329895f9ffd2960cf418392f05445552d6b25e5b8bc"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.8.3/micronaut-http-netty-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.8.7/micronaut-http-netty-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "d99a622397a499171a68ea3ea100ce2eb1d53d7878e44ce5c16c0ad7a8979529"
+                                    "sha256": "2c60f0ad6a9478704f58b19eac832e6bcfb03102fca82f74ad9d61b9f354a5c7"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.8.3/micronaut-http-netty-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.8.7/micronaut-http-netty-3.8.7.module",
                                 "digest": {
-                                    "sha256": "fee470a5716ff39f71848ab6f1c91dd3a1e21bd53da41ff850ca084e5e36d9f8"
+                                    "sha256": "91f3bce34148e869c77701c09cee87221b0d8953b32fb2b6d6926d02bc0d91c4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.8.3/micronaut-http-netty-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.8.7/micronaut-http-netty-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "5a5052bde5069e216fb131ec45ecdda66ca30385c7be7d31a39c22c1fdfb283d"
+                                    "sha256": "51f6ae4e70e6b241296889260b520c60a325892bb49dfeb74bb86c2bb19f8819"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.8.3/micronaut-http-server-netty-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.8.7/micronaut-http-server-netty-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "b211cbd9ee58e25379106fceb4c156dbd8420001151a0e2f3f40406b2cb3f0e0"
+                                    "sha256": "0cdaac8af99d9fe8729da08a76a21603d2c8cb454c3032c6032f555113f289e8"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.8.3/micronaut-http-server-netty-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.8.7/micronaut-http-server-netty-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "be0f17ef84495eaddf6b4c5e5c8e787b79d95e95e2c96688f833af721bd503c3"
+                                    "sha256": "d32a26e295c33dd6ed647ff956097ca462f8e3255f69a492a7f3ff1488eb233d"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.8.3/micronaut-http-server-netty-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.8.7/micronaut-http-server-netty-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "8184880115a1639ddeec7544b0addcf1df2bd1b3ef2d5c5966f5f3ab7f9036be"
+                                    "sha256": "7c8020922240e57d16319c137c9cb2fa170b8f5d6754b72105ecd2ab446e143c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.8.3/micronaut-http-server-netty-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.8.7/micronaut-http-server-netty-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "3c97fee5dc5b74e15cc02dda88e1a3a7a0dc322cefca8d9c44291e0875fc4090"
+                                    "sha256": "9e5e78524b621351d4a004756c5b6779d6f83aafe46822b9384189db3639f8dd"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.8.3/micronaut-http-server-netty-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.8.7/micronaut-http-server-netty-3.8.7.module",
                                 "digest": {
-                                    "sha256": "8cf81922049ebc690e7a3f026c7a9cf664fca13bfb742d7948d7e22d1db448b2"
+                                    "sha256": "7877452555f4291e8be502814e1c04300a001a8d32b3793fac68baeb7ad72583"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.8.3/micronaut-http-server-netty-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.8.7/micronaut-http-server-netty-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "81985a356346d103f1ae5bdf2e4bd00e234565d00e4e9136a9fcdda1a4be9d49"
+                                    "sha256": "0328f95851bbb9dd932222fa91a20657689366923cc2bbab8289c4dac3add92f"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.8.3/micronaut-http-server-tck-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.8.7/micronaut-http-server-tck-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "9b21f771b522f8b4291baa133a02e6049bbd22f79676e190a4f28d528be2b760"
+                                    "sha256": "63401b04976c792cb4e37b0c6db84d02ffb49302e4f76d19e7e821d45216e33b"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.8.3/micronaut-http-server-tck-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.8.7/micronaut-http-server-tck-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "c1b1b9a240c516dcd65feab1c93f5ca43610435e7f99f78edc5661b51ef6417b"
+                                    "sha256": "d6b6df189a7ffee203d73f59e88ee77860303834e5cba7c6bdaf4c9f67555098"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.8.3/micronaut-http-server-tck-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.8.7/micronaut-http-server-tck-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "945c9354bee37f40f02b57d1bbabc5f46994212e7297f51321a99100a2e48172"
+                                    "sha256": "776e32d1aea34028a6a6a330a372d84bbb58d7303d3a4bed1e13c3033a7427c7"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.8.3/micronaut-http-server-tck-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.8.7/micronaut-http-server-tck-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "41a93de2ab3a8de7171b3f21ba26ef804367580fa890c0c9f41ffb3eed44c675"
+                                    "sha256": "9198961aecff8934a82e5c2e3b72d46951d6992e03dee2f24de913a292414b00"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.8.3/micronaut-http-server-tck-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.8.7/micronaut-http-server-tck-3.8.7.module",
                                 "digest": {
-                                    "sha256": "e1aa07f177208476de775883d177ebe000fbd1dad43ccfbc1d56959914493577"
+                                    "sha256": "9de70f1d002510d04b67f4ad7b0f9defc261fbb5a1b0af633ff7924f76c9c275"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.8.3/micronaut-http-server-tck-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.8.7/micronaut-http-server-tck-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "5d57adbab15496b3b8687de0ad086fbe4506611a6c738099320cd7aaf682dff9"
+                                    "sha256": "89777b62e5cb2f287b6becca6e2014a44fdb39904b838734ca32ab8d9fc9c5df"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/3.8.3/micronaut-http-server-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server/3.8.7/micronaut-http-server-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "00ff6841ea9f44de74fd1f5bfa02fe3ce3b063377178dbeb5f5d95ee98308df7"
+                                    "sha256": "bcda179232474264b2054d52f3af4dfec4ca7e0e5e95d6de9a4755d45e284379"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/3.8.3/micronaut-http-server-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server/3.8.7/micronaut-http-server-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "ae305b87d899e26b4528ea91f24ec9c6ba477bb553330596cda5ee4898c3fd6b"
+                                    "sha256": "23b3518baa990b390579acfb99cc81bf7d7f499ec2bbc773973630987ca6880c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/3.8.3/micronaut-http-server-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server/3.8.7/micronaut-http-server-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "355daaaf1211b0e8c7968f9c0f218fff987f05e6519f3612f642ae1cb4eb0839"
+                                    "sha256": "445d45c0184d20111d7ed76b475bd2b614344a0a2a7cd8577d28a632993e9d65"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/3.8.3/micronaut-http-server-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server/3.8.7/micronaut-http-server-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "ba4ce777ecbc343afe2efe904ca38afbe28d973143388ade9ab5694c1e3ea762"
+                                    "sha256": "c0e01ac9f6ec6688770ab1b2e0a9b68309c692e118b1c730e6f0da51fb2713b4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/3.8.3/micronaut-http-server-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-http-server/3.8.7/micronaut-http-server-3.8.7.module",
                                 "digest": {
-                                    "sha256": "5eaea235db8dbc414e3e69e5e16b791c90255d193231a1b4a7b8fd756098a468"
+                                    "sha256": "745874e8f5a1a247b646053f0095db62ff81d85407ed79441ab5b81915b7e8f0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/3.8.3/micronaut-http-server-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-http-server/3.8.7/micronaut-http-server-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "7cb8d88a25f2964194774e22fd316cdf977d91ae4d312a20c7b379ebca0d8f33"
+                                    "sha256": "fb1b802eb2e26075719c499aff47159acbfcf61701d57b170926121c1cfe608d"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.8.3/micronaut-http-validation-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.8.7/micronaut-http-validation-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "630865f0d95066073badd1a62fa5f8c88569892ed7047d02b1828124fba2cd28"
+                                    "sha256": "e1f145ba49669546856f5a0b635eb627957200affbbc6eb922966b538076e8d0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.8.3/micronaut-http-validation-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.8.7/micronaut-http-validation-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "70e3a182dbc02081bf937229d71d469c21269b9d7544c23a2e397632117b73ac"
+                                    "sha256": "7ffcb283cf9464bc6166a171eb500dab0725ec0d68521519e9bfb2118085afb9"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.8.3/micronaut-http-validation-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.8.7/micronaut-http-validation-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "100791d28541d93a67263770a4699b6a9a88c6e5217e20d8421f22bfe77358a8"
+                                    "sha256": "0252733fbad2f938e2db3f4c39577975ed38d6a05283b7bc13fff48fa4cabc61"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.8.3/micronaut-http-validation-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.8.7/micronaut-http-validation-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "0160bc9bd405b7e73d06b69cd147edb8536109aca41e31a74b4659db6d9a6c3c"
+                                    "sha256": "fcc329490f857c5c78442c570c07c773ff3396900e16d7c335ceced86c8d5417"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.8.3/micronaut-http-validation-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.8.7/micronaut-http-validation-3.8.7.module",
                                 "digest": {
-                                    "sha256": "f55449a7f36306615beada48fb9b4628b0aa85089c3a7182638733092969e9c9"
+                                    "sha256": "eab2305b7acbd8a2492f485fbe6f3392f80a836d4f4565de65a57a3487a17211"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.8.3/micronaut-http-validation-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.8.7/micronaut-http-validation-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "db1aae41610210064b1f52b7dd55854f04a023c977d2f0e6f0abb0b885b1b1f0"
+                                    "sha256": "9d2b06e82effbfa1626d47d9e6c6a8ef1ac1bbf96338131485b467b5df08d798"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http/3.8.3/micronaut-http-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http/3.8.7/micronaut-http-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "f14f138b7a2833d366cc18e92b558c67257647f0669fa87c07bac303b3fc4713"
+                                    "sha256": "b5f5ab76fd791d4bbf4b21180ad516e9a31ce7d21e47c621e2e5f73cf6b57a46"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http/3.8.3/micronaut-http-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http/3.8.7/micronaut-http-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "1aa6dd54ea89acb6bbb55137be59bdd72ba98a25e20d0157948784ca756f405d"
+                                    "sha256": "62ebe52fbb7ff0dcc63907bcfea01f8edabcacd6cf11f08aae108ac1a894f2dd"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http/3.8.3/micronaut-http-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http/3.8.7/micronaut-http-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "1e4526b393822f459eef182917384d57301f32b9ef21810d00614262e87f5148"
+                                    "sha256": "03ac991142193a736dd25799d330852c50c8690bda53b347a828d1e72a37b7a0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http/3.8.3/micronaut-http-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http/3.8.7/micronaut-http-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "76d5aab6a209b2673309e9e5c5324d4c0f0e7a5b0c3cb31eb43e5c0bbac2b90b"
+                                    "sha256": "d058cf5ece4f582979dc76f932a30f003a2e1e2228b4725cb8a60d674ca34a0a"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http/3.8.3/micronaut-http-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-http/3.8.7/micronaut-http-3.8.7.module",
                                 "digest": {
-                                    "sha256": "916c83761d2d0ceb9f1c369b74bf6c1041e0a0afefdd2e61c5fdb02350d73155"
+                                    "sha256": "7f4b22a1f0c63a370df5d6e74fe57e2b4ff5bbedfc39a309568c49ae1556ca36"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http/3.8.3/micronaut-http-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-http/3.8.7/micronaut-http-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "5b3926490d78c8b9464fdef1daff1020e2595565a0dc4326f1dd4c3899553401"
+                                    "sha256": "56cc82ebf256c43b178f44871aa8b80415f1c36e13282265c54042dd8f4d333b"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.8.3/micronaut-inject-groovy-test-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.8.7/micronaut-inject-groovy-test-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "bce6cbe188b05b13bda0485a46f7aef4cdcb4b6b6d4866c7cda6a74826cdccf3"
+                                    "sha256": "893f1ec4b6482e87d4254dbf4788703c6c74e603e78b1fd312d1bcf697e3d3f7"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.8.3/micronaut-inject-groovy-test-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.8.7/micronaut-inject-groovy-test-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "3e36d543ec0ccbc6df029cf50c5b68cea9cc12a16fef1dbaa0284e6908efa387"
+                                    "sha256": "c6a1565bb420b894dbb8aad6707c1dfc20e9103c6f6a32978369c7b76350b548"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.8.3/micronaut-inject-groovy-test-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.8.7/micronaut-inject-groovy-test-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "b745d8f6c873b924978315b3920581867393c908dec1c71ba72632f8323f641e"
+                                    "sha256": "8524d447a8eea5bb88f53906fb8c6eaa1705fcf1dbe0711913208cc03b60541a"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.8.3/micronaut-inject-groovy-test-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.8.7/micronaut-inject-groovy-test-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "3fbe1cc6baa126d8fd58a12596cedc5a15333a72ba5b9ae351b9146c34496707"
+                                    "sha256": "14da538364bf5a6b0d933bf37bad45503963c527b0fa9bd6dd805391a516e670"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.8.3/micronaut-inject-groovy-test-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.8.7/micronaut-inject-groovy-test-3.8.7.module",
                                 "digest": {
-                                    "sha256": "000fc8f9153b3ea5026875734fba23338885eff9201e15d83ae2f1dc88d2ddef"
+                                    "sha256": "488867f967bfa6c3afe0177572650adce3ba93e706ac6f6edb5ad5b081117e6d"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.8.3/micronaut-inject-groovy-test-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.8.7/micronaut-inject-groovy-test-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "432b6e88b01f2cd2b95fd08a42dcd5219586a09b9e07a95277334eafba5df4de"
+                                    "sha256": "8f8f17d71e892d7c52a519e9622d3513e3f8afe96ac53185ba371f991cee88c6"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.8.3/micronaut-inject-groovy-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.8.7/micronaut-inject-groovy-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "e3c7af6dec26f440698c8ac8aaf4a691a202a1d2a160380a2cc8e97c738d0b82"
+                                    "sha256": "6b87aaf5d9d835e81d2cbdfdf2bb8d336b61cb600761b55504b984d31a3e1889"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.8.3/micronaut-inject-groovy-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.8.7/micronaut-inject-groovy-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "c84a632fb9fe54911aaa467566cfa177c1010b1dcba9f955ec47c144d04384d5"
+                                    "sha256": "b6222c09093dd35918feedab3062b2b267d50eac59916b6ebb88f084f45412d8"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.8.3/micronaut-inject-groovy-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.8.7/micronaut-inject-groovy-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "c1c1ecac65e7d757d1cf89e2d6ea244e1c8cf57a065687702251f9577e5b61e8"
+                                    "sha256": "eea05aa682031e67b68dec37037d1a24b4bc57f05d47331970b7cea9db4bbccc"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.8.3/micronaut-inject-groovy-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.8.7/micronaut-inject-groovy-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "e398e84918a23dec6d844faed6dbb6a7c57b14a8ee6a7f89c6b5aecb28eb336b"
+                                    "sha256": "de0ed554fbea22026cd98290dc694dc296a0cae628d0950c453f031aca8cc5f4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.8.3/micronaut-inject-groovy-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.8.7/micronaut-inject-groovy-3.8.7.module",
                                 "digest": {
-                                    "sha256": "23c50b4fc9d8b84e60780a0fec875409a78f4ff4a8988bf36f0c7d8a39ff03fd"
+                                    "sha256": "752366117c2eb1c54220badd9b722eeab5d20061f2dcbb918d20d8e8974df0df"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.8.3/micronaut-inject-groovy-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.8.7/micronaut-inject-groovy-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "e34b6f48e745f7732fcbc4c11bc79de867b2b6048c0349d6c3646a0d9b9336f6"
+                                    "sha256": "ea9cafc4bcaff418c29cd6f9ec121e3ee430d940132e11ceb658708104b86b6e"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.8.3/micronaut-inject-java-test-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.8.7/micronaut-inject-java-test-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "62bfa9a5e70afa6ec559a561a1212064f35eda6d66cb8226ad3cb7ac161089b5"
+                                    "sha256": "9dc1bf0a42eeed3969a554379323a378b305a126f1ebdce69219825917a68405"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.8.3/micronaut-inject-java-test-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.8.7/micronaut-inject-java-test-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "41bb1e8a94411d77b7a483d6df23a596ba98d2c26567ff682fd089c80fbf61a2"
+                                    "sha256": "4ccbbe8a10cceea3fc5417f1f58a453ed534a405052b36be822fdcfef6501d46"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.8.3/micronaut-inject-java-test-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.8.7/micronaut-inject-java-test-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "de940879b5982b457bb1280e197938e09f0479cdcb47553ba750ace1c42bf5b8"
+                                    "sha256": "ea927eef0ada20da1b8b2afa8e1ac9fd9f02e178bcfb622656f75191de8f2ac4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.8.3/micronaut-inject-java-test-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.8.7/micronaut-inject-java-test-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "2034548611b099ee9d018929fc329c1e6b746cf7e8c739d756036e5aba9058fb"
+                                    "sha256": "f41d866f23cbe03bab88d43d1aed4eb7b679ec0cc84fddf6c3eaf1447496c33c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.8.3/micronaut-inject-java-test-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.8.7/micronaut-inject-java-test-3.8.7.module",
                                 "digest": {
-                                    "sha256": "e99c32fc9c22bfffaabe7d1a46ccdcda88f266752af5e15ca931233b818aaf9f"
+                                    "sha256": "decb300a89cf1085f15b4b6fe420bb7a89320d68d74be52e90c9ee43b4f7aa0b"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.8.3/micronaut-inject-java-test-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.8.7/micronaut-inject-java-test-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "d6200ab7df19104b52ba8a0157ea33c1aac1cb7fff767f0897574f6052a5b4fe"
+                                    "sha256": "cbf96c71c78972fc42cf9e5d21c2f18c92e2790cb9a0553d466a1d74a9c508c9"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.8.3/micronaut-inject-java-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.8.7/micronaut-inject-java-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "a332d536eaa47227ce5b03e23f77983d3ff1b927748057411cb76763f38b340a"
+                                    "sha256": "b7702c9c27c0fb5f9439396049f48dc30cab66904db14cd97bc55b16616f6222"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.8.3/micronaut-inject-java-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.8.7/micronaut-inject-java-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "3b7edf30a6c22cb618c13b11124fdfdf6c6b0a70a57d576f63a14b29abfca840"
+                                    "sha256": "57466f9d782ff1b1747b884cf0509eefb016f970eda299c96fa746c22a29359c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.8.3/micronaut-inject-java-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.8.7/micronaut-inject-java-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "b34de24e95ae10a55ba9b2d290dadf653f55c8c59e34330b2c26525d443e2218"
+                                    "sha256": "ce951ee5be5f034b5849e60fd6c351ab061dc03ca5e3b6d164e88cffafd7c492"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.8.3/micronaut-inject-java-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.8.7/micronaut-inject-java-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "68e7f4cdd4c0c40ab22c0d3d9e909dae5a0da67e7bc54c12b5cc6e6dabde8ee5"
+                                    "sha256": "57b0f17b772d67cf9ced95034370b0b6ca9ce92ee5d9213cfaa4d586f8531d0b"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.8.3/micronaut-inject-java-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.8.7/micronaut-inject-java-3.8.7.module",
                                 "digest": {
-                                    "sha256": "7501361d1b00d71e2433ea0114b98e54431c15a29802581c97da87abf4cfa84a"
+                                    "sha256": "1945771f0e174bf487e05a04f8c5feeb5300d2b6aa10de52006b8ff80b1e7c6f"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.8.3/micronaut-inject-java-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.8.7/micronaut-inject-java-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "c24fa09ac2a9bcb3986e3f41ab96163cc96ddada4f183c0dd32e2cf6522e1870"
+                                    "sha256": "11becfb225eb1cd8ef57fe9ee0c699ed1d9b03c0bef0af37e78da6cf414c91f1"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.8.3/micronaut-inject-kotlin-test-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.8.7/micronaut-inject-kotlin-test-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "74f38169553ce8386fefe44b1c25dd21e3a2fa9ed9085847a09f81c8185396c9"
+                                    "sha256": "0dfb2552579f97b1d1d17f39f285e76342bbd7d5a516fbb5b9ccda576e0ea2b0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.8.3/micronaut-inject-kotlin-test-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.8.7/micronaut-inject-kotlin-test-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "d3a764adcc67db76b3dd19bac616a73f316b1aac0b6cb46c0cc904b5b1b40044"
+                                    "sha256": "55686b42443619aa4e685dd6bcdd2800be447915c94cb7783b232632f360acb0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.8.3/micronaut-inject-kotlin-test-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.8.7/micronaut-inject-kotlin-test-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "f7f21570e281854d8fe8d3e5c20ede9e076a1ef7daa25dabc7e4afbafbc06094"
+                                    "sha256": "2bba4f4e1b68c2b5c75fa58c1e58b71bbaf74cd3e70272a4eaceef8a69f55e56"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.8.3/micronaut-inject-kotlin-test-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.8.7/micronaut-inject-kotlin-test-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "73f5b3d613b2d3698f8aded805a1c490efc6864818802b26c6f407089bf7edfb"
+                                    "sha256": "083a06c8d1e0ddb70aaf7557b1dc59bed565a7f488207b8399163402fab14cd7"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.8.3/micronaut-inject-kotlin-test-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.8.7/micronaut-inject-kotlin-test-3.8.7.module",
                                 "digest": {
-                                    "sha256": "0c5467aff08e3443501718abbeed089ea14b59dcb6a9ebee6791a9871bcfe249"
+                                    "sha256": "7b3477b7cfb5225a439de442f97eacbe30ade6d56f135915e1aa09d2bd0a9f47"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.8.3/micronaut-inject-kotlin-test-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.8.7/micronaut-inject-kotlin-test-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "18244e5b9729cb77538f8354ab1ca34c6e6af5949081a95bc09ed91997323ca7"
+                                    "sha256": "bfe7f19c513dbca8b4f85c171e47ad1ffeea996cb0983f26156959a721825301"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject/3.8.3/micronaut-inject-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject/3.8.7/micronaut-inject-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "2087ffb831c0e071e3c52f49d7a6be52ecdc2f66b1801e9b8d6421be02245cbe"
+                                    "sha256": "bbe6dfcda08bb1805b65e534d310abeb57646942c11cb722f99261b70dcf6980"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject/3.8.3/micronaut-inject-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject/3.8.7/micronaut-inject-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "f0d08bd385a870c7eb45365e224e75784bdbd6fbb212073839f9a2e8e6997317"
+                                    "sha256": "49a04d94798f506faf2b8275474b05522a81e05101a08b21e945e8246225f292"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject/3.8.3/micronaut-inject-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject/3.8.7/micronaut-inject-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "a65ca2dead268d85a3af96a75519d38a1aa60f4bc26951def8548569d5c42386"
+                                    "sha256": "e82fac1df4017df61657f2e70fe55ce5686a45b9166488095eac5385c6b6b571"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-inject/3.8.3/micronaut-inject-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-inject/3.8.7/micronaut-inject-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "55f5831828f218fffe06b8503f702dd127db3ec7206cb6fec5aee1226d43bdcc"
+                                    "sha256": "ea0ba3625b2c37d7efa2f60a79e7a7952ef8adba45561026f5026bec909e132a"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.8.3/micronaut-jackson-core-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.8.7/micronaut-jackson-core-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "bd152ff4419e7bf66ae22ea818dbc08ff0d2fcf29bbbc7a95454fc5ed5205533"
+                                    "sha256": "aeb5ac479ece62920fda7ddffe36b22576120e00298ca96ccddc31252b461ad4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.8.3/micronaut-jackson-core-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.8.7/micronaut-jackson-core-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "18bcb0bf9f7387646bf14403c8392bdb8f8d663e6daaabe323cb4e01ae8ec9a8"
+                                    "sha256": "b12736b57e73ebc2761a95777f71111e3401363f72eca7ecd24ca58d871cc3d1"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.8.3/micronaut-jackson-core-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.8.7/micronaut-jackson-core-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "9eabec6044374b233638a2816a07188ef89ed840b238706a2db805831b516d5f"
+                                    "sha256": "f54ca513d2288d000f6f02def150af076040a2d9e2b444c6ccce35fef1a6541d"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.8.3/micronaut-jackson-core-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.8.7/micronaut-jackson-core-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "4123fb344a493e2ada3504388fd972fd758e74e05aa9540f41a85c1e32084bdc"
+                                    "sha256": "ad328a98fdd7d55a65bc7cbda3fdec5b3a8824463334a973416596eb950cb4a6"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.8.3/micronaut-jackson-core-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.8.7/micronaut-jackson-core-3.8.7.module",
                                 "digest": {
-                                    "sha256": "8fc03ad56c3d555b7ed6810fce1b124f05f93302b5d7e950a5bb313a8938c9f4"
+                                    "sha256": "daf9dcf77c2c96cbd4239957ce675fc7fe60c6b0eddfe2a6054bf61f4d1c8486"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.8.3/micronaut-jackson-core-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.8.7/micronaut-jackson-core-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "33b82bc97f2d01ccaf0083a8836380d7653b57f0ae42b31eef904c236e86b592"
+                                    "sha256": "f92fcacca5f316417a905f6a3fcaf1e904cd78ee12381e03c771d4c2d9aeedc6"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.8.3/micronaut-jackson-databind-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.8.7/micronaut-jackson-databind-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "c89fd07a8c81bfc8ccd230ca3655fd988df91b9b4b097419be6d6a563714f45d"
+                                    "sha256": "5a05d138b4af816a43557aa54a9b7708bfa9925e8759b3b5eb24c72defc3d5b6"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.8.3/micronaut-jackson-databind-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.8.7/micronaut-jackson-databind-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "d0a217a9b95a18b27c29d2f06c522372964a6e5447ee0717174bfd9b4547e4f9"
+                                    "sha256": "f8c79a318326d2e8303cb142207e5dbfa20cc6ad820ee9bdeaef5843c3c6aa7b"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.8.3/micronaut-jackson-databind-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.8.7/micronaut-jackson-databind-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "b9349cc815f5d59c81590b0e279d80c0cd0fdb9fd03d810ef921eb6bbbf58085"
+                                    "sha256": "d2861a8c27fbe09165402fdb09c1c9156e3c44c478ba63574535f40828bfdd62"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.8.3/micronaut-jackson-databind-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.8.7/micronaut-jackson-databind-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "838ff5b1e2769658b45e86e509cfc4e7c1e438aa8823fbdb40618fc076d32ab2"
+                                    "sha256": "93ad501caa5303d12deace6a2c664300027587d3f61f440feb5e9ccbb2af84bf"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.8.3/micronaut-jackson-databind-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.8.7/micronaut-jackson-databind-3.8.7.module",
                                 "digest": {
-                                    "sha256": "a6addefd0a15f6315fe9f7580639fd46c313f441e453e445d672c23d05a8ad81"
+                                    "sha256": "b9aca3b79a792e1e2194c6b79733f6307325e2437e2ae22491b9140511418659"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.8.3/micronaut-jackson-databind-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.8.7/micronaut-jackson-databind-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "07e5a878748d5a03aca522be2888e7284fff18fae1a8eeb26fcf8aa56a8be116"
+                                    "sha256": "86d573c71fe2ed58685c5870fd0e60457952025d26f8c5fbb783b3c1b65da9df"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/3.8.3/micronaut-json-core-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-json-core/3.8.7/micronaut-json-core-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "e344601fbc912a4a1801fbe8483cfa1460e7cfd499c8af67e7fd60ed6aa8f296"
+                                    "sha256": "f35deb5cc23a34b5bdc64bfc1039044705cf150820748c018b24cc6df124bbca"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/3.8.3/micronaut-json-core-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-json-core/3.8.7/micronaut-json-core-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "f771f64daebdaae62ddeef4b1694d7e1d3ee0c9d13bfb8ef4ee1168ebef2bec3"
+                                    "sha256": "1e38ae4bec0d60216c0269218e0844a5bd3326f99f770c72e0476edc291122d3"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/3.8.3/micronaut-json-core-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-json-core/3.8.7/micronaut-json-core-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "04430226ce4833d0db6891eff74dca8d7582d4bcdac7e68e9eacff7d105ae161"
+                                    "sha256": "2cfd2f31a62c2f51b369b959d74ca526b1e660be49da594129b7f7a65e07ddd8"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/3.8.3/micronaut-json-core-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-json-core/3.8.7/micronaut-json-core-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "fc763c3e4086a2b6a4c32165a89bde6d94c2b010ece8b1c692c16ccd1b74598a"
+                                    "sha256": "025f33dde913686fb2571103a7b77a93c6b54823eb7be89392e8b8c05230081c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/3.8.3/micronaut-json-core-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-json-core/3.8.7/micronaut-json-core-3.8.7.module",
                                 "digest": {
-                                    "sha256": "a99a9d213a0c73a5f603550461adb81db30c5b397c47f4b759c7b6ce2481d264"
+                                    "sha256": "49ccafb8deda3c0c034c04f8c29950a83b08a9828402e7de978452ea8de35004"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/3.8.3/micronaut-json-core-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-json-core/3.8.7/micronaut-json-core-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "6e2303af7422492b175b687316d909014e34e71d7d3315659c869a001c09f800"
+                                    "sha256": "40acec0bfb3918e57ff93453d5553d8dfdccc6b58815476b171e96209cb7e4ce"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-management/3.8.3/micronaut-management-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-management/3.8.7/micronaut-management-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "575ada1611b4b30132b2f0172e910c597764064b18602f490c3c48e7a4e462ba"
+                                    "sha256": "6a4e710ba5b941ddc240ec37671776bc80545ec7a8e8ed3b3e87025d4dc298de"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-management/3.8.3/micronaut-management-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-management/3.8.7/micronaut-management-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "b01fa8118872632aa81a294977d3c1ad26e34f1719b101bd84ae53343b6f32de"
+                                    "sha256": "19c5019469a9e19f3caa64659343a01b7fd4f38011db9099ce6af59ef3a7f1d8"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-management/3.8.3/micronaut-management-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-management/3.8.7/micronaut-management-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "34036d82e519d45f4cd5600f061690c90cba2a12c0dc82ed7cab9617a5459e0b"
+                                    "sha256": "d48f52003afa4659665604d1bf7345c36c041061c86be11ddced356e22c772fc"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-management/3.8.3/micronaut-management-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-management/3.8.7/micronaut-management-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "1ab065a8a0c17dc6b967d25e9ce8706da550851cd78708cc270d7e4fcf76b01a"
+                                    "sha256": "55c0f2140c044199a3ed446d16c8eb95b4646883a00ee5358edc4845a346cd3c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-management/3.8.3/micronaut-management-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-management/3.8.7/micronaut-management-3.8.7.module",
                                 "digest": {
-                                    "sha256": "11a734ab30328e70ca9f497a5b701ae96ffefd82d016734251810100d234bb88"
+                                    "sha256": "d002753a566512b59a11ac128597b0516045284791b27ceaf4b58d3ef6cb0c68"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-management/3.8.3/micronaut-management-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-management/3.8.7/micronaut-management-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "d20214ded1fe5d191b97b3b8ca68a1bcc5db34969b2623ed163ea8a5d3125093"
+                                    "sha256": "2361e4ac15cf85be416f01ece79e3821415011b71a8bd780b41522936129d061"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/3.8.3/micronaut-messaging-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-messaging/3.8.7/micronaut-messaging-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "23338981cb2ad13b5bb68d837f53e3ce348163e7b9f061571f6c2350e8602fdc"
+                                    "sha256": "3587a8253e31e0df3b9f85976253080a59f85afdcf8452f25817d5e488b3a9a9"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/3.8.3/micronaut-messaging-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-messaging/3.8.7/micronaut-messaging-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "22304f94f7b9a02679ec170c8951b71b0617434c0fc1d3c57d1c9321108746d6"
+                                    "sha256": "175255b6d0e8e958ffc86dce8b8d82240a0043e1a721c8eac505e5728a7472a3"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/3.8.3/micronaut-messaging-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-messaging/3.8.7/micronaut-messaging-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "4c71d813379239a77ed16a5b370b4b1539bc0495fb948f0a8191980fb9585ab3"
+                                    "sha256": "86f4a6e92452b1fdae85c4c868b1d067faa747800bcbac3369403d3f1d600a86"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/3.8.3/micronaut-messaging-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-messaging/3.8.7/micronaut-messaging-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "efc3550960e85abe2b7bb0bf89b843d98be8248106104e53928bf27cde9c3114"
+                                    "sha256": "8c1efc1ec8e25861fbcbd931850ac7179e0403613d6b6943d28322cd2d41b5ec"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/3.8.3/micronaut-messaging-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-messaging/3.8.7/micronaut-messaging-3.8.7.module",
                                 "digest": {
-                                    "sha256": "c6b59f582c1b35f2df9a42d0d471bf0dd29b42ff18a8932458c5744c6596288b"
+                                    "sha256": "c1fc0aafb1c487b3ec8cc9fd78572aeaf4610482d27d080bfcd7f6befd3dab21"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/3.8.3/micronaut-messaging-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-messaging/3.8.7/micronaut-messaging-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "64675fb0a5eabd08311873d84c5888e1a4e06e9d91f9d7c95e500674dae6fd1a"
+                                    "sha256": "8fd62349b26dfcaf8c6b47ecf19644d22f074a9ba6599d8f5918ff614025e212"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-parent/3.8.3/micronaut-parent-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-parent/3.8.7/micronaut-parent-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "169ccf418aefd29b1dd3ebfe0f7b36509325886ef8c10adf8320b63dfa6d8442"
+                                    "sha256": "598077bb338f97076151a6f56f8f7c9a60037ccaf95a906b042d0c4313dc0dc6"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-router/3.8.3/micronaut-router-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-router/3.8.7/micronaut-router-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "090afa944c7f1c8f6bed5e5f9fd59071b62a9d3763324da2f21523f76875d65a"
+                                    "sha256": "49c1eb40a99f793c80f153397aeddafee0ff385ca67b24d2c8904c0f6b989e4d"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-router/3.8.3/micronaut-router-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-router/3.8.7/micronaut-router-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "188b1ef5a0ef391fd93f85f03fb4a73c675ccb6fab7a35ffd8dcb5a437b2d3e5"
+                                    "sha256": "2a56f8291c953e12dc582ec43d78edfd263fc5055b0ae76307a224272b1f113c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-router/3.8.3/micronaut-router-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-router/3.8.7/micronaut-router-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "adf1155a32aead3cc078d68b2ae90126424885757bdc024f54a0279ec19923de"
+                                    "sha256": "09867439df1e4c0f67cb0c8eba57faad0335885c18711a6bda612cd2677781f8"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-router/3.8.3/micronaut-router-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-router/3.8.7/micronaut-router-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "89001664c1baad17f0fc1c0bca3b8411328c112cfa0d0ee43e26701d2c9b0bc8"
+                                    "sha256": "9c538b4a0e99a5e81806815a7f9475adf35c2d6075bca5fe68d0a39c8545011c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-router/3.8.3/micronaut-router-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-router/3.8.7/micronaut-router-3.8.7.module",
                                 "digest": {
-                                    "sha256": "119e2d8d030a25cf55ffeff024cffe3f0fd2033e893b15a7a3ef0837ee90efd1"
+                                    "sha256": "9d8c66698841e20808bd1365dbc38053f79c3222c5bdb3b4464b447f82c672ec"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-router/3.8.3/micronaut-router-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-router/3.8.7/micronaut-router-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "92d54d08fb72421e67aca60c2db7ed4ba40deb53684e66e4a81dd570f5d7aeec"
+                                    "sha256": "512f09b47952ebbdd2a514aea2552b0eac753fb8feb8c3ab686ec590369d5b58"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.8.3/micronaut-runtime-osx-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.8.7/micronaut-runtime-osx-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "afd15b6c88eb91442e621bd30722c8bee51e40dc6bdd26aa4c788c8e84e953d8"
+                                    "sha256": "e89e679697de547ee8d54172b59c8351051aeca562b2050c2e780f556370190f"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.8.3/micronaut-runtime-osx-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.8.7/micronaut-runtime-osx-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "07c2224829e7bd77421f90ec0b92d9a641b719a0144155d7a342238273a46dc4"
+                                    "sha256": "de0013d167eab0288b48d19dd90a04b31bc8d6f649305027786a6bc47b7686fd"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.8.3/micronaut-runtime-osx-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.8.7/micronaut-runtime-osx-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "2af488fa367f47d883484cd339015361792ddfffae7e7b46c1b391ee98a063dd"
+                                    "sha256": "b87c088401ce3c79a7e2bca51b1f8d165d964ba4accd08141752955181033788"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.8.3/micronaut-runtime-osx-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.8.7/micronaut-runtime-osx-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "895401f2c6ced86601e98781f767f2a750669a2a842f29d262fa7626a79c4663"
+                                    "sha256": "9643933844757aee0dc8e1d9c00be57bf36a1e9efc7d7e102653083af596dca3"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.8.3/micronaut-runtime-osx-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.8.7/micronaut-runtime-osx-3.8.7.module",
                                 "digest": {
-                                    "sha256": "280c649fc59dbbff14fb001ba1841b5dd0b7f14cc93859b56939d90fdde073b5"
+                                    "sha256": "79152f1dad5b14e6102a3c2081fb2c2e959a4dda63b4f4467ab52af1395f20d3"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.8.3/micronaut-runtime-osx-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.8.7/micronaut-runtime-osx-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "02c6182c185d2235746f0d94337c54638b0e7caedb4a3c4ccd42cc359b3fd9b4"
+                                    "sha256": "7b788b295530c96307aeffe6fea9833e1d539f64f046b27464da25736b0917cb"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-runtime/3.8.3/micronaut-runtime-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-runtime/3.8.7/micronaut-runtime-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "801e560ba8b5c76ce1ea7d5170fe8a40300adf8e546186af8dcbb9afba4fc540"
+                                    "sha256": "2a59cdc546bf58252d32b5af32285f0455455bad9d7b0caeae894d66b6a89b9e"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-runtime/3.8.3/micronaut-runtime-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-runtime/3.8.7/micronaut-runtime-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "3a3944c1d1cd8d6c3e9601d505d4899c74d60843674dda3f3443e571aa900106"
+                                    "sha256": "d1d52663742a5b8b8ed2230697fbe194e1acc40f6700e31f243af4b4db108e6c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-runtime/3.8.3/micronaut-runtime-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-runtime/3.8.7/micronaut-runtime-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "3ae21bb2baccf89d125dd5e943a3b4c815a213990413923208bf88170aa8c54a"
+                                    "sha256": "064253dea4d2eb29b3d292490da281c46c7c8f4984b8e3f98f6e47cb14e2415e"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-runtime/3.8.3/micronaut-runtime-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-runtime/3.8.7/micronaut-runtime-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "cb20327ad79f8c91bd28cb94f88bc2f3e49e34a14a2caac2deadacbfae629e64"
+                                    "sha256": "85e8271f1af118fadd9be90dad4989cc759fdf8aa8e11ed65f831498ec6f065b"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-session/3.8.3/micronaut-session-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-session/3.8.7/micronaut-session-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "2b2cc5d9cf89d2cfd33d1df002f95e9f62bdadeffc9c2613500695354ef2e71d"
+                                    "sha256": "a0bc979ba2e5bf9a857a8b5459df44017feedfdec77407d5b5a9988245309dd0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-session/3.8.3/micronaut-session-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-session/3.8.7/micronaut-session-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "372ec852347458fc465e4a46420724e1deea00ba919a2a9923d123564583dd16"
+                                    "sha256": "b3cb13935f6aa6567349401108d45096e2c9e7c9372154e7d48012501c38b733"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-session/3.8.3/micronaut-session-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-session/3.8.7/micronaut-session-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "f0897b7319982317b8a6d22bf109696b01bbb71cf125ab473847cbdae9b396de"
+                                    "sha256": "3ea7ef4984ea76f6030706b2a8b35b719bca3f143a2b98fe8cc0407d87a82588"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-session/3.8.3/micronaut-session-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-session/3.8.7/micronaut-session-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "d5a2a95b8efb619d15bc3ed126a64555507e28fdcd003599aeab7734205dd9ad"
+                                    "sha256": "6c7d3c77cb93d5be7515e12b739118c0fde45fe8381c976738413a706d93d361"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-validation/3.8.3/micronaut-validation-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-validation/3.8.7/micronaut-validation-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "9719cab2f40484864524ca06b2358a1a4e129153c9723ea270fe8f6911ba25ae"
+                                    "sha256": "e0695e57982cd7c3489585a873335541f05cbb61e0e1701e0e6ee18d96dc6ac9"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-validation/3.8.3/micronaut-validation-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-validation/3.8.7/micronaut-validation-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "fe17efc5861f103cd98d787ad30734d9027b8719c8b821946686b281e4654876"
+                                    "sha256": "66760770d9f3529d6fc6c7838bdd469177e469eb7d375c09498d31f996ce598c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-validation/3.8.3/micronaut-validation-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-validation/3.8.7/micronaut-validation-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "058a5f005c25c3a291dc8bcdfd6bf92430790170214980ed89e832fd3235e2ad"
+                                    "sha256": "e87ef5e7e33e7756dc7507c2f98765d1ef6d14442ec419bd2c3a6834e9ae1ffe"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-validation/3.8.3/micronaut-validation-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-validation/3.8.7/micronaut-validation-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "de7c34f03be56c56f3a47c8bcecb10b957f46da1b29a80bb92e5867d55877ebf"
+                                    "sha256": "e9e48d22431182c96ffdb66cea10ac8262ff5e9e0a3088ee9cfab0de9020297b"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-validation/3.8.3/micronaut-validation-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-validation/3.8.7/micronaut-validation-3.8.7.module",
                                 "digest": {
-                                    "sha256": "570034d57d83178752e988ed27fedc517abfd95290590138fac33cd846e1342f"
+                                    "sha256": "d82cdac43bb230db3cc3314107c67fd87b5a9a829caca2a829d96293c10349e6"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-validation/3.8.3/micronaut-validation-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-validation/3.8.7/micronaut-validation-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "641763f713325771951f8119f14b032bbf72226d54a77464fd972c08b15d3f8b"
+                                    "sha256": "193ef2228f350e4e46b5ff314144402160484b785a5bdfbbeb2679480f6e7f44"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/3.8.3/micronaut-websocket-3.8.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-websocket/3.8.7/micronaut-websocket-3.8.7-all.jar",
                                 "digest": {
-                                    "sha256": "3bfa5805a5e49bfc096e55f971f93342017d02ab7b505710baf4e5b0fd123fa2"
+                                    "sha256": "86009060d9c1a23376adf16e4cbfa561d233dbad8b0cff3a0c7e78098d0bd568"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/3.8.3/micronaut-websocket-3.8.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-websocket/3.8.7/micronaut-websocket-3.8.7-javadoc.jar",
                                 "digest": {
-                                    "sha256": "12ed851e3a950147aabf1f0034dd9b431b099d6c780cd33b2d909aea5be8d455"
+                                    "sha256": "f878c2e5db5faef54486d4d0fce29b1e049cd2edd89e9dd6a41ba568e14d0600"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/3.8.3/micronaut-websocket-3.8.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-websocket/3.8.7/micronaut-websocket-3.8.7-sources.jar",
                                 "digest": {
-                                    "sha256": "e9b8246570a1bacc03025e14e373f8d94b1dffac7f518ae4c7d372c6d4051c7f"
+                                    "sha256": "c67560f5e030c8ea18a207aa7d26f5a54966ced35137497f94bae49f04fcbdae"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/3.8.3/micronaut-websocket-3.8.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-websocket/3.8.7/micronaut-websocket-3.8.7.jar",
                                 "digest": {
-                                    "sha256": "bc89171bb50cac77ef85adc0be2e639b89fc63d3c2ecf20daa1203b7221d1e4c"
+                                    "sha256": "b7902951c882f457f1acc86a70106a01dcf63571e1fdfabd716899af9a785e72"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/3.8.3/micronaut-websocket-3.8.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-websocket/3.8.7/micronaut-websocket-3.8.7.module",
                                 "digest": {
-                                    "sha256": "75805a4a27e370bc8dacd73c0a02c20a27c3d939a743db0bc6af79cb928d9c8e"
+                                    "sha256": "72156aabb69f44760298bc3f0f9c4266a805364433d684c3b3bff1b7f339620c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/3.8.3/micronaut-websocket-3.8.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-websocket/3.8.7/micronaut-websocket-3.8.7.pom",
                                 "digest": {
-                                    "sha256": "da6b3922a98f669c2f05da3c186a1779ac4ce8f57f41e72505b9533c9eac996a"
+                                    "sha256": "944c1612c5c3da3942d31f3d9c4a11d262d2cd3541111cc17653106e5db22507"
                                 }
                             }
                         ],
@@ -1203,9 +1203,9 @@
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/micronaut-projects/micronaut-core@refs/tags/v3.8.3",
+                                    "uri": "git+https://github.com/micronaut-projects/micronaut-core@refs/tags/v3.8.7",
                                     "digest": {
-                                        "sha1": "fec5ecfdc101b2a559f68e7b942fe3d666f450cb"
+                                        "sha1": "959ea40b4efccf6dc84bfe5728c4259d96aa26f1"
                                     },
                                     "entryPoint": ".github/workflows/release.yml"
                                 },
@@ -1233,7 +1233,7 @@
                                         },
                                         "release": {
                                             "assets": [],
-                                            "assets_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases/90512910/assets",
+                                            "assets_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases/94973347/assets",
                                             "author": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/864788?v=4",
                                                 "events_url": "https://api.github.com/users/sdelamo/events{/privacy}",
@@ -1254,22 +1254,22 @@
                                                 "type": "User",
                                                 "url": "https://api.github.com/users/sdelamo"
                                             },
-                                            "body": "<!-- Release notes generated using configuration in .github/release.yml at 3.8.x -->\r\n\r\n## What's Changed\r\n\r\n## Dependency Upgrades \ud83d\ude80\r\n\r\n* micronaut-openapi to 4.8.2 (#8656)\r\n* micronaut-oracle-cloud to 2.3.2 (#8658)\r\n\r\n### Bug Fixes \ud83d\udc1e\r\n* Handle WebLogic classloader URIs by @mattmoss in https://github.com/micronaut-projects/micronaut-core/pull/8646\r\n* Fix Cors for alternate local addresses by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8642\r\n\r\n* Fixed property placeholder expression issue (#8633) by @msupic in https://github.com/micronaut-projects/micronaut-core/pull/8645\r\n\r\n### Docs \ud83d\udcd6\r\n* chore(doc): upgrade lombok patch version by @juanpabloprado in https://github.com/micronaut-projects/micronaut-core/pull/8648\r\n\r\n### CI \u2699\ufe0f\r\n* ci: sync as in project template by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8671\r\n\r\n## New Contributors\r\n* @msupic made their first contribution in https://github.com/micronaut-projects/micronaut-core/pull/8645\r\n* @juanpabloprado made their first contribution in https://github.com/micronaut-projects/micronaut-core/pull/8648\r\n\r\n**Full Changelog**: https://github.com/micronaut-projects/micronaut-core/compare/v3.8.2...v3.8.3",
-                                            "created_at": "2023-01-28T07:46:02Z",
+                                            "body": "<!-- Release notes generated using configuration in .github/release.yml at 3.8.x -->\r\n\r\n## What's Changed\r\n### Breaking Changes \ud83d\udee0\r\n* BREAKING: update dependency org.yaml:snakeyaml to v2 by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8905\r\n\r\n### Improvements \u2b50\r\n* fix: allow to disable  disable `ServiceReadyHealthIndicator` via configuration by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8836\r\n* remove parallelism from default methods in AnnotationScanner by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8906\r\n* Prevent multiple date headers with file responses by @jameskleeh in https://github.com/micronaut-projects/micronaut-core/pull/8872\r\n* imp: Add STANDARD_HEADERS list by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8903\r\n\r\n### Docs \ud83d\udcd6\r\n* docs: fix Route Compile-Time validation by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8877\r\n\r\n### Tests \u2705\r\n* test: HTTP Server TCK Health endpoint by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8862\r\n* test: HTTP Server TCK LOG body and contains string by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8861\r\n\r\n### Dependency Upgrades \ud83d\ude80\r\n* micronaut-crac 1.1.2\r\n* micronaut-serialization to 1.5.2 (#8895)\r\n* micronaut-kafka to 4.5.2 (#8878)\r\n* micronaut-aot to 1.1.2 (#8874)\r\n* micronaut-gcp to 4.8.1 (#8875)\r\n\r\n**Full Changelog**: https://github.com/micronaut-projects/micronaut-core/compare/v3.8.6...v3.8.7",
+                                            "created_at": "2023-03-08T15:31:37Z",
                                             "draft": false,
-                                            "html_url": "https://github.com/micronaut-projects/micronaut-core/releases/tag/v3.8.3",
-                                            "id": 90512910,
-                                            "mentions_count": 5,
-                                            "name": "Micronaut Framework 3.8.3",
-                                            "node_id": "RE_kwDOB2eaPM4FZR4O",
+                                            "html_url": "https://github.com/micronaut-projects/micronaut-core/releases/tag/v3.8.7",
+                                            "id": 94973347,
+                                            "mentions_count": 3,
+                                            "name": "Micronaut Framework 3.8.7",
+                                            "node_id": "RE_kwDOB2eaPM4FqS2j",
                                             "prerelease": false,
-                                            "published_at": "2023-01-28T08:53:20Z",
-                                            "tag_name": "v3.8.3",
-                                            "tarball_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/tarball/v3.8.3",
+                                            "published_at": "2023-03-08T18:57:03Z",
+                                            "tag_name": "v3.8.7",
+                                            "tarball_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/tarball/v3.8.7",
                                             "target_commitish": "3.8.x",
-                                            "upload_url": "https://uploads.github.com/repos/micronaut-projects/micronaut-core/releases/90512910/assets{?name,label}",
-                                            "url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases/90512910",
-                                            "zipball_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/zipball/v3.8.3"
+                                            "upload_url": "https://uploads.github.com/repos/micronaut-projects/micronaut-core/releases/94973347/assets{?name,label}",
+                                            "url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases/94973347",
+                                            "zipball_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/zipball/v3.8.7"
                                         },
                                         "repository": {
                                             "allow_forking": true,
@@ -1293,8 +1293,8 @@
                                             "downloads_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/downloads",
                                             "events_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/events",
                                             "fork": false,
-                                            "forks": 952,
-                                            "forks_count": 952,
+                                            "forks": 962,
+                                            "forks_count": 962,
                                             "forks_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/forks",
                                             "full_name": "micronaut-projects/micronaut-core",
                                             "git_commits_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/commits{/sha}",
@@ -1332,8 +1332,8 @@
                                             "name": "micronaut-core",
                                             "node_id": "MDEwOlJlcG9zaXRvcnkxMjQyMzAyMDQ=",
                                             "notifications_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/notifications{?since,all,participating}",
-                                            "open_issues": 570,
-                                            "open_issues_count": 570,
+                                            "open_issues": 590,
+                                            "open_issues_count": 590,
                                             "owner": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/36880643?v=4",
                                                 "events_url": "https://api.github.com/users/micronaut-projects/events{/privacy}",
@@ -1356,11 +1356,11 @@
                                             },
                                             "private": false,
                                             "pulls_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/pulls{/number}",
-                                            "pushed_at": "2023-01-28T08:53:20Z",
+                                            "pushed_at": "2023-03-08T18:57:03Z",
                                             "releases_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases{/id}",
-                                            "size": 94351,
+                                            "size": 95131,
                                             "ssh_url": "git@github.com:micronaut-projects/micronaut-core.git",
-                                            "stargazers_count": 5578,
+                                            "stargazers_count": 5625,
                                             "stargazers_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/stargazers",
                                             "statuses_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/statuses/{sha}",
                                             "subscribers_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/subscribers",
@@ -1377,11 +1377,11 @@
                                                 "serverless"
                                             ],
                                             "trees_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/trees{/sha}",
-                                            "updated_at": "2023-01-28T07:54:28Z",
+                                            "updated_at": "2023-03-08T15:41:53Z",
                                             "url": "https://api.github.com/repos/micronaut-projects/micronaut-core",
                                             "visibility": "public",
-                                            "watchers": 5578,
-                                            "watchers_count": 5578,
+                                            "watchers": 5625,
+                                            "watchers_count": 5625,
                                             "web_commit_signoff_required": false
                                         },
                                         "sender": {
@@ -1406,19 +1406,19 @@
                                         }
                                     },
                                     "github_head_ref": "",
-                                    "github_ref": "refs/tags/v3.8.3",
+                                    "github_ref": "refs/tags/v3.8.7",
                                     "github_ref_type": "tag",
                                     "github_repository_id": "124230204",
                                     "github_repository_owner": "micronaut-projects",
                                     "github_repository_owner_id": "36880643",
                                     "github_run_attempt": "1",
-                                    "github_run_id": "4031052453",
-                                    "github_run_number": "116",
-                                    "github_sha1": "fec5ecfdc101b2a559f68e7b942fe3d666f450cb"
+                                    "github_run_id": "4367577844",
+                                    "github_run_number": "123",
+                                    "github_sha1": "959ea40b4efccf6dc84bfe5728c4259d96aa26f1"
                                 }
                             },
                             "metadata": {
-                                "buildInvocationID": "4031052453-1",
+                                "buildInvocationID": "4367577844-1",
                                 "completeness": {
                                     "parameters": true,
                                     "environment": false,
@@ -1428,9 +1428,9 @@
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/micronaut-projects/micronaut-core@refs/tags/v3.8.3",
+                                    "uri": "git+https://github.com/micronaut-projects/micronaut-core@refs/tags/v3.8.7",
                                     "digest": {
-                                        "sha1": "fec5ecfdc101b2a559f68e7b942fe3d666f450cb"
+                                        "sha1": "959ea40b4efccf6dc84bfe5728c4259d96aa26f1"
                                     }
                                 }
                             ]
@@ -1442,12 +1442,23 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 2,
+                "FAILED": 1,
                 "PASSED": 6,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
             "results": [
+                {
+                    "check_id": "mcn_provenance_expectation_1",
+                    "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the expected value.",
+                    "slsa_requirements": [
+                        "Provenance conforms with expectations. - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "No policy defined for this repository."
+                    ],
+                    "result_type": "UNKNOWN"
+                },
                 {
                     "check_id": "mcn_build_as_code_1",
                     "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
@@ -1511,203 +1522,8 @@
                         "Provenance content - Identifies source code - SLSA Level 2"
                     ],
                     "justification": [
-                        "Successfully verified level 3 provenance for the following artifacts",
-                        "build/repo/micronaut-aop/3.8.3/micronaut-aop-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-aop/3.8.3/micronaut-aop-3.8.3-sources.jar.",
-                        "build/repo/micronaut-aop/3.8.3/micronaut-aop-3.8.3.jar.",
-                        "build/repo/micronaut-aop/3.8.3/micronaut-aop-3.8.3.pom.",
-                        "build/repo/micronaut-bom/3.8.3/micronaut-bom-3.8.3.module.",
-                        "build/repo/micronaut-bom/3.8.3/micronaut-bom-3.8.3.pom.",
-                        "build/repo/micronaut-bom/3.8.3/micronaut-bom-3.8.3.toml.",
-                        "build/repo/micronaut-buffer-netty/3.8.3/micronaut-buffer-netty-3.8.3-all.jar.",
-                        "build/repo/micronaut-buffer-netty/3.8.3/micronaut-buffer-netty-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-buffer-netty/3.8.3/micronaut-buffer-netty-3.8.3-sources.jar.",
-                        "build/repo/micronaut-buffer-netty/3.8.3/micronaut-buffer-netty-3.8.3.jar.",
-                        "build/repo/micronaut-buffer-netty/3.8.3/micronaut-buffer-netty-3.8.3.module.",
-                        "build/repo/micronaut-buffer-netty/3.8.3/micronaut-buffer-netty-3.8.3.pom.",
-                        "build/repo/micronaut-context/3.8.3/micronaut-context-3.8.3-all.jar.",
-                        "build/repo/micronaut-context/3.8.3/micronaut-context-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-context/3.8.3/micronaut-context-3.8.3-sources.jar.",
-                        "build/repo/micronaut-context/3.8.3/micronaut-context-3.8.3.jar.",
-                        "build/repo/micronaut-context/3.8.3/micronaut-context-3.8.3.module.",
-                        "build/repo/micronaut-context/3.8.3/micronaut-context-3.8.3.pom.",
-                        "build/repo/micronaut-core-reactive/3.8.3/micronaut-core-reactive-3.8.3-all.jar.",
-                        "build/repo/micronaut-core-reactive/3.8.3/micronaut-core-reactive-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-core-reactive/3.8.3/micronaut-core-reactive-3.8.3-sources.jar.",
-                        "build/repo/micronaut-core-reactive/3.8.3/micronaut-core-reactive-3.8.3.jar.",
-                        "build/repo/micronaut-core-reactive/3.8.3/micronaut-core-reactive-3.8.3.module.",
-                        "build/repo/micronaut-core-reactive/3.8.3/micronaut-core-reactive-3.8.3.pom.",
-                        "build/repo/micronaut-core/3.8.3/micronaut-core-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-core/3.8.3/micronaut-core-3.8.3-sources.jar.",
-                        "build/repo/micronaut-core/3.8.3/micronaut-core-3.8.3.jar.",
-                        "build/repo/micronaut-core/3.8.3/micronaut-core-3.8.3.pom.",
-                        "build/repo/micronaut-function-client/3.8.3/micronaut-function-client-3.8.3-all.jar.",
-                        "build/repo/micronaut-function-client/3.8.3/micronaut-function-client-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-function-client/3.8.3/micronaut-function-client-3.8.3-sources.jar.",
-                        "build/repo/micronaut-function-client/3.8.3/micronaut-function-client-3.8.3.jar.",
-                        "build/repo/micronaut-function-client/3.8.3/micronaut-function-client-3.8.3.module.",
-                        "build/repo/micronaut-function-client/3.8.3/micronaut-function-client-3.8.3.pom.",
-                        "build/repo/micronaut-function-web/3.8.3/micronaut-function-web-3.8.3-all.jar.",
-                        "build/repo/micronaut-function-web/3.8.3/micronaut-function-web-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-function-web/3.8.3/micronaut-function-web-3.8.3-sources.jar.",
-                        "build/repo/micronaut-function-web/3.8.3/micronaut-function-web-3.8.3.jar.",
-                        "build/repo/micronaut-function-web/3.8.3/micronaut-function-web-3.8.3.module.",
-                        "build/repo/micronaut-function-web/3.8.3/micronaut-function-web-3.8.3.pom.",
-                        "build/repo/micronaut-function/3.8.3/micronaut-function-3.8.3-all.jar.",
-                        "build/repo/micronaut-function/3.8.3/micronaut-function-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-function/3.8.3/micronaut-function-3.8.3-sources.jar.",
-                        "build/repo/micronaut-function/3.8.3/micronaut-function-3.8.3.jar.",
-                        "build/repo/micronaut-function/3.8.3/micronaut-function-3.8.3.module.",
-                        "build/repo/micronaut-function/3.8.3/micronaut-function-3.8.3.pom.",
-                        "build/repo/micronaut-graal/3.8.3/micronaut-graal-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-graal/3.8.3/micronaut-graal-3.8.3-sources.jar.",
-                        "build/repo/micronaut-graal/3.8.3/micronaut-graal-3.8.3.jar.",
-                        "build/repo/micronaut-graal/3.8.3/micronaut-graal-3.8.3.pom.",
-                        "build/repo/micronaut-http-client-core/3.8.3/micronaut-http-client-core-3.8.3-all.jar.",
-                        "build/repo/micronaut-http-client-core/3.8.3/micronaut-http-client-core-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-http-client-core/3.8.3/micronaut-http-client-core-3.8.3-sources.jar.",
-                        "build/repo/micronaut-http-client-core/3.8.3/micronaut-http-client-core-3.8.3.jar.",
-                        "build/repo/micronaut-http-client-core/3.8.3/micronaut-http-client-core-3.8.3.module.",
-                        "build/repo/micronaut-http-client-core/3.8.3/micronaut-http-client-core-3.8.3.pom.",
-                        "build/repo/micronaut-http-client/3.8.3/micronaut-http-client-3.8.3-all.jar.",
-                        "build/repo/micronaut-http-client/3.8.3/micronaut-http-client-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-http-client/3.8.3/micronaut-http-client-3.8.3-sources.jar.",
-                        "build/repo/micronaut-http-client/3.8.3/micronaut-http-client-3.8.3.jar.",
-                        "build/repo/micronaut-http-client/3.8.3/micronaut-http-client-3.8.3.module.",
-                        "build/repo/micronaut-http-client/3.8.3/micronaut-http-client-3.8.3.pom.",
-                        "build/repo/micronaut-http-netty/3.8.3/micronaut-http-netty-3.8.3-all.jar.",
-                        "build/repo/micronaut-http-netty/3.8.3/micronaut-http-netty-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-http-netty/3.8.3/micronaut-http-netty-3.8.3-sources.jar.",
-                        "build/repo/micronaut-http-netty/3.8.3/micronaut-http-netty-3.8.3.jar.",
-                        "build/repo/micronaut-http-netty/3.8.3/micronaut-http-netty-3.8.3.module.",
-                        "build/repo/micronaut-http-netty/3.8.3/micronaut-http-netty-3.8.3.pom.",
-                        "build/repo/micronaut-http-server-netty/3.8.3/micronaut-http-server-netty-3.8.3-all.jar.",
-                        "build/repo/micronaut-http-server-netty/3.8.3/micronaut-http-server-netty-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-http-server-netty/3.8.3/micronaut-http-server-netty-3.8.3-sources.jar.",
-                        "build/repo/micronaut-http-server-netty/3.8.3/micronaut-http-server-netty-3.8.3.jar.",
-                        "build/repo/micronaut-http-server-netty/3.8.3/micronaut-http-server-netty-3.8.3.module.",
-                        "build/repo/micronaut-http-server-netty/3.8.3/micronaut-http-server-netty-3.8.3.pom.",
-                        "build/repo/micronaut-http-server-tck/3.8.3/micronaut-http-server-tck-3.8.3-all.jar.",
-                        "build/repo/micronaut-http-server-tck/3.8.3/micronaut-http-server-tck-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-http-server-tck/3.8.3/micronaut-http-server-tck-3.8.3-sources.jar.",
-                        "build/repo/micronaut-http-server-tck/3.8.3/micronaut-http-server-tck-3.8.3.jar.",
-                        "build/repo/micronaut-http-server-tck/3.8.3/micronaut-http-server-tck-3.8.3.module.",
-                        "build/repo/micronaut-http-server-tck/3.8.3/micronaut-http-server-tck-3.8.3.pom.",
-                        "build/repo/micronaut-http-server/3.8.3/micronaut-http-server-3.8.3-all.jar.",
-                        "build/repo/micronaut-http-server/3.8.3/micronaut-http-server-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-http-server/3.8.3/micronaut-http-server-3.8.3-sources.jar.",
-                        "build/repo/micronaut-http-server/3.8.3/micronaut-http-server-3.8.3.jar.",
-                        "build/repo/micronaut-http-server/3.8.3/micronaut-http-server-3.8.3.module.",
-                        "build/repo/micronaut-http-server/3.8.3/micronaut-http-server-3.8.3.pom.",
-                        "build/repo/micronaut-http-validation/3.8.3/micronaut-http-validation-3.8.3-all.jar.",
-                        "build/repo/micronaut-http-validation/3.8.3/micronaut-http-validation-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-http-validation/3.8.3/micronaut-http-validation-3.8.3-sources.jar.",
-                        "build/repo/micronaut-http-validation/3.8.3/micronaut-http-validation-3.8.3.jar.",
-                        "build/repo/micronaut-http-validation/3.8.3/micronaut-http-validation-3.8.3.module.",
-                        "build/repo/micronaut-http-validation/3.8.3/micronaut-http-validation-3.8.3.pom.",
-                        "build/repo/micronaut-http/3.8.3/micronaut-http-3.8.3-all.jar.",
-                        "build/repo/micronaut-http/3.8.3/micronaut-http-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-http/3.8.3/micronaut-http-3.8.3-sources.jar.",
-                        "build/repo/micronaut-http/3.8.3/micronaut-http-3.8.3.jar.",
-                        "build/repo/micronaut-http/3.8.3/micronaut-http-3.8.3.module.",
-                        "build/repo/micronaut-http/3.8.3/micronaut-http-3.8.3.pom.",
-                        "build/repo/micronaut-inject-groovy-test/3.8.3/micronaut-inject-groovy-test-3.8.3-all.jar.",
-                        "build/repo/micronaut-inject-groovy-test/3.8.3/micronaut-inject-groovy-test-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-inject-groovy-test/3.8.3/micronaut-inject-groovy-test-3.8.3-sources.jar.",
-                        "build/repo/micronaut-inject-groovy-test/3.8.3/micronaut-inject-groovy-test-3.8.3.jar.",
-                        "build/repo/micronaut-inject-groovy-test/3.8.3/micronaut-inject-groovy-test-3.8.3.module.",
-                        "build/repo/micronaut-inject-groovy-test/3.8.3/micronaut-inject-groovy-test-3.8.3.pom.",
-                        "build/repo/micronaut-inject-groovy/3.8.3/micronaut-inject-groovy-3.8.3-all.jar.",
-                        "build/repo/micronaut-inject-groovy/3.8.3/micronaut-inject-groovy-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-inject-groovy/3.8.3/micronaut-inject-groovy-3.8.3-sources.jar.",
-                        "build/repo/micronaut-inject-groovy/3.8.3/micronaut-inject-groovy-3.8.3.jar.",
-                        "build/repo/micronaut-inject-groovy/3.8.3/micronaut-inject-groovy-3.8.3.module.",
-                        "build/repo/micronaut-inject-groovy/3.8.3/micronaut-inject-groovy-3.8.3.pom.",
-                        "build/repo/micronaut-inject-java-test/3.8.3/micronaut-inject-java-test-3.8.3-all.jar.",
-                        "build/repo/micronaut-inject-java-test/3.8.3/micronaut-inject-java-test-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-inject-java-test/3.8.3/micronaut-inject-java-test-3.8.3-sources.jar.",
-                        "build/repo/micronaut-inject-java-test/3.8.3/micronaut-inject-java-test-3.8.3.jar.",
-                        "build/repo/micronaut-inject-java-test/3.8.3/micronaut-inject-java-test-3.8.3.module.",
-                        "build/repo/micronaut-inject-java-test/3.8.3/micronaut-inject-java-test-3.8.3.pom.",
-                        "build/repo/micronaut-inject-java/3.8.3/micronaut-inject-java-3.8.3-all.jar.",
-                        "build/repo/micronaut-inject-java/3.8.3/micronaut-inject-java-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-inject-java/3.8.3/micronaut-inject-java-3.8.3-sources.jar.",
-                        "build/repo/micronaut-inject-java/3.8.3/micronaut-inject-java-3.8.3.jar.",
-                        "build/repo/micronaut-inject-java/3.8.3/micronaut-inject-java-3.8.3.module.",
-                        "build/repo/micronaut-inject-java/3.8.3/micronaut-inject-java-3.8.3.pom.",
-                        "build/repo/micronaut-inject-kotlin-test/3.8.3/micronaut-inject-kotlin-test-3.8.3-all.jar.",
-                        "build/repo/micronaut-inject-kotlin-test/3.8.3/micronaut-inject-kotlin-test-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-inject-kotlin-test/3.8.3/micronaut-inject-kotlin-test-3.8.3-sources.jar.",
-                        "build/repo/micronaut-inject-kotlin-test/3.8.3/micronaut-inject-kotlin-test-3.8.3.jar.",
-                        "build/repo/micronaut-inject-kotlin-test/3.8.3/micronaut-inject-kotlin-test-3.8.3.module.",
-                        "build/repo/micronaut-inject-kotlin-test/3.8.3/micronaut-inject-kotlin-test-3.8.3.pom.",
-                        "build/repo/micronaut-inject/3.8.3/micronaut-inject-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-inject/3.8.3/micronaut-inject-3.8.3-sources.jar.",
-                        "build/repo/micronaut-inject/3.8.3/micronaut-inject-3.8.3.jar.",
-                        "build/repo/micronaut-inject/3.8.3/micronaut-inject-3.8.3.pom.",
-                        "build/repo/micronaut-jackson-core/3.8.3/micronaut-jackson-core-3.8.3-all.jar.",
-                        "build/repo/micronaut-jackson-core/3.8.3/micronaut-jackson-core-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-jackson-core/3.8.3/micronaut-jackson-core-3.8.3-sources.jar.",
-                        "build/repo/micronaut-jackson-core/3.8.3/micronaut-jackson-core-3.8.3.jar.",
-                        "build/repo/micronaut-jackson-core/3.8.3/micronaut-jackson-core-3.8.3.module.",
-                        "build/repo/micronaut-jackson-core/3.8.3/micronaut-jackson-core-3.8.3.pom.",
-                        "build/repo/micronaut-jackson-databind/3.8.3/micronaut-jackson-databind-3.8.3-all.jar.",
-                        "build/repo/micronaut-jackson-databind/3.8.3/micronaut-jackson-databind-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-jackson-databind/3.8.3/micronaut-jackson-databind-3.8.3-sources.jar.",
-                        "build/repo/micronaut-jackson-databind/3.8.3/micronaut-jackson-databind-3.8.3.jar.",
-                        "build/repo/micronaut-jackson-databind/3.8.3/micronaut-jackson-databind-3.8.3.module.",
-                        "build/repo/micronaut-jackson-databind/3.8.3/micronaut-jackson-databind-3.8.3.pom.",
-                        "build/repo/micronaut-json-core/3.8.3/micronaut-json-core-3.8.3-all.jar.",
-                        "build/repo/micronaut-json-core/3.8.3/micronaut-json-core-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-json-core/3.8.3/micronaut-json-core-3.8.3-sources.jar.",
-                        "build/repo/micronaut-json-core/3.8.3/micronaut-json-core-3.8.3.jar.",
-                        "build/repo/micronaut-json-core/3.8.3/micronaut-json-core-3.8.3.module.",
-                        "build/repo/micronaut-json-core/3.8.3/micronaut-json-core-3.8.3.pom.",
-                        "build/repo/micronaut-management/3.8.3/micronaut-management-3.8.3-all.jar.",
-                        "build/repo/micronaut-management/3.8.3/micronaut-management-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-management/3.8.3/micronaut-management-3.8.3-sources.jar.",
-                        "build/repo/micronaut-management/3.8.3/micronaut-management-3.8.3.jar.",
-                        "build/repo/micronaut-management/3.8.3/micronaut-management-3.8.3.module.",
-                        "build/repo/micronaut-management/3.8.3/micronaut-management-3.8.3.pom.",
-                        "build/repo/micronaut-messaging/3.8.3/micronaut-messaging-3.8.3-all.jar.",
-                        "build/repo/micronaut-messaging/3.8.3/micronaut-messaging-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-messaging/3.8.3/micronaut-messaging-3.8.3-sources.jar.",
-                        "build/repo/micronaut-messaging/3.8.3/micronaut-messaging-3.8.3.jar.",
-                        "build/repo/micronaut-messaging/3.8.3/micronaut-messaging-3.8.3.module.",
-                        "build/repo/micronaut-messaging/3.8.3/micronaut-messaging-3.8.3.pom.",
-                        "build/repo/micronaut-parent/3.8.3/micronaut-parent-3.8.3.pom.",
-                        "build/repo/micronaut-router/3.8.3/micronaut-router-3.8.3-all.jar.",
-                        "build/repo/micronaut-router/3.8.3/micronaut-router-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-router/3.8.3/micronaut-router-3.8.3-sources.jar.",
-                        "build/repo/micronaut-router/3.8.3/micronaut-router-3.8.3.jar.",
-                        "build/repo/micronaut-router/3.8.3/micronaut-router-3.8.3.module.",
-                        "build/repo/micronaut-router/3.8.3/micronaut-router-3.8.3.pom.",
-                        "build/repo/micronaut-runtime-osx/3.8.3/micronaut-runtime-osx-3.8.3-all.jar.",
-                        "build/repo/micronaut-runtime-osx/3.8.3/micronaut-runtime-osx-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-runtime-osx/3.8.3/micronaut-runtime-osx-3.8.3-sources.jar.",
-                        "build/repo/micronaut-runtime-osx/3.8.3/micronaut-runtime-osx-3.8.3.jar.",
-                        "build/repo/micronaut-runtime-osx/3.8.3/micronaut-runtime-osx-3.8.3.module.",
-                        "build/repo/micronaut-runtime-osx/3.8.3/micronaut-runtime-osx-3.8.3.pom.",
-                        "build/repo/micronaut-runtime/3.8.3/micronaut-runtime-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-runtime/3.8.3/micronaut-runtime-3.8.3-sources.jar.",
-                        "build/repo/micronaut-runtime/3.8.3/micronaut-runtime-3.8.3.jar.",
-                        "build/repo/micronaut-runtime/3.8.3/micronaut-runtime-3.8.3.pom.",
-                        "build/repo/micronaut-session/3.8.3/micronaut-session-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-session/3.8.3/micronaut-session-3.8.3-sources.jar.",
-                        "build/repo/micronaut-session/3.8.3/micronaut-session-3.8.3.jar.",
-                        "build/repo/micronaut-session/3.8.3/micronaut-session-3.8.3.pom.",
-                        "build/repo/micronaut-validation/3.8.3/micronaut-validation-3.8.3-all.jar.",
-                        "build/repo/micronaut-validation/3.8.3/micronaut-validation-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-validation/3.8.3/micronaut-validation-3.8.3-sources.jar.",
-                        "build/repo/micronaut-validation/3.8.3/micronaut-validation-3.8.3.jar.",
-                        "build/repo/micronaut-validation/3.8.3/micronaut-validation-3.8.3.module.",
-                        "build/repo/micronaut-validation/3.8.3/micronaut-validation-3.8.3.pom.",
-                        "build/repo/micronaut-websocket/3.8.3/micronaut-websocket-3.8.3-all.jar.",
-                        "build/repo/micronaut-websocket/3.8.3/micronaut-websocket-3.8.3-javadoc.jar.",
-                        "build/repo/micronaut-websocket/3.8.3/micronaut-websocket-3.8.3-sources.jar.",
-                        "build/repo/micronaut-websocket/3.8.3/micronaut-websocket-3.8.3.jar.",
-                        "build/repo/micronaut-websocket/3.8.3/micronaut-websocket-3.8.3.module.",
-                        "build/repo/micronaut-websocket/3.8.3/micronaut-websocket-3.8.3.pom."
+                        "Successfully verified level 3: ",
+                        "verify passed: build/repo/micronaut-aop/3.8.7/micronaut-aop-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-aop/3.8.7/micronaut-aop-3.8.7-sources.jar,verify passed: build/repo/micronaut-aop/3.8.7/micronaut-aop-3.8.7.jar,verify passed: build/repo/micronaut-aop/3.8.7/micronaut-aop-3.8.7.pom,verify passed: build/repo/micronaut-bom/3.8.7/micronaut-bom-3.8.7.module,verify passed: build/repo/micronaut-bom/3.8.7/micronaut-bom-3.8.7.pom,verify passed: build/repo/micronaut-bom/3.8.7/micronaut-bom-3.8.7.toml,verify passed: build/repo/micronaut-buffer-netty/3.8.7/micronaut-buffer-netty-3.8.7-all.jar,verify passed: build/repo/micronaut-buffer-netty/3.8.7/micronaut-buffer-netty-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-buffer-netty/3.8.7/micronaut-buffer-netty-3.8.7-sources.jar,verify passed: build/repo/micronaut-buffer-netty/3.8.7/micronaut-buffer-netty-3.8.7.jar,verify passed: build/repo/micronaut-buffer-netty/3.8.7/micronaut-buffer-netty-3.8.7.module,verify passed: build/repo/micronaut-buffer-netty/3.8.7/micronaut-buffer-netty-3.8.7.pom,verify passed: build/repo/micronaut-context/3.8.7/micronaut-context-3.8.7-all.jar,verify passed: build/repo/micronaut-context/3.8.7/micronaut-context-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-context/3.8.7/micronaut-context-3.8.7-sources.jar,verify passed: build/repo/micronaut-context/3.8.7/micronaut-context-3.8.7.jar,verify passed: build/repo/micronaut-context/3.8.7/micronaut-context-3.8.7.module,verify passed: build/repo/micronaut-context/3.8.7/micronaut-context-3.8.7.pom,verify passed: build/repo/micronaut-core-reactive/3.8.7/micronaut-core-reactive-3.8.7-all.jar,verify passed: build/repo/micronaut-core-reactive/3.8.7/micronaut-core-reactive-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-core-reactive/3.8.7/micronaut-core-reactive-3.8.7-sources.jar,verify passed: build/repo/micronaut-core-reactive/3.8.7/micronaut-core-reactive-3.8.7.jar,verify passed: build/repo/micronaut-core-reactive/3.8.7/micronaut-core-reactive-3.8.7.module,verify passed: build/repo/micronaut-core-reactive/3.8.7/micronaut-core-reactive-3.8.7.pom,verify passed: build/repo/micronaut-core/3.8.7/micronaut-core-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-core/3.8.7/micronaut-core-3.8.7-sources.jar,verify passed: build/repo/micronaut-core/3.8.7/micronaut-core-3.8.7.jar,verify passed: build/repo/micronaut-core/3.8.7/micronaut-core-3.8.7.pom,verify passed: build/repo/micronaut-function-client/3.8.7/micronaut-function-client-3.8.7-all.jar,verify passed: build/repo/micronaut-function-client/3.8.7/micronaut-function-client-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-function-client/3.8.7/micronaut-function-client-3.8.7-sources.jar,verify passed: build/repo/micronaut-function-client/3.8.7/micronaut-function-client-3.8.7.jar,verify passed: build/repo/micronaut-function-client/3.8.7/micronaut-function-client-3.8.7.module,verify passed: build/repo/micronaut-function-client/3.8.7/micronaut-function-client-3.8.7.pom,verify passed: build/repo/micronaut-function-web/3.8.7/micronaut-function-web-3.8.7-all.jar,verify passed: build/repo/micronaut-function-web/3.8.7/micronaut-function-web-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-function-web/3.8.7/micronaut-function-web-3.8.7-sources.jar,verify passed: build/repo/micronaut-function-web/3.8.7/micronaut-function-web-3.8.7.jar,verify passed: build/repo/micronaut-function-web/3.8.7/micronaut-function-web-3.8.7.module,verify passed: build/repo/micronaut-function-web/3.8.7/micronaut-function-web-3.8.7.pom,verify passed: build/repo/micronaut-function/3.8.7/micronaut-function-3.8.7-all.jar,verify passed: build/repo/micronaut-function/3.8.7/micronaut-function-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-function/3.8.7/micronaut-function-3.8.7-sources.jar,verify passed: build/repo/micronaut-function/3.8.7/micronaut-function-3.8.7.jar,verify passed: build/repo/micronaut-function/3.8.7/micronaut-function-3.8.7.module,verify passed: build/repo/micronaut-function/3.8.7/micronaut-function-3.8.7.pom,verify passed: build/repo/micronaut-graal/3.8.7/micronaut-graal-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-graal/3.8.7/micronaut-graal-3.8.7-sources.jar,verify passed: build/repo/micronaut-graal/3.8.7/micronaut-graal-3.8.7.jar,verify passed: build/repo/micronaut-graal/3.8.7/micronaut-graal-3.8.7.pom,verify passed: build/repo/micronaut-http-client-core/3.8.7/micronaut-http-client-core-3.8.7-all.jar,verify passed: build/repo/micronaut-http-client-core/3.8.7/micronaut-http-client-core-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-http-client-core/3.8.7/micronaut-http-client-core-3.8.7-sources.jar,verify passed: build/repo/micronaut-http-client-core/3.8.7/micronaut-http-client-core-3.8.7.jar,verify passed: build/repo/micronaut-http-client-core/3.8.7/micronaut-http-client-core-3.8.7.module,verify passed: build/repo/micronaut-http-client-core/3.8.7/micronaut-http-client-core-3.8.7.pom,verify passed: build/repo/micronaut-http-client/3.8.7/micronaut-http-client-3.8.7-all.jar,verify passed: build/repo/micronaut-http-client/3.8.7/micronaut-http-client-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-http-client/3.8.7/micronaut-http-client-3.8.7-sources.jar,verify passed: build/repo/micronaut-http-client/3.8.7/micronaut-http-client-3.8.7.jar,verify passed: build/repo/micronaut-http-client/3.8.7/micronaut-http-client-3.8.7.module,verify passed: build/repo/micronaut-http-client/3.8.7/micronaut-http-client-3.8.7.pom,verify passed: build/repo/micronaut-http-netty/3.8.7/micronaut-http-netty-3.8.7-all.jar,verify passed: build/repo/micronaut-http-netty/3.8.7/micronaut-http-netty-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-http-netty/3.8.7/micronaut-http-netty-3.8.7-sources.jar,verify passed: build/repo/micronaut-http-netty/3.8.7/micronaut-http-netty-3.8.7.jar,verify passed: build/repo/micronaut-http-netty/3.8.7/micronaut-http-netty-3.8.7.module,verify passed: build/repo/micronaut-http-netty/3.8.7/micronaut-http-netty-3.8.7.pom,verify passed: build/repo/micronaut-http-server-netty/3.8.7/micronaut-http-server-netty-3.8.7-all.jar,verify passed: build/repo/micronaut-http-server-netty/3.8.7/micronaut-http-server-netty-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-http-server-netty/3.8.7/micronaut-http-server-netty-3.8.7-sources.jar,verify passed: build/repo/micronaut-http-server-netty/3.8.7/micronaut-http-server-netty-3.8.7.jar,verify passed: build/repo/micronaut-http-server-netty/3.8.7/micronaut-http-server-netty-3.8.7.module,verify passed: build/repo/micronaut-http-server-netty/3.8.7/micronaut-http-server-netty-3.8.7.pom,verify passed: build/repo/micronaut-http-server-tck/3.8.7/micronaut-http-server-tck-3.8.7-all.jar,verify passed: build/repo/micronaut-http-server-tck/3.8.7/micronaut-http-server-tck-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-http-server-tck/3.8.7/micronaut-http-server-tck-3.8.7-sources.jar,verify passed: build/repo/micronaut-http-server-tck/3.8.7/micronaut-http-server-tck-3.8.7.jar,verify passed: build/repo/micronaut-http-server-tck/3.8.7/micronaut-http-server-tck-3.8.7.module,verify passed: build/repo/micronaut-http-server-tck/3.8.7/micronaut-http-server-tck-3.8.7.pom,verify passed: build/repo/micronaut-http-server/3.8.7/micronaut-http-server-3.8.7-all.jar,verify passed: build/repo/micronaut-http-server/3.8.7/micronaut-http-server-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-http-server/3.8.7/micronaut-http-server-3.8.7-sources.jar,verify passed: build/repo/micronaut-http-server/3.8.7/micronaut-http-server-3.8.7.jar,verify passed: build/repo/micronaut-http-server/3.8.7/micronaut-http-server-3.8.7.module,verify passed: build/repo/micronaut-http-server/3.8.7/micronaut-http-server-3.8.7.pom,verify passed: build/repo/micronaut-http-validation/3.8.7/micronaut-http-validation-3.8.7-all.jar,verify passed: build/repo/micronaut-http-validation/3.8.7/micronaut-http-validation-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-http-validation/3.8.7/micronaut-http-validation-3.8.7-sources.jar,verify passed: build/repo/micronaut-http-validation/3.8.7/micronaut-http-validation-3.8.7.jar,verify passed: build/repo/micronaut-http-validation/3.8.7/micronaut-http-validation-3.8.7.module,verify passed: build/repo/micronaut-http-validation/3.8.7/micronaut-http-validation-3.8.7.pom,verify passed: build/repo/micronaut-http/3.8.7/micronaut-http-3.8.7-all.jar,verify passed: build/repo/micronaut-http/3.8.7/micronaut-http-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-http/3.8.7/micronaut-http-3.8.7-sources.jar,verify passed: build/repo/micronaut-http/3.8.7/micronaut-http-3.8.7.jar,verify passed: build/repo/micronaut-http/3.8.7/micronaut-http-3.8.7.module,verify passed: build/repo/micronaut-http/3.8.7/micronaut-http-3.8.7.pom,verify passed: build/repo/micronaut-inject-groovy-test/3.8.7/micronaut-inject-groovy-test-3.8.7-all.jar,verify passed: build/repo/micronaut-inject-groovy-test/3.8.7/micronaut-inject-groovy-test-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-inject-groovy-test/3.8.7/micronaut-inject-groovy-test-3.8.7-sources.jar,verify passed: build/repo/micronaut-inject-groovy-test/3.8.7/micronaut-inject-groovy-test-3.8.7.jar,verify passed: build/repo/micronaut-inject-groovy-test/3.8.7/micronaut-inject-groovy-test-3.8.7.module,verify passed: build/repo/micronaut-inject-groovy-test/3.8.7/micronaut-inject-groovy-test-3.8.7.pom,verify passed: build/repo/micronaut-inject-groovy/3.8.7/micronaut-inject-groovy-3.8.7-all.jar,verify passed: build/repo/micronaut-inject-groovy/3.8.7/micronaut-inject-groovy-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-inject-groovy/3.8.7/micronaut-inject-groovy-3.8.7-sources.jar,verify passed: build/repo/micronaut-inject-groovy/3.8.7/micronaut-inject-groovy-3.8.7.jar,verify passed: build/repo/micronaut-inject-groovy/3.8.7/micronaut-inject-groovy-3.8.7.module,verify passed: build/repo/micronaut-inject-groovy/3.8.7/micronaut-inject-groovy-3.8.7.pom,verify passed: build/repo/micronaut-inject-java-test/3.8.7/micronaut-inject-java-test-3.8.7-all.jar,verify passed: build/repo/micronaut-inject-java-test/3.8.7/micronaut-inject-java-test-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-inject-java-test/3.8.7/micronaut-inject-java-test-3.8.7-sources.jar,verify passed: build/repo/micronaut-inject-java-test/3.8.7/micronaut-inject-java-test-3.8.7.jar,verify passed: build/repo/micronaut-inject-java-test/3.8.7/micronaut-inject-java-test-3.8.7.module,verify passed: build/repo/micronaut-inject-java-test/3.8.7/micronaut-inject-java-test-3.8.7.pom,verify passed: build/repo/micronaut-inject-java/3.8.7/micronaut-inject-java-3.8.7-all.jar,verify passed: build/repo/micronaut-inject-java/3.8.7/micronaut-inject-java-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-inject-java/3.8.7/micronaut-inject-java-3.8.7-sources.jar,verify passed: build/repo/micronaut-inject-java/3.8.7/micronaut-inject-java-3.8.7.jar,verify passed: build/repo/micronaut-inject-java/3.8.7/micronaut-inject-java-3.8.7.module,verify passed: build/repo/micronaut-inject-java/3.8.7/micronaut-inject-java-3.8.7.pom,verify passed: build/repo/micronaut-inject-kotlin-test/3.8.7/micronaut-inject-kotlin-test-3.8.7-all.jar,verify passed: build/repo/micronaut-inject-kotlin-test/3.8.7/micronaut-inject-kotlin-test-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-inject-kotlin-test/3.8.7/micronaut-inject-kotlin-test-3.8.7-sources.jar,verify passed: build/repo/micronaut-inject-kotlin-test/3.8.7/micronaut-inject-kotlin-test-3.8.7.jar,verify passed: build/repo/micronaut-inject-kotlin-test/3.8.7/micronaut-inject-kotlin-test-3.8.7.module,verify passed: build/repo/micronaut-inject-kotlin-test/3.8.7/micronaut-inject-kotlin-test-3.8.7.pom,verify passed: build/repo/micronaut-inject/3.8.7/micronaut-inject-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-inject/3.8.7/micronaut-inject-3.8.7-sources.jar,verify passed: build/repo/micronaut-inject/3.8.7/micronaut-inject-3.8.7.jar,verify passed: build/repo/micronaut-inject/3.8.7/micronaut-inject-3.8.7.pom,verify passed: build/repo/micronaut-jackson-core/3.8.7/micronaut-jackson-core-3.8.7-all.jar,verify passed: build/repo/micronaut-jackson-core/3.8.7/micronaut-jackson-core-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-jackson-core/3.8.7/micronaut-jackson-core-3.8.7-sources.jar,verify passed: build/repo/micronaut-jackson-core/3.8.7/micronaut-jackson-core-3.8.7.jar,verify passed: build/repo/micronaut-jackson-core/3.8.7/micronaut-jackson-core-3.8.7.module,verify passed: build/repo/micronaut-jackson-core/3.8.7/micronaut-jackson-core-3.8.7.pom,verify passed: build/repo/micronaut-jackson-databind/3.8.7/micronaut-jackson-databind-3.8.7-all.jar,verify passed: build/repo/micronaut-jackson-databind/3.8.7/micronaut-jackson-databind-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-jackson-databind/3.8.7/micronaut-jackson-databind-3.8.7-sources.jar,verify passed: build/repo/micronaut-jackson-databind/3.8.7/micronaut-jackson-databind-3.8.7.jar,verify passed: build/repo/micronaut-jackson-databind/3.8.7/micronaut-jackson-databind-3.8.7.module,verify passed: build/repo/micronaut-jackson-databind/3.8.7/micronaut-jackson-databind-3.8.7.pom,verify passed: build/repo/micronaut-json-core/3.8.7/micronaut-json-core-3.8.7-all.jar,verify passed: build/repo/micronaut-json-core/3.8.7/micronaut-json-core-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-json-core/3.8.7/micronaut-json-core-3.8.7-sources.jar,verify passed: build/repo/micronaut-json-core/3.8.7/micronaut-json-core-3.8.7.jar,verify passed: build/repo/micronaut-json-core/3.8.7/micronaut-json-core-3.8.7.module,verify passed: build/repo/micronaut-json-core/3.8.7/micronaut-json-core-3.8.7.pom,verify passed: build/repo/micronaut-management/3.8.7/micronaut-management-3.8.7-all.jar,verify passed: build/repo/micronaut-management/3.8.7/micronaut-management-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-management/3.8.7/micronaut-management-3.8.7-sources.jar,verify passed: build/repo/micronaut-management/3.8.7/micronaut-management-3.8.7.jar,verify passed: build/repo/micronaut-management/3.8.7/micronaut-management-3.8.7.module,verify passed: build/repo/micronaut-management/3.8.7/micronaut-management-3.8.7.pom,verify passed: build/repo/micronaut-messaging/3.8.7/micronaut-messaging-3.8.7-all.jar,verify passed: build/repo/micronaut-messaging/3.8.7/micronaut-messaging-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-messaging/3.8.7/micronaut-messaging-3.8.7-sources.jar,verify passed: build/repo/micronaut-messaging/3.8.7/micronaut-messaging-3.8.7.jar,verify passed: build/repo/micronaut-messaging/3.8.7/micronaut-messaging-3.8.7.module,verify passed: build/repo/micronaut-messaging/3.8.7/micronaut-messaging-3.8.7.pom,verify passed: build/repo/micronaut-parent/3.8.7/micronaut-parent-3.8.7.pom,verify passed: build/repo/micronaut-router/3.8.7/micronaut-router-3.8.7-all.jar,verify passed: build/repo/micronaut-router/3.8.7/micronaut-router-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-router/3.8.7/micronaut-router-3.8.7-sources.jar,verify passed: build/repo/micronaut-router/3.8.7/micronaut-router-3.8.7.jar,verify passed: build/repo/micronaut-router/3.8.7/micronaut-router-3.8.7.module,verify passed: build/repo/micronaut-router/3.8.7/micronaut-router-3.8.7.pom,verify passed: build/repo/micronaut-runtime-osx/3.8.7/micronaut-runtime-osx-3.8.7-all.jar,verify passed: build/repo/micronaut-runtime-osx/3.8.7/micronaut-runtime-osx-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-runtime-osx/3.8.7/micronaut-runtime-osx-3.8.7-sources.jar,verify passed: build/repo/micronaut-runtime-osx/3.8.7/micronaut-runtime-osx-3.8.7.jar,verify passed: build/repo/micronaut-runtime-osx/3.8.7/micronaut-runtime-osx-3.8.7.module,verify passed: build/repo/micronaut-runtime-osx/3.8.7/micronaut-runtime-osx-3.8.7.pom,verify passed: build/repo/micronaut-runtime/3.8.7/micronaut-runtime-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-runtime/3.8.7/micronaut-runtime-3.8.7-sources.jar,verify passed: build/repo/micronaut-runtime/3.8.7/micronaut-runtime-3.8.7.jar,verify passed: build/repo/micronaut-runtime/3.8.7/micronaut-runtime-3.8.7.pom,verify passed: build/repo/micronaut-session/3.8.7/micronaut-session-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-session/3.8.7/micronaut-session-3.8.7-sources.jar,verify passed: build/repo/micronaut-session/3.8.7/micronaut-session-3.8.7.jar,verify passed: build/repo/micronaut-session/3.8.7/micronaut-session-3.8.7.pom,verify passed: build/repo/micronaut-validation/3.8.7/micronaut-validation-3.8.7-all.jar,verify passed: build/repo/micronaut-validation/3.8.7/micronaut-validation-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-validation/3.8.7/micronaut-validation-3.8.7-sources.jar,verify passed: build/repo/micronaut-validation/3.8.7/micronaut-validation-3.8.7.jar,verify passed: build/repo/micronaut-validation/3.8.7/micronaut-validation-3.8.7.module,verify passed: build/repo/micronaut-validation/3.8.7/micronaut-validation-3.8.7.pom,verify passed: build/repo/micronaut-websocket/3.8.7/micronaut-websocket-3.8.7-all.jar,verify passed: build/repo/micronaut-websocket/3.8.7/micronaut-websocket-3.8.7-javadoc.jar,verify passed: build/repo/micronaut-websocket/3.8.7/micronaut-websocket-3.8.7-sources.jar,verify passed: build/repo/micronaut-websocket/3.8.7/micronaut-websocket-3.8.7.jar,verify passed: build/repo/micronaut-websocket/3.8.7/micronaut-websocket-3.8.7.module,verify passed: build/repo/micronaut-websocket/3.8.7/micronaut-websocket-3.8.7.pom"
                     ],
                     "result_type": "PASSED"
                 },
@@ -1723,17 +1539,6 @@
                         }
                     ],
                     "result_type": "PASSED"
-                },
-                {
-                    "check_id": "mcn_policy_check_1",
-                    "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the policy.",
-                    "slsa_requirements": [
-                        "Policy - SLSA Level 3"
-                    ],
-                    "justification": [
-                        "Could not verify policy against the provenance."
-                    ],
-                    "result_type": "FAILED"
                 },
                 {
                     "check_id": "mcn_trusted_builder_level_three_1",
@@ -1757,7 +1562,7 @@
         "unique_dep_repos": 2,
         "checks_summary": [
             {
-                "check_id": "mcn_policy_check_1",
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             },
             {

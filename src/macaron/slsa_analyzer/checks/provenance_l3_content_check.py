@@ -55,6 +55,7 @@ class ProvenanceL3ContentCheck(BaseCheck):
         policy = ctx.dynamic_data["policy"]
         if not policy:
             check_result["justification"].append("No policy defined for this repository.")
+            logger.info("%s check was unable to find any policies.", self.check_id)
             return CheckResultType.UNKNOWN
 
         ci_services = ctx.dynamic_data["ci_services"]

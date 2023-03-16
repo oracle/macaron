@@ -67,7 +67,7 @@ aggregate_level_requirement(4, repo) :-
     aggregate_level_requirement(3, repo),
     check_passed(repo, "mcn_provenance_level_three_1"),
     check_passed(repo, "mcn_trusted_builder_level_three_1"),
-    check_passed(repo, "mcn_policy_check_1").
+    check_passed(repo, "mcn_provenance_expectation_1").
 
 /**
  * The minimum aggregate level the dependencies of a repository should have.

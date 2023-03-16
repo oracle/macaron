@@ -41,7 +41,7 @@ class PolicyRegistry:
                     self.policies[policy.target] = policy
             elif ext in (".cue",):
                 policy = Policy.make_cue_policy(policy_path)
-                if policy.target:
+                if policy and policy.target:
                     self.policies[policy.target] = policy
                     logger.info("Found target %s for policy %s.", policy.target, policy_path)
                 else:

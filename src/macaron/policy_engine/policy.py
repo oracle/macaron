@@ -347,7 +347,7 @@ class Policy:
         )
 
     @classmethod
-    def make_cue_policy(cls, policy_path: os.PathLike | str) -> Self:
+    def make_cue_policy(cls, policy_path: os.PathLike | str) -> Self | None:
         """Construct a cue policy.
 
         Parameters
@@ -377,6 +377,7 @@ class Policy:
                 policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
         except OSError as error:
             logger.error("Failed to load the CUE policy: %s.", error)
+            return None
 
         policy._validator = lambda provenance: cue_validator.validate(str(policy.path), provenance)
 
@@ -384,7 +385,7 @@ class Policy:
         return policy  # type: ignore
 
     @classmethod
-    def make_policy(cls, file_path: os.PathLike | str) -> Self:
+    def make_policy(cls, file_path: os.PathLike | str) -> Self | None:
         """Generate a Policy from a policy yaml file.
 
         Parameters
@@ -394,7 +395,7 @@ class Policy:
 
         Returns
         -------
-        Self
+        Self | None
             The instantiated policy object.
         """
         logger.info("Generating a policy from file %s", file_path)
@@ -406,8 +407,7 @@ class Policy:
 
         if not policy_content:
             logger.error("Cannot load the policy yaml file at %s.", file_path)
-            # TODO remove type ignore once mypy adds support for Self.
-            return policy  # type: ignore
+            return None
 
         with open(file_path, encoding="utf-8") as f:
             policy.text = f.read()
@@ -428,6 +428,7 @@ class Policy:
             logger.info("Successfully loaded %s", policy)
         except InvalidPolicyError as error:
             logger.error("Cannot parse the policy definition for %s - %s", policy, error)
+            return None
 
         # TODO remove type ignore once mypy adds support for Self.
         return policy  # type: ignore
