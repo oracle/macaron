@@ -29,6 +29,11 @@ class Pip(BaseBuildTool):
                 if hasattr(self, item):
                     setattr(self, item, defaults.get_list("builder.pip", item))
 
+        if "builder.pip.ci.deploy" in defaults:
+            for item in defaults["builder.pip.ci.deploy"]:
+                if item in self.ci_deploy_kws:
+                    self.ci_deploy_kws[item] = defaults.get_list("builder.pip.ci.deploy", item)
+
     def is_detected(self, repo_path: str) -> bool:
         """Return True if this build tool is used in the target repo.
 

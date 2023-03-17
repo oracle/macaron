@@ -33,6 +33,11 @@ class Poetry(BaseBuildTool):
                 if hasattr(self, item):
                     setattr(self, item, defaults.get_list("builder.poetry", item))
 
+        if "builder.pip.ci.deploy" in defaults:
+            for item in defaults["builder.pip.ci.deploy"]:
+                if item in self.ci_deploy_kws:
+                    self.ci_deploy_kws[item] = defaults.get_list("builder.pip.ci.deploy", item)
+
     def is_detected(self, repo_path: str) -> bool:
         """Return True if this build tool is used in the target repo.
 
@@ -56,6 +61,8 @@ class Poetry(BaseBuildTool):
             files_detected = glob.glob(pattern, recursive=True)
 
             if files_detected:
+                # TODO: this implementation assumes one build type, so when multiple build types are supported, this
+                # needs to be updated.
                 # Take the highest level file, if there are two at the same level, take the first in the list.
                 file_path = min(files_detected, key=lambda x: len(Path(x).parts))
                 try:

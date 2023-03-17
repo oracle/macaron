@@ -65,13 +65,29 @@ class BuildServiceCheck(BaseCheck):
             if not cmd_program_name:
                 logger.debug("Found invalid program name %s.", com[0])
                 continue
-            if any(build_cmd for build_cmd in build_tool.builder if build_cmd == cmd_program_name):
+
+            if build_tool.packager:
+                builder = build_tool.packager
+            else:
+                builder = build_tool.builder
+
+            check_build_commands = any(build_cmd for build_cmd in builder if build_cmd == cmd_program_name)
+
+            # Support for use of Python modules.
+            check_module_build_commands = any(
+                module == cmd_program_name and com[1] and com[1] == "-m" and com[2] in builder
+                for module in build_tool.builder_module
+            )
+
+            prog_name_index = 2 if check_module_build_commands else 0
+
+            if check_build_commands or check_module_build_commands:
                 # Check the arguments in the bash command for the build goals.
                 # If there are no build args for this build tool, accept as build command.
                 if not build_tool.build_arg:
                     logger.info("No build arguments required. Accept %s as build command.", str(com))
                     return str(com)
-                for word in com[1:]:
+                for word in com[(prog_name_index + 1) :]:
                     # TODO: allow plugin versions in arguments, e.g., maven-plugin:1.6.8:package.
                     if word in build_tool.build_arg:
                         logger.info("Found build command %s.", str(com))
