@@ -94,8 +94,6 @@ class BuildAsCodeCheck(BaseCheck):
             )
             prog_name_index = 2 if check_module_build_commands else 0
 
-            # logger.info("com: %s", com[(prog_name_index + 1) :])
-
             if check_build_commands or check_module_build_commands:
                 if not build_tool.deploy_arg:
                     logger.info("No deploy arguments required. Accept %s as deploy command.", str(com))

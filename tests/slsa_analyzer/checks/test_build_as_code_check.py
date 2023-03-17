@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for the Build As Code Check."""
@@ -11,6 +11,8 @@ from macaron.parsers.bashparser import BashCommands
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
+from macaron.slsa_analyzer.build_tool.pip import Pip
+from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.checks.build_as_code_check import BuildAsCodeCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -43,6 +45,10 @@ class TestBuildAsCodeCheck(MacaronTestCase):
         maven.load_defaults()
         gradle = Gradle()
         gradle.load_defaults()
+        poetry = Poetry()
+        poetry.load_defaults()
+        pip = Pip()
+        pip.load_defaults()
         github_actions = MockGitHubActions()
         github_actions.load_defaults()
         jenkins = Jenkins()
@@ -74,6 +80,16 @@ class TestBuildAsCodeCheck(MacaronTestCase):
         # The target repo uses Gradle build tool but does not deploy artifacts.
         use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
         use_build_tool.dynamic_data["build_spec"]["tool"] = gradle
+        assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
+
+        # The target repo uses Poetry build tool but does not deploy artifacts.
+        use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        use_build_tool.dynamic_data["build_spec"]["tool"] = poetry
+        assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
+
+        # The target repo uses Pip build tool but does not deploy artifacts.
+        use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        use_build_tool.dynamic_data["build_spec"]["tool"] = pip
         assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
         # The target repo does not use a build tool.
@@ -115,6 +131,36 @@ class TestBuildAsCodeCheck(MacaronTestCase):
         bash_commands["commands"] = [["./gradlew", "publishToSonatype"]]
         gradle_deploy.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(gradle_deploy, check_result) == CheckResultType.PASSED
+
+        # Use poetry publish to publish the artifact
+        poetry_publish = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        poetry_publish.dynamic_data["build_spec"]["tool"] = poetry
+        bash_commands["commands"] = [["poetry", "publish"]]
+        poetry_publish.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(poetry_publish, check_result) == CheckResultType.PASSED
+
+        # Use Poetry but do not deploy artifacts
+        no_poetry_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        no_poetry_deploy.dynamic_data["build_spec"]["tool"] = poetry
+        bash_commands["commands"] = [["poetry", "upload"]]
+        no_poetry_deploy.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(no_maven_deploy, check_result) == CheckResultType.FAILED
+
+        # Use twine upload to deploy the artifact.
+        twine_upload = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        twine_upload.dynamic_data["build_spec"]["tool"] = pip
+        bash_commands["commands"] = [["twine", "upload", "dist/*"]]
+        twine_upload.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(twine_upload, check_result) == CheckResultType.PASSED
+
+        # Use flit publish to deploy the artifact.
+        flit_publish = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        flit_publish.dynamic_data["build_spec"]["tool"] = pip
+        bash_commands["commands"] = [["flit", "publish"]]
+        flit_publish.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(flit_publish, check_result) == CheckResultType.PASSED
+
+        # TODO: Use external action pypa/gh-action-pypi-publish to deploy the artifact.
 
         # Test Jenkins.
         maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
