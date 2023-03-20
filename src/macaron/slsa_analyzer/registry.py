@@ -201,7 +201,7 @@ class Registry:
         else:
             logger.critical(
                 "Cannot resolve the source file of %s even when it has been resolved.",
-                str(check_module),
+                check.check_id,
             )
             return False
 
