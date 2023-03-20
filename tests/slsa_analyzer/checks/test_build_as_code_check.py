@@ -7,6 +7,7 @@ import os
 from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from macaron.parsers.actionparser import parse as parse_action
 from macaron.parsers.bashparser import BashCommands
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
@@ -16,7 +17,7 @@ from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.checks.build_as_code_check import BuildAsCodeCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
-from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
+from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType, GitHubActions, GitHubNode
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
@@ -160,8 +161,6 @@ class TestBuildAsCodeCheck(MacaronTestCase):
         flit_publish.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(flit_publish, check_result) == CheckResultType.PASSED
 
-        # TODO: Use external action pypa/gh-action-pypi-publish to deploy the artifact.
-
         # Test Jenkins.
         maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
         maven_deploy.dynamic_data["build_spec"]["tool"] = maven
@@ -193,3 +192,28 @@ class TestBuildAsCodeCheck(MacaronTestCase):
         bash_commands["commands"] = []
         maven_deploy.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
+
+        # This Github Actions workflow uses gh-action-pypi-publish to publish the artifact.
+        workflows_dir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "resources", "github", "workflow_files"
+        )
+        ci_info["bash_commands"] = []
+        gha_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        gha_deploy.dynamic_data["build_spec"]["tool"] = pip
+        gha_deploy.dynamic_data["ci_services"] = [ci_info]
+
+        root = GitHubNode(name="root", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
+        gh_cg = CallGraph(root, "")
+        workflow_path = os.path.join(workflows_dir, "pypi_publish.yaml")
+        parsed_obj = parse_action(workflow_path, macaron_path=str(MacaronTestCase.macaron_path))
+        callee = GitHubNode(
+            name=os.path.basename(workflow_path),
+            node_type=GHWorkflowType.INTERNAL,
+            source_path=workflow_path,
+            parsed_obj=parsed_obj,
+            caller_path="",
+        )
+        root.add_callee(callee)
+        github_actions.build_call_graph_from_node(callee)
+        ci_info["callgraph"] = gh_cg
+        assert check.run_check(gha_deploy, check_result) == CheckResultType.PASSED

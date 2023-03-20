@@ -66,6 +66,12 @@ class BuildAsCodeCheck(BaseCheck):
 
     def _has_deploy_command(self, commands: list[list[str]], build_tool: BaseBuildTool) -> str:
         """Check if the bash command is a build and deploy command."""
+        # Account for Python projects having separate tools for packaging and publishing.
+        if build_tool.publisher:
+            deploy_tool = build_tool.publisher
+        else:
+            deploy_tool = build_tool.builder
+
         for com in commands:
 
             # Check for empty or invalid commands.
@@ -79,17 +85,11 @@ class BuildAsCodeCheck(BaseCheck):
                 logger.debug("Found invalid program name %s.", com[0])
                 continue
 
-            # Account for Python projects having separate tools for packaging and publishing.
-            if build_tool.publisher:
-                deploy_tool = build_tool.publisher
-            else:
-                deploy_tool = build_tool.builder
-
             check_build_commands = any(build_cmd for build_cmd in deploy_tool if build_cmd == cmd_program_name)
 
             # Support the use of python modules, i.e. 'python -m pip install'
             check_module_build_commands = any(
-                module == cmd_program_name and com[1] and com[1] == "-m" and com[2] in deploy_tool
+                module == cmd_program_name and com[1] and com[1] == "-m" and com[2] and com[2] in deploy_tool
                 for module in build_tool.builder_module
             )
             prog_name_index = 2 if check_module_build_commands else 0
@@ -98,7 +98,6 @@ class BuildAsCodeCheck(BaseCheck):
                 if not build_tool.deploy_arg:
                     logger.info("No deploy arguments required. Accept %s as deploy command.", str(com))
                     return str(com)
-                logger.info(build_tool.deploy_arg)
 
                 for word in com[(prog_name_index + 1) :]:
                     # TODO: allow plugin versions in arguments, e.g., maven-plugin:1.6.8:deploy.

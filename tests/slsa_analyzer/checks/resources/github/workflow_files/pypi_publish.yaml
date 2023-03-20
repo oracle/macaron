@@ -1,0 +1,24 @@
+# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+name: Publish to PyPI
+
+on:
+  # For manual tests.
+  workflow_dispatch:
+  push:
+    tags:
+    - '*'   # triggers only if push new tag version, like `0.8.4`.
+
+permissions: read-all
+
+jobs:
+  publish:
+    permissions:
+      actions: read   # For the detection of GitHub Actions environment.
+      id-token: write   # For signing.
+      contents: write   # For asset uploads.
+    uses: pypa/gh-action-pypi-publish@37f50c210e3d2f9450da2cd423303d6a14a6e29f
+    with:
+      user: __token__
+      password: ${{ secrets.PYPI_TOKEN }}
