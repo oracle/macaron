@@ -5,7 +5,7 @@
 # Actions workflows. It checks, tests, and builds the artifacts including SBOM and documentations,
 # and computes hash digests as output to be used by a SLSA provenance generator. The artifacts are
 # always uploaded for every job to be used for debugging purposes, but they will be removed within
-# the specified retention days. The Macaron Docker image is also built and tested in this workflow.
+# the specified retention days. The Docker image is also built and tested in this workflow.
 #
 # Even though we run the build in a matrix to check against different platforms, due to a known
 # limitation of reusable workflows that do not support setting strategy property from the caller
@@ -136,8 +136,8 @@ jobs:
         if-no-files-found: error
         retention-days: 7
 
-  # This job called the reusable workflow _build_docker.yaml to build and test
-  # the Macaron Docker image. Note that the built image is not pushed to ghcr.io here.
+  # This job calls the reusable workflow _build_docker.yaml to build and test
+  # the Docker image. Note that the built image is not pushed to ghcr.io here.
   build_docker_image:
     needs: [build]
     permissions:

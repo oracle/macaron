@@ -113,7 +113,7 @@ jobs:
         echo "Hash of package should be $ARTIFACT_HASH."
         echo "$ARTIFACT_HASH" | base64 --decode | sha256sum --strict --check --status || exit 1
 
-    # Log in to ghcr.io so that we could push the Macaron Docker image.
+    # Log in to ghcr.io to push the Docker image.
     - name: Log in to GitHub Container Registry
       run: docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
 

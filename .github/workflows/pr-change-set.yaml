@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This workflow checks and tests the package code, builds all package
-# artifacts and the Docker image whenever there were changes to a pull request.
+# artifacts and the Docker image whenever there are changes to a pull request.
 
 name: Check change set
 on:
