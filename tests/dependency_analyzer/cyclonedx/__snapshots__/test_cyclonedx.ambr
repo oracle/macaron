@@ -12218,3 +12218,39 @@
     'pkg:maven/software.constructs/constructs@10.1.232?type=jar',
   ])
 # ---
+# name: test_low_quality_bom[bom_no_group.json]
+  dict({
+    'None:joda-time': dict({
+      'available': <SCMStatus.AVAILABLE: 'AVAILABLE'>,
+      'group': None,
+      'name': 'joda-time',
+      'note': '',
+      'url': 'https://github.com/JodaOrg/joda-time',
+      'version': '2.6',
+    }),
+  })
+# ---
+# name: test_low_quality_bom[bom_no_version.json]
+  dict({
+    'joda-time:joda-time': dict({
+      'available': <SCMStatus.AVAILABLE: 'AVAILABLE'>,
+      'group': 'joda-time',
+      'name': 'joda-time',
+      'note': '',
+      'url': 'https://github.com/JodaOrg/joda-time',
+      'version': None,
+    }),
+  })
+# ---
+# name: test_multiple_versions
+  dict({
+    'joda-time:joda-time': dict({
+      'available': <SCMStatus.DUPLICATED_SCM: 'DUPLICATED REPO URL'>,
+      'group': 'joda-time',
+      'name': 'joda-time',
+      'note': 'https://github.com/JodaOrg/joda-time is already analyzed.',
+      'url': 'https://github.com/JodaOrg/joda-time',
+      'version': '2.7-rc.1',
+    }),
+  })
+# ---

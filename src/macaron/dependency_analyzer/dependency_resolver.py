@@ -4,6 +4,7 @@
 """This module processes and collects the dependencies to be processed by Macaron."""
 
 import logging
+import re
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import TypedDict
@@ -157,10 +158,12 @@ class DependencyAnalyzer(ABC):
             latest_deps[key] = item
         else:
             try:
+                # If version is found, compare the numeric part of the version string.
                 if (
-                    latest_value["version"]
-                    and item["version"]
-                    and version.Version(latest_value["version"].lower()) < version.Version(item["version"].lower())
+                    (latest_version := latest_value.get("version", ""))
+                    and (item_version := item.get("version", ""))
+                    and version.Version(re.sub(r"[^0-9.]", "", latest_version))
+                    < version.Version(re.sub(r"[^0-9.]", "", item_version))
                 ):
                     latest_deps[key] = item
             except ValueError as error:
