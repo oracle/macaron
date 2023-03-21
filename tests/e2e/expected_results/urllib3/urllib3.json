@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-03-16 14:34:54"
+        "timestamps": "2023-03-21 11:07:21"
     },
     "target": {
         "info": {
@@ -8,8 +8,8 @@
             "local_cloned_path": "git_repos/github_com/urllib3/urllib3",
             "remote_path": "https://github.com/urllib3/urllib3",
             "branch": "main",
-            "commit_hash": "a03a0bfc3f58c138c591d57e23433286e23f7f5d",
-            "commit_date": "2023-03-10T23:56:57-06:00"
+            "commit_hash": "87a0ecee6e691fe5ff93cd000c0158deebef763b",
+            "commit_date": "2022-10-04T07:59:23-05:00"
         },
         "provenances": {
             "is_inferred": false,
