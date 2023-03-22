@@ -74,6 +74,31 @@ python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
+echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using a CycloneDx SBOM."
+echo -e "----------------------------------------------------------------------------------\n"
+SBOM_FILE=$WORKSPACE/tests/e2e/resources/apache_maven_root_sbom.json
+
+JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/apache/maven
+JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven-with-sbom
+DEP_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven-with-sbom/dependencies.json
+DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
+
+declare -a COMPARE_FILES=(
+    "maven.json"
+    "JavaHamcrest.json"
+    "junit5.json"
+)
+
+$RUN_MACARON analyze -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 -sbom "$SBOM_FILE" || log_fail
+
+python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+
+for i in "${COMPARE_FILES[@]}"
+do
+    python $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
+done
+
 # Analyze micronaut-projects/micronaut-core.
 echo -e "\n=================================================================================="
 echo "Run integration tests with configurations for micronaut-projects/micronaut-core..."
@@ -158,7 +183,7 @@ $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/mave
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/mavenCheck: Check the e2e status code of running with invalid branch or digest defined in the yaml configuration."
+echo "apache/maven: Check: Check the e2e status code of running with invalid branch or digest defined in the yaml configuration."
 echo -e "----------------------------------------------------------------------------------\n"
 declare -a INVALID_BRANCH_DIGEST=(
     "maven_digest_no_branch.yaml"

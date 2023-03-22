@@ -272,13 +272,6 @@ class Analyzer:
             return {}
 
         # Start resolving dependencies.
-        logger.info(
-            "Running %s version %s dependency analyzer on %s",
-            dep_analyzer.tool_name,
-            dep_analyzer.tool_version,
-            main_ctx.repo_path,
-        )
-
         deps_resolved: dict[str, DependencyInfo] = (
             self._get_deps_from_sbom(sbom_path)
             if sbom_path
@@ -289,6 +282,7 @@ class Analyzer:
 
     def _get_deps_from_sbom(self, sbom_path: str) -> dict[str, DependencyInfo]:
         """Get the dependencies from the provided SBOM."""
+        logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
         deps_components = get_dep_components(Path(sbom_path))
         return convert_components_to_artifacts(deps_components)
 
@@ -296,6 +290,13 @@ class Analyzer:
         self, main_ctx: AnalyzeContext, dep_analyzer: DependencyAnalyzer, working_dirs: Iterable[Path]
     ) -> dict[str, DependencyInfo]:
         """Get the dependencies by running the Dependency Analyzer for the target repo."""
+        logger.info(
+            "Running %s version %s dependency analyzer on %s",
+            dep_analyzer.tool_name,
+            dep_analyzer.tool_version,
+            main_ctx.repo_path,
+        )
+
         log_path = os.path.join(
             global_config.build_log_path,
             f"{main_ctx.repo_name}.{dep_analyzer.tool_name}.log",
