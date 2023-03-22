@@ -71,7 +71,9 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         # Get user config from yaml file
         run_config = YamlLoader.load(analyzer_single_args.config_path)
 
-    status_code = analyzer.run(run_config, analyzer_single_args.skip_deps)
+    # TODO(tromai): Support running the analysis with the SBOM without having to provide the repo path
+    # or config file.
+    status_code = analyzer.run(run_config, analyzer_single_args.sbom_path, analyzer_single_args.skip_deps)
     sys.exit(status_code)
 
 
@@ -177,6 +179,15 @@ def main() -> None:
     # Use Macaron to analyze one single repository.
     single_analyze_parser = sub_parser.add_parser(name="analyze")
     group = single_analyze_parser.add_mutually_exclusive_group(required=True)
+
+    single_analyze_parser.add_argument(
+        "-sbom",
+        "--sbom-path",
+        required=False,
+        type=str,
+        default="",
+        help=("The path to the SBOM of the analysis target."),
+    )
 
     group.add_argument(
         "-rp",
