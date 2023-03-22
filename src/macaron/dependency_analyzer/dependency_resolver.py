@@ -157,7 +157,6 @@ class DependencyAnalyzer(ABC):
             latest_deps[key] = item
         else:
             try:
-                # If version is found, compare the numeric part of the version string.
                 if (
                     (latest_version := latest_value.get("version", ""))
                     and (item_version := item.get("version", ""))
