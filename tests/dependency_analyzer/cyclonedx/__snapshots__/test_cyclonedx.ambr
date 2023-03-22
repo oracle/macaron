@@ -12245,12 +12245,12 @@
 # name: test_multiple_versions
   dict({
     'joda-time:joda-time': dict({
-      'available': <SCMStatus.DUPLICATED_SCM: 'DUPLICATED REPO URL'>,
+      'available': <SCMStatus.AVAILABLE: 'AVAILABLE'>,
       'group': 'joda-time',
       'name': 'joda-time',
-      'note': 'https://github.com/JodaOrg/joda-time is already analyzed.',
+      'note': '',
       'url': 'https://github.com/JodaOrg/joda-time',
-      'version': '2.7-rc.1',
+      'version': '2.7',
     }),
   })
 # ---
