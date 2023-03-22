@@ -176,9 +176,9 @@ def convert_components_to_artifacts(
                 # IN case of a build error, we use this as a heuristic to avoid analyzing
                 # submodules that produce development artifacts in the same repo.
                 if (
-                    "snapshot" in item["version"].lower()
+                    "snapshot" in item.get("version", "").lower()
                     and root_component
-                    and item["group"] == root_component.get("group")
+                    and item.get("group", "") == root_component.get("group")
                 ):
                     continue
                 logger.debug(

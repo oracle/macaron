@@ -158,9 +158,9 @@ class DependencyAnalyzer(ABC):
         else:
             try:
                 if (
-                    latest_value["version"]
-                    and item["version"]
-                    and version.Version(latest_value["version"].lower()) < version.Version(item["version"].lower())
+                    (latest_version := latest_value.get("version", ""))
+                    and (item_version := item.get("version", ""))
+                    and version.Version(latest_version) < version.Version(item_version)
                 ):
                     latest_deps[key] = item
             except ValueError as error:

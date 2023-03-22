@@ -64,10 +64,39 @@ def test_convert_components_to_artifacts(snapshot: dict[str, DependencyInfo]) ->
     root_bom_path = Path(RESOURCES_DIR, "root_bom.json")
 
     # Path to the sub-project bom.json files.
-    child_bom_paths = [Path(RESOURCES_DIR, "child_bom_1.json"), Path(RESOURCES_DIR, "child_bom_2.json")]
+    child_bom_paths = [Path(RESOURCES_DIR, child) for child in ["child_bom_1.json", "child_bom_2.json"]]
 
     # Pass a root bom.json and two sub-project bom.json files in recursive mode.
     result = convert_components_to_artifacts(
         get_dep_components(root_bom_path=root_bom_path, child_bom_paths=child_bom_paths, recursive=True)
     )
+    assert snapshot == result
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "bom_no_group.json",
+        "bom_no_version.json",
+    ],
+)
+def test_low_quality_bom(snapshot: dict[str, DependencyInfo], name: str) -> None:
+    """Test converting CycloneDX components when the quality of the BOM file is poor.
+
+    E.g., a component misses a version or group.
+    """
+    # Path to the BOM file.
+    bom_path = Path(RESOURCES_DIR, name)
+    result = convert_components_to_artifacts(get_dep_components(root_bom_path=bom_path))
+    assert snapshot == result
+
+
+def test_multiple_versions(snapshot: dict[str, DependencyInfo]) -> None:
+    """Test converting CycloneDX components when there are multiple artifacts.
+
+    Based on semantic versioning, version strings can contain alphabet characters.
+    """
+    # Path to the BOM file.
+    bom_path = Path(RESOURCES_DIR, "bom_multi_versions.json")
+    result = convert_components_to_artifacts(get_dep_components(root_bom_path=bom_path))
     assert snapshot == result
