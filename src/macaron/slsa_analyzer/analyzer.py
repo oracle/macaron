@@ -26,6 +26,7 @@ from macaron.dependency_analyzer import (
     DependencyInfo,
     NoneDependencyAnalyzer,
 )
+from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.policy_engine.policy_registry import PolicyRegistry
@@ -103,7 +104,7 @@ class Analyzer:
         # Create database tables: all checks have been registered so all tables should be mapped now
         self.db_man.create_tables()
 
-    def run(self, user_config: dict, skip_deps: bool = False) -> int:
+    def run(self, user_config: dict, sbom_path: str = "", skip_deps: bool = False) -> int:
         """Run the analysis and write results to the output path.
 
         This method handles the configuration file and writes the result html reports including dependencies.
@@ -113,6 +114,8 @@ class Analyzer:
         ----------
         user_config : dict
             The dictionary that contains the user config parsed from the yaml file.
+        sbom_path : str
+            The path to the SBOM.
         skip_deps : bool
             Flag to skip dependency resolution.
 
@@ -137,7 +140,7 @@ class Analyzer:
         if skip_deps:
             logger.info("Skipping automatic dependency analysis...")
         else:
-            deps_resolved = self.resolve_dependencies(main_record.context)
+            deps_resolved = self.resolve_dependencies(main_record.context, sbom_path)
 
         # Merge the automatically resolved dependencies with the manual configuration.
         deps_config = DependencyAnalyzer.merge_configs(deps_config, deps_resolved)
@@ -234,19 +237,25 @@ class Analyzer:
         for reporter in self.reporters:
             reporter.generate(output_target_path, report)
 
-    def resolve_dependencies(self, main_ctx: AnalyzeContext) -> dict[str, DependencyInfo]:
+    def resolve_dependencies(self, main_ctx: AnalyzeContext, sbom_path: str) -> dict[str, DependencyInfo]:
         """Resolve the dependencies of the main target repo.
 
         Parameters
         ----------
         main_ctx : AnalyzeContext
             The context of object of the target repository.
+        sbom_path: str
+            The path to the SBOM.
 
         Returns
         -------
         dict[str, DependencyInfo]
             A dictionary where artifacts are grouped based on ``artifactId:groupId``.
         """
+        if sbom_path:
+            logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
+            return get_deps_from_sbom(sbom_path)
+
         deps_resolved: dict[str, DependencyInfo] = {}
 
         build_tool = main_ctx.dynamic_data["build_spec"]["tool"]

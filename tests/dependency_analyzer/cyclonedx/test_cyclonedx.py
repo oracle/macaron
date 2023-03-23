@@ -12,6 +12,7 @@ from macaron.dependency_analyzer.cyclonedx import (
     convert_components_to_artifacts,
     deserialize_bom_json,
     get_dep_components,
+    get_deps_from_sbom,
 )
 from macaron.dependency_analyzer.dependency_resolver import DependencyInfo
 
@@ -87,7 +88,7 @@ def test_low_quality_bom(snapshot: dict[str, DependencyInfo], name: str) -> None
     """
     # Path to the BOM file.
     bom_path = Path(RESOURCES_DIR, name)
-    result = convert_components_to_artifacts(get_dep_components(root_bom_path=bom_path))
+    result = get_deps_from_sbom(bom_path)
     assert snapshot == result
 
 
@@ -98,5 +99,5 @@ def test_multiple_versions(snapshot: dict[str, DependencyInfo]) -> None:
     """
     # Path to the BOM file.
     bom_path = Path(RESOURCES_DIR, "bom_multi_versions.json")
-    result = convert_components_to_artifacts(get_dep_components(root_bom_path=bom_path))
+    result = get_deps_from_sbom(bom_path)
     assert snapshot == result
