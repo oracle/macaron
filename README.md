@@ -70,7 +70,7 @@ The main input parameters of the `analyze` command:
 - `[-b <branch_name>]`: The name of the branch to analyze. If not specified, Macaron will checkout the default branch (if a remote path is supplied) or use the current branch that HEAD is on (if a local path is supplied).
 - `[-d <digest>]`: The hash of the commit to checkout in the current branch. This hash must be in full form. If not specified, Macaron will checkout the latest commit of the current branch.
 - `-c <config_path>`: The path to the configuration yaml file. This option cannot be used together with the `-rp` option.
-- `[-sbom <sbom_path>]`: The path to the CycloneDX format SBOM for analyzing the dependencies of the target repo.
+- `[-sbom <sbom_path>]`: The path to the CyclondeDX SBOM of the target repo.
 
 Example I: Analyzing the GitHub repository [apache/maven](https://github.com/apache/maven) on **the latest commit of the default branch** without using a config file:
 
@@ -98,7 +98,7 @@ The results of the examples above will be stored in ``output/reports/github_com/
 - Macaron automatically detects and analyzes direct dependencies for Java Maven projects. This process might take a while during the first run but will be faster during the subsequent runs. To skip analyzing the dependencies you can pass ``--skip-deps`` option.
 - If you supply a remote path, the repository is cloned to `git_repos/` before the analysis starts. If the repository has already been cloned to `git_repos/`, Macaron will not clone the repository and proceed to analyze the local repo instead.
 - The `branch` and `digest` in the config file or `-b` and `-d` in the CLI are all optional and can be omitted.
-- At the moment, if an SBOM is provided with `-sbom`, Macaron uses the dependency data within the SBOM instead of running the dependency plugins against the target repo.
+- If an SBOM is provided via `--sbom-path` option, Macaron will not detect the dependencies automatically. Note that `--skip-deps` option disables dependency analysis even if an SBOM file is provided.
 
 ### Verifying a policy
 
