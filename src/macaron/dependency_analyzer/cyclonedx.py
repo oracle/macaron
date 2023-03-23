@@ -204,3 +204,18 @@ def convert_components_to_artifacts(
         logger.error(error)
 
     return latest_deps
+
+
+def get_deps_from_sbom(sbom_path: str | Path) -> dict[str, DependencyInfo]:
+    """Get the dependencies from a provided SBOM.
+
+    Parameters
+    ----------
+    sbom_path : str | Path
+        The path to the SBOM file.
+
+    Returns
+    -------
+        A dictionary where dependency artifacts are grouped based on "artifactId:groupId".
+    """
+    return convert_components_to_artifacts(get_dep_components(root_bom_path=Path(sbom_path)))
