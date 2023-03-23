@@ -77,7 +77,7 @@ python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using a CycloneDx SBOM."
 echo -e "----------------------------------------------------------------------------------\n"
-SBOM_FILE=$WORKSPACE/tests/e2e/resources/apache_maven_root_sbom.json
+SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/apache_maven_root_sbom.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/apache_maven_with_sbom_provided.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 
