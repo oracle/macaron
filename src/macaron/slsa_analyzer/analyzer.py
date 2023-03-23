@@ -26,7 +26,7 @@ from macaron.dependency_analyzer import (
     DependencyInfo,
     NoneDependencyAnalyzer,
 )
-from macaron.dependency_analyzer.cyclonedx import convert_components_to_artifacts, get_dep_components
+from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.policy_engine.policy_registry import PolicyRegistry
@@ -244,7 +244,6 @@ class Analyzer:
         ----------
         main_ctx : AnalyzeContext
             The context of object of the target repository.
-
         sbom_path: str
             The path to the SBOM.
 
@@ -253,6 +252,12 @@ class Analyzer:
         dict[str, DependencyInfo]
             A dictionary where artifacts are grouped based on ``artifactId:groupId``.
         """
+        if sbom_path:
+            logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
+            return get_deps_from_sbom(sbom_path)
+
+        deps_resolved: dict[str, DependencyInfo] = {}
+
         build_tool = main_ctx.dynamic_data["build_spec"]["tool"]
         if not build_tool or isinstance(build_tool, NoneBuildTool):
             logger.info("Unable to find a valid build tool.")
@@ -272,24 +277,6 @@ class Analyzer:
             return {}
 
         # Start resolving dependencies.
-        deps_resolved: dict[str, DependencyInfo] = (
-            self._get_deps_from_sbom(sbom_path)
-            if sbom_path
-            else self._get_deps_from_dep_analyzer(main_ctx, dep_analyzer, build_tool.get_build_dirs(main_ctx.repo_path))
-        )
-
-        return deps_resolved
-
-    def _get_deps_from_sbom(self, sbom_path: str) -> dict[str, DependencyInfo]:
-        """Get the dependencies from the provided SBOM."""
-        logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
-        deps_components = get_dep_components(Path(sbom_path))
-        return convert_components_to_artifacts(deps_components)
-
-    def _get_deps_from_dep_analyzer(
-        self, main_ctx: AnalyzeContext, dep_analyzer: DependencyAnalyzer, working_dirs: Iterable[Path]
-    ) -> dict[str, DependencyInfo]:
-        """Get the dependencies by running the Dependency Analyzer for the target repo."""
         logger.info(
             "Running %s version %s dependency analyzer on %s",
             dep_analyzer.tool_name,
@@ -304,9 +291,9 @@ class Analyzer:
 
         # Clean up existing SBOM files.
         dep_analyzer.remove_sboms(main_ctx.repo_path)
-        commands = dep_analyzer.get_cmd()
 
-        deps_resolved: dict[str, DependencyInfo] = {}
+        commands = dep_analyzer.get_cmd()
+        working_dirs: Iterable[Path] = build_tool.get_build_dirs(main_ctx.repo_path)
         for working_dir in working_dirs:
             # Get the absolute path to use as the working dir in the subprocess.
             working_dir = Path(main_ctx.repo_path).joinpath(working_dir)
