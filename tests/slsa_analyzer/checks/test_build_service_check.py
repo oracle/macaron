@@ -140,11 +140,11 @@ class TestBuildServiceCheck(MacaronTestCase):
         assert check.run_check(poetry_build_ci, check_result) == CheckResultType.PASSED
 
         # Use pip in CI to build the artifact.
-        pip_module_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        pip_module_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        pip_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        pip_build_ci.dynamic_data["build_spec"]["tool"] = pip
         bash_commands["commands"] = [["pip", "install"]]
-        pip_module_build_ci.dynamic_data["ci_services"] = [ci_info]
-        assert check.run_check(pip_module_build_ci, check_result) == CheckResultType.PASSED
+        pip_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(pip_build_ci, check_result) == CheckResultType.PASSED
 
         # Use flit in CI to build the artifact.
         flit_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
@@ -154,25 +154,25 @@ class TestBuildServiceCheck(MacaronTestCase):
         assert check.run_check(flit_build_ci, check_result) == CheckResultType.PASSED
 
         # Use pip as a module in CI to build the artifact.
-        pip_module_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        pip_module_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        pip_interpreter_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        pip_interpreter_build_ci.dynamic_data["build_spec"]["tool"] = pip
         bash_commands["commands"] = [["python", "-m", "pip", "install"]]
-        pip_module_build_ci.dynamic_data["ci_services"] = [ci_info]
-        assert check.run_check(pip_module_build_ci, check_result) == CheckResultType.PASSED
+        pip_interpreter_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(pip_interpreter_build_ci, check_result) == CheckResultType.PASSED
 
         # Use pip as a module incorrectly in CI to build the artifact.
-        pip_module_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        pip_module_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        no_pip_interpreter_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        no_pip_interpreter_build_ci.dynamic_data["build_spec"]["tool"] = pip
         bash_commands["commands"] = [["python", "pip", "install"]]
-        pip_module_build_ci.dynamic_data["ci_services"] = [ci_info]
-        assert check.run_check(pip_module_build_ci, check_result) == CheckResultType.FAILED
+        no_pip_interpreter_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(no_pip_interpreter_build_ci, check_result) == CheckResultType.FAILED
 
         # Use pip as a module in CI with invalid goal to build the artifact.
-        pip_module_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        pip_module_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        no_pip_interpreter_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        no_pip_interpreter_build_ci.dynamic_data["build_spec"]["tool"] = pip
         bash_commands["commands"] = [["python", "-m", "pip", "installl"]]
-        pip_module_build_ci.dynamic_data["ci_services"] = [ci_info]
-        assert check.run_check(pip_module_build_ci, check_result) == CheckResultType.FAILED
+        no_pip_interpreter_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(no_pip_interpreter_build_ci, check_result) == CheckResultType.FAILED
 
         # Test Jenkins.
         maven_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
@@ -205,5 +205,3 @@ class TestBuildServiceCheck(MacaronTestCase):
         ci_info["service"] = gitlab_ci
         maven_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(maven_build_ci, check_result) == CheckResultType.FAILED
-
-        # TODO: Python module - maybe not for this context, just build

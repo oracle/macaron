@@ -47,7 +47,7 @@ class Pip(BaseBuildTool):
         bool
             True if this build tool is detected, else False.
         """
-        for file in self.entry_conf:
+        for file in self.build_configs:
             if file_exists(repo_path, file):
                 return True
         return False
@@ -55,7 +55,8 @@ class Pip(BaseBuildTool):
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
         """Prepare the necessary wrapper files for running the build.
 
-        This method will return False if there is any errors happened during operation.
+        This method returns False on errors. Pip doesn't require any preparation, therefore this method always
+        returns True.
 
         Parameters
         ----------
@@ -84,4 +85,5 @@ class Pip(BaseBuildTool):
         DependencyAnalyzer
             The DependencyAnalyzer object.
         """
+        # TODO: Implement this method.
         return NoneDependencyAnalyzer()

@@ -66,17 +66,18 @@ class BuildServiceCheck(BaseCheck):
                 logger.debug("Found invalid program name %s.", com[0])
                 continue
 
-            if build_tool.packager:
-                builder = build_tool.packager
-            else:
-                builder = build_tool.builder
+            builder = build_tool.packager if build_tool.packager else build_tool.builder
 
             check_build_commands = any(build_cmd for build_cmd in builder if build_cmd == cmd_program_name)
 
-            # Support for use of Python modules.
+            # Support the use of interpreters like Python that load modules, i.e., 'python -m pip install'.
             check_module_build_commands = any(
-                module == cmd_program_name and com[1] and com[1] == "-m" and com[2] in builder
-                for module in build_tool.builder_module
+                interpreter == cmd_program_name
+                and com[1]
+                and com[1] in build_tool.interpreter_flag
+                and com[2]
+                and com[2] in builder
+                for interpreter in build_tool.interpreter
             )
 
             prog_name_index = 2 if check_module_build_commands else 0

@@ -67,11 +67,7 @@ class BuildAsCodeCheck(BaseCheck):
     def _has_deploy_command(self, commands: list[list[str]], build_tool: BaseBuildTool) -> str:
         """Check if the bash command is a build and deploy command."""
         # Account for Python projects having separate tools for packaging and publishing.
-        if build_tool.publisher:
-            deploy_tool = build_tool.publisher
-        else:
-            deploy_tool = build_tool.builder
-
+        deploy_tool = build_tool.publisher if build_tool.publisher else build_tool.builder
         for com in commands:
 
             # Check for empty or invalid commands.
@@ -87,14 +83,20 @@ class BuildAsCodeCheck(BaseCheck):
 
             check_build_commands = any(build_cmd for build_cmd in deploy_tool if build_cmd == cmd_program_name)
 
-            # Support the use of python modules, i.e. 'python -m pip install'
+            # Support the use of interpreters like Python that load modules, i.e., 'python -m pip install'.
             check_module_build_commands = any(
-                module == cmd_program_name and com[1] and com[1] == "-m" and com[2] and com[2] in deploy_tool
-                for module in build_tool.builder_module
+                interpreter == cmd_program_name
+                and com[1]
+                and com[1] in build_tool.interpreter_flag
+                and com[2]
+                and com[2] in deploy_tool
+                for interpreter in build_tool.interpreter
             )
             prog_name_index = 2 if check_module_build_commands else 0
 
             if check_build_commands or check_module_build_commands:
+                # Check the arguments in the bash command for the deploy goals.
+                # If there are no deploy args for this build tool, accept as deploy command.
                 if not build_tool.deploy_arg:
                     logger.info("No deploy arguments required. Accept %s as deploy command.", str(com))
                     return str(com)
@@ -123,7 +125,7 @@ class BuildAsCodeCheck(BaseCheck):
         """
         # Get the build tool identified by the mcn_version_control_system_1, which we depend on.
         build_tool = ctx.dynamic_data["build_spec"].get("tool")
-        ci_services = ctx.dynamic_data["ci_services"]  # keep storing things here
+        ci_services = ctx.dynamic_data["ci_services"]
 
         # Checking if a build tool is discovered for this repo.
         if build_tool and not isinstance(build_tool, NoneBuildTool):
@@ -135,8 +137,8 @@ class BuildAsCodeCheck(BaseCheck):
 
                 trusted_deploy_actions = defaults.get_list("builder.pip.ci.deploy", "github_actions", fallback=[])
 
-                # Check for use of a trusted Github Action to publish/deploy.
-                # TODO: verify that deplyment is legitimate and not a test
+                # Check for use of a trusted Github Actions workflow to publish/deploy.
+                # TODO: verify that deployment is legitimate and not a test
                 if trusted_deploy_actions:
                     for callee in ci_info["callgraph"].bfs():
                         workflow_name = callee.name.split("@")[0]
@@ -155,7 +157,6 @@ class BuildAsCodeCheck(BaseCheck):
                                     os.path.basename(callee.caller_path)
                                 ),
                             )
-                            # TODO: verify that caller_path and CI_PATH are the same
                             deploy_action_source_link = ci_service.api_client.get_file_link(
                                 ctx.repo_full_name, ctx.commit_sha, callee.caller_path
                             )
@@ -191,6 +192,15 @@ class BuildAsCodeCheck(BaseCheck):
                                 predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                                 predicate["metadata"]["buildInvocationId"] = html_url
+                                check_result["result_tables"] = [
+                                    BuildAsCodeTable(
+                                        build_tool_name=build_tool.name,
+                                        ci_service_name=ci_service.name,
+                                        build_trigger=trigger_link,
+                                        deploy_command=workflow_name,
+                                        build_status_url=html_url,
+                                    )
+                                ]
                             return CheckResultType.PASSED
 
                 for bash_cmd in ci_info["bash_commands"]:

@@ -10,6 +10,7 @@ import glob
 import logging
 import os
 import tomllib
+from collections.abc import Iterable
 from pathlib import Path
 
 from macaron.config.defaults import defaults
@@ -51,16 +52,21 @@ class Poetry(BaseBuildTool):
         bool
             True if this build tool is detected, else False.
         """
-        for file in self.build_configs:
+        package_lock_exists = ""
+        for file in self.package_lock:
             if file_exists(repo_path, file):
-                return True
+                package_lock_exists = file
+                break
 
-        for conf in self.entry_conf:
+        for conf in self.build_configs:
             # Find the paths of all pyproject.toml files.
             pattern = os.path.join(repo_path, "**", conf)
             files_detected = glob.glob(pattern, recursive=True)
 
             if files_detected:
+                # If a package_lock file exists, and a config file is present, Poetry build tool is detected.
+                if package_lock_exists:
+                    return True
                 # TODO: this implementation assumes one build type, so when multiple build types are supported, this
                 # needs to be updated.
                 # Take the highest level file, if there are two at the same level, take the first in the list.
@@ -86,7 +92,8 @@ class Poetry(BaseBuildTool):
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
         """Prepare the necessary wrapper files for running the build.
 
-        This method returns False on errors.
+        This method returns False on errors. Poetry doesn't require any preparation, therefore this method always
+        returns True.
 
         Parameters
         ----------
@@ -100,7 +107,7 @@ class Poetry(BaseBuildTool):
         bool
             True if succeeds else False.
         """
-        return False
+        return True
 
     def get_dep_analyzer(self, repo_path: str) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.
@@ -115,4 +122,38 @@ class Poetry(BaseBuildTool):
         DependencyAnalyzer
             The DependencyAnalyzer object.
         """
+        # TODO: Implement this method.
         return NoneDependencyAnalyzer()
+
+    def get_build_dirs(self, repo_path: str) -> Iterable[Path]:
+        """Find directories in the repository that have their own build scripts.
+
+        This is especially important for applications that consist of multiple services.
+
+        Parameters
+        ----------
+        repo_path: str
+            The path to the target repo.
+
+        Yields
+        ------
+        Path
+            The relative paths from the repo path that contain build scripts.
+        """
+        config_paths: set[str] = set()
+        config_files = self.build_configs + self.package_lock
+        for build_cfg in config_files:
+            config_paths.update(glob.glob(os.path.join(repo_path, "**", build_cfg), recursive=True))
+
+        list_iter = iter(sorted(config_paths, key=lambda x: (str(Path(x).parent), len(Path(x).parts))))
+        try:
+            cfg_path = next(list_iter)
+            yield Path(cfg_path).parent.relative_to(repo_path)
+            while next_item := next(list_iter):
+                if str(Path(cfg_path).parent) in next_item:
+                    continue
+                cfg_path = next_item
+                yield Path(next_item).parent.relative_to(repo_path)
+
+        except StopIteration:
+            pass
