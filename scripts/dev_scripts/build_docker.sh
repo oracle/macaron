@@ -25,7 +25,7 @@ then
 fi
 
 # We need to use the relative path so that it works in the docker context.
-WHEEL_PATH=$(realpath --relative-to=$REPO_PATH "$WHEEL_PATH")
+WHEEL_PATH=$(realpath --relative-to="$REPO_PATH" "$WHEEL_PATH")
 
 if [[ -z "${RELEASE_TAG}" ]];
 then

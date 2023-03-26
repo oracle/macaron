@@ -23,7 +23,9 @@ entrypoint=()
 # For example: `macaron analyze` or `macaron dump_defaults`
 action=()
 
-# Arguments whose values changed by this script before being passed to the Macaron Docker image.
+# `argv_main` and `argv_action` are the collections of arguments whose values changed by this script
+# before being passed to the Docker image.
+
 # These are arguments for macaron entrypoint.
 #   -dp/--defaults-path DEFAULTS_PATH: The path to the defaults configuration file.
 #   -h/--help:  Show the help message and exit.
@@ -36,8 +38,7 @@ action=()
 #   -d/--database DATABASE: Database path.
 argv_main=()
 
-# Arguments whose values changed by this script before being passed to the Macaron Docker image.
-# These are arguments will be specific to action in macaron entrypoint.
+# These are the sub-commands for a specific action.
 # macaron
 #   analzye:
 #       -g/--template-path TEMPLATE_PATH: The path to the Jinja2 html template (please make sure to use .html or .j2 extensions).
@@ -374,7 +375,7 @@ fi
 USER_UID="$(id -u)"
 USER_GID="$(id -g)"
 
-if [[ -z "$entrypoint" ]];
+if [[ -z "${entrypoint[*]}" ]];
 then
     entrypoint=("macaron")
 fi
