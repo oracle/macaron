@@ -4,10 +4,12 @@
 """This module contains the tests for the Build As Code Check."""
 
 import os
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
+import macaron
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.parsers.actionparser import parse as parse_action
 from macaron.parsers.bashparser import BashCommands
@@ -189,7 +191,6 @@ def test_build_as_code_check(
 
 
 def test_gha_workflow_deployment(
-    macaron_path: str,
     build_as_code_check: BuildAsCodeCheck,  # pylint: disable=redefined-outer-name
     check_result: CheckResult,
     pip_tool: Pip,
@@ -215,7 +216,7 @@ def test_gha_workflow_deployment(
     root = GitHubNode(name="root", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
     gh_cg = CallGraph(root, "")
     workflow_path = os.path.join(workflows_dir, "pypi_publish.yaml")
-    parsed_obj = parse_action(workflow_path, macaron_path=macaron_path)
+    parsed_obj = parse_action(workflow_path, macaron_path=str(Path(macaron.MACARON_PATH)))
     callee = GitHubNode(
         name=os.path.basename(workflow_path),
         node_type=GHWorkflowType.INTERNAL,
