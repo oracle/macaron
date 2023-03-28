@@ -155,7 +155,7 @@ class BaseBuildTool(ABC):
             cfg_path = next(list_iter)
             yield Path(cfg_path).parent.relative_to(repo_path)
             while next_item := next(list_iter):
-                if str(Path(cfg_path).parent) in next_item:
+                if next_item.startswith(str(Path(cfg_path).parent)):
                     continue
                 cfg_path = next_item
                 yield Path(next_item).parent.relative_to(repo_path)
