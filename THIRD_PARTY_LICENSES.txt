@@ -1107,55 +1107,55 @@ SOFTWARE.
 Mozilla Public License
 Version 2.0
 1. Definitions
-1.1. â€œContributorâ€
+1.1. “Contributor”
 means each individual or legal entity that creates, contributes to the creation of, or owns Covered Software.
 
-1.2. â€œContributor Versionâ€
-means the combination of the Contributions of others (if any) used by a Contributor and that particular Contributorâ€™s Contribution.
+1.2. “Contributor Version”
+means the combination of the Contributions of others (if any) used by a Contributor and that particular Contributor’s Contribution.
 
-1.3. â€œContributionâ€
+1.3. “Contribution”
 means Covered Software of a particular Contributor.
 
-1.4. â€œCovered Softwareâ€
+1.4. “Covered Software”
 means Source Code Form to which the initial Contributor has attached the notice in Exhibit A, the Executable Form of such Source Code Form, and Modifications of such Source Code Form, in each case including portions thereof.
 
-1.5. â€œIncompatible With Secondary Licensesâ€
+1.5. “Incompatible With Secondary Licenses”
 means
 
 that the initial Contributor has attached the notice described in Exhibit B to the Covered Software; or
 
 that the Covered Software was made available under the terms of version 1.1 or earlier of the License, but not also under the terms of a Secondary License.
 
-1.6. â€œExecutable Formâ€
+1.6. “Executable Form”
 means any form of the work other than Source Code Form.
 
-1.7. â€œLarger Workâ€
+1.7. “Larger Work”
 means a work that combines Covered Software with other material, in a separate file or files, that is not Covered Software.
 
-1.8. â€œLicenseâ€
+1.8. “License”
 means this document.
 
-1.9. â€œLicensableâ€
+1.9. “Licensable”
 means having the right to grant, to the maximum extent possible, whether at the time of the initial grant or subsequently, any and all of the rights conveyed by this License.
 
-1.10. â€œModificationsâ€
+1.10. “Modifications”
 means any of the following:
 
 any file in Source Code Form that results from an addition to, deletion from, or modification of the contents of Covered Software; or
 
 any new file in Source Code Form that contains any Covered Software.
 
-1.11. â€œPatent Claimsâ€ of a Contributor
+1.11. “Patent Claims” of a Contributor
 means any patent claim(s), including without limitation, method, process, and apparatus claims, in any patent Licensable by such Contributor that would be infringed, but for the grant of the License, by the making, using, selling, offering for sale, having made, import, or transfer of either its Contributions or its Contributor Version.
 
-1.12. â€œSecondary Licenseâ€
+1.12. “Secondary License”
 means either the GNU General Public License, Version 2.0, the GNU Lesser General Public License, Version 2.1, the GNU Affero General Public License, Version 3.0, or any later versions of those licenses.
 
-1.13. â€œSource Code Formâ€
+1.13. “Source Code Form”
 means the form of the work preferred for making modifications.
 
-1.14. â€œYouâ€ (or â€œYourâ€)
-means an individual or a legal entity exercising rights under this License. For legal entities, â€œYouâ€ includes any entity that controls, is controlled by, or is under common control with You. For purposes of this definition, â€œcontrolâ€ means (a) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (b) ownership of more than fifty percent (50%) of the outstanding shares or beneficial ownership of such entity.
+1.14. “You” (or “Your”)
+means an individual or a legal entity exercising rights under this License. For legal entities, “You” includes any entity that controls, is controlled by, or is under common control with You. For purposes of this definition, “control” means (a) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (b) ownership of more than fifty percent (50%) of the outstanding shares or beneficial ownership of such entity.
 
 2. License Grants and Conditions
 2.1. Grants
@@ -1173,7 +1173,7 @@ The licenses granted in this Section 2 are the only rights granted under this Li
 
 for any code that a Contributor has removed from Covered Software; or
 
-for infringements caused by: (i) Your and any other third partyâ€™s modifications of Covered Software, or (ii) the combination of its Contributions with other software (except as part of its Contributor Version); or
+for infringements caused by: (i) Your and any other third party’s modifications of Covered Software, or (ii) the combination of its Contributions with other software (except as part of its Contributor Version); or
 
 under Patent Claims infringed by Covered Software in the absence of its Contributions.
 
@@ -1193,14 +1193,14 @@ Sections 3.1, 3.2, 3.3, and 3.4 are conditions of the licenses granted in Sectio
 
 3. Responsibilities
 3.1. Distribution of Source Form
-All distribution of Covered Software in Source Code Form, including any Modifications that You create or to which You contribute, must be under the terms of this License. You must inform recipients that the Source Code Form of the Covered Software is governed by the terms of this License, and how they can obtain a copy of this License. You may not attempt to alter or restrict the recipientsâ€™ rights in the Source Code Form.
+All distribution of Covered Software in Source Code Form, including any Modifications that You create or to which You contribute, must be under the terms of this License. You must inform recipients that the Source Code Form of the Covered Software is governed by the terms of this License, and how they can obtain a copy of this License. You may not attempt to alter or restrict the recipients’ rights in the Source Code Form.
 
 3.2. Distribution of Executable Form
 If You distribute Covered Software in Executable Form then:
 
 such Covered Software must also be made available in Source Code Form, as described in Section 3.1, and You must inform recipients of the Executable Form how they can obtain a copy of such Source Code Form by reasonable means in a timely manner, at a charge no more than the cost of distribution to the recipient; and
 
-You may distribute such Executable Form under the terms of this License, or sublicense it under different terms, provided that the license for the Executable Form does not attempt to limit or alter the recipientsâ€™ rights in the Source Code Form under this License.
+You may distribute such Executable Form under the terms of this License, or sublicense it under different terms, provided that the license for the Executable Form does not attempt to limit or alter the recipients’ rights in the Source Code Form under this License.
 
 3.3. Distribution of a Larger Work
 You may create and distribute a Larger Work under terms of Your choice, provided that You also comply with the requirements of this License for the Covered Software. If the Larger Work is a combination of Covered Software with a work governed by one or more Secondary Licenses, and the Covered Software is not Incompatible With Secondary Licenses, this License permits You to additionally distribute such Covered Software under the terms of such Secondary License(s), so that the recipient of the Larger Work may, at their option, further distribute the Covered Software under the terms of either this License or such Secondary License(s).
@@ -1222,13 +1222,13 @@ If it is impossible for You to comply with any of the terms of this License with
 5.3. In the event of termination under Sections 5.1 or 5.2 above, all end user license agreements (excluding distributors and resellers) which have been validly granted by You or Your distributors under this License prior to termination shall survive termination.
 
 6. Disclaimer of Warranty
-Covered Software is provided under this License on an â€œas isâ€ basis, without warranty of any kind, either expressed, implied, or statutory, including, without limitation, warranties that the Covered Software is free of defects, merchantable, fit for a particular purpose or non-infringing. The entire risk as to the quality and performance of the Covered Software is with You. Should any Covered Software prove defective in any respect, You (not any Contributor) assume the cost of any necessary servicing, repair, or correction. This disclaimer of warranty constitutes an essential part of this License. No use of any Covered Software is authorized under this License except under this disclaimer.
+Covered Software is provided under this License on an “as is” basis, without warranty of any kind, either expressed, implied, or statutory, including, without limitation, warranties that the Covered Software is free of defects, merchantable, fit for a particular purpose or non-infringing. The entire risk as to the quality and performance of the Covered Software is with You. Should any Covered Software prove defective in any respect, You (not any Contributor) assume the cost of any necessary servicing, repair, or correction. This disclaimer of warranty constitutes an essential part of this License. No use of any Covered Software is authorized under this License except under this disclaimer.
 
 7. Limitation of Liability
-Under no circumstances and under no legal theory, whether tort (including negligence), contract, or otherwise, shall any Contributor, or anyone who distributes Covered Software as permitted above, be liable to You for any direct, indirect, special, incidental, or consequential damages of any character including, without limitation, damages for lost profits, loss of goodwill, work stoppage, computer failure or malfunction, or any and all other commercial damages or losses, even if such party shall have been informed of the possibility of such damages. This limitation of liability shall not apply to liability for death or personal injury resulting from such partyâ€™s negligence to the extent applicable law prohibits such limitation. Some jurisdictions do not allow the exclusion or limitation of incidental or consequential damages, so this exclusion and limitation may not apply to You.
+Under no circumstances and under no legal theory, whether tort (including negligence), contract, or otherwise, shall any Contributor, or anyone who distributes Covered Software as permitted above, be liable to You for any direct, indirect, special, incidental, or consequential damages of any character including, without limitation, damages for lost profits, loss of goodwill, work stoppage, computer failure or malfunction, or any and all other commercial damages or losses, even if such party shall have been informed of the possibility of such damages. This limitation of liability shall not apply to liability for death or personal injury resulting from such party’s negligence to the extent applicable law prohibits such limitation. Some jurisdictions do not allow the exclusion or limitation of incidental or consequential damages, so this exclusion and limitation may not apply to You.
 
 8. Litigation
-Any litigation relating to this License may be brought only in the courts of a jurisdiction where the defendant maintains its principal place of business and such litigation shall be governed by laws of that jurisdiction, without reference to its conflict-of-law provisions. Nothing in this Section shall prevent a partyâ€™s ability to bring cross-claims or counter-claims.
+Any litigation relating to this License may be brought only in the courts of a jurisdiction where the defendant maintains its principal place of business and such litigation shall be governed by laws of that jurisdiction, without reference to its conflict-of-law provisions. Nothing in this Section shall prevent a party’s ability to bring cross-claims or counter-claims.
 
 9. Miscellaneous
 This License represents the complete agreement concerning the subject matter hereof. If any provision of this License is held to be unenforceable, such provision shall be reformed only to the extent necessary to make it enforceable. Any law or regulation which provides that the language of a contract shall be construed against the drafter shall not be used to construe this License against a Contributor.
@@ -1253,8 +1253,8 @@ If it is not possible or desirable to put the notice in a particular file, then 
 
 You may add additional accurate notices of copyright ownership.
 
-Exhibit B - â€œIncompatible With Secondary Licensesâ€ Notice
-This Source Code Form is â€œIncompatible With Secondary Licensesâ€, as defined by the Mozilla Public License, v. 2.0.
+Exhibit B - “Incompatible With Secondary Licenses” Notice
+This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 --------------------------------(separator)---------------------------------
 == NAME OF DEPENDENCY #3: idna
 == License Type: BSD-3-clause
@@ -1341,7 +1341,7 @@ THE SOFTWARE.
 4P - PYYAML
 https://github.com/yaml/pyyaml/releases/tag/6.0  MIT License
 
-Copyright (c) 2017-2021 Ingy dÃ¶t Net
+Copyright (c) 2017-2021 Ingy döt Net
 Copyright (c) 2006-2016 Kirill Simonov
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -1425,7 +1425,7 @@ Copyright (c) 2011-2016 Heather Arthur <fayearthur@gmail.com>
 Copyright (c) 2011-2019 Canonical Ltd
 Copyright (c) 2011-2022 Isaac Z. Schlueter and Contributors
 Copyright (c) 2011-2022 OpenJS Foundation and contributors, https://openjsf.org
-Copyright (c) 2012 Felix GeisendÃ¶rfer (felix@debuggable.com) and contributors
+Copyright (c) 2012 Felix Geisendörfer (felix@debuggable.com) and contributors
 Copyright (c) 2012 James Halliday <mail@substack.net>
 Copyright (c) 2012, 2013 Thorsten Lorenz <thlorenz@gmx.de>
 Copyright (c) 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019 Phil Booth
@@ -1516,13 +1516,13 @@ Copyright 2019 The Go Authors. All rights reserved.
 Copyright 2020 The Go Authors. All rights reserved.
 Copyright 2021 The Go Authors. All rights reserved.
 Copyright 2022 The Go Authors. All rights reserved.
-Copyright Â© 2016, [Jon Schlinkert](https://github.com/jonschlinkert).
-Copyright Â© 2017, [Jon Schlinkert](https://github.com/jonschlinkert).
-Copyright Â© 2017-present, [Jon Schlinkert](https://github.com/jonschlinkert).
-Copyright Â© 2018, [Jon Schlinkert](https://github.com/jonschlinkert).
-Copyright Â© 2019 W3C and Jeff Carpenter \<jeffcarp@chromium.org\>
-Copyright Â© 2019, [Brian Woodward](https://github.com/doowb).
-Copyright Â© 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2016, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2017, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2017-present, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2018, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2019 W3C and Jeff Carpenter \<jeffcarp@chromium.org\>
+Copyright © 2019, [Brian Woodward](https://github.com/doowb).
+Copyright © 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
 copyright (c) 2015 by Calin Barbat
 copyright (c) 2015 by Grzegorz Mazur
 copyright (c) 2016 Jared Dean, SAS Institute
@@ -1854,7 +1854,7 @@ Copyright (c) 2011-2016 Heather Arthur <fayearthur@gmail.com>
 Copyright (c) 2011-2019 Canonical Ltd
 Copyright (c) 2011-2022 Isaac Z. Schlueter and Contributors
 Copyright (c) 2011-2022 OpenJS Foundation and contributors, https://openjsf.org
-Copyright (c) 2012 Felix GeisendÃ¶rfer (felix@debuggable.com) and contributors
+Copyright (c) 2012 Felix Geisendörfer (felix@debuggable.com) and contributors
 Copyright (c) 2012 James Halliday <mail@substack.net>
 Copyright (c) 2012, 2013 Thorsten Lorenz <thlorenz@gmx.de>
 Copyright (c) 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019 Phil Booth
@@ -1945,13 +1945,13 @@ Copyright 2019 The Go Authors. All rights reserved.
 Copyright 2020 The Go Authors. All rights reserved.
 Copyright 2021 The Go Authors. All rights reserved.
 Copyright 2022 The Go Authors. All rights reserved.
-Copyright Â© 2016, [Jon Schlinkert](https://github.com/jonschlinkert).
-Copyright Â© 2017, [Jon Schlinkert](https://github.com/jonschlinkert).
-Copyright Â© 2017-present, [Jon Schlinkert](https://github.com/jonschlinkert).
-Copyright Â© 2018, [Jon Schlinkert](https://github.com/jonschlinkert).
-Copyright Â© 2019 W3C and Jeff Carpenter \<jeffcarp@chromium.org\>
-Copyright Â© 2019, [Brian Woodward](https://github.com/doowb).
-Copyright Â© 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2016, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2017, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2017-present, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2018, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2019 W3C and Jeff Carpenter \<jeffcarp@chromium.org\>
+Copyright © 2019, [Brian Woodward](https://github.com/doowb).
+Copyright © 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
 copyright (c) 2015 by Calin Barbat
 copyright (c) 2015 by Grzegorz Mazur
 copyright (c) 2016 Jared Dean, SAS Institute
@@ -2021,7 +2021,7 @@ abab
 SPDX:BSD-3-Clause
 
 == Copyright
-Copyright Â© 2019 W3C and Jeff Carpenter \<jeffcarp@chromium.org\>
+Copyright © 2019 W3C and Jeff Carpenter \<jeffcarp@chromium.org\>
 
 --------------------------------- (separator) ----------------------------------
 
@@ -2077,7 +2077,7 @@ SPDX:MIT
 
 == Copyright
 Copyright (c) 2015-present, Brian Woodward.
-Copyright Â© 2019, [Brian Woodward](https://github.com/doowb).
+Copyright © 2019, [Brian Woodward](https://github.com/doowb).
 
 --------------------------------- (separator) ----------------------------------
 
@@ -2468,7 +2468,7 @@ SPDX:MIT
 
 == Copyright
 Copyright (c) 2014-2018, Jon Schlinkert.
-Copyright Â© 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
 
 --------------------------------- (separator) ----------------------------------
 
@@ -2818,7 +2818,7 @@ entities
 == License Type
 ===BSD-2-Clause-d5b9cb3b
 
-Copyright (c) Felix BÃ¶hm
+Copyright (c) Felix Böhm
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -3029,7 +3029,7 @@ SPDX:MIT
 
 == Copyright
 Copyright (c) 2014-present, Jon Schlinkert.
-Copyright Â© 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
 
 --------------------------------- (separator) ----------------------------------
 
@@ -3076,7 +3076,7 @@ form-data
 SPDX:MIT
 
 == Copyright
-Copyright (c) 2012 Felix GeisendÃ¶rfer (felix@debuggable.com) and contributors
+Copyright (c) 2012 Felix Geisendörfer (felix@debuggable.com) and contributors
 
 --------------------------------- (separator) ----------------------------------
 
@@ -3360,7 +3360,7 @@ SPDX:MIT
 == Copyright
 Copyright (c) 2014-2016, Jon Schlinkert
 Copyright (c) 2014-2016, Jon Schlinkert.
-Copyright Â© 2016, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2016, [Jon Schlinkert](https://github.com/jonschlinkert).
 
 --------------------------------- (separator) ----------------------------------
 
@@ -3383,7 +3383,7 @@ SPDX:MIT
 
 == Copyright
 Copyright (c) 2014-2017, Jon Schlinkert.
-Copyright Â© 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
 
 --------------------------------- (separator) ----------------------------------
 
@@ -3395,7 +3395,7 @@ SPDX:MIT
 
 == Copyright
 Copyright (c) 2014-present, Jon Schlinkert.
-Copyright Â© 2018, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2018, [Jon Schlinkert](https://github.com/jonschlinkert).
 
 --------------------------------- (separator) ----------------------------------
 
@@ -3633,7 +3633,7 @@ SPDX:MIT
 
 == Copyright
 Copyright (c) 2014-2018, Jon Schlinkert.
-Copyright Â© 2018, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2018, [Jon Schlinkert](https://github.com/jonschlinkert).
 
 --------------------------------- (separator) ----------------------------------
 
@@ -3763,7 +3763,7 @@ SPDX:MIT
 
 == Copyright
 Copyright (c) 2017-present, Jon Schlinkert.
-Copyright Â© 2017-present, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2017-present, [Jon Schlinkert](https://github.com/jonschlinkert).
 
 --------------------------------- (separator) ----------------------------------
 
@@ -4116,7 +4116,7 @@ SPDX:MIT
 
 == Copyright
 Copyright (c) 2015-present, Jon Schlinkert.
-Copyright Â© 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
 
 --------------------------------- (separator) ----------------------------------
 
@@ -4256,7 +4256,7 @@ SPDX:MIT
 == Copyright
 Copyright (c) 2014-2017, Jon Schlinkert
 Copyright (c) 2014-2017, Jon Schlinkert.
-Copyright Â© 2017, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2017, [Jon Schlinkert](https://github.com/jonschlinkert).
 
 --------------------------------- (separator) ----------------------------------
 
@@ -4691,16 +4691,16 @@ sh
 === Public License Template ===
 mvdan.cc/sh/v3
 -------- Copyrights
-Copyright (c) 2016, Daniel MartÃ­. All rights reserved.
-Copyright (c) 2017, Daniel MartÃ­ <mvdan@mvdan.cc>
-Copyright (c) 2016, Daniel MartÃ­ <mvdan@mvdan.cc>
-Copyright (c) 2019, Daniel MartÃ­ <mvdan@mvdan.cc>
-Copyright (c) 2018, Daniel MartÃ­ <mvdan@mvdan.cc>
+Copyright (c) 2016, Daniel Martí. All rights reserved.
+Copyright (c) 2017, Daniel Martí <mvdan@mvdan.cc>
+Copyright (c) 2016, Daniel Martí <mvdan@mvdan.cc>
+Copyright (c) 2019, Daniel Martí <mvdan@mvdan.cc>
+Copyright (c) 2018, Daniel Martí <mvdan@mvdan.cc>
 Copyright (c) 2017, Andrey Nering <andrey.nering@gmail.com>
-Copyright (c) 2021, Daniel MartÃ­ <mvdan@mvdan.cc>
+Copyright (c) 2021, Daniel Martí <mvdan@mvdan.cc>
 
 -------- License
-Copyright (c) 2016, Daniel MartÃ­. All rights reserved.
+Copyright (c) 2016, Daniel Martí. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -4889,7 +4889,7 @@ limitations under the License.
 mvdan.cc/sh/v3
 
 -------- License used by Dependencies
-Copyright (c) 2016, Daniel MartÃ­. All rights reserved.
+Copyright (c) 2016, Daniel Martí. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -4922,14 +4922,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -------- Dependency
 mvdan.cc/editorconfig
 -------- Copyrights
-Copyright (c) 2019, Daniel MartÃ­. All rights reserved.
-Copyright (c) 2019, Daniel MartÃ­ <mvdan@mvdan.cc>
+Copyright (c) 2019, Daniel Martí. All rights reserved.
+Copyright (c) 2019, Daniel Martí <mvdan@mvdan.cc>
 
 -------- Dependencies Summary
 mvdan.cc/editorconfig
 
 -------- License used by Dependencies
-Copyright (c) 2019, Daniel MartÃ­. All rights reserved.
+Copyright (c) 2019, Daniel Martí. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -5169,7 +5169,7 @@ Copyright (c) 2012 Alex Ogier. All rights reserved.
 Copyright (c) 2012 Dave Grijalva
 Copyright (c) 2012 Koichi Kobayashi
 Copyright (c) 2012 Miki Tebeka <miki.tebeka@gmail.com>.
-Copyright (c) 2012 PÃ©ter SurÃ¡nyi. Portions Copyright (c) 2009 The Go Authors. All rights reserved.
+Copyright (c) 2012 Péter Surányi. Portions Copyright (c) 2009 The Go Authors. All rights reserved.
 Copyright (c) 2012, Suryandaru Triandana <syndtr@gmail.com>
 Copyright (c) 2012-2014, Bram Stein
 Copyright (c) 2012-2016 Charles Banning <clbanning@gmail.com>.
@@ -5182,7 +5182,7 @@ Copyright (c) 2012-2021 Charles Banning <clbanning@gmail.com>.  All rights reser
 Copyright (c) 2013 - 2022 Thomas Pelletier, Eric Anderton
 Copyright (c) 2013 Alif Rachmawadi
 Copyright (c) 2013 Damien Le Berrigaud and Nick Wade
-Copyright (c) 2013 Dario CastaÃ±Ã©. All rights reserved.
+Copyright (c) 2013 Dario Castañé. All rights reserved.
 Copyright (c) 2013 Dave Collins <dave@davec.name>
 Copyright (c) 2013 Google. All rights reserved.
 Copyright (c) 2013 Mitchell Hashimoto
@@ -5303,7 +5303,7 @@ Copyright 2012-2017 Charles Banning. All rights reserved.
 Copyright 2012-2017 Docker, Inc.
 Copyright 2012-2018 Charles Banning. All rights reserved.
 Copyright 2012-2019, Charles Banning. All rights reserved.
-Copyright 2013 Dario CastaÃ±Ã©. All rights reserved.
+Copyright 2013 Dario Castañé. All rights reserved.
 Copyright 2013 Google Inc.
 Copyright 2013 Google Inc. All Rights Reserved.
 Copyright 2013 The Go Authors.  All rights reserved.
@@ -5315,7 +5315,7 @@ Copyright 2013-2014 Frank Schroeder. All rights reserved.
 Copyright 2013-2017 Docker, Inc.
 Copyright 2013-2018 Docker, Inc.
 Copyright 2014 CoreOS, Inc
-Copyright 2014 Dario CastaÃ±Ã©. All rights reserved.
+Copyright 2014 Dario Castañé. All rights reserved.
 Copyright 2014 Google Inc. All rights reserved.
 Copyright 2014 Google LLC
 Copyright 2014 Google LLC. All Rights Reserved.
@@ -5368,7 +5368,7 @@ Copyright 2016 Unknwon
 Copyright 2016 Zbigniew Mandziejewicz
 Copyright 2016 gRPC authors.
 Copyright 2016-2017 The New York Times Company
-Copyright 2016-present BjÃ¸rn Erik Pedersen <bjorn.erik.pedersen@gmail.com>
+Copyright 2016-present Bjørn Erik Pedersen <bjorn.erik.pedersen@gmail.com>
 Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Copyright 2017 Docker, Inc.
 Copyright 2017 Google Inc.
@@ -5492,22 +5492,22 @@ Copyright 2022, Mai Lapyst
 Copyright 2022, Masahiro Yoshida
 Copyright 2022, Ryan Glab <ryan.j.glab@gmail.com>
 Copyright 2022, Timo Furrer <tuxtimo@gmail.com>
-Copyright Â© 2013 Steve Francia <spf@spf13.com>.
-Copyright Â© 2014 Steve Francia <spf@spf13.com>.
-Copyright Â© 2015 Jerry Jacobs <jerry.jacobs@xor-gate.org>.
-Copyright Â© 2015 Steve Francia <spf@spf13.com>.
-Copyright Â© 2016 Docker, Inc.
-Copyright Â© 2016 Steve Francia <spf@spf13.com>.
-Copyright Â© 2018 Steve Francia <spf@spf13.com>.
-Copyright Â© 2019, 2020 OCI Contributors
-Copyright Â© 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
-Copyright Â© 2020 Chris Mellard chris.mellard@icloud.com
-Copyright Â© 2020 The Sigstore Authors.
-Copyright Â© 2021 The Sigstore Authors
-Copyright Â© 2021 The Sigstore Authors.
-Copyright Â© 2021 Vasily Ovchinnikov <vasily@remerge.io>.
-Copyright Â© 2022 Chris Mellard chris.mellard@icloud.com
-Copyright Â© 2022 Steve Francia <spf@spf13.com>.
+Copyright © 2013 Steve Francia <spf@spf13.com>.
+Copyright © 2014 Steve Francia <spf@spf13.com>.
+Copyright © 2015 Jerry Jacobs <jerry.jacobs@xor-gate.org>.
+Copyright © 2015 Steve Francia <spf@spf13.com>.
+Copyright © 2016 Docker, Inc.
+Copyright © 2016 Steve Francia <spf@spf13.com>.
+Copyright © 2018 Steve Francia <spf@spf13.com>.
+Copyright © 2019, 2020 OCI Contributors
+Copyright © 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2020 Chris Mellard chris.mellard@icloud.com
+Copyright © 2020 The Sigstore Authors.
+Copyright © 2021 The Sigstore Authors
+Copyright © 2021 The Sigstore Authors.
+Copyright © 2021 Vasily Ovchinnikov <vasily@remerge.io>.
+Copyright © 2022 Chris Mellard chris.mellard@icloud.com
+Copyright © 2022 Steve Francia <spf@spf13.com>.
 
 -------------------------- Fourth Party Dependencies ---------------------------
 
@@ -5694,7 +5694,7 @@ github.com/alibabacloud-go/cr-20160607
 == License Type
 ===Unknown License-1d6a8e0b
 
-English | [ç®€ä½“ä¸­æ–‡](README-CN.md)
+English | [简体中文](README-CN.md)
 ![](https://aliyunsdk-pages.alicdn.com/icons/AlibabaCloud.svg)
 
 # Alibaba Cloud cr SDK for Go
@@ -5815,7 +5815,7 @@ github.com/alibabacloud-go/tea-xml
 == License Type
 ===Unknown License-3115e5d6
 
-English | [ç®€ä½“ä¸­æ–‡](README-CN.md)
+English | [简体中文](README-CN.md)
 ![](https://aliyunsdk-pages.alicdn.com/icons/AlibabaCloud.svg)
 
 ## Alibaba Cloud Tea XML for Go
@@ -6073,8 +6073,8 @@ github.com/chrismellard/docker-credential-acr-env
 SPDX:Apache-2.0
 
 == Copyright
-Copyright Â© 2020 Chris Mellard chris.mellard@icloud.com
-Copyright Â© 2022 Chris Mellard chris.mellard@icloud.com
+Copyright © 2020 Chris Mellard chris.mellard@icloud.com
+Copyright © 2022 Chris Mellard chris.mellard@icloud.com
 
 --------------------------------- (separator) ----------------------------------
 
@@ -6838,10 +6838,10 @@ SPDX:BSD-3-Clause--modified-by-Google
 
 == Copyright
 Copyright (c) 2012 The Go Authors. All rights reserved.
-Copyright (c) 2013 Dario CastaÃ±Ã©. All rights reserved.
+Copyright (c) 2013 Dario Castañé. All rights reserved.
 Copyright 2009 The Go Authors. All rights reserved.
-Copyright 2013 Dario CastaÃ±Ã©. All rights reserved.
-Copyright 2014 Dario CastaÃ±Ã©. All rights reserved.
+Copyright 2013 Dario Castañé. All rights reserved.
+Copyright 2014 Dario Castañé. All rights reserved.
 
 --------------------------------- (separator) ----------------------------------
 
@@ -7401,8 +7401,8 @@ Copyright 2016 Docker, Inc.
 Copyright 2017 Docker, Inc.
 Copyright 2019, 2020 OCI Contributors
 Copyright 2020, 2020 OCI Contributors
-Copyright Â© 2016 Docker, Inc.
-Copyright Â© 2019, 2020 OCI Contributors
+Copyright © 2016 Docker, Inc.
+Copyright © 2019, 2020 OCI Contributors
 
 --------------------------------- (separator) ----------------------------------
 
@@ -7538,9 +7538,9 @@ SPDX:Apache-2.0
 Copyright 2021 The Sigstore Authors.
 Copyright 2022 The Sigstore Authors
 Copyright 2022 The Sigstore Authors.
-Copyright Â© 2020 The Sigstore Authors.
-Copyright Â© 2021 The Sigstore Authors
-Copyright Â© 2021 The Sigstore Authors.
+Copyright © 2020 The Sigstore Authors.
+Copyright © 2021 The Sigstore Authors
+Copyright © 2021 The Sigstore Authors.
 
 --------------------------------- (separator) ----------------------------------
 
@@ -7600,13 +7600,13 @@ SPDX:Apache-2.0
 == Copyright
 Copyright 2009 The Go Authors. All rights reserved.
 Copyright 2013 tsuru authors. All rights reserved.
-Copyright 2016-present BjÃ¸rn Erik Pedersen <bjorn.erik.pedersen@gmail.com>
-Copyright Â© 2014 Steve Francia <spf@spf13.com>.
-Copyright Â© 2015 Jerry Jacobs <jerry.jacobs@xor-gate.org>.
-Copyright Â© 2015 Steve Francia <spf@spf13.com>.
-Copyright Â© 2016 Steve Francia <spf@spf13.com>.
-Copyright Â© 2018 Steve Francia <spf@spf13.com>.
-Copyright Â© 2021 Vasily Ovchinnikov <vasily@remerge.io>.
+Copyright 2016-present Bjørn Erik Pedersen <bjorn.erik.pedersen@gmail.com>
+Copyright © 2014 Steve Francia <spf@spf13.com>.
+Copyright © 2015 Jerry Jacobs <jerry.jacobs@xor-gate.org>.
+Copyright © 2015 Steve Francia <spf@spf13.com>.
+Copyright © 2016 Steve Francia <spf@spf13.com>.
+Copyright © 2018 Steve Francia <spf@spf13.com>.
+Copyright © 2021 Vasily Ovchinnikov <vasily@remerge.io>.
 
 --------------------------------- (separator) ----------------------------------
 
@@ -7619,7 +7619,7 @@ SPDX:MIT
 == Copyright
 Copyright (c) 2014 Steve Francia
 Copyright 2011 The Go Authors. All rights reserved.
-Copyright Â© 2014 Steve Francia <spf@spf13.com>.
+Copyright © 2014 Steve Francia <spf@spf13.com>.
 
 --------------------------------- (separator) ----------------------------------
 
@@ -7632,8 +7632,8 @@ SPDX:Apache-2.0
 == Copyright
 Copyright 2015 Red Hat Inc. All rights reserved.
 Copyright 2016 French Ben. All rights reserved.
-Copyright Â© 2013 Steve Francia <spf@spf13.com>.
-Copyright Â© 2022 Steve Francia <spf@spf13.com>.
+Copyright © 2013 Steve Francia <spf@spf13.com>.
+Copyright © 2022 Steve Francia <spf@spf13.com>.
 
 --------------------------------- (separator) ----------------------------------
 
@@ -7645,7 +7645,7 @@ SPDX:MIT
 
 == Copyright
 Copyright (c) 2014 Steve Francia
-Copyright Â© 2016 Steve Francia <spf@spf13.com>.
+Copyright © 2016 Steve Francia <spf@spf13.com>.
 
 --------------------------------- (separator) ----------------------------------
 
@@ -7673,9 +7673,9 @@ SPDX:MIT
 == Copyright
 Copyright (c) 2014 Steve Francia
 Copyright (c) 2017 Canonical Ltd.
-Copyright Â© 2014 Steve Francia <spf@spf13.com>.
-Copyright Â© 2015 Steve Francia <spf@spf13.com>.
-Copyright Â© 2016 Steve Francia <spf@spf13.com>.
+Copyright © 2014 Steve Francia <spf@spf13.com>.
+Copyright © 2015 Steve Francia <spf@spf13.com>.
+Copyright © 2016 Steve Francia <spf@spf13.com>.
 
 --------------------------------- (separator) ----------------------------------
 
@@ -9985,7 +9985,7 @@ gopkg.in/inf.v0
 SPDX:BSD-3-Clause--modified-by-Google
 
 == Copyright
-Copyright (c) 2012 PÃ©ter SurÃ¡nyi. Portions Copyright (c) 2009 The Go
+Copyright (c) 2012 Péter Surányi. Portions Copyright (c) 2009 The Go
 Authors. All rights reserved.
 
 --------------------------------- (separator) ----------------------------------
@@ -10625,7 +10625,7 @@ Copyright (c) 2012 Alex Ogier. All rights reserved.
 Copyright (c) 2012 Dave Grijalva
 Copyright (c) 2012 Koichi Kobayashi
 Copyright (c) 2012 Miki Tebeka <miki.tebeka@gmail.com>.
-Copyright (c) 2012 PÃ©ter SurÃ¡nyi. Portions Copyright (c) 2009 The Go The Go Authors. All rights reserved.
+Copyright (c) 2012 Péter Surányi. Portions Copyright (c) 2009 The Go The Go Authors. All rights reserved.
 Copyright (c) 2012, Suryandaru Triandana <syndtr@gmail.com>
 Copyright (c) 2012-2014, Bram Stein
 Copyright (c) 2012-2016 Charles Banning <clbanning@gmail.com>.
@@ -10638,7 +10638,7 @@ Copyright (c) 2012-2021 Charles Banning <clbanning@gmail.com>.  All rights reser
 Copyright (c) 2013 - 2022 Thomas Pelletier, Eric Anderton
 Copyright (c) 2013 Alif Rachmawadi
 Copyright (c) 2013 Damien Le Berrigaud and Nick Wade
-Copyright (c) 2013 Dario CastaÃ±Ã©. All rights reserved.
+Copyright (c) 2013 Dario Castañé. All rights reserved.
 Copyright (c) 2013 Dave Collins <dave@davec.name>
 Copyright (c) 2013 Google. All rights reserved.
 Copyright (c) 2013 Mitchell Hashimoto
@@ -10759,7 +10759,7 @@ Copyright 2012-2017 Charles Banning. All rights reserved.
 Copyright 2012-2017 Docker, Inc.
 Copyright 2012-2018 Charles Banning. All rights reserved.
 Copyright 2012-2019, Charles Banning. All rights reserved.
-Copyright 2013 Dario CastaÃ±Ã©. All rights reserved.
+Copyright 2013 Dario Castañé. All rights reserved.
 Copyright 2013 Google Inc.
 Copyright 2013 Google Inc. All Rights Reserved.
 Copyright 2013 The Go Authors.  All rights reserved.
@@ -10771,7 +10771,7 @@ Copyright 2013-2014 Frank Schroeder. All rights reserved.
 Copyright 2013-2017 Docker, Inc.
 Copyright 2013-2018 Docker, Inc.
 Copyright 2014 CoreOS, Inc
-Copyright 2014 Dario CastaÃ±Ã©. All rights reserved.
+Copyright 2014 Dario Castañé. All rights reserved.
 Copyright 2014 Google Inc. All rights reserved.
 Copyright 2014 Google LLC
 Copyright 2014 Google LLC. All Rights Reserved.
@@ -10824,7 +10824,7 @@ Copyright 2016 Unknwon
 Copyright 2016 Zbigniew Mandziejewicz
 Copyright 2016 gRPC authors.
 Copyright 2016-2017 The New York Times Company
-Copyright 2016-present BjÃ¸rn Erik Pedersen <bjorn.erik.pedersen@gmail.com>
+Copyright 2016-present Bjørn Erik Pedersen <bjorn.erik.pedersen@gmail.com>
 Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Copyright 2017 Docker, Inc.
 Copyright 2017 Google Inc.
@@ -10948,22 +10948,22 @@ Copyright 2022, Mai Lapyst
 Copyright 2022, Masahiro Yoshida
 Copyright 2022, Ryan Glab <ryan.j.glab@gmail.com>
 Copyright 2022, Timo Furrer <tuxtimo@gmail.com>
-Copyright Â© 2013 Steve Francia <spf@spf13.com>.
-Copyright Â© 2014 Steve Francia <spf@spf13.com>.
-Copyright Â© 2015 Jerry Jacobs <jerry.jacobs@xor-gate.org>.
-Copyright Â© 2015 Steve Francia <spf@spf13.com>.
-Copyright Â© 2016 Docker, Inc.
-Copyright Â© 2016 Steve Francia <spf@spf13.com>.
-Copyright Â© 2018 Steve Francia <spf@spf13.com>.
-Copyright Â© 2019, 2020 OCI Contributors
-Copyright Â© 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
-Copyright Â© 2020 Chris Mellard chris.mellard@icloud.com
-Copyright Â© 2020 The Sigstore Authors.
-Copyright Â© 2021 The Sigstore Authors
-Copyright Â© 2021 The Sigstore Authors.
-Copyright Â© 2021 Vasily Ovchinnikov <vasily@remerge.io>.
-Copyright Â© 2022 Chris Mellard chris.mellard@icloud.com
-Copyright Â© 2022 Steve Francia <spf@spf13.com>.
+Copyright © 2013 Steve Francia <spf@spf13.com>.
+Copyright © 2014 Steve Francia <spf@spf13.com>.
+Copyright © 2015 Jerry Jacobs <jerry.jacobs@xor-gate.org>.
+Copyright © 2015 Steve Francia <spf@spf13.com>.
+Copyright © 2016 Docker, Inc.
+Copyright © 2016 Steve Francia <spf@spf13.com>.
+Copyright © 2018 Steve Francia <spf@spf13.com>.
+Copyright © 2019, 2020 OCI Contributors
+Copyright © 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2020 Chris Mellard chris.mellard@icloud.com
+Copyright © 2020 The Sigstore Authors.
+Copyright © 2021 The Sigstore Authors
+Copyright © 2021 The Sigstore Authors.
+Copyright © 2021 Vasily Ovchinnikov <vasily@remerge.io>.
+Copyright © 2022 Chris Mellard chris.mellard@icloud.com
+Copyright © 2022 Steve Francia <spf@spf13.com>.
 
 --------------------------------- (separator) ----------------------------------
 
@@ -11218,7 +11218,7 @@ SPDX:MIT
 
 == Copyright
 Copyright (c) 2014-2017, Jon Schlinkert.
-Copyright Â© 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
 
 --------------------------------- (separator) ----------------------------------
 
@@ -12522,7 +12522,7 @@ SPDX:Apache-2.0
 == Copyright
 Copyright 2015 Red Hat Inc. All rights reserved.
 Copyright 2016 French Ben. All rights reserved.
-Copyright Â© 2013 Steve Francia <spf@spf13.com>.
+Copyright © 2013 Steve Francia <spf@spf13.com>.
 
 --------------------------------- (separator) ----------------------------------
 
@@ -12698,14 +12698,14 @@ Copyright 2017 The Go Authors. All rights reserved.
 Copyright 2018 The Go Authors. All rights reserved.
 Copyright 2019 The Go Authors. All rights reserved.
 Copyright 2020 The Go Authors. All rights reserved.
-Copyright Â© 1994-1999 Lucent Technologies Inc.  All rights reserved.
-Copyright Â© 1995-1997 C H Forsyth (forsyth@terzarima.net)
-Copyright Â© 1997-1999 Vita Nuova Limited
-Copyright Â© 2000-2007 Lucent Technologies Inc. and others
-Copyright Â© 2000-2007 Vita Nuova Holdings Limited (www.vitanuova.com)
-Copyright Â© 2004,2006 Bruce Ellis
-Copyright Â© 2005-2007 C H Forsyth (forsyth@terzarima.net)
-Copyright Â© 2009 The Go Authors. All rights reserved.
+Copyright © 1994-1999 Lucent Technologies Inc.  All rights reserved.
+Copyright © 1995-1997 C H Forsyth (forsyth@terzarima.net)
+Copyright © 1997-1999 Vita Nuova Limited
+Copyright © 2000-2007 Lucent Technologies Inc. and others
+Copyright © 2000-2007 Vita Nuova Holdings Limited (www.vitanuova.com)
+Copyright © 2004,2006 Bruce Ellis
+Copyright © 2005-2007 C H Forsyth (forsyth@terzarima.net)
+Copyright © 2009 The Go Authors. All rights reserved.
 
 == Patents
 Additional IP Rights Grant (Patents)
@@ -13101,8 +13101,7 @@ Software, and any and all patent rights owned or freely licensable by each licen
 Software as contributed to or provided by such licensor, or (ii) the Larger Works (as defined below), to deal in both
 
 (a) the Software, and
-(b) any piece of software and/or hardware listed in the lrgrwrks.txt file if one is included with the Software (each a â€œLarger
-Workâ€ to which the Software is contributed by such licensors),
+(b) any piece of software and/or hardware listed in the lrgrwrks.txt file if one is included with the Software (each a “Larger Work” to which the Software is contributed by such licensors),
 
 without restriction, including without limitation the rights to copy, create derivative works of, display, perform, and
 distribute the Software and make, use, sell, offer for sale, import, export, have made, and have sold the Software and the
@@ -13122,7 +13121,7 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 4th Party Dependencies:
 ======================
-JSON11 â€“ A tiny JSON library for C++11
+JSON11: A tiny JSON library for C++11
 
 Copyright (c) 2013 Dropbox, Inc.
 
@@ -13239,9 +13238,9 @@ authorization.
 sqlite-devel
 
 The author disclaims copyright to this source code. In place of a legal notice, here is a blessing:
-â€¢	May you do good and not evil.
-â€¢	May you find forgiveness for yourself and forgive others.
-â€¢	May you share freely, never taking more than you give.
+*	May you do good and not evil.
+*	May you find forgiveness for yourself and forgive others.
+*	May you share freely, never taking more than you give.
 --------------------------------- (separator) ----------------------------------
 
 zlib-devel
