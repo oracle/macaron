@@ -148,7 +148,11 @@ class BaseBuildTool(ABC):
         """
         config_paths: set[str] = set()
         for build_cfg in self.build_configs:
-            config_paths.update(glob.glob(os.path.join(repo_path, "**", build_cfg), recursive=True))
+            config_paths.update(
+                path
+                for path in glob.glob(os.path.join(repo_path, "**", build_cfg), recursive=True)
+                if self.is_detected(str(Path(path).parent))
+            )
 
         list_iter = iter(sorted(config_paths, key=lambda x: (str(Path(x).parent), len(Path(x).parts))))
         try:
