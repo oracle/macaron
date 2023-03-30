@@ -10,6 +10,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Optional
 
+from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, DependencyInfo
 from macaron.errors import MacaronError
@@ -218,4 +219,13 @@ def get_deps_from_sbom(sbom_path: str | Path) -> dict[str, DependencyInfo]:
     -------
         A dictionary where dependency artifacts are grouped based on "artifactId:groupId".
     """
-    return convert_components_to_artifacts(get_dep_components(root_bom_path=Path(sbom_path)))
+    return convert_components_to_artifacts(
+        get_dep_components(
+            root_bom_path=Path(sbom_path),
+            recursive=defaults.getboolean(
+                "dependency.resolver",
+                "recursive",
+                fallback=False,
+            ),
+        )
+    )
