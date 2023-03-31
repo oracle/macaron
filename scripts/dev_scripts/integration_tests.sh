@@ -329,12 +329,11 @@ TARGET_REPO="$WORKSPACE/output/git_repos/local_repos/target"
 
 mkdir -p  "$SOURCE_REPO"
 
-git config --local user.email "testing@example.com"
-git config --local user.name "Testing"
-
 # Prepare the first commit for the repository.
 cd "$SOURCE_REPO" || log_fail
 git init || log_fail
+git config --local user.email "testing@example.com"
+git config --local user.name "Testing"
 echo 1 >> test1.txt || log_fail
 git add test1.txt || log_fail
 git commit -m "First commit" || log_fail
