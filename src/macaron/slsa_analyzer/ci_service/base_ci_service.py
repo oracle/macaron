@@ -120,7 +120,7 @@ class BaseCIService:
         raise NotImplementedError
 
     def has_kws_in_config(self, kws: list, repo_path: str) -> tuple[str, str]:
-        """Check the content of all config file in a repository for any build keywords.
+        """Check the content of all config files in a repository for any build keywords.
 
         For now, it only checks the file content directly.
 
@@ -133,8 +133,8 @@ class BaseCIService:
 
         Returns
         -------
-        tuple[kw, config]
-            kw : str
+        tuple[keyword, config]
+            keyword : str
                 The keyword that was found.
             config : str
                 The config file name that the keyword was found in.
@@ -147,16 +147,15 @@ class BaseCIService:
             try:
                 with open(file_path, encoding="utf-8") as file:
                     for index, line in enumerate(file):
-                        for keyword in kws:
-                            if keyword in line:
-                                logger.info(
-                                    'Found build command %s at line %s in %s: "%s"',
-                                    keyword,
-                                    index,
-                                    config,
-                                    line.strip(),
-                                )
-                                return keyword, config
+                        if any((keyword := kw) in line for kw in kws):
+                            logger.info(
+                                'Found build command %s at line %s in %s: "%s"',
+                                keyword,
+                                index,
+                                config,
+                                line.strip(),
+                            )
+                            return keyword, config
                 logger.info("No build command found in %s", file_path)
                 return "", ""
             except FileNotFoundError as error:
