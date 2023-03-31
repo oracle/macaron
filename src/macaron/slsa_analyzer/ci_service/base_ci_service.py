@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseCIService class to be inherited by a CI service."""
@@ -119,10 +119,10 @@ class BaseCIService:
         """
         raise NotImplementedError
 
-    def has_kws_in_config(self, kws: list, repo_path: str) -> str:
-        """Check the content of a file for any build keywords.
+    def has_kws_in_config(self, kws: list, repo_path: str) -> tuple[str, str]:
+        """Check the content of all config file in a repository for any build keywords.
 
-        For now, it only check content directly.
+        For now, it only checks the file content directly.
 
         Parameters
         ----------
@@ -133,8 +133,11 @@ class BaseCIService:
 
         Returns
         -------
-        str
-            The config file else empty.
+        tuple[kw, config]
+            kw : str
+                The keyword that was found.
+            config : str
+                The config file name that the keyword was found in.
         """
         for config in self.entry_conf:
             file_path = os.path.join(repo_path, config)
@@ -144,16 +147,22 @@ class BaseCIService:
             try:
                 with open(file_path, encoding="utf-8") as file:
                     for index, line in enumerate(file):
-                        if any(kw in line for kw in kws):
-                            logger.info('Found build command at line %s in %s: "%s"', index, config, line.strip())
-                            return config
-
+                        for keyword in kws:
+                            if keyword in line:
+                                logger.info(
+                                    'Found build command %s at line %s in %s: "%s"',
+                                    keyword,
+                                    index,
+                                    config,
+                                    line.strip(),
+                                )
+                                return keyword, config
                 logger.info("No build command found in %s", file_path)
-                return ""
+                return "", ""
             except FileNotFoundError as error:
                 logger.error(error)
-                return ""
-        return ""
+                return "", ""
+        return "", ""
 
     def has_latest_run_passed(
         self, repo_full_name: str, branch_name: str, commit_sha: str, commit_date: str, workflow: str
