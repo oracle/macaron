@@ -5,11 +5,7 @@
 # This base image contains the necessary components to build and run the Docker image.
 
 name: Build base image
-on:
-  workflow_dispatch:
-  push:
-    branches:
-    - add-docker-images
+on: workflow_dispatch
 
 permissions:
   contents: read
