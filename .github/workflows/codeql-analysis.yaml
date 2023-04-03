@@ -32,7 +32,8 @@ jobs:
       matrix:
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
         # Learn more about CodeQL language support at https://git.io/codeql-language-support
-        language: [python, go]
+        # We enable JavaScript language to analyze JavaScript expressions in GitHub Actions.
+        language: [python, go, javascript]
     steps:
 
     - name: Checkout repository
