@@ -12,7 +12,6 @@ from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.build_tool.poetry import Poetry
-from macaron.slsa_analyzer.checks.check_result import CheckResult
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
@@ -69,23 +68,6 @@ def setup_test(test_dir: Path, macaron_path: Path) -> NoReturn:  # type: ignore
     load_defaults(str(macaron_path))
     yield
     defaults.clear()
-
-
-@pytest.fixture()
-def check_result() -> CheckResult:  # pylint: disable=unused-argument
-    """Create a CheckResult instance.
-
-    Parameters
-    ----------
-    setup_test
-        Depends on setup_test fixture.
-
-    Returns
-    -------
-    CheckResult
-        The CheckResult instance.
-    """
-    return CheckResult(justification=[])  # type: ignore
 
 
 @pytest.fixture(autouse=True)

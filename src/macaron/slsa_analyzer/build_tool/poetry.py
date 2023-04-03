@@ -10,7 +10,6 @@ import glob
 import logging
 import os
 import tomllib
-from collections.abc import Iterable
 from pathlib import Path
 
 from macaron.config.defaults import defaults
@@ -124,36 +123,3 @@ class Poetry(BaseBuildTool):
         """
         # TODO: Implement this method.
         return NoneDependencyAnalyzer()
-
-    def get_build_dirs(self, repo_path: str) -> Iterable[Path]:
-        """Find directories in the repository that have their own build scripts.
-
-        This is especially important for applications that consist of multiple services.
-
-        Parameters
-        ----------
-        repo_path: str
-            The path to the target repo.
-
-        Yields
-        ------
-        Path
-            The relative paths from the repo path that contain build scripts.
-        """
-        config_paths: set[str] = set()
-        config_files = self.build_configs + self.package_lock
-        for build_cfg in config_files:
-            config_paths.update(glob.glob(os.path.join(repo_path, "**", build_cfg), recursive=True))
-
-        list_iter = iter(sorted(config_paths, key=lambda x: (str(Path(x).parent), len(Path(x).parts))))
-        try:
-            cfg_path = next(list_iter)
-            yield Path(cfg_path).parent.relative_to(repo_path)
-            while next_item := next(list_iter):
-                if str(Path(cfg_path).parent) in next_item:
-                    continue
-                cfg_path = next_item
-                yield Path(next_item).parent.relative_to(repo_path)
-
-        except StopIteration:
-            pass
