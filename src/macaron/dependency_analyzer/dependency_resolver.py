@@ -158,8 +158,8 @@ class DependencyAnalyzer(ABC):
         else:
             try:
                 if (
-                    (latest_version := latest_value.get("version", ""))
-                    and (item_version := item.get("version", ""))
+                    (latest_version := latest_value.get("version"))
+                    and (item_version := item.get("version"))
                     and version.Version(latest_version) < version.Version(item_version)
                 ):
                     latest_deps[key] = item

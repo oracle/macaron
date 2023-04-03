@@ -161,10 +161,12 @@ def convert_components_to_artifacts(
     for component in components:
         try:
             key = f"{component.get('group')}:{component.get('name')}"
+            # According to PEP-0589 all keys must be present in a TypedDict.
+            # See https://peps.python.org/pep-0589/#totality
             item = DependencyInfo(
-                version=component.get("version"),  # type: ignore
-                group=component.get("group"),  # type: ignore
-                name=component.get("name"),  # type: ignore
+                version=component.get("version") or "",
+                group=component.get("group") or "",
+                name=component.get("name") or "",
                 url="",
                 note="",
                 available=SCMStatus.AVAILABLE,
@@ -177,9 +179,10 @@ def convert_components_to_artifacts(
                 # IN case of a build error, we use this as a heuristic to avoid analyzing
                 # submodules that produce development artifacts in the same repo.
                 if (
-                    "snapshot" in item.get("version", "").lower()
+                    "snapshot"
+                    in (item.get("version") or "").lower()  # or "" is not necessary but mypy produces a FP otherwise.
                     and root_component
-                    and item.get("group", "") == root_component.get("group")
+                    and item.get("group") == root_component.get("group")
                 ):
                     continue
                 logger.debug(
