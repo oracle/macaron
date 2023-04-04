@@ -1,0 +1,15 @@
+# serializer version: 1
+# name: test_get_build_dirs[mock_repo0]
+  list([
+    PosixPath('.'),
+  ])
+# ---
+# name: test_get_build_dirs[mock_repo1]
+  list([
+  ])
+# ---
+# name: test_get_build_dirs[mock_repo2]
+  list([
+    PosixPath('.'),
+  ])
+# ---

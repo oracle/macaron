@@ -55,7 +55,12 @@ class BaseBuildTool(ABC):
         self.name = name
         self.entry_conf: list[str] = []
         self.build_configs: list[str] = []
+        self.package_lock: list[str] = []
         self.builder: list[str] = []
+        self.packager: list[str] = []
+        self.publisher: list[str] = []
+        self.interpreter: list[str] = []
+        self.interpreter_flag: list[str] = []
         self.build_arg: list[str] = []
         self.deploy_arg: list[str] = []
         self.ci_build_kws: dict[str, list[str]] = {
