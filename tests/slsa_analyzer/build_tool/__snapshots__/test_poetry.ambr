@@ -6,7 +6,6 @@
 # ---
 # name: test_get_build_dirs[mock_repo1]
   list([
-    PosixPath('.'),
   ])
 # ---
 # name: test_get_build_dirs[mock_repo2]
