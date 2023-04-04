@@ -15,7 +15,6 @@ from yamale.schema import Schema
 
 from macaron.database.table_definitions import PolicyTable
 from macaron.parsers.yaml.loader import YamlLoader
-from macaron.policy_engine import cue_validator
 from macaron.policy_engine.exceptions import InvalidPolicyError, PolicyRuntimeError
 from macaron.policy_engine.policy_engine import copy_prelude, get_generated
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
@@ -347,50 +346,12 @@ class Policy:
         )
 
     @classmethod
-    def make_cue_policy(cls, policy_path: os.PathLike | str) -> Self | None:
-        """Construct a cue policy.
-
-        Parameters
-        ----------
-        policy_path: os.PathLike | str
-            The path to the policy file.
-
-        Returns
-        -------
-        Self
-            The instantiated policy object.
-        """
-        logger.info("Generating a policy from file %s", policy_path)
-        policy: Policy = Policy(
-            "CUE policy has no ID",
-            "CUE policy has no description",
-            policy_path,
-            cue_validator.get_target(str(policy_path)),
-            None,
-            None,
-            "CUE",
-        )
-
-        try:
-            with open(policy_path, encoding="utf-8") as f:
-                policy.text = f.read()
-                policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
-        except OSError as error:
-            logger.error("Failed to load the CUE policy: %s.", error)
-            return None
-
-        policy._validator = lambda provenance: cue_validator.validate(str(policy.path), provenance)
-
-        # TODO remove type ignore once mypy adds support for Self.
-        return policy  # type: ignore
-
-    @classmethod
-    def make_policy(cls, file_path: os.PathLike | str) -> Self | None:
+    def make_policy(cls, policy_path: os.PathLike | str) -> Self | None:
         """Generate a Policy from a policy yaml file.
 
         Parameters
         ----------
-        file_path : os.PathLike
+        policy_path : os.PathLike
             The path to the yaml file.
 
         Returns
@@ -398,24 +359,24 @@ class Policy:
         Self | None
             The instantiated policy object.
         """
-        logger.info("Generating a policy from file %s", file_path)
+        logger.info("Generating a policy from file %s", policy_path)
         policy: Policy = Policy("", "", "", "", None, None, "YAML_DIFF")
 
         # First load from the policy yaml file. We also validate the policy
         # against the schema.
-        policy_content = YamlLoader.load(file_path, POLICY_SCHEMA)
+        policy_content = YamlLoader.load(policy_path, POLICY_SCHEMA)
 
         if not policy_content:
-            logger.error("Cannot load the policy yaml file at %s.", file_path)
+            logger.error("Cannot load the policy yaml file at %s.", policy_path)
             return None
 
-        with open(file_path, encoding="utf-8") as f:
+        with open(policy_path, encoding="utf-8") as f:
             policy.text = f.read()
             policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
 
         policy.ID = policy_content.get("metadata").get("id")
         policy.description = policy_content.get("metadata").get("description")
-        policy.path = file_path
+        policy.path = policy_path
         if "target" in policy_content.get("metadata"):
             policy.target = policy_content.get("metadata").get("target")
         else:

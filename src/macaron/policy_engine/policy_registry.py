@@ -7,6 +7,7 @@ import logging
 import os
 from typing import Any, Optional
 
+from macaron.policy_engine.cue.cue_policy import CUEPolicy
 from macaron.policy_engine.policy import Policy, SoufflePolicy
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ class PolicyRegistry:
                 if policy:
                     self.policies[policy.target] = policy
             elif ext in (".cue",):
-                policy = Policy.make_cue_policy(policy_path)
+                policy = CUEPolicy.make_policy(policy_path)
                 if policy and policy.target:
                     self.policies[policy.target] = policy
                     logger.info("Found target %s for policy %s.", policy.target, policy_path)
