@@ -32,5 +32,4 @@ Dockerfile
 .idea
 *.venv
 output
-bin
 slsa-verifier

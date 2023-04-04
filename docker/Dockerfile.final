@@ -1,0 +1,51 @@
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# This Dockerfile is for building the final production image. It's based on ghcr.io/oracle-samples/macaron-base.
+# For the build, two files will be copied into the image:
+#   - Macaron wheel file (its path must be provided to the build argument WHEEL_PATH)
+#   - user.sh for the entrypoint of the final image.
+# For example, using Docker, we could build the image using:
+#   docker build --build-arg WHEEL_PATH=<path_to_wheel> -t ghcr.io/oracle-samples/macaron -f docker/Dockerfile.final ./
+# Note that the local machine must login to ghcr.io so that Docker could pull the ghcr.io/oracle-samples/macaron-base
+# image for this build.
+
+FROM ghcr.io/oracle-samples/macaron-base
+
+ENV HOME="/home/macaron"
+
+ENV PACKAGE_PATH=$HOME/.venv/lib/python3.11/site-packages/macaron
+
+# Create the macaron user and group with abritary UID and GID.
+# The macaron GID and UID in this image will be modified by the
+# user.sh script on startup to get the UID and GID of the user who started
+# the Docker container.
+RUN : \
+    && groupadd --gid 43147 macaron \
+    && useradd --uid 43147 --create-home --gid 43147 macaron
+
+WORKDIR $HOME
+
+# Build time ARG. This argument specifies the path of the wheel file from the host machine.
+ARG WHEEL_PATH
+
+# Installing the Python dependencies in the Python virtual environment.
+# We switch to user macaron so that when we install the dependencies using pip,
+# the warning of not having correct ownership of /home/macaron is not raised.
+USER macaron:macaron
+COPY --chown=macaron:macaron $WHEEL_PATH $HOME/dist/
+RUN : \
+    && python3 -m venv $HOME/.venv \
+    && . .venv/bin/activate \
+    && pip install --no-compile --no-cache-dir --upgrade pip \
+    && find $HOME/dist -depth \( -type f \( -name "macaron-*.whl" \) \) -exec pip install --no-compile --no-cache-dir '{}' \; \
+    && rm -rf $HOME/dist \
+    && deactivate
+
+COPY --chown=macaron:macaron docker/user.sh $HOME/user.sh
+
+# We enable the root user here so that the user.sh script can modify the
+# GID and UID of user macaron at startup to match the GID and UID
+# of the current user in the host machine.
+USER root
+ENTRYPOINT [ "./user.sh" ]
