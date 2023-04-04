@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for the Build Service Check."""
@@ -11,6 +11,8 @@ from macaron.parsers.bashparser import BashCommands
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
+from macaron.slsa_analyzer.build_tool.pip import Pip
+from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.checks.build_service_check import BuildServiceCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -43,6 +45,10 @@ class TestBuildServiceCheck(MacaronTestCase):
         maven.load_defaults()
         gradle = Gradle()
         gradle.load_defaults()
+        poetry = Poetry()
+        poetry.load_defaults()
+        pip = Pip()
+        pip.load_defaults()
         github_actions = MockGitHubActions()
         github_actions.load_defaults()
         jenkins = Jenkins()
@@ -74,6 +80,16 @@ class TestBuildServiceCheck(MacaronTestCase):
         # The target repo uses Gradle build tool but does not use a service.
         use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
         use_build_tool.dynamic_data["build_spec"]["tool"] = gradle
+        assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
+
+        # The target repo uses Poetry build tool but does not use a service.
+        use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        use_build_tool.dynamic_data["build_spec"]["tool"] = poetry
+        assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
+
+        # The target repo uses Pip build tool but does not use a service.
+        use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        use_build_tool.dynamic_data["build_spec"]["tool"] = pip
         assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
         # The target repo does not use a build tool.
@@ -115,6 +131,48 @@ class TestBuildServiceCheck(MacaronTestCase):
         bash_commands["commands"] = [["./gradlew", "build"]]
         gradle_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(gradle_build_ci, check_result) == CheckResultType.PASSED
+
+        # Use poetry in CI to build the artifact.
+        poetry_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        poetry_build_ci.dynamic_data["build_spec"]["tool"] = poetry
+        bash_commands["commands"] = [["poetry", "build"]]
+        poetry_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(poetry_build_ci, check_result) == CheckResultType.PASSED
+
+        # Use pip in CI to build the artifact.
+        pip_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        pip_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        bash_commands["commands"] = [["pip", "install"]]
+        pip_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(pip_build_ci, check_result) == CheckResultType.PASSED
+
+        # Use flit in CI to build the artifact.
+        flit_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        flit_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        bash_commands["commands"] = [["flit", "build"]]
+        flit_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(flit_build_ci, check_result) == CheckResultType.PASSED
+
+        # Use pip as a module in CI to build the artifact.
+        pip_interpreter_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        pip_interpreter_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        bash_commands["commands"] = [["python", "-m", "pip", "install"]]
+        pip_interpreter_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(pip_interpreter_build_ci, check_result) == CheckResultType.PASSED
+
+        # Use pip as a module incorrectly in CI to build the artifact.
+        no_pip_interpreter_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        no_pip_interpreter_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        bash_commands["commands"] = [["python", "pip", "install"]]
+        no_pip_interpreter_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(no_pip_interpreter_build_ci, check_result) == CheckResultType.FAILED
+
+        # Use pip as a module in CI with invalid goal to build the artifact.
+        no_pip_interpreter_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        no_pip_interpreter_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        bash_commands["commands"] = [["python", "-m", "pip", "installl"]]
+        no_pip_interpreter_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(no_pip_interpreter_build_ci, check_result) == CheckResultType.FAILED
 
         # Test Jenkins.
         maven_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
