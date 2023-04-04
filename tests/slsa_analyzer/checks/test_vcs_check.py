@@ -6,7 +6,6 @@
 import os
 
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext, ChecksOutputs
-from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.checks.vcs_check import VCSCheck
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
@@ -40,7 +39,7 @@ class MockAnalyzeContext(AnalyzeContext):
         self.remote_path = "https://github.com/org/name"
         self.dynamic_data: ChecksOutputs = ChecksOutputs(
             git_service=NoneGitService(),
-            build_spec=BuildSpec(tool=NoneBuildTool()),
+            build_spec=BuildSpec(tools=[]),
             ci_services=[],
             is_inferred_prov=True,
             expectation=None,

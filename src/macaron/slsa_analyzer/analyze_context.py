@@ -13,7 +13,6 @@ from typing import TypedDict
 from pydriller.git import Git
 
 from macaron.database.table_definitions import RepositoryTable, SLSALevelTable
-from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.git_service import BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
@@ -117,7 +116,7 @@ class AnalyzeContext:
         # Add the data computed at runtime to the dynamic_data attribute.
         self.dynamic_data: ChecksOutputs = ChecksOutputs(
             git_service=NoneGitService(),
-            build_spec=BuildSpec(tool=NoneBuildTool()),
+            build_spec=BuildSpec(tools=[]),
             ci_services=[],
             is_inferred_prov=True,
             expectation=None,

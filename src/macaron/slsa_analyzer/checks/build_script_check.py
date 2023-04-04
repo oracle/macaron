@@ -11,7 +11,6 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.database.database_manager import ORMBase
 from macaron.database.table_definitions import CheckFactsTable
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.registry import registry
@@ -59,20 +58,22 @@ class BuildScriptCheck(BaseCheck):
         CheckResultType
             The result type of the check (e.g. PASSED).
         """
-        build_tool = ctx.dynamic_data["build_spec"].get("tool")
+        build_tools = ctx.dynamic_data["build_spec"]["tools"]
 
-        # Check if a build tool is discovered for this repo.
+        if not build_tools:
+            failed_msg = "The target repository does not have any build tools."
+            check_result["justification"].append(failed_msg)
+            return CheckResultType.FAILED
+
+        # Check if any build tools are discovered for this repo.
         # TODO: look for build commands in the bash scripts. Currently
-        # we parse bash scripts that are reachable through CI only.
-        if build_tool and not isinstance(build_tool, NoneBuildTool):
-            pass_msg = f"The target repository uses build tool {build_tool.name}."
+        #       we parse bash scripts that are reachable through CI only.
+        for tool in build_tools:
+            pass_msg = f"The target repository uses build tool {tool.name}."
             check_result["justification"].append(pass_msg)
-            check_result["result_tables"] = [BuildScriptTable(build_tool_name=build_tool.name)]
-            return CheckResultType.PASSED
+            check_result["result_tables"].append(BuildScriptTable(build_tool_name=tool.name))
 
-        failed_msg = "The target repository does not have a build tool."
-        check_result["justification"].append(failed_msg)
-        return CheckResultType.FAILED
+        return CheckResultType.PASSED
 
 
 registry.register(BuildScriptCheck())
