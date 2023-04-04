@@ -32,7 +32,7 @@ if [ ${#missing_copyright_files[@]} -ne 0 ]; then
     for f in "${missing_copyright_files[@]}"; do
 
         # Don't allow this script to run on itself.
-        if [[ $0 == $f ]];then
+        if [[ $0 == "$f" ]];then
             echo "Cannot run the $0 on itself. Please fix the headers in this file manually."
             exit 1
         fi
@@ -65,7 +65,7 @@ if [ ${#missing_copyright_files[@]} -ne 0 ]; then
                 sed -i "1s/^/$expected\n\n/" "$f"
             else
                 # If there is a shebang, append to the end of the line.
-                sed -i "$(echo $shebang_line | cut -d : -f 1)""s/$/\n\n$expected/" "$f"
+                sed -i "$(echo "$shebang_line" | cut -d : -f 1)""s/$/\n\n$expected/" "$f"
             fi
         else
             echo "Copyright header needs update for $f."

@@ -1,0 +1,238 @@
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# This Dockerfile is for building the base image which contains the necessary components
+# to build and run the Docker image.
+# This image is based on the container-registry.oracle.com/os/oraclelinux:9-slim image and contains the following
+# components:
+#   Python3.11.2 (with pip 22.3.1 and setuptools 65.5.1) compiled and installed from source.
+#   Oracle JDK 17 installed from dnf.
+#   Souffle 2.3 compiled and installed from source.
+#   Other runtime libraries (e.g sqlite-devel) which are installed from dnf.
+
+FROM container-registry.oracle.com/os/oraclelinux:9-slim
+
+ENV HOME="/home/macaron" \
+    # Setting Python related environment variables.
+    PYTHON3_VERSION=3.11.2 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L12
+    LANG="C.UTF-8" \
+    # The GPG key to verify the source tar ball following the instructions in https://www.python.org/downloads/
+    PYTHON_SOURCE_GPG="A035C8C19219BA821ECEA86B64E628F8D684696D" \
+    # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L133
+    PYTHON_PIP_VERSION=22.3.1 \
+    PYTHON_SETUPTOOLS_VERSION=65.5.1 \
+    PYTHON_GET_PIP_URL="https://github.com/pypa/get-pip/raw/d5cb0afaf23b8520f1bbcfed521017b4a95f5c01/public/get-pip.py" \
+    PYTHON_GET_PIP_SHA256="394be00f13fa1b9aaa47e911bdb59a09c3b2986472130f30aa0bfaf7f3980637" \
+    # Setting Java related environment variables.
+    JAVA_HOME="/usr/lib/jvm/jdk-17-oracle-x64" \
+    PATH=/usr/local/bin:/usr/lib/jvm/jdk-17-oracle-x64/bin:$PATH
+
+# We run the installation of all components in one single RUN to minimize the final image size.
+RUN : \
+    && set -eux \
+# ---------------------------------------------------------------------------------------------------------------------
+    # INSTALL RUNTIME DEPENDENCIES.
+    # We switch to dnf to use some features of dnf that do not exist in microdnf.
+    && microdnf install -y dnf \
+    # We can then safely remove the unused microdnf.
+    && dnf remove -y microdnf \
+    # Add the EPEL packages yum repo following the convention as existing repo definitions in OL9.
+    # The following yum repo will be resolved to this URL:
+    # https://yum.oracle.com/repo/OracleLinux/OL9/developer/EPEL/x86_64/index.html
+    # This repo contains the package lcov which is later used in building Python from source.
+    && echo -e \
+"\
+[ol9_epel]\n\
+name=EPEL packages for test and development (\$basearch)\n\
+baseurl=https://yum\$ociregion.\$ocidomain/repo/OracleLinux/OL9/developer/EPEL/\$basearch/\n\
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle\n\
+gpgcheck=1\n\
+enabled=1\
+" >> /etc/yum.repos.d/epel-ol9.repo \
+    # We clean all here so that when we run upgrade, the newly added yum repo is used.
+    && dnf clean all    \
+    && dnf upgrade -y   \
+    && dnf install -y   \
+        # These are the runtime dependencies as specified by the official Python 3.11 slim-buster Dockerfile.
+        # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#LL19C2-L23C5
+        # Exception: netbase (We couldn't find an equivalent in Oracle Linux).
+        tzdata          \
+        ca-certificates \
+        # git and finutils are needed for running and building Macaron.
+        git             \
+        findutils       \
+        # Runtime libraries for Souffle. These are based on
+        # https://souffle-lang.github.io/build#software-requirements
+        # https://github.com/souffle-lang/souffle/blob/cc8ea091721fcfb60bed45a0edf571ad9d0c58a5/CMakeLists.txt#LL442C39-L442C129
+        # Exceptions (not installed):
+        #   mcpp - The package mcpp is not available in Oracle Linux 9. However, we don't use Souffle's feature
+        #       that needs it.
+        #   python3 - We use the installed Python3.11.2 for this.
+        gcc-c++         \
+        libffi          \
+        libffi-devel    \
+        ncurses-devel   \
+        sqlite-devel    \
+        zlib-devel      \
+        # Oracle JDK17
+        https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.rpm \
+    # Store the list of user installed packages to preserve them when we clean up unused packages.
+    # https://dnf.readthedocs.io/en/latest/command_ref.html#history-command
+    && USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2)" \
+# ---------------------------------------------------------------------------------------------------------------------
+    # INSTALL PYTHON FROM SOURCE.
+    # We enable the ol9_core_ready_builder repo for the package gdbm-devel
+    && dnf --enablerepo=ol9_codeready_builder install -y \
+        # Install Python build dependencies. These libraries are not needed during runtime and should be removed after
+        # the build completes.
+        # The required packages are listed here:
+        #   https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L34
+        # Note that the link above describes the packages in Debian-based Linux distribution. The packages below might
+        # have different names because we are running in Oracle Linux (which is based on RedHat).
+        autoconf        \
+        bluez-libs      \
+        bzip2-devel     \
+        expat-devel     \
+        libdb-devel     \
+        libffi-devel    \
+        libuuid-devel   \
+        gcc             \
+        gdbm-devel      \
+        glibc-devel     \
+        gnupg           \
+        gpm-devel       \
+        lcov            \
+        make            \
+        ncurses-devel   \
+        openssl-devel   \
+        pkgconfig       \
+        readline-devel  \
+        sqlite-devel    \
+        tk-devel        \
+        wget            \
+        xz              \
+        xz-devel        \
+        zlib-devel      \
+        # The dpkg-dev package is used to query for used shared libraries:
+        #   https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L34
+        #   https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L114
+        dpkg-dev        \
+    # Download the source tarball and verify its integrity.
+    # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L56
+    && wget -O python.tar.xz "https://www.python.org/ftp/python/$PYTHON3_VERSION/Python-$PYTHON3_VERSION.tar.xz" \
+    && wget -O python.tar.xz.asc "https://www.python.org/ftp/python/$PYTHON3_VERSION/Python-$PYTHON3_VERSION.tar.xz.asc" \
+    && GNUPGHOME="$(mktemp -d)" \
+    && export GNUPGHOME \
+    && gpg --recv-keys "$PYTHON_SOURCE_GPG" \
+    && gpg --verify python.tar.xz.asc python.tar.xz \
+    && command -v gpgconf > /dev/null && gpgconf --kill all || : \
+    && rm -rf "$GNUPGHOME" python.tar.xz.asc \
+    # Compile and install Python from source.
+    # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#LL56C2-L99C3
+    && mkdir -p /usr/src/python \
+    && tar --extract --directory /usr/src/python --strip-components=1 --file python.tar.xz \
+    && rm python.tar.xz \
+    && cd /usr/src/python \
+    && gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
+    && ./configure \
+        --build="$gnuArch" \
+        --enable-loadable-sqlite-extensions \
+        --enable-optimizations \
+        --enable-option-checking=fatal \
+        --enable-shared \
+        --with-lto \
+        --with-system-expat \
+    # https://docs.python.org/3/using/configure.html#cmdoption-with-ensurepip
+        --with-ensurepip=install \
+    && nproc="$(nproc)" \
+    && LDFLAGS="-Wl,--strip-all" \
+    && make -j "$nproc" \
+        "EXTRA_CFLAGS=${EXTRA_CFLAGS:-}" \
+        "LDFLAGS=${LDFLAGS:-}" \
+        "PROFILE_TASK=${PROFILE_TASK:-}" \
+    && rm python \
+    && make -j "$nproc" \
+        "EXTRA_CFLAGS=${EXTRA_CFLAGS:-}" \
+        "LDFLAGS=${LDFLAGS:--Wl},-rpath='\$\$ORIGIN/../lib'" \
+        "PROFILE_TASK=${PROFILE_TASK:-}" \
+        python \
+    && make install \
+    && cd / \
+    && rm -rf /usr/src/python \
+    # Clean up test and cache files.
+    # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#LL100C2-L108C3
+    && find /usr/local -depth \
+        \( \
+            \( -type d -a \( -name test -o -name tests -o -name idle_test \) \) \
+            -o \( -type f -a \( -name '*.pyc' -o -name '*.pyo' -o -name 'libpython*.a' \) \) \
+        \) -exec rm -rf '{}' + \
+    && ldconfig \
+    && python3 --version \
+    # Create useful symlinks for python related tools.
+    # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L124
+    && for src in idle3 pydoc3 python3 python3-config; do \
+        dst="$(echo "$src" | tr -d 3)"; \
+        [ -s "/usr/local/bin/$src" ]; \
+        [ ! -e "/usr/local/bin/$dst" ]; \
+        ln -svT "$src" "/usr/local/bin/$dst"; \
+    done \
+# ---------------------------------------------------------------------------------------------------------------------
+    # INSTALLING SOUFFLE FROM SOURCE.
+    # Based on https://github.com/souffle-lang/souffle/blob/master/.github/images/oraclelinux-8/Dockerfile.
+    # However, some parts are different on Oracle Linux 9.
+    && mkdir /souffle-src \
+    && cd /souffle-src \
+    # Install build dependencies.
+    && dnf --enablerepo=ol9_codeready_builder install -y \
+        autoconf \
+        automake \
+        bash-completion \
+        bison \
+        clang \
+        cmake \
+        doxygen \
+        flex \
+        git \
+        libtool \
+        make \
+        pkg-config \
+        rpm-build \
+    && git clone --depth=1 https://github.com/souffle-lang/souffle/ -b 2.3 \
+    && cd souffle \
+    && cmake -S . -B build -DSOUFFLE_DOMAIN_64BIT=ON -DCMAKE_INSTALL_PREFIX="/usr/local" \
+    && nproc="$(nproc)" \
+    && cmake --build build --target install -j "$nproc" \
+    && cd / \
+    && rm -rf /souffle-src \
+    && souffle --version \
+# ---------------------------------------------------------------------------------------------------------------------
+    # CLEANING UP.
+    # We mark all unecessary packages to be removed while preserving the user installed packages.
+    && dnf list installed | tail -n +2 | cut -d' ' -f1 | xargs -r dnf mark remove > /dev/null \
+    && [ -z "$USER_MANUAL_INSTALLED" ] || dnf mark install $USER_MANUAL_INSTALLED \
+    # Look for share libraries that are used by looking through the executables in /usr/local to preserve them.
+    # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#LL111C2-L121C3
+    && find /usr/local -type f -executable -not \( -name '*tkinter*' \) -exec ldd '{}' ';' \
+        | awk '/=>/ { print $(NF-1) }' \
+        | sort -u \
+        | xargs -r dpkg-query --search \
+        | cut -d: -f1 \
+        | sort -u \
+        | xargs -r dnf mark install \
+    # We exclude systemd-udev because currently one of the build dependencies for Souffle pull this protected package.
+    # This command make sure that it won't break if systemd-udev is not pulled in the future.
+    && (dnf list installed systemd-udev && dnf mark install systemd-udev || true) \
+    # Running dnf autoremove will remove all packages that are marked with "dnf mark remove".
+    # https://dnf.readthedocs.io/en/latest/command_ref.html#autoremove-command
+    && dnf autoremove -y \
+    && dnf clean all \
+    && rm -rf /var/cache/yum \
+    && rm -rf /var/cache/dnf \
+    && java --version \
+    && javac --version \
+    && git --version
+
+CMD [ "/bin/bash" ]

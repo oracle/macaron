@@ -5,7 +5,7 @@
 # Actions workflows. It checks, tests, and builds the artifacts including SBOM and documentations,
 # and computes hash digests as output to be used by a SLSA provenance generator. The artifacts are
 # always uploaded for every job to be used for debugging purposes, but they will be removed within
-# the specified retention days.
+# the specified retention days. The Docker image is also built and tested in this workflow.
 #
 # Even though we run the build in a matrix to check against different platforms, due to a known
 # limitation of reusable workflows that do not support setting strategy property from the caller
@@ -115,15 +115,13 @@ jobs:
         set -euo pipefail
         TARBALL_PATH=$(find dist/ -type f -name "*.tar.gz")
         WHEEL_PATH=$(find dist/ -type f -name "*.whl")
-        GO_ACTION_PARSER=$(find ${{ env.PACKAGE_PATH }}/bin/ -type f -name "actionparser")
-        GO_BASH_PARSER=$(find ${{ env.PACKAGE_PATH }}/bin/ -type f -name "bashparser")
         REQUIREMENTS_PATH=$(find dist/ -type f -name "*-requirements.txt")
         SBOM_PATH=$(find dist/ -type f -name "*-sbom.json")
         SBOM_GO_PATH=$(find dist/ -type f -name "*-sbom-go.json")
         HTML_DOCS_PATH=$(find dist/ -type f -name "*-docs-html.zip")
         BUILD_EPOCH_PATH=$(find dist/ -type f -name "*-build-epoch.txt")
         DIGEST=$(sha256sum "$TARBALL_PATH" "$WHEEL_PATH" "$REQUIREMENTS_PATH" "$SBOM_PATH" \
-          "$SBOM_GO_PATH" "$GO_ACTION_PARSER" "$GO_BASH_PARSER" "$HTML_DOCS_PATH" "$BUILD_EPOCH_PATH" | base64 -w0)
+          "$SBOM_GO_PATH" "$HTML_DOCS_PATH" "$BUILD_EPOCH_PATH" | base64 -w0)
         echo "Digest of artifacts is $DIGEST."
         echo "artifacts-sha256=$DIGEST" >> "$GITHUB_OUTPUT"
 
@@ -134,9 +132,20 @@ jobs:
       uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         name: artifact-${{ matrix.os }}-python-${{ matrix.python }}
-        path: |
-          dist
-          ${{ env.PACKAGE_PATH }}/bin/actionparser
-          ${{ env.PACKAGE_PATH }}/bin/bashparser
+        path: dist
         if-no-files-found: error
         retention-days: 7
+
+  # This job calls the reusable workflow _build_docker.yaml to build and test
+  # the Docker image. Note that the built image is not pushed to ghcr.io here.
+  build_docker_image:
+    needs: [build]
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/_build_docker.yaml
+    with:
+      artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
+      # TODO: use ${{ env.ARTIFACT_OS }} and ${{ env.ARTIFACT_PYTHON }}
+      # when this issue is addressed: https://github.com/actions/runner/issues/2394.
+      artifact-name: artifact-ubuntu-latest-python-3.11
