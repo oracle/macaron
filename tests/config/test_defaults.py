@@ -1,87 +1,121 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the defaults module."""
 
 import os
 
-from macaron.config.defaults import create_defaults, defaults, load_defaults
+import pytest
+
+from macaron.config.defaults import ConfigParser, create_defaults, defaults, load_defaults
 from macaron.config.global_config import global_config
 
 from ..macaron_testcase import MacaronTestCase
 
 
-class TestDefaults(MacaronTestCase):
-    """This class includes tests for the defaults module."""
+def test_load_defaults() -> None:
+    """Test loading defaults."""
+    config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources")
+    assert load_defaults(config_dir) is True
 
-    def test_load_defaults(self) -> None:
-        """Test loading defaults."""
-        config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources")
-        assert load_defaults(config_dir) is True
+    assert defaults.get("dependency.resolver", "dep_tool_maven") == "cyclonedx-maven:2.6.2"
 
-        assert defaults.get("dependency.resolver", "dep_tool_maven") == "cyclonedx-maven:2.6.2"
 
-    def test_create_defaults(self) -> None:
-        """Test dumping the default values."""
-        output_dir = os.path.dirname(os.path.abspath(__file__))
-        assert create_defaults(output_dir, global_config.macaron_path) is True
-        assert create_defaults("/", "/") is False
+def test_create_defaults() -> None:
+    """Test dumping the default values."""
+    output_dir = os.path.dirname(os.path.abspath(__file__))
+    assert create_defaults(output_dir, global_config.macaron_path) is True
+    assert create_defaults("/", "/") is False
 
-    def test_get_str_list(self) -> None:
-        """Test getting a list of strings from defaults.ini"""
-        content = """
-        [test.list]
-        with_new_lines =
-            github.com
-            comma_ended,
-            space string
-        empty =
-        one_line = github.com comma_ended, space string
-        duplicates =
-            github.com github.com github.com
-            github.com
-        commas_string = github.com, gitlab.com, space string
-        """
-        defaults.read_string(content)
-        expect = ["github.com", "comma_ended,", "space", "string"]
-        expect.sort()
 
-        # Parse a list defined in multiple lines.
-        multiple_lines_values = defaults.get_list("test.list", "with_new_lines")
-        multiple_lines_values.sort()
+@pytest.mark.parametrize(
+    ("section", "item", "delimiter", "cleanup", "duplicated_ok", "expect"),
+    [
+        (
+            "test.list",
+            "commas_string",
+            ",",
+            False,
+            True,
+            ["", " gitlab.com", " space string", " space string", "github.com"],
+        ),
+        ("test.list", "commas_string", ",", False, False, ["", " gitlab.com", " space string", "github.com"]),
+        ("test.list", "commas_string", ",", True, True, ["github.com", "gitlab.com", "space string", "space string"]),
+        ("test.list", "commas_string", ",", True, False, ["github.com", "gitlab.com", "space string"]),
+        # Using None as the delimiter parameter will ignore cleanup
+        ("test.list", "default", None, True, False, ["comma_ended,", "github.com", "space", "string"]),
+        ("test.list", "default", None, False, False, ["comma_ended,", "github.com", "space", "string"]),
+        (
+            "test.list",
+            "default",
+            None,
+            False,
+            True,
+            ["comma_ended,", "github.com", "space", "space", "string", "string"],
+        ),
+        ("test.list", "one_line", None, True, False, ["comma_ended,", "github.com", "space", "string"]),
+        (
+            "test.list",
+            "one_line",
+            None,
+            True,
+            True,
+            ["comma_ended,", "github.com", "space", "space", "string", "string"],
+        ),
+    ],
+)
+def test_get_str_list_with_custom_delimiter(
+    section: str, item: str, delimiter: str, cleanup: bool, duplicated_ok: bool, expect: list[str]
+) -> None:
+    """Test getting a list of strings from defaults.ini using a custom delimiter."""
+    content = """
+    [test.list]
+    default =
+        github.com
+        comma_ended,
+        space string
+        space string
+    empty =
+    one_line = github.com comma_ended, space string space string
+    commas_string = ,github.com, gitlab.com, space string, space string
+    """
+    defaults = ConfigParser()
+    defaults.read_string(content)
 
-        # Parse a list defined in one line.
-        one_line_values = defaults.get_list("test.list", "one_line")
-        one_line_values.sort()
+    results = defaults.get_list(section, item, delimiter=delimiter, cleanup=cleanup, duplicated_ok=duplicated_ok)
+    results.sort()
+    assert results == expect
 
-        assert len(multiple_lines_values) == len(one_line_values) == len(expect)
-        for i, val in enumerate(expect):
-            assert multiple_lines_values[i] == one_line_values[i] == val
-            # Make sure that we are returning a list of strings.
-            assert isinstance(multiple_lines_values[i], str)
-            assert isinstance(one_line_values[i], str)
 
-        # Parse a list with duplicated values.
-        values_without_duplicates = defaults.get_list("test.list", "duplicates")
-        assert len(values_without_duplicates) == 1
-        assert values_without_duplicates == ["github.com"]
+@pytest.mark.parametrize(
+    ("section", "item", "cleanup", "duplicated_ok", "fallback", "expect"),
+    [
+        ("test.list", "default", True, False, [], ["comma_ended,", "github.com", "space string"]),
+        ("test.list", "default", True, True, [], ["comma_ended,", "github.com", "space string", "space string"]),
+        ("test.list", "empty", False, True, [], [""]),
+        ("test.list", "empty", True, True, [], []),
+        # Test for an item that does not exist in defaults.ini
+        ("test.list", "item_not_exist", True, True, [], []),
+        # Test value for fallback. The fallback value must be returned as is and shouldn't be modified by the method.
+        ("test.list", "item_not_exist", True, True, ["", "fallback_val"], ["", "fallback_val"]),
+    ],
+)
+def test_get_str_list_with_default_delimiter(
+    section: str, item: str, cleanup: bool, duplicated_ok: bool, fallback: list[str], expect: list[str]
+) -> None:
+    """Test getting a list of strings from defaults.ini using the default delimiter."""
+    content = """
+    [test.list]
+    default =
+        github.com
+        comma_ended,
+        space string
+        space string
+    empty =
+    """
+    defaults = ConfigParser()
+    defaults.read_string(content)
 
-        # Parse an empty list.
-        assert not defaults.get_list("test.list", "empty")
-
-        # Trying to parse an item that does not exist in defaults.ini.
-        assert not defaults.get_list("test.list", "item_not_exist")
-
-        # Allow duplicated results
-        values_with_duplicates = defaults.get_list("test.list", "duplicates", duplicated_ok=True)
-        assert len(values_with_duplicates) == 4
-        assert values_with_duplicates == ["github.com", "github.com", "github.com", "github.com"]
-
-        # Split the strings using a delimiter
-        expect_split_comma = ["github.com", " gitlab.com", " space string"]
-        expect_split_comma.sort()
-
-        values_split_with_comma = defaults.get_list("test.list", "commas_string", delimiter=",")
-        values_split_with_comma.sort()
-        assert len(values_split_with_comma) == 3
-        assert values_split_with_comma == expect_split_comma
+    results = defaults.get_list(section, item, cleanup=cleanup, fallback=fallback, duplicated_ok=duplicated_ok)
+    results.sort()
+    assert results == expect

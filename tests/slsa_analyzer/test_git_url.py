@@ -147,7 +147,7 @@ def test_get_unique_path() -> None:
 
     # TODO: use pytest fixtures to properly set and cleanup defaults after each run.
     back_up = defaults["git"]["allowed_hosts"]
-    defaults["git"]["allowed_hosts"] = f"{back_up} git.host.blah ** wrong_host##format"
+    defaults["git"]["allowed_hosts"] = f"{back_up} \n git.host.blah \n ** \n wrong_host##format"
 
     assert git_url.get_repo_dir_name("git@git.host.blah:apache/maven") == os.path.normpath("git_host_blah/apache/maven")
     assert git_url.get_repo_dir_name("https://**/apache/maven") == os.path.normpath("mcn__/apache/maven")

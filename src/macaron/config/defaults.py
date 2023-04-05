@@ -20,15 +20,23 @@ class ConfigParser(configparser.ConfigParser):
         self,
         section: str,
         item: str,
-        delimiter: Optional[str] = None,
-        fallback: Optional[list] = None,
+        delimiter: Optional[str] = "\n",
+        fallback: Optional[list[str]] = None,
         duplicated_ok: bool = False,
-    ) -> list:
-        """Parse and return a list of strings from an item in ``defaults.ini``.
+        cleanup: bool = True,
+    ) -> list[str]:
+        r"""Parse and return a list of strings from an item in ``defaults.ini``.
 
-        If ``delimiter`` is not set (default: None), return strings are split on any whitespace character
-        and will discard empty strings from the result. If `delimiter` is set, it will be used to split
-        the list of strings only (any whitespace character are not removed).
+        This method uses str.split() to split the value into list of strings.
+        References: https://docs.python.org/3/library/stdtypes.html#str.split.
+
+        The following parameters are used to modify the behavior of the split operation.
+
+        If ``delimiter`` is set (default: "\n"), it will be used to split the list of strings
+        (i.e content.split(sep=delimiter)).
+
+        If ``cleanup`` is True  (default: True), strings are whitespace-stripped and empty strings
+        are removed from the final result.
 
         If ``duplicated_ok`` is True (default: False), duplicated values are not removed from the final list.
 
@@ -46,6 +54,8 @@ class ConfigParser(configparser.ConfigParser):
             The fallback value in case of errors.
         duplicated_ok : bool
             If True allow duplicate values.
+        cleanup: bool
+            If True, strings are whitespace-stripped and any empty strings are removed.
 
         Returns
         -------
@@ -60,16 +70,20 @@ class ConfigParser(configparser.ConfigParser):
 
             [git]
             allowed_hosts =
-                github.com gitlab.com
+                github.com
+                boo.com gitlab.com
                 host com
 
         >>> config_parser.get_list("git", "allowed_hosts")
-        ['github.com', 'gitlab.com', 'host', 'com']
+        ['github.com', 'boo.com gitlab.com', 'host com']
         """
         try:
             value = self.get(section, item)
             if isinstance(value, str):
                 content = value.split(sep=delimiter)
+
+                if cleanup:
+                    content = [x.strip() for x in content if x.strip()]
 
                 if duplicated_ok:
                     return content
