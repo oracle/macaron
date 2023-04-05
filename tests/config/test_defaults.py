@@ -10,8 +10,6 @@ import pytest
 from macaron.config.defaults import ConfigParser, create_defaults, defaults, load_defaults
 from macaron.config.global_config import global_config
 
-from ..macaron_testcase import MacaronTestCase
-
 
 def test_load_defaults() -> None:
     """Test loading defaults."""
@@ -79,10 +77,10 @@ def test_get_str_list_with_custom_delimiter(
     one_line = github.com comma_ended, space string space string
     commas_string = ,github.com, gitlab.com, space string, space string
     """
-    defaults = ConfigParser()
-    defaults.read_string(content)
+    custom_defaults = ConfigParser()
+    custom_defaults.read_string(content)
 
-    results = defaults.get_list(section, item, delimiter=delimiter, cleanup=cleanup, duplicated_ok=duplicated_ok)
+    results = custom_defaults.get_list(section, item, delimiter=delimiter, cleanup=cleanup, duplicated_ok=duplicated_ok)
     results.sort()
     assert results == expect
 
@@ -113,9 +111,9 @@ def test_get_str_list_with_default_delimiter(
         space string
     empty =
     """
-    defaults = ConfigParser()
-    defaults.read_string(content)
+    custom_defaults = ConfigParser()
+    custom_defaults.read_string(content)
 
-    results = defaults.get_list(section, item, cleanup=cleanup, fallback=fallback, duplicated_ok=duplicated_ok)
+    results = custom_defaults.get_list(section, item, cleanup=cleanup, fallback=fallback, duplicated_ok=duplicated_ok)
     results.sort()
     assert results == expect
