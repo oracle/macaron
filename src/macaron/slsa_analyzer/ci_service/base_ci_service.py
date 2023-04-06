@@ -141,8 +141,6 @@ class BaseCIService:
         """
         for config in self.entry_conf:
             file_path = os.path.join(repo_path, config)
-            if not os.path.isfile(file_path):
-                continue
             logger.debug("Checking kws for %s", file_path)
             try:
                 with open(file_path, encoding="utf-8") as file:
@@ -160,7 +158,7 @@ class BaseCIService:
                 return "", ""
             except FileNotFoundError as error:
                 logger.error(error)
-                return "", ""
+                continue
         return "", ""
 
     def has_latest_run_passed(
