@@ -33,7 +33,7 @@ then
     cp $RESOURCES/settings.xml $HOMEDIR/.m2/
 fi
 
-# Running Macaron without config files
+# # Running Macaron without config files
 echo -e "\n=================================================================================="
 echo "Run integration tests without configurations"
 echo -e "==================================================================================\n"
@@ -281,12 +281,16 @@ echo -e "-----------------------------------------------------------------------
 rm -rf $WORKSPACE/output/git_repos/local_repos/test_repo
 git clone $WORKSPACE/output/git_repos/github_com/apache/maven $WORKSPACE/output/git_repos/local_repos/test_repo
 
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/local_repos/maven/maven.json
-JSON_RESULT=$WORKSPACE/output/reports/local_repos/maven/maven.json
+JSON_EXPECTED=$WORKSPACE/output/reports/local_repos/maven/maven.json
+HTML_EXPECTED=$WORKSPACE/output/reports/local_repos/maven/maven.html
 
 $RUN_MACARON -lr $WORKSPACE/output/git_repos/local_repos/ analyze -rp test_repo -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+# We don't compare the report content because the remote_path fields in the reports are undeterministic when running
+# this test locally and running it in the GitHub Actions runner. We only check if the reports are generated as
+# expected without the issue described in https://github.com/oracle-samples/macaron/issues/116.
+ls $JSON_EXPECTED || log_fail
+ls $HTML_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: test using invalid local repo path."
