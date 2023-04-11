@@ -229,9 +229,11 @@ class Analyzer:
             logger.critical("The main repository analysis failed. Cannot generate a report for it.")
             return
 
-        output_target_path = os.path.join(
-            global_config.output_path, "reports", git_url.get_repo_dir_name(report.root_record.context.remote_path)
-        )
+        target_dir = git_url.get_repo_dir_name(report.root_record.context.remote_path)
+        if not target_dir:
+            target_dir = report.root_record.context.repo_full_name
+
+        output_target_path = os.path.join(global_config.output_path, "reports", target_dir)
         os.makedirs(output_target_path, exist_ok=True)
 
         for reporter in self.reporters:
@@ -375,7 +377,7 @@ class Analyzer:
         # TODO: use both the repo URL and the commit hash to check.
         if (
             existing_records
-            and (existing_record := existing_records.get(git_url.get_remote_url_of_local_repo(git_obj))) is not None
+            and (existing_record := existing_records.get(git_url.get_remote_origin_of_local_repo(git_obj))) is not None
         ):
             info_msg = f"{repo_path} is already analyzed."
             logger.info(info_msg)
@@ -408,20 +410,23 @@ class Analyzer:
 
         Parameters
         ----------
-        git_obj : Git
-            The pydriller Git object of the target repository.
         branch_name : str
             The name of the branch that we are analyzing.
             We need this because when the target repository is in a detached state,
             the current branch name cannot be determined.
+        git_obj : Git
+            The pydriller Git object of the target repository.
 
         Returns
         -------
         AnalyzeContext
             The context of object of the target repository.
         """
-        remote_path = git_url.get_remote_url_of_local_repo(git_obj)
-        full_name = git_url.get_repo_full_name_from_url(remote_path)
+        origin_remote_path = git_url.get_remote_origin_of_local_repo(git_obj)
+        full_name = git_url.get_repo_full_name_from_url(origin_remote_path)
+        if not full_name:
+            full_name = f"local_repos/{Path(origin_remote_path).name}"
+
         logger.info("The full name of this repository is %s", full_name)
 
         res_branch = ""
@@ -468,7 +473,7 @@ class Analyzer:
             commit_date_str,
             global_config.macaron_path,
             self.output_path,
-            remote_path,
+            origin_remote_path,
         )
 
         self.db_man.add(analyze_ctx.repository_table)
