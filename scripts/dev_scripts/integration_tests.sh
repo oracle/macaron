@@ -275,6 +275,20 @@ do
 done
 
 echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: Analyzing a repository that was cloned from another local repo."
+echo -e "----------------------------------------------------------------------------------\n"
+# Clone the repo from the existing apache/maven repo
+rm -rf $WORKSPACE/output/git_repos/local_repos/test_repo
+git clone $WORKSPACE/output/git_repos/github_com/apache/maven $WORKSPACE/output/git_repos/local_repos/test_repo
+
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/local_repos/maven/maven.json
+JSON_RESULT=$WORKSPACE/output/reports/local_repos/maven/maven.json
+
+$RUN_MACARON -lr $WORKSPACE/output/git_repos/local_repos/ analyze -rp test_repo -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: test using invalid local repo path."
 echo -e "----------------------------------------------------------------------------------\n"
 # Assume that $WORKSPACE is always an absolute path.
