@@ -14,6 +14,7 @@ class GlobalConfig:
     """Class for keeping track of global configurations."""
 
     policy_paths: list[str]
+    artefact_repositories: list[str]
     macaron_path: str = ""
     output_path: str = ""
     build_log_path: str = ""
@@ -24,6 +25,7 @@ class GlobalConfig:
 
     def __init__(self) -> None:
         self.policy_paths = []
+        self.artefact_repositories = []
 
     def load(
         self,
@@ -35,6 +37,7 @@ class GlobalConfig:
         gh_token: str,
         policy_paths: list[str],
         resources_path: str,
+        artefact_repositories: list[str],
     ) -> None:
         """Initiate the GlobalConfig object.
 
@@ -56,6 +59,8 @@ class GlobalConfig:
             The path to the policy file.
         resources_path : str
             The path to the resources files needed for the analysis (i.e. mvnw, gradlew, etc.)
+        artefact_repositories : list[str]
+            The list of repositories to search for artefact POMs in (e.g. Maven central)
         """
         self.macaron_path = macaron_path
         self.output_path = output_path
@@ -64,6 +69,7 @@ class GlobalConfig:
         self.local_repos_path = local_repos_path
         self.gh_token = gh_token
         self.resources_path = resources_path
+        self.artefact_repositories = artefact_repositories
 
         # Find the policies.
         policy_files = []
