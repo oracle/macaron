@@ -132,9 +132,9 @@ class DependencyAnalyzer(ABC):
         """
         if item["url"] == "" and item["version"] != "unspecified":
             gav = f"{item['group']}:{item['name']}:{item['version']}"
-            urls = find_repo(gav)
+            urls = find_repo(gav, ["scm.url"])
             if len(urls) != 0:
-                logger.info("Found urls for GAV: %s -> \n\t%s", gav, "\t\n".join(urls))
+                logger.info("Found urls for GAV: %s -> \n\t%s", gav, "\n\t".join(urls))
                 # TODO decide how to handle multiple returned URLs
                 item["url"] = urls[0]
             else:

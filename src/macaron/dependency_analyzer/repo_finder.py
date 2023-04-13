@@ -4,11 +4,12 @@
 """This module tries to find urls of repositories that match artefacts passed in 'group:artefact:version' form."""
 
 import re
+import typing
 
 import requests
+from defusedxml.ElementTree import fromstring
 
 from macaron.config.global_config import global_config, logger
-from macaron.parsers.limited_xmlparser import extract_tags
 
 
 def create_urls(group: str, artefact: str, version: str) -> list[str]:
@@ -69,8 +70,6 @@ def parse_gav(gav: str) -> list[str]:
     version = split[2]
     group_url = group.replace(".", "/")
 
-    print(f"gav: {group_url}, {artifact}, {version}")
-
     return create_urls(group_url, artifact, version)
 
 
@@ -100,7 +99,50 @@ def retrieve_pom(session: requests.Session, url: str) -> str:
     return res.text
 
 
-def find_repo(gav: str) -> list[str]:
+def _find_element(parent: typing.Any, target: str) -> typing.Any:
+    # Attempt to match the target tag within the children of parent.
+    for child in parent:
+        # Account for raw tags and tags accompanied by Maven metadata enclosed in curly braces. E.g. '{metadata}tag'
+        if child.tag == target or child.tag.endswith("}" + target):
+            return child
+    return None
+
+
+def parse_pom(pom: str, tags: list[str]) -> list[str]:
+    """
+    Parse the passed pom and extract the passed tags.
+
+    Parameters
+    ----------
+    pom : str
+        The POM as a string
+    tags : list[str]
+        The list of tags to try extracting from the POM
+
+    Returns
+    -------
+    list[str] :
+        The extracted contents of any matches tags
+    """
+    xml = fromstring(pom)
+    results = []
+
+    # Try to match each tag with the contents of the POM
+    for tag in tags:
+        element = xml
+        tag_parts = tag.split(".")
+        for index, tag_part in enumerate(tag_parts):
+            element = _find_element(element, tag_part)
+            if element is None:
+                break
+            if index == len(tag_parts) - 1:
+                # Add the contents of the final tag
+                results.append(element.text)
+
+    return results
+
+
+def find_repo(gav: str, tags: list[str]) -> list[str]:
     """
     Attempt to retrieve a repository URL that matches the passed GAV artefact.
 
@@ -108,11 +150,13 @@ def find_repo(gav: str) -> list[str]:
     ----------
     gav : str
         An artefact represented as a GAV (group, artefact, version) in the format: G:A:V.
+    tags : list[str]
+        The list of XML tags to look for, each in the format: tag1[.tag2 ... .tagN]
 
     Returns
     -------
-    list[str]:
-        A list of URLs found for the passed GAV.
+    list[str] :
+        The URLs found for the passed GAV.
     """
     if len(global_config.artefact_repositories) == 0:
         logger.warning("No repositories set in config artefact_repositories parameter for repo finder.")
@@ -134,5 +178,5 @@ def find_repo(gav: str) -> list[str]:
     if pom == "":
         return []
 
-    # Trailing call to extract SCM URLs from the POM and return them
-    return extract_tags(pom, {"project.scm.url"})
+    # Parse XML data and return URL
+    return parse_pom(pom, tags)
