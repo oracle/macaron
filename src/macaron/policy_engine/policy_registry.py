@@ -7,6 +7,7 @@ import logging
 import os
 from typing import Any, Optional
 
+from macaron.policy_engine.cue.cue_policy import CUEPolicy
 from macaron.policy_engine.policy import Policy, SoufflePolicy
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ class PolicyRegistry:
     souffle_policies: list[SoufflePolicy]
     evaluated: bool
 
-    def __init__(self, macaron_path: str, policy_paths: list[str]) -> None:
+    def __init__(self, policy_paths: list[str]) -> None:
         self.policies: dict[str, Policy] = {}
         self.souffle_policies: list[SoufflePolicy] = []
         self.evaluated = False
@@ -40,9 +41,12 @@ class PolicyRegistry:
                 if policy:
                     self.policies[policy.target] = policy
             elif ext in (".cue",):
-                policy = Policy.make_cue_policy(macaron_path, policy_path)
-                if policy:
+                policy = CUEPolicy.make_policy(policy_path)
+                if policy and policy.target:
                     self.policies[policy.target] = policy
+                    logger.info("Found target %s for policy %s.", policy.target, policy_path)
+                else:
+                    logger.error("Unable to find target for policy %s.", policy_path)
             elif ext == ".dl":
                 sfl_policy = SoufflePolicy.make_policy(policy_path)
                 if sfl_policy:

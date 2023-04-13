@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2022-11-09 17:45:38"
+        "timestamps": "2023-03-16 18:15:28"
     },
     "target": {
         "info": {
@@ -114,17 +114,6 @@
                     "result_type": "FAILED"
                 },
                 {
-                    "check_id": "mcn_policy_check_1",
-                    "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the policy.",
-                    "slsa_requirements": [
-                        "Policy - SLSA Level 3"
-                    ],
-                    "justification": [
-                        "Could not verify policy against the provenance."
-                    ],
-                    "result_type": "FAILED"
-                },
-                {
                     "check_id": "mcn_provenance_available_1",
                     "check_description": "Check whether the target has intoto provenance.",
                     "slsa_requirements": [
@@ -135,6 +124,17 @@
                     ],
                     "justification": [
                         "Could not find any SLSA provenances."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_expectation_1",
+                    "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the expected value.",
+                    "slsa_requirements": [
+                        "Provenance conforms with expectations - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Check mcn_provenance_expectation_1 is set to FAILED because mcn_provenance_level_three_1 FAILED."
                     ],
                     "result_type": "FAILED"
                 },
@@ -174,7 +174,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_policy_check_1",
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             },
             {

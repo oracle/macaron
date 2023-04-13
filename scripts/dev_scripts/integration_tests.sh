@@ -57,7 +57,8 @@ echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolut
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
-$RUN_MACARON analyze -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
+CUE_POLICY=$WORKSPACE/tests/policy_engine/resources/policies/valid/urllib3.cue
+$RUN_MACARON -po $CUE_POLICY analyze -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 

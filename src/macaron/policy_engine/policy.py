@@ -8,14 +8,13 @@ import logging
 import os
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import Any, Callable, NamedTuple, Optional, Union
+from typing import Any, Callable, NamedTuple, Optional, Self, Union
 
 import yamale
 from yamale.schema import Schema
 
 from macaron.database.table_definitions import PolicyTable
 from macaron.parsers.yaml.loader import YamlLoader
-from macaron.policy_engine import cue
 from macaron.policy_engine.exceptions import InvalidPolicyError, PolicyRuntimeError
 from macaron.policy_engine.policy_engine import copy_prelude, get_generated
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
@@ -318,11 +317,13 @@ class Policy:
         The ID of the policy.
     description : str
         The description of the policy.
+    path: os.PathLike | str
+        The path to the policy.
     target: str
         The full repository name this policy applies to
-    text: str
+    text: str | None
         The full text content of the policy
-    sha: str
+    sha: str | None
         The sha256sum digest of the policy
     policy_type: str
         The kind of policy: YAML_DIFF or CUE
@@ -330,6 +331,7 @@ class Policy:
 
     ID: str
     description: str
+    path: os.PathLike | str
     target: str
     text: str | None
     sha: str | None
@@ -344,59 +346,37 @@ class Policy:
         )
 
     @classmethod
-    def make_cue_policy(cls, macaron_path: os.PathLike | str, policy_path: os.PathLike | str) -> Optional["Policy"]:
-        """Construct a cue policy."""
+    def make_policy(cls, policy_path: os.PathLike | str) -> Self | None:
+        """Generate a Policy from a policy yaml file.
+
+        Parameters
+        ----------
+        policy_path : os.PathLike
+            The path to the yaml file.
+
+        Returns
+        -------
+        Self | None
+            The instantiated policy object.
+        """
         logger.info("Generating a policy from file %s", policy_path)
-        policy: Policy = Policy("", "", "", None, None, "", None)
-        policy.policy_type = "CUE"
+        policy: Policy = Policy("", "", "", "", None, None, "YAML_DIFF")
+
+        # First load from the policy yaml file. We also validate the policy
+        # against the schema.
+        policy_content = YamlLoader.load(policy_path, POLICY_SCHEMA)
+
+        if not policy_content:
+            logger.error("Cannot load the policy yaml file at %s.", policy_path)
+            return None
 
         with open(policy_path, encoding="utf-8") as f:
             policy.text = f.read()
             policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
 
-        try:
-            cue.init(macaron_path)
-        except PolicyRuntimeError:
-            return None
-
-        policy.ID = "?"
-        policy.target = "any"
-        policy.description = "?"
-        policy._validator = lambda provenance: cue.validate(policy.text, provenance)  # type: ignore
-        return policy
-
-    @classmethod
-    def make_policy(cls, file_path: os.PathLike | str) -> Optional["Policy"]:
-        """Generate a Policy from a policy yaml file.
-
-        Parameters
-        ----------
-        file_path : os.PathLike
-            The path to the yaml file.
-
-        Returns
-        -------
-        Policy | None
-            The Policy instance that has been initialized.
-        """
-        logger.info("Generating a policy from file %s", file_path)
-        policy: Policy = Policy("", "", "", None, None, "", None)
-        policy.policy_type = "YAML_DIFF"
-
-        # First load from the policy yaml file. We also validate the policy
-        # against the schema.
-        policy_content = YamlLoader.load(file_path, POLICY_SCHEMA)
-
-        if not policy_content:
-            logger.error("Cannot load the policy yaml file at %s.", file_path)
-            return None
-
-        with open(file_path, encoding="utf-8") as f:
-            policy.text = f.read()
-            policy.sha = str(hashlib.sha256(policy.text.encode("utf-8")).hexdigest())
-
         policy.ID = policy_content.get("metadata").get("id")
         policy.description = policy_content.get("metadata").get("description")
+        policy.path = policy_path
         if "target" in policy_content.get("metadata"):
             policy.target = policy_content.get("metadata").get("target")
         else:
@@ -404,18 +384,18 @@ class Policy:
 
         # Then we parse the policy content.
         try:
-            logger.info("Parsing the policy definition of Policy %s", policy.ID)
+            logger.debug("Parsing the policy definition of Policy %s", policy.path)
             policy._validator = _gen_policy_func(policy_content.get("definition"))
+            logger.info("Successfully loaded %s", policy)
         except InvalidPolicyError as error:
             logger.error("Cannot parse the policy definition for %s - %s", policy, error)
             return None
 
-        logger.info("Successfully loaded %s", policy)
-
-        return policy
+        # TODO remove type ignore once mypy adds support for Self.
+        return policy  # type: ignore
 
     def __str__(self) -> str:
-        return f"Policy(id='{self.ID}', description='{self.description}')"
+        return f"Policy(id='{self.ID}', description='{self.description}, path='{self.path}')"
 
     def validate(self, prov: JsonType) -> bool:
         """Validate the provenance against this policy.

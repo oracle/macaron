@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2022-11-09 17:39:40"
+        "timestamps": "2023-03-17 10:54:29"
     },
     "target": {
         "info": {
@@ -116,9 +116,7 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        {
-                            "The target repository uses build tool maven to deploy": "jenkins"
-                        }
+                        "The target repository uses build tool maven in jenkins to deploy."
                     ],
                     "result_type": "PASSED"
                 },
@@ -158,17 +156,6 @@
                     "result_type": "PASSED"
                 },
                 {
-                    "check_id": "mcn_policy_check_1",
-                    "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the policy.",
-                    "slsa_requirements": [
-                        "Policy - SLSA Level 3"
-                    ],
-                    "justification": [
-                        "Could not verify policy against the provenance."
-                    ],
-                    "result_type": "FAILED"
-                },
-                {
                     "check_id": "mcn_provenance_available_1",
                     "check_description": "Check whether the target has intoto provenance.",
                     "slsa_requirements": [
@@ -179,6 +166,17 @@
                     ],
                     "justification": [
                         "Could not find any SLSA provenances."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_expectation_1",
+                    "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the expected value.",
+                    "slsa_requirements": [
+                        "Provenance conforms with expectations - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Check mcn_provenance_expectation_1 is set to FAILED because mcn_provenance_level_three_1 FAILED."
                     ],
                     "result_type": "FAILED"
                 },
@@ -214,11 +212,11 @@
         }
     },
     "dependencies": {
-        "analyzed_deps": 2,
-        "unique_dep_repos": 2,
+        "analyzed_deps": 0,
+        "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_policy_check_1",
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             },
             {
@@ -227,11 +225,11 @@
             },
             {
                 "check_id": "mcn_build_as_code_1",
-                "num_deps_pass": 2
+                "num_deps_pass": 0
             },
             {
                 "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 2
+                "num_deps_pass": 0
             },
             {
                 "check_id": "mcn_trusted_builder_level_three_1",
@@ -239,7 +237,7 @@
             },
             {
                 "check_id": "mcn_build_script_1",
-                "num_deps_pass": 2
+                "num_deps_pass": 0
             },
             {
                 "check_id": "mcn_provenance_level_three_1",
@@ -247,23 +245,10 @@
             },
             {
                 "check_id": "mcn_build_service_1",
-                "num_deps_pass": 2
+                "num_deps_pass": 0
             }
         ],
-        "dep_status": [
-            {
-                "id": "guava",
-                "description": "Analysis Completed.",
-                "report": "guava.html",
-                "status": "AVAILABLE"
-            },
-            {
-                "id": "mockito",
-                "description": "Analysis Completed.",
-                "report": "mockito.html",
-                "status": "AVAILABLE"
-            }
-        ]
+        "dep_status": []
     },
     "policies_passed": [],
     "policies_failed": []

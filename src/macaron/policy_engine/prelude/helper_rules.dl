@@ -15,6 +15,11 @@ check_passed(repo, check_name) :- check_result(_, check_name, repo, 1, skipped).
 .decl check_skipped(repo: number, check_name: symbol)
 check_skipped(repo, check_name) :- check_result(_, check_name, repo, passed, 1).
 
+/**
+ * Check name is valid.
+ */
+.decl is_check(check_name: symbol)
+is_check(check_name) :- check_result(_, check_name, _, _, _).
 
 /**
  *  This fact exists iff a repository is hosted on a trusted public platform.

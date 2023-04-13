@@ -4,13 +4,20 @@
 """Exceptions used by the policy engine."""
 
 
-class InvalidPolicyError(Exception):
-    """Happen when the policy is invalid."""
-
-    # TODO: Use generic Macaron error class
+from macaron.errors import MacaronError
 
 
-class PolicyRuntimeError(Exception):
-    """Happen if there are errors while validating the policy against a target."""
+class InvalidPolicyError(MacaronError):
+    """Happens when the policy is invalid."""
 
-    # TODO: Use generic Macaron error class
+
+class PolicyRuntimeError(MacaronError):
+    """Happens if there are errors while validating the policy against a target."""
+
+
+class CUEPolicyError(MacaronError):
+    """Happens when the CUE policy is invalid."""
+
+
+class CUERuntimeError(MacaronError):
+    """Happens when there are errors in CUE policy validation."""
