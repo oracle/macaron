@@ -47,6 +47,8 @@ func target(policy *C.char) *C.char {
 }
 
 // validate validates the provenance against a CUE policy.
+// Returns 1 if policy conforms with the provenance, 0 if
+// provenance is invalid, and -1 if CUE returns a validation error.
 //
 //export validate
 func validate(policy *C.char, provenance *C.char) int32 {

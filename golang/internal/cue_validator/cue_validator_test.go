@@ -7,71 +7,85 @@ import (
 	"testing"
 )
 
-func Test_target(t *testing.T) {
-	// Test an invalid policy.
-	invalid_policy := LoadResource(t, "invalid_policy.cue")
-	value := target(invalid_policy)
-	if value != nil {
-		t.Errorf("Expected errors but got none.")
+func Test_Target(t *testing.T) {
+	tests := []struct {
+		name     string
+		path     string
+		expected string
+	}{
+		{
+			name:     "get target from invalid policy",
+			path:     "invalid_policy.cue",
+			expected: GetGoString(nil),
+		},
+		{
+			name:     "get target from valid policy",
+			path:     "valid_policy.cue",
+			expected: "urllib3/urllib3",
+		},
 	}
+	for _, test := range tests {
+		test := test // Re-initialize the test.
+		t.Run(test.name, func(t *testing.T) {
+			policy := LoadResource(t, test.path)
+			value := target(policy)
 
-	// Test getting the target from a valid policy.
-	valid_policy := LoadResource(t, "valid_policy.cue")
-
-	value = target(valid_policy)
-	if value == nil {
-		t.Errorf("Unexpected error.")
-	}
-	// GoLang doesn’t provide any built-in support for assert.
-	expected_target := "urllib3/urllib3"
-	if GetGoString(value) != expected_target {
-		t.Errorf("%s does not match expected value %s.", GetGoString(value), expected_target)
+			// GoLang doesn’t provide any built-in support for assert.
+			if GetGoString(value) != test.expected {
+				t.Errorf("Expected %s but got %s.", test.expected, GetGoString(value))
+			}
+		})
 	}
 }
 
-func Test_validatePolicy(t *testing.T) {
-	// Load resources.
-	invalid_policy := LoadResource(t, "invalid_policy.cue")
-	valid_policy := LoadResource(t, "valid_policy.cue")
-	invalid_prov := LoadResource(t, "invalid_provenance.json")
-	valid_prov := LoadResource(t, "valid_provenance.json")
-	valid_prov2 := LoadResource(t, "valid_provenance2.json")
-
-	var result int32
-	var expected int32
-
-	// Test valid policy and invalid provenance.
-	result = validate(valid_policy, invalid_prov)
-	expected = -1
-	if result != expected {
-		t.Errorf("%d does not match expected value %d.", result, expected)
+func Test_ValidatePolicy(t *testing.T) {
+	tests := []struct {
+		name            string
+		policy_path     string
+		provenance_path string
+		expected        int32
+	}{
+		{
+			name:            "validate policy with invalid provenance",
+			policy_path:     "valid_policy.cue",
+			provenance_path: "invalid_provenance.json",
+			expected:        -1,
+		},
+		{
+			name:            "validate invalid policy with invalid provenance",
+			policy_path:     "invalid_policy.cue",
+			provenance_path: "invalid_provenance.json",
+			expected:        -1,
+		},
+		{
+			name:            "validate invalid policy with valid provenance",
+			policy_path:     "invalid_policy.cue",
+			provenance_path: "valid_provenance.json",
+			expected:        0,
+		},
+		{
+			name:            "validate valid policy with valid provenance that conform",
+			policy_path:     "valid_policy.cue",
+			provenance_path: "valid_provenance.json",
+			expected:        1,
+		},
+		{
+			name:            "validate valid policy with valid provenance that do not conform",
+			policy_path:     "valid_policy.cue",
+			provenance_path: "valid_provenance2.json",
+			expected:        0,
+		},
 	}
 
-	// Test invalid policy and invalid provenance.
-	result = validate(invalid_policy, invalid_prov)
-	expected = -1
-	if result != expected {
-		t.Errorf("%d does not match expected value %d.", result, expected)
-	}
-
-	// Test invalid policy and valid provenance.
-	result = validate(invalid_policy, valid_prov)
-	expected = 0
-	if result != expected {
-		t.Errorf("%d does not match expected value %d.", result, expected)
-	}
-
-	// Test valid policy and valid provenance.
-	result = validate(valid_policy, valid_prov)
-	expected = 1
-	if result != expected {
-		t.Errorf("%d does not match expected value %d.", result, expected)
-	}
-
-	// Test a valid policy and valid provenance that do not conform.
-	result = validate(valid_policy, valid_prov2)
-	expected = 0
-	if result != expected {
-		t.Errorf("%d does not match expected value %d.", result, expected)
+	for _, test := range tests {
+		test := test // Re-initialize the test.
+		t.Run(test.name, func(t *testing.T) {
+			policy := LoadResource(t, test.policy_path)
+			provenance := LoadResource(t, test.provenance_path)
+			result := validate(policy, provenance)
+			if result != test.expected {
+				t.Errorf("Expected %d but got %d.", test.expected, result)
+			}
+		})
 	}
 }
