@@ -16,8 +16,9 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-# Note: the ORM mappings for the results of this check are automatically.
-# There is no need to declare mappings explicitly here.
+# Note: the ORM mappings for the results of this check are separately created per
+# policy object by calling policy.get_policy_table() in the body of the check.
+# There is no need to declare mappings explicitly again.
 
 
 class ProvenanceL3ContentCheck(BaseCheck):

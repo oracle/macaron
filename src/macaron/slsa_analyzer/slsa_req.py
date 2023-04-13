@@ -52,7 +52,7 @@ class ReqName(Enum):
     SECURITY = "Security"
     ACCESS = "Access"
     SUPERUSERS = "Superusers"
-    POLICY = "Provenance conforms with expectations."
+    POLICY = "Provenance conforms with expectations"
 
 
 class Category(Enum):
