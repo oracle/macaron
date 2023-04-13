@@ -10,7 +10,7 @@
 #   Souffle 2.3 compiled and installed from source.
 #   Other runtime libraries (e.g sqlite-devel) which are installed from dnf.
 
-FROM container-registry.oracle.com/os/oraclelinux:9-slim
+FROM container-registry.oracle.com/os/oraclelinux:9-slim@sha256:e2aa8053b4a15f27c5f80666be1190d24aa3f403225f2dd6fdb545979f08482a
 
 ENV HOME="/home/macaron" \
     # Setting Python related environment variables.
