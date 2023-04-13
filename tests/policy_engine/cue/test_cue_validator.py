@@ -43,6 +43,8 @@ def test_get_target(policy_path: str, expected: str) -> None:
     policy = CUEPolicy.make_policy(policy_path=policy_path)
     if policy:
         assert get_target(policy.text) == expected
+    else:
+        raise ValueError("Expected a valid policy.")
 
 
 @pytest.mark.parametrize(
@@ -77,3 +79,5 @@ def test_validate_policy(policy_path: str, prov_path: str, expected: bool) -> No
         with open(prov_path, encoding="utf-8") as prov_file:
             provenance = json.load(prov_file)
         assert validate_policy(policy.text, provenance) == expected
+    else:
+        raise ValueError("Expected a valid policy.")
