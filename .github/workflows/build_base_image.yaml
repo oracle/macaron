@@ -9,12 +9,13 @@ on: workflow_dispatch
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   build-base-image:
+    name: Build base image
     runs-on: ubuntu-latest
-
+    permissions:
+      packages: write # To push the base Docker image.
     steps:
 
     - name: Check out repository
