@@ -178,7 +178,7 @@
                     "check_id": "mcn_provenance_expectation_1",
                     "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the expected value.",
                     "slsa_requirements": [
-                        "Provenance conforms with expectations. - SLSA Level 3"
+                        "Provenance conforms with expectations - SLSA Level 3"
                     ],
                     "justification": [
                         "Check mcn_provenance_expectation_1 is set to FAILED because mcn_provenance_level_three_1 FAILED."

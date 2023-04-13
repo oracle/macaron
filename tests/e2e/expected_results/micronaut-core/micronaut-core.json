@@ -1452,7 +1452,7 @@
                     "check_id": "mcn_provenance_expectation_1",
                     "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the expected value.",
                     "slsa_requirements": [
-                        "Provenance conforms with expectations. - SLSA Level 3"
+                        "Provenance conforms with expectations - SLSA Level 3"
                     ],
                     "justification": [
                         "No policy defined for this repository."
