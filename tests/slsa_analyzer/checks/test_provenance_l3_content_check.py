@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This modules contains tests for the policy check."""
@@ -10,7 +10,7 @@ from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.policy_engine.policy import Policy
 from macaron.slsa_analyzer.analyzer import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
-from macaron.slsa_analyzer.checks.policy_check import PolicyCheck
+from macaron.slsa_analyzer.checks.provenance_l3_content_check import ProvenanceL3ContentCheck
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
@@ -54,12 +54,12 @@ class MockGhAPIClient(GhAPIClient):
         return True
 
 
-class TestPolicyCheck(MacaronTestCase):
+class TestProvenanceL3ContentCheck(MacaronTestCase):
     """Test the policy check."""
 
     def test_policy_check(self) -> None:
         """Test the policy check."""
-        check = PolicyCheck()
+        check = ProvenanceL3ContentCheck()
         check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
         github_actions = MockGitHubActions()
         api_client = MockGhAPIClient({"headers": {}, "query": []})
@@ -92,7 +92,7 @@ class TestPolicyCheck(MacaronTestCase):
         # Repo has inferred provenance and no policy.
         ctx.dynamic_data["is_inferred_prov"] = True
         ctx.dynamic_data["policy"] = None
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx, check_result) == CheckResultType.UNKNOWN
 
         # Repo has a provenance, but no policy.
         ci_info["provenances"] = [
@@ -100,11 +100,11 @@ class TestPolicyCheck(MacaronTestCase):
         ]
         ctx.dynamic_data["is_inferred_prov"] = False
         ctx.dynamic_data["policy"] = None
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx, check_result) == CheckResultType.UNKNOWN
 
         # Repo has a provenance but invalid policy.
         ctx.dynamic_data["policy"] = Policy.make_policy(os.path.join(policy_dir, "invalid.yaml"))
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx, check_result) == CheckResultType.UNKNOWN
 
         # Repo has a provenance and valid policy.
         ctx.dynamic_data["policy"] = Policy.make_policy(os.path.join(policy_dir, "slsa_verifier.yaml"))

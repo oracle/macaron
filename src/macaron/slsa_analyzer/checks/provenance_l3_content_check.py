@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module checks if a SLSA provenances conforms to a given policy."""
@@ -16,14 +16,18 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+# Note: the ORM mappings for the results of this check are separately created per
+# policy object by calling policy.get_policy_table() in the body of the check.
+# There is no need to declare mappings explicitly again.
 
-class PolicyCheck(BaseCheck):
+
+class ProvenanceL3ContentCheck(BaseCheck):
     """This check compares a SLSA provenance with a given policy and checks whether they match."""
 
     def __init__(self) -> None:
         """Initialize instance."""
-        check_id = "mcn_policy_check_1"
-        description = "Check whether the SLSA provenance for the produced artifact conforms to the policy."
+        check_id = "mcn_provenance_expectation_1"
+        description = "Check whether the SLSA provenance for the produced artifact conforms to the expected value."
         depends_on: list[tuple[str, CheckResultType]] = [("mcn_provenance_level_three_1", CheckResultType.PASSED)]
         eval_reqs = [ReqName.POLICY]
         super().__init__(
@@ -51,8 +55,9 @@ class PolicyCheck(BaseCheck):
         """
         policy = ctx.dynamic_data["policy"]
         if not policy:
-            check_result["justification"].append("No policy defined for repository.")
-            return CheckResultType.FAILED
+            check_result["justification"].append("No policy defined for this repository.")
+            logger.info("%s check was unable to find any policies.", self.check_id)
+            return CheckResultType.UNKNOWN
 
         ci_services = ctx.dynamic_data["ci_services"]
         for ci_info in ci_services:
@@ -85,4 +90,4 @@ class PolicyCheck(BaseCheck):
         return CheckResultType.FAILED
 
 
-registry.register(PolicyCheck())
+registry.register(ProvenanceL3ContentCheck())

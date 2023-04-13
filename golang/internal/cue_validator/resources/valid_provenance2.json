@@ -1,0 +1,250 @@
+{
+    "_type": "https://in-toto.io/Statement/v0.1",
+    "predicateType": "https://slsa.dev/provenance/v0.2",
+    "subject": [
+      {
+        "name": "urllib3-1.26.15-py2.py3-none-any.whl",
+        "digest": {
+          "sha256": "aa751d169e23c7479ce47a0cb0da579e3ede798f994f5816a74e4f4500dcea42"
+        }
+      },
+      {
+        "name": "urllib3-1.26.15.tar.gz",
+        "digest": {
+          "sha256": "8a388717b9476f934a21484e8c8e61875ab60644d29b9b39e11e4b9dc1c6b305"
+        }
+      }
+    ],
+    "predicate": {
+      "builder": {
+        "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.2.1"
+      },
+      "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
+      "invocation": {
+        "configSource": {
+          "uri": "git+https://github.com/fork/urllib3@refs/tags/1.26.15",
+          "digest": {
+            "sha1": "95ca35211d23d8baf7646e1f60aa31e3650178a8"
+          },
+          "entryPoint": ".github/workflows/publish.yml"
+        },
+        "parameters": {},
+        "environment": {
+          "github_actor": "sethmlarson",
+          "github_actor_id": "18519037",
+          "github_base_ref": "",
+          "github_event_name": "push",
+          "github_event_payload": {
+            "after": "e8b707c05e8c9f93d9681ae9d042fbec92c08e8c",
+            "base_ref": null,
+            "before": "0000000000000000000000000000000000000000",
+            "commits": [],
+            "compare": "https://github.com/urllib3/urllib3/compare/1.26.15",
+            "created": true,
+            "deleted": false,
+            "forced": false,
+            "head_commit": {
+              "author": {
+                "email": "68963309+nickwilliams-zaxiom@users.noreply.github.com",
+                "name": "Nick Williams",
+                "username": "nickwilliams-zaxiom"
+              },
+              "committer": {
+                "email": "noreply@github.com",
+                "name": "GitHub",
+                "username": "web-flow"
+              },
+              "distinct": true,
+              "id": "95ca35211d23d8baf7646e1f60aa31e3650178a8",
+              "message": "Release 1.26.15\n\nCo-authored-by: Seth Michael Larson <sethmichaellarson@gmail.com>",
+              "timestamp": "2023-03-10T17:50:17-06:00",
+              "tree_id": "2ba76cf12ce448956051758b665287ea40c1a8bf",
+              "url": "https://github.com/urllib3/urllib3/commit/95ca35211d23d8baf7646e1f60aa31e3650178a8"
+            },
+            "organization": {
+              "avatar_url": "https://avatars.githubusercontent.com/u/26825299?v=4",
+              "description": "",
+              "events_url": "https://api.github.com/orgs/urllib3/events",
+              "hooks_url": "https://api.github.com/orgs/urllib3/hooks",
+              "id": 26825299,
+              "issues_url": "https://api.github.com/orgs/urllib3/issues",
+              "login": "urllib3",
+              "members_url": "https://api.github.com/orgs/urllib3/members{/member}",
+              "node_id": "MDEyOk9yZ2FuaXphdGlvbjI2ODI1Mjk5",
+              "public_members_url": "https://api.github.com/orgs/urllib3/public_members{/member}",
+              "repos_url": "https://api.github.com/orgs/urllib3/repos",
+              "url": "https://api.github.com/orgs/urllib3"
+            },
+            "pusher": {
+              "email": "sethmichaellarson@gmail.com",
+              "name": "sethmlarson"
+            },
+            "ref": "refs/tags/1.26.15",
+            "repository": {
+              "allow_forking": true,
+              "archive_url": "https://api.github.com/repos/urllib3/urllib3/{archive_format}{/ref}",
+              "archived": false,
+              "assignees_url": "https://api.github.com/repos/urllib3/urllib3/assignees{/user}",
+              "blobs_url": "https://api.github.com/repos/urllib3/urllib3/git/blobs{/sha}",
+              "branches_url": "https://api.github.com/repos/urllib3/urllib3/branches{/branch}",
+              "clone_url": "https://github.com/urllib3/urllib3.git",
+              "collaborators_url": "https://api.github.com/repos/urllib3/urllib3/collaborators{/collaborator}",
+              "comments_url": "https://api.github.com/repos/urllib3/urllib3/comments{/number}",
+              "commits_url": "https://api.github.com/repos/urllib3/urllib3/commits{/sha}",
+              "compare_url": "https://api.github.com/repos/urllib3/urllib3/compare/{base}...{head}",
+              "contents_url": "https://api.github.com/repos/urllib3/urllib3/contents/{+path}",
+              "contributors_url": "https://api.github.com/repos/urllib3/urllib3/contributors",
+              "created_at": 1316369308,
+              "default_branch": "main",
+              "deployments_url": "https://api.github.com/repos/urllib3/urllib3/deployments",
+              "description": "Python HTTP library with thread-safe connection pooling, file post support, user friendly, and more.",
+              "disabled": false,
+              "downloads_url": "https://api.github.com/repos/urllib3/urllib3/downloads",
+              "events_url": "https://api.github.com/repos/urllib3/urllib3/events",
+              "fork": false,
+              "forks": 1033,
+              "forks_count": 1033,
+              "forks_url": "https://api.github.com/repos/urllib3/urllib3/forks",
+              "full_name": "urllib3/urllib3",
+              "git_commits_url": "https://api.github.com/repos/urllib3/urllib3/git/commits{/sha}",
+              "git_refs_url": "https://api.github.com/repos/urllib3/urllib3/git/refs{/sha}",
+              "git_tags_url": "https://api.github.com/repos/urllib3/urllib3/git/tags{/sha}",
+              "git_url": "git://github.com/urllib3/urllib3.git",
+              "has_discussions": false,
+              "has_downloads": true,
+              "has_issues": true,
+              "has_pages": false,
+              "has_projects": true,
+              "has_wiki": false,
+              "homepage": "https://urllib3.readthedocs.io",
+              "hooks_url": "https://api.github.com/repos/urllib3/urllib3/hooks",
+              "html_url": "https://github.com/urllib3/urllib3",
+              "id": 2410676,
+              "is_template": false,
+              "issue_comment_url": "https://api.github.com/repos/urllib3/urllib3/issues/comments{/number}",
+              "issue_events_url": "https://api.github.com/repos/urllib3/urllib3/issues/events{/number}",
+              "issues_url": "https://api.github.com/repos/urllib3/urllib3/issues{/number}",
+              "keys_url": "https://api.github.com/repos/urllib3/urllib3/keys{/key_id}",
+              "labels_url": "https://api.github.com/repos/urllib3/urllib3/labels{/name}",
+              "language": "Python",
+              "languages_url": "https://api.github.com/repos/urllib3/urllib3/languages",
+              "license": {
+                "key": "mit",
+                "name": "MIT License",
+                "node_id": "MDc6TGljZW5zZTEz",
+                "spdx_id": "MIT",
+                "url": "https://api.github.com/licenses/mit"
+              },
+              "master_branch": "main",
+              "merges_url": "https://api.github.com/repos/urllib3/urllib3/merges",
+              "milestones_url": "https://api.github.com/repos/urllib3/urllib3/milestones{/number}",
+              "mirror_url": null,
+              "name": "urllib3",
+              "node_id": "MDEwOlJlcG9zaXRvcnkyNDEwNjc2",
+              "notifications_url": "https://api.github.com/repos/urllib3/urllib3/notifications{?since,all,participating}",
+              "open_issues": 120,
+              "open_issues_count": 120,
+              "organization": "urllib3",
+              "owner": {
+                "avatar_url": "https://avatars.githubusercontent.com/u/26825299?v=4",
+                "email": null,
+                "events_url": "https://api.github.com/users/urllib3/events{/privacy}",
+                "followers_url": "https://api.github.com/users/urllib3/followers",
+                "following_url": "https://api.github.com/users/urllib3/following{/other_user}",
+                "gists_url": "https://api.github.com/users/urllib3/gists{/gist_id}",
+                "gravatar_id": "",
+                "html_url": "https://github.com/urllib3",
+                "id": 26825299,
+                "login": "urllib3",
+                "name": "urllib3",
+                "node_id": "MDEyOk9yZ2FuaXphdGlvbjI2ODI1Mjk5",
+                "organizations_url": "https://api.github.com/users/urllib3/orgs",
+                "received_events_url": "https://api.github.com/users/urllib3/received_events",
+                "repos_url": "https://api.github.com/users/urllib3/repos",
+                "site_admin": false,
+                "starred_url": "https://api.github.com/users/urllib3/starred{/owner}{/repo}",
+                "subscriptions_url": "https://api.github.com/users/urllib3/subscriptions",
+                "type": "Organization",
+                "url": "https://api.github.com/users/urllib3"
+              },
+              "private": false,
+              "pulls_url": "https://api.github.com/repos/urllib3/urllib3/pulls{/number}",
+              "pushed_at": 1678492341,
+              "releases_url": "https://api.github.com/repos/urllib3/urllib3/releases{/id}",
+              "size": 7069,
+              "ssh_url": "git@github.com:urllib3/urllib3.git",
+              "stargazers": 3302,
+              "stargazers_count": 3302,
+              "stargazers_url": "https://api.github.com/repos/urllib3/urllib3/stargazers",
+              "statuses_url": "https://api.github.com/repos/urllib3/urllib3/statuses/{sha}",
+              "subscribers_url": "https://api.github.com/repos/urllib3/urllib3/subscribers",
+              "subscription_url": "https://api.github.com/repos/urllib3/urllib3/subscription",
+              "svn_url": "https://github.com/urllib3/urllib3",
+              "tags_url": "https://api.github.com/repos/urllib3/urllib3/tags",
+              "teams_url": "https://api.github.com/repos/urllib3/urllib3/teams",
+              "topics": [
+                "http",
+                "http-client",
+                "python",
+                "urllib3"
+              ],
+              "trees_url": "https://api.github.com/repos/urllib3/urllib3/git/trees{/sha}",
+              "updated_at": "2023-03-10T11:51:02Z",
+              "url": "https://github.com/urllib3/urllib3",
+              "visibility": "public",
+              "watchers": 3302,
+              "watchers_count": 3302,
+              "web_commit_signoff_required": false
+            },
+            "sender": {
+              "avatar_url": "https://avatars.githubusercontent.com/u/18519037?v=4",
+              "events_url": "https://api.github.com/users/sethmlarson/events{/privacy}",
+              "followers_url": "https://api.github.com/users/sethmlarson/followers",
+              "following_url": "https://api.github.com/users/sethmlarson/following{/other_user}",
+              "gists_url": "https://api.github.com/users/sethmlarson/gists{/gist_id}",
+              "gravatar_id": "",
+              "html_url": "https://github.com/sethmlarson",
+              "id": 18519037,
+              "login": "sethmlarson",
+              "node_id": "MDQ6VXNlcjE4NTE5MDM3",
+              "organizations_url": "https://api.github.com/users/sethmlarson/orgs",
+              "received_events_url": "https://api.github.com/users/sethmlarson/received_events",
+              "repos_url": "https://api.github.com/users/sethmlarson/repos",
+              "site_admin": false,
+              "starred_url": "https://api.github.com/users/sethmlarson/starred{/owner}{/repo}",
+              "subscriptions_url": "https://api.github.com/users/sethmlarson/subscriptions",
+              "type": "User",
+              "url": "https://api.github.com/users/sethmlarson"
+            }
+          },
+          "github_head_ref": "",
+          "github_ref": "refs/tags/1.26.15",
+          "github_ref_type": "tag",
+          "github_repository_id": "2410676",
+          "github_repository_owner": "urllib3",
+          "github_repository_owner_id": "26825299",
+          "github_run_attempt": "1",
+          "github_run_id": "4389408691",
+          "github_run_number": "12",
+          "github_sha1": "95ca35211d23d8baf7646e1f60aa31e3650178a8"
+        }
+      },
+      "metadata": {
+        "buildInvocationID": "4389408691-1",
+        "completeness": {
+          "parameters": true,
+          "environment": false,
+          "materials": false
+        },
+        "reproducible": false
+      },
+      "materials": [
+        {
+          "uri": "git+https://github.com/urllib3/urllib3@refs/tags/1.26.15",
+          "digest": {
+            "sha1": "95ca35211d23d8baf7646e1f60aa31e3650178a8"
+          }
+        }
+      ]
+    }
+  }

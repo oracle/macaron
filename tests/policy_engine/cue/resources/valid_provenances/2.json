@@ -1,0 +1,1433 @@
+{
+  "_type": "https://in-toto.io/Statement/v0.1",
+  "predicateType": "https://slsa.dev/provenance/v0.2",
+  "subject": [
+    {
+      "name": "build/repo/io/micronaut/micronaut-aop/4.0.0-M1/micronaut-aop-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "c806c53717d783d1c14b44b694e5a6c0eed4c49bd25dbb7dec2e234b196e1e91"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-aop/4.0.0-M1/micronaut-aop-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "d05e60f28093381c7a4d6c7be37735c7cb8d77a5f3a8683adaedc1bc3f6b0406"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-aop/4.0.0-M1/micronaut-aop-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "804a07fb7897bcffa723bb3d05ecc9db0a3f8f50a2b4e0354cd4c43e734b7437"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-aop/4.0.0-M1/micronaut-aop-4.0.0-M1.module",
+      "digest": {
+        "sha256": "9413d504603aed879b8f6a23a0cbe7a5123e4ee3d59fae5e4873d847610b44ac"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-aop/4.0.0-M1/micronaut-aop-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "f6c18b310d73d0fd8334c7768754bf158cf27e5f58990b73ec0ee057e14bbe19"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-buffer-netty/4.0.0-M1/micronaut-buffer-netty-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "3d63d5871c1986d26602118608ecadea570666b27d624d1162c1b3cc4f71d325"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-buffer-netty/4.0.0-M1/micronaut-buffer-netty-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "48a380d80c1a3b56c361634872869f752cd95d8f46e69432af76a2e43f386065"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-buffer-netty/4.0.0-M1/micronaut-buffer-netty-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "494e62e0e3701b00074a4d5de209b432485230a09b570400826a499b2f80d552"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-buffer-netty/4.0.0-M1/micronaut-buffer-netty-4.0.0-M1.module",
+      "digest": {
+        "sha256": "02ce557829f505c8a7a54db76d6d4f59b6907004e01062e332eec732d885ca99"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-buffer-netty/4.0.0-M1/micronaut-buffer-netty-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "833ecbfbf5a6ead679cce73a42f764d578923265c2592768e0115b184368b3ee"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-context/4.0.0-M1/micronaut-context-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "6d70c14e2e05a888058ff640f1aaa994c8106121e18f7af2c0a4311d8a71f06a"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-context/4.0.0-M1/micronaut-context-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "57a89eaf00266067647793569d154a2d81fbaaee4968d4940929e1bf8ea0cdcc"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-context/4.0.0-M1/micronaut-context-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "8e8c2569acb25ac23378954719c8ecedb3d9e039dd0d37f3455340f8fc6b0c4c"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-context/4.0.0-M1/micronaut-context-4.0.0-M1.module",
+      "digest": {
+        "sha256": "da80410bfafc4b50a3ef00876219f8241470f050d8cbf19770a2a47fa15dd549"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-context/4.0.0-M1/micronaut-context-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "4ba85084c6797cc29c324dde6e7d960922dd6622eaa39a0c576ac0604eb94a19"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-bom/4.0.0-M1/micronaut-core-bom-4.0.0-M1.module",
+      "digest": {
+        "sha256": "ecd666b50b098bb89b1bb15f7bee530f766c50f45fa8435cfdc8a54aea3a5fd4"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-bom/4.0.0-M1/micronaut-core-bom-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "5511d34a1f21534d99a85ad119ad7744a092e4c291c8b2a596510187d6552fa2"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-bom/4.0.0-M1/micronaut-core-bom-4.0.0-M1.toml",
+      "digest": {
+        "sha256": "7237df3cf929de7b10a5e5a30c67c2c7c9f9f99a5f43d58cc62e2bbb825db4ff"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-processor/4.0.0-M1/micronaut-core-processor-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "70856cbe6d6882d7ae1b786fd323eacfd52c3f2d1af0008ff75eab53f45c974a"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-processor/4.0.0-M1/micronaut-core-processor-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "33c2ee8949cd61a8dbd0a01ac013b1b87fcd85f8a6964f1d03e6c2f78abe79fe"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-processor/4.0.0-M1/micronaut-core-processor-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "5739e6516dbba201ae913bc784861f4e881b06203ab300feaa9c724389c2bf6c"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-processor/4.0.0-M1/micronaut-core-processor-4.0.0-M1.module",
+      "digest": {
+        "sha256": "98dd715a23f56d67311aa5132822eb0e193bd02f04df1ab2ed0d0dd18604c9fd"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-processor/4.0.0-M1/micronaut-core-processor-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "cca4ed744a0af630f4f85a790d077092bb35b9f9c378e51c33039c4a355e943d"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-reactive/4.0.0-M1/micronaut-core-reactive-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "01fd97610002e1af4629f178821f755cbbf56150fdcff84987a4a629e9067644"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-reactive/4.0.0-M1/micronaut-core-reactive-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "314d71a329e901da8d0b60b08fc6fbec625e960a28e82ab7c433ced5d13bbe71"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-reactive/4.0.0-M1/micronaut-core-reactive-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "0cc0028a74067ed70194f0f06046eac824a0cf53421ad7a5e2190de49a49db9e"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-reactive/4.0.0-M1/micronaut-core-reactive-4.0.0-M1.module",
+      "digest": {
+        "sha256": "81c8e557da3929aae853ca5e7834d280119808a7e8603e5d1c85d7996bfa1f14"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core-reactive/4.0.0-M1/micronaut-core-reactive-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "d705ab8e8c23c255be57898b1b4c812c08c6764b5cb410774492cafad5b46189"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core/4.0.0-M1/micronaut-core-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "cd3d152088211241a446a744811941b05bd9c1b80aef1447e6596cd6290175c0"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core/4.0.0-M1/micronaut-core-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "df277c2643e86f584ce86a1e984bf93149553e92e0430134f74edf6f7d4b1fba"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core/4.0.0-M1/micronaut-core-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "be02ec113a6484321fdb6de2301bed3f2206e82a6f27448703aff92c4deba656"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core/4.0.0-M1/micronaut-core-4.0.0-M1.module",
+      "digest": {
+        "sha256": "2ea00c083b36190eae538b6cd5b7a26ac52e4f7fb5de180fbfcd06ac38a9079b"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-core/4.0.0-M1/micronaut-core-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "dd85add238d4129329897361d0ec8c8bd10b2a63a7ca0a6a6f2174252c1db97b"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-discovery-core/4.0.0-M1/micronaut-discovery-core-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "48d90d7ed8bb834d6d6aa6aa211314bb4d2af4e6717f4893443960ba69071cc7"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-discovery-core/4.0.0-M1/micronaut-discovery-core-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "2d5c0f119fe7423263aaf35fd84dea3357457547625cb41c183264234b42c94a"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-discovery-core/4.0.0-M1/micronaut-discovery-core-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "86333c8753826397564bf451afa9c842cb0c01fd721c961e2fd62c7d0d44ffe4"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-discovery-core/4.0.0-M1/micronaut-discovery-core-4.0.0-M1.module",
+      "digest": {
+        "sha256": "747f3a5e6bf7c877d2259ee2b903cdb5f3a3d4fc2bf9387c9d83e97db915ac02"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-discovery-core/4.0.0-M1/micronaut-discovery-core-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "65f0f295c01bb8821f1db545619d5fe716f3a01d5bae96549d97e79edc881805"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function-client/4.0.0-M1/micronaut-function-client-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "ee876fd937af0b6fea54b4cdb8f48d29d77b082dd032230a794abb22cf18a0f4"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function-client/4.0.0-M1/micronaut-function-client-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "4da9293ee58697035bf57fa6d6aa084444ad2c82ec013cd12059e7614bf10b87"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function-client/4.0.0-M1/micronaut-function-client-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "121a34ff4c0e0a8062579eee47de7758b265e3d28aee62956b12c9a8e4d757a1"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function-client/4.0.0-M1/micronaut-function-client-4.0.0-M1.module",
+      "digest": {
+        "sha256": "398612da396e676c58f30b32884e6585dd09f43bd2c927d22e5a7cc738448fde"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function-client/4.0.0-M1/micronaut-function-client-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "1ce17001052e02f28e505c62060abe78a04271b94938b415eb29fdb1e78f78b6"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function-web/4.0.0-M1/micronaut-function-web-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "0a378a3103cb595eca232b0b559a8d25630a4e16aeadb40a3c617ee3f0a82426"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function-web/4.0.0-M1/micronaut-function-web-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "e5e0465baa2b531c2ae95f075ee483af525b083cb38e8e884f987d1791ffc171"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function-web/4.0.0-M1/micronaut-function-web-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "4ff106a4f96718467b27712174fd1e22f686e576631374edeab4d2127c230819"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function-web/4.0.0-M1/micronaut-function-web-4.0.0-M1.module",
+      "digest": {
+        "sha256": "0cf5cf153c3179c2e737a4cfdd6882ca6c42c58f89963e9c360fe074baea0d43"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function-web/4.0.0-M1/micronaut-function-web-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "5a55d86b35f2e391cc53a46a2b3f0bef697c85eed5f50ce006e17e711a898aec"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function/4.0.0-M1/micronaut-function-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "06fbdeb926227bbe46e295b6510446cf77130cad6698c2567b155ed4b5d98b75"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function/4.0.0-M1/micronaut-function-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "d6ea9f7fd5551b2ac260af1907de1ac6b21c94f326204a952bddb77303de31c6"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function/4.0.0-M1/micronaut-function-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "937dbfa373d6953c2597d7ab3bafc572fe57ef5d7050013c070085efe03455c3"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function/4.0.0-M1/micronaut-function-4.0.0-M1.module",
+      "digest": {
+        "sha256": "9b576723c5aa6705b1b7b8e16e0b3b3fa4421c871cd7d3870adbd8352b012d12"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-function/4.0.0-M1/micronaut-function-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "3a234f9e83a7d70f15a7a76ebb594abd885e9a03e20e2b5d05b7c5b8cc025b5d"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-graal/4.0.0-M1/micronaut-graal-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "75a3fae0bc0ac2d6adf9338e19eb92be5abe9ea72e6ef22be5c8e00df5c42130"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-graal/4.0.0-M1/micronaut-graal-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "f7d315c7ffd5ec8860757ecb1148b0699844ebbe177a7160687f4d53ecd8d3a3"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-graal/4.0.0-M1/micronaut-graal-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "4f967d85a066a8ac865696bf490a33961ca9e56eeb841e5ecfbfff22e80fb880"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-graal/4.0.0-M1/micronaut-graal-4.0.0-M1.module",
+      "digest": {
+        "sha256": "aed2a94b94e2ffe75678d5003bc4b91969cfbd040966e28477b3a697bafa6ec6"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-graal/4.0.0-M1/micronaut-graal-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "63400f0db4193acc8f8248a896cb1001033ccbce0c9405607efb8728cd2753ca"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-core/4.0.0-M1/micronaut-http-client-core-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "53fb344e64f23dba60dbdc3492e39589e515bb6e7124b9d10fbc917832714ff2"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-core/4.0.0-M1/micronaut-http-client-core-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "1a8e40a2213ae7e85c5fc74b368a9193237a3fa83636e1b305a8b077b50817e4"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-core/4.0.0-M1/micronaut-http-client-core-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "b96e78004d5f29e542bc7d079001576e3f0a9a637f7b94289c298819e61128e7"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-core/4.0.0-M1/micronaut-http-client-core-4.0.0-M1.module",
+      "digest": {
+        "sha256": "c238c89bc0f86210297b82044b4e034043c04d524941055846edf05f71897df3"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-core/4.0.0-M1/micronaut-http-client-core-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "c54901640d7634e43589c678c1a1b597ae18696f7d2719516d9b3cd090b70ec9"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-jdk/4.0.0-M1/micronaut-http-client-jdk-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "5230aa0ee2ca3dbbc6244261601625013ccb48f0f19f54d07843405c31d2837f"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-jdk/4.0.0-M1/micronaut-http-client-jdk-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "77a9f71e957b219af2ad7fc83d9e173cc4316ae977d20271b80fe04972f0ed3a"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-jdk/4.0.0-M1/micronaut-http-client-jdk-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "3bbd94d42cc3788d3b1f3aa97f85050e767efc59232a6a4133fe9c51787cff00"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-jdk/4.0.0-M1/micronaut-http-client-jdk-4.0.0-M1.module",
+      "digest": {
+        "sha256": "e28ca894d10abf2457c64b9fe6847ef6c50910814a6ff8ed4d55148dcafee308"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-jdk/4.0.0-M1/micronaut-http-client-jdk-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "b299fa3caf69498ee489440c21b1624f25b57cd35b524fdfe4fc2acc64f0fc2b"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-tck/4.0.0-M1/micronaut-http-client-tck-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "03798886647247e9e8f4cf129716d802a7e7542228fc2721b30b49dafd08b45d"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-tck/4.0.0-M1/micronaut-http-client-tck-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "1fceaea1b77473720053b4ff83c32c028fd5a8c6d6467264c837ca5e3e8fc73a"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-tck/4.0.0-M1/micronaut-http-client-tck-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "61d15b028e3c5f01c59359bc436a63a25cce5691fea6f6927b53833303efeb46"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-tck/4.0.0-M1/micronaut-http-client-tck-4.0.0-M1.module",
+      "digest": {
+        "sha256": "1ba1674ccc4e3187c85827a1f95f925665461644ffca7f1e6afca5eeee78f073"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client-tck/4.0.0-M1/micronaut-http-client-tck-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "cf1f766ef3ca3e4cf9e492c6871dcac0f347c37a4339a65b54b0ba869d2051a5"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client/4.0.0-M1/micronaut-http-client-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "7721541156cdba3f988ee95f0f4737359e916ce8928568218e61b2cce1bb977e"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client/4.0.0-M1/micronaut-http-client-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "431650034f8011d1deec2625e2c096aa3e77548b2c0b4e999074e8c9729f149d"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client/4.0.0-M1/micronaut-http-client-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "d0968a6662f20cefff56639eda4c1f779f048d1fc52de4db756f84a5b0b37023"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client/4.0.0-M1/micronaut-http-client-4.0.0-M1.module",
+      "digest": {
+        "sha256": "2479656ab7847dc862ebf07f60cdacc0607d25704f215dfb09c907ddad2a6b54"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-client/4.0.0-M1/micronaut-http-client-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "0b4c1eea2c4a67ab21c3bab6d03a0b07f4bee34e7a9ee68b9f2b08cb097bc1f5"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-netty/4.0.0-M1/micronaut-http-netty-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "3fea4fc3783897e3aaaf74b65cb683bf9d29f8873ea6bbdd291ec56738fbfad3"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-netty/4.0.0-M1/micronaut-http-netty-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "d13e746747a40655d65878729f01c9cbbb195f31da2eb3b4a3b5c92516124a59"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-netty/4.0.0-M1/micronaut-http-netty-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "e0a9371ad13155a5b307efcce61534094ffd5c76a01b03b2b6bf977aea331d8f"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-netty/4.0.0-M1/micronaut-http-netty-4.0.0-M1.module",
+      "digest": {
+        "sha256": "4400097848c3325f6e33ec9e959efbb19541630b6357f14284d6a5f473ea3458"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-netty/4.0.0-M1/micronaut-http-netty-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "859cab466b26a3e9d3f66c1f0266440db1ca09a24bf0ce46176c285c08708899"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server-netty/4.0.0-M1/micronaut-http-server-netty-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "0736a8554c23ac5ec2f71d260f57c11ac14284b8ad49efb626ea3764bfe164a0"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server-netty/4.0.0-M1/micronaut-http-server-netty-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "68f7239630970f02e1005d6795b55d012496be4f32a8b88728a46f1c05082ca7"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server-netty/4.0.0-M1/micronaut-http-server-netty-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "100521650e69a7e373f4d48c238072e7ccc08380a4278fe884df74927b121bd6"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server-netty/4.0.0-M1/micronaut-http-server-netty-4.0.0-M1.module",
+      "digest": {
+        "sha256": "b8ad03c9adf1203f049705c2aef9b1604ebf70f1f4317c71096461f4849d6e3f"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server-netty/4.0.0-M1/micronaut-http-server-netty-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "5d5c0d92fc31e4cabe4c7640f603743dfbc3158a2281f4721cd1a2683da3c749"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server-tck/4.0.0-M1/micronaut-http-server-tck-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "d632ac94785e56913e85bea9b6252ce93c9a03c874469628aed78d30ee7ddd86"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server-tck/4.0.0-M1/micronaut-http-server-tck-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "e2fa71f9a2902983f098ea49431c66ab6fb1da708cb086bd29c19da718b07f1e"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server-tck/4.0.0-M1/micronaut-http-server-tck-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "37a4996079d938b6c698af70c4baf12e2bea3d4236c56f6a711b249b482118d4"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server-tck/4.0.0-M1/micronaut-http-server-tck-4.0.0-M1.module",
+      "digest": {
+        "sha256": "c12ed40564eadd3ce5d5491b6c6c439b7baa73933056dba4b8d51fe5a1e9af9a"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server-tck/4.0.0-M1/micronaut-http-server-tck-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "cf9ce04d55d78532c2a22dcb672acd5deaa462817ae8d24885501950a197a9e5"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server/4.0.0-M1/micronaut-http-server-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "1681cd5105ed3e779d24daa2b6c17fd2494cda466f3c7a7e88432b62ed832779"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server/4.0.0-M1/micronaut-http-server-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "5f9b80c039aa97c75092b8d33e0e427a6ebc6c0e2c2e538437c41028af46addd"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server/4.0.0-M1/micronaut-http-server-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "50168ae1e69b231dd771592e7638109d58fc518742fab575be4104aeb76e3198"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server/4.0.0-M1/micronaut-http-server-4.0.0-M1.module",
+      "digest": {
+        "sha256": "937f0b555d99139684619316ebb65d22f0cfc1b260c7b9ee4b379dfbd2fae523"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-server/4.0.0-M1/micronaut-http-server-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "4ab438fa20cae96c72c1c0ae269925e76e52bc0ef69767f6693aa50f97b01b7f"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-tck/4.0.0-M1/micronaut-http-tck-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "8cf039e1545d49afb6b50002e3472cad5e946cede1e34f0676186d75f7157909"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-tck/4.0.0-M1/micronaut-http-tck-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "625aa2980fbd16d415adf145aa311bfd3f462b77e68f3607b869afd012a7637d"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-tck/4.0.0-M1/micronaut-http-tck-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "7331194c4b3dfed311f51f269eaf02aa9ba17660ef022b0e7e685ca9eaa1acf6"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-tck/4.0.0-M1/micronaut-http-tck-4.0.0-M1.module",
+      "digest": {
+        "sha256": "19814bfef61c286e09b8959da4d31e7c9d9ffd7ea42adb4002ef36f99492831e"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-tck/4.0.0-M1/micronaut-http-tck-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "e7757b969c98f32faef5a5c0fc6a23418dacca3dd6e3f77887d94f70e972293c"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-validation/4.0.0-M1/micronaut-http-validation-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "9d1ab5fba44c66d2cde37dfa506f64031df8fdb989678f01d2dca2b298dc6251"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-validation/4.0.0-M1/micronaut-http-validation-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "69bf2a52ddbdcf8388c647f68aab3154548d1ee545b120889b9df3c3b7abea38"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-validation/4.0.0-M1/micronaut-http-validation-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "0f2a8c35cd67e76849ab37299f6ce51cb60480cf4d27a18da6392459dab43129"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-validation/4.0.0-M1/micronaut-http-validation-4.0.0-M1.module",
+      "digest": {
+        "sha256": "d1a7f059141194d5021fab18aef4c05395dbff268b16b0cfeaccd88b4c39af80"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http-validation/4.0.0-M1/micronaut-http-validation-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "73f68cd5322d51127b3d92db9bd74665a45f1837b3ae95cca11332204e846c63"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http/4.0.0-M1/micronaut-http-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "e09e2a1e795ad9d3768d001017a4de9900d6d0c6962ff155908724f5de186249"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http/4.0.0-M1/micronaut-http-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "2ef7d6dbe0afe798339cafdf4d0bc872ff0532250366fee3b8ddb5e71f24f807"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http/4.0.0-M1/micronaut-http-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "955bbaad00fb61a8a9d30e135f7c3ec23fb4f39884b696b2f0ef760d737302f5"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http/4.0.0-M1/micronaut-http-4.0.0-M1.module",
+      "digest": {
+        "sha256": "628ee44de3972a1ee6413f2471adc0e28813a765f9122b85ea5159f99cc0481f"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-http/4.0.0-M1/micronaut-http-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "9d8db75578b57b31f36f949ff8e82e6721bb05ea72ae01eae72da18f6ac2f5ff"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/4.0.0-M1/micronaut-inject-groovy-test-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "d2cf95e1c28e3aee7de3f3ba823965236ea525634704b43608ec54cdd9166ae8"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/4.0.0-M1/micronaut-inject-groovy-test-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "95d756d9f3a2539c800ed066766119f3440d28446e8f438b6b0f431adf22348e"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/4.0.0-M1/micronaut-inject-groovy-test-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "d03d7aa09acfb199690f4ea1016150598fc9822825441e8af769cb54364f4dca"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/4.0.0-M1/micronaut-inject-groovy-test-4.0.0-M1.module",
+      "digest": {
+        "sha256": "e660a93ccd6ce818e41ae2177b0acf9c831a4b49d44f383bb845f77f23aecce8"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/4.0.0-M1/micronaut-inject-groovy-test-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "29d9a9bef267f33fa889c2a9ce81e6d3ece75693bb35465210de70b1e1c33d3b"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-groovy/4.0.0-M1/micronaut-inject-groovy-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "fa024283e91934ccc919fefe355519322cce39cef7d2268fdb1c88b3087d2587"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-groovy/4.0.0-M1/micronaut-inject-groovy-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "bd8a608cb9ffd0ce693b4517e2aeaf0a019f946f52e1f558faeae4e62c38566c"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-groovy/4.0.0-M1/micronaut-inject-groovy-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "69719afa23950f194c0faa68b59cf1e3bcfc94392cff0b54c5f82138df84d3fb"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-groovy/4.0.0-M1/micronaut-inject-groovy-4.0.0-M1.module",
+      "digest": {
+        "sha256": "b809e1cf8cb29383325c7a4d5b63a18efd8790ace30d13ac1f5ce171d0ec71a3"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-groovy/4.0.0-M1/micronaut-inject-groovy-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "046dc1775a0ad8e299d6bebb4810def4aff31875af5ddc8837138a3037d4f590"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-java-test/4.0.0-M1/micronaut-inject-java-test-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "eeceec55f1c06991d9e587880220ada3296e4383b6fcc075ab44016b8e3d2709"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-java-test/4.0.0-M1/micronaut-inject-java-test-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "d827d17600a482b10e5505d11352169b3f6d50d0e6bfd08a745d2b357f458afd"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-java-test/4.0.0-M1/micronaut-inject-java-test-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "335d654bc2e25b75bd6b283a73541f876da9754b63d4376048c050a6a1b64a6b"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-java-test/4.0.0-M1/micronaut-inject-java-test-4.0.0-M1.module",
+      "digest": {
+        "sha256": "d2ef416ebe74707f3aeb9ab10d68b7ea3d43d77aee7c3d3539c3e199c73607bc"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-java-test/4.0.0-M1/micronaut-inject-java-test-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "ef61fdcca383b5200f47575955fe45b5a51062980f0b6745287a147d48235f0e"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-java/4.0.0-M1/micronaut-inject-java-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "12a6cbe968ce0ac4949cc2449ae48b4f93c7c13cdbb340ac450cc7f8cb0c84d6"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-java/4.0.0-M1/micronaut-inject-java-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "ef25a27a3409414b5d8264d2fcc166bff1475e5169ba81ab7d6f93cfeaadf0c8"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-java/4.0.0-M1/micronaut-inject-java-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "1f13b74dd5baa35ba43aed40dd6768ec9e1caf2f6562674d207896e8b4af0b88"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-java/4.0.0-M1/micronaut-inject-java-4.0.0-M1.module",
+      "digest": {
+        "sha256": "c8eeb1eec7b42b2635055c340b80fd5cca18ec95818408664d3de3cb32144dbc"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-java/4.0.0-M1/micronaut-inject-java-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "bd26956e56342570a3efa949754caef69f950c8e6bba09d7f57ae3ed634cab0f"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/4.0.0-M1/micronaut-inject-kotlin-test-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "6308d0efbc8d0638f685fca2dede29b8e0561cc585601bd744f5ce3760254463"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/4.0.0-M1/micronaut-inject-kotlin-test-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "87bd7abe1f3cb6580e1e6e79343edd58e773c079f310a412788010b3da45a6f5"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/4.0.0-M1/micronaut-inject-kotlin-test-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "494b03c8f7bae9e99f135257c4ca9a131afcd4a698d4658396a942fd461cf954"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/4.0.0-M1/micronaut-inject-kotlin-test-4.0.0-M1.module",
+      "digest": {
+        "sha256": "45134685b7645a87518eb19c25e734dbce328908babfa7b7fa6c55fe34ecdad7"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/4.0.0-M1/micronaut-inject-kotlin-test-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "25555a14e5e3ba0064f886a037c91be67328e9dfb85864964d00e9e1e5bde746"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-kotlin/4.0.0-M1/micronaut-inject-kotlin-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "f5ec183b23052c227185db1e72ae0e109a998b2b3e10f9710dd45a7925ad47cb"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-kotlin/4.0.0-M1/micronaut-inject-kotlin-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "43007e863d213fb40b2ba0f2ca197a093e50c8fe06254a56a0e5e955ee03225f"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-kotlin/4.0.0-M1/micronaut-inject-kotlin-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "f24b0e2fa3f8982d545b8611484086bcbf73c72a48c0bb0b6b25590e5c23f393"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-kotlin/4.0.0-M1/micronaut-inject-kotlin-4.0.0-M1.module",
+      "digest": {
+        "sha256": "9dd33355e4aec3cb94b624219dadf7c750d27477b812fc8e0258f6df11925900"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject-kotlin/4.0.0-M1/micronaut-inject-kotlin-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "397f36dce838a005cc5bdd16de4ff56823a3811ba4c391e935abc24e359572dc"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject/4.0.0-M1/micronaut-inject-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "c3f7fd645b4872ba4ead5d4256d5f96697684f54c09d202c4d68a96d977cc083"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject/4.0.0-M1/micronaut-inject-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "109101a3e609164b07c73e04e8d758e3b55abc9fc6f05e912a6ed252b69336a1"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject/4.0.0-M1/micronaut-inject-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "0b9bc38fab44fdea6884ff2f2f44c6ba221e5fcda794f57e8a7e5ef6e37667ec"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject/4.0.0-M1/micronaut-inject-4.0.0-M1.module",
+      "digest": {
+        "sha256": "a1eef5001dd3c28cbb9edc6f83441a18c21a2484d2d9dd6808094be9fd58e5a9"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-inject/4.0.0-M1/micronaut-inject-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "a6451ba06fe900fbbb20721574e3713270fe68fe12a2d680a4e3714f5223b429"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-jackson-core/4.0.0-M1/micronaut-jackson-core-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "f0b03bca351131589bc3102a2cffa73161b0fcb1aafa5d9690f587194975d008"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-jackson-core/4.0.0-M1/micronaut-jackson-core-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "7ada9c01ab76027a9f1d4752eaabf917818cab86a9b5f749b1a9e1c3f2cf4540"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-jackson-core/4.0.0-M1/micronaut-jackson-core-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "843b7994d88b301c5f33b79fdc970285e5122fba7aefe7cb8ad6fbad5f20dbc5"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-jackson-core/4.0.0-M1/micronaut-jackson-core-4.0.0-M1.module",
+      "digest": {
+        "sha256": "21cc361d313f10f6b402b6fde99c094c0e7d7786f38afc53133de31fddc8831b"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-jackson-core/4.0.0-M1/micronaut-jackson-core-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "0db60c6175018d151deab8c0c9bdd70f0c6cdcb5260efcf3e8d7fbe55aff2923"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-jackson-databind/4.0.0-M1/micronaut-jackson-databind-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "a436ed544bd24a11383451be4ad2c411783a9468f70a8f6b45d66b08b8547b6f"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-jackson-databind/4.0.0-M1/micronaut-jackson-databind-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "603cda84186db72af9983a52b45028513a4690b1b5ae7a2ae6495ee2428f4e34"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-jackson-databind/4.0.0-M1/micronaut-jackson-databind-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "dacb124bbc163975e8af21208f9edf0a07c8d0471456f4626ac2159afe6e94cd"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-jackson-databind/4.0.0-M1/micronaut-jackson-databind-4.0.0-M1.module",
+      "digest": {
+        "sha256": "67c74b758eee012f9b456ef41cac97b9e26c076f44472aeebfe2b8b3ce746aa5"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-jackson-databind/4.0.0-M1/micronaut-jackson-databind-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "e2261147f39cf8f071b0df6d24525b9b4bd2f1060a2fb40f5ee97501e1142332"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-json-core/4.0.0-M1/micronaut-json-core-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "1d5be81d9eea62b885a1c92ac702223bb9a1615106e5542dd9a27006998b7ecc"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-json-core/4.0.0-M1/micronaut-json-core-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "da8db1f840953d9396b50882231a0582ba98e0a313c92c24134ed3c8e3637df2"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-json-core/4.0.0-M1/micronaut-json-core-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "d8fef59a54ff7330c26b9d794634bda4242dc085d0548ab51ddc3020b174821f"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-json-core/4.0.0-M1/micronaut-json-core-4.0.0-M1.module",
+      "digest": {
+        "sha256": "ecb416a53ed70625d9ccd97355b6c0b67c358f9313e3f6cbe9fc2d4336b1b093"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-json-core/4.0.0-M1/micronaut-json-core-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "f5fe9c12b0ebbdb802b48f2db9237845df29dbdaac67a48d5fb695db4d49939b"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-management/4.0.0-M1/micronaut-management-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "656bd72dea22e7385961a49c26d02a5518caf9ab51bcbf9541d1f2e8e80a67d7"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-management/4.0.0-M1/micronaut-management-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "8f5f51b3efdaaa849740620854e579ad7962380fac6e957f3b2f4d0f3b736293"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-management/4.0.0-M1/micronaut-management-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "0bb2da4243172dc2fa5089cca681011538f0664c47c756275e67a81bd4c24690"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-management/4.0.0-M1/micronaut-management-4.0.0-M1.module",
+      "digest": {
+        "sha256": "84a2d2b7518eb386d3ca174ee32e42e5179f8b325b5778ec7fb7b95036466a9e"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-management/4.0.0-M1/micronaut-management-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "bcaa6a0ca30b513cbfd5a4d848370c22a36fb6e6bf07aebf125e92b597cd162e"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-messaging/4.0.0-M1/micronaut-messaging-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "ae1ac60ca5037239275f2faa28f6f0cff2b300a1cdf59190e22789ae618673c0"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-messaging/4.0.0-M1/micronaut-messaging-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "330463d7f0a5a25127fff47a8bb569464713be6fd49845e2b0b14b99c5e027f4"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-messaging/4.0.0-M1/micronaut-messaging-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "32e8fa436c00a44c07e78a0bcca430146a900ac83d5b2cab536b6b3630a8fda2"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-messaging/4.0.0-M1/micronaut-messaging-4.0.0-M1.module",
+      "digest": {
+        "sha256": "1dbf3d85ff051250cffa3aa1f6ddcb47d10c4f079b2c5cd326784dd2f68fdc27"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-messaging/4.0.0-M1/micronaut-messaging-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "c76cb68da861a9eb846275daf66693d473ba65af2e11e40bcb991759e5286483"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-retry/4.0.0-M1/micronaut-retry-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "84666a8c03e343ef3429156661d6210bf3a7979f60b4aa3e96480c34aa51b0f8"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-retry/4.0.0-M1/micronaut-retry-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "3a7ecf46aee8ddb7b06b5a3d97ffb6c52e1b6b744e413e2a62d6b5e6e94907ba"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-retry/4.0.0-M1/micronaut-retry-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "cf10f78011288b1a3623e3eebf059f65d30dcf1808f164214a53947040776974"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-retry/4.0.0-M1/micronaut-retry-4.0.0-M1.module",
+      "digest": {
+        "sha256": "e8e85eaa8596fb658b20039317b38ce833a1e948e7bd2544e58095898f9962b4"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-retry/4.0.0-M1/micronaut-retry-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "9505bc4ab79697ea43ed037d5b4e39021e940407ae9f2e8292c4de22b58cfc7c"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-router/4.0.0-M1/micronaut-router-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "58e8612f657640a09038c86b744cac69387dfadf48ac6f4aa0b985a8222f3a99"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-router/4.0.0-M1/micronaut-router-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "8331990d0c4dd745c153563ace4bc170f9fecfd094f0563abcbe8b3aa643211b"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-router/4.0.0-M1/micronaut-router-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "ec4d8e18294430cb668562995b44c3ea2d7f7a42c753db914a94e5d94ec0cd87"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-router/4.0.0-M1/micronaut-router-4.0.0-M1.module",
+      "digest": {
+        "sha256": "1da33b3e51ec1c95bf30ee09d2331e4bf2a01ab0cd8d8dce4a8ba7f9b2511540"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-router/4.0.0-M1/micronaut-router-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "0715c0964a1f6ed6fb44aa3711ad7910ec2191e6cb9df820d27cb896c9ab9843"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-runtime-osx/4.0.0-M1/micronaut-runtime-osx-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "03af35359fed4cb5ff0dd1b9c5b9783d51c98a32efb3231969016b56daf70970"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-runtime-osx/4.0.0-M1/micronaut-runtime-osx-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "d5d9422678a7aef795765e3b7664b580c72abde4c7668f944523ec97d284c52c"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-runtime-osx/4.0.0-M1/micronaut-runtime-osx-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "67441cfba1107b1d3dae798c1504c9a8d7913965f833351c23ddcb60e28812cd"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-runtime-osx/4.0.0-M1/micronaut-runtime-osx-4.0.0-M1.module",
+      "digest": {
+        "sha256": "f48cff3daeaa949f6ae1aabbb3fd7c2a67fdf6db1ea42c8e10f8852edc2da477"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-runtime-osx/4.0.0-M1/micronaut-runtime-osx-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "61ebf04bd623469a04225528eced2dac6e6c3726d92135981d214adca61c536d"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-runtime/4.0.0-M1/micronaut-runtime-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "46041c9509bdec013d55f138bcec3444e01759a82ba17e487b289d5481d419fd"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-runtime/4.0.0-M1/micronaut-runtime-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "46041c9509bdec013d55f138bcec3444e01759a82ba17e487b289d5481d419fd"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-runtime/4.0.0-M1/micronaut-runtime-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "6fc907c7459fc31efe443b8cbcfd47f3d91fed20de4cd4ec375d75cb65a1b642"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-runtime/4.0.0-M1/micronaut-runtime-4.0.0-M1.module",
+      "digest": {
+        "sha256": "b50302b2d8aa8ba3c484023572ab643f743f38f1329c2e484e0032f46da124e4"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-runtime/4.0.0-M1/micronaut-runtime-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "ac1036199584071916c7b0a07d95b9133a28ff6ec7709af432f82f6af9b85c65"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-websocket/4.0.0-M1/micronaut-websocket-4.0.0-M1-javadoc.jar",
+      "digest": {
+        "sha256": "2d28c06bc2c661a5023ee1722dd725bb0a57ec11cf00e6095ddad38e211deb06"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-websocket/4.0.0-M1/micronaut-websocket-4.0.0-M1-sources.jar",
+      "digest": {
+        "sha256": "bae9fc60112bf3ff149ec2e1de0b93ca37d71a81a5158c74ad48bde5e3e74dc2"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-websocket/4.0.0-M1/micronaut-websocket-4.0.0-M1.jar",
+      "digest": {
+        "sha256": "7273b3cca493be3288b4d151bf227a54e481d2acd21554c8c5a947024f341ce8"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-websocket/4.0.0-M1/micronaut-websocket-4.0.0-M1.module",
+      "digest": {
+        "sha256": "b370bd32deda2a3cd46bdbdff02d606aeed68cb519ac9960ec32bb0762086218"
+      }
+    },
+    {
+      "name": "build/repo/io/micronaut/micronaut-websocket/4.0.0-M1/micronaut-websocket-4.0.0-M1.pom",
+      "digest": {
+        "sha256": "fcb0f8a249652c729d7ed96e1c1f72b3a606816599de42ad4922d35bd4ff26fa"
+      }
+    }
+  ],
+  "predicate": {
+    "builder": {
+      "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.5.0"
+    },
+    "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
+    "invocation": {
+      "configSource": {
+        "uri": "git+https://github.com/micronaut-projects/micronaut-core@refs/tags/v4.0.0-M1",
+        "digest": {
+          "sha1": "d35e5a030411a14a6ff000de2f95d847f95d5ae8"
+        },
+        "entryPoint": ".github/workflows/release.yml"
+      },
+      "parameters": {},
+      "environment": {
+        "github_actor": "sdelamo",
+        "github_actor_id": "864788",
+        "github_base_ref": "",
+        "github_event_name": "release",
+        "github_event_payload": {
+          "action": "published",
+          "organization": {
+            "avatar_url": "https://avatars.githubusercontent.com/u/36880643?v=4",
+            "description": "",
+            "events_url": "https://api.github.com/orgs/micronaut-projects/events",
+            "hooks_url": "https://api.github.com/orgs/micronaut-projects/hooks",
+            "id": 36880643,
+            "issues_url": "https://api.github.com/orgs/micronaut-projects/issues",
+            "login": "micronaut-projects",
+            "members_url": "https://api.github.com/orgs/micronaut-projects/members{/member}",
+            "node_id": "MDEyOk9yZ2FuaXphdGlvbjM2ODgwNjQz",
+            "public_members_url": "https://api.github.com/orgs/micronaut-projects/public_members{/member}",
+            "repos_url": "https://api.github.com/orgs/micronaut-projects/repos",
+            "url": "https://api.github.com/orgs/micronaut-projects"
+          },
+          "release": {
+            "assets": [],
+            "assets_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases/96190002/assets",
+            "author": {
+              "avatar_url": "https://avatars.githubusercontent.com/u/864788?v=4",
+              "events_url": "https://api.github.com/users/sdelamo/events{/privacy}",
+              "followers_url": "https://api.github.com/users/sdelamo/followers",
+              "following_url": "https://api.github.com/users/sdelamo/following{/other_user}",
+              "gists_url": "https://api.github.com/users/sdelamo/gists{/gist_id}",
+              "gravatar_id": "",
+              "html_url": "https://github.com/sdelamo",
+              "id": 864788,
+              "login": "sdelamo",
+              "node_id": "MDQ6VXNlcjg2NDc4OA==",
+              "organizations_url": "https://api.github.com/users/sdelamo/orgs",
+              "received_events_url": "https://api.github.com/users/sdelamo/received_events",
+              "repos_url": "https://api.github.com/users/sdelamo/repos",
+              "site_admin": false,
+              "starred_url": "https://api.github.com/users/sdelamo/starred{/owner}{/repo}",
+              "subscriptions_url": "https://api.github.com/users/sdelamo/subscriptions",
+              "type": "User",
+              "url": "https://api.github.com/users/sdelamo"
+            },
+            "body": "<!-- Release notes generated using configuration in .github/release.yml at 4.0.x -->\r\n\r\n## What's new and breaking changes\r\n\r\n- Kotlin 1.8\r\n- [Experimental Support for Kotlin Symbol Processing (KSP)](https://docs.micronaut.io/snapshot/guide/#ksp)\r\n- Apache Groovy 4.0\r\n- [Support for Virtual Threads](https://docs.micronaut.io/snapshot/guide/#virtualThreads)\r\n- [Filter Methods](https://docs.micronaut.io/snapshot/guide/#filtermethods)\r\n- Injection of Maps\r\n- Improved Error Messages for Missing Beans\r\n- Tracking of Disabled Beans\r\n- `micronaut-retry` dependency.\r\n- `micronaut-discovery` dependency.\r\n- `micronaut-websocket` dependency.\r\n- Reactor instrumentation moved to Reactor module.\r\n- Validation support moved to validatio module\r\n- session support moved to session module. \r\n- kotlin flow support moved to kotlin module. \r\n- Compilation time Api split into a new module `micronaut-core-processor`\r\n- ASM no longer shaded\r\n- Caffeine no longer shaded\r\n- Environment deduction disabled by default. \r\n- SnakeYAML no longer a direct dependency\r\n\r\n\r\n## What's Changed\r\n### Breaking Changes 🛠\r\n* Make SnakeYAML and javax.annotation optional by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8061\r\n* Refactor `ConversionService` to remove mutable operations from `ConversionService.SHARED` by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8156\r\n* Disable Cloud environment deduction by default. Fixes #7758 by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8068\r\n* Rework BOM as core BOM by @melix in https://github.com/micronaut-projects/micronaut-core/pull/8299\r\n* Remove the session module, and add micronaut-session by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8281\r\n### New Features 🎉\r\n* Virtual thread support by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8180\r\n* Introduce `@Vetoed` to exclude particular classes, methods and fields from processing by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8274\r\n* Implement support for injection of maps by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8305\r\n* Support arbitrary nesting of EachProperty/ConfigurationProperties beans by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8424\r\n* Adds support for KSP by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8462\r\n* Support annotation-based HTTP filter declarations by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8422\r\n* Include disabled bean info in beans endpoint by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8792\r\n* feat: HTTP Client Implementation with Java HTTP Client by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8441\r\n* HTTP/3 support by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8559\r\n### Bug Fixes 🐞\r\n* Remove use of shadow plugin by @melix in https://github.com/micronaut-projects/micronaut-core/pull/8312\r\n* Stop conversion of Properties keys and values by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8327\r\n* Groovy properties shouldn't become executable methods by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8350\r\n* Fix bug in introspections when properties are of mixed types by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8451\r\n* Don't include write only properties in serialization by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8457\r\n* Fix bug with custom conditions and EachBean definitions by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8459\r\n* Fix incorrect dependency substitution by @melix in https://github.com/micronaut-projects/micronaut-core/pull/8467\r\n* fix configuration inheritance path calculation by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8484\r\n* Fix NonUniqueBeanException when using FunctionInitializer by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8488\r\n* Remove usage of Utils classes from GraalReflectionConfigurer by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8563\r\n* Pick a more specific setter if child configuration properties by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8578\r\n* Fix NPE producing anntotion metadata for KSP by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8736\r\n* Fix GraalVM native image support by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8793\r\n* fix validation of write-only config properties by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8826\r\n* Fix broken MethodElement.overrides implementation by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8842\r\n* fix IncompatibleClassChangeError in ConfigurationProperties by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8864\r\n* fix: WebSocketMessageEncoder @Requires classes by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8962\r\n### Improvements ⭐\r\n* Stop repackaging Caffeine by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8054\r\n* One channel per HTTP2 stream by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/6842\r\n* Match interceptors by all the bindings it defines by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8174\r\n* Let SemanticVersion.isAtLeastMajorMinor be able to compare two different major versions. by @donbeave in https://github.com/micronaut-projects/micronaut-core/pull/8208\r\n* Reuse enclosed elements querying for Java and Groovy. Added a way to query methods and fields together. by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8197\r\n* HTTP Netty server executing route refactoring by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8217\r\n* Split the runtime and compiler code into separate modules by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8224\r\n* Split the runtime module into multiple modules by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8235\r\n* Class -> Class<?> by @altro3 in https://github.com/micronaut-projects/micronaut-core/pull/8278\r\n* Add support for Jakarta nulllable annotations.  by @baracil in https://github.com/micronaut-projects/micronaut-core/pull/8307\r\n* remove javax.annotation.Nullable usage by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8311\r\n* Improve support for configuration property nesting by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8306\r\n* Improve the error message for missing beans when EachBean is used by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8316\r\n* Improve error messages for disabled beans by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8326\r\n* Detect deadlocks when using BlockingHttpClient on the event loop by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8354\r\n* Remove NoInjectBeanDefinition and improve/refactor RuntimeBeanDefinition by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8398\r\n* Eliminate unused proxy targets and simplify resolution by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8447\r\n* Add tests and refine behaviour of registerSingleton by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8469\r\n* add isWithin(..) check to each property handling by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8565\r\n* Support Range requests when returning SystemFiles by @kgeri in https://github.com/micronaut-projects/micronaut-core/pull/8553\r\n* Optimize HttpRequestCertificateHandler by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8771\r\n* Refactor: Remove unnecessary use of reactive APIs in routes endpoint by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8795\r\n* Remove more GraalVM build-time init flags by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8841\r\n* cleanup unnecessary GraalVM flags by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8843\r\n* Remove jackson databind as a transtive of GraalVM module by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8869\r\n* Allow to introspect classes by names by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8899\r\n### Docs 📖\r\n* Configuration props for inner classes are now dollar prefixed by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8183\r\n* EntityIntrospectedAnnotationMapper class has moved by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8244\r\n* Add documentation for virtual thread support by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8577\r\n* Update docs to the new configuration macro by @melix in https://github.com/micronaut-projects/micronaut-core/pull/8613\r\n* doc: Highlight virtual threads support by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8734\r\n* doc: use asciidoc inner link by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8732\r\n* doc: links to session module by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8788\r\n* Configuration asciidoc macro migration  by @wetted in https://github.com/micronaut-projects/micronaut-core/pull/8745\r\n* Update simple retry doc to mention a linear progression of 1s by @miguelaferreira in https://github.com/micronaut-projects/micronaut-core/pull/8850\r\n* Remove docs for HTTP sessions and provide link to `micronaut-session` docs by @wetted in https://github.com/micronaut-projects/micronaut-core/pull/8737\r\n* doc: delete what’s new and breaks prior to 4.0.0 by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8952\r\n* doc: add websocket dependency by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8953\r\n* docs: what's new add support Kotlin 1.8.0 by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8785\r\n* doc: Add KSP section and mention it in what's new by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8786\r\n* doc: introduction mention server & client runtimes by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8960\r\n* doc: retry dependency in Advice & HTTP client by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8961\r\n### Dependency updates 🚀\r\n* fix(deps): update dependency io.micronaut.crac:micronaut-crac-bom to v1.0.1 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8081\r\n* chore(deps): update plugin me.champeau.jmh to v0.6.8 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8078\r\n* fix(deps): update junit5 monorepo to v5.9.1 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8103\r\n* chore(deps): update mikepenz/action-junit-report action to v3.5.1 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8101\r\n* fix(deps): update managed-testcontainers to v1.17.5 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8105\r\n* fix(deps): update managed-swagger to v2.2.3 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8104\r\n* fix(deps): update dependency io.micronaut.graphql:micronaut-graphql to v3.2.0 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8106\r\n* fix(deps): update managed-kotlin to v1.7.20 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/7855\r\n* fix(deps): update dependency io.micronaut.email:micronaut-email-bom to v1.4.0 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8136\r\n* fix(deps): update asm to v9.4 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8133\r\n* fix(deps): update dependency io.micronaut.coherence:micronaut-coherence-bom to v3.7.1 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8135\r\n* fix(deps): update dependency org.codehaus.groovy:groovy-test to v3.0.13 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8132\r\n* fix(deps): update dependency com.fasterxml.jackson.core:jackson-databind to v2.13.4.2 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8168\r\n* chore(deps): update mikepenz/action-junit-report action to v3.5.2 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8166\r\n* chore(deps): update dependency io.micronaut.build.internal:micronaut-gradle-plugins to v5.3.15 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8165\r\n* fix(deps): update managed-micrometer to v1.9.5 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8207\r\n* fix(deps): update dependency io.projectreactor:reactor-core to v3.4.24 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8205\r\n* fix(deps): update dependency io.micronaut.redis:micronaut-redis-bom to v5.3.1 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8204\r\n* fix(deps): update managed-swagger to v2.2.4 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8209\r\n* fix(deps): update groovy monorepo to v4.0.6 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8206\r\n* chore(deps): update dependency org.tomlj:tomlj to v1.1.0 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8211\r\n* fix(deps): update dependency io.micronaut.testresources:micronaut-test-resources-bom to v1.1.3 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8254\r\n* upgrade Jackson version to 2.14.0 by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8358\r\n* build: bump up slf4j to 2.0.4 and logback to 1.4.4 by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8360\r\n* fix(deps): update dependency ch.qos.logback:logback-classic to v1.4.5 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8372\r\n* fix(deps): update dependency com.github.javaparser:javaparser-symbol-solver-core to v3.24.9 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8477\r\n* fix(deps): update dependency com.blazebit:blaze-persistence-core-impl to v1.6.8 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8460\r\n* fix(deps): update netty monorepo to v4.1.86.final by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8379\r\n* fix(deps): update dependency io.micrometer:micrometer-core to v1.10.2 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8381\r\n* fix(deps): update dependency com.fasterxml.jackson.core:jackson-databind to v2.14.1 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8396\r\n* fix(deps): update httpcomponents-client to v4.5.14 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8536\r\n* Update dependency io.micronaut.tracing:micronaut-tracing-bom to v4.5.0 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8554\r\n* build: micronau-tracing 4.5.0 by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8672\r\n* build: micronau-tracing 4.5.0 by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8700\r\n* build: Apache groovy 4.0.9 by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8784\r\n* chore(deps): update dependency gradle to v7.6.1 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8832\r\n* build: Micronaut Flyway 5.5.0 by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8887\r\n* Upgrade to Micronaut Spring 4.5.1 by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8910\r\n* fix(deps): update dependency ch.qos.logback:logback-classic to v1.4.6 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/8964\r\n### Regressions 🧐\r\n* Fix: Req attrs has routeMatch for WebSocketServer by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8285\r\n### GraalVM 🏆\r\n* Lazily create the singleton stream-pipeline attribute to fix native image by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8125\r\n* Allow context annotations at build time by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8485\r\n* Run the HTTP TCK against Netty natively by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8865\r\n* Allow Tag annotation at build time for the TCK by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8904\r\n### Other Changes 💡\r\n* Upgrade H2 for CVE-2022-23221 by @cristianrgreco in https://github.com/micronaut-projects/micronaut-core/pull/7000\r\n* Bump managed kotlin version to 1.7.10 by @wetted in https://github.com/micronaut-projects/micronaut-core/pull/8074\r\n* Remove deprecated code in Micronaut Core for 4.0.x (partial) by @wetted in https://github.com/micronaut-projects/micronaut-core/pull/8089\r\n* Update to Groovy 4.0 by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8010\r\n* Stop relocating caffeine by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8143\r\n* Rewrite of Bean Definition processing to use it for both Java and Groovy by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8121\r\n* Support custom HTTP status codes by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8147\r\n* Allow for Bean Introspection to use different accessor for read and write.  by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8148\r\n* Fix HttpClient.start by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8155\r\n* Fix `ClassElement` equals with primitive and bean property type by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8163\r\n* Fix STREAM_PIPELINE_ATTRIBUTE by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8162\r\n* Fix use-case when `@Introspected` is added using `anotate` by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8158\r\n* Correct validation detection by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8175\r\n* Use v6.0.1 of the internal build tools by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8154\r\n* Remove JacksonConfig construtor from HateoasErrorResponseProcessor by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8186\r\n* Fix NPE in Groovy processing by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8182\r\n* New HTTP client connection pooling by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8100\r\n* Support http status 103 and 425 by @SplotyCode in https://github.com/micronaut-projects/micronaut-core/pull/8123\r\n* Use bean property writer type as the property type. Correct annotations creation for fields. by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8223\r\n* Select possibly the property field's type if it has type annotations by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8225\r\n* Fix detecting bean for @ConfigurationInject injection by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8234\r\n* Require asm as an api dependency so it's pulled in transitively downstream by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8243\r\n* Don't relocate ASM references by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8246\r\n* Improve binary incompatibility for existing processors by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8250\r\n* build: remove replacement not necessary for 4.0.x by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8260\r\n* Port fix to 4.0.x and cleanup code by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8262\r\n* Use serialization and reactor snapshots by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8266\r\n* Switch to using snapshot of micronaut-groovy by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8268\r\n* Fix querying generic arguments by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8267\r\n* Fix configuration classes with optional getters by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8269\r\n* Cleanup context after test finishes by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8271\r\n* address sonar issues by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8270\r\n* Removal of Jakarta JSON Glassfish by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8272\r\n* Add byte[] to String converter by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8273\r\n* Correct how function method is recognized by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8283\r\n* Fail when the request is with the incorrect type by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8261\r\n* Add passing snapshot modules to BOMs by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8286\r\n* build: security and email as SNAPSHOT by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8298\r\n* fix sonar issues by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8304\r\n* Property type: select the type with the most generic argument annotations by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8302\r\n* Introduce workaround for javadoc generation by @melix in https://github.com/micronaut-projects/micronaut-core/pull/8324\r\n* Fix Java generic placeholder annotations by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8331\r\n* Correct configuration builder and recognition of the property's field by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8319\r\n* Fix NoSuchMethodError when calling getGenericBeanType() by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8351\r\n* git: merge up 3.8.x into master by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8363\r\n* Exclude maven copy of aop for testRuntime by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8369\r\n* Fix introduction method order by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8386\r\n* Make Snakeyaml a managed dependency by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8390\r\n* Warn when bean definition class is excluded because of the error by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8385\r\n* Refactor bean processing module after inject module split by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8394\r\n* Fix http2 client log warning by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8400\r\n* Improve `BeanDefinitionDelegate` attributes modification by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8403\r\n* Remove parent module by @melix in https://github.com/micronaut-projects/micronaut-core/pull/8405\r\n* Add logback as a managed dependency by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8388\r\n* Add field generic argument annotation test by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8409\r\n* Fix Java error element reporting by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8418\r\n* Fix log error by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8437\r\n* Improve pospone error message by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8445\r\n* Correct validation by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8439\r\n* Upgrade to Micronaut Build 6.1.1 by @melix in https://github.com/micronaut-projects/micronaut-core/pull/8452\r\n* Fix issue injecting qualifier into interceptor by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8453\r\n* Fix broken ServiceHttpClientCondition by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8456\r\n* remove the transitive dependency on Guava from core-processor by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8466\r\n* Add reactor-test as a managed dependency by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8470\r\n* Route processing refactor by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8463\r\n* 4.0.x merge by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8492\r\n* Fix intercepted adapter methods by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8496\r\n* Refactor and cleanup bean context by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8479\r\n* Fix delegating to intercepted method in Kotlin by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8498\r\n* Improve intercepted adapter tests by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8503\r\n* Fix each bean interceptor's qualifier by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8508\r\n* Fix each bean with a bean annotated `@Named` and `@Primary` by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8510\r\n* Fix intercepted adapter invocation is invoked on the annotated method by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8515\r\n* `Publishers#convertPublisher` needs to use `ConversionService` by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8517\r\n* Use `ConversionService` from bean context for `InterceptedMethod` by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8521\r\n* Remove `FilerOutputStream` inefficiency workaround by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8529\r\n* Fix `@EachBean` with `@Replaces` and a missing class by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8530\r\n* Merge branch '3.9.x' into 4.0.x by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8568\r\n* init at build time before instantiating reference by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8576\r\n* Move to Geb 7 for Groovy 4 support by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8575\r\n* Set kotlinOptions.jvmTarget to 17 for 4.0.0 by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8579\r\n* build: enable binary compatiblity by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8571\r\n* Remove unneeded PROXY_TARGET_QUALIFIER by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8589\r\n* Load bean listeners lazily by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8595\r\n* Add default annotation values test + remove unused method by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8611\r\n* Performance improvements + Java style improvements by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8586\r\n* Fix adding repeatable annotations by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8618\r\n* Use `PropertyExpressionResolver` for implementing random property values by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8614\r\n* Links to bootstrap configuration in documentation by @rogervinas in https://github.com/micronaut-projects/micronaut-core/pull/8609\r\n* Fix NPE in isCandidateBean by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8631\r\n* Rewrite `AbstractAnnotationMetadataBuilder` bugfixes and tests by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8632\r\n* Move mutable operations out of the default annotation metadata. Cleanup. by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8664\r\n* improve KSP error handling by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8666\r\n* Fix NPE in bean context by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8665\r\n* add test for #4887 by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8655\r\n* Don't process overridden interface methods in introduction advice by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8662\r\n* Add discovery 3.3.0 BOM to build [skip ci] by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8659\r\n* build: add back managed-micronaut-discovery by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8702\r\n* Merge up 3.9.x into 4.0.x by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8701\r\n* Merge branch '3.9.x' into 4.0.x by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8726\r\n* Fixes for generic type arguments and their annotations by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8630\r\n* Run coretto on version named branches by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8722\r\n* Correct messaging event publishing by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8723\r\n* Groovy annotations and generic improvements by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8740\r\n* don't run listeners for bean providers by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8742\r\n* Correct how annotations are propagated for generics and build method … by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8743\r\n* Implement more lenient restrictions on mixed types for getters/setters by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8757\r\n* Move away from annotation API that now returns defaults by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8776\r\n* Deflake the BinaryWebSocketSpec by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8725\r\n* Support type annotations for Java & Groovy by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8764\r\n* Fix regression where AliasFor is no longer recursive  by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8746\r\n* Merge branch '3.9.x' into 4.0.x by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8787\r\n* Fix Object lookup with Groovy. Fixes #8782 by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8791\r\n* Remove bad merge by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8797\r\n* try fix some sonar issues by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8796\r\n* Deprecate FilterOrderProvider by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8624\r\n* javadoc: remove {@code @NonNullApi} by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8814\r\n* Rollback changes that have broken Micronaut Serialization by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8817\r\n* Adding test for headers to verify conformance to HTTP/1.1 4.2 Message Headers specification by @wetted in https://github.com/micronaut-projects/micronaut-core/pull/8806\r\n* Cleanup GraalVM metadata and used Metadata Repository by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8821\r\n* Buffered JSON parsing by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8803\r\n* Support type annotations for KSP, generics improvements and bugfixes. by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8837\r\n* Correct annotating a property for KSP and improve method element annotations by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8847\r\n* Remove incorrect visitor reference by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8858\r\n* Replace the validation module with Micronaut Validation dependency by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8863\r\n* Fallback to trying to load visitor annotations from type by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8870\r\n* Prepare for Jakarta validation by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8871\r\n* Correct processing of the inner classes by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8879\r\n* build: Micronaut Azure 3.9.0 by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8889\r\n* Support private access for introspected beans by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8890\r\n* Fix version parsing by @melix in https://github.com/micronaut-projects/micronaut-core/pull/8897\r\n* Add back the platform for the server-tck tests by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8898\r\n* ci: remove build scan url step by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8909\r\n* Run Corretto nightly instead of every merge by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/8924\r\n* Migrate to Jakarta validation by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8916\r\n* Address sonar bugs and smells in 4.0.x branch by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/8928\r\n* Removed mention of default null check behaviour from javadoc by @sorin-silaghi in https://github.com/micronaut-projects/micronaut-core/pull/8820\r\n* build: remove dependency to validation dependency from core by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8914\r\n* Include stereotypes into the mapped/remapped annotation value, keep `@Inherited` by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8932\r\n* Allow for configuration beans to have interceptors by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8936\r\n* Enable test for streaming h2c requests by @yawkat in https://github.com/micronaut-projects/micronaut-core/pull/8406\r\n* Merge branch '3.9.x' into '4.0.x' by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8947\r\n* Allow to directly synthesize the annotation value by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8949\r\n* Correctly propagate annotations default by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/8943\r\n* docs: validation module by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8957\r\n* ci: Github Actions Sync by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/8970\r\n\r\n## New Contributors\r\n* @cristianrgreco made their first contribution in https://github.com/micronaut-projects/micronaut-core/pull/7000\r\n* @donbeave made their first contribution in https://github.com/micronaut-projects/micronaut-core/pull/8208\r\n* @baracil made their first contribution in https://github.com/micronaut-projects/micronaut-core/pull/8307\r\n* @kgeri made their first contribution in https://github.com/micronaut-projects/micronaut-core/pull/8553\r\n* @rogervinas made their first contribution in https://github.com/micronaut-projects/micronaut-core/pull/8609\r\n* @miguelaferreira made their first contribution in https://github.com/micronaut-projects/micronaut-core/pull/8850\r\n* @sorin-silaghi made their first contribution in https://github.com/micronaut-projects/micronaut-core/pull/8820\r\n\r\n**Full Changelog**: https://github.com/micronaut-projects/micronaut-core/compare/v3.8.7...v4.0.0-M1",
+            "created_at": "2023-03-20T10:44:11Z",
+            "draft": false,
+            "html_url": "https://github.com/micronaut-projects/micronaut-core/releases/tag/v4.0.0-M1",
+            "id": 96190002,
+            "mentions_count": 19,
+            "name": "Micronaut Framework 4.0.0-M1",
+            "node_id": "RE_kwDOB2eaPM4Fu74y",
+            "prerelease": false,
+            "published_at": "2023-03-20T11:29:19Z",
+            "tag_name": "v4.0.0-M1",
+            "tarball_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/tarball/v4.0.0-M1",
+            "target_commitish": "4.0.x",
+            "upload_url": "https://uploads.github.com/repos/micronaut-projects/micronaut-core/releases/96190002/assets{?name,label}",
+            "url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases/96190002",
+            "zipball_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/zipball/v4.0.0-M1"
+          },
+          "repository": {
+            "allow_forking": true,
+            "archive_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/{archive_format}{/ref}",
+            "archived": false,
+            "assignees_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/assignees{/user}",
+            "blobs_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/blobs{/sha}",
+            "branches_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/branches{/branch}",
+            "clone_url": "https://github.com/micronaut-projects/micronaut-core.git",
+            "collaborators_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/collaborators{/collaborator}",
+            "comments_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/comments{/number}",
+            "commits_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/commits{/sha}",
+            "compare_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/compare/{base}...{head}",
+            "contents_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/contents/{+path}",
+            "contributors_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/contributors",
+            "created_at": "2018-03-07T12:05:08Z",
+            "default_branch": "4.0.x",
+            "deployments_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/deployments",
+            "description": "Micronaut Application Framework",
+            "disabled": false,
+            "downloads_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/downloads",
+            "events_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/events",
+            "fork": false,
+            "forks": 964,
+            "forks_count": 964,
+            "forks_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/forks",
+            "full_name": "micronaut-projects/micronaut-core",
+            "git_commits_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/commits{/sha}",
+            "git_refs_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/refs{/sha}",
+            "git_tags_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/tags{/sha}",
+            "git_url": "git://github.com/micronaut-projects/micronaut-core.git",
+            "has_discussions": true,
+            "has_downloads": true,
+            "has_issues": true,
+            "has_pages": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage": "http://micronaut.io",
+            "hooks_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/hooks",
+            "html_url": "https://github.com/micronaut-projects/micronaut-core",
+            "id": 124230204,
+            "is_template": false,
+            "issue_comment_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/issues/comments{/number}",
+            "issue_events_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/issues/events{/number}",
+            "issues_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/issues{/number}",
+            "keys_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/keys{/key_id}",
+            "labels_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/labels{/name}",
+            "language": "Java",
+            "languages_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/languages",
+            "license": {
+              "key": "apache-2.0",
+              "name": "Apache License 2.0",
+              "node_id": "MDc6TGljZW5zZTI=",
+              "spdx_id": "Apache-2.0",
+              "url": "https://api.github.com/licenses/apache-2.0"
+            },
+            "merges_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/merges",
+            "milestones_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/milestones{/number}",
+            "mirror_url": null,
+            "name": "micronaut-core",
+            "node_id": "MDEwOlJlcG9zaXRvcnkxMjQyMzAyMDQ=",
+            "notifications_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/notifications{?since,all,participating}",
+            "open_issues": 594,
+            "open_issues_count": 594,
+            "owner": {
+              "avatar_url": "https://avatars.githubusercontent.com/u/36880643?v=4",
+              "events_url": "https://api.github.com/users/micronaut-projects/events{/privacy}",
+              "followers_url": "https://api.github.com/users/micronaut-projects/followers",
+              "following_url": "https://api.github.com/users/micronaut-projects/following{/other_user}",
+              "gists_url": "https://api.github.com/users/micronaut-projects/gists{/gist_id}",
+              "gravatar_id": "",
+              "html_url": "https://github.com/micronaut-projects",
+              "id": 36880643,
+              "login": "micronaut-projects",
+              "node_id": "MDEyOk9yZ2FuaXphdGlvbjM2ODgwNjQz",
+              "organizations_url": "https://api.github.com/users/micronaut-projects/orgs",
+              "received_events_url": "https://api.github.com/users/micronaut-projects/received_events",
+              "repos_url": "https://api.github.com/users/micronaut-projects/repos",
+              "site_admin": false,
+              "starred_url": "https://api.github.com/users/micronaut-projects/starred{/owner}{/repo}",
+              "subscriptions_url": "https://api.github.com/users/micronaut-projects/subscriptions",
+              "type": "Organization",
+              "url": "https://api.github.com/users/micronaut-projects"
+            },
+            "private": false,
+            "pulls_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/pulls{/number}",
+            "pushed_at": "2023-03-20T11:29:19Z",
+            "releases_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases{/id}",
+            "size": 95770,
+            "ssh_url": "git@github.com:micronaut-projects/micronaut-core.git",
+            "stargazers_count": 5633,
+            "stargazers_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/stargazers",
+            "statuses_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/statuses/{sha}",
+            "subscribers_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/subscribers",
+            "subscription_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/subscription",
+            "svn_url": "https://github.com/micronaut-projects/micronaut-core",
+            "tags_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/tags",
+            "teams_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/teams",
+            "topics": [
+              "cloudnative",
+              "groovy",
+              "java",
+              "kotlin",
+              "microservices",
+              "serverless"
+            ],
+            "trees_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/trees{/sha}",
+            "updated_at": "2023-03-20T04:13:06Z",
+            "url": "https://api.github.com/repos/micronaut-projects/micronaut-core",
+            "visibility": "public",
+            "watchers": 5633,
+            "watchers_count": 5633,
+            "web_commit_signoff_required": false
+          },
+          "sender": {
+            "avatar_url": "https://avatars.githubusercontent.com/u/864788?v=4",
+            "events_url": "https://api.github.com/users/sdelamo/events{/privacy}",
+            "followers_url": "https://api.github.com/users/sdelamo/followers",
+            "following_url": "https://api.github.com/users/sdelamo/following{/other_user}",
+            "gists_url": "https://api.github.com/users/sdelamo/gists{/gist_id}",
+            "gravatar_id": "",
+            "html_url": "https://github.com/sdelamo",
+            "id": 864788,
+            "login": "sdelamo",
+            "node_id": "MDQ6VXNlcjg2NDc4OA==",
+            "organizations_url": "https://api.github.com/users/sdelamo/orgs",
+            "received_events_url": "https://api.github.com/users/sdelamo/received_events",
+            "repos_url": "https://api.github.com/users/sdelamo/repos",
+            "site_admin": false,
+            "starred_url": "https://api.github.com/users/sdelamo/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/sdelamo/subscriptions",
+            "type": "User",
+            "url": "https://api.github.com/users/sdelamo"
+          }
+        },
+        "github_head_ref": "",
+        "github_ref": "refs/tags/v4.0.0-M1",
+        "github_ref_type": "tag",
+        "github_repository_id": "124230204",
+        "github_repository_owner": "micronaut-projects",
+        "github_repository_owner_id": "36880643",
+        "github_run_attempt": "1",
+        "github_run_id": "4467685258",
+        "github_run_number": "124",
+        "github_sha1": "d35e5a030411a14a6ff000de2f95d847f95d5ae8"
+      }
+    },
+    "metadata": {
+      "buildInvocationID": "4467685258-1",
+      "completeness": {
+        "parameters": true,
+        "environment": false,
+        "materials": false
+      },
+      "reproducible": false
+    },
+    "materials": [
+      {
+        "uri": "git+https://github.com/micronaut-projects/micronaut-core@refs/tags/v4.0.0-M1",
+        "digest": {
+          "sha1": "d35e5a030411a14a6ff000de2f95d847f95d5ae8"
+        }
+      }
+    ]
+  }
+}
