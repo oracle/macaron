@@ -18,8 +18,14 @@
 {% endblock%}
 
 {% block content %}
+    {% if target %}
+    {#
+        Display the related section only when the target information is available :
+            - Target information
+            - Provenance summary
+            - Check report
+    #}
     <div class="table_caption">Target information</div>
-
     {{ macros.render_target_info_table(target.info) | indent(4) }}
 
     <div class='space_divider'></div>
@@ -42,15 +48,31 @@
     <div class="table_caption">Reports for Macaron checks</div>
     {{ macros.render_checks_report(target.checks.results) | indent(4) }}
 
+    {% else %}
+    {#
+        TODO: design what to display if the target is empty.
+    #}
+    <div id= "prov_justification">Empty main target </div>
+
+    {% endif %}
+
     <div class='space_divider'></div>
 
+    {#
+        Display the dependencies data if it's available:
+            - The total number of dependencies and unique repositories include in the analysis
+            - Dependency results (The number of dependencies pass each check)
+            - The status for each dependency
+    #}
     {% if dependencies.analyzed_deps != 0 %}
     <div class="table_caption" id="deps_result_title">Dependency results</div>
     <div class="table_sub_caption">
     {{ dependencies.analyzed_deps }} dependencies that map to {{ dependencies.unique_dep_repos }} unique repositories have been successfully analyzed.
     </div>
     {{ macros.render_dep_summary(dependencies.checks_summary) | indent(4) }}
+
     <div class="space_divider"></div>
+
     {{ macros.render_dep_status(dependencies.dep_status) | indent(4) }}
     {% endif %}
 {% endblock %}
