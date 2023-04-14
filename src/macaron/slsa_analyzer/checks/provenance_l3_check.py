@@ -37,7 +37,7 @@ from macaron.util import get_if_exists
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class _VerifyArtefactResultType(Enum):
+class _VerifyArtifactResultType(Enum):
     """Result of attempting to verify an asset."""
 
     # slsa-verifier succeeded and the artifact passed verification
@@ -53,18 +53,18 @@ class _VerifyArtefactResultType(Enum):
 
     def is_skip(self) -> bool:
         """Return whether the verification was skipped."""
-        return self in (_VerifyArtefactResultType.NO_DOWNLOAD, _VerifyArtefactResultType.TOO_LARGE)
+        return self in (_VerifyArtifactResultType.NO_DOWNLOAD, _VerifyArtifactResultType.TOO_LARGE)
 
     def is_fail(self) -> bool:
         """Return whether the verification failed."""
-        return self in (_VerifyArtefactResultType.FAILED, _VerifyArtefactResultType.ERROR)
+        return self in (_VerifyArtifactResultType.FAILED, _VerifyArtifactResultType.ERROR)
 
 
 @dataclass
-class _VerifyArtefactResult:
+class _VerifyArtifactResult:
     """Dataclass storing the result of verifying a single asset."""
 
-    result: _VerifyArtefactResultType
+    result: _VerifyArtifactResultType
     artifact_name: str
 
     def __str__(self) -> str:
@@ -77,7 +77,7 @@ class ProvenanceResultTable(CheckFactsTable, ORMBase):
     __tablename__ = "_provenance_l3_check"
 
 
-class ReleaseArtefact(ORMBase):
+class ReleaseArtifact(ORMBase):
     """Table to store artifacts."""
 
     __tablename__ = "_release_artifact"
@@ -110,7 +110,7 @@ class Provenance(ORMBase):
     config_source_entry_point: Mapped[str] = mapped_column(String)
 
 
-class ProvenanceArtefact(ORMBase):
+class ProvenanceArtifact(ORMBase):
     """Mapping artifacts to the containing provenance."""
 
     __tablename__ = "_provenance_artifact"
@@ -122,15 +122,15 @@ class ProvenanceArtefact(ORMBase):
     _provenance = relationship(Provenance)
 
 
-class ArtefactDigest(ORMBase):
+class ArtifactDigest(ORMBase):
     """Table to store artifact digests."""
 
     __tablename__ = "_artifact_digest"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, nullable=False)  # noqa: A003
-    artifact: Mapped[int] = mapped_column(Integer, ForeignKey(ProvenanceArtefact.id), nullable=False)
+    artifact: Mapped[int] = mapped_column(Integer, ForeignKey(ProvenanceArtifact.id), nullable=False)
     digest: Mapped[int] = mapped_column(Integer, ForeignKey(DigestSet.id), nullable=False)
 
-    _artifact = relationship(ProvenanceArtefact)
+    _artifact = relationship(ProvenanceArtifact)
     _digest = relationship(DigestSet)
 
 
@@ -166,15 +166,15 @@ class ProvenanceL3Check(BaseCheck):
 
     def _verify_slsa(
         self, macaron_path: str, temp_path: str, prov_asset: dict, asset_name: str, repository_url: str
-    ) -> _VerifyArtefactResult:
+    ) -> _VerifyArtifactResult:
         """Run SLSA verifier to verify the artifact."""
         source_path = get_repo_dir_name(repository_url, sanitize=False)
         if not source_path:
             logger.error("Invalid repository source path to verify: %s.", repository_url)
-            return _VerifyArtefactResult(_VerifyArtefactResultType.NO_DOWNLOAD, asset_name)
+            return _VerifyArtifactResult(_VerifyArtifactResultType.NO_DOWNLOAD, asset_name)
 
         errors: list[str] = []
-        result: _VerifyArtefactResult
+        result: _VerifyArtifactResult
         cmd = [
             os.path.join(macaron_path, "bin/slsa-verifier"),
             "verify-artifact",
@@ -197,9 +197,9 @@ class ProvenanceL3Check(BaseCheck):
 
             output = verifier_output.stdout.decode("utf-8")
             if "PASSED: Verified SLSA provenance" in output:
-                result = _VerifyArtefactResult(_VerifyArtefactResultType.PASSED, asset_name)
+                result = _VerifyArtifactResult(_VerifyArtifactResultType.PASSED, asset_name)
             else:
-                result = _VerifyArtefactResult(_VerifyArtefactResultType.FAILED, asset_name)
+                result = _VerifyArtifactResult(_VerifyArtifactResultType.FAILED, asset_name)
 
             log_path = os.path.join(global_config.build_log_path, f"{os.path.basename(source_path)}.slsa_verifier.log")
             with open(log_path, mode="a", encoding="utf-8") as log_file:
@@ -216,7 +216,7 @@ class ProvenanceL3Check(BaseCheck):
             errors.append(str(error))
 
         if errors:
-            result = _VerifyArtefactResult(result=_VerifyArtefactResultType.ERROR, artifact_name=asset_name)
+            result = _VerifyArtifactResult(result=_VerifyArtifactResultType.ERROR, artifact_name=asset_name)
             try:
                 error_log_path = os.path.join(
                     global_config.build_log_path, f"{os.path.basename(source_path)}.slsa_verifier.errors"
@@ -320,7 +320,7 @@ class ProvenanceL3Check(BaseCheck):
 
             ci_service_name: str
             asset_url: str
-            verify_result: _VerifyArtefactResult
+            verify_result: _VerifyArtifactResult
 
         all_feedback: list[Feedback] = []
         ci_services = ctx.dynamic_data["ci_services"]
@@ -371,7 +371,7 @@ class ProvenanceL3Check(BaseCheck):
 
                         # Output provenance
                         prov = Provenance()
-                        # TODO: fix commit reference for provenance when release/artefact as an analysis entrypoint is
+                        # TODO: fix commit reference for provenance when release/artifact as an analysis entrypoint is
                         #  implemented ensure the provenance commit matches the actual release analyzed
                         prov.release_commit_sha = ""
                         prov.provenance_json = json.dumps(payload)
@@ -392,25 +392,25 @@ class ProvenanceL3Check(BaseCheck):
                         for subject in payload["subject"]:
                             sub_asset = self._find_asset(subject, all_assets, temp_path, ci_service)
 
-                            result: None | _VerifyArtefactResult = None
+                            result: None | _VerifyArtifactResult = None
                             for _ in range(1):
                                 if not sub_asset:
-                                    result = _VerifyArtefactResult(
-                                        result=_VerifyArtefactResultType.NO_DOWNLOAD, artifact_name=subject["name"]
+                                    result = _VerifyArtifactResult(
+                                        result=_VerifyArtifactResultType.NO_DOWNLOAD, artifact_name=subject["name"]
                                     )
                                     break
                                 if not Path(temp_path, sub_asset["name"]).is_file():
                                     if "size" in sub_asset and self._size_large(sub_asset["size"]):
-                                        result = _VerifyArtefactResult(
-                                            result=_VerifyArtefactResultType.TOO_LARGE,
+                                        result = _VerifyArtifactResult(
+                                            result=_VerifyArtifactResultType.TOO_LARGE,
                                             artifact_name=sub_asset["name"],
                                         )
                                         break
                                     if "url" in sub_asset and not ci_service.api_client.download_asset(
                                         sub_asset["url"], os.path.join(temp_path, sub_asset["name"])
                                     ):
-                                        result = _VerifyArtefactResult(
-                                            result=_VerifyArtefactResultType.NO_DOWNLOAD,
+                                        result = _VerifyArtifactResult(
+                                            result=_VerifyArtifactResultType.NO_DOWNLOAD,
                                             artifact_name=sub_asset["name"],
                                         )
                                         break
@@ -424,9 +424,9 @@ class ProvenanceL3Check(BaseCheck):
                                     logger.info("Skipped verifying artifact: %s", result.result)
                                 if result.result.is_fail():
                                     logger.info("Error verifying artifact: %s", result.result)
-                                if result.result == _VerifyArtefactResultType.FAILED:
+                                if result.result == _VerifyArtifactResultType.FAILED:
                                     logger.info("Failed verifying artifact: %s", result.result)
-                                if result.result == _VerifyArtefactResultType.PASSED:
+                                if result.result == _VerifyArtifactResultType.PASSED:
                                     logger.info("Successfully verified artifact: %s", result.result)
 
                                 all_feedback.append(
@@ -438,15 +438,15 @@ class ProvenanceL3Check(BaseCheck):
                                 )
 
                                 # Store artifact information result to database
-                                artifact = ProvenanceArtefact()
+                                artifact = ProvenanceArtifact()
                                 artifact.name = subject["name"]
-                                artifact.verified = result.result == _VerifyArtefactResultType.PASSED
+                                artifact.verified = result.result == _VerifyArtifactResultType.PASSED
                                 artifact._provenance = prov  # pylint: disable=protected-access
                                 check_result["result_tables"].append(artifact)
 
                                 for k, val in subject["digest"].items():
                                     digest = DigestSet()
-                                    artifact_digest = ArtefactDigest()
+                                    artifact_digest = ArtifactDigest()
                                     digest.digest_algorithm = k
                                     digest.digest = val
                                     # foreign key relations
@@ -471,12 +471,12 @@ class ProvenanceL3Check(BaseCheck):
             failed = [
                 result
                 for ci_name, prov_url, result in all_feedback
-                if result.result == _VerifyArtefactResultType.FAILED
+                if result.result == _VerifyArtifactResultType.FAILED
             ]
             passed = [
                 result
                 for ci_name, prov_url, result in all_feedback
-                if result.result == _VerifyArtefactResultType.PASSED
+                if result.result == _VerifyArtifactResultType.PASSED
             ]
             skipped = [
                 result for ci_name, prov_url, result in all_feedback if result not in passed and result not in failed
