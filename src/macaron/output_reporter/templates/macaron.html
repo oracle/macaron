@@ -3,9 +3,9 @@
     Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
 #}
 
-{% import "helper_macros.jinja2" as macros %}
+{%- import "helper_macros.j2" as macros -%}
 
-{% extends "base_template.html"%}
+{%- extends "base_template.html" -%}
 
 {#
     This section is where we fill in the blocks defined in base_template.html.
@@ -14,19 +14,17 @@
 #}
 
 {% block timestamps %}
-{{ super() }}
 {{ metadata.timestamps | indent(12, first=true) }}
 {% endblock%}
 
+{% block content %}
+    <div class="table_caption">Target information</div>
 
-{% block target_info %}
-{{ super() }}
-{{ macros.render_target_info_table(target.info) | indent(4, first=true) }}
-{% endblock %}
+    {{ macros.render_target_info_table(target.info) | indent(4) }}
 
+    <div class='space_divider'></div>
 
-{% block prov_justification %}
-{{ super() }}
+    <div class="table_caption">Provenance summary</div>
     <div id= "prov_justification">
         {% if target.provenances.is_inferred == true %}
         Could not find a provenance for this repository. Below is what Macaron has inferred.
@@ -34,21 +32,25 @@
         This is the provenance found for this repository.
         {% endif %}
     </div>
-{% endblock %}
 
+    <button class="fancy-button" onclick="expandAll()">Expand All</button>
+    <button class="fancy-button" onclick="collapseAll()">Collapse All</button>
+    {{ macros.render_tree_view_nested_list(target.provenances.content) | indent(4) }}
 
-{% block prov_summary %}
-{{ super() }}
-{{ macros.render_tree_view_nested_list(target.provenances.content) | indent(4, first=true) }}
-{% endblock %}
+    <div class='space_divider'></div>
 
+    <div class="table_caption">Reports for Macaron checks</div>
+    {{ macros.render_checks_report(target.checks.results) | indent(4) }}
 
-{% block checks_report %}
-{{ super() }}
-{{ macros.render_checks_report(target.checks.results) | indent(4, first=true) }}
-{% endblock %}
+    <div class='space_divider'></div>
 
-
-{% block deps_result_section %}
-{{ macros.render_dep_result(dependencies) | indent(4, first=true) }}
+    {% if dependencies.analyzed_deps != 0 %}
+    <div class="table_caption" id="deps_result_title">Dependency results</div>
+    <div class="table_sub_caption">
+    {{ dependencies.analyzed_deps }} dependencies that map to {{ dependencies.unique_dep_repos }} unique repositories have been successfully analyzed.
+    </div>
+    {{ macros.render_dep_summary(dependencies.checks_summary) | indent(4) }}
+    <div class="space_divider"></div>
+    {{ macros.render_dep_status(dependencies.dep_status) | indent(4) }}
+    {% endif %}
 {% endblock %}

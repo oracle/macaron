@@ -1,0 +1,166 @@
+{#
+    Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+    Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
+#}
+
+{# This section contains the reuseable macros. #}
+
+{#
+    This macro renders a hyperlink.
+#}
+{%- macro render_hyperlink(href, display_text= "", target="_blank", class="", id="") -%}
+<a href="{{ href }}" target="{{ target }}" class="{{ class }}" id = "{{ id }}">{{ display_text }}</a>
+{%- endmacro %}
+
+{#
+    This macro creates the <thead> element for a table from a list of header names.
+#}
+{%- macro render_headers(headers) -%}
+<thead>
+    <tr>
+        {% for header in headers %}
+        <th>{{ header | replace("_", " ") | capitalize }}</th>
+        {% endfor %}
+    </tr>
+</thead>
+{%- endmacro %}
+
+{#
+    This macro renders the structure for a html table which will contain <thead> (optional) and <tbody> elements.
+    The parameter header_names is a list of header names for the table (default to an empty list).
+    If has_header == true, the macro will also render the from header_names (default to true).
+    The rendering for each data row in the table must be handled by the caller.
+#}
+{%- macro render_table(header_names=[], has_header=true, class="", id="") -%}
+<table class="{{ class }}" id="{{ id }}">
+    {% if has_header == true %}
+    {%- set headers = header_names -%}
+    {{ render_headers(headers) | indent(4, first=true) }}
+    {% endif %}
+    <tbody>
+    {# We use the caller rendering here. #}
+    {{ caller() | indent(4) }}
+    </tbody>
+</table>
+{%- endmacro %}
+
+{#
+    This macro renders a hierarchy list to display a dictionary-structured data.
+#}
+{% macro render_tree_view_nested_list(data, class="", id="") %}
+{% set data = data | get_flatten_dict %}
+<ul class="tree-view-nested-list {{ class }}" id="{{ id }}">
+    {% for key, value in data.items() recursive %}
+    <li>
+        {% if value is mapping %}
+        <div class="caret">{{ key }}:</div>
+        <ul class="nested-ul">
+        {{ loop(value.items()) | indent(2 * 4) }}
+        </ul>
+        {% else %}
+        {{ key }}: {{ value }}
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endmacro %}
+
+{# -------------------------------------------- #}
+
+{#
+    This section contains macros that are use to render each element in this template.
+    We define these macros separately so that we could use correct
+    indentation for the whole block.
+#}
+
+{% macro render_target_info_table(target_info_data) %}
+{% call render_table(class="target_info", has_header=false) %}
+    {% for key, value in target_info_data | items %}
+    <tr>
+        <th>
+            {{ key | replace("_", " ") | capitalize }}
+        </th>
+        <td>
+            {{ value }}
+        </td>
+    </tr>
+    {% endfor %}
+{% endcall %}
+{% endmacro %}
+
+{% macro render_checks_report(checks_report_data) %}
+{%- set headers = checks_report_data | get_headers -%}
+{% call render_table(header_names=headers, has_header=true, class="checks_report") %}
+    {% for item in checks_report_data %}
+    <tr>
+    {% for header in headers %}
+        {% if header == "slsa_requirements" %}
+        <td>
+            <ul>
+            {% for ele in item[header] %}
+                <li>{{ ele }}</li>
+            {% endfor %}
+            </ul>
+        </td>
+        {% elif header == "result_type" %}
+        <td class={{ item[header] | get_check_result_color }}>{{ item[header].value }}</td>
+        {% elif header == "justification" %}
+        <td>
+            <ul>
+            {% for ele in item[header] %}
+                {% if ele is mapping %}
+                    {% for key, value in ele | items %}
+                <li>{{ key }}: {{ render_hyperlink(href=value, display_text=value) }}</li>
+                    {% endfor %}
+                {% else %}
+                <li>{{ ele }}</li>
+                {% endif %}
+            {% endfor %}
+            </ul>
+        </td>
+        {% else %}
+        <td>{{ item[header] }}</td>
+        {% endif %}
+    {% endfor %}
+    </tr>
+    {% endfor %}
+{% endcall %}
+{% endmacro %}
+
+{% macro render_dep_summary(dep_summary_data) %}
+{%- set headers = dep_summary_data | get_headers -%}
+{% call render_table(header_names=headers, has_header=true, class="dep_summary") %}
+    {% for item in dep_summary_data %}
+    <tr>
+        {% for header in headers %}
+        <td>{{ item[header] }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+{% endcall %}
+{% endmacro %}
+
+{% macro render_dep_status(dep_status_data) %}
+{%- set headers = dep_status_data | get_headers -%}
+{% call render_table(header_names=headers, has_header=true, class="dep_status") %}
+    {% for item in dep_status_data %}
+    <tr>
+    {% for header in headers %}
+        {% if header == "report" %}
+        {% if item[header] %}
+        <td>{{ render_hyperlink(item[header], display_text="Open report.") }}</td>
+        {% else %}
+        <td>Not available.</td>
+        {% endif %}
+        {% elif header == "status" %}
+        <td class={{ item[header] | get_dep_status_color }}>{{ item[header].value }}</td>
+        {% else %}
+        <td>{{ item[header] }}</td>
+        {% endif %}
+    {% endfor %}
+    </tr>
+    {% endfor %}
+{% endcall %}
+{% endmacro %}
+
+{# -------------------------------------------- #}

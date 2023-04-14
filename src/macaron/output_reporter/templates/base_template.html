@@ -609,30 +609,7 @@
         </div>
     </header>
 
-    {% block target_info%}
-    <div class="table_caption">Target information</div>
-    {% endblock %}
-
-    <div class='space_divider'></div>
-
-    {% block prov_justification %}
-    <div class="table_caption">Provenance summary</div>
-    {% endblock %}
-
-    {% block prov_summary %}
-    <button class="fancy-button" onclick="expandAll()">Expand All</button>
-    <button class="fancy-button" onclick="collapseAll()">Collapse All</button>
-    {% endblock %}
-
-    <div class='space_divider'></div>
-
-    {% block checks_report %}
-    <div class="table_caption">Reports for Macaron checks</div>
-    {% endblock%}
-
-    <div class='space_divider'></div>
-
-    {% block deps_result_section %}
+    {% block content %}
     {% endblock %}
 
     <footer class='footer'>
