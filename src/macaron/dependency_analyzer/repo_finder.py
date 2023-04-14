@@ -1,7 +1,7 @@
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module tries to find urls of repositories that match artefacts passed in 'group:artefact:version' form."""
+"""This module tries to find urls of repositories that match artifacts passed in 'group:artifact:version' form."""
 
 import re
 import typing
@@ -12,7 +12,7 @@ from defusedxml.ElementTree import fromstring
 from macaron.config.global_config import global_config, logger
 
 
-def create_urls(group: str, artefact: str, version: str) -> list[str]:
+def create_urls(group: str, artifact: str, version: str) -> list[str]:
     """
     Create the urls to search for the pom relating to the passed GAV.
 
@@ -20,10 +20,10 @@ def create_urls(group: str, artefact: str, version: str) -> list[str]:
     ----------
     group : str
         The group ID.
-    artefact: str
-        The artefact ID.
+    artifact: str
+        The artifact ID.
     version: str
-        The version of the artefact.
+        The version of the artifact.
 
     Returns
     -------
@@ -34,14 +34,14 @@ def create_urls(group: str, artefact: str, version: str) -> list[str]:
 
     version_pruned = ""
     if "-" in version:
-        # Create a pruned version to fix some strangely labeled artefacts
+        # Create a pruned version to fix some strangely labeled artifacts
         version_pruned = re.sub("-[a-zA-Z]+", "", version)
 
     # Create URLs using all configured repositories
-    for repo in global_config.artefact_repositories:
-        urls.append(f"{repo}/{group}/{artefact}/{version}/{artefact}-{version}.pom")
+    for repo in global_config.artifact_repositories:
+        urls.append(f"{repo}/{group}/{artifact}/{version}/{artifact}-{version}.pom")
         if version_pruned != "":
-            urls.append(f"{repo}/{group}/{artefact}/{version_pruned}/{artefact}-{version_pruned}.pom")
+            urls.append(f"{repo}/{group}/{artifact}/{version_pruned}/{artifact}-{version_pruned}.pom")
 
     return urls
 
@@ -53,7 +53,7 @@ def parse_gav(gav: str) -> list[str]:
     Parameters
     ----------
     gav : str
-        An artefact represented as a GAV (group, artefact, version) in the format: G:A:V.
+        An artifact represented as a GAV (group, artifact, version) in the format: G:A:V.
 
     Returns
     -------
@@ -95,7 +95,7 @@ def retrieve_pom(session: requests.Session, url: str) -> str:
     if not res.ok:
         logger.warning("Failed to retrieve pom from: %s, error code: %s", url, res.status_code)
         return ""
-    logger.info("Found artefact POM at: %s", url)
+    logger.info("Found artifact POM at: %s", url)
     return res.text
 
 
@@ -144,12 +144,12 @@ def parse_pom(pom: str, tags: list[str]) -> list[str]:
 
 def find_repo(gav: str, tags: list[str]) -> list[str]:
     """
-    Attempt to retrieve a repository URL that matches the passed GAV artefact.
+    Attempt to retrieve a repository URL that matches the passed GAV artifact.
 
     Parameters
     ----------
     gav : str
-        An artefact represented as a GAV (group, artefact, version) in the format: G:A:V.
+        An artifact represented as a GAV (group, artifact, version) in the format: G:A:V.
     tags : list[str]
         The list of XML tags to look for, each in the format: tag1[.tag2 ... .tagN]
 
@@ -158,8 +158,8 @@ def find_repo(gav: str, tags: list[str]) -> list[str]:
     list[str] :
         The URLs found for the passed GAV.
     """
-    if len(global_config.artefact_repositories) == 0:
-        logger.warning("No repositories set in config artefact_repositories parameter for repo finder.")
+    if len(global_config.artifact_repositories) == 0:
+        logger.warning("No repositories set in config artifact_repositories parameter for repo finder.")
         return []
 
     # Parse the GAV and create the URLs for its POM

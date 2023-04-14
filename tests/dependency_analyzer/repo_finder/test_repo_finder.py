@@ -17,7 +17,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
 
     def test_repo_finder(self) -> None:
         """Test the functions of the repo finder that do not require http transactions."""
-        global_config.artefact_repositories = ["https://repository.repo/"]
+        global_config.artifact_repositories = ["https://repository.repo/"]
         gav = "group:artifact:version"
         created_urls = parse_gav(gav)
         assert len(created_urls) == 1
