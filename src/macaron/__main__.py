@@ -167,8 +167,16 @@ def main() -> None:
         "--policy",
         required=False,
         default=[],
-        help=("The path to a policy yaml file or directory."),
+        help="The path to a policy yaml file or directory.",
         action="append",
+    )
+
+    main_parser.add_argument(
+        "-ar",
+        "--artefact-repositories",
+        required=False,
+        default=["https://repo.maven.apache.org/maven2"],
+        help="The remote repository to retrieve artefact POMs from.",
     )
 
     # Add sub parsers for each action
@@ -297,6 +305,7 @@ def main() -> None:
         gh_token=args.personal_access_token or "",
         policy_paths=args.policy,
         resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
+        artefact_repositories=args.artefact_repositories,
     )
 
     # Load the default values from defaults.ini files.
