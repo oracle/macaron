@@ -162,7 +162,10 @@ while [[ $# -gt 0 ]]; do
             arg_provenance="$2"
             shift
             ;;
-
+        -sbom|--sbom-path)
+            arg_sbom_path="$2"
+            shift
+            ;;
         # This flag is duplicated for digest and database.
         -d)
             if [[ "${entrypoint[0]}" = "policy_engine" ]];
@@ -293,6 +296,22 @@ fi
 if [[ -n "${config_path}" ]]; then
     config_path="$(ensure_absolute_path "${config_path}")"
     mounts+=("-v" "${config_path}:${MACARON_WORKSPACE}/config/${file_name}:ro")
+fi
+
+# Determine the sbom path to be mounted into ${MACARON_WORKSPACE}/sbom/${file_name}
+if [[ -n "${arg_sbom_path}" ]]; then
+    sbom_path="${arg_sbom_path}"
+    err=$(check_file_exists "${sbom_path}" "-sbom/--sbom-path")
+    if [[ -n "${err}" ]]; then
+        echo "${err}"
+        exit 1
+    fi
+    file_name="$(basename "${sbom_path}")"
+    argv_action+=("--sbom-path" "${MACARON_WORKSPACE}/sbom/${file_name}")
+fi
+if [[ -n "${sbom_path}" ]]; then
+    sbom_path="$(ensure_absolute_path "${sbom_path}")"
+    mounts+=("-v" "${sbom_path}:${MACARON_WORKSPACE}/sbom/${file_name}:ro")
 fi
 
 # MACARON entrypoint - Verify action argvs
