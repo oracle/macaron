@@ -139,11 +139,35 @@ jobs:
       # We only generate SBOM in CycloneDX format.
       run: |
         RELEASE_TAG=$(git describe --tags --abbrev=0)
-        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b "$SYFT_BIN" v0.74.1
-        "$SYFT_BIN"/syft --version
-        "$SYFT_BIN"/syft \
-          ghcr.io/oracle-samples/macaron:"$RELEASE_TAG" \
-          -o cyclonedx-json=dist/macaron-"$RELEASE_TAG"-sbom-docker.json
+        SYFT_VERSION=0.77.0
+        ASSET_NAME="syft_${SYFT_VERSION}_linux_amd64.tar.gz"
+        CHECKSUMS="syft_${SYFT_VERSION}_checksums.txt"
+
+        # Download artifacts.
+        echo "Downloading $ASSET_NAME"
+        curl --output "$ASSET_NAME" --progress-bar --location \
+          "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/${ASSET_NAME}"
+        test -s "$ASSET_NAME" || (echo "Unable to download $ASSET_NAME" && exit 0)
+        echo "Downloading $CHECKSUMS"
+        curl --output "$CHECKSUMS"  --progress-bar --location \
+          "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/${CHECKSUMS}"
+        test -s "$CHECKSUMS" || (echo "Unable to download $CHECKSUMS" && exit 0)
+
+        tar -zxvf "$ASSET_NAME" -C "$SYFT_BIN" syft
+        EXPECTED=$(grep "${ASSET_NAME}" "${CHECKSUMS}" 2>/dev/null | tr '\t' ' ' | cut -d ' ' -f 1)
+        SYFT_DIGEST=$(sha256sum "$ASSET_NAME" | cut -d ' ' -f 1)
+        rm -f "$ASSET_NAME"
+        rm -f "$CHECKSUMS"
+
+        # Check if artifact is valid.
+        if [ "$EXPECTED" == "$SYFT_DIGEST" ]; then
+          "$SYFT_BIN"/syft --version
+          "$SYFT_BIN"/syft \
+            ghcr.io/oracle-samples/macaron:"$RELEASE_TAG" \
+            -o cyclonedx-json=dist/macaron-"$RELEASE_TAG"-sbom-docker.json
+        else
+          echo "Checksum for '$ASSET_NAME' did not verify: expected $EXPECTED but got $SYFT_DIGEST"
+        fi
 
     # Create the Release Notes using commitizen.
     - name: Set up Python
