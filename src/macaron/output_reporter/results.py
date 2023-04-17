@@ -277,17 +277,27 @@ class Report:
 
     def __str__(self) -> str:
         """Return the string representation of the Report instance."""
-        ctx_list = list(self.get_ctxs())
-        main_ctx: AnalyzeContext = ctx_list.pop(0)
+        main_ctx = self.root_record.context
+
+        if not main_ctx:
+            return "".join(
+                [
+                    "\nANALYSIS RESULT:\n\n",
+                    "\nThere is no information to display for the main target.\n\n",
+                ]
+            )
 
         output = "".join(
             [
-                f"\n{main_ctx.remote_path} ANALYSIS RESULT:\n\n",
+                "\nANALYSIS RESULT:\n\n",
                 "\nCHECK RESULTS:\n\n",
                 str(main_ctx),
                 "\nSLSA REQUIREMENT RESULTS:\n",
             ]
         )
+
+        # Remove the AnalyzeContext instance of the main target.
+        ctx_list = list(self.get_ctxs())[1:]
 
         slsa_req_mesg: dict[SLSALevels, list[str]] = {level: [] for level in SLSALevels if level != SLSALevels.LEVEL0}
         for req in main_ctx.ctx_data.values():

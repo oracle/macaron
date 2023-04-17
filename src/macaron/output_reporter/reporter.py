@@ -219,6 +219,13 @@ class HTMLReporter(FileReporter):
                     # in the original data.
                     html = self.template.render(deepcopy(record.get_dict()))
                     self.write_file(file_name, html)
+                elif record.dependencies:
+                    # TODO: This might not be the best way to indicate a main target (WIP).
+                    file_name = os.path.join(target_dir, "index.html")
+                    # Make a deep copy because we don't want to keep any modification from Jinja
+                    # in the original data.
+                    html = self.template.render(deepcopy(record.get_dict()))
+                    self.write_file(file_name, html)
         except TemplateSyntaxError as error:
             location = f"line {error.lineno}"
             name = error.filename or error.name

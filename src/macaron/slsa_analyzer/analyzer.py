@@ -128,19 +128,35 @@ class Analyzer:
         deps_config: list[Configuration] = [Configuration(dep) for dep in user_config.get("dependencies", [])]
         deps_resolved: dict[str, DependencyInfo] = {}
 
-        # Analyze the main target.
-        main_record = self.run_single(main_config)
+        if main_config.get_value("path"):
+            # Analyze the main target.
+            main_record = self.run_single(main_config)
+        else:
+            main_record = Record(
+                record_id="Unknown main target.",
+                description="This main target is not provided.",
+                pre_config=main_config,
+                status=SCMStatus.MISSING_SCM,
+                policies_failed=[],
+                policies_passed=[],
+                context=None,
+                dependencies=[],
+            )
 
-        # Write the results of main target to DB.
-        if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
-            logger.info("Analysis has failed.")
-            return 1
+        # # Write the results of main target to DB.
+        # if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
+        #     logger.info("Analysis has failed.")
+        #     return 1
 
         # Run the chosen dependency analyzer plugin.
         if skip_deps:
             logger.info("Skipping automatic dependency analysis...")
-        else:
-            deps_resolved = self.resolve_dependencies(main_record.context, sbom_path)
+        elif sbom_path:
+            logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
+            deps_resolved = get_deps_from_sbom(sbom_path)
+        elif main_record.context:
+            logger.info("Getting the dependencies by running the SBOM generator")
+            deps_resolved = self.resolve_dependencies(main_record.context)
 
         # Merge the automatically resolved dependencies with the manual configuration.
         deps_config = DependencyAnalyzer.merge_configs(deps_config, deps_resolved)
@@ -215,7 +231,7 @@ class Analyzer:
         logger.info(str(report))
 
         logger.info("Analysis Completed!")
-        return any(failed_policies)
+        return int(any(failed_policies))
 
     def generate_reports(self, report: Report) -> None:
         """Generate the report of the analysis to all registered reporters.
@@ -226,36 +242,35 @@ class Analyzer:
             The report of the analysis.
         """
         if not report.root_record.context:
-            logger.critical("The main repository analysis failed. Cannot generate a report for it.")
-            return
+            output_target_path = os.path.join(
+                # TODO: work more on the directory of the temporary directory. Perhaps add the timestamps?
+                global_config.output_path,
+                "reports",
+                report.root_record.pre_config.options.get("id", "temp"),
+            )
+        else:
+            output_target_path = os.path.join(
+                global_config.output_path, "reports", git_url.get_repo_dir_name(report.root_record.context.remote_path)
+            )
 
-        output_target_path = os.path.join(
-            global_config.output_path, "reports", git_url.get_repo_dir_name(report.root_record.context.remote_path)
-        )
         os.makedirs(output_target_path, exist_ok=True)
 
         for reporter in self.reporters:
             reporter.generate(output_target_path, report)
 
-    def resolve_dependencies(self, main_ctx: AnalyzeContext, sbom_path: str) -> dict[str, DependencyInfo]:
+    def resolve_dependencies(self, main_ctx: AnalyzeContext) -> dict[str, DependencyInfo]:
         """Resolve the dependencies of the main target repo.
 
         Parameters
         ----------
         main_ctx : AnalyzeContext
             The context of object of the target repository.
-        sbom_path: str
-            The path to the SBOM.
 
         Returns
         -------
         dict[str, DependencyInfo]
             A dictionary where artifacts are grouped based on ``artifactId:groupId``.
         """
-        if sbom_path:
-            logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
-            return get_deps_from_sbom(sbom_path)
-
         deps_resolved: dict[str, DependencyInfo] = {}
 
         build_tool = main_ctx.dynamic_data["build_spec"]["tool"]
