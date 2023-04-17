@@ -153,14 +153,12 @@ jobs:
           "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/${CHECKSUMS}"
         test -s "$CHECKSUMS" || (echo "Unable to download $CHECKSUMS" && exit 0)
 
-        tar -zxvf "$ASSET_NAME" -C "$SYFT_BIN" syft
         EXPECTED=$(grep "${ASSET_NAME}" "${CHECKSUMS}" 2>/dev/null | tr '\t' ' ' | cut -d ' ' -f 1)
         SYFT_DIGEST=$(sha256sum "$ASSET_NAME" | cut -d ' ' -f 1)
-        rm -f "$ASSET_NAME"
-        rm -f "$CHECKSUMS"
 
         # Check if artifact is valid.
         if [ "$EXPECTED" == "$SYFT_DIGEST" ]; then
+          tar -zxvf "$ASSET_NAME" -C "$SYFT_BIN" syft
           "$SYFT_BIN"/syft --version
           "$SYFT_BIN"/syft \
             ghcr.io/oracle-samples/macaron:"$RELEASE_TAG" \
@@ -168,6 +166,10 @@ jobs:
         else
           echo "Checksum for '$ASSET_NAME' did not verify: expected $EXPECTED but got $SYFT_DIGEST"
         fi
+
+        # Remove the downloaded artifacts.
+        rm -f "$ASSET_NAME"
+        rm -f "$CHECKSUMS"
 
     # Create the Release Notes using commitizen.
     - name: Set up Python
