@@ -76,8 +76,7 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
     This method supports repositories which are cloned (full or shallow) from existing remote repositories.
     Other scenarios are not covered (e.g. a newly initiated repository).
 
-    If ``offline_mode`` is True. This method will not perform any pulling before checking out the branch
-    or commit.
+    If ``offline_mode`` is set, this method will not pull from remote while checking out the branch or commit.
 
     Parameters
     ----------
@@ -145,18 +144,20 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
     # We only pull the latest changes if we are not running in offline mode and:
     #   - no digest is provided.
     #   - or a commit digest is provided but it does not exist in the current local branch.
-    if not offline_mode:
-        if not digest or (digest and not commit_exists(git_obj, digest)):
-            logger.info("Pulling the latest changes of branch %s fast-forward only.", res_branch)
-            if not pull_latest_changes(git_obj):
-                logger.error(
-                    "Cannot pull the latest changes for branch %s.",
-                    res_branch,
-                )
-                return False
+    if not offline_mode and (not digest or (digest or not commit_exists(git_obj, digest))):
+        logger.info("Pulling the latest changes of branch %s fast-forward only.", res_branch)
+        if not pull_latest_changes(git_obj):
+            logger.error(
+                "Cannot pull the latest changes for branch %s.",
+                res_branch,
+            )
+            return False
 
     if digest:
-        if git_obj.repo.head.commit.hexsha == digest:
+        current_head: Commit = git_obj.repo.head.commit
+        # We don't return False if current_head is None here to try checking out the
+        # specific commit by the user.
+        if current_head and current_head.hexsha == digest:
             logger.info("HEAD of the repo is already at %s.", digest)
             return True
 
@@ -176,12 +177,16 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
             logger.info("Cannot find commit %s on branch %s. Please check the configuration.", digest, res_branch)
             return False
 
-    head_commit: Commit = git_obj.repo.head.commit
-    if not head_commit:
+    final_head_commit: Commit = git_obj.repo.head.commit
+    if not final_head_commit:
         logger.critical("Cannot get the head commit after checking out.")
         return False
 
-    logger.info("Successfully checked out commit %s.", git_obj.repo.head.commit.hexsha)
+    if digest and final_head_commit.hexsha != digest:
+        logger.critical("The current HEAD at %s. Expect %s.", final_head_commit.hexsha, digest)
+        return False
+
+    logger.info("Successfully checked out commit %s.", final_head_commit.hexsha)
     return True
 
 

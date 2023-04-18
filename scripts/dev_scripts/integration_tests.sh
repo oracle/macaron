@@ -322,7 +322,7 @@ then
 fi
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: test not doing a git pull when analyzing a local cloned repo."
+echo "apache/maven: test not pulling from remote for a locally cloned repo."
 echo -e "----------------------------------------------------------------------------------\n"
 SOURCE_REPO="$WORKSPACE/output/git_repos/local_repos/source"
 TARGET_REPO="$WORKSPACE/output/git_repos/local_repos/target"
