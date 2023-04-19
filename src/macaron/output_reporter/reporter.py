@@ -212,20 +212,26 @@ class HTMLReporter(FileReporter):
             return
 
         try:
-            for record in report.get_records():
-                if record.context and record.status == SCMStatus.AVAILABLE:
-                    file_name = os.path.join(target_dir, f"{record.context.repo_name}.html")
-                    # Make a deep copy because we don't want to keep any modification from Jinja
-                    # in the original data.
-                    html = self.template.render(deepcopy(record.get_dict()))
-                    self.write_file(file_name, html)
-                elif record.dependencies:
-                    # TODO: This might not be the best way to indicate a main target (WIP).
-                    file_name = os.path.join(target_dir, "index.html")
-                    # Make a deep copy because we don't want to keep any modification from Jinja
-                    # in the original data.
-                    html = self.template.render(deepcopy(record.get_dict()))
-                    self.write_file(file_name, html)
+            # We make a deep copy of the data dictionary to pass to the Jinja2 template
+            # because we don't want to keep any modification from Jinja in the original data.
+            main_record = report.root_record
+            if main_record.context and main_record.status == SCMStatus.AVAILABLE:
+                file_name = os.path.join(target_dir, f"{main_record.context.repo_name}.html")
+                html = self.template.render(deepcopy(main_record.get_dict()))
+                self.write_file(file_name, html)
+            elif main_record.dependencies:
+                # When the main target is empty but we have dependencies data to display, the main target's html file
+                # will have the default name index.html.
+                file_name = os.path.join(target_dir, "index.html")
+                html = self.template.render(deepcopy(main_record.get_dict()))
+                self.write_file(file_name, html)
+
+                for dep_record in report.get_dep_records():
+                    if dep_record.context and dep_record.status == SCMStatus.AVAILABLE:
+                        file_name = os.path.join(target_dir, f"{dep_record.context.repo_name}.html")
+                        html = self.template.render(deepcopy(dep_record.get_dict()))
+                        self.write_file(file_name, html)
+
         except TemplateSyntaxError as error:
             location = f"line {error.lineno}"
             name = error.filename or error.name

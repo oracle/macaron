@@ -184,6 +184,16 @@ class Report:
         if root_record.context:
             self.record_mapping[root_record.context.remote_path] = root_record
 
+    def get_dep_records(self) -> Iterable[Record]:
+        """Get the generator for all dep records in the report.
+
+        Yields
+        ------
+        Record
+            The dep record within this report instance.
+        """
+        yield from self.root_record.dependencies
+
     def get_records(self) -> Iterable[Record]:
         """Get the generator for all records in the report.
 
