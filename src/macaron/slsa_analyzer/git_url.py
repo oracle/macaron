@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides methods to perform generic actions on Git URLS."""
@@ -15,7 +15,6 @@ from git import GitCommandError
 from git.objects import Commit
 from git.remote import Remote
 from git.repo import Repo
-from gitdb.exc import BadObject
 from pydriller.git import Git
 
 from macaron.config.defaults import defaults
@@ -62,7 +61,7 @@ def reset_git_repo(git_obj: Git, stash: bool = True, index: bool = True, working
         return False
 
 
-def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "") -> bool:
+def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "", offline_mode: bool = False) -> bool:
     """Checkout the branch and commit specified by the user.
 
     If no branch name is provided, this method will checkout the default branch
@@ -77,6 +76,8 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "")
     This method supports repositories which are cloned (full or shallow) from existing remote repositories.
     Other scenarios are not covered (e.g. a newly initiated repository).
 
+    If ``offline_mode`` is set, this method will not pull from remote while checking out the branch or commit.
+
     Parameters
     ----------
     git_obj : Git
@@ -85,6 +86,8 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "")
         The name of the branch we want to checkout.
     digest : str
         The hash of the commit that we want to checkout in the branch.
+    offline_mode : bool
+        If True, this function will not perform any online operation (fetch, pull).
 
     Returns
     -------
@@ -138,16 +141,10 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "")
 
     logger.info("Successfully checked out branch %s.", res_branch)
 
-    try:
-        head_commit: Commit = git_obj.repo.rev_parse("HEAD")
-    # https://gitpython.readthedocs.io/en/stable/reference.html?highlight=rev_parse#git.repo.base.Repo.rev_parse
-    except (BadObject, IndexError, ValueError) as error:
-        logger.critical("Cannot get the head commit after checking out. Error %s.", error)
-        return False
-
-    # We only pull the latest changes if no digest is provided
-    # or a commit digest is provided but it does not exist in the current local branch.
-    if not digest or (digest and not commit_exists(git_obj, digest)):
+    # We only pull the latest changes if we are not running in offline mode and:
+    #   - no digest is provided.
+    #   - or a commit digest is provided but it does not exist in the current local branch.
+    if not offline_mode and (not digest or not commit_exists(git_obj, digest)):
         logger.info("Pulling the latest changes of branch %s fast-forward only.", res_branch)
         if not pull_latest_changes(git_obj):
             logger.error(
@@ -157,7 +154,10 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "")
             return False
 
     if digest:
-        if head_commit.hexsha == digest:
+        current_head: Commit = git_obj.repo.head.commit
+        # We don't return False if current_head is None here to try checking out the
+        # specific commit by the user.
+        if current_head and current_head.hexsha == digest:
             logger.info("HEAD of the repo is already at %s.", digest)
             return True
 
@@ -177,7 +177,16 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "")
             logger.info("Cannot find commit %s on branch %s. Please check the configuration.", digest, res_branch)
             return False
 
-    logger.info("Successfully checked out commit %s.", head_commit)
+    final_head_commit: Commit = git_obj.repo.head.commit
+    if not final_head_commit:
+        logger.critical("Cannot get the head commit after checking out.")
+        return False
+
+    if digest and final_head_commit.hexsha != digest:
+        logger.critical("The current HEAD at %s. Expect %s.", final_head_commit.hexsha, digest)
+        return False
+
+    logger.info("Successfully checked out commit %s.", final_head_commit.hexsha)
     return True
 
 
@@ -240,6 +249,8 @@ def pull_latest_changes(git_obj: Git) -> bool:
 
 def get_default_branch(git_obj: Git) -> str:
     """Return the default branch of the target repository.
+
+    This function does not perform any online operation.
 
     Parameters
     ----------

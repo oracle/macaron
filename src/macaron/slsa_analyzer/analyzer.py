@@ -524,8 +524,9 @@ class Analyzer:
         )
 
         resolved_local_path = ""
+        is_remote = git_url.is_remote_repo(repo_path)
 
-        if git_url.is_remote_repo(repo_path):
+        if is_remote:
             logger.info("The path to repo %s is a remote path.", repo_path)
             resolved_remote_path = git_url.get_remote_vcs_url(repo_path)
             if not resolved_remote_path:
@@ -562,7 +563,7 @@ class Analyzer:
             logger.error("Cannot reset the target repository.")
             return None
 
-        if not git_url.check_out_repo_target(git_obj, branch_name, digest):
+        if not git_url.check_out_repo_target(git_obj, branch_name, digest, (not is_remote)):
             logger.error("Cannot checkout the specific branch or commit of the target repo.")
             return None
 
