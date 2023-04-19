@@ -144,7 +144,7 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
     # We only pull the latest changes if we are not running in offline mode and:
     #   - no digest is provided.
     #   - or a commit digest is provided but it does not exist in the current local branch.
-    if not offline_mode and (not digest or (digest or not commit_exists(git_obj, digest))):
+    if not offline_mode and (not digest or not commit_exists(git_obj, digest)):
         logger.info("Pulling the latest changes of branch %s fast-forward only.", res_branch)
         if not pull_latest_changes(git_obj):
             logger.error(
