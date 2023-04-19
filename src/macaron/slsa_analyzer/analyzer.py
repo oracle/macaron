@@ -143,11 +143,6 @@ class Analyzer:
                 dependencies=[],
             )
 
-        # # Write the results of main target to DB.
-        # if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
-        #     logger.info("Analysis has failed.")
-        #     return 1
-
         # Run the chosen dependency analyzer plugin.
         if skip_deps:
             logger.info("Skipping automatic dependency analysis...")
@@ -225,13 +220,30 @@ class Analyzer:
             logger.error("Policy Failed: %s", policy)
 
         # Store the analysis result into report files.
+        # TODO: handle internal errors in while generating reports to return code.
         self.generate_reports(report)
 
         # Print the analysis result into the console output.
         logger.info(str(report))
 
-        logger.info("Analysis Completed!")
-        return int(any(failed_policies))
+        match main_record.status:
+            case SCMStatus.ANALYSIS_FAILED:
+                logger.info("Analysis for the main target has failed.")
+                return 1
+
+            case SCMStatus.MISSING_SCM:
+                logger.info("The main target is not provided.")
+                if report.record_mapping:
+                    logger.info("The analysis for dependencies is available!.")
+                    return 0
+                return 1
+
+            case SCMStatus.AVAILABLE:
+                logger.info("Analysis for the main target completed!.")
+                return int(any(failed_policies))
+
+            case _:
+                return 1
 
     def generate_reports(self, report: Report) -> None:
         """Generate the report of the analysis to all registered reporters.
