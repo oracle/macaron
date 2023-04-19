@@ -6,7 +6,7 @@ module github.com/oracle-samples/macaron
 go 1.18
 
 require (
-	cuelang.org/go v0.4.3
+	cuelang.org/go v0.5.0
 	github.com/rhysd/actionlint v1.6.24
 	mvdan.cc/sh/v3 v3.6.0
 )
@@ -26,6 +26,5 @@ require (
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
