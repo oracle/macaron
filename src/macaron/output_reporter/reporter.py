@@ -226,11 +226,11 @@ class HTMLReporter(FileReporter):
                 html = self.template.render(deepcopy(main_record.get_dict()))
                 self.write_file(file_name, html)
 
-                for dep_record in report.get_dep_records():
-                    if dep_record.context and dep_record.status == SCMStatus.AVAILABLE:
-                        file_name = os.path.join(target_dir, f"{dep_record.context.repo_name}.html")
-                        html = self.template.render(deepcopy(dep_record.get_dict()))
-                        self.write_file(file_name, html)
+            for dep_record in report.get_dep_records():
+                if dep_record.context and dep_record.status == SCMStatus.AVAILABLE:
+                    file_name = os.path.join(target_dir, f"{dep_record.context.repo_name}.html")
+                    html = self.template.render(deepcopy(dep_record.get_dict()))
+                    self.write_file(file_name, html)
 
         except TemplateSyntaxError as error:
             location = f"line {error.lineno}"

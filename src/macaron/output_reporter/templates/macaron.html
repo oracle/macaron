@@ -3,19 +3,137 @@
     Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
 #}
 
-{%- import "helper_macros.j2" as macros -%}
+{%- import "helper_macros.j2" as macaron_macros -%}
 
 {%- extends "base_template.html" -%}
 
 {#
+    This section contains macros that are used to render elements in this template.
+    We define these macros separately so that we could use correct
+    indentation for the whole block.
+#}
+
+{#
+    Render the target information table.
+#}
+{%- macro render_target_info_table(target_info_data) -%}
+{% call macaron_macros.render_table(class="target_info", has_header=false) %}
+    {% for key, value in target_info_data | items %}
+    <tr>
+        <th>
+            {{ key | replace("_", " ") | capitalize }}
+        </th>
+        <td>
+            {{ value }}
+        </td>
+    </tr>
+    {% endfor %}
+{% endcall %}
+{%- endmacro -%}
+
+{#
+    Render the check report for the target as a table with headers.
+#}
+{%- macro render_checks_report(checks_report_data) -%}
+{%- set headers = checks_report_data | get_headers -%}
+{% call macaron_macros.render_table(header_names=headers, has_header=true, class="checks_report") %}
+    {% for item in checks_report_data %}
+    <tr>
+    {% for header in headers %}
+        {% if header == "slsa_requirements" %}
+        <td>
+            <ul>
+            {% for ele in item[header] %}
+                <li>{{ ele }}</li>
+            {% endfor %}
+            </ul>
+        </td>
+        {% elif header == "result_type" %}
+        <td class={{ item[header] | get_check_result_color }}>{{ item[header].value }}</td>
+        {% elif header == "justification" %}
+        <td>
+            <ul>
+            {% for ele in item[header] %}
+                {% if ele is mapping %}
+                    {% for key, value in ele | items %}
+                <li>{{ key }}: {{ macaron_macros.render_hyperlink(href=value, display_text=value) }}</li>
+                    {% endfor %}
+                {% else %}
+                <li>{{ ele }}</li>
+                {% endif %}
+            {% endfor %}
+            </ul>
+        </td>
+        {% else %}
+        <td>{{ item[header] }}</td>
+        {% endif %}
+    {% endfor %}
+    </tr>
+    {% endfor %}
+{% endcall %}
+{%- endmacro -%}
+
+{#
+    Render the summary of dependencies check reports.
+#}
+{%- macro render_dep_summary(dep_summary_data) -%}
+{%- set headers = dep_summary_data | get_headers -%}
+{% call macaron_macros.render_table(header_names=headers, has_header=true, class="dep_summary") %}
+    {% for item in dep_summary_data %}
+    <tr>
+        {% for header in headers %}
+        <td>{{ item[header] }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+{% endcall %}
+{%- endmacro -%}
+
+{#
+    Render the status for each of the dependencies analysis.
+#}
+{%- macro render_dep_status(dep_status_data) -%}
+{%- set headers = dep_status_data | get_headers -%}
+{% call macaron_macros.render_table(header_names=headers, has_header=true, class="dep_status") %}
+    {% for item in dep_status_data %}
+    <tr>
+    {% for header in headers %}
+        {% if header == "report" %}
+        {% if item[header] %}
+        <td>{{ macaron_macros.render_hyperlink(item[header], display_text="Open report.") }}</td>
+        {% else %}
+        <td>Not available.</td>
+        {% endif %}
+        {% elif header == "status" %}
+        <td class={{ item[header] | get_dep_status_color }}>{{ item[header].value }}</td>
+        {% else %}
+        <td>{{ item[header] }}</td>
+        {% endif %}
+    {% endfor %}
+    </tr>
+    {% endfor %}
+{% endcall %}
+{%- endmacro -%}
+
+{# -------------------------------------------- #}
+
+{#
     This section is where we fill in the blocks defined in base_template.html.
-    Note that the input context dictionary will have the format:
-        {data = <data_from_html_reporter}
+    The data for this template is passed in as a Python dictionary by the HTMLReporter. We can access those data by
+    specifying the keys to the required value field.
+    For example, if the data from HTMLReporter is:
+    {
+        "metadata": {
+            "boo": 1,
+            "foo": 2
+        }
+    }
+    Within the Jinja2 template, ``{{ metadata.boo }}`` will be rendered as ``1``
 #}
 
 {% block timestamps %}
 {{ metadata.timestamps | indent(12, first=true) }}
-{% endblock%}
+{% endblock %}
 
 {% block content %}
     {% if target %}
@@ -26,7 +144,7 @@
             - Check report
     #}
     <div class="table_caption">Target information</div>
-    {{ macros.render_target_info_table(target.info) | indent(4) }}
+    {{ render_target_info_table(target.info) | indent(4) }}
 
     <div class='space_divider'></div>
 
@@ -41,12 +159,12 @@
 
     <button class="fancy-button" onclick="expandAll()">Expand All</button>
     <button class="fancy-button" onclick="collapseAll()">Collapse All</button>
-    {{ macros.render_tree_view_nested_list(target.provenances.content) | indent(4) }}
+    {{ macaron_macros.render_tree_view_nested_list(target.provenances.content) | indent(4) }}
 
     <div class='space_divider'></div>
 
     <div class="table_caption">Reports for Macaron checks</div>
-    {{ macros.render_checks_report(target.checks.results) | indent(4) }}
+    {{ render_checks_report(target.checks.results) | indent(4) }}
 
     {% else %}
     {#
@@ -69,10 +187,10 @@
     <div class="table_sub_caption">
     {{ dependencies.analyzed_deps }} dependencies that map to {{ dependencies.unique_dep_repos }} unique repositories have been successfully analyzed.
     </div>
-    {{ macros.render_dep_summary(dependencies.checks_summary) | indent(4) }}
+    {{ render_dep_summary(dependencies.checks_summary) | indent(4) }}
 
     <div class="space_divider"></div>
 
-    {{ macros.render_dep_status(dependencies.dep_status) | indent(4) }}
+    {{ render_dep_status(dependencies.dep_status) | indent(4) }}
     {% endif %}
 {% endblock %}
