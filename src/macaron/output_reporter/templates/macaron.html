@@ -115,6 +115,30 @@
 {% endcall %}
 {%- endmacro -%}
 
+{#
+    Render the status for the target.
+#}
+{%- macro render_target_metadata(target_metadata) -%}
+{% call macaron_macros.render_table(class="target_info", has_header=false) %}
+    {% for key, value in target_metadata.summary | items %}
+    <tr>
+        <th>
+            {{ key | replace("_", " ") | capitalize }}
+        </th>
+        {% if key == "status" %}
+        <td class={{ value | get_dep_status_color }}>{{ value.value }}</td>
+        {% elif key == "report" %}
+        {# We ignore this field. #}
+        {% else %}
+        <td>
+            {{ value }}
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+{% endcall %}
+{%- endmacro -%}
+
 {# -------------------------------------------- #}
 
 {#
@@ -136,6 +160,7 @@
 {% endblock %}
 
 {% block content %}
+    <div class="table_caption">Target information</div>
     {% if target %}
     {#
         Display the related section only when the target information is available :
@@ -143,7 +168,6 @@
             - Provenance summary
             - Check report
     #}
-    <div class="table_caption">Target information</div>
     {{ render_target_info_table(target.info) | indent(4) }}
 
     <div class='space_divider'></div>
@@ -167,10 +191,15 @@
     {{ render_checks_report(target.checks.results) | indent(4) }}
 
     {% else %}
-    {#
-        TODO: design what to display if the target is empty.
-    #}
-    <div id= "prov_justification">Empty main target </div>
+
+    <div id= "prov_justification">
+        {% if metadata.component.config_target_path == "" %}
+        The analysis cannot complete because the target is not available.
+        {% else %}
+        The analysis for the target at {{ metadata.component.config_target_path }} is not successful.
+        {% endif %}
+    </div>
+    {{ render_target_metadata(metadata.component) }}
 
     {% endif %}
 

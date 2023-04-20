@@ -133,8 +133,8 @@ class Analyzer:
             main_record = self.run_single(main_config)
         else:
             main_record = Record(
-                record_id="Unknown main target.",
-                description="This main target is not provided.",
+                record_id="None",
+                description="The main target is not provided.",
                 pre_config=main_config,
                 status=SCMStatus.MISSING_SCM,
                 policies_failed=[],
@@ -255,10 +255,11 @@ class Analyzer:
         """
         if not report.root_record.context:
             output_target_path = os.path.join(
-                # TODO: work more on the directory of the temporary directory. Perhaps add the timestamps?
+                # TODO: Implement a unique directory name for this scenario.
+                # Prefix the directory name with the timestamp is possible.
                 global_config.output_path,
                 "reports",
-                report.root_record.pre_config.options.get("id", "temp"),
+                "temp",
             )
         else:
             output_target_path = os.path.join(
