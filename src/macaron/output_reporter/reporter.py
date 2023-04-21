@@ -174,6 +174,12 @@ class HTMLReporter(FileReporter):
             self.template = self.env.get_template(target_template)
         except TemplateNotFound:
             logger.error("Cannot find the template to load.")
+        except TemplateSyntaxError as error:
+            location = f"line {error.lineno}"
+            name = error.filename or error.name
+            if name:
+                location = f'File "{name}", {location}'
+            logger.info("jinja2.TemplateSyntaxError: \n\t%s\n\t%s", error.message, location)
 
     def _init_extensions(self) -> None:
         """Dynamically add Jinja2 extension filters and tests."""

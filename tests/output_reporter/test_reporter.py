@@ -6,6 +6,7 @@ This modules contains tests for the JSON reporter.
 """
 
 import os
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, call, patch
 
@@ -19,8 +20,6 @@ from macaron.output_reporter.reporter import HTMLReporter, JSONReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 
 from ..st import JINJA_CONTEXT_DICT
-
-ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 
 class MockRecord(Record):
@@ -43,40 +42,51 @@ class MockRecord(Record):
         return self.mock_data
 
 
-def test_no_html_template_found() -> None:
-    """Test initializing a HTMLReporter instance with a non-existing template."""
-    no_template_reporter = HTMLReporter(target_template="not_exist_template.html")
-    assert not no_template_reporter.template
+@pytest.fixture(scope="module", name="custom_jinja_env")
+def fixture_custom_jinja_env() -> Environment:
+    """Return the custom Jinja2 environment for testing.
 
-
-@given(mock_data=JINJA_CONTEXT_DICT, num_dep=st.integers(min_value=0, max_value=3))
-def test_gen_json_reports(mock_data: Any, num_dep: int) -> None:
-    """Test if JSONReporter can print JSON files without errors."""
-    report = Report(MockRecord(mock_data))
-    for _ in range(num_dep):
-        report.root_record.dependencies.append(MockRecord(mock_data))
-
-    reporter = JSONReporter()
-
-    with patch("builtins.open") as mock_open:
-        reporter.generate("report_paths", report)
-        calls = [call(os.path.join("report_paths", "dependencies.json"), mode="w", encoding="utf-8")]
-        mock_open.assert_has_calls(calls)
-
-
-@given(mock_data=JINJA_CONTEXT_DICT, num_dep=st.integers(min_value=0, max_value=3))
-def test_gen_html_reports(mock_data: Any, num_dep: int) -> None:
-    """Test if HTMLReporter can print HTML files without errors."""
-    report = Report(MockRecord(mock_data))
-    for _ in range(num_dep):
-        report.root_record.dependencies.append(MockRecord(mock_data))
-
-    custom_jinja_env = Environment(
-        loader=FileSystemLoader(ROOT_PATH),
+    Returns
+    -------
+    Environment
+        The custom Jinja2 environment.
+    """
+    root_path = Path(__file__).parent.joinpath("resources")
+    return Environment(
+        loader=FileSystemLoader(root_path),
         autoescape=select_autoescape(enabled_extensions=["html", "j2"]),
         trim_blocks=True,
         lstrip_blocks=True,
     )
+
+
+def test_no_html_template_found(custom_jinja_env: Environment) -> None:
+    """Test initializing a HTMLReporter instance with a non-existing template."""
+    no_template_reporter = HTMLReporter(env=custom_jinja_env, target_template="not_exist_template.html")
+    assert not no_template_reporter.template
+
+
+def test_syntax_err_template(custom_jinja_env: Environment) -> None:
+    """Test generating the HTML report from a template with syntax errors."""
+    syntax_err = HTMLReporter(env=custom_jinja_env, target_template="syntax_err.html")
+    assert not syntax_err.template
+
+
+def test_runtime_err_template(custom_jinja_env: Environment) -> None:
+    """Test generating the HTML report from a template with runtime errors."""
+    report = Report(MockRecord({}))
+    runtime_err = HTMLReporter(env=custom_jinja_env, target_template="runtime_err.html")
+    with patch("builtins.open") as mock_open:
+        runtime_err.generate("report_paths", report)
+        mock_open.assert_not_called()
+
+
+@given(mock_data=JINJA_CONTEXT_DICT, num_dep=st.integers(min_value=0, max_value=3))
+def test_gen_html_reports(custom_jinja_env: Environment, mock_data: Any, num_dep: int) -> None:
+    """Test if HTMLReporter can print HTML files without errors."""
+    report = Report(MockRecord(mock_data))
+    for _ in range(num_dep):
+        report.root_record.dependencies.append(MockRecord(mock_data))
 
     reporter = HTMLReporter(env=custom_jinja_env, target_template="template.html")
     with patch("builtins.open") as mock_open:
@@ -97,8 +107,10 @@ def test_gen_html_reports(mock_data: Any, num_dep: int) -> None:
         (SCMStatus.AVAILABLE, True, False),
     ],
 )
-def test_main_target_status(main_status: SCMStatus, has_deps: bool, gen_empty_main: bool) -> None:
-    """WIP"""
+def test_main_target_status(
+    custom_jinja_env: Environment, main_status: SCMStatus, has_deps: bool, gen_empty_main: bool
+) -> None:
+    """Test the different scenarios for the main target's analysis status."""
     main_record: Record = Record(
         record_id="record",
         description="sample_desc",
@@ -110,28 +122,21 @@ def test_main_target_status(main_status: SCMStatus, has_deps: bool, gen_empty_ma
         policies_passed=[],
     )
 
-    dep_record: Record = Record(
-        record_id="dep",
-        description="sample_desc",
-        pre_config=Configuration({}),
-        status=SCMStatus.AVAILABLE,
-        context=MagicMock(),
-        dependencies=[],
-        policies_failed=[],
-        policies_passed=[],
-    )
-
     report = Report(main_record)
 
     if has_deps:
-        report.add_dep_record(dep_record)
+        dep_record: Record = Record(
+            record_id="dep",
+            description="sample_desc",
+            pre_config=Configuration({}),
+            status=SCMStatus.AVAILABLE,
+            context=MagicMock(),
+            dependencies=[],
+            policies_failed=[],
+            policies_passed=[],
+        )
+        report.root_record.dependencies.append(dep_record)
 
-    custom_jinja_env = Environment(
-        loader=FileSystemLoader(ROOT_PATH),
-        autoescape=select_autoescape(enabled_extensions=["html", "j2"]),
-        trim_blocks=True,
-        lstrip_blocks=True,
-    )
     reporter = HTMLReporter(env=custom_jinja_env, target_template="template.html")
     empty_main_call = call(os.path.join("report_paths", "index.html"), mode="w", encoding="utf-8")
     with patch("builtins.open") as mock_open:
@@ -140,3 +145,18 @@ def test_main_target_status(main_status: SCMStatus, has_deps: bool, gen_empty_ma
             mock_open.assert_has_calls([empty_main_call])
         else:
             assert empty_main_call.args not in mock_open.call_args_list
+
+
+@given(mock_data=JINJA_CONTEXT_DICT, num_dep=st.integers(min_value=0, max_value=3))
+def test_gen_json_reports(mock_data: Any, num_dep: int) -> None:
+    """Test if JSONReporter can print JSON files without errors."""
+    report = Report(MockRecord(mock_data))
+    for _ in range(num_dep):
+        report.root_record.dependencies.append(MockRecord(mock_data))
+
+    reporter = JSONReporter()
+
+    with patch("builtins.open") as mock_open:
+        reporter.generate("report_paths", report)
+        calls = [call(os.path.join("report_paths", "dependencies.json"), mode="w", encoding="utf-8")]
+        mock_open.assert_has_calls(calls)
