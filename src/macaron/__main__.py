@@ -42,7 +42,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         )
         if not html_reporter.template:
             logger.error("Exiting because the custom template cannot be found.")
-            sys.exit(1)
+            sys.exit(os.EX_NOINPUT)
 
         analyzer.reporters.append(html_reporter)
     else:
@@ -65,7 +65,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         validate_result: ValidationResult = TARGET_CONFIG_SCHEMA.validate(run_config, "config_generated", strict=False)
         if not validate_result.isValid():
             logger.critical("The generated config dict is invalid.")
-            sys.exit(1)
+            sys.exit(os.EX_DATAERR)
 
     elif analyzer_single_args.config_path:
         # Get user config from yaml file
@@ -82,11 +82,11 @@ def verify_prov(verify_args: argparse.Namespace) -> Never:
 
     if not policy_files:
         logger.error("The policy is not provided to complete this action.")
-        sys.exit(1)
+        sys.exit(os.EX_NOINPUT)
 
     if len(policy_files) > 1:
         logger.error("Exactly one policy must be provided to complete this action.")
-        sys.exit(1)
+        sys.exit(os.EX_USAGE)
 
     policy_file = policy_files[0]
     try:
@@ -95,19 +95,19 @@ def verify_prov(verify_args: argparse.Namespace) -> Never:
 
         if not policy:
             logger.error("Could not load policy at %s.", policy_file)
-            sys.exit(1)
+            sys.exit(os.EX_NOINPUT)
 
         logger.info("Validating the provenance at %s against %s.", prov_file, policy)
 
         if not policy.validate(prov_content):
-            logger.error("The validation for provenance at %s is unsuccessful.", prov_file)
-            sys.exit(1)
+            logger.error("The validation for provenance at %s was unsuccessful.", prov_file)
+            sys.exit(os.EX_NOINPUT)
 
-        logger.info("The validation for provenance at %s is successful.", prov_file)
-        sys.exit(0)
+        logger.info("The validation for provenance at %s was successful.", prov_file)
+        sys.exit(os.EX_OK)
     except (SLSAProvenanceError, PolicyRuntimeError) as error:
         logger.error(error)
-        sys.exit(1)
+        sys.exit(os.EX_DATAERR)
 
 
 def perform_action(action_args: argparse.Namespace) -> None:
@@ -115,11 +115,12 @@ def perform_action(action_args: argparse.Namespace) -> None:
     if action_args.action == "dump_defaults":
         # Create the defaults.ini file in the output dir and exit.
         create_defaults(action_args.output_dir, os.getcwd())
-        sys.exit(0)
+        sys.exit(os.EX_OK)
 
     # Check that the GitHub token is enabled.
     if not action_args.personal_access_token:
-        raise argparse.ArgumentError(None, "GitHub access token not set.")
+        logger.error("GitHub access token not set.")
+        sys.exit(os.EX_USAGE)
 
     match action_args.action:
         case "analyze":
@@ -128,7 +129,7 @@ def perform_action(action_args: argparse.Namespace) -> None:
             verify_prov(action_args)
         case _:
             logger.error("Macaron does not support command option %s.", action_args.action)
-            sys.exit(1)
+            sys.exit(os.EX_USAGE)
 
 
 def main() -> None:
@@ -256,7 +257,7 @@ def main() -> None:
 
     if not args.action:
         main_parser.print_help()
-        sys.exit(1)
+        sys.exit(os.EX_USAGE)
 
     if args.verbose:
         log_level = logging.DEBUG
@@ -265,27 +266,39 @@ def main() -> None:
         log_level = logging.INFO
         log_format = "%(asctime)s [%(levelname)s] %(message)s"
 
-    # Set logging config.
-    logging.basicConfig(format=log_format, handlers=[logging.StreamHandler()], force=True, level=log_level)
+    # Set global logging config. We need the stream handler for the initial
+    # output directory checking log messages.
+    st_handler = logging.StreamHandler(sys.stdout)
+    logging.basicConfig(format=log_format, handlers=[st_handler], force=True, level=log_level)
 
-    # Set the output directory
-    if args.output_dir:
-        if os.path.isfile(args.output_dir):
-            logger.error("The output directory already exists. Exiting ...")
-            sys.exit(1)
+    # Set the output directory.
+    if not args.output_dir:
+        logger.error("The output path cannot be empty. Exiting ...")
+        sys.exit(os.EX_USAGE)
 
-        if os.path.isdir(args.output_dir):
-            logger.info("Setting the output directory to %s", args.output_dir)
-        else:
-            logger.info("No directory at %s. Creating one ...", args.output_dir)
-            os.makedirs(args.output_dir)
+    if os.path.isfile(args.output_dir):
+        logger.error("The output directory already exists. Exiting ...")
+        sys.exit(os.EX_USAGE)
 
-    # Set logging debug level. We only need to set for the root logger.
+    if os.path.isdir(args.output_dir):
+        logger.info("Setting the output directory to %s", args.output_dir)
+    else:
+        logger.info("No directory at %s. Creating one ...", args.output_dir)
+        os.makedirs(args.output_dir)
+
+    # Add file handler to the root logger. Remove stream handler from the
+    # root logger to prevent dependencies printing logs to stdout.
     debug_log_path = os.path.join(args.output_dir, "debug.log")
     log_file_handler = logging.FileHandler(debug_log_path, "w")
     log_file_handler.setFormatter(logging.Formatter(log_format))
+    logging.getLogger().removeHandler(st_handler)
     logging.getLogger().addHandler(log_file_handler)
-    logger.info("The log file of Macaron will be stored in debug.log")
+
+    # Add StreamHandler to the Macaron logger only.
+    mcn_logger = logging.getLogger("macaron")
+    mcn_logger.addHandler(st_handler)
+
+    logger.info("The logs will be stored in debug.log")
 
     # Set Macaron's global configuration.
     global_config.load(
@@ -302,7 +315,7 @@ def main() -> None:
     # Load the default values from defaults.ini files.
     if not load_defaults(args.defaults_path):
         logger.error("Exiting because the defaults configuration could not be loaded.")
-        sys.exit(1)
+        sys.exit(os.EX_NOINPUT)
 
     perform_action(args)
 
