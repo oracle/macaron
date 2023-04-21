@@ -3,13 +3,16 @@
 
 """This module tries to find urls of repositories that match artifacts passed in 'group:artifact:version' form."""
 
+import logging
 import re
 import typing
 
 import requests
 from defusedxml.ElementTree import fromstring
 
-from macaron.config.global_config import global_config, logger
+from macaron.config.global_config import global_config
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def create_urls(group: str, artifact: str, version: str) -> list[str]:
