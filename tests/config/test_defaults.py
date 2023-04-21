@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the defaults module."""
@@ -19,7 +19,7 @@ class TestDefaults(MacaronTestCase):
         config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources")
         assert load_defaults(config_dir) is True
 
-        assert defaults.get("dependency.resolver", "dep_tool_maven") == "cyclonedx-maven:2.6.2"
+        assert defaults.get("dependency.resolver", "dep_tool_maven") == "cyclonedx-maven:2.7.5"
 
     def test_create_defaults(self) -> None:
         """Test dumping the default values."""

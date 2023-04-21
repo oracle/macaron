@@ -131,7 +131,7 @@ class Maven(BaseBuildTool):
             defaults.get(
                 "dependency.resolver",
                 "dep_tool_maven",
-                fallback="cyclonedx-maven:2.6.2",
+                fallback="cyclonedx-maven:2.7.5",
             ).split(":")
         )
         if tool_name == DependencyTools.CYCLONEDX_MAVEN:
