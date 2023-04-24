@@ -363,6 +363,10 @@ for v in "${proxy_var_names[@]}"; do
     [[ -n ${!v} ]] && proxy_vars+=("-e" "${v}=${!v}")
 done
 
+prod_vars=(
+    "-e PYTHONWARNINGS=ignore"  # Turn off Python warnings in the production environment.
+)
+
 # Only allocate tty if we detect one. Allocating tty is useful for the user to terminate the container using Ctrl+C.
 # However, when not running on a terminal, setting -t will cause errors.
 # https://stackoverflow.com/questions/43099116/error-the-input-device-is-not-a-tty
@@ -384,8 +388,10 @@ echo "Running ${IMAGE}:${MACARON_IMAGE_TAG}"
 docker run \
     --network=host \
     --rm -i "${tty[@]}" \
-    -e "USER_UID=${USER_UID}" -e "USER_GID=${USER_GID}" \
+    -e "USER_UID=${USER_UID}" \
+    -e "USER_GID=${USER_GID}" \
     "${proxy_vars[@]}" \
+    "${prod_vars[@]}" \
     "${mounts[@]}" \
     "${IMAGE}:${MACARON_IMAGE_TAG}" \
     "${entrypoint[@]}" \
