@@ -138,6 +138,66 @@ def get_dep_components(
                 logger.debug(error)
 
 
+def convert_single_component(component: dict, root_component: dict | None = None) -> DependencyInfo | None:
+    """Convert a CycloneDX component using internal artifact representation.
+
+    Parameters
+    ----------
+    components : list[dict]
+        The dependency components.
+    root_component: Optional[dict|None]
+        The root CycloneDX component.
+
+    Returns
+    -------
+    DependencyInfo
+       The internal artifact representation of this component.
+    """
+    if not component:
+        return None
+
+    try:
+        # According to PEP-0589 all keys must be present in a TypedDict.
+        # See https://peps.python.org/pep-0589/#totality
+        item = DependencyInfo(
+            version=component.get("version") or "",
+            group=component.get("group") or "",
+            name=component.get("name") or "",
+            url="",
+            note="",
+            available=SCMStatus.AVAILABLE,
+        )
+        # Some of the components might miss external references.
+        if component.get("externalReferences") is None:
+            # In Java, development artifacts contain "SNAPSHOT" in the version.
+            # If the SBOM generation completes with no build errors for submodules
+            # the submodule would not be added as a dependency and we shouldn't reach here.
+            # IN case of a build error, we use this as a heuristic to avoid analyzing
+            # submodules that produce development artifacts in the same repo.
+            if (
+                "snapshot"
+                in (item.get("version") or "").lower()  # or "" is not necessary but mypy produces a FP otherwise.
+                and root_component
+                and item.get("group") == root_component.get("group")
+            ):
+                return None
+            logger.debug(
+                "Could not find external references for %s. Skipping...",
+                component.get("bom-ref"),
+            )
+        else:
+            # Find a valid URL.
+            item["url"] = DependencyAnalyzer.find_valid_url(
+                [link.get("url") for link in component.get("externalReferences")]  # type: ignore
+            )
+
+    except KeyError as error:
+        logger.debug(error)
+        return None
+
+    return item
+
+
 def convert_components_to_artifacts(
     components: Iterable[dict], root_component: Optional[dict | None] = None
 ) -> dict[str, DependencyInfo]:
@@ -159,47 +219,14 @@ def convert_components_to_artifacts(
     latest_deps: dict[str, DependencyInfo] = {}  # Stores the latest version of dependencies.
     url_to_artifact: dict[str, set] = {}  # Used to detect artifacts that have similar repos.
     for component in components:
-        try:
-            key = f"{component.get('group')}:{component.get('name')}"
-            # According to PEP-0589 all keys must be present in a TypedDict.
-            # See https://peps.python.org/pep-0589/#totality
-            item = DependencyInfo(
-                version=component.get("version") or "",
-                group=component.get("group") or "",
-                name=component.get("name") or "",
-                url="",
-                note="",
-                available=SCMStatus.AVAILABLE,
-            )
-            # Some of the components might miss external references.
-            if component.get("externalReferences") is None:
-                # In Java, development artifacts contain "SNAPSHOT" in the version.
-                # If the SBOM generation completes with no build errors for submodules
-                # the submodule would not be added as a dependency and we shouldn't reach here.
-                # IN case of a build error, we use this as a heuristic to avoid analyzing
-                # submodules that produce development artifacts in the same repo.
-                if (
-                    "snapshot"
-                    in (item.get("version") or "").lower()  # or "" is not necessary but mypy produces a FP otherwise.
-                    and root_component
-                    and item.get("group") == root_component.get("group")
-                ):
-                    continue
-                logger.debug(
-                    "Could not find external references for %s. Skipping...",
-                    component.get("bom-ref"),
-                )
-            else:
-                # Find a valid URL.
-                item["url"] = DependencyAnalyzer.find_valid_url(
-                    [link.get("url") for link in component.get("externalReferences")]  # type: ignore
-                )
-
-            DependencyAnalyzer.add_latest_version(
-                item=item, key=key, all_versions=all_versions, latest_deps=latest_deps, url_to_artifact=url_to_artifact
-            )
-        except KeyError as error:
-            logger.debug(error)
+        key = f"{component.get('group')}:{component.get('name')}"
+        item = convert_single_component(component, root_component)
+        # Should we check for "key" if it's available as well?
+        if not item:
+            continue
+        DependencyAnalyzer.add_latest_version(
+            item=item, key=key, all_versions=all_versions, latest_deps=latest_deps, url_to_artifact=url_to_artifact
+        )
 
     try:
         with open(os.path.join(global_config.output_path, "sbom_debug.json"), "w", encoding="utf8") as debug_file:

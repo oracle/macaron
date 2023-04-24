@@ -26,7 +26,7 @@ from macaron.dependency_analyzer import (
     DependencyInfo,
     NoneDependencyAnalyzer,
 )
-from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
+from macaron.dependency_analyzer.cyclonedx import convert_single_component, get_deps_from_sbom, get_root_component
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.policy_engine.policy_registry import PolicyRegistry
@@ -131,6 +131,30 @@ class Analyzer:
         if main_config.get_value("path"):
             # Analyze the main target.
             main_record = self.run_single(main_config)
+        elif sbom_path and (root_component := get_root_component(Path(sbom_path))):
+            item = convert_single_component(root_component)
+            if item:
+                infer_config = Configuration(
+                    {
+                        "id": f"{item.get('group')}:{item.get('name')}:{item.get('version')}",
+                        "path": item.get("url"),
+                        "note": "",
+                        "available": SCMStatus.AVAILABLE,
+                    }
+                )
+                main_record = self.run_single(infer_config)
+            else:
+                # TODO: Remove duplicated stuffs.
+                main_record = Record(
+                    record_id="None",
+                    description=f"The main target cannot be found in the SBOM provided at {sbom_path}",
+                    pre_config=main_config,
+                    status=SCMStatus.MISSING_SCM,
+                    policies_failed=[],
+                    policies_passed=[],
+                    context=None,
+                    dependencies=[],
+                )
         else:
             main_record = Record(
                 record_id="None",
