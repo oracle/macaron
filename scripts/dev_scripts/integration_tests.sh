@@ -97,17 +97,6 @@ $RUN_MACARON analyze -sbom "$SBOM_FILE" || log_fail
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing using only a CycloneDx SBOM."
-echo -e "----------------------------------------------------------------------------------\n"
-SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/apache_maven_root_sbom.json
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/apache_maven_with_sbom_provided.json
-DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
-
-$RUN_MACARON analyze -sbom "$SBOM_FILE" || log_fail
-
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
 # Analyze micronaut-projects/micronaut-core.
 echo -e "\n=================================================================================="
 echo "Run integration tests with configurations for micronaut-projects/micronaut-core..."
