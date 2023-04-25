@@ -57,7 +57,7 @@ policy_engine = 'macaron.policy_engine.__main__:main'
 # We keep them listed here to ensure the infrastructure BOM is consistent with what's
 # installed. Make sure to keep the requirements in sync with the workflows!
 actions = [
-    "commitizen >=2.37.1,<3.0.0",
+    "commitizen >=2.37.1,<4.0.0",
     "twine >=4.0.1,<5.0.0",
 ]
 dev = [
