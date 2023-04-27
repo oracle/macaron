@@ -373,7 +373,7 @@ def get_repo_name_from_url(url: str) -> str:
 def get_repo_full_name_from_url(url: str) -> str:
     """Extract the full name of the repository from the remote url.
 
-    The full name is in the form <owner>/<name>.
+    The full name is in the form <owner>/<name>. Note that this function assumes `url` is a remote url.
 
     Parameters
     ----------
@@ -401,8 +401,10 @@ def get_repo_full_name_from_url(url: str) -> str:
     return full_name
 
 
-def get_remote_url_of_local_repo(git_obj: Git) -> str:
-    """Get the origin remote url of a repository.
+def get_remote_origin_of_local_repo(git_obj: Git) -> str:
+    """Get the origin remote of a repository.
+
+    Note that this origin remote can be either a remote url or a path to a local repo.
 
     Parameters
     ----------
@@ -412,20 +414,23 @@ def get_remote_url_of_local_repo(git_obj: Git) -> str:
     Returns
     -------
     str
-        The remote url or empty if error.
+        The origin remote path or empty if error.
     """
     try:
         remote_origin = git_obj.repo.remote("origin")
         remote_urls = [*remote_origin.urls]
         remote_urls.sort()
-        valid_remote_urls_set = {get_remote_vcs_url(value) for value in remote_urls if get_remote_vcs_url(value) != ""}
-        if not valid_remote_urls_set:
-            return ""
-
-        return valid_remote_urls_set.pop()
+        valid_remote_path_set = {value for value in remote_urls if value != ""}
     except ValueError as error:
         logger.error("No origin remote discovered for the repository: %s", error)
         return ""
+
+    # This path could be either a remote path or a local path (if the repo is cloned from another local repo or from
+    # a git bundle).
+    # We don't need to validate this path as we are getting it from an already cloned repository. If the path is invalid
+    # it should have been caught during the preparing process of the git repository.
+    remote_origin_path = valid_remote_path_set.pop()
+    return remote_origin_path or ""
 
 
 def clean_up_repo_path(repo_path: str) -> str:
