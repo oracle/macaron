@@ -262,15 +262,14 @@ class BuildAsCodeCheck(BaseCheck):
                 for unparsed_ci in (Jenkins, Travis, CircleCI, GitLabCI):
                     if isinstance(ci_service, unparsed_ci):
                         if build_tool.ci_deploy_kws[ci_service.name]:
-                            config_name = ci_service.has_kws_in_config(
+                            deploy_kw, config_name = ci_service.has_kws_in_config(
                                 build_tool.ci_deploy_kws[ci_service.name], repo_path=ctx.repo_path
                             )
                             if not config_name:
                                 break
-
                             check_result["justification"].append(
                                 f"The target repository uses build tool {build_tool.name}"
-                                + f" in {ci_service.name} to deploy."
+                                + f" in {ci_service.name} using {deploy_kw} to deploy."
                             )
                             if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
                                 predicate = ci_info["provenances"][0]["predicate"]
@@ -285,7 +284,7 @@ class BuildAsCodeCheck(BaseCheck):
                                 BuildAsCodeTable(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
-                                    deploy_command=deploy_cmd,
+                                    deploy_command=deploy_kw,
                                 )
                             ]
                             return CheckResultType.PASSED

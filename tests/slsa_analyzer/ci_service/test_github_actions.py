@@ -1,14 +1,10 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""
-This module tests the call graphs.
-"""
+"""This module tests GitHub Actions CI service."""
 
 import os
 from pathlib import Path
-
-import pytest
 
 from macaron.code_analyzer.call_graph import CallGraph
 from macaron.parsers.actionparser import parse as parse_action
@@ -74,7 +70,6 @@ class TestGitHubActions(MacaronTestCase):
             "GitHubNode(actions/setup-java@v3,GHWorkflowType.EXTERNAL)",
         ] == [str(node) for node in gh_cg.bfs()]
 
-    @pytest.mark.skip()
     def test_is_detected(self) -> None:
         """Test detecting GitHub Action config files."""
         assert self.github_actions.is_detected(str(self.ga_has_build_kws))
