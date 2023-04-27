@@ -135,7 +135,7 @@ definition:
 You can also run the policy verifier directly like below:
 
 ```bash
-python -m macaron verify-policy <macaron.db> [-f <path-to-the-policy>] [-s]
+python -m macaron verify-policy -d <path-to-macaron.db> -f <path-to-the-policy> [-s]
 ```
 
 **Note.** The policy engine is under active development and will support more complex policies soon. Stay tuned.
