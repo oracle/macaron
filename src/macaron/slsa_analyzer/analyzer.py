@@ -229,9 +229,10 @@ class Analyzer:
             logger.critical("The main repository analysis failed. Cannot generate a report for it.")
             return
 
-        target_dir = git_url.get_repo_dir_name(report.root_record.context.remote_path)
-        if not target_dir:
-            target_dir = report.root_record.context.repo_full_name
+        target_dir = (
+            git_url.get_repo_dir_name(report.root_record.context.remote_path)
+            or report.root_record.context.repo_full_name
+        )
 
         output_target_path = os.path.join(global_config.output_path, "reports", target_dir)
         os.makedirs(output_target_path, exist_ok=True)
@@ -422,6 +423,12 @@ class Analyzer:
         AnalyzeContext
             The context of object of the target repository.
         """
+        # We get the origin url from the git repository.
+        # If it is a remote url, we could get the full name of the repository directly.
+        # For example, https://github.com/oracle-samples/macaron -> oracle-samples/macaron.
+        # However, if the origin url is a path to a local repository, we will assign a default
+        # name for it (i.e local_repos/<basename_of_the_local_path>).
+        # For example, /home/path/to/repo -> local_repos/repo.
         origin_remote_path = git_url.get_remote_origin_of_local_repo(git_obj)
         full_name = git_url.get_repo_full_name_from_url(origin_remote_path)
         if not full_name:

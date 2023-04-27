@@ -362,7 +362,7 @@ def get_repo_name_from_url(url: str) -> str:
 def get_repo_full_name_from_url(url: str) -> str:
     """Extract the full name of the repository from the remote url.
 
-    The full name is in the form <owner>/<name>. Note that this function assume `url` is a remote url.
+    The full name is in the form <owner>/<name>. Note that this function assumes `url` is a remote url.
 
     Parameters
     ----------
@@ -393,7 +393,7 @@ def get_repo_full_name_from_url(url: str) -> str:
 def get_remote_origin_of_local_repo(git_obj: Git) -> str:
     """Get the origin remote of a repository.
 
-    Note that this origin remote can be either a remote url to point to a local repo.
+    Note that this origin remote can be either a remote url or a path to a local repo.
 
     Parameters
     ----------
