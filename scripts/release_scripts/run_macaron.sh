@@ -20,7 +20,7 @@ MACARON_WORKSPACE="/home/macaron"
 entrypoint=()
 
 # The action to run for each entrypoint.
-# For example: `macaron analyze` or `macaron dump_defaults`
+# For example: `macaron analyze` or `macaron dump-defaults`
 action=()
 
 # `argv_main` and `argv_action` are the collections of arguments whose values changed by this script
@@ -43,8 +43,8 @@ argv_main=()
 #   analzye:
 #       -g/--template-path TEMPLATE_PATH: The path to the Jinja2 html template (please make sure to use .html or .j2 extensions).
 #       -c/--config-path CONFIG_PATH: The path to the user configuration.
-#   dump_defaults:
-#   verify:
+#   dump-defaults:
+#   verify-policy:
 #       -pr/--provenance PROVENANCE: The path to the provenance file.
 argv_action=()
 
@@ -117,7 +117,7 @@ while [[ $# -gt 0 ]]; do
             action+=("analyze")
             ;;
         dump_defaults)
-            action+=("dump_defaults")
+            action+=("dump-defaults")
             ;;
         verify)
             action+=("verify")

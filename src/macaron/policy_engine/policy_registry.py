@@ -21,20 +21,20 @@ class PolicyRegistry:
     ----------
     macaron_path: str
         The path to the macaron module
-    policy_paths: list[str]
-        The list of policy file paths. ``all((os.isfile(path) for path in policy_paths))`` must be True.
+    expectation_paths: list[str]
+        The list of policy file paths. ``all((os.isfile(path) for path in expectation_paths))`` must be True.
     """
 
     policies: dict[str, Policy]
     souffle_policies: list[SoufflePolicy]
     evaluated: bool
 
-    def __init__(self, policy_paths: list[str]) -> None:
+    def __init__(self, expectation_paths: list[str]) -> None:
         self.policies: dict[str, Policy] = {}
         self.souffle_policies: list[SoufflePolicy] = []
         self.evaluated = False
 
-        for policy_path in policy_paths:
+        for policy_path in expectation_paths:
             _, ext = os.path.splitext(policy_path)
             if ext in (".yaml", ".yml"):
                 policy = Policy.make_policy(policy_path)

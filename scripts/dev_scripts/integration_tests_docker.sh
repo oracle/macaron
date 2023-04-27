@@ -79,22 +79,25 @@ $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "slsa-framework/slsa-verifier: Analyzing using the repo path when automatic dependency resolution is skipped."
+echo "Verify Datalog policy as expectation."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier.json
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
 
-$RUN_MACARON_SCRIPT macaron -t $GITHUB_TOKEN -po $POLICY_FILE analyze -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+$RUN_MACARON_SCRIPT macaron -t $GITHUB_TOKEN analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 
 $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "slsa-framework/slsa-verifier: Verify the provenance against a policy."
+echo "slsa-framework/slsa-verifier: Analyzing using the repo path when automatic dependency resolution is skipped."
+echo "Verify YAML-based provenance expectation."
 echo -e "----------------------------------------------------------------------------------\n"
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/slsa_verifier.yaml
-PROVENANCE_FILE=$WORKSPACE/tests/policy_engine/resources/provenances/slsa-verifier-linux-amd64.intoto.jsonl
 
-$RUN_MACARON_SCRIPT macaron -po $POLICY_FILE -t $GITHUB_TOKEN verify -pr $PROVENANCE_FILE || log_fail
+$RUN_MACARON_SCRIPT macaron -t $GITHUB_TOKEN analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+
+$COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 if [ $RESULT_CODE -ne 0 ];
 then

@@ -13,7 +13,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 class GlobalConfig:
     """Class for keeping track of global configurations."""
 
-    policy_paths: list[str]
+    expectation_paths: list[str]
     macaron_path: str = ""
     output_path: str = ""
     build_log_path: str = ""
@@ -23,7 +23,7 @@ class GlobalConfig:
     resources_path: str = ""
 
     def __init__(self) -> None:
-        self.policy_paths = []
+        self.expectation_paths = []
 
     def load(
         self,
@@ -33,7 +33,7 @@ class GlobalConfig:
         debug_level: int,
         local_repos_path: str,
         gh_token: str,
-        policy_paths: list[str],
+        expectation_paths: list[str],
         resources_path: str,
     ) -> None:
         """Initiate the GlobalConfig object.
@@ -52,8 +52,8 @@ class GlobalConfig:
             The directory to look for local repositories.
         gh_token : str
             The GitHub personal access token.
-        policy_paths : str
-            The path to the policy file.
+        expectation_paths : list[str]
+            The path to the provenance expectation files.
         resources_path : str
             The path to the resources files needed for the analysis (i.e. mvnw, gradlew, etc.)
         """
@@ -67,7 +67,7 @@ class GlobalConfig:
 
         # Find the policies.
         policy_files = []
-        for policy_path in policy_paths:
+        for policy_path in expectation_paths:
             if os.path.isdir(policy_path):
                 for policy_file_path in os.listdir(policy_path):
                     if os.path.isfile(policy_file_path):
@@ -77,7 +77,7 @@ class GlobalConfig:
                 policy_files.append(policy_path)
                 logger.info("Added policy file %s", policy_path)
 
-        self.policy_paths = policy_files
+        self.expectation_paths = policy_files
 
 
 global_config = GlobalConfig()

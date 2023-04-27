@@ -7,7 +7,6 @@ import argparse
 import logging
 import os
 import sys
-from typing import Never
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from yamale.schema.validationresults import ValidationResult
@@ -16,11 +15,10 @@ import macaron
 from macaron.config.defaults import create_defaults, load_defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import TARGET_CONFIG_SCHEMA
-from macaron.output_reporter.reporter import HTMLReporter, JSONReporter
+from macaron.output_reporter.reporter import HTMLReporter, JSONReporter, PolicyReporter
 from macaron.parsers.yaml.loader import YamlLoader
-from macaron.policy_engine.policy import Policy, PolicyRuntimeError
+from macaron.policy_engine.policy_engine import run_policy_engine
 from macaron.slsa_analyzer.analyzer import Analyzer
-from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader, SLSAProvenanceError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -28,6 +26,10 @@ logger: logging.Logger = logging.getLogger(__name__)
 def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None:
     """Run the SLSA checks against a single target repository."""
     analyzer = Analyzer(global_config.output_path, global_config.build_log_path)
+
+    # Set provenance expectation path.
+    if analyzer_single_args.provenance_expectation:
+        global_config.expectation_paths = analyzer_single_args.provenance_expectation
 
     # Initiate reporters.
     if analyzer_single_args.template_path:
@@ -75,58 +77,45 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     sys.exit(status_code)
 
 
-def verify_prov(verify_args: argparse.Namespace) -> Never:
-    """Verify a provenance against a user defined policy."""
-    prov_file = verify_args.provenance
-    policy_files = list(filter(lambda path: os.path.splitext(path)[1] in (".yaml", ".yml"), global_config.policy_paths))
+def verify_policy(action_args: argparse.Namespace) -> int:
+    """Run policy engine and verify the Datalog policy.
 
-    if not policy_files:
-        logger.error("The policy is not provided to complete this action.")
-        sys.exit(os.EX_NOINPUT)
+    Returns
+    -------
+    int
+        Returns os.EX_OK if successful or the corresponding error code on failure.
+    """
+    if not os.path.isfile(action_args.database):
+        logger.critical("The database file does not exist.")
+        return os.EX_OSFILE
 
-    if len(policy_files) > 1:
-        logger.error("Exactly one policy must be provided to complete this action.")
-        sys.exit(os.EX_USAGE)
+    result = run_policy_engine(action_args.database, action_args.show_prelude, action_args.file)
+    policy_reporter = PolicyReporter()
+    policy_reporter.generate(global_config.output_path, result)
 
-    policy_file = policy_files[0]
-    try:
-        prov_content = ProvPayloadLoader.load(prov_file)
-        policy: Policy | None = Policy.make_policy(policy_file)
+    if ("failed_policies" in result) and any(result["failed_policies"]):
+        return os.EX_DATAERR
 
-        if not policy:
-            logger.error("Could not load policy at %s.", policy_file)
-            sys.exit(os.EX_NOINPUT)
-
-        logger.info("Validating the provenance at %s against %s.", prov_file, policy)
-
-        if not policy.validate(prov_content):
-            logger.error("The validation for provenance at %s was unsuccessful.", prov_file)
-            sys.exit(os.EX_NOINPUT)
-
-        logger.info("The validation for provenance at %s was successful.", prov_file)
-        sys.exit(os.EX_OK)
-    except (SLSAProvenanceError, PolicyRuntimeError) as error:
-        logger.error(error)
-        sys.exit(os.EX_DATAERR)
+    return os.EX_OK
 
 
 def perform_action(action_args: argparse.Namespace) -> None:
     """Perform the indicated action of Macaron."""
-    if action_args.action == "dump_defaults":
-        # Create the defaults.ini file in the output dir and exit.
-        create_defaults(action_args.output_dir, os.getcwd())
-        sys.exit(os.EX_OK)
-
-    # Check that the GitHub token is enabled.
-    if not action_args.personal_access_token:
-        logger.error("GitHub access token not set.")
-        sys.exit(os.EX_USAGE)
-
     match action_args.action:
+        case "dump-defaults":
+            # Create the defaults.ini file in the output dir and exit.
+            create_defaults(action_args.output_dir, os.getcwd())
+            sys.exit(os.EX_OK)
+
+        case "verify-policy":
+            sys.exit(verify_policy(action_args))
+
         case "analyze":
+            # Check that the GitHub token is enabled.
+            if not action_args.personal_access_token:
+                logger.error("GitHub access token not set.")
+                sys.exit(os.EX_USAGE)
             analyze_slsa_levels_single(action_args)
-        case "verify":
-            verify_prov(action_args)
         case _:
             logger.error("Macaron does not support command option %s.", action_args.action)
             sys.exit(os.EX_USAGE)
@@ -161,15 +150,6 @@ def main() -> None:
         "--local-repos-path",
         default="",
         help="The directory where Macaron looks for already cloned repositories.",
-    )
-
-    main_parser.add_argument(
-        "-po",
-        "--policy",
-        required=False,
-        default=[],
-        help=("The path to a policy yaml file or directory."),
-        action="append",
     )
 
     # Add sub parsers for each action
@@ -217,6 +197,15 @@ def main() -> None:
         ),
     )
 
+    single_analyze_parser.add_argument(
+        "-pe",
+        "--provenance-expectation",
+        required=False,
+        default=[],
+        help=("The path to provenance expectation file or directory."),
+        action="append",
+    )
+
     group.add_argument(
         "-c",
         "--config-path",
@@ -244,14 +233,14 @@ def main() -> None:
     )
 
     # Dump the default values.
-    sub_parser.add_parser(name="dump_defaults", description="Dumps the defaults.ini file to the output directory.")
+    sub_parser.add_parser(name="dump-defaults", description="Dumps the defaults.ini file to the output directory.")
 
-    # Verifying a provenance against a policy.
-    verify_parser = sub_parser.add_parser(name="verify")
+    # Verify the Datalog policy.
+    vp_parser = sub_parser.add_parser(name="verify-policy")
 
-    verify_parser.add_argument(
-        "-pr", "--provenance", required=True, type=str, help=("The path to the provenance file.")
-    )
+    vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
+    vp_parser.add_argument("-f", "--file", required=False, type=str, default="", help="Path to the Datalog policy.")
+    vp_parser.add_argument("-s", "--show-prelude", required=False, action="store_true", help="Show policy prelude.")
 
     args = main_parser.parse_args(sys.argv[1:])
 
@@ -301,6 +290,8 @@ def main() -> None:
     logger.info("The logs will be stored in debug.log")
 
     # Set Macaron's global configuration.
+    # The path to provenance expectation files will be updated if
+    # set through analyze sun-command.
     global_config.load(
         macaron_path=macaron.MACARON_PATH,
         output_path=args.output_dir,
@@ -308,7 +299,7 @@ def main() -> None:
         debug_level=log_level,
         local_repos_path=args.local_repos_path,
         gh_token=args.personal_access_token or "",
-        policy_paths=args.policy,
+        expectation_paths=[],
         resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
     )
 
