@@ -276,6 +276,24 @@ do
 done
 
 echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: Analyzing a repository that was cloned from another local repo."
+echo -e "----------------------------------------------------------------------------------\n"
+# Clone the repo from the existing apache/maven repo
+rm -rf $WORKSPACE/output/git_repos/local_repos/test_repo
+git clone $WORKSPACE/output/git_repos/github_com/apache/maven $WORKSPACE/output/git_repos/local_repos/test_repo
+
+JSON_EXPECTED=$WORKSPACE/output/reports/local_repos/maven/maven.json
+HTML_EXPECTED=$WORKSPACE/output/reports/local_repos/maven/maven.html
+
+$RUN_MACARON -lr $WORKSPACE/output/git_repos/local_repos/ analyze -rp test_repo -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
+
+# We don't compare the report content because the remote_path fields in the reports are undeterministic when running
+# this test locally and running it in the GitHub Actions runner. We only check if the reports are generated as
+# expected without the issue described in https://github.com/oracle-samples/macaron/issues/116.
+ls $JSON_EXPECTED || log_fail
+ls $HTML_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: test using invalid local repo path."
 echo -e "----------------------------------------------------------------------------------\n"
 # Assume that $WORKSPACE is always an absolute path.
