@@ -94,6 +94,7 @@ echo "slsa-framework/slsa-verifier: Analyzing using the repo path when automatic
 echo "Verify YAML-based provenance expectation."
 echo -e "----------------------------------------------------------------------------------\n"
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/slsa_verifier.yaml
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier-yaml-po.json
 
 $RUN_MACARON_SCRIPT macaron -t $GITHUB_TOKEN analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 

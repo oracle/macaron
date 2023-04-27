@@ -395,12 +395,12 @@ python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test verifying an invalid YAML-based provenance expectation verifier."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier-yaml-po.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/invalid.yaml
 $RUN_MACARON analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 if [ $? -eq 0 ];
 then
     echo -e "Expected non-zero status code but got $?."
