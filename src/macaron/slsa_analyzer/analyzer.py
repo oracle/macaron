@@ -124,8 +124,8 @@ class Analyzer:
         int
             The return status code.
         """
-        main_config = Configuration(user_config.get("target", {}))
-        deps_config: list[Configuration] = [Configuration(dep) for dep in user_config.get("dependencies", [])]
+        main_config = Configuration.from_user_config(user_config)
+        deps_config = main_config.dependencies
         deps_resolved: dict[str, DependencyInfo] = {}
 
         # Analyze the main target.
@@ -153,15 +153,15 @@ class Analyzer:
         if deps_config:
             logger.info("Start analyzing the dependencies.")
             for config in deps_config:
-                dep_status: SCMStatus = config.get_value("available")
+                dep_status: SCMStatus = config.available
                 if dep_status != SCMStatus.AVAILABLE:
                     dep_record: Record = Record(
-                        record_id=config.get_value("id"),
-                        description=config.get_value("note"),
+                        record_id=config.target_id,
+                        description=config.note,
                         policies_failed=[],
                         policies_passed=[],
                         pre_config=config,
-                        status=config.get_value("available"),
+                        status=config.available,
                     )
                     report.add_dep_record(dep_record)
                     if dep_status == SCMStatus.DUPLICATED_SCM:
@@ -176,7 +176,7 @@ class Analyzer:
         # Populate the record of duplicated scm dependencies with the
         # context of analyzed dependencies if available.
         for dup_record in duplicated_scm_records:
-            find_ctx = report.find_ctx(dup_record.pre_config.get_value("path"))
+            find_ctx = report.find_ctx(dup_record.pre_config.path)
             dup_record.context = find_ctx
 
         analysis = store_analysis_to_db(self.db_man, main_record)
@@ -344,10 +344,10 @@ class Analyzer:
         Record
             The record of the analysis for this repository.
         """
-        repo_id = config.get_value("id")
-        repo_path = config.get_value("path")
-        req_branch = config.get_value("branch")
-        req_digest = config.get_value("digest")
+        repo_id = config.target_id
+        repo_path = config.path
+        req_branch = config.branch
+        req_digest = config.digest
 
         logger.info("=====================================")
         logger.info("Analyzing %s", repo_id)

@@ -63,7 +63,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
 
         expected_result_with_deps = [
             {
-                "id": "id",
+                "id": "id_1",
                 "path": "https://github.com/owner/name.git",
                 "branch": "master",
                 "digest": "aac3b3bcb608e1e8451d4beedd38ecbe6306e7e7",
@@ -71,7 +71,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
                 "available": SCMStatus.AVAILABLE,
             },
             {
-                "id": "id",
+                "id": "id_2",
                 "path": "https://github.com/owner/name_2.git",
                 "branch": "master",
                 "digest": "aac3b3bcb608e1e8451d4beedd38ecbe6306e7e7",
@@ -99,17 +99,22 @@ class TestDependencyAnalyzer(MacaronTestCase):
         # Get the mock config file with dependencies.
         path = TestDependencyAnalyzer.CONFIG_DIR.joinpath("valid_has_deps.yaml")
         user_config = YamlLoader.load(path, TARGET_CONFIG_SCHEMA)
-        user_dep_config = [Configuration(dep) for dep in user_config.get("dependencies", [])]
+        user_dep_config = Configuration.from_user_config(user_config).dependencies
         merged_configs = DependencyAnalyzer.merge_configs(user_dep_config, auto_deps)
 
-        assert [dep.options for dep in merged_configs] == expected_result_with_deps
+        assert [dep.get_dict() for dep in merged_configs].sort(key=lambda x: x["id"]) == expected_result_with_deps.sort(
+            key=lambda x: x["id"]
+        )
 
         # Get the mock config file without dependencies.
         path = TestDependencyAnalyzer.CONFIG_DIR.joinpath("valid_no_deps.yaml")
         user_config = YamlLoader.load(path, TARGET_CONFIG_SCHEMA)
-        merged_configs = DependencyAnalyzer.merge_configs(user_config.get("dependencies"), auto_deps)
+        user_dep_config = Configuration.from_user_config(user_config).dependencies
+        merged_configs = DependencyAnalyzer.merge_configs(user_dep_config, auto_deps)
 
-        assert [dep.options for dep in merged_configs] == expected_result_no_deps
+        assert [dep.get_dict() for dep in merged_configs].sort(key=lambda x: x["id"]) == expected_result_no_deps.sort(
+            key=lambda x: x["id"]
+        )
 
     def test_tool_valid(self) -> None:
         """Test the tool name and version is valid."""

@@ -6,7 +6,7 @@
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Generic, Optional, TypedDict, TypeVar
+from typing import Optional, TypedDict
 
 from macaron.config.target_config import Configuration
 from macaron.output_reporter.scm import SCMStatus
@@ -48,15 +48,8 @@ class DepSummary(TypedDict):
     """
 
 
-RecordNode = TypeVar("RecordNode", bound="Record")
-# The documentation below for `TypeVar` is commented out due to a breaking
-# change in Sphinx version (^=6.1.0).
-# Reported at: https://github.com/oracle-samples/macaron/issues/58.
-# """This binds type ``RecordNode`` to ``Record`` and any of its subclasses."""
-
-
 @dataclass
-class Record(Generic[RecordNode]):
+class Record:
     """This class contains the analysis status and data of a repo.
 
     Parameters
@@ -93,7 +86,7 @@ class Record(Generic[RecordNode]):
     policies_passed: list[str]
     policies_failed: list[str]
     context: AnalyzeContext | None = field(default=None)
-    dependencies: list[RecordNode] = field(default_factory=list)
+    dependencies: list["Record"] = field(default_factory=list)
 
     def get_summary(self) -> dict:
         """Get a dictionary that summarizes the status of this record.
@@ -220,7 +213,7 @@ class Report:
             The configs dict of a dependency.
         """
         for record in self.root_record.dependencies:
-            yield record.pre_config.options
+            yield record.pre_config.get_dict()
 
     def get_ctxs(self) -> Iterable[AnalyzeContext]:
         """Get the generator for all AnalyzeContext instances.

@@ -1,14 +1,16 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Configuration class for the target analyzed repository."""
 
 import logging
 import os
-from typing import Any, Optional
+from dataclasses import dataclass, field
 
 import yamale
 from yamale.schema import Schema
+
+from macaron.output_reporter.scm import SCMStatus
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -18,46 +20,42 @@ TARGET_CONFIG_SCHEMA: Schema = yamale.make_schema(_SCHEMA_DIR)
 """The schema for the target configuration yaml file."""
 
 
+@dataclass
 class Configuration:
     """This class contains the configuration for an analyzed repo in Macaron."""
 
-    def __init__(self, data: Optional[dict] = None) -> None:
-        """Construct the Configuration object.
+    target_id: str
+    path: str
+    branch: str = ""
+    digest: str = ""
+    note: str = ""
+    available: SCMStatus = SCMStatus.UNKNOWN
+    dependencies: list["Configuration"] = field(default_factory=list)
 
-        Parameters
-        ----------
-        data : Optional[dict]
-            The dictionary contains the data to analyze a repository.
-        """
-        self.options = {"id": "", "path": "", "branch": "", "digest": "", "note": "", "available": ""}
+    @classmethod
+    def from_single_config(cls, config: dict) -> "Configuration":
+        """WIP."""
+        target_id = config.get("id", "")
+        path = config.get("path", "")
+        branch = config.get("branch", "")
+        digest = config.get("digest", "")
+        return Configuration(target_id=target_id, path=path, branch=branch, digest=digest)
 
-        if data:
-            for key, value in data.items():
-                self.options[key] = value
+    @classmethod
+    def from_user_config(cls, config: dict):
+        """WIP."""
+        main_target = Configuration.from_single_config(config.get("target", {}))
+        main_target.dependencies = [Configuration.from_single_config(dep) for dep in config.get("dependencies", [])]
+        return main_target
 
-    def set_value(self, key: str, value: Any) -> None:
-        """Set an option in the configuration.
-
-        Parameters
-        ----------
-        key : str
-            The key to insert value.
-        value : Any
-            The value to insert.
-        """
-        self.options[key] = value
-
-    def get_value(self, key: str) -> Any:
-        """Get an option value in the configuration.
-
-        Parameters
-        ----------
-        key : str
-            The key to get the value.
-
-        Returns
-        -------
-        Any
-            The value indicated by key or None if not existed.
-        """
-        return self.options.get(key)
+    def get_dict(self) -> dict:
+        """WIP."""
+        return {
+            "id": self.target_id,
+            "path": self.path,
+            "branch": self.branch,
+            "digest": self.digest,
+            "note": self.note,
+            "available": self.available,
+            "dependencies": [dep.get_dict() for dep in self.dependencies],
+        }

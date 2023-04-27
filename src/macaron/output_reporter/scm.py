@@ -17,3 +17,5 @@ class SCMStatus(str, Enum):
     """The SCM url is available but has been already analyzed for another artifact."""
     ANALYSIS_FAILED = "FAILED"
     """When the SCM is available but the analysis could not finish for this artifact."""
+    UNKNOWN = "UNKNOWN"
+    """Init value."""

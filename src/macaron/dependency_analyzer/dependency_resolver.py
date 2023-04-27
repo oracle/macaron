@@ -214,7 +214,7 @@ class DependencyAnalyzer(ABC):
         merged_deps: list[Configuration] = []
         if config_deps:
             for dep in config_deps:
-                dep.set_value("available", SCMStatus.AVAILABLE)
+                dep.available = SCMStatus.AVAILABLE
                 merged_deps.append(dep)
 
         if not resolved_deps:
@@ -224,7 +224,7 @@ class DependencyAnalyzer(ABC):
             duplicate = False
             if config_deps:
                 for m_dep in config_deps:
-                    m_repo = get_repo_full_name_from_url(m_dep.get_value("path"))
+                    m_repo = get_repo_full_name_from_url(m_dep.path)
                     a_repo = get_repo_full_name_from_url(value.get("url", ""))
                     if m_repo and m_repo == a_repo:
                         duplicate = True
@@ -233,14 +233,12 @@ class DependencyAnalyzer(ABC):
                     continue
             merged_deps.append(
                 Configuration(
-                    {
-                        "id": key,
-                        "path": value.get("url"),
-                        "branch": "",
-                        "digest": "",
-                        "note": value.get("note"),
-                        "available": value.get("available"),
-                    }
+                    target_id=key,
+                    path=value.get("url", ""),
+                    branch="",
+                    digest="",
+                    note=value.get("note", ""),
+                    available=value.get("available", SCMStatus.UNKNOWN),
                 )
             )
 

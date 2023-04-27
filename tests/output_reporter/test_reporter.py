@@ -30,7 +30,7 @@ class MockRecord(Record):
         super().__init__(
             record_id="record",
             description="sample_desc",
-            pre_config=Configuration({}),
+            pre_config=Configuration.from_single_config({}),
             status=SCMStatus.AVAILABLE,
             context=MagicMock(),
             dependencies=[],
