@@ -178,7 +178,7 @@ class BuildServiceCheck(BaseCheck):
                 for unparsed_ci in (Jenkins, Travis, CircleCI, GitLabCI):
                     if isinstance(ci_service, unparsed_ci):
                         if build_tool.ci_build_kws[ci_service.name]:
-                            config_name = ci_service.has_kws_in_config(
+                            _, config_name = ci_service.has_kws_in_config(
                                 build_tool.ci_build_kws[ci_service.name], repo_path=ctx.repo_path
                             )
                             if not config_name:

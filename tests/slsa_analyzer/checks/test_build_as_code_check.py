@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
+
 import macaron
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.parsers.actionparser import parse as parse_action
@@ -226,3 +228,32 @@ def test_gha_workflow_deployment(
     github_actions_service.build_call_graph_from_node(callee)
     ci_info["callgraph"] = gh_cg
     assert check.run_check(gha_deploy, check_result) == CheckResultType.FAILED
+
+
+@pytest.mark.parametrize(
+    ("repo_path", "expect_result"),
+    [
+        (Path(__file__).parent.joinpath("resources", "build_as_code", "travis_ci_with_deploy"), CheckResultType.PASSED),
+        (Path(__file__).parent.joinpath("resources", "build_as_code", "travis_ci_no_deploy"), CheckResultType.FAILED),
+    ],
+)
+def test_travis_ci_deploy(
+    gradle_tool: Gradle, travis_service: Jenkins, repo_path: Path, expect_result: CheckResultType
+) -> None:
+    """Test the Gradle build tool."""
+    check = BuildAsCodeCheck()
+
+    ci_info = CIInfo(
+        service=travis_service,
+        bash_commands=[],
+        callgraph=CallGraph(BaseNode(), ""),
+        provenance_assets=[],
+        latest_release={},
+        provenances=[],
+    )
+    check_result = CheckResult(justification=[])  # type: ignore
+    gradle_deploy = AnalyzeContext("use_build_tool", str(repo_path.absolute()), MagicMock())
+    gradle_deploy.dynamic_data["build_spec"]["tool"] = gradle_tool
+    gradle_deploy.dynamic_data["ci_services"] = [ci_info]
+
+    assert check.run_check(gradle_deploy, check_result) == expect_result
