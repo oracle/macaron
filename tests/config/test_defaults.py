@@ -27,7 +27,7 @@ def test_create_defaults() -> None:
 
 
 @pytest.mark.parametrize(
-    ("section", "item", "delimiter", "cleanup", "duplicated_ok", "expect"),
+    ("section", "item", "delimiter", "strip", "duplicated_ok", "expect"),
     [
         (
             "test.list",
@@ -63,7 +63,7 @@ def test_create_defaults() -> None:
     ],
 )
 def test_get_str_list_with_custom_delimiter(
-    section: str, item: str, delimiter: str, cleanup: bool, duplicated_ok: bool, expect: list[str]
+    section: str, item: str, delimiter: str, strip: bool, duplicated_ok: bool, expect: list[str]
 ) -> None:
     """Test getting a list of strings from defaults.ini using a custom delimiter."""
     content = """
@@ -80,13 +80,13 @@ def test_get_str_list_with_custom_delimiter(
     custom_defaults = ConfigParser()
     custom_defaults.read_string(content)
 
-    results = custom_defaults.get_list(section, item, delimiter=delimiter, cleanup=cleanup, duplicated_ok=duplicated_ok)
+    results = custom_defaults.get_list(section, item, delimiter=delimiter, strip=strip, duplicated_ok=duplicated_ok)
     results.sort()
     assert results == expect
 
 
 @pytest.mark.parametrize(
-    ("section", "item", "cleanup", "duplicated_ok", "fallback", "expect"),
+    ("section", "item", "strip", "duplicated_ok", "fallback", "expect"),
     [
         ("test.list", "default", True, False, [], ["comma_ended,", "github.com", "space string"]),
         ("test.list", "default", True, True, [], ["comma_ended,", "github.com", "space string", "space string"]),
@@ -99,7 +99,7 @@ def test_get_str_list_with_custom_delimiter(
     ],
 )
 def test_get_str_list_with_default_delimiter(
-    section: str, item: str, cleanup: bool, duplicated_ok: bool, fallback: list[str], expect: list[str]
+    section: str, item: str, strip: bool, duplicated_ok: bool, fallback: list[str], expect: list[str]
 ) -> None:
     """Test getting a list of strings from defaults.ini using the default delimiter."""
     content = """
@@ -114,6 +114,6 @@ def test_get_str_list_with_default_delimiter(
     custom_defaults = ConfigParser()
     custom_defaults.read_string(content)
 
-    results = custom_defaults.get_list(section, item, cleanup=cleanup, fallback=fallback, duplicated_ok=duplicated_ok)
+    results = custom_defaults.get_list(section, item, strip=strip, fallback=fallback, duplicated_ok=duplicated_ok)
     results.sort()
     assert results == expect

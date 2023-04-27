@@ -23,7 +23,7 @@ class ConfigParser(configparser.ConfigParser):
         delimiter: Optional[str] = "\n",
         fallback: Optional[list[str]] = None,
         duplicated_ok: bool = False,
-        cleanup: bool = True,
+        strip: bool = True,
     ) -> list[str]:
         r"""Parse and return a list of strings from an item in ``defaults.ini``.
 
@@ -35,7 +35,7 @@ class ConfigParser(configparser.ConfigParser):
         If ``delimiter`` is set (default: "\n"), it will be used to split the list of strings
         (i.e content.split(sep=delimiter)).
 
-        If ``cleanup`` is True  (default: True), strings are whitespace-stripped and empty strings
+        If ``strip`` is True  (default: True), strings are whitespace-stripped and empty strings
         are removed from the final result.
 
         If ``duplicated_ok`` is True (default: False), duplicated values are not removed from the final list.
@@ -54,7 +54,7 @@ class ConfigParser(configparser.ConfigParser):
             The fallback value in case of errors.
         duplicated_ok : bool
             If True allow duplicate values.
-        cleanup: bool
+        strip: bool
             If True, strings are whitespace-stripped and any empty strings are removed.
 
         Returns
@@ -82,7 +82,7 @@ class ConfigParser(configparser.ConfigParser):
             if isinstance(value, str):
                 content = value.split(sep=delimiter)
 
-                if cleanup:
+                if strip:
                     content = [x.strip() for x in content if x.strip()]
 
                 if duplicated_ok:
