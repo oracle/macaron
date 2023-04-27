@@ -33,7 +33,7 @@ then
     cp $RESOURCES/settings.xml $HOMEDIR/.m2/
 fi
 
-# # Running Macaron without config files
+# Running Macaron without config files
 echo -e "\n=================================================================================="
 echo "Run integration tests without configurations"
 echo -e "==================================================================================\n"
