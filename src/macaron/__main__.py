@@ -25,11 +25,11 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None:
     """Run the SLSA checks against a single target repository."""
-    analyzer = Analyzer(global_config.output_path, global_config.build_log_path)
-
     # Set provenance expectation path.
     if analyzer_single_args.provenance_expectation:
-        global_config.expectation_paths = analyzer_single_args.provenance_expectation
+        global_config.load_expectation_paths(analyzer_single_args.provenance_expectation)
+
+    analyzer = Analyzer(global_config.output_path, global_config.build_log_path)
 
     # Initiate reporters.
     if analyzer_single_args.template_path:
@@ -299,7 +299,6 @@ def main() -> None:
         debug_level=log_level,
         local_repos_path=args.local_repos_path,
         gh_token=args.personal_access_token or "",
-        expectation_paths=[],
         resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
     )
 
