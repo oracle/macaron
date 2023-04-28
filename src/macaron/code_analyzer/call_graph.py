@@ -3,6 +3,7 @@
 
 """This module contains classes to generate build call graphs for the target repository."""
 
+from collections import deque
 from collections.abc import Iterable
 from typing import Generic, TypeVar
 
@@ -79,11 +80,11 @@ class CallGraph(Generic[Node]):
         Node
             The traversed nodes.
         """
-        queue = []
+        queue: deque[Node] = deque()
         queue.extend(self.root.callee)
         visited = []
         while queue:
-            node = queue.pop(0)
+            node = queue.popleft()
             if node not in visited:
                 queue.extend(node.callee)
                 visited.append(node)
