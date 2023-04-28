@@ -3,9 +3,14 @@
 
 """This module contains the BuildAsCodeCheck class."""
 
+# import itertools
 import logging
 import os
+from enum import Enum
 
+# from pgmpy.factors.discrete import TabularCPD
+# from pgmpy.inference import VariableElimination
+# from pgmpy.models.BayesianModel import BayesianNetwork
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
@@ -14,6 +19,7 @@ from macaron.database.database_manager import ORMBase
 from macaron.database.table_definitions import CheckFactsTable
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, NoneBuildTool
+from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
@@ -37,6 +43,43 @@ class BuildAsCodeTable(CheckFactsTable, ORMBase):
     build_trigger: Mapped[str] = mapped_column(String, nullable=True)
     deploy_command: Mapped[str] = mapped_column(String, nullable=True)
     build_status_url: Mapped[str] = mapped_column(String, nullable=True)
+
+
+class EvidenceType(str, Enum):
+    """This class contains the types of evidence."""
+
+    FACT = "FACT"
+    EVIDENCE = "EVIDENCE"
+    CLUE = "CLUE"
+
+
+class Evidence:
+    """This class contains the evidence for a check."""
+
+    def __init__(
+        self,
+        name: str = "",
+        evidence_type: EvidenceType = EvidenceType.CLUE,
+        state: bool = False,
+        weight: float = 0,
+        norm_weight: float = 0,
+        description: str = "",
+        mutual_exclusion: list[str] = None,
+        children: list[str] = None,
+    ) -> None:
+        self.state = state
+        self.evidence_type = evidence_type
+        self.name = name
+        self.description = description
+        self.weight = weight
+        self.norm_weight = norm_weight
+        self.mutual_exclusion = mutual_exclusion
+        self.children = children
+
+        # TODO: add optional dependencies on other factors, i.e. build tool, CI service.
+
+    def __str__(self) -> str:
+        return f"Name: {self.name}, weight: {self.weight}, state: {self.state}."
 
 
 class BuildAsCodeCheck(BaseCheck):
@@ -63,6 +106,19 @@ class BuildAsCodeCheck(BaseCheck):
             eval_reqs=eval_reqs,
             result_on_skip=CheckResultType.PASSED,
         )
+
+        # Can define weight and type here, or leave as default.
+        self.evidence = {
+            "ci_parsed": Evidence(name="ci_parsed", weight=0.2, description="CI files are parsed for this CI service"),
+            "gha_deploy": Evidence(
+                name="gha_deploy", weight=0.7, description="Trusted GitHub Action used in CI workflow to deploy"
+            ),
+            "cmd_deploy": Evidence(
+                name="cmd_deploy", weight=0.5, description="Bash command used to deploy", mutual_exclusion="gha_deploy"
+            ),
+        }
+
+        self.check_confidence_threshold = 0.3
 
     def _has_deploy_command(self, commands: list[list[str]], build_tool: BaseBuildTool) -> str:
         """Check if the bash command is a build and deploy command."""
@@ -127,6 +183,8 @@ class BuildAsCodeCheck(BaseCheck):
         build_tool = ctx.dynamic_data["build_spec"].get("tool")
         ci_services = ctx.dynamic_data["ci_services"]
 
+        check_result["check_confidence_threshold"] = self.check_confidence_threshold
+
         # Checking if a build tool is discovered for this repo.
         if build_tool and not isinstance(build_tool, NoneBuildTool):
             for ci_info in ci_services:
@@ -135,11 +193,12 @@ class BuildAsCodeCheck(BaseCheck):
                 if isinstance(ci_service, NoneCIService):
                     continue
 
+                # TODO: check for build tool specific trusted GHAs.
                 trusted_deploy_actions = defaults.get_list("builder.pip.ci.deploy", "github_actions", fallback=[])
 
                 # Check for use of a trusted Github Actions workflow to publish/deploy.
                 # TODO: verify that deployment is legitimate and not a test
-                if trusted_deploy_actions:
+                if trusted_deploy_actions and isinstance(build_tool, Pip):
                     for callee in ci_info["callgraph"].bfs():
                         workflow_name = callee.name.split("@")[0]
 
@@ -201,61 +260,74 @@ class BuildAsCodeCheck(BaseCheck):
                                         build_status_url=html_url,
                                     )
                                 ]
-                            return CheckResultType.PASSED
+                            self.evidence["gha_deploy"].state = True
+                            self.evidence["ci_parsed"].state = True
+                            self.evidence["cmd_deploy"].weight = 0.1
+                            print(workflow_name)
+                            # return CheckResultType.PASSED
 
-                for bash_cmd in ci_info["bash_commands"]:
-                    deploy_cmd = self._has_deploy_command(bash_cmd["commands"], build_tool)
-                    if deploy_cmd:
-                        # Get the permalink and HTML hyperlink tag of the CI file that triggered the bash command.
-                        trigger_link = ci_service.api_client.get_file_link(
-                            ctx.repo_full_name,
-                            ctx.commit_sha,
-                            ci_service.api_client.get_relative_path_of_workflow(os.path.basename(bash_cmd["CI_path"])),
-                        )
-                        # Get the permalink of the source file of the bash command.
-                        bash_source_link = ci_service.api_client.get_file_link(
-                            ctx.repo_full_name, ctx.commit_sha, bash_cmd["caller_path"]
-                        )
+                # TODO: handle mutual exclusion.
+                if self.evidence["gha_deploy"].state is False:
+                    for bash_cmd in ci_info["bash_commands"]:
+                        deploy_cmd = self._has_deploy_command(bash_cmd["commands"], build_tool)
+                        if deploy_cmd:
+                            # Get the permalink and HTML hyperlink tag of the CI file that triggered the bash command.
+                            trigger_link = ci_service.api_client.get_file_link(
+                                ctx.repo_full_name,
+                                ctx.commit_sha,
+                                ci_service.api_client.get_relative_path_of_workflow(
+                                    os.path.basename(bash_cmd["CI_path"])
+                                ),
+                            )
+                            # Get the permalink of the source file of the bash command.
+                            bash_source_link = ci_service.api_client.get_file_link(
+                                ctx.repo_full_name, ctx.commit_sha, bash_cmd["caller_path"]
+                            )
 
-                        html_url = ci_service.has_latest_run_passed(
-                            ctx.repo_full_name,
-                            ctx.branch_name,
-                            ctx.commit_sha,
-                            ctx.commit_date,
-                            os.path.basename(bash_cmd["CI_path"]),
-                        )
+                            html_url = ci_service.has_latest_run_passed(
+                                ctx.repo_full_name,
+                                ctx.branch_name,
+                                ctx.commit_sha,
+                                ctx.commit_date,
+                                os.path.basename(bash_cmd["CI_path"]),
+                            )
 
-                        justification_cmd: list[str | dict[str, str]] = [
-                            {
-                                f"The target repository uses build tool {build_tool.name} to deploy": bash_source_link,
-                                "The build is triggered by": trigger_link,
-                            },
-                            f"Deploy command: {deploy_cmd}",
-                            {"The status of the build can be seen at": html_url}
-                            if html_url
-                            else "However, could not find a passing workflow run.",
-                        ]
-                        check_result["justification"].extend(justification_cmd)
-                        if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
-                            predicate = ci_info["provenances"][0]["predicate"]
-                            predicate["buildType"] = f"Custom {ci_service.name}"
-                            predicate["builder"]["id"] = bash_source_link
-                            predicate["invocation"]["configSource"][
-                                "uri"
-                            ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
-                            predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
-                            predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
-                            predicate["metadata"]["buildInvocationId"] = html_url
-                            check_result["result_tables"] = [
-                                BuildAsCodeTable(
-                                    build_tool_name=build_tool.name,
-                                    ci_service_name=ci_service.name,
-                                    build_trigger=trigger_link,
-                                    deploy_command=deploy_cmd,
-                                    build_status_url=html_url,
-                                )
+                            justification_cmd: list[str | dict[str, str]] = [
+                                {
+                                    f"The target repository uses build tool {build_tool.name} "
+                                    "to deploy": bash_source_link,
+                                    "The build is triggered by": trigger_link,
+                                },
+                                f"Deploy command: {deploy_cmd}",
+                                {"The status of the build can be seen at": html_url}
+                                if html_url
+                                else "However, could not find a passing workflow run.",
                             ]
-                        return CheckResultType.PASSED
+                            check_result["justification"].extend(justification_cmd)
+                            if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
+                                predicate = ci_info["provenances"][0]["predicate"]
+                                predicate["buildType"] = f"Custom {ci_service.name}"
+                                predicate["builder"]["id"] = bash_source_link
+                                predicate["invocation"]["configSource"][
+                                    "uri"
+                                ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
+                                predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
+                                predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
+                                predicate["metadata"]["buildInvocationId"] = html_url
+                                check_result["result_tables"] = [
+                                    BuildAsCodeTable(
+                                        build_tool_name=build_tool.name,
+                                        ci_service_name=ci_service.name,
+                                        build_trigger=trigger_link,
+                                        deploy_command=deploy_cmd,
+                                        build_status_url=html_url,
+                                    )
+                                ]
+                            self.evidence["ci_parsed"].state = True
+                            self.evidence["cmd_deploy"].state = True
+                            self.evidence["gha_deploy"].weight = 0.1
+
+                            # return CheckResultType.PASSED
 
                 # We currently don't parse these CI configuration files.
                 # We just look for a keyword for now.
@@ -288,12 +360,64 @@ class BuildAsCodeCheck(BaseCheck):
                                     deploy_command=deploy_cmd,
                                 )
                             ]
-                            return CheckResultType.PASSED
+                            self.evidence["ci_parsed"].state = False
+                            self.evidence["cmd_deploy"].state = True
+                            # return CheckResultType.PASSED
 
-            pass_msg = f"The target repository does not use {build_tool.name} to deploy."
-            check_result["justification"].append(pass_msg)
-            check_result["result_tables"] = [BuildAsCodeTable(build_tool_name=build_tool.name)]
-            return CheckResultType.FAILED
+            total_weight = sum(ev.weight for ev in self.evidence.values())
+            found_evidence: list[Evidence] = []
+            confidence_score = 0
+
+            for item in self.evidence.values():
+                item.norm_weight = float(item.weight) / total_weight
+                if item.state:
+                    confidence_score += item.norm_weight
+                    found_evidence.append(item)
+
+            # TODO: uncomment when using BN
+            # bayesian_network = EvidenceGraph(self.check_id, self.evidence)
+            # logger.info(bayesian_network.validate_network())
+            # check_infer = bayesian_network.perform_variable_elimination()
+            # logger.info(check_infer.map_query(variables=["build_as_code"], evidence=collected_evidence))
+
+            # Processing evidence and confidence values
+            confidence_score_rounded = round(confidence_score, 4)
+            check_result["confidence_score"] = confidence_score_rounded
+            evidence_list: list[str] = []
+            for item in found_evidence:
+                evidence_list.append(item.description)
+                print(item.name, item.norm_weight)
+            evidence_str = ", ".join(evidence_list)
+
+            # TODO: ensure that this value hasn't been found.
+            evidence_importance = sorted(self.evidence.values(), key=lambda x: x.norm_weight, reverse=True)
+
+            # Has the check passed (i.e., is the confidence score above the specified threshold?).
+            if confidence_score > self.check_confidence_threshold:
+                message = f"The confidence score for this check is: {confidence_score_rounded}."
+                ev_msg = f"The evidence found: {evidence_str}."
+                check_result["justification"].append(ev_msg)
+                check_result["justification"].append(message)
+                return CheckResultType.PASSED
+            else:
+                pass_msg = f"The target repository does not use {build_tool.name} to deploy. "
+                conf_msg = (
+                    f"The confidence score for this check is {confidence_score_rounded}, "
+                    f"which is below the specified threshold of {self.check_confidence_threshold}"
+                    "for this check."
+                )
+                improve_msg = (
+                    f"To improve this score, consider including the following piece of evidence: "
+                    f"{evidence_importance[0].description}."
+                )
+
+                check_result["justification"].append(pass_msg)
+                check_result["justification"].append(conf_msg)
+                check_result["justification"].append(improve_msg)
+                check_result["result_tables"] = [BuildAsCodeTable(build_tool_name=build_tool.name)]
+                return CheckResultType.FAILED
+
+        # TODO: construct DAG here,
 
         check_result["result_tables"] = [BuildAsCodeTable()]
         failed_msg = "The target repository does not have a build tool."

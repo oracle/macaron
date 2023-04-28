@@ -40,6 +40,8 @@ class CheckResult(TypedDict):
     result_tables: list[DeclarativeBase | Table]
     # recommendation: str
     result_type: CheckResultType
+    check_confidence_threshold: float
+    confidence_score: float
 
 
 class SkippedInfo(TypedDict):
