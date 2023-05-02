@@ -385,7 +385,7 @@ fi
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test verifying YAML-based provenance expectation."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_yaml_poc.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/slsa_verifier.yaml
 $RUN_MACARON analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
@@ -395,24 +395,19 @@ python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test verifying an invalid YAML-based provenance expectation verifier."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier-yaml-po.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_yaml_invalid.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/invalid.yaml
 $RUN_MACARON analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
-if [ $? -eq 0 ];
-then
-    echo -e "Expected non-zero status code but got $?."
-    log_fail
-fi
 
 # Testing the Souffle policy engine.
 echo -e "\n----------------------------------------------------------------------------------"
 echo "slsa-framework/slsa-verifier: Analyzing the repo path when automatic dependency resolution is skipped"
-echo "and Datalog policy is provided."
+echo "and Datalog file is provided as expectation."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_datalog.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
 $RUN_MACARON analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
