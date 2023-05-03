@@ -171,14 +171,6 @@ def main() -> None:
         action="append",
     )
 
-    main_parser.add_argument(
-        "-ar",
-        "--artifact-repositories",
-        required=False,
-        default=["https://repo.maven.apache.org/maven2"],
-        help="The list of remote repositories to retrieve artifact POMs from.",
-    )
-
     # Add sub parsers for each action
     sub_parser = main_parser.add_subparsers(dest="action", help="Run macaron <action> --help for help")
 
@@ -305,7 +297,6 @@ def main() -> None:
         gh_token=args.personal_access_token or "",
         policy_paths=args.policy,
         resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
-        artifact_repositories=args.artifact_repositories,
     )
 
     # Load the default values from defaults.ini files.
