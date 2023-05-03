@@ -35,7 +35,7 @@ echo -e "-----------------------------------------------------------------------
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 
-$RUN_MACARON_SCRIPT macaron -t $GITHUB_TOKEN analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || log_fail
+$RUN_MACARON_SCRIPT -t $GITHUB_TOKEN analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || log_fail
 $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -44,7 +44,7 @@ echo -e "-----------------------------------------------------------------------
 JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
 
-$RUN_MACARON_SCRIPT macaron -lr $WORKSPACE/output/git_repos/github_com -t $GITHUB_TOKEN analyze -r apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
+$RUN_MACARON_SCRIPT -lr $WORKSPACE/output/git_repos/github_com -t $GITHUB_TOKEN analyze -r apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
 $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -59,7 +59,7 @@ declare -a COMPARE_FILES=(
     "mockito.json"
 )
 
-$RUN_MACARON_SCRIPT macaron -t $GITHUB_TOKEN analyze -c $WORKSPACE/tests/e2e/configurations/maven_config.yaml --skip-deps || log_fail
+$RUN_MACARON_SCRIPT -t $GITHUB_TOKEN analyze -c $WORKSPACE/tests/e2e/configurations/maven_config.yaml --skip-deps || log_fail
 
 for i in "${COMPARE_FILES[@]}"
 do
@@ -73,7 +73,7 @@ SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/apache_maven_
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/apache_maven_with_sbom_provided.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 
-$RUN_MACARON_SCRIPT macaron -t $GITHUB_TOKEN analyze -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 -sbom $SBOM_FILE || log_fail
+$RUN_MACARON_SCRIPT -t $GITHUB_TOKEN analyze -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 -sbom $SBOM_FILE || log_fail
 
 $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
@@ -85,7 +85,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/sl
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_datalog.json
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
 
-$RUN_MACARON_SCRIPT macaron -t $GITHUB_TOKEN analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+$RUN_MACARON_SCRIPT -t $GITHUB_TOKEN analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 
 $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
@@ -95,9 +95,21 @@ echo -e "-----------------------------------------------------------------------
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/slsa_verifier.yaml
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_yaml_poc.json
 
-$RUN_MACARON_SCRIPT macaron -t $GITHUB_TOKEN analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+$RUN_MACARON_SCRIPT -t $GITHUB_TOKEN analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 
 $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Run policy CLI with slsa-verifier results."
+echo -e "----------------------------------------------------------------------------------\n"
+COMPARE_POLICIES=$WORKSPACE/tests/policy_engine/compare_policy_reports.py
+POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
+POLICY_RESULT=$WORKSPACE/output/policy_report.json
+POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/policy_report.json
+
+# Run policy engine on the database and compare results.
+$RUN_MACARON_SCRIPT verify-policy -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
+python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 
 if [ $RESULT_CODE -ne 0 ];
 then
