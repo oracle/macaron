@@ -101,7 +101,7 @@ def retrieve_pom(session: requests.Session, url: str) -> str:
 
 
 def _find_element(parent: typing.Optional[Element], target: str) -> typing.Optional[Element]:
-    if parent is None:
+    if not parent:
         return None
 
     # Attempt to match the target tag within the children of parent.
@@ -144,7 +144,7 @@ def parse_pom(pom: str, tags: list[str]) -> Iterator[str]:
             element = _find_element(element, tag_part)
             if element is None:
                 break
-            if index == len(tag_parts) - 1 and element.text is not None:
+            if index == len(tag_parts) - 1 and element.text:
                 # Add the contents of the final tag
                 results.append(element.text.strip())
 

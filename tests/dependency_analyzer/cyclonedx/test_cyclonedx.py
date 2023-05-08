@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from macaron.config.global_config import global_config
 from macaron.dependency_analyzer.cyclonedx import (
     CycloneDXParserError,
     convert_components_to_artifacts,
@@ -63,6 +64,8 @@ def test_convert_components_to_artifacts(snapshot: dict[str, DependencyInfo]) ->
     """Test converting CycloneDX components using internal artifact representation."""
     # Path to the root bom.json.
     root_bom_path = Path(RESOURCES_DIR, "root_bom.json")
+    # Disable repo finding to prevent remote calls during testing
+    global_config.find_repos = False
 
     # Path to the sub-project bom.json files.
     child_bom_paths = [Path(RESOURCES_DIR, child) for child in ["child_bom_1.json", "child_bom_2.json"]]

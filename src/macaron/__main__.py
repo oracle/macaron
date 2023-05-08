@@ -242,6 +242,15 @@ def main() -> None:
         help=("The path to the Jinja2 html template (please make sure to use .html or .j2 extensions)."),
     )
 
+    single_analyze_parser.add_argument(
+        "-fr",
+        "--find-repos",
+        required=False,
+        type=bool,
+        default="True",
+        help="A flag for whether Macaron should attempt to find missing repositories using remote lookup.",
+    )
+
     # Dump the default values.
     sub_parser.add_parser(name="dump_defaults", description="Dumps the defaults.ini file to the output directory.")
 
@@ -297,6 +306,7 @@ def main() -> None:
         gh_token=args.personal_access_token or "",
         policy_paths=args.policy,
         resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
+        find_repos=args.find_repos,
     )
 
     # Load the default values from defaults.ini files.

@@ -12,7 +12,7 @@ from macaron.dependency_analyzer.java_repo_finder import create_urls, parse_gav,
 
 
 def test_java_repo_finder() -> None:
-    """Test the functions of the repo finder that do not require http transactions."""
+    """Test the functions of the repo finder."""
     gav = "group:artifact:version"
     group, artifact, version = parse_gav(gav)
     assert group != ""
@@ -24,6 +24,11 @@ def test_java_repo_finder() -> None:
 
     resources_dir = Path(__file__).parent.joinpath("resources")
     with open(os.path.join(resources_dir, "example_pom.xml"), encoding="utf8") as file:
-        found_urls = parse_pom(file.read(), ["scm.url", "scm.connection"])
-        assert "https://example.example/example" in found_urls
-        assert "scm:example:example@example.example:ExampleExampleExample_Example/ExampleExample.git" in found_urls
+        file_data = file.read()
+        found_urls = parse_pom(file_data, ["scm.url", "scm.connection", "scm.developerConnection"])
+        expected = [
+            "https://github.com/owner/project",
+            "ssh://git@hostname:port/owner/project.git",
+            "git@github.com:owner/project.git",
+        ]
+        assert expected == list(found_urls)
