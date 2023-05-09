@@ -117,7 +117,7 @@ def load_defaults(user_config_path: str) -> bool:
     config_files = [os.path.join(curr_dir, "defaults.ini")]
     if os.path.exists(user_config_path):
         config_files.append(user_config_path)
-    else:
+    elif user_config_path:
         logger.error("Configuration file %s does not exist.", user_config_path)
         return False
 
