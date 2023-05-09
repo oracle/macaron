@@ -152,7 +152,7 @@ def main() -> None:
     main_parser.add_argument(
         "-dp",
         "--defaults-path",
-        default=os.path.join(os.getcwd(), "defaults.ini"),
+        default="",
         help="The path to the defaults configuration file.",
     )
 
