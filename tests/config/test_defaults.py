@@ -13,10 +13,10 @@ from macaron.config.global_config import global_config
 
 def test_load_defaults() -> None:
     """Test loading defaults."""
-    config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources")
+    config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "defaults.ini")
     assert load_defaults(config_dir) is True
 
-    assert defaults.get("dependency.resolver", "dep_tool_maven") == "cyclonedx-maven:2.6.2"
+    assert defaults.get("dependency.resolver", "dep_tool_maven") == "cyclonedx-maven:1.1.1"
 
 
 def test_create_defaults() -> None:
