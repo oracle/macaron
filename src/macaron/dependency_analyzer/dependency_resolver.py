@@ -10,7 +10,7 @@ from typing import TypedDict
 
 from packaging import version
 
-from macaron.config.global_config import global_config
+from macaron.config.defaults import defaults
 from macaron.config.target_config import Configuration
 from macaron.dependency_analyzer.java_repo_finder import find_repo
 from macaron.errors import MacaronError
@@ -131,7 +131,7 @@ class DependencyAnalyzer(ABC):
         url_to_artifact: dict[str, set]
             Used to detect artifacts that have similar repos.
         """
-        if global_config.find_repos:
+        if defaults.getboolean("repofinder", "find_repos"):
             if item["url"] == "" and item["version"] != "unspecified" and item["group"] and item["name"]:
                 gav = f"{item['group']}:{item['name']}:{item['version']}"
                 urls = find_repo(gav, ["scm.url", "scm.connection", "scm.developerConnection"])

@@ -36,7 +36,6 @@ class GlobalConfig:
         gh_token: str,
         policy_paths: list[str],
         resources_path: str,
-        find_repos: bool,
     ) -> None:
         """Initiate the GlobalConfig object.
 
@@ -58,8 +57,6 @@ class GlobalConfig:
             The path to the policy file.
         resources_path : str
             The path to the resources files needed for the analysis (i.e. mvnw, gradlew, etc.)
-        find_repos: bool
-            A flag for whether Macaron should attempt to find missing repositories using remote lookup.
         """
         self.macaron_path = macaron_path
         self.output_path = output_path
@@ -68,7 +65,6 @@ class GlobalConfig:
         self.local_repos_path = local_repos_path
         self.gh_token = gh_token
         self.resources_path = resources_path
-        self.find_repos = find_repos
 
         # Find the policies.
         policy_files = []

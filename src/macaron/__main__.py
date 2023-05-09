@@ -306,7 +306,6 @@ def main() -> None:
         gh_token=args.personal_access_token or "",
         policy_paths=args.policy,
         resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
-        find_repos=args.find_repos,
     )
 
     # Load the default values from defaults.ini files.
