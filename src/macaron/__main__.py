@@ -89,6 +89,10 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
         logger.critical("The database file does not exist.")
         return os.EX_OSFILE
 
+    if not os.path.isfile(verify_policy_args.file):
+        logger.critical('The policy file "%s" does not exist.', verify_policy_args.file)
+        return os.EX_OSFILE
+
     result = run_policy_engine(verify_policy_args.database, verify_policy_args.show_prelude, verify_policy_args.file)
     policy_reporter = PolicyReporter()
     policy_reporter.generate(global_config.output_path, result)
@@ -291,7 +295,7 @@ def main() -> None:
 
     # Set Macaron's global configuration.
     # The path to provenance expectation files will be updated if
-    # set through analyze sun-command.
+    # set through analyze sub-command.
     global_config.load(
         macaron_path=macaron.MACARON_PATH,
         output_path=args.output_dir,

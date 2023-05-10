@@ -323,7 +323,7 @@ if [[ -n "${prov_exp}" ]]; then
     mounts+=("-v" "${prov_exp}:${MACARON_WORKSPACE}/prov_expectations/${file_name}:ro")
 fi
 
-# MACARON action - verify-policy
+# MACARON entrypoint - verify-policy action argvs
 # This is for macaron verify-policy action.
 # Determine the database path to be mounted into ${MACARON_WORKSPACE}/database/macaron.db
 if [[ -n "${arg_database}" ]]; then
