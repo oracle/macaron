@@ -246,7 +246,7 @@ def main() -> None:
     vp_parser = sub_parser.add_parser(name="verify-policy")
 
     vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
-    vp_parser.add_argument("-f", "--file", required=False, type=str, default="", help="Path to the Datalog policy.")
+    vp_parser.add_argument("-f", "--file", required=True, type=str, help="Path to the Datalog policy.")
     vp_parser.add_argument("-s", "--show-prelude", required=False, action="store_true", help="Show policy prelude.")
 
     args = main_parser.parse_args(sys.argv[1:])
