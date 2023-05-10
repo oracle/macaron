@@ -26,8 +26,13 @@ logger: logging.Logger = logging.getLogger(__name__)
 def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None:
     """Run the SLSA checks against a single target repository."""
     # Set provenance expectation path.
-    if analyzer_single_args.provenance_expectation:
-        global_config.load_expectation_paths(analyzer_single_args.provenance_expectation)
+    if analyzer_single_args.provenance_expectation is not None:
+        if not os.path.exists(analyzer_single_args.provenance_expectation):
+            logger.critical(
+                'The provenance expectation file "%s" does not exist.', analyzer_single_args.provenance_expectation
+            )
+            sys.exit(os.EX_OSFILE)
+        global_config.load_expectation_files(analyzer_single_args.provenance_expectation)
 
     analyzer = Analyzer(global_config.output_path, global_config.build_log_path)
 
@@ -205,9 +210,7 @@ def main() -> None:
         "-pe",
         "--provenance-expectation",
         required=False,
-        nargs="*",
         help=("The path to provenance expectation file or directory."),
-        # action="append",
     )
 
     group.add_argument(

@@ -59,26 +59,25 @@ class GlobalConfig:
         self.gh_token = gh_token
         self.resources_path = resources_path
 
-    def load_expectation_paths(self, expectation_paths: list[str]) -> None:
+    def load_expectation_files(self, exp_path: str) -> None:
         """
         Load provenance expectation files.
 
         Parameters
         ----------
-        expectation_paths : list[str]
-            The path to the provenance expectation files.
+        exp_path : str
+            The path to the provenance expectation file or directory containing the files.
         """
         exp_files = []
-        for exp_path in expectation_paths:
-            if os.path.isdir(exp_path):
-                for policy_path in os.listdir(exp_path):
-                    policy_file_path = os.path.join(exp_path, policy_path)
-                    if os.path.isfile(policy_file_path):
-                        exp_files.append(policy_file_path)
-                        logger.info("Added provenance expectation file %s", policy_file_path)
-            elif os.path.isfile(exp_path):
-                exp_files.append(exp_path)
-                logger.info("Added provenance expectation file %s", exp_path)
+        if os.path.isdir(exp_path):
+            for policy_path in os.listdir(exp_path):
+                policy_file_path = os.path.join(exp_path, policy_path)
+                if os.path.isfile(policy_file_path):
+                    exp_files.append(policy_file_path)
+                    logger.info("Added provenance expectation file %s", policy_file_path)
+        elif os.path.isfile(exp_path):
+            exp_files.append(exp_path)
+            logger.info("Added provenance expectation file %s", exp_path)
 
         self.expectation_paths = exp_files
 

@@ -102,6 +102,21 @@ function check_file_exists() {
     fi
 }
 
+# Ensure a path exists.
+#
+# Arguments:
+#   $1: The path to a file or directory.
+# Outputs:
+#   STDOUT: Error message if the file or directory does not exist; empty string string otherwise.
+function check_path_exists() {
+    if [[ ! -s "$1" ]]; then
+        echo "[ERROR] $1 of argument $2 is neither file nor directory."
+    else
+        echo ""
+    fi
+}
+
+
 # Parse arguments.
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -310,17 +325,17 @@ fi
 # Determine the provenance expectation path to be mounted into ${MACARON_WORKSPACE}/prov_expectations/${file_name}
 if [[ -n "${arg_prov_exp}" ]]; then
     prov_exp="${arg_prov_exp}"
-    err=$(check_file_exists "${prov_exp}" "-pe/--provenance-expectation")
+    err=$(check_path_exists "${prov_exp}" "-pe/--provenance-expectation")
     if [[ -n "${err}" ]]; then
         echo "${err}"
         exit 1
     fi
-    file_name="$(basename "${prov_exp}")"
-    argv_action+=("--provenance-expectation" "${MACARON_WORKSPACE}/prov_expectations/${file_name}")
+    pe_name="$(basename "${prov_exp}")"
+    argv_action+=("--provenance-expectation" "${MACARON_WORKSPACE}/prov_expectations/${pe_name}")
 fi
 if [[ -n "${prov_exp}" ]]; then
     prov_exp="$(ensure_absolute_path "${prov_exp}")"
-    mounts+=("-v" "${prov_exp}:${MACARON_WORKSPACE}/prov_expectations/${file_name}:ro")
+    mounts+=("-v" "${prov_exp}:${MACARON_WORKSPACE}/prov_expectations/${pe_name}:ro")
 fi
 
 # MACARON entrypoint - verify-policy action argvs
