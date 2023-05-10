@@ -77,7 +77,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     sys.exit(status_code)
 
 
-def verify_policy(action_args: argparse.Namespace) -> int:
+def verify_policy(verify_policy_args: argparse.Namespace) -> int:
     """Run policy engine and verify the Datalog policy.
 
     Returns
@@ -85,11 +85,11 @@ def verify_policy(action_args: argparse.Namespace) -> int:
     int
         Returns os.EX_OK if successful or the corresponding error code on failure.
     """
-    if not os.path.isfile(action_args.database):
+    if not os.path.isfile(verify_policy_args.database):
         logger.critical("The database file does not exist.")
         return os.EX_OSFILE
 
-    result = run_policy_engine(action_args.database, action_args.show_prelude, action_args.file)
+    result = run_policy_engine(verify_policy_args.database, verify_policy_args.show_prelude, verify_policy_args.file)
     policy_reporter = PolicyReporter()
     policy_reporter.generate(global_config.output_path, result)
 
@@ -201,9 +201,9 @@ def main() -> None:
         "-pe",
         "--provenance-expectation",
         required=False,
-        default=[],
+        nargs="*",
         help=("The path to provenance expectation file or directory."),
-        action="append",
+        # action="append",
     )
 
     group.add_argument(

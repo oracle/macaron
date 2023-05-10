@@ -1,0 +1,24 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+
+#include "prelude.dl"
+
+/**
+ *  This is an example policy for urllib3/urllib3 project..
+ *  See: https://github.com/urllib3/urllib3
+ */
+
+Policy("urllib3", id, "") :-
+    check_passed(id, "mcn_build_service_1"),
+    verify_provenance(id).
+
+
+// Projects that we expect to generate a provenance.
+.decl verify_provenance(id: number)
+verify_provenance(id) :-
+    check_passed(id, "mcn_provenance_level_three_1"),
+    check_passed(id, "mcn_provenance_expectation_1").
+
+// Apply the policy.
+apply_policy_to("urllib3", id) :- is_repo(id, "urllib3/urllib3").

@@ -4,7 +4,7 @@
 """This module contains the GlobalConfig class to be used globally."""
 import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 class GlobalConfig:
     """Class for keeping track of global configurations."""
 
-    expectation_paths: list[str]
+    expectation_paths: list[str] = field(default_factory=list)
     macaron_path: str = ""
     output_path: str = ""
     build_log_path: str = ""
@@ -21,9 +21,6 @@ class GlobalConfig:
     gh_token: str = ""
     debug_level: int = logging.DEBUG
     resources_path: str = ""
-
-    def __init__(self) -> None:
-        self.expectation_paths = []
 
     def load(
         self,
@@ -74,13 +71,14 @@ class GlobalConfig:
         exp_files = []
         for exp_path in expectation_paths:
             if os.path.isdir(exp_path):
-                for policy_file_path in os.listdir(exp_path):
+                for policy_path in os.listdir(exp_path):
+                    policy_file_path = os.path.join(exp_path, policy_path)
                     if os.path.isfile(policy_file_path):
                         exp_files.append(policy_file_path)
-                        logger.info("Added policy file %s", policy_file_path)
+                        logger.info("Added provenance expectation file %s", policy_file_path)
             elif os.path.isfile(exp_path):
                 exp_files.append(exp_path)
-                logger.info("Added policy file %s", exp_path)
+                logger.info("Added provenance expectation file %s", exp_path)
 
         self.expectation_paths = exp_files
 

@@ -54,11 +54,35 @@ python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
+echo "The CUE expectation file is provided as a single file path."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
 CUE_POLICY=$WORKSPACE/tests/policy_engine/resources/policies/valid/urllib3.cue
 $RUN_MACARON analyze -pe $CUE_POLICY -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
+echo "The CUE expectation and Datalog policy files are passed as a list."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3_cue_datalog.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
+CUE_POLICY=$WORKSPACE/tests/policy_engine/resources/policies/valid/urllib3.cue
+DATALOG_POLICY=$WORKSPACE/tests/policy_engine/resources/policies/valid/urllib3.dl
+$RUN_MACARON analyze -pe $CUE_POLICY $DATALOG_POLICY -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
+echo "The CUE expectation file and datalog policy should be found via the directory path."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
+POLICY_DIR=$WORKSPACE/tests/policy_engine/resources/policies/valid/
+$RUN_MACARON analyze -pe $POLICY_DIR -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
