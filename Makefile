@@ -124,10 +124,10 @@ souffle:
 		echo "Installing system dependency: souffle" && \
 	    case $(LINUX_DISTRO) in \
 	        "Oracle Linux") \
-                sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.3/x86_64-oraclelinux-8-souffle-2.3-Linux.rpm \
+                sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.4/x86_64-oraclelinux-8-souffle-2.4-Linux.rpm \
                 ;; \
 	        "Fedora Linux") \
-                sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.3/x86_64-fedora-34-souffle-2.3-Linux.rpm \
+                sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.4/x86_64-fedora-34-souffle-2.4-Linux.rpm \
                 ;; \
             "Ubuntu") \
                 sudo wget https://souffle-lang.github.io/ppa/souffle-key.public -O /usr/share/keyrings/souffle-archive-keyring.gpg; \
