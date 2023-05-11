@@ -95,7 +95,7 @@ class Analyzer:
             os.makedirs(self.local_repos_path, exist_ok=True)
 
         # Load the policies from global config.
-        self.policies = PolicyRegistry(global_config.policy_paths)
+        self.policies = PolicyRegistry(global_config.expectation_paths)
 
         # Initialize the reporters to store analysis data to files.
         self.reporters: list[FileReporter] = []

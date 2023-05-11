@@ -8,7 +8,7 @@ import subprocess  # nosec B404
 from pathlib import Path
 from unittest import TestCase
 
-from macaron.policy_engine.__main__ import get_generated, policy_engine
+from macaron.policy_engine.policy_engine import get_generated, run_souffle
 
 
 class TestSoufflePolicyEngineMain(TestCase):
@@ -31,7 +31,7 @@ class TestSoufflePolicyEngineMain(TestCase):
 
     def test_eval_policy(self) -> None:
         """Test loading the policy from file."""
-        res = policy_engine(os.path.join(self.POLICY_FILE, self.DATABASE_FILE), self.POLICY_FILE)
+        res = run_souffle(os.path.join(self.POLICY_FILE, self.DATABASE_FILE), self.POLICY_FILE)
         res.pop("repo_satisfies_policy")
         res.pop("repo_violates_policy")
         assert res == {

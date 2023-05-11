@@ -20,7 +20,7 @@ MACARON_WORKSPACE="/home/macaron"
 entrypoint=()
 
 # The action to run for each entrypoint.
-# For example: `macaron analyze` or `macaron dump_defaults`
+# For example: `macaron analyze` or `macaron dump-defaults`
 action=()
 
 # `argv_main` and `argv_action` are the collections of arguments whose values changed by this script
@@ -30,12 +30,9 @@ action=()
 #   -dp/--defaults-path DEFAULTS_PATH: The path to the defaults configuration file.
 #   -h/--help:  Show the help message and exit.
 #   -lr/--local-repos-path LOCAL_REPOS_PATH: The directory where Macaron looks for already cloned repositories.
-#   -po/--policy POLICY: The path to a policy file.
 #   -t/--personal_access_token PERSONAL_ACCESS_TOKEN: The GitHub personal access token, which is mandatory for running analysis.
 #   -v/--verbose: Run Macaron with more debug logs.
-# These are arguments for policy_engine entrypoint.
-#   -f/--file FILE: Replace policy file.
-#   -d/--database DATABASE: Database path.
+
 argv_main=()
 
 # These are the sub-commands for a specific action.
@@ -43,9 +40,12 @@ argv_main=()
 #   analzye:
 #       -g/--template-path TEMPLATE_PATH: The path to the Jinja2 html template (please make sure to use .html or .j2 extensions).
 #       -c/--config-path CONFIG_PATH: The path to the user configuration.
-#   dump_defaults:
-#   verify:
-#       -pr/--provenance PROVENANCE: The path to the provenance file.
+#       -pe/--provenance-expectation POLICY: The path to provenance expectation file or directory.
+#   dump-defaults:
+#   verify-policy:
+#       -f/--file FILE: Replace policy file.
+#       -d/--database DATABASE: Database path.
+
 argv_action=()
 
 # The rest of the arguments whose values are not changed by this script.
@@ -102,6 +102,21 @@ function check_file_exists() {
     fi
 }
 
+# Ensure a path exists.
+#
+# Arguments:
+#   $1: The path to a file or directory.
+# Outputs:
+#   STDOUT: Error message if the file or directory does not exist; empty string string otherwise.
+function check_path_exists() {
+    if [[ ! -s "$1" ]]; then
+        echo "[ERROR] $1 of argument $2 is neither file nor directory."
+    else
+        echo ""
+    fi
+}
+
+
 # Parse arguments.
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -109,18 +124,15 @@ while [[ $# -gt 0 ]]; do
         macaron)
             entrypoint+=("macaron")
             ;;
-        policy_engine)
-            entrypoint+=("policy_engine")
-            ;;
         # Parsing actions for macaron entrypoint.
         analyze)
             action+=("analyze")
             ;;
-        dump_defaults)
-            action+=("dump_defaults")
+        dump-defaults)
+            action+=("dump-defaults")
             ;;
-        verify)
-            action+=("verify")
+        verify-policy)
+            action+=("verify-policy")
             ;;
         # Main argv for main in macaron entrypoint.
         -t|--personal_access_token)
@@ -145,10 +157,6 @@ while [[ $# -gt 0 ]]; do
             arg_local_repos_path="$2"
             shift
             ;;
-        -po|--policy)
-            arg_policy="$2"
-            shift
-            ;;
         # Action argv for macaron entrypoint.
         -g|--template-path)
             arg_template_path="$2"
@@ -158,8 +166,8 @@ while [[ $# -gt 0 ]]; do
             arg_config_path="$2"
             shift
             ;;
-        -pr|--provenance)
-            arg_provenance="$2"
+        -pe|--provenance-expectation)
+            arg_prov_exp="$2"
             shift
             ;;
         -sbom|--sbom-path)
@@ -168,7 +176,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         # This flag is duplicated for digest and database.
         -d)
-            if [[ "${entrypoint[0]}" = "policy_engine" ]];
+            if [[ "${action[0]}" = "verify-policy" ]];
             then
                 arg_database="$2"
                 shift
@@ -178,13 +186,13 @@ while [[ $# -gt 0 ]]; do
             fi
             ;;
 
-        # Main Argv for policy_engine endpoint.
+        # Main Argv for verify-policy action.
         --database)
             arg_database="$2"
             shift
             ;;
         -f|--file)
-            arg_replace_policy_file="$2"
+            arg_datalog_policy_file="$2"
             shift
             ;;
         *) # Pass the rest to Macaron.
@@ -314,25 +322,24 @@ if [[ -n "${sbom_path}" ]]; then
     mounts+=("-v" "${sbom_path}:${MACARON_WORKSPACE}/sbom/${file_name}:ro")
 fi
 
-# MACARON entrypoint - Verify action argvs
-# Determine the provenance path to be mounted into ${MACARON_WORKSPACE}/provenance/${file_name}
-# This is for macaron verify action.
-if [[ -n "${arg_provenance}" ]]; then
-    provenance="${arg_provenance}"
-    err=$(check_file_exists "${provenance}" "-pr/--provenance")
+# Determine the provenance expectation path to be mounted into ${MACARON_WORKSPACE}/prov_expectations/${file_name}
+if [[ -n "${arg_prov_exp}" ]]; then
+    prov_exp="${arg_prov_exp}"
+    err=$(check_path_exists "${prov_exp}" "-pe/--provenance-expectation")
     if [[ -n "${err}" ]]; then
         echo "${err}"
         exit 1
     fi
-    file_name="$(basename "${provenance}")"
-    argv_action+=("--provenance" "${MACARON_WORKSPACE}/provenance/${file_name}")
+    pe_name="$(basename "${prov_exp}")"
+    argv_action+=("--provenance-expectation" "${MACARON_WORKSPACE}/prov_expectations/${pe_name}")
 fi
-if [[ -n "${provenance}" ]]; then
-    provenance="$(ensure_absolute_path "${provenance}")"
-    mounts+=("-v" "${provenance}:${MACARON_WORKSPACE}/provenance/${file_name}:ro")
+if [[ -n "${prov_exp}" ]]; then
+    prov_exp="$(ensure_absolute_path "${prov_exp}")"
+    mounts+=("-v" "${prov_exp}:${MACARON_WORKSPACE}/prov_expectations/${pe_name}:ro")
 fi
 
-# POLICY_ENGINE entrypoint.
+# MACARON entrypoint - verify-policy action argvs
+# This is for macaron verify-policy action.
 # Determine the database path to be mounted into ${MACARON_WORKSPACE}/database/macaron.db
 if [[ -n "${arg_database}" ]]; then
     database="${arg_database}"
@@ -349,20 +356,20 @@ if [[ -n "${database}" ]]; then
     mounts+=("-v" "${database}:${MACARON_WORKSPACE}/database/${file_name}:rw,Z")
 fi
 
-# Determine the policy to be replaced in policy_engine endpoint.
-if [[ -n "${arg_replace_policy_file}" ]]; then
-    replace_policy_file="${arg_replace_policy_file}"
-    err=$(check_file_exists "${replace_policy_file}" "-f/--file")
+# Determine the Datalog policy to be verified by verify-policy action.
+if [[ -n "${arg_datalog_policy_file}" ]]; then
+    datalog_policy_file="${arg_datalog_policy_file}"
+    err=$(check_file_exists "${datalog_policy_file}" "-f/--file")
     if [[ -n "${err}" ]]; then
         echo "${err}"
         exit 1
     fi
-    file_name="$(basename "${replace_policy_file}")"
+    file_name="$(basename "${datalog_policy_file}")"
     argv_action+=("--file" "${MACARON_WORKSPACE}/policy/${file_name}")
 fi
-if [[ -n "${replace_policy_file}" ]]; then
-    replace_policy_file="$(ensure_absolute_path "${replace_policy_file}")"
-    mounts+=("-v" "${replace_policy_file}:${MACARON_WORKSPACE}/policy/${file_name}:ro")
+if [[ -n "${datalog_policy_file}" ]]; then
+    datalog_policy_file="$(ensure_absolute_path "${datalog_policy_file}")"
+    mounts+=("-v" "${datalog_policy_file}:${MACARON_WORKSPACE}/policy/${file_name}:ro")
 fi
 
 # Set up proxy.
@@ -404,6 +411,7 @@ then
 fi
 
 echo "Running ${IMAGE}:${MACARON_IMAGE_TAG}"
+
 docker run \
     --network=host \
     --rm -i "${tty[@]}" \
