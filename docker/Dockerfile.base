@@ -200,7 +200,7 @@ enabled=1\
         make \
         pkg-config \
         rpm-build \
-    && git clone --depth=1 https://github.com/souffle-lang/souffle/ -b 2.3 \
+    && git clone --depth=1 https://github.com/souffle-lang/souffle/ -b 2.4 \
     && cd souffle \
     && cmake -S . -B build -DSOUFFLE_DOMAIN_64BIT=ON -DCMAKE_INSTALL_PREFIX="/usr/local" \
     && nproc="$(nproc)" \
