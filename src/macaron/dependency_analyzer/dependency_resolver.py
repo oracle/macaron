@@ -131,7 +131,7 @@ class DependencyAnalyzer(ABC):
         url_to_artifact: dict[str, set]
             Used to detect artifacts that have similar repos.
         """
-        if defaults.getboolean("repofinder", "find_repos"):
+        if defaults.getboolean("repofinder.java", "find_repos"):
             if item["url"] == "" and item["version"] != "unspecified" and item["group"] and item["name"]:
                 gav = f"{item['group']}:{item['name']}:{item['version']}"
                 urls = find_repo(gav, ["scm.url", "scm.connection", "scm.developerConnection"])

@@ -168,7 +168,7 @@ def find_repo(gav: str, tags: list[str]) -> Iterator[str]:
         The URLs found for the passed GAV.
     """
     repositories = defaults.get_list(
-        "repofinder", "artifact_repositories", fallback=["https://repo.maven.apache.org/maven2"]
+        "repofinder.java", "artifact_repositories", fallback=["https://repo.maven.apache.org/maven2"]
     )
 
     # Parse the GAV and create the URLs for its POM

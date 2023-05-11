@@ -67,7 +67,7 @@ def test_convert_components_to_artifacts(snapshot: dict[str, DependencyInfo]) ->
 
     # Disable repo finding to prevent remote calls during testing
     load_defaults(os.path.join(os.path.dirname(os.path.abspath(__file__)), "defaults.ini"))
-    assert defaults.getboolean("repofinder", "find_repos") is False
+    assert defaults.getboolean("repofinder.java", "find_repos") is False
 
     # Path to the sub-project bom.json files.
     child_bom_paths = [Path(RESOURCES_DIR, child) for child in ["child_bom_1.json", "child_bom_2.json"]]

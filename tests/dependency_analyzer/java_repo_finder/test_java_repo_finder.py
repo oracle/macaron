@@ -17,7 +17,7 @@ def test_java_repo_finder() -> None:
     group, artifact, version = parse_gav(gav)
     assert group != ""
     repositories = defaults.get_list(
-        "repofinder", "artifact_repositories", fallback=["https://repo.maven.apache.org/maven2"]
+        "repofinder.java", "artifact_repositories", fallback=["https://repo.maven.apache.org/maven2"]
     )
     created_urls = create_urls(group, artifact, version, repositories)
     assert created_urls

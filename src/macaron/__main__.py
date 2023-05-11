@@ -242,15 +242,6 @@ def main() -> None:
         help=("The path to the Jinja2 html template (please make sure to use .html or .j2 extensions)."),
     )
 
-    single_analyze_parser.add_argument(
-        "-fr",
-        "--find-repos",
-        required=False,
-        type=bool,
-        default="True",
-        help="A flag for whether Macaron should attempt to find missing repositories using remote lookup.",
-    )
-
     # Dump the default values.
     sub_parser.add_parser(name="dump_defaults", description="Dumps the defaults.ini file to the output directory.")
 
