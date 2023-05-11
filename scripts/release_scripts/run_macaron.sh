@@ -9,7 +9,7 @@ if [[ -z ${MACARON_IMAGE_TAG} ]]; then
     MACARON_IMAGE_TAG="latest"
 fi
 
-IMAGE="ghcr.io/oracle-samples/macaron"
+IMAGE="test"
 
 # Workspace directory inside of the container.
 MACARON_WORKSPACE="/home/macaron"
@@ -30,7 +30,6 @@ action=()
 #   -dp/--defaults-path DEFAULTS_PATH: The path to the defaults configuration file.
 #   -h/--help:  Show the help message and exit.
 #   -lr/--local-repos-path LOCAL_REPOS_PATH: The directory where Macaron looks for already cloned repositories.
-#   -t/--personal_access_token PERSONAL_ACCESS_TOKEN: The GitHub personal access token, which is mandatory for running analysis.
 #   -v/--verbose: Run Macaron with more debug logs.
 
 argv_main=()
@@ -135,10 +134,6 @@ while [[ $# -gt 0 ]]; do
             action+=("verify-policy")
             ;;
         # Main argv for main in macaron entrypoint.
-        -t|--personal_access_token)
-            argv_main+=("-t" "$2")
-            shift
-            ;;
         -v|--verbose)
             argv_main+=("-v")
             ;;
@@ -417,6 +412,7 @@ docker run \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" \
     -e "USER_GID=${USER_GID}" \
+    -e "GITHUB_TOKEN=${GITHUB_TOKEN}" \
     "${proxy_vars[@]}" \
     "${prod_vars[@]}" \
     "${mounts[@]}" \
