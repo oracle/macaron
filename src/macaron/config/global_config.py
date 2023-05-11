@@ -29,7 +29,6 @@ class GlobalConfig:
         build_log_path: str,
         debug_level: int,
         local_repos_path: str,
-        gh_token: str,
         resources_path: str,
     ) -> None:
         """Initiate the GlobalConfig object.
@@ -46,8 +45,6 @@ class GlobalConfig:
             The global debug level.
         local_repos_path : str
             The directory to look for local repositories.
-        gh_token : str
-            The GitHub personal access token.
         resources_path : str
             The path to the resources files needed for the analysis (i.e. mvnw, gradlew, etc.)
         """
@@ -56,7 +53,6 @@ class GlobalConfig:
         self.build_log_path = build_log_path
         self.debug_level = debug_level
         self.local_repos_path = local_repos_path
-        self.gh_token = gh_token
         self.resources_path = resources_path
 
     def load_expectation_files(self, exp_path: str) -> None:
