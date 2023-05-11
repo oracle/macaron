@@ -39,7 +39,7 @@ make setup
 ## Running Macaron
 
 ```bash
-usage: macaron [-h] [-v] [-o OUTPUT_DIR] -t PERSONAL_ACCESS_TOKEN {analyze,dump_defaults,verify} ...
+usage: macaron [-h] [-v] [-o OUTPUT_DIR] -t PERSONAL_ACCESS_TOKEN {analyze,dump-defaults,verify-policy} ...
 ```
 
 The main parameters for Macaron are:
@@ -49,8 +49,8 @@ The main parameters for Macaron are:
 
 Apart from the main parameters listed above, you should choose the command to run, which requires other parameters. At the moment, Macaron has three commands.
 - `analyze`: analyze the SLSA level of a single repository.
-- `dump_defaults`: dump the default values in the output directory.
-- `verify`: verify a provenance against a policy.
+- `dump-defaults`: dump the default values in the output directory.
+- `verify-policy`: verify a Datalog policy.
 
 
 ### Obtaining the GitHub personal access token
@@ -104,10 +104,10 @@ The results of the examples above will be stored in ``output/reports/github_com/
 
 ### Verifying a policy
 
-Macaron, currently, provides a PoC policy engine that checks a verified SLSA provenance against compliance requirements expressed as a policy. The result is reported in the JSON and HTML reports as a check called `mcn_policy_check_1`.
+Macaron, currently, provides a PoC policy engine that checks a verified SLSA provenance against compliance requirements expressed as a policy. The result is reported in the JSON and HTML reports as a check called `mcn_provenance_expectation_1`.
 
 ```bash
-python -m macaron -t $GITHUB_TOKEN -po <path-to-policy.yaml> analyze -rp https://github.com/apache/maven.git
+python -m macaron -t $GITHUB_TOKEN analyze -rp https://github.com/apache/maven.git -pe <path-to-provenance expectation>
 ```
 
 The policy is a YAML file that contains expected values of predicates in SLSA provenance v0.2. Here is an example policy file:
@@ -135,7 +135,7 @@ definition:
 You can also run the policy verifier directly like below:
 
 ```bash
-python -m macaron -po <path_to_policy.yaml> verify -pr <path_to_prov_file>
+python -m macaron verify-policy -d <path-to-macaron.db> -f <path-to-the-policy> [-s]
 ```
 
 **Note.** The policy engine is under active development and will support more complex policies soon. Stay tuned.

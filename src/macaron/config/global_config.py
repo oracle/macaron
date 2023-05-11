@@ -4,7 +4,7 @@
 """This module contains the GlobalConfig class to be used globally."""
 import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 class GlobalConfig:
     """Class for keeping track of global configurations."""
 
-    policy_paths: list[str]
+    expectation_paths: list[str] = field(default_factory=list)
     macaron_path: str = ""
     output_path: str = ""
     build_log_path: str = ""
@@ -21,9 +21,6 @@ class GlobalConfig:
     gh_token: str = ""
     debug_level: int = logging.DEBUG
     resources_path: str = ""
-
-    def __init__(self) -> None:
-        self.policy_paths = []
 
     def load(
         self,
@@ -33,7 +30,6 @@ class GlobalConfig:
         debug_level: int,
         local_repos_path: str,
         gh_token: str,
-        policy_paths: list[str],
         resources_path: str,
     ) -> None:
         """Initiate the GlobalConfig object.
@@ -52,8 +48,6 @@ class GlobalConfig:
             The directory to look for local repositories.
         gh_token : str
             The GitHub personal access token.
-        policy_paths : str
-            The path to the policy file.
         resources_path : str
             The path to the resources files needed for the analysis (i.e. mvnw, gradlew, etc.)
         """
@@ -65,19 +59,27 @@ class GlobalConfig:
         self.gh_token = gh_token
         self.resources_path = resources_path
 
-        # Find the policies.
-        policy_files = []
-        for policy_path in policy_paths:
-            if os.path.isdir(policy_path):
-                for policy_file_path in os.listdir(policy_path):
-                    if os.path.isfile(policy_file_path):
-                        policy_files.append(policy_file_path)
-                        logger.info("Added policy file %s", policy_file_path)
-            elif os.path.isfile(policy_path):
-                policy_files.append(policy_path)
-                logger.info("Added policy file %s", policy_path)
+    def load_expectation_files(self, exp_path: str) -> None:
+        """
+        Load provenance expectation files.
 
-        self.policy_paths = policy_files
+        Parameters
+        ----------
+        exp_path : str
+            The path to the provenance expectation file or directory containing the files.
+        """
+        exp_files = []
+        if os.path.isdir(exp_path):
+            for policy_path in os.listdir(exp_path):
+                policy_file_path = os.path.join(exp_path, policy_path)
+                if os.path.isfile(policy_file_path):
+                    exp_files.append(policy_file_path)
+                    logger.info("Added provenance expectation file %s", policy_file_path)
+        elif os.path.isfile(exp_path):
+            exp_files.append(exp_path)
+            logger.info("Added provenance expectation file %s", exp_path)
+
+        self.expectation_paths = exp_files
 
 
 global_config = GlobalConfig()

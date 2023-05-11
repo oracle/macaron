@@ -54,11 +54,23 @@ python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
+echo "The CUE expectation file is provided as a single file path."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
-CUE_POLICY=$WORKSPACE/tests/policy_engine/resources/policies/valid/urllib3.cue
-$RUN_MACARON -po $CUE_POLICY analyze -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
+CUE_POLICY=$WORKSPACE/tests/policy_engine/resources/policies/urllib3/urllib3.cue
+$RUN_MACARON analyze -pe $CUE_POLICY -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
+echo "The CUE expectation file and datalog policy should be found via the directory path."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3_cue_datalog.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
+POLICY_DIR=$WORKSPACE/tests/policy_engine/resources/policies/urllib3/
+$RUN_MACARON analyze -pe $POLICY_DIR -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
@@ -399,43 +411,43 @@ then
     log_fail
 fi
 
+# Testing the custom YAML-based provenance expectation verifier.
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Test verifiying the SLSA provenance."
+echo "Test verifying YAML-based provenance expectation."
 echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_yaml_poc.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/slsa_verifier.yaml
-PROV_FILE=$WORKSPACE/tests/policy_engine/resources/provenances/slsa-verifier-linux-amd64.intoto.jsonl
-$RUN_MACARON -po $POLICY_FILE verify -pr $PROV_FILE || log_fail
+$RUN_MACARON analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Test verifiying the SLSA provenance with invalid policy language."
+echo "Test verifying an invalid YAML-based provenance expectation verifier."
 echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_yaml_invalid.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/invalid.yaml
-PROV_FILE=$WORKSPACE/tests/policy_engine/resources/provenances/slsa-verifier-linux-amd64.intoto.jsonl
-$RUN_MACARON -po $POLICY_FILE verify -pr $PROV_FILE
+$RUN_MACARON analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 
-if [ $? -eq 0 ];
-then
-    echo -e "Expected non-zero status code but got $?."
-    log_fail
-fi
-
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 # Testing the Souffle policy engine.
 echo -e "\n----------------------------------------------------------------------------------"
 echo "slsa-framework/slsa-verifier: Analyzing the repo path when automatic dependency resolution is skipped"
-echo "and Datalog policy is provided."
+echo "and Datalog file is provided as expectation."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_datalog.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
-$RUN_MACARON -po $POLICY_FILE analyze -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+$RUN_MACARON analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Run policy CLI with slsa-verifier results."
 echo -e "----------------------------------------------------------------------------------\n"
-RUN_POLICY="policy_engine"
+RUN_POLICY="macaron verify-policy"
 COMPARE_POLICIES=$WORKSPACE/tests/policy_engine/compare_policy_reports.py
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
