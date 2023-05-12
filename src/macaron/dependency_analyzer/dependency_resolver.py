@@ -135,8 +135,13 @@ class DependencyAnalyzer(ABC):
         if defaults.getboolean("repofinder.java", "find_repos"):
             if item["url"] == "" and item["version"] != "unspecified" and item["group"] and item["name"]:
                 gav = f"{item['group']}:{item['name']}:{item['version']}"
-                urls = find_repo(gav, ["scm.url", "scm.connection", "scm.developerConnection"])
-                item["url"] = DependencyAnalyzer.find_valid_url(urls)
+                urls = find_repo(
+                    item["group"],
+                    item["name"],
+                    item["version"],
+                    ["scm.url", "scm.connection", "scm.developerConnection"],
+                )
+                item["url"] = DependencyAnalyzer.find_valid_url(list(urls))
                 if item["url"] == "":
                     logger.warning("Failed to find url for GAV: %s", gav)
 
@@ -178,7 +183,7 @@ class DependencyAnalyzer(ABC):
                 logger.error("Could not parse dependency version number: %s", error)
 
     @staticmethod
-    def find_valid_url(urls: Iterable[str]) -> str:
+    def find_valid_url(urls: Iterable[str]) ->e6f9b5b3a48bf7855 str:
         """Find a valid URL from the provided URLs.
 
         Parameters
