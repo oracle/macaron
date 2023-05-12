@@ -21,6 +21,7 @@ class GlobalConfig:
     gh_token: str = ""
     debug_level: int = logging.DEBUG
     resources_path: str = ""
+    find_repos: bool = True
 
     def load(
         self,

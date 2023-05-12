@@ -2,11 +2,12 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the CyclondeDX helper functions."""
-
+import os
 from pathlib import Path
 
 import pytest
 
+from macaron.config.defaults import defaults, load_defaults
 from macaron.dependency_analyzer.cyclonedx import (
     CycloneDXParserError,
     convert_components_to_artifacts,
@@ -63,6 +64,10 @@ def test_convert_components_to_artifacts(snapshot: dict[str, DependencyInfo]) ->
     """Test converting CycloneDX components using internal artifact representation."""
     # Path to the root bom.json.
     root_bom_path = Path(RESOURCES_DIR, "root_bom.json")
+
+    # Disable repo finding to prevent remote calls during testing
+    load_defaults(os.path.join(os.path.dirname(os.path.abspath(__file__)), "defaults.ini"))
+    assert defaults.getboolean("repofinder.java", "find_repos") is False
 
     # Path to the sub-project bom.json files.
     child_bom_paths = [Path(RESOURCES_DIR, child) for child in ["child_bom_1.json", "child_bom_2.json"]]
