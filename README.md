@@ -68,7 +68,7 @@ export GITHUB_TOKEN="<your token here>"
 python -m macaron [-v] analyze -rp <path_to_target_repo> [-b <branch_name>] [-d <digest>] -c <config_path> [-sbom <sbom_path>]
 ```
 
-**Note**: for the rest this section, we assume that the Github access token has been set as the environment variable correctly.
+**Note**: for the rest of this section, we assume that the Github access token has been set as GITHUB_TOKEN environment variable.
 
 The main input parameters of the `analyze` command:
 - `-rp <path_to_target_repo>` specifies the path to the repository to analyze. This path can be both a local path (e.g. `/path/to/repo`) or a remote path (e.g. `git@github.com:organization/repo_name.git` or `https://github.com/organization/repo_name.git`).
