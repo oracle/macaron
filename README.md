@@ -34,18 +34,17 @@ make venv
 make setup
 ```
 
-**Note**: Running the above command will prompt you for sudo access to install [Soufflé Datalog engine](https://github.com/souffle-lang/souffle). You can install Soufflé on your system before running `make setup` to avoid getting prompted.
+**Note**: Running the above command will prompt you for sudo access to install [Soufflé Datalog engine](https://github.com/souffle-lang/souffle).
 
 ## Running Macaron
 
 ```bash
-usage: macaron [-h] [-v] [-o OUTPUT_DIR] -t PERSONAL_ACCESS_TOKEN {analyze,dump-defaults,verify-policy} ...
+usage: macaron [-h] [-v] [-o OUTPUT_DIR] {analyze,dump-defaults,verify-policy} ...
 ```
 
 The main parameters for Macaron are:
 - `[-v]`: Run Macaron with more debug outputs.
 - `[-o OUTPUT_DIR]`: The directory to store the results. The default value will be the Macaron repo path.
-- `-t PERSONAL_ACCESS_TOKEN`: The GitHub access token. It's mandatory to have one for using any feature of Macaron. A valid token will provide increased ***request rate***, ***request limit*** and access to resources (e.g. GitHub Actions workflow data). Macaron is tested for valid GitHub access tokens only. The method to obtain a GitHub personal access token is described in the next section.
 
 Apart from the main parameters listed above, you should choose the command to run, which requires other parameters. At the moment, Macaron has three commands.
 - `analyze`: analyze the SLSA level of a single repository.
@@ -56,7 +55,7 @@ Apart from the main parameters listed above, you should choose the command to ru
 ### Obtaining the GitHub personal access token
 Create your own Github access token (please refer to the instructions [here](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token)). When creating this token, make sure to assign **at least** `repo` permissions.
 
-The GitHub token should be stored in an environment variable and supplied to Macaron via command line parameters.
+The GitHub token should be stored in an **environment variable** called `GITHUB_TOKEN`. Macaron will read the value of this Github token from the environment variable **only** if we use the `analyze` command (see instructions below).
 
 ### Analyzing SLSA levels of a repository
 *This section describes the `analyze` command of Macaron.*
@@ -64,8 +63,12 @@ The GitHub token should be stored in an environment variable and supplied to Mac
 Run this command to determine the SLSA level of a repository:
 
 ```bash
+export GITHUB_TOKEN="<your token here>"
+
 python -m macaron [-v] analyze -rp <path_to_target_repo> [-b <branch_name>] [-d <digest>] -c <config_path> [-sbom <sbom_path>]
 ```
+
+**Note**: for the rest this section, we assume that the Github access token has been set as the environment variable correctly.
 
 The main input parameters of the `analyze` command:
 - `-rp <path_to_target_repo>` specifies the path to the repository to analyze. This path can be both a local path (e.g. `/path/to/repo`) or a remote path (e.g. `git@github.com:organization/repo_name.git` or `https://github.com/organization/repo_name.git`).
@@ -77,13 +80,13 @@ The main input parameters of the `analyze` command:
 Example I: Analyzing the GitHub repository [apache/maven](https://github.com/apache/maven) on **the latest commit of the default branch** without using a config file:
 
 ```bash
-python -m macaron -t $GITHUB_TOKEN -o output analyze -rp https://github.com/apache/maven.git
+python -m macaron -o output analyze -rp https://github.com/apache/maven.git
 ```
 
 Example II: Doing the same thing as Example I, but using a config file:
 
 ```bash
-python -m macaron -t $GITHUB_TOKEN -o output analyze -c <path-to-maven_config.yaml>
+python -m macaron -o output analyze -c <path-to-maven_config.yaml>
 ```
 
 ```yaml
@@ -107,7 +110,7 @@ The results of the examples above will be stored in ``output/reports/github_com/
 Macaron, currently, provides a PoC policy engine that checks a verified SLSA provenance against compliance requirements expressed as a policy. The result is reported in the JSON and HTML reports as a check called `mcn_provenance_expectation_1`.
 
 ```bash
-python -m macaron -t $GITHUB_TOKEN analyze -rp https://github.com/apache/maven.git -pe <path-to-provenance expectation>
+python -m macaron analyze -rp https://github.com/apache/maven.git -pe <path-to-provenance expectation>
 ```
 
 The policy is a YAML file that contains expected values of predicates in SLSA provenance v0.2. Here is an example policy file:
