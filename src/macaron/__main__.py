@@ -121,9 +121,11 @@ def perform_action(action_args: argparse.Namespace) -> None:
 
         case "analyze":
             # Check that the GitHub token is enabled.
-            if not action_args.personal_access_token:
+            gh_token = os.environ.get("GITHUB_TOKEN")
+            if not gh_token:
                 logger.error("GitHub access token not set.")
                 sys.exit(os.EX_USAGE)
+            global_config.gh_token = gh_token
             analyze_slsa_levels_single(action_args)
         case _:
             logger.error("Macaron does not support command option %s.", action_args.action)
@@ -134,12 +136,7 @@ def main() -> None:
     """Execute Macaron as a standalone command-line tool."""
     main_parser = argparse.ArgumentParser(prog="macaron")
     main_parser.add_argument("-v", "--verbose", help="Run Macaron with more debug logs", action="store_true")
-    main_parser.add_argument(
-        "-t",
-        "--personal_access_token",
-        required=False,
-        help="The GitHub personal access token, which is mandatory for running analysis.",
-    )
+
     main_parser.add_argument(
         "-o",
         "--output-dir",
@@ -305,7 +302,6 @@ def main() -> None:
         build_log_path=os.path.join(args.output_dir, "build_log"),
         debug_level=log_level,
         local_repos_path=args.local_repos_path,
-        gh_token=args.personal_access_token or "",
         resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
     )
 

@@ -9,20 +9,13 @@ HOMEDIR=$2
 RESOURCES=$WORKSPACE/src/macaron/resources
 COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
-RUN_MACARON="python -m macaron -o $WORKSPACE/output -t $GITHUB_TOKEN"
+RUN_MACARON="python -m macaron -o $WORKSPACE/output"
 RESULT_CODE=0
 
 function log_fail() {
     printf "Error: FAILED integration test (line ${BASH_LINENO}) %s\n" $@
     RESULT_CODE=1
 }
-
-
-if [[ -z "${GITHUB_TOKEN}" ]]
-then
-  echo "Environment variable GITHUB_TOKEN not set."
-  exit 1
-fi
 
 if [[ ! -d "$HOMEDIR/.m2/settings.xml" ]];
 then
@@ -399,6 +392,20 @@ fi
 # Clean up the repos.
 rm -rf "$SOURCE_REPO"
 rm -rf "$TARGET_REPO"
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: test analyzing without the environment variable GITHUB_TOKEN being set."
+echo -e "----------------------------------------------------------------------------------\n"
+temp="$GITHUB_TOKEN"
+GITHUB_TOKEN="" && $RUN_MACARON analyze -rp https://github.com/apache/maven --skip-deps
+
+if [ $? -eq 0 ];
+then
+    echo -e "Expect non-zero status code but got $?."
+    log_fail
+fi
+
+GITHUB_TOKEN="$temp"
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test using a custom template file that does not exist."
