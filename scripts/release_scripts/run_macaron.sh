@@ -9,7 +9,7 @@ if [[ -z ${MACARON_IMAGE_TAG} ]]; then
     MACARON_IMAGE_TAG="latest"
 fi
 
-IMAGE="test"
+IMAGE="ghcr.io/oracle-samples/macaron"
 
 # Workspace directory inside of the container.
 MACARON_WORKSPACE="/home/macaron"
