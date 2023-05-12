@@ -10,7 +10,9 @@ from typing import TypedDict
 
 from packaging import version
 
+from macaron.config.defaults import defaults
 from macaron.config.target_config import Configuration
+from macaron.dependency_analyzer.java_repo_finder import find_repo
 from macaron.errors import MacaronError
 from macaron.output_reporter.scm import SCMStatus
 from macaron.slsa_analyzer.git_url import get_remote_vcs_url, get_repo_full_name_from_url
@@ -129,6 +131,14 @@ class DependencyAnalyzer(ABC):
         url_to_artifact: dict[str, set]
             Used to detect artifacts that have similar repos.
         """
+        if defaults.getboolean("repofinder.java", "find_repos"):
+            if item["url"] == "" and item["version"] != "unspecified" and item["group"] and item["name"]:
+                gav = f"{item['group']}:{item['name']}:{item['version']}"
+                urls = find_repo(gav, ["scm.url", "scm.connection", "scm.developerConnection"])
+                item["url"] = DependencyAnalyzer.find_valid_url(list(urls))
+                if item["url"] == "":
+                    logger.warning("Failed to find url for GAV: %s", gav)
+
         # Check if the URL is already seen for a different artifact.
         if item["url"] != "":
             artifacts = url_to_artifact.get(item["url"])
