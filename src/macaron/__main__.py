@@ -167,7 +167,7 @@ def main() -> None:
         "--policy",
         required=False,
         default=[],
-        help="The path to a policy yaml file or directory.",
+        help=("The path to a policy yaml file or directory."),
         action="append",
     )
 
