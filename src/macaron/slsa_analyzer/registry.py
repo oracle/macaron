@@ -390,6 +390,7 @@ class Registry:
                                 logger.error("Exception in check %s: %s.", current_check_id, current_future.exception())
                                 logger.info("Check %s has failed.", current_check_id)
                                 current_future.cancel()
+                                self.runner_queue.put(current_runner)
                                 return results
                         except concurrent.futures.TimeoutError:
                             # The check is still running, put the future back into the queue.
