@@ -57,27 +57,27 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-api",
-        "path": "",
+        "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-util",
-        "path": "",
+        "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "com.google.inject:guice",
-        "path": "",
+        "path": "https://github.com/google/guice",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "com.google.guava:guava",
@@ -177,19 +177,19 @@
     },
     {
         "id": "org.apache.maven.wagon:wagon-http",
-        "path": "",
+        "path": "https://github.com/apache/maven-wagon",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "org.apache.maven.wagon:wagon-file",
-        "path": "",
+        "path": "https://github.com/apache/maven-wagon",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "org.slf4j:jcl-over-slf4j",
@@ -201,35 +201,35 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-connector-basic",
-        "path": "",
+        "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-transport-file",
-        "path": "",
+        "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-transport-http",
-        "path": "",
+        "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-transport-wagon",
-        "path": "",
+        "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "org.codehaus.plexus:plexus-interpolation",
@@ -241,11 +241,11 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-impl",
-        "path": "",
+        "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "org.codehaus.plexus:plexus-component-annotations",
@@ -257,11 +257,11 @@
     },
     {
         "id": "org.apache.maven.wagon:wagon-provider-api",
-        "path": "",
+        "path": "https://github.com/apache/maven-wagon",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "org.codehaus.plexus:plexus-testing",
@@ -321,11 +321,11 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-spi",
-        "path": "",
+        "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "commons-jxpath:commons-jxpath",

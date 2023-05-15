@@ -205,8 +205,11 @@ def find_repo(group: str, artifact: str, version: str, tags: list[str]) -> Itera
     # - Try to extract SCM metadata and return URLs
     # - Try to extract parent information and change current artifact to it
     # - Repeat
-    while group and artifact and version:
+    limit = 10
+    while group and artifact and version and limit > 0:
         # Create the URLs for retrieving the artifact's POM
+        group = group.replace(".", "/")
+        artifact = artifact.replace(".", "/")
         request_urls = create_urls(group, artifact, version, repositories)
         if not request_urls:
             # Abort if no URLs were created
@@ -240,6 +243,8 @@ def find_repo(group: str, artifact: str, version: str, tags: list[str]) -> Itera
             group, artifact, version = find_parent(pom_element)
         else:
             break
+
+        limit = limit - 1
 
     # Nothing found
     return iter([])
