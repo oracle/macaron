@@ -1,1 +1,162 @@
-[{"id": "org.junit.jupiter:junit-jupiter-engine", "path": "https://github.com/junit-team/junit5", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.hamcrest:hamcrest-core", "path": "https://github.com/hamcrest/JavaHamcrest", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.apache.maven:maven-model", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-artifact", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-plugin-api", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-builder-support", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-model-transform", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-model-builder", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-settings", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-settings-builder", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-toolchain-model", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-toolchain-builder", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-repository-metadata", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-resolver-provider", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-core", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-slf4j-wrapper", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-slf4j-provider", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-embedder", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:maven-compat", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven:apache-maven", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}]
+[
+    {
+        "id": "org.junit.jupiter:junit-jupiter-engine",
+        "path": "https://github.com/junit-team/junit5",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.hamcrest:hamcrest-core",
+        "path": "https://github.com/hamcrest/JavaHamcrest",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.apache.maven:maven-model",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-artifact",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-plugin-api",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-builder-support",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-model-transform",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-model-builder",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-settings",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-settings-builder",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-toolchain-model",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-toolchain-builder",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-repository-metadata",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-resolver-provider",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-core",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-slf4j-wrapper",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-slf4j-provider",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-embedder",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-compat",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:apache-maven",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    }
+]

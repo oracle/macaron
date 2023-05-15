@@ -1,1 +1,196 @@
-[{"id": "com.fasterxml.jackson.core:jackson-annotations", "path": "https://github.com/FasterXML/jackson-annotations", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "com.fasterxml.jackson.core:jackson-core", "path": "https://github.com/FasterXML/jackson-core", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.powermock:powermock-core", "path": "https://github.com/powermock/powermock", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.powermock:powermock-module-junit4", "path": "https://github.com/powermock/powermock", "branch": "", "digest": "", "note": "https://github.com/powermock/powermock is already analyzed.", "available": "DUPLICATED REPO URL"}, {"id": "org.powermock:powermock-api-mockito2", "path": "https://github.com/powermock/powermock", "branch": "", "digest": "", "note": "https://github.com/powermock/powermock is already analyzed.", "available": "DUPLICATED REPO URL"}, {"id": "com.google.guava:guava-testlib", "path": "https://github.com/google/guava", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "javax.measure:jsr-275", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "junit:junit", "path": "https://github.com/junit-team/junit4", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}]
+[
+    {
+        "id": "com.fasterxml.jackson.core:jackson-annotations",
+        "path": "https://github.com/FasterXML/jackson-annotations",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "com.fasterxml.jackson.core:jackson-core",
+        "path": "https://github.com/FasterXML/jackson-core",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.powermock:powermock-core",
+        "path": "https://github.com/powermock/powermock",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.powermock:powermock-module-junit4",
+        "path": "https://github.com/powermock/powermock",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/powermock/powermock is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.powermock:powermock-api-mockito2",
+        "path": "https://github.com/powermock/powermock",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/powermock/powermock is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "com.google.guava:guava-testlib",
+        "path": "https://github.com/google/guava",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "javax.measure:jsr-275",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "junit:junit",
+        "path": "https://github.com/junit-team/junit4",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    }
+][
+    {
+        "id": "com.fasterxml.jackson.core:jackson-annotations",
+        "path": "https://github.com/FasterXML/jackson-annotations",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "com.fasterxml.jackson.core:jackson-core",
+        "path": "https://github.com/FasterXML/jackson-core",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.powermock:powermock-core",
+        "path": "https://github.com/powermock/powermock",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.powermock:powermock-module-junit4",
+        "path": "https://github.com/powermock/powermock",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/powermock/powermock is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.powermock:powermock-api-mockito2",
+        "path": "https://github.com/powermock/powermock",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/powermock/powermock is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "com.google.guava:guava-testlib",
+        "path": "https://github.com/google/guava",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "javax.measure:jsr-275",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "junit:junit",
+        "path": "https://github.com/junit-team/junit4",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    }
+][
+    {
+        "id": "com.fasterxml.jackson.core:jackson-annotations",
+        "path": "https://github.com/FasterXML/jackson-annotations",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "com.fasterxml.jackson.core:jackson-core",
+        "path": "https://github.com/FasterXML/jackson-core",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.powermock:powermock-core",
+        "path": "https://github.com/powermock/powermock",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.powermock:powermock-module-junit4",
+        "path": "https://github.com/powermock/powermock",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/powermock/powermock is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.powermock:powermock-api-mockito2",
+        "path": "https://github.com/powermock/powermock",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/powermock/powermock is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "com.google.guava:guava-testlib",
+        "path": "https://github.com/google/guava",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "javax.measure:jsr-275",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "junit:junit",
+        "path": "https://github.com/junit-team/junit4",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    }
+]

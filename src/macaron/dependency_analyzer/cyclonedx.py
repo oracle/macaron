@@ -203,7 +203,7 @@ def convert_components_to_artifacts(
 
     try:
         with open(os.path.join(global_config.output_path, "sbom_debug.json"), "w", encoding="utf8") as debug_file:
-            debug_file.write(json.dumps(all_versions))
+            debug_file.write(json.dumps(all_versions, indent=4))
     except OSError as error:
         logger.error(error)
 
