@@ -1,1 +1,338 @@
-[{"id": "org.junit.jupiter:junit-jupiter-engine", "path": "https://github.com/junit-team/junit5", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.hamcrest:hamcrest-core", "path": "https://github.com/hamcrest/JavaHamcrest", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.eclipse.sisu:org.eclipse.sisu.plexus", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.codehaus.plexus:plexus-utils", "path": "https://github.com/codehaus-plexus/plexus-utils", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.codehaus.plexus:plexus-classworlds", "path": "https://github.com/codehaus-plexus/plexus-classworlds", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.slf4j:slf4j-api", "path": "https://github.com/qos-ch/slf4j", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.apache.maven.shared:maven-shared-utils", "path": "https://github.com/apache/maven-shared-utils", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.apache.maven.resolver:maven-resolver-api", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven.resolver:maven-resolver-util", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "com.google.inject:guice", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "com.google.guava:guava", "path": "https://github.com/google/guava", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "com.google.guava:failureaccess", "path": "https://github.com/google/guava", "branch": "", "digest": "", "note": "https://github.com/google/guava is already analyzed.", "available": "DUPLICATED REPO URL"}, {"id": "javax.inject:javax.inject", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "javax.annotation:javax.annotation-api", "path": "https://github.com/javaee/javax.annotation", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.codehaus.plexus:plexus-sec-dispatcher", "path": "https://github.com/codehaus-plexus/plexus-sec-dispatcher", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.codehaus.plexus:plexus-cipher", "path": "https://github.com/codehaus-plexus/plexus-cipher", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.slf4j:slf4j-simple", "path": "https://github.com/qos-ch/slf4j", "branch": "", "digest": "", "note": "https://github.com/qos-ch/slf4j is already analyzed.", "available": "DUPLICATED REPO URL"}, {"id": "ch.qos.logback:logback-classic", "path": "https://github.com/ceki/logback", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "commons-cli:commons-cli", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.commons:commons-lang3", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.mockito:mockito-core", "path": "https://github.com/mockito/mockito", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.fusesource.jansi:jansi", "path": "https://github.com/fusesource/jansi", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.apache.maven.wagon:wagon-http", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven.wagon:wagon-file", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.slf4j:jcl-over-slf4j", "path": "https://github.com/qos-ch/slf4j", "branch": "", "digest": "", "note": "https://github.com/qos-ch/slf4j is already analyzed.", "available": "DUPLICATED REPO URL"}, {"id": "org.apache.maven.resolver:maven-resolver-connector-basic", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven.resolver:maven-resolver-transport-file", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven.resolver:maven-resolver-transport-http", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.apache.maven.resolver:maven-resolver-transport-wagon", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.codehaus.plexus:plexus-interpolation", "path": "https://github.com/codehaus-plexus/plexus-interpolation", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.apache.maven.resolver:maven-resolver-impl", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.codehaus.plexus:plexus-component-annotations", "path": "https://github.com/codehaus-plexus/plexus-containers", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.apache.maven.wagon:wagon-provider-api", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.codehaus.plexus:plexus-testing", "path": "https://github.com/codehaus-plexus/plexus-testing", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.junit.jupiter:junit-jupiter-params", "path": "https://github.com/junit-team/junit5", "branch": "", "digest": "", "note": "https://github.com/junit-team/junit5 is already analyzed.", "available": "DUPLICATED REPO URL"}, {"id": "org.xmlunit:xmlunit-assertj", "path": "https://github.com/xmlunit/xmlunit", "branch": "", "digest": "", "note": "", "available": "AVAILABLE"}, {"id": "org.hamcrest:hamcrest-library", "path": "https://github.com/hamcrest/JavaHamcrest", "branch": "", "digest": "", "note": "https://github.com/hamcrest/JavaHamcrest is already analyzed.", "available": "DUPLICATED REPO URL"}, {"id": "org.eclipse.sisu:org.eclipse.sisu.inject", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "org.xmlunit:xmlunit-core", "path": "https://github.com/xmlunit/xmlunit", "branch": "", "digest": "", "note": "https://github.com/xmlunit/xmlunit is already analyzed.", "available": "DUPLICATED REPO URL"}, {"id": "org.xmlunit:xmlunit-matchers", "path": "https://github.com/xmlunit/xmlunit", "branch": "", "digest": "", "note": "https://github.com/xmlunit/xmlunit is already analyzed.", "available": "DUPLICATED REPO URL"}, {"id": "org.apache.maven.resolver:maven-resolver-spi", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}, {"id": "commons-jxpath:commons-jxpath", "path": "", "branch": "", "digest": "", "note": "Manual configuration required. Could not find SCM URL.", "available": "MISSING REPO URL"}]
+[
+    {
+        "id": "org.junit.jupiter:junit-jupiter-engine",
+        "path": "https://github.com/junit-team/junit5",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.hamcrest:hamcrest-core",
+        "path": "https://github.com/hamcrest/JavaHamcrest",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.eclipse.sisu:org.eclipse.sisu.plexus",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.codehaus.plexus:plexus-utils",
+        "path": "https://github.com/codehaus-plexus/plexus-utils",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.codehaus.plexus:plexus-classworlds",
+        "path": "https://github.com/codehaus-plexus/plexus-classworlds",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.slf4j:slf4j-api",
+        "path": "https://github.com/qos-ch/slf4j",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.apache.maven.shared:maven-shared-utils",
+        "path": "https://github.com/apache/maven-shared-utils",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.apache.maven.resolver:maven-resolver-api",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven.resolver:maven-resolver-util",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "com.google.inject:guice",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "com.google.guava:guava",
+        "path": "https://github.com/google/guava",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "com.google.guava:failureaccess",
+        "path": "https://github.com/google/guava",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/google/guava is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "javax.inject:javax.inject",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "javax.annotation:javax.annotation-api",
+        "path": "https://github.com/javaee/javax.annotation",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.codehaus.plexus:plexus-sec-dispatcher",
+        "path": "https://github.com/codehaus-plexus/plexus-sec-dispatcher",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.codehaus.plexus:plexus-cipher",
+        "path": "https://github.com/codehaus-plexus/plexus-cipher",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.slf4j:slf4j-simple",
+        "path": "https://github.com/qos-ch/slf4j",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/qos-ch/slf4j is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "ch.qos.logback:logback-classic",
+        "path": "https://github.com/ceki/logback",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "commons-cli:commons-cli",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.commons:commons-lang3",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.mockito:mockito-core",
+        "path": "https://github.com/mockito/mockito",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.fusesource.jansi:jansi",
+        "path": "https://github.com/fusesource/jansi",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.apache.maven.wagon:wagon-http",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven.wagon:wagon-file",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.slf4j:jcl-over-slf4j",
+        "path": "https://github.com/qos-ch/slf4j",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/qos-ch/slf4j is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven.resolver:maven-resolver-connector-basic",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven.resolver:maven-resolver-transport-file",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven.resolver:maven-resolver-transport-http",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven.resolver:maven-resolver-transport-wagon",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.codehaus.plexus:plexus-interpolation",
+        "path": "https://github.com/codehaus-plexus/plexus-interpolation",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.apache.maven.resolver:maven-resolver-impl",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.codehaus.plexus:plexus-component-annotations",
+        "path": "https://github.com/codehaus-plexus/plexus-containers",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.apache.maven.wagon:wagon-provider-api",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.codehaus.plexus:plexus-testing",
+        "path": "https://github.com/codehaus-plexus/plexus-testing",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.junit.jupiter:junit-jupiter-params",
+        "path": "https://github.com/junit-team/junit5",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/junit-team/junit5 is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.xmlunit:xmlunit-assertj",
+        "path": "https://github.com/xmlunit/xmlunit",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.hamcrest:hamcrest-library",
+        "path": "https://github.com/hamcrest/JavaHamcrest",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/hamcrest/JavaHamcrest is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.eclipse.sisu:org.eclipse.sisu.inject",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.xmlunit:xmlunit-core",
+        "path": "https://github.com/xmlunit/xmlunit",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/xmlunit/xmlunit is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.xmlunit:xmlunit-matchers",
+        "path": "https://github.com/xmlunit/xmlunit",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/xmlunit/xmlunit is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven.resolver:maven-resolver-spi",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "commons-jxpath:commons-jxpath",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    }
+]
