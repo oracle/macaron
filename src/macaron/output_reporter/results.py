@@ -203,9 +203,11 @@ class Report:
         dep_record : Record
             The record of the dependency.
         """
-        self.root_record.dependencies.append(dep_record)
-        if dep_record.context:
-            self.record_mapping[dep_record.context.remote_path] = dep_record
+        # Do not add a dependency if it's a duplicate.
+        if dep_record.status != SCMStatus.DUPLICATED_SCM:
+            self.root_record.dependencies.append(dep_record)
+            if dep_record.context:
+                self.record_mapping[dep_record.context.remote_path] = dep_record
 
     def get_serialized_configs(self) -> Iterable[dict]:
         """Get the generator for the configs content of all dependencies.
