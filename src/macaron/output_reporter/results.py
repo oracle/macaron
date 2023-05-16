@@ -182,7 +182,7 @@ class Report:
         self.root_record: Record = root_record
         self.record_mapping: dict[str, Record] = {}
         if root_record.context:
-            self.record_mapping[root_record.context.remote_path] = root_record
+            self.record_mapping[root_record.record_id] = root_record
 
     def get_records(self) -> Iterable[Record]:
         """Get the generator for all records in the report.
@@ -204,10 +204,10 @@ class Report:
             The record of the dependency.
         """
         # Do not add a dependency if it's a duplicate.
-        if dep_record.status != SCMStatus.DUPLICATED_SCM:
+        if dep_record.record_id not in self.record_mapping:
             self.root_record.dependencies.append(dep_record)
             if dep_record.context:
-                self.record_mapping[dep_record.context.remote_path] = dep_record
+                self.record_mapping[dep_record.record_id] = dep_record
 
     def get_serialized_configs(self) -> Iterable[dict]:
         """Get the generator for the configs content of all dependencies.
@@ -258,20 +258,20 @@ class Report:
                 if record.context:
                     yield root_record.context, record.context
 
-    def find_ctx(self, remote_path: str) -> AnalyzeContext | None:
-        """Find the context instance from a given remote path.
+    def find_ctx(self, record_id: str) -> AnalyzeContext | None:
+        """Find the context instance using the configuration ID.
 
         Parameters
         ----------
-        remote_path : str
-            The remote path to look for the analyze context
+        record_id : str
+            The ID to look for the analyze context.
 
         Returns
         -------
         AnalyzeContext
             The analyze context for the given remote path or None if cannot find.
         """
-        record = self.record_mapping.get(remote_path, None)
+        record = self.record_mapping.get(record_id, None)
         if record:
             return record.context or None
 

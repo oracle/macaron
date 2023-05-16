@@ -176,7 +176,7 @@ class Analyzer:
         # Populate the record of duplicated scm dependencies with the
         # context of analyzed dependencies if available.
         for dup_record in duplicated_scm_records:
-            find_ctx = report.find_ctx(dup_record.pre_config.get_value("path"))
+            find_ctx = report.find_ctx(dup_record.pre_config.get_value("id"))
             dup_record.context = find_ctx
 
         analysis = store_analysis_to_db(self.db_man, main_record)
