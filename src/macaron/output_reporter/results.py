@@ -269,7 +269,7 @@ class Report:
         Returns
         -------
         AnalyzeContext
-            The analyze context for the given remote path or None if cannot find.
+            The analyze context for the given record ID or None if cannot find.
         """
         record = self.record_mapping.get(record_id, None)
         if record:
