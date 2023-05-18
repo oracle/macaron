@@ -1,4 +1,4 @@
-.. Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+.. Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 .. Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 macaron.slsa\_analyzer.build\_tool package
@@ -32,6 +32,22 @@ macaron.slsa\_analyzer.build\_tool.maven module
 -----------------------------------------------
 
 .. automodule:: macaron.slsa_analyzer.build_tool.maven
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+macaron.slsa\_analyzer.build\_tool.pip module
+---------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.build_tool.pip
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+macaron.slsa\_analyzer.build\_tool.poetry module
+------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.build_tool.poetry
    :members:
    :undoc-members:
    :show-inheritance:

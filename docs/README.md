@@ -26,7 +26,7 @@ make html
 To view the html documentation on localhost:
 
 ```
-python3 -m http.server -d docs/build/html
+python3 -m http.server -d docs/_build/html
 ```
 
 ## For developers: Generating the API docs.

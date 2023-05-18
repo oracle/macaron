@@ -1,4 +1,4 @@
-.. Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+.. Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 .. Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 macaron.slsa\_analyzer.checks package
@@ -52,14 +52,6 @@ macaron.slsa\_analyzer.checks.check\_result module
    :undoc-members:
    :show-inheritance:
 
-macaron.slsa\_analyzer.checks.policy\_check module
---------------------------------------------------
-
-.. automodule:: macaron.slsa_analyzer.checks.policy_check
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 macaron.slsa\_analyzer.checks.provenance\_available\_check module
 -----------------------------------------------------------------
 
@@ -72,6 +64,14 @@ macaron.slsa\_analyzer.checks.provenance\_l3\_check module
 ----------------------------------------------------------
 
 .. automodule:: macaron.slsa_analyzer.checks.provenance_l3_check
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+macaron.slsa\_analyzer.checks.provenance\_l3\_content\_check module
+-------------------------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.checks.provenance_l3_content_check
    :members:
    :undoc-members:
    :show-inheritance:
