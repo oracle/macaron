@@ -192,7 +192,7 @@ def convert_components_to_artifacts(
             else:
                 # Find a valid URL.
                 item["url"] = DependencyAnalyzer.find_valid_url(
-                    [link.get("url") for link in component.get("externalReferences")]  # type: ignore
+                    link.get("url") for link in component.get("externalReferences")  # type: ignore
                 )
 
             DependencyAnalyzer.add_latest_version(

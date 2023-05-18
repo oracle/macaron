@@ -5,6 +5,7 @@
 
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from enum import Enum
 from typing import TypedDict
 
@@ -135,7 +136,7 @@ class DependencyAnalyzer(ABC):
             if item["url"] == "" and item["version"] != "unspecified" and item["group"] and item["name"]:
                 gav = f"{item['group']}:{item['name']}:{item['version']}"
                 urls = find_repo(gav, ["scm.url", "scm.connection", "scm.developerConnection"])
-                item["url"] = DependencyAnalyzer.find_valid_url(list(urls))
+                item["url"] = DependencyAnalyzer.find_valid_url(urls)
                 if item["url"] == "":
                     logger.warning("Failed to find url for GAV: %s", gav)
 
@@ -177,13 +178,13 @@ class DependencyAnalyzer(ABC):
                 logger.error("Could not parse dependency version number: %s", error)
 
     @staticmethod
-    def find_valid_url(urls: list) -> str:
-        """Find a valid URL from the list of URLs.
+    def find_valid_url(urls: Iterable[str]) -> str:
+        """Find a valid URL from the provided URLs.
 
         Parameters
         ----------
-        urls : list
-            List of URLs.
+        urls : Iterable[str]
+            An Iterable object containing urls.
 
         Returns
         -------
