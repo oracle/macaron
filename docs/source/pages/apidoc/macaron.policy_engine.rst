@@ -1,4 +1,4 @@
-.. Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+.. Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 .. Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 macaron.policy\_engine package
@@ -12,6 +12,14 @@ macaron.policy\_engine package
 Submodules
 ----------
 
+macaron.policy\_engine.exceptions module
+----------------------------------------
+
+.. automodule:: macaron.policy_engine.exceptions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.policy\_engine.policy module
 ------------------------------------
 
@@ -20,6 +28,21 @@ macaron.policy\_engine.policy module
    :undoc-members:
    :show-inheritance:
 
+macaron.policy\_engine.policy\_engine module
+--------------------------------------------
+
+.. automodule:: macaron.policy_engine.policy_engine
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+macaron.policy\_engine.policy\_registry module
+----------------------------------------------
+
+.. automodule:: macaron.policy_engine.policy_registry
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 macaron.policy\_engine.souffle module
 -------------------------------------
@@ -29,29 +52,10 @@ macaron.policy\_engine.souffle module
    :undoc-members:
    :show-inheritance:
 
-
-macaron.policy\_engine.policy_registry module
----------------------------------------------
-
-.. automodule:: macaron.policy_engine.policy_registry
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-
-macaron.policy\_engine.souffle_code_generator module
-----------------------------------------------------
+macaron.policy\_engine.souffle\_code\_generator module
+------------------------------------------------------
 
 .. automodule:: macaron.policy_engine.souffle_code_generator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-macaron.policy\_engine.cue module
----------------------------------
-
-.. automodule:: macaron.policy_engine.cue
    :members:
    :undoc-members:
    :show-inheritance:
