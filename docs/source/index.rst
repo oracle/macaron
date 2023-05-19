@@ -7,4 +7,8 @@ Macaron documentation
 .. toctree::
    :maxdepth: 1
 
+   pages/installation
+   pages/using
+   pages/output_files
+   pages/cli_options
    pages/apidoc/index
