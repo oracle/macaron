@@ -4,7 +4,7 @@
 Using Macaron
 =============
 
-.. note:: The instructions below assumes that you have setup you environment correctly to run Macaron (if not, please refer to :ref:`Installation Guide <installation-guide>`).
+.. note:: The instructions below assume that you have setup you environment correctly to run Macaron (if not, please refer to :ref:`Installation Guide <installation-guide>`).
 
 ------------------------------------
 Analyzing a public Github repository
@@ -44,8 +44,8 @@ Take the same example as above, to disable analyzing `micronaut-core <https://gi
 
 With the example above, the generated output reports can be seen here:
 
-- `micronaut-core.html <./_static/examples/micronaut-projects/micronaut-core/analyze_with_repo_path/micronaut-core.html>`__
-- `micronaut-core.json <./_static/examples/micronaut-projects/micronaut-core/analyze_with_repo_path/micronaut-core.json>`__
+- `micronaut-core.html <../_static/examples/micronaut-projects/micronaut-core/analyze_with_repo_path/micronaut-core.html>`__
+- `micronaut-core.json <../_static/examples/micronaut-projects/micronaut-core/analyze_with_repo_path/micronaut-core.json>`__
 
 ----------------------
 Analyzing with an SBOM
@@ -59,16 +59,19 @@ For example, with `micronaut-core <https://github.com/micronaut-projects/microna
 
 To run the analysis against that SBOM, run this command:
 
+..
+  TODO: Remove the -rp path after https://github.com/oracle-samples/macaron/issues/108 is merged.
+
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -sbom <path_to_sbom>
+  ./run_macaron.sh analyze -rp https://github.com/micronaut-projects/micronaut-core -sbom <path_to_sbom>
 
 With ``path_to_sbom`` is the path to the SBOM you want to use.
 
 With the example above, the generated output reports can be seen here:
 
-- `micronaut-core.html <./_static/examples/micronaut-projects/micronaut-core/analyze_with_sbom/micronaut-core.html>`__
-- `micronaut-core.json <./_static/examples/micronaut-projects/micronaut-core/analyze_with_sbom/micronaut-core.json>`__
+- `micronaut-core.html <../_static/examples/micronaut-projects/micronaut-core/analyze_with_sbom/micronaut-core.html>`__
+- `micronaut-core.json <../_static/examples/micronaut-projects/micronaut-core/analyze_with_sbom/micronaut-core.json>`__
 
 -------------------------------------
 Analyzing a locally cloned repository

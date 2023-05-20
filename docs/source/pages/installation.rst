@@ -8,7 +8,7 @@ Installation
 Prerequisites
 -------------
 - Installations of ``wget`` or ``curl`` and ``bash`` must be available and on the path.
-- Docker (or docker equivalent for your host OS) must be installed, with a docker command line equivalent to Docker 17.06 (Oracle Container Runtime 19.03) and the user that is executing a member of the operating system group ``docker`` (to run Docker in `rootless mode <https://docs.docker.com/engine/security/rootless/>`_ ).
+- Docker (or docker equivalent for your host OS) must be installed, with a docker command line equivalent to Docker 17.06 (Oracle Container Runtime 19.03) and the user that is executing a member of the operating system group ``docker`` (to run Docker in `rootless mode <https://docs.docker.com/engine/security/rootless/>`_).
 
 --------
 Download
@@ -38,7 +38,7 @@ To verify your setup, go to the directory containing the downloaded ``run_macaro
 
 .. note:: In the first execution, this script will download the Macaron Docker image from ``ghcr.io/oracle-samples/macaron`` which can take some time. However, the next time you run it, the docker image available on your local host will be used.
 
-.. note:: By default, ``latest`` is used as the tag for the downloaded image. You could specify the tag you want to run by assigning the environment variable ``MACARON_IMAGE_TAG``. For example to run Macaron 0.1: ``MACARON_IMAGE_TAG=0.1 && ./run_macaron.sh --help``
+.. note:: By default, ``latest`` is used as the tag for the downloaded image. You could specify the tag you want to run by assigning the environment variable ``MACARON_IMAGE_TAG``. For example to run Macaron v0.1: ``MACARON_IMAGE_TAG=0.1 && ./run_macaron.sh --help``
 
 ---------------------------
 Prepare GitHub access token
@@ -53,8 +53,9 @@ A GitHub access token is **always** required when using the **analyze** command 
 To obtain a GitHub access token, please see the official instructions `here <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token>`_.
 
 Ideally, the GitHub token must have **read** permissions for the repositories that you want to analyze:
-- Every `fine-grained personal-access token <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-fine-grained-personal-access-token>`_ should have read permission to public GitHub repositories. However, if you are analyzing a private repositories, please select it in the Repository Access section.
-- For `classic personal-access token <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic>`_, the repo.public_repo scope must be selected. Please select whole repo scope if you are running the analysis against private repositories.
+
+- Every `fine-grained personal-access token <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-fine-grained-personal-access-token>`_ should have read permission to public GitHub repositories. However, if you are analyzing a private repository, please select it in the ``Repository Access section``.
+- For `classic personal-access token <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic>`_, the ``repo.public_repo`` scope must be selected. Please select the whole ``repo`` scope if you are running the analysis against private repositories.
 
 After generating a GitHub personal-access token, please store its value in an environment variable called ``GITHUB_TOKEN``. This environment variable will be read by Macaron for its **analyze** command.
 
