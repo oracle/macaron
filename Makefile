@@ -209,8 +209,8 @@ audit:
 	python -m pip_audit --skip-editable --desc on --fix --dry-run
 
 # Run some or all checks over the package code base.
-.PHONY: check check-code check-bandit check-flake8 check-lint check-mypy check-go
-check-code: check-bandit check-flake8 check-lint check-mypy check-go
+.PHONY: check check-code check-bandit check-flake8 check-lint check-mypy check-go check-actionlint
+check-code: check-bandit check-flake8 check-lint check-mypy check-go check-actionlint
 check-bandit:
 	pre-commit run bandit --all-files
 check-flake8:
@@ -231,6 +231,8 @@ check-go:
 	pre-commit run go-vet-repo-mod --all-files
 	pre-commit run go-fmt --all-files
 	pre-commit run go-fmt-repo --all-files
+check-actionlint:
+	pre-commit run actionlint --all-files
 check:
 	pre-commit run --all-files
 
