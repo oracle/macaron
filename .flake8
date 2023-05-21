@@ -1,19 +1,44 @@
 # Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-# Unfortunately, flake8 does not support pyproject.toml configuration.
+# Unfortunately, Flake8 does not support pyproject.toml configuration.
 # https://github.com/PyCQA/flake8/issues/234
+#
+# More details regarding Flake8 and Black interplay:
+# https://github.com/psf/black/blob/main/docs/guides/using_black_with_other_tools.md#flake8
+
 [flake8]
+
+# Enable a few additional checks.
+#
+# https://github.com/PyCQA/flake8-bugbear#how-to-enable-opinionated-warnings
+# B9: Bugbear's extended opinionated checks
+#
+# https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes
+# W504: line break after binary operator (Black compliant)
+extend-select = B9, W504
+
 # Disabling the following:
+#
+# https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes
 # E203: whitespace before ':'. Conflict with black.
 # E266: too many leading '#' for block comment
 # W503: line break before binary operator
+
+# http://www.pydocstyle.org/en/latest/error_codes.html
 # D105: Missing docstring in magic method
 # D104: Missing docstring in public package
 # D404: First word of the docstring should not be `This`
+
+# https://pypi.org/project/flake8-pytest-style/
 # PT009: use a regular assert instead of unittest-style
+
+# https://github.com/peterjc/flake8-rst-docstrings#configuration
+# RST307: Error in "XXX" directive
 ignore = E203,E266,W503,D105,D404,PT009
+
 # Disabling the following for tests:
+#
 # D400: First line should end with a period
 # D200: One-line docstring should fit on one line with quotes
 # D102: Missing docstring in public method
@@ -25,15 +50,23 @@ per-file-ignores =
     __init__.py:D104
     tests/*:D400,D200,D102,D104,D107,PT004
     src/macaron/database/views.py:B903
+
 max-line-length = 120
 show-source = true
 
-# Enable Bugbear's extended opinionated checks.
-# https://github.com/PyCQA/flake8-bugbear#how-to-enable-opinionated-warnings
-extend-select = B9
-
-# Ensure that flake8 warnings are silenced correctly.
+# Ensure that Flake8 warnings are silenced correctly:
 # https://github.com/plinss/flake8-noqa#options
 noqa-require-code = true
 
+# Ensure that Sphinx extensions of .rst are recognized:
+# https://github.com/peterjc/flake8-rst-docstrings#configuration
+rst-roles = class, func, ref
+rst-directives = envvar, exception
+rst-substitutions = version
+
+# Ensure that Sphinx docstrings use Numpy format for docstrings:
+# https://github.com/PyCQA/flake8-docstrings
+#
+# For details on the Numpy format:
+# https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html
 docstring-convention = numpy
