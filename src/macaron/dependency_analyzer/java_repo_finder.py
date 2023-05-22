@@ -68,7 +68,7 @@ def retrieve_pom(session: requests.Session, url: str) -> str:
         return ""
 
     if not res.ok:
-        logger.warning("Failed to retrieve pom from: %s, error code: %s", url, res.status_code)
+        logger.debug("Failed to retrieve pom from: %s, error code: %s", url, res.status_code)
         return ""
 
     logger.debug("Found artifact POM at: %s", url)
@@ -95,12 +95,12 @@ def find_parent(pom: Element) -> tuple[str, str, str]:
     Parameters
     ----------
     pom : str
-        The POM as a string
+        The POM as a string.
 
     Returns
     -------
     tuple[str] :
-        The GAV of the parent artefact
+        The GAV of the parent artefact.
     """
     element = _find_element(pom, "parent")
     if element is None:
@@ -127,14 +127,14 @@ def find_scm(pom: Element, tags: list[str]) -> tuple[Iterator[str], int]:
     Parameters
     ----------
     pom : Element
-        The parsed POM
+        The parsed POM.
     tags : list[str]
-        The list of tags to try extracting from the POM
+        The list of tags to try extracting from the POM.
 
     Returns
     -------
     tuple[Iterator[str], int] :
-        The extracted contents of any matches tags, and the number of matches, as a tuple
+        The extracted contents of any matches tags, and the number of matches, as a tuple.
     """
     results = []
 
@@ -160,12 +160,12 @@ def parse_pom(pom: str) -> typing.Optional[Element]:
     Parameters
     ----------
     pom : str
-        The contents of a POM file as a string
+        The contents of a POM file as a string.
 
     Returns
     -------
     Element :
-        The parsed element representing the POM's XML hierarchy
+        The parsed element representing the POM's XML hierarchy.
     """
     try:
         pom_element: Element = fromstring(pom)
@@ -182,22 +182,25 @@ def find_repo(group: str, artifact: str, version: str, tags: list[str]) -> Itera
     Parameters
     ----------
     group : str
-        The group identifier of an artifact
+        The group identifier of an artifact.
     artifact : str
-        The artifact name of an artifact
+        The artifact name of an artifact.
     version : str
-        The version number of an artifact
-    tags : list[str]
-        The list of XML tags to look for, each in the format: tag1[.tag2 ... .tagN]
+        The version number of an artifact.
+    tags : Iterator[str]
+        The list of XML tags to look for, each in the format: tag1[.tag2 ... .tagN].
 
     Returns
     -------
-    Iterator[str] :
+    list[str] :
         The URLs found for the passed GAV.
     """
     repositories = defaults.get_list(
         "repofinder.java", "artifact_repositories", fallback=["https://repo.maven.apache.org/maven2"]
     )
+    if len(tags) == 0 or not any(tags):
+        logger.debug("No POM tags found for URL discovery.")
+        return iter([])
 
     # Perform the following in a loop:
     # - Create URLs for the current artifact POM
@@ -205,7 +208,7 @@ def find_repo(group: str, artifact: str, version: str, tags: list[str]) -> Itera
     # - Try to extract SCM metadata and return URLs
     # - Try to extract parent information and change current artifact to it
     # - Repeat
-    limit = 10
+    limit = defaults.getint("repofinder.java", "parent_limit", fallback=10)
     while group and artifact and version and limit > 0:
         # Create the URLs for retrieving the artifact's POM
         group = group.replace(".", "/")

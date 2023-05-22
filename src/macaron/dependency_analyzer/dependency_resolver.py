@@ -139,11 +139,11 @@ class DependencyAnalyzer(ABC):
                     item["group"],
                     item["name"],
                     item["version"],
-                    ["scm.url", "scm.connection", "scm.developerConnection"],
+                    defaults.get_list("repofinder.java", "repo_pom_paths"),
                 )
                 item["url"] = DependencyAnalyzer.find_valid_url(list(urls))
                 if item["url"] == "":
-                    logger.warning("Failed to find url for GAV: %s", gav)
+                    logger.debug("Failed to find url for GAV: %s", gav)
 
         # Check if the URL is already seen for a different artifact.
         if item["url"] != "":
