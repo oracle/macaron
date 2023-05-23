@@ -69,11 +69,12 @@ class Registry:
             logger.error("The check registered is invalid.")
             sys.exit(1)
 
-        # Update the check relationship mapping.
-        # If this check does not depend on any check,
-        # we add it as a standalone check.
+        # Update the check relationship mapping. Even though a check might not depend on any other checks, other
+        # checks can still depend on it, and therefore it might have been initialized and added to the mapping
+        # already. So we need to check if it already exists in `_check_relationships_mapping`.
         if not check.depends_on:
-            self._check_relationships_mapping[check.check_id] = {}
+            if check.check_id not in self._check_relationships_mapping:
+                self._check_relationships_mapping[check.check_id] = {}
         else:
             for parent_relationship in check.depends_on:
                 if not self._add_relationship_entry(check.check_id, parent_relationship):
