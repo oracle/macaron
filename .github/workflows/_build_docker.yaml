@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This is a reuseable workflow to build and test the Docker image. Note that this workflow does not
@@ -64,4 +64,4 @@ jobs:
         # This environment variable will be picked up by run_macaron.sh.
         MACARON_IMAGE_TAG: test
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ./scripts/dev_scripts/integration_tests_docker.sh ${{ github.workspace }} ./scripts/release_scripts/run_macaron.sh
+      run: make integration-test-docker
