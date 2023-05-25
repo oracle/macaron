@@ -153,7 +153,7 @@ def find_scm(pom: Element, tags: list[str]) -> tuple[Iterator[str], int]:
     return iter(results), len(results)
 
 
-def parse_pom(pom: str) -> typing.Optional[Element]:
+def parse_pom(pom: str) -> Element | None:
     """
     Parse the passed POM using defusedxml.
 
@@ -164,7 +164,7 @@ def parse_pom(pom: str) -> typing.Optional[Element]:
 
     Returns
     -------
-    Element :
+    Element | None :
         The parsed element representing the POM's XML hierarchy.
     """
     try:
@@ -175,7 +175,7 @@ def parse_pom(pom: str) -> typing.Optional[Element]:
         return None
 
 
-def find_repo(group: str, artifact: str, version: str, tags: list[str]) -> Iterator[str]:
+def find_java_repo(group: str, artifact: str, version: str, tags: list[str]) -> Iterator[str]:
     """
     Attempt to retrieve a repository URL that matches the passed GAV artifact.
 
@@ -190,17 +190,17 @@ def find_repo(group: str, artifact: str, version: str, tags: list[str]) -> Itera
     tags : Iterator[str]
         The list of XML tags to look for, each in the format: tag1[.tag2 ... .tagN].
 
-    Returns
-    -------
-    list[str] :
+    Yields
+    ------
+    Iterator[str] :
         The URLs found for the passed GAV.
     """
     repositories = defaults.get_list(
         "repofinder.java", "artifact_repositories", fallback=["https://repo.maven.apache.org/maven2"]
     )
-    if len(tags) == 0 or not any(tags):
+    if not any(tags):
         logger.debug("No POM tags found for URL discovery.")
-        return iter([])
+        return
 
     # Perform the following in a loop:
     # - Create URLs for the current artifact POM
@@ -216,7 +216,7 @@ def find_repo(group: str, artifact: str, version: str, tags: list[str]) -> Itera
         request_urls = create_urls(group, artifact, version, repositories)
         if not request_urls:
             # Abort if no URLs were created
-            return iter([])
+            return
 
         # Try each POM URL in order, terminating early if a match is found
         with requests.Session() as session:
@@ -228,18 +228,18 @@ def find_repo(group: str, artifact: str, version: str, tags: list[str]) -> Itera
 
         if pom == "":
             # Abort if no POM was found
-            return iter([])
+            return
 
         # Parse POM using defusedxml
         pom_element = parse_pom(pom)
         if pom_element is None:
-            return iter([])
+            return
 
         # Attempt to extract SCM data and return URL
         urls, url_count = find_scm(pom_element, tags)
 
         if url_count > 0:
-            return urls
+            yield from urls
 
         if defaults.getboolean("repofinder.java", "find_parents"):
             # Attempt to extract parent information from POM
@@ -250,4 +250,4 @@ def find_repo(group: str, artifact: str, version: str, tags: list[str]) -> Itera
         limit = limit - 1
 
     # Nothing found
-    return iter([])
+    return
