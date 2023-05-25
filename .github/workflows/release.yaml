@@ -27,6 +27,7 @@ jobs:
     uses: ./.github/workflows/_build.yaml
     permissions:
       contents: read
+      packages: read
 
   # On pushes to the 'main' branch create a new release by bumping the version
   # and generating a change log. That's the new bump commit and associated tag.
@@ -77,6 +78,7 @@ jobs:
     uses: ./.github/workflows/_build.yaml
     permissions:
       contents: read
+      packages: read
 
   # Create a new Release on Github from the verified build artifacts, and optionally
   # publish the artifacts to a PyPI server.
