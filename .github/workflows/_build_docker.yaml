@@ -47,11 +47,6 @@ jobs:
         echo "Hash of package should be $ARTIFACT_HASH."
         echo "$ARTIFACT_HASH" | base64 --decode | sha256sum --strict --check --status || exit 1
 
-    # We need to login to access the private macaron-base image.
-    # TODO: remove it when macaron-base is public.
-    - name: Login to ghcr.io
-      run: docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
-
     # Build the Docker image without pushing it.
     - name: Build the Docker image
       env:
