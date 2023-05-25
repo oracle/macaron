@@ -250,6 +250,10 @@ test-go:
 integration-test:
 	scripts/dev_scripts/integration_tests.sh $(REPO_PATH) $$HOME
 
+.PHONY: integration-test-docker
+integration-test-docker:
+	scripts/dev_scripts/integration_tests_docker.sh $(REPO_PATH) scripts/release_scripts/run_macaron.sh
+
 # Build a source distribution package and a binary wheel distribution artifact.
 # When building these artifacts, we need the environment variable SOURCE_DATE_EPOCH
 # set to the build date/epoch. For more details, see: https://flit.pypa.io/en/latest/reproducible.html
