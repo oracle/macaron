@@ -50,10 +50,11 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Set up Commitizen
-      run: |
-        pip install --upgrade pip wheel
-        pip install 'commitizen ==2.37.1'
+    # Prepare the environment to run commitizen.
+    - name: Create empty virtual environment for Actions
+      run: mkdir .venv
+    - name: Install dependencies
+      run: make setup
 
     - name: Set up user
       run: |
@@ -174,17 +175,18 @@ jobs:
         rm -f "$ASSET_NAME"
         rm -f "$CHECKSUMS"
 
-    # Create the Release Notes using commitizen.
     - name: Set up Python
       uses: actions/setup-python@57ded4d7d5e986d7296eab16560982c6dd7c923b # v4.6.0
       with:
         python-version: '3.11'
 
-    - name: Set up Commitizen
-      run: |
-        pip install --upgrade pip wheel
-        pip install 'commitizen ==2.37.1'
+    # Prepare the environment to run commitizen.
+    - name: Create empty virtual environment for Actions
+      run: mkdir .venv
+    - name: Install dependencies
+      run: make setup
 
+    # Create the Release Notes using commitizen.
     - name: Create Release Notes
       run: cz changelog --dry-run "$(cz version --project)" > RELEASE_NOTES.md
 
