@@ -54,7 +54,7 @@ jobs:
     - name: Create empty virtual environment for Actions
       run: mkdir .venv
     - name: Install dependencies
-      run: make setup
+      run: make setup-github-actions
 
     - name: Set up user
       run: |
@@ -184,7 +184,7 @@ jobs:
     - name: Create empty virtual environment for Actions
       run: mkdir .venv
     - name: Install dependencies
-      run: make setup
+      run: make setup-github-actions
 
     # Create the Release Notes using commitizen.
     - name: Create Release Notes
