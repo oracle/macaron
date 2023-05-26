@@ -100,7 +100,7 @@ def find_parent(pom: Element) -> tuple[str, str, str]:
     Returns
     -------
     tuple[str] :
-        The GAV of the parent artefact.
+        The GAV of the parent artifact.
     """
     element = _find_element(pom, "parent")
     if element is None:
@@ -212,7 +212,6 @@ def find_java_repo(group: str, artifact: str, version: str, tags: list[str]) -> 
     while group and artifact and version and limit > 0:
         # Create the URLs for retrieving the artifact's POM
         group = group.replace(".", "/")
-        artifact = artifact.replace(".", "/")
         request_urls = create_urls(group, artifact, version, repositories)
         if not request_urls:
             # Abort if no URLs were created

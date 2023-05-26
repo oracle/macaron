@@ -174,11 +174,12 @@ class DependencyAnalyzer(ABC):
 
     @staticmethod
     def _find_repo(item: DependencyInfo) -> None:
+        """Find the repo for the current item, if the criteria are met."""
         if item["url"] != "" or item["version"] == "unspecified" or not item["group"] or not item["name"]:
             logger.debug("Item URL already exists, or item is missing information: %s", item)
             return
         gav = f"{item['group']}:{item['name']}:{item['version']}"
-        if f"{item['group']}:{item['name']}" in defaults.get_list("repofinder.java", "ga_ignore_list"):
+        if f"{item['group']}:{item['name']}" in defaults.get_list("repofinder.java", "artifact_ignore_list"):
             logger.debug("Skipping GAV: %s", gav)
             return
 
