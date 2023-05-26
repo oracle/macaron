@@ -141,8 +141,9 @@ jobs:
       #   https://github.com/anchore/syft#installation
       # We only generate SBOM in CycloneDX format.
       run: |
+        mkdir -p "$SYFT_BIN"
         RELEASE_TAG=$(git describe --tags --abbrev=0)
-        SYFT_VERSION=0.77.0
+        SYFT_VERSION=0.82.0
         ASSET_NAME="syft_${SYFT_VERSION}_linux_amd64.tar.gz"
         CHECKSUMS="syft_${SYFT_VERSION}_checksums.txt"
 
