@@ -56,7 +56,7 @@ jobs:
     - name: Build the Docker image
       env:
         IMAGE_NAME: ghcr.io/oracle-samples/macaron
-      run: ./scripts/dev_scripts/build_docker.sh "${IMAGE_NAME}" ${{ github.workspace }}
+      run: make build-docker
 
     # Run the integration tests against the built Docker image.
     - name: Test the Docker image

@@ -248,7 +248,7 @@ test-go:
 # Run the integration tests.
 .PHONY: integration-test
 integration-test:
-	scripts/dev_scripts/integration_tests.sh $(REPO_PATH) $$HOME
+	scripts/dev_scripts/integration_tests.sh $(REPO_PATH) "${HOME}"
 
 .PHONY: integration-test-docker
 integration-test-docker:
@@ -273,6 +273,15 @@ dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt:
 docs: docs/_build/html/index.html
 docs/_build/html/index.html:
 	$(MAKE) -C docs/ html
+
+# Build the Docker image. The image name and tag are read from IMAGE_NAME and RELEASE_TAG
+# environment variables, respectively. By default "test" is used as the image tag.
+.PHONY: build-docker
+build-docker:
+	if [ -z "${IMAGE_NAME}" ]; then \
+	  echo "Please set IMAGE_NAME environment variable!" && exit 1; \
+	fi
+	scripts/dev_scripts/build_docker.sh "${IMAGE_NAME}" $(REPO_PATH) "${RELEASE_TAG}"
 
 # Prune the packages currently installed in the virtual environment down to the required
 # packages only. Pruning works in a roundabout way, where we first generate the wheels for
