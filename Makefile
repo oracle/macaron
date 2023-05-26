@@ -283,6 +283,16 @@ build-docker:
 	fi
 	scripts/dev_scripts/build_docker.sh "${IMAGE_NAME}" $(REPO_PATH) "${RELEASE_TAG}"
 
+# Push the Docker image. The image name and tag are read from IMAGE_NAME and RELEASE_TAG
+# environment variables, respectively.
+.PHONY: push-docker
+push-docker:
+	if [ -z "${IMAGE_NAME}" ] || [ -z "${RELEASE_TAG}" ]; then \
+	  echo "Please set IMAGE_NAME and RELEASE_TAG environment variables!" && exit 1; \
+	fi
+	docker push "${IMAGE_NAME}":latest
+	docker push "${IMAGE_NAME}":"${RELEASE_TAG}"
+
 # Prune the packages currently installed in the virtual environment down to the required
 # packages only. Pruning works in a roundabout way, where we first generate the wheels for
 # all installed packages into the build/wheelhouse/ folder. Next we wipe all packages and

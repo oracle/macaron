@@ -130,8 +130,8 @@ jobs:
     - name: Push the Docker image
       run: |
         RELEASE_TAG=$(git describe --tags --abbrev=0)
-        docker push "$IMAGE_NAME":latest
-        docker push "$IMAGE_NAME":"$RELEASE_TAG"
+        export RELEASE_TAG
+        make push-docker
 
     # Generate the Docker image SBOM under the dist/ directory which will be published as part of the release assets.
     - name: Generate Docker sbom
