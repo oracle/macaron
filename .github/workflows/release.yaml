@@ -72,6 +72,23 @@ jobs:
         git push
         git push --tags
 
+  # After the bump commit was pushed to the main branch, rebase the staging branch
+  # (to_head argument) on top of the new main branch (from_base argument), to keep
+  # the histories of both branches in sync.
+  rebase_staging:
+    needs: [bump]
+    name: Rebase staging branch on main
+    uses: ./.github/workflows/_generate-rebase.yaml
+    permissions:
+      contents: read
+    with:
+      to_head: staging
+      from_base: origin/main
+      git_user_name: behnazh-w
+      git_user_email: behnazh-w@users.noreply.github.com
+    secrets:
+      REPO_ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+
   # When triggered by the version bump commit, build the package and publish the release artifacts.
   build:
     if: github.ref == 'refs/heads/main' && startsWith(github.event.commits[0].message, 'bump:')
