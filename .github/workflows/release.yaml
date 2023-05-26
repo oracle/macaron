@@ -123,7 +123,8 @@ jobs:
     - name: Build the Docker image
       run: |
         RELEASE_TAG=$(git describe --tags --abbrev=0)
-        ./scripts/dev_scripts/build_docker.sh "$IMAGE_NAME" ${{ github.workspace }} "$RELEASE_TAG"
+        export RELEASE_TAG
+        make build-docker
 
     # Push the Docker image as part of the release pipeline.
     - name: Push the Docker image
