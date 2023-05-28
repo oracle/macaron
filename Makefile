@@ -162,6 +162,15 @@ upgrade-go:
 	go get $$(go list -f '{{if not (or .Main .Indirect)}}{{.Path}}{{end}}' -m all)
 	go mod tidy
 
+# Install dependencies for GitHub Actions, such as commitizen that we need as part of
+# the automatic release in the release GitHub Actions and with this target we can skip
+# setting up unrelated packages.
+.PHONY: setup-github-actions
+setup-github-actions:
+	python -m pip install --upgrade pip
+	python -m pip install --upgrade wheel
+	python -m pip install --upgrade --upgrade-strategy eager --editable .[actions]
+
 # Generate a Software Bill of Materials (SBOM).
 .PHONY: sbom
 sbom: requirements
