@@ -1,0 +1,1043 @@
+
+<!-- Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved. -->
+<!-- Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. -->
+
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <title>Macaron - Report</title>
+    <style>
+        html,
+        body,
+        table,
+        div,
+        p {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-family: 'Helvetica Neue', 'Segoe UI', helvetica, arial, sans-serif;
+            width: 100%;
+        }
+
+        body {
+            margin-bottom: 20px;
+        }
+
+        a {
+            color: #045fab;
+            line-height: inherit;
+            text-decoration: none;
+        }
+
+        pre {
+            padding-left: 10px;
+            font-size: large;
+            white-space: pre-wrap;
+        }
+
+        button {
+            border: 0;
+            padding: 0;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            background: lightgrey;
+            box-shadow: none;
+            border-radius: 0px;
+        }
+
+        button:hover:enabled,
+        .tablebutton_current {
+            background: grey;
+            color: white;
+        }
+
+        table,
+        th,
+        td {
+            padding: 10px;
+            border: 1px black solid;
+            border-collapse: collapse;
+            box-sizing: border-box;
+        }
+
+        th {
+            min-width: fit-content;
+            text-align: left;
+        }
+
+        td {
+            word-wrap: break-word;
+            word-break: keep-all;
+        }
+
+        th a:active {
+            font-weight: bold !important;
+        }
+
+        hr {
+            visibility: hidden;
+        }
+
+        header th,
+        header td {
+            width: 25%;
+            min-width: 25%;
+        }
+
+        footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .raw {
+            display: none;
+        }
+
+        .title {
+            text-align: center;
+            font-style: bold;
+            font-size: 30px;
+        }
+
+        .table>th {
+            vertical-align: top;
+        }
+
+        .table>td {
+            vertical-align: top;
+        }
+
+        #scroll_to_top {
+            position: fixed;
+            padding: 20px;
+            bottom: 20px;
+            right: 30px;
+            font-size: 20px;
+            z-index: 99;
+        }
+
+        .space_divider {
+            height: 20px;
+        }
+
+        #report_title {
+            padding: 10px 10px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #macaron-svg {
+            align-self: center;
+            padding: 10px;
+        }
+
+        .red_bg {
+            background-color: red;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .green_bg {
+            background-color: forestgreen;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .lightgreen_bg {
+            background-color: lightgreen;
+            color: grey;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .grey_bg {
+            background-color: grey;
+            color: black;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .black_bg {
+            background-color: black;
+            color: slategray;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .timestamps {
+            padding-top: 10px;
+            padding-bottom: 10px;
+            border: 0;
+            font-size: small;
+            font-weight: lighter;
+            text-align: center;
+        }
+
+        .table_caption {
+            text-align: center;
+            font-weight: bold;
+            padding: 10px 10px;
+            font-size: 25px;
+        }
+
+        .table_sub_caption {
+            text-align: center;
+            font-weight: bold;
+            padding: 10px 10px;
+            font-size: 18px;
+        }
+
+        #mcn_prov_sum {
+            padding-top: 5px;
+        }
+
+        #prov_justification {
+            text-align: center;
+            font-style: italic;
+            font-size: 18px;
+        }
+
+        /* Format the Slsa requirements column.
+        /* https://stackoverflow.com/questions/4757844/css-table-column-autowidth */
+        .checks_report > tbody > * > td:nth-child(3) {
+            width: 1px;
+            white-space: nowrap;
+        }
+
+        /* Customize the jquery-bonsai expand-all/collapse-all buttons. */
+        .fancy-button {
+            border-radius: 6px;
+            box-sizing: border-box;
+            color: black;
+            cursor: pointer;
+            display: inline-block;
+            font-weight: 500;
+            line-height: 20px;
+            list-style: none;
+            padding: 6px 16px;
+            position: relative;
+            user-select: none;
+            vertical-align: middle;
+            white-space: nowrap;
+            word-wrap: break-word;
+            font-weight: bold;
+            border: 2px solid #d5d3d3;
+            border-radius: 10px;
+            vertical-align: middle;
+            white-space: nowrap;
+            word-wrap: break-word;
+            margin: 10px;
+        }
+
+        .fancy-button:hover {
+            background-color: grey;
+            text-decoration: none;
+            transition-duration: 0.1s;
+        }
+
+        /*
+            CSS for the tree view nested list.
+            Inspired by https://www.w3schools.com/howto/howto_js_treeview.asp
+        */
+        .tree-view-nested-list, .tree-view-nested-list ul {
+            /* Remove default bullets. This will be replaced with a caret. */
+            list-style-type: none;
+            padding: 0
+        }
+
+        .tree-view-nested-list li {
+            padding-left: 2em
+        }
+
+        .caret {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* Create the caret using a unicode symbol, and style it. */
+        .caret::before {
+            content: "\25B8";
+            color: black;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        /* Rotate the caret icon when clicked on. */
+        .caret-down::before {
+            transform: rotate(90deg);
+        }
+
+        /* Hide the nested list. */
+        .nested-ul {
+            display: none;
+        }
+
+        /* Show the nested list when the user clicks on the caret. */
+        .active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body onload="prepare_report()">
+    <header class="header" id="report_title">
+        <svg width="150" height="75" viewBox="0 0 79.374992 39.687496" version="1.1" id="macaron-svg"
+            xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+            <defs id="defs2">
+                <linearGradient id="linearGradient19384">
+                    <stop style="stop-color:#2c1100;stop-opacity:1" offset="0" id="stop19380" />
+                    <stop style="stop-color:#7b2f00;stop-opacity:1" offset="1" id="stop19382" />
+                </linearGradient>
+                <linearGradient id="linearGradient25188">
+                    <stop style="stop-color:#faff0d;stop-opacity:1;" offset="0" id="stop25186" />
+                </linearGradient>
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient19386" x1="54.163754" y1="22.947735"
+                    x2="54.651581" y2="23.437124" gradientUnits="userSpaceOnUse"
+                    gradientTransform="translate(-45.593456,33.416041)" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21603"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-48.039912,35.065492)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21649"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-51.594596,35.954163)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21672"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-55.289597,36.562201)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21695"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-53.746116,37.123467)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21718"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-43.269151,31.370491)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21741"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-63.942447,36.796062)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21764"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-60.153902,37.217012)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21787"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-62.352194,37.637961)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21810"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-57.441116,36.842834)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21833"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-58.750737,37.918594)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21856"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-67.871309,36.047708)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21879"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-66.187511,37.310556)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21902"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-73.764601,34.083277)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21925"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-71.051816,35.439669)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21948"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-72.735614,35.299353)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21971"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-76.33707,32.118846)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient21994"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-78.020868,30.154415)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient22017"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-75.916121,33.475239)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient22040"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-69.695423,36.515429)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient22063"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-49.95757,35.907391)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient22086"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-44.11105,33.007517)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+                <linearGradient xlink:href="#linearGradient19384" id="linearGradient22109"
+                    gradientUnits="userSpaceOnUse" gradientTransform="translate(-46.49643,34.270365)" x1="54.163754"
+                    y1="22.947735" x2="54.651581" y2="23.437124" />
+            </defs>
+            <a href="https://github.com/oracle-samples/macaron" target="_blank">
+                <g id="layer1" style="display:inline">
+                    <path id="ellipse1174-3-8-6-0-1"
+                        style="fill:#000000;fill-opacity:0.32787;fill-rule:evenodd;stroke-width:2.18443"
+                        d="m 74.681702,22.764045 c 2.414413,3.30634 -2.065384,8.021358 -10.005916,10.531287 -7.940534,2.509929 -16.334884,1.864311 -18.749307,-1.442028 -2.41442,-3.306341 1.36591,-8.979226 9.306444,-11.489157 7.940535,-2.509931 17.034358,-0.906443 19.448779,2.399898 z" />
+                    <g id="g22178" transform="translate(2.6272121,-34.802479)">
+                        <g id="g136313" transform="matrix(4.9158184,0,0,4.9158184,28.127784,34.537725)">
+                            <path id="ellipse1174-3-0"
+                                style="fill:#00b8a9;fill-opacity:1;fill-rule:evenodd;stroke-width:0.578431"
+                                d="m 7.831079,5.2900624 c -1.1e-6,1.1305074 -1.624711,1.8286203 -3.6288925,1.8286203 -2.0041815,0 -3.62889207,-0.9164565 -3.6288931,-2.0469631 0,-1.1305065 1.6247111,-2.0469644 3.6288931,-2.0469644 2.0041821,5e-7 3.6288925,1.1348007 3.6288925,2.2653072 z" />
+                            <path id="path114160"
+                                style="fill:#f6416c;fill-opacity:1;fill-rule:evenodd;stroke-width:0.52624"
+                                d="M 7.6457309,4.7910856 A 3.3976985,1.8095508 0 0 1 4.2480303,6.6006364 3.3976985,1.8095508 0 0 1 0.85033118,4.7910856 3.3976985,1.8095508 0 0 1 4.2480303,2.9815349 3.3976985,1.8095508 0 0 1 7.6457309,4.7910856 Z" />
+                            <path id="ellipse1174-2-6"
+                                style="fill:#3ec1d3;fill-opacity:1;fill-rule:evenodd;stroke-width:0.55462"
+                                d="M 8.0275555,4.5713782 A 3.7740471,1.8095508 0 0 1 4.2535053,6.380929 3.7740471,1.8095508 0 0 1 0.47945818,4.5713782 3.7740471,1.8095508 0 0 1 4.2535053,2.7618271 3.7740471,1.8095508 0 0 1 8.0275555,4.5713782 Z" />
+                            <path id="ellipse1174-2"
+                                style="fill:#f8f3d4;fill-opacity:1;fill-rule:evenodd;stroke-width:0.55462"
+                                d="M 8.0275555,4.0537542 A 3.7740471,1.8095508 0 0 1 4.2535053,5.863305 3.7740471,1.8095508 0 0 1 0.47945818,4.0537542 3.7740471,1.8095508 0 0 1 4.2535053,2.2442038 3.7740471,1.8095508 0 0 1 8.0275555,4.0537542 Z" />
+                            <path id="ellipse1174-3"
+                                style="fill:#00b8a9;fill-opacity:1;fill-rule:evenodd;stroke-width:0.544585"
+                                d="m 7.8823999,3.5605934 c -1.1e-6,1.0020904 -1.6247115,1.8144458 -3.6288929,1.8144458 -2.0041815,0 -3.62889213,-0.8123554 -3.62889316,-1.8144458 0,-1.0020912 1.62471056,-2.1047579 3.62889316,-2.1047579 2.0041825,-5e-7 3.6288929,1.1026667 3.6288929,2.1047579 z" />
+                            <path id="ellipse1174-3-8"
+                                style="fill:#00b8a9;fill-opacity:1;fill-rule:evenodd;stroke-width:0.544585"
+                                d="m 7.8823999,3.2702816 c -1.1e-6,1.0020904 -1.6247115,1.8144458 -3.6288929,1.8144458 -2.0041815,0 -3.62889213,-0.8123554 -3.62889316,-1.8144458 0,-1.0020908 1.62471116,-2.1047578 3.62889316,-2.1047578 2.0041825,0 3.6288929,1.102667 3.6288929,2.1047578 z" />
+                            <path id="ellipse1174-3-7"
+                                style="opacity:0.605096;fill:#00cebc;fill-opacity:1;fill-rule:evenodd;stroke-width:0.216091"
+                                d="M 4.9796104,2.3421837 A 0.78189551,1.325869 85.558936 0 1 3.3410162,2.9601854 0.78189551,1.325869 85.558936 0 1 2.4370714,2.0357688 0.78189551,1.325869 85.558936 0 1 4.0756662,1.4177677 0.78189551,1.325869 85.558936 0 1 4.9796104,2.3421837 Z" />
+                            <path id="path17697"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="M 7.218926,5.002175 A 0.05357373,0.05357373 0 0 1 7.165352,4.948599 0.05357373,0.05357373 0 0 1 7.218926,4.895023 0.05357373,0.05357373 0 0 1 7.2725,4.948599 0.05357373,0.05357373 0 0 1 7.218926,5.002175 Z" />
+                            <path id="path17697-6"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 6.7848277,5.0855309 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path17697-1"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 6.5108304,5.4112011 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path17697-8"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 7.5015164,4.6570729 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path17697-7"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 6.0235762,5.3164728 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path17697-9"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="M 5.8018346,5.593137 A 0.05357373,0.05357373 0 0 1 5.7482606,5.539561 0.05357373,0.05357373 0 0 1 5.8018346,5.485985 0.05357373,0.05357373 0 0 1 5.8554086,5.539561 0.05357373,0.05357373 0 0 1 5.8018346,5.593137 Z" />
+                            <path id="path17697-94"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 5.3663677,5.6657143 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="circle36076"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 1.5753765,5.0131241 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="circle36092"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 2.6924067,5.5954371 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <g aria-label="Nhan"
+                                transform="matrix(0.14692259,-0.10888716,0.10888716,0.14692259,-10.262065,-8.3711938)"
+                                id="text43937"
+                                style="font-size:0.132292px;line-height:0.85;fill:#f6416c;fill-opacity:1;stroke-width:0.264583">
+                                <path
+                                    d="m 33.587256,116.36517 h 0.01757 l 0.04276,0.0807 v -0.0807 h 0.01266 v 0.0964 h -0.01757 l -0.04276,-0.0807 v 0.0807 h -0.01266 z"
+                                    id="path110811" style="fill:#f6416c;fill-opacity:1" />
+                                <path
+                                    d="m 33.745838,116.41794 v 0.0437 h -0.01188 v -0.0433 q 0,-0.0103 -0.004,-0.0154 -0.004,-0.005 -0.01201,-0.005 -0.0096,0 -0.01518,0.006 -0.0056,0.006 -0.0056,0.0167 v 0.0409 h -0.01195 v -0.10051 h 0.01195 v 0.0394 q 0.0043,-0.007 0.01001,-0.01 0.0058,-0.003 0.01337,-0.003 0.01247,0 0.01886,0.008 0.0064,0.008 0.0064,0.0227 z"
+                                    id="path110813" style="fill:#f6416c;fill-opacity:1" />
+                                <path
+                                    d="m 33.802424,116.42524 q -0.01441,0 -0.01996,0.003 -0.0056,0.003 -0.0056,0.0112 0,0.006 0.0041,0.0101 0.0042,0.004 0.01137,0.004 0.0099,0 0.01583,-0.007 0.006,-0.007 0.006,-0.0187 v -0.003 z m 0.02371,-0.005 v 0.0413 h -0.01189 v -0.011 q -0.0041,0.007 -0.01014,0.01 -0.0061,0.003 -0.01486,0.003 -0.01111,0 -0.0177,-0.006 -0.0065,-0.006 -0.0065,-0.0167 0,-0.0122 0.0081,-0.0184 0.0082,-0.006 0.02442,-0.006 h 0.01667 v -10e-4 q 0,-0.008 -0.0054,-0.0127 -0.0054,-0.005 -0.01512,-0.005 -0.0062,0 -0.01208,0.001 -0.0059,10e-4 -0.0113,0.004 v -0.011 q 0.0065,-0.003 0.01266,-0.004 0.0061,-10e-4 0.01195,-10e-4 0.0157,0 0.02345,0.008 0.0078,0.008 0.0078,0.0247 z"
+                                    id="path110815" style="fill:#f6416c;fill-opacity:1" />
+                                <path
+                                    d="m 33.910751,116.41794 v 0.0437 h -0.01188 v -0.0433 q 0,-0.0103 -0.004,-0.0154 -0.004,-0.005 -0.01201,-0.005 -0.0096,0 -0.01518,0.006 -0.0056,0.006 -0.0056,0.0167 v 0.0409 h -0.01195 v -0.0724 h 0.01195 v 0.0112 q 0.0043,-0.007 0.01001,-0.01 0.0058,-0.003 0.01337,-0.003 0.01247,0 0.01886,0.008 0.0064,0.008 0.0064,0.0227 z"
+                                    id="path110817" style="fill:#f6416c;fill-opacity:1" />
+                            </g>
+                            <path id="path122709"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="M 2.5443176,5.368926 A 0.05357373,0.05357373 0 0 1 2.4907436,5.31535 0.05357373,0.05357373 0 0 1 2.5443176,5.261774 0.05357373,0.05357373 0 0 1 2.5978916,5.31535 0.05357373,0.05357373 0 0 1 2.5443176,5.368926 Z" />
+                            <path id="path122713"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 2.0570633,5.2741977 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path122719"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 1.2971369,5.0099527 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path122725"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 5.1642136,5.4814405 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path122733"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 3.8451059,5.7008935 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path122739"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="M 4.7757718,5.699528 A 0.05357373,0.05357373 0 0 1 4.7221978,5.645952 0.05357373,0.05357373 0 0 1 4.7757718,5.592376 0.05357373,0.05357373 0 0 1 4.8293458,5.645952 0.05357373,0.05357373 0 0 1 4.7757718,5.699528 Z" />
+                            <path id="path122747"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 3.4919082,5.5500832 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path122749"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 2.2735476,5.5104312 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path122751"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 2.9931929,5.5768842 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path122753"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 4.3236232,5.5609612 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path122757"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 1.0172239,4.6892067 a 0.05357373,0.05357373 0 0 1 -0.0535737,-0.053576 0.05357373,0.05357373 0 0 1 0.0535737,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                            <path id="path122759"
+                                style="opacity:0.605096;fill:#f6416c;fill-opacity:1;stroke-width:0.0817588"
+                                d="m 1.6772415,5.1996466 a 0.05357373,0.05357373 0 0 1 -0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,-0.053576 0.05357373,0.05357373 0 0 1 0.053574,0.053576 0.05357373,0.05357373 0 0 1 -0.053574,0.053576 z" />
+                        </g>
+                    </g>
+                    <g id="g25755" transform="translate(-7.8497519,-25.448046)">
+                        <path id="ellipse1174-3-8-6-0"
+                            style="fill:#000000;fill-opacity:0.32787;fill-rule:evenodd;stroke-width:1.71845"
+                            d="m 42.132704,55.148761 c 1.576119,2.808709 -2.364681,6.071861 -8.802029,7.288451 -6.437348,1.216591 -12.93355,-0.07408 -14.509677,-2.882788 -1.576123,-2.808711 1.908068,-6.885563 8.345418,-8.102154 6.437349,-1.216591 13.390165,0.88778 14.966288,3.696491 z" />
+                        <path id="ellipse1174-3-8-6-9"
+                            style="opacity:0.280772;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:0.653862"
+                            d="m 46.349013,48.239399 c -1.1482,0.328539 -2.148273,-1.429423 -2.233723,-3.926516 -0.08545,-2.497094 0.776089,-4.787725 1.924287,-5.116265 1.148203,-0.328541 2.480914,1.33424 2.566365,3.831335 0.08545,2.497096 -1.108726,4.882905 -2.256929,5.211446 z" />
+                        <path id="ellipse1174-3-0-6"
+                            style="fill:#672f0a;fill-opacity:1;fill-rule:evenodd;stroke-width:2.84346"
+                            d="m 46.775073,37.724497 c 3.552105,4.273979 -0.396738,12.018171 -7.973711,18.315406 -7.576973,6.297237 -16.598876,7.937417 -20.150986,3.663448 -3.552107,-4.273973 -0.289308,-12.843639 7.287667,-19.140876 7.576976,-6.297236 17.284924,-7.11195 20.83703,-2.837978 z" />
+                        <path id="path114160-7"
+                            style="fill:#a97b4c;fill-opacity:1;fill-rule:evenodd;stroke-width:2.5869"
+                            d="M 44.506541,36.420447 A 8.8954231,16.702469 50.269967 0 1 37.346952,53.937343 8.8954231,16.702469 50.269967 0 1 18.815975,57.771924 8.8954231,16.702469 50.269967 0 1 25.975558,40.255033 8.8954231,16.702469 50.269967 0 1 44.506541,36.420447 Z" />
+                        <path id="ellipse1174-2-6-5"
+                            style="fill:#411900;fill-opacity:1;fill-rule:evenodd;stroke-width:2.72641"
+                            d="M 45.259728,34.390114 A 8.8954231,18.55253 50.269967 0 1 36.677319,53.089518 8.8954231,18.55253 50.269967 0 1 16.723527,58.106603 8.8954231,18.55253 50.269967 0 1 25.305925,39.407207 8.8954231,18.55253 50.269967 0 1 45.259728,34.390114 Z" />
+                        <path id="ellipse1174-2-3"
+                            style="fill:#a97b4c;fill-opacity:1;fill-rule:evenodd;stroke-width:2.72641"
+                            d="m 43.633329,32.433194 a 8.8954231,18.55253 50.269967 0 1 -8.58241,18.699405 8.8954231,18.55253 50.269967 0 1 -19.953792,5.017085 8.8954231,18.55253 50.269967 0 1 8.5824,-18.699394 8.8954231,18.55253 50.269967 0 1 19.953802,-5.017096 z" />
+                        <path id="ellipse1174-3-5"
+                            style="fill:#672f0a;fill-opacity:1;fill-rule:evenodd;stroke-width:2.67708"
+                            d="m 41.53502,31.024845 c 3.148613,3.788488 -0.441277,11.964584 -8.01825,18.26182 -7.576972,6.297235 -16.271785,8.330979 -19.420405,4.542498 -3.14862,-3.788489 -0.470901,-13.06213 7.106076,-19.35937 7.576975,-6.29724 17.183959,-7.233436 20.332579,-3.444948 z" />
+                        <path id="ellipse1174-3-8-6"
+                            style="fill:#672f0a;fill-opacity:1;fill-rule:evenodd;stroke-width:2.67708"
+                            d="m 40.622847,29.927298 c 3.148612,3.788488 -0.441278,11.964583 -8.01825,18.261819 -7.576973,6.297236 -16.271785,8.33098 -19.420406,4.542498 -3.148619,-3.788487 -0.470898,-13.062131 7.106077,-19.359369 7.576976,-6.297239 17.18396,-7.233435 20.332579,-3.444948 z" />
+                        <path id="ellipse1174-3-7-2"
+                            style="opacity:0.605096;fill:#853e0f;fill-opacity:1;fill-rule:evenodd;stroke-width:1.06296"
+                            d="m 35.653668,32.690162 a 4.0091186,6.2570141 62.640215 0 1 -6.410407,5.59664 4.0091186,6.2570141 62.640215 0 1 -5.240118,-3.251461 4.0091186,6.2570141 62.640215 0 1 6.410411,-5.596639 4.0091186,6.2570141 62.640215 0 1 5.240114,3.25146 z" />
+                        <ellipse
+                            style="fill:url(#linearGradient19386);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252" transform="rotate(-39.730033)"
+                            d="m 9.0705242,56.613388 a 0.24804685,0.24804685 0 0 1 -0.2468624,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.2444822,-0.25039 0.24804685,0.24804685 0 0 1 0.2515549,0.243283" />
+                        <ellipse
+                            style="fill:url(#linearGradient21603);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-6" transform="rotate(-39.730033)"
+                            d="m 6.6240663,58.26284 a 0.24804685,0.24804685 0 0 1 -0.2468623,0.248044 0.24804685,0.24804685 0 0 1 -0.2492201,-0.245675 0.24804685,0.24804685 0 0 1 0.2444822,-0.25039 0.24804685,0.24804685 0 0 1 0.251555,0.243284" />
+                        <ellipse
+                            style="fill:url(#linearGradient21649);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-9" transform="rotate(-39.730033)"
+                            d="m 3.0693836,59.151512 a 0.24804685,0.24804685 0 0 1 -0.2468624,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.2444822,-0.25039 0.24804685,0.24804685 0 0 1 0.2515549,0.243283" />
+                        <ellipse
+                            style="fill:url(#linearGradient21672);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-8" transform="rotate(-39.730033)"
+                            d="m -0.62561557,59.759548 a 0.24804685,0.24804685 0 0 1 -0.24686235,0.248044 0.24804685,0.24804685 0 0 1 -0.24921998,-0.245675 0.24804685,0.24804685 0 0 1 0.24448213,-0.25039 0.24804685,0.24804685 0 0 1 0.25155495,0.243284" />
+                        <ellipse
+                            style="fill:url(#linearGradient21695);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-0" transform="rotate(-39.730033)"
+                            d="M 0.91786435,60.320816 A 0.24804685,0.24804685 0 0 1 0.671002,60.56886 0.24804685,0.24804685 0 0 1 0.42178197,60.323185 0.24804685,0.24804685 0 0 1 0.66626415,60.072795 0.24804685,0.24804685 0 0 1 0.9178191,60.316078" />
+                        <ellipse
+                            style="fill:url(#linearGradient21718);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-1" transform="rotate(-39.730033)"
+                            d="m 11.394832,54.567841 a 0.24804685,0.24804685 0 0 1 -0.246863,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.244482,-0.250391 0.24804685,0.24804685 0 0 1 0.251555,0.243284" />
+                        <ellipse
+                            style="fill:url(#linearGradient21741);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-3" transform="rotate(-39.730033)"
+                            d="m -9.2784672,59.993412 a 0.24804685,0.24804685 0 0 1 -0.2468624,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.2444822,-0.25039 0.24804685,0.24804685 0 0 1 0.2515549,0.243283" />
+                        <ellipse
+                            style="fill:url(#linearGradient21764);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-61" transform="rotate(-39.730033)"
+                            d="m -5.4899211,60.41436 a 0.24804685,0.24804685 0 0 1 -0.2468624,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.2444822,-0.25039 0.24804685,0.24804685 0 0 1 0.2515549,0.243283" />
+                        <ellipse
+                            style="fill:url(#linearGradient21787);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-4" transform="rotate(-39.730033)"
+                            d="m -7.6882129,60.835308 a 0.24804685,0.24804685 0 0 1 -0.2468624,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.2444822,-0.25039 0.24804685,0.24804685 0 0 1 0.2515549,0.243283" />
+                        <ellipse
+                            style="fill:url(#linearGradient21810);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-5" transform="rotate(-39.730033)"
+                            d="m -2.7771356,60.040184 a 0.24804685,0.24804685 0 0 1 -0.2468624,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.2444822,-0.25039 0.24804685,0.24804685 0 0 1 0.2515549,0.243283" />
+                        <ellipse
+                            style="fill:url(#linearGradient21833);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-37" transform="rotate(-39.730033)"
+                            d="m -4.0867553,61.115944 a 0.24804685,0.24804685 0 0 1 -0.2468624,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.2444822,-0.25039 0.24804685,0.24804685 0 0 1 0.2515549,0.243283" />
+                        <ellipse
+                            style="fill:url(#linearGradient21856);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-2" transform="rotate(-39.730033)"
+                            d="m -13.207328,59.245056 a 0.24804685,0.24804685 0 0 1 -0.246862,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.244482,-0.25039 0.24804685,0.24804685 0 0 1 0.251555,0.243283" />
+                        <ellipse
+                            style="fill:url(#linearGradient21879);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-7" transform="rotate(-39.730033)"
+                            d="m -11.52353,60.507904 a 0.24804685,0.24804685 0 0 1 -0.246862,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.244482,-0.25039 0.24804685,0.24804685 0 0 1 0.251555,0.243283" />
+                        <ellipse
+                            style="fill:url(#linearGradient21902);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-30" transform="rotate(-39.730033)"
+                            d="m -19.10062,57.280624 a 0.24804685,0.24804685 0 0 1 -0.246863,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.244482,-0.25039 0.24804685,0.24804685 0 0 1 0.251555,0.243284" />
+                        <ellipse
+                            style="fill:url(#linearGradient21925);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-68" transform="rotate(-39.730033)"
+                            d="m -16.387836,58.637016 a 0.24804685,0.24804685 0 0 1 -0.246863,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.244482,-0.25039 0.24804685,0.24804685 0 0 1 0.251555,0.243284" />
+                        <ellipse
+                            style="fill:url(#linearGradient21948);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-31" transform="rotate(-39.730033)"
+                            d="m -18.071634,58.4967 a 0.24804685,0.24804685 0 0 1 -0.246863,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.244482,-0.25039 0.24804685,0.24804685 0 0 1 0.251555,0.243284" />
+                        <ellipse
+                            style="fill:url(#linearGradient21971);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-20" transform="rotate(-39.730033)"
+                            d="m -21.67309,55.316193 a 0.24804685,0.24804685 0 0 1 -0.246862,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.244482,-0.250391 0.24804685,0.24804685 0 0 1 0.251555,0.243284" />
+                        <ellipse
+                            style="fill:url(#linearGradient21994);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-92" transform="rotate(-39.730033)"
+                            d="m -23.356886,53.351765 a 0.24804685,0.24804685 0 0 1 -0.246862,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.244482,-0.250391 0.24804685,0.24804685 0 0 1 0.251555,0.243284" />
+                        <ellipse
+                            style="fill:url(#linearGradient22017);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-49" transform="rotate(-39.730033)"
+                            d="m -21.25214,56.672588 a 0.24804685,0.24804685 0 0 1 -0.246862,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.244482,-0.25039 0.24804685,0.24804685 0 0 1 0.251555,0.243284" />
+                        <ellipse
+                            style="fill:url(#linearGradient22040);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-48" transform="rotate(-39.730033)"
+                            d="m -15.031444,59.712776 a 0.24804685,0.24804685 0 0 1 -0.246862,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.244482,-0.25039 0.24804685,0.24804685 0 0 1 0.251555,0.243284" />
+                        <ellipse
+                            style="fill:url(#linearGradient22063);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-72" transform="rotate(-39.730033)"
+                            d="m 4.7064113,59.10474 a 0.24804685,0.24804685 0 0 1 -0.2468623,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245675 0.24804685,0.24804685 0 0 1 0.2444821,-0.25039 0.24804685,0.24804685 0 0 1 0.251555,0.243283" />
+                        <ellipse
+                            style="fill:url(#linearGradient22086);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-26" transform="rotate(-39.730033)"
+                            d="m 10.552932,56.204865 a 0.24804685,0.24804685 0 0 1 -0.246863,0.248044 0.24804685,0.24804685 0 0 1 -0.24922,-0.245676 0.24804685,0.24804685 0 0 1 0.244483,-0.25039 0.24804685,0.24804685 0 0 1 0.251555,0.243284" />
+                        <ellipse
+                            style="fill:url(#linearGradient22109);fill-opacity:1;stroke:none;stroke-width:2.97789;stroke-opacity:1"
+                            id="path19252-615" transform="rotate(-39.730033)"
+                            d="m 8.167551,57.467712 a 0.24804685,0.24804685 0 0 1 -0.2468623,0.248044 0.24804685,0.24804685 0 0 1 -0.2492201,-0.245675 0.24804685,0.24804685 0 0 1 0.2444822,-0.25039 0.24804685,0.24804685 0 0 1 0.251555,0.243284" />
+                    </g>
+                </g>
+            </a>
+        </svg>
+        <div>MACARON REPORT</div>
+        <div class="timestamps">
+            2023-05-20 04:07:10
+        </div>
+    </header>
+
+    <div class="table_caption">Target information</div>
+    <table class="target_info" id="">
+        <tbody>
+            <tr>
+                <th>
+                    Full name
+                </th>
+                <td>
+                    reactor/reactor-core
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Local cloned path
+                </th>
+                <td>
+                    git_repos/github_com/reactor/reactor-core
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Remote path
+                </th>
+                <td>
+                    https://github.com/reactor/reactor-core
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Branch
+                </th>
+                <td>
+                    main
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Commit hash
+                </th>
+                <td>
+                    46567369bf715a013513cd87ac8fb33ecf15018a
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Commit date
+                </th>
+                <td>
+                    2023-05-17T15:09:38+03:00
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+
+    <div class='space_divider'></div>
+
+    <div class="table_caption">Provenance summary</div>
+    <div id= "prov_justification">
+        Could not find a provenance for this repository. Below is what Macaron has inferred.
+    </div>
+
+    <button class="fancy-button" onclick="expandAll()">Expand All</button>
+    <button class="fancy-button" onclick="collapseAll()">Collapse All</button>
+
+    <ul class="tree-view-nested-list " id="">
+        <li>
+            <div class="caret">github_actions:</div>
+            <ul class="nested-ul">
+                <li>
+                    <div class="caret">0:</div>
+                    <ul class="nested-ul">
+                        <li>
+                            _type: https://in-toto.io/Statement/v0.1
+                        </li>
+                        <li>
+                            <div class="caret">subject:</div>
+                            <ul class="nested-ul">
+
+                            </ul>
+                        </li>
+                        <li>
+                            predicateType: https://slsa.dev/provenance/v0.2
+                        </li>
+                        <li>
+                            <div class="caret">predicate:</div>
+                            <ul class="nested-ul">
+                                <li>
+                                    <div class="caret">builder:</div>
+                                    <ul class="nested-ul">
+                                        <li>
+                                            id: https://github.com/reactor/reactor-core/blob/46567369bf715a013513cd87ac8fb33ecf15018a/.github/workflows/publish.yml
+                                        </li>
+
+                                    </ul>
+                                </li>
+                                <li>
+                                    buildType: Custom github_actions
+                                </li>
+                                <li>
+                                    <div class="caret">invocation:</div>
+                                    <ul class="nested-ul">
+                                        <li>
+                                            <div class="caret">configSource:</div>
+                                            <ul class="nested-ul">
+                                                <li>
+                                                    uri: https://github.com/reactor/reactor-core@refs/heads/main
+                                                </li>
+                                                <li>
+                                                    <div class="caret">digest:</div>
+                                                    <ul class="nested-ul">
+                                                        <li>
+                                                            sha1: 46567369bf715a013513cd87ac8fb33ecf15018a
+                                                        </li>
+
+                                                    </ul>
+                                                </li>
+                                                <li>
+                                                    entryPoint: https://github.com/reactor/reactor-core/blob/46567369bf715a013513cd87ac8fb33ecf15018a/.github/workflows/publish.yml
+                                                </li>
+
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <div class="caret">parameters:</div>
+                                            <ul class="nested-ul">
+
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <div class="caret">environment:</div>
+                                            <ul class="nested-ul">
+
+                                            </ul>
+                                        </li>
+
+                                    </ul>
+                                </li>
+                                <li>
+                                    <div class="caret">buildConfig:</div>
+                                    <ul class="nested-ul">
+
+                                    </ul>
+                                </li>
+                                <li>
+                                    <div class="caret">metadata:</div>
+                                    <ul class="nested-ul">
+                                        <li>
+                                            buildInvocationId:
+                                        </li>
+                                        <li>
+                                            buildStartedOn: &lt;TIMESTAMP&gt;
+                                        </li>
+                                        <li>
+                                            buildFinishedOn: &lt;TIMESTAMP&gt;
+                                        </li>
+                                        <li>
+                                            <div class="caret">completeness:</div>
+                                            <ul class="nested-ul">
+                                                <li>
+                                                    parameters: false
+                                                </li>
+                                                <li>
+                                                    environment: false
+                                                </li>
+                                                <li>
+                                                    materials: false
+                                                </li>
+
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            reproducible: false
+                                        </li>
+
+                                    </ul>
+                                </li>
+                                <li>
+                                    <div class="caret">materials:</div>
+                                    <ul class="nested-ul">
+                                        <li>
+                                            <div class="caret">0:</div>
+                                            <ul class="nested-ul">
+                                                <li>
+                                                    uri: &lt;URI&gt;
+                                                </li>
+                                                <li>
+                                                    <div class="caret">digest:</div>
+                                                    <ul class="nested-ul">
+
+                                                    </ul>
+                                                </li>
+
+                                            </ul>
+                                        </li>
+
+                                    </ul>
+                                </li>
+
+                            </ul>
+                        </li>
+
+                    </ul>
+                </li>
+
+            </ul>
+        </li>
+    </ul>
+
+
+    <div class='space_divider'></div>
+
+    <div class="table_caption">Reports for Macaron checks</div>
+    <table class="checks_report" id="">
+        <thead>
+            <tr>
+                <th>Check id</th>
+                <th>Check description</th>
+                <th>Slsa requirements</th>
+                <th>Justification</th>
+                <th>Result type</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>mcn_build_as_code_1</td>
+                <td>The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.</td>
+                <td>
+                    <ul>
+                        <li>Build as code - SLSA Level 3</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>The target repository uses build tool gradle to deploy: <a href="https://github.com/reactor/reactor-core/blob/46567369bf715a013513cd87ac8fb33ecf15018a/.github/workflows/publish.yml" target="_blank" class="" id = "">https://github.com/reactor/reactor-core/blob/46567369bf715a013513cd87ac8fb33ecf15018a/.github/workflows/publish.yml</a></li>
+                        <li>The build is triggered by: <a href="https://github.com/reactor/reactor-core/blob/46567369bf715a013513cd87ac8fb33ecf15018a/.github/workflows/publish.yml" target="_blank" class="" id = "">https://github.com/reactor/reactor-core/blob/46567369bf715a013513cd87ac8fb33ecf15018a/.github/workflows/publish.yml</a></li>
+                        <li>Deploy command: [&#39;./gradlew&#39;, &#39;assemble&#39;, &#39;sign&#39;, &#39;artifactoryPublish&#39;, &#39;-Partifactory_publish_contextUrl=https://repo.spring.io&#39;, &#39;-Partifactory_publish_repoKey=libs-milestone-local&#39;]</li>
+                        <li>However, could not find a passing workflow run.</li>
+                    </ul>
+                </td>
+                <td class=green_bg>PASSED</td>
+            </tr>
+            <tr>
+                <td>mcn_build_script_1</td>
+                <td>Check if the target repo has a valid build script.</td>
+                <td>
+                    <ul>
+                        <li>Scripted Build - SLSA Level 1</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>Check mcn_build_script_1 is set to PASSED because mcn_build_service_1 PASSED.</li>
+                    </ul>
+                </td>
+                <td class=green_bg>PASSED</td>
+            </tr>
+            <tr>
+                <td>mcn_build_service_1</td>
+                <td>Check if the target repo has a valid build service.</td>
+                <td>
+                    <ul>
+                        <li>Build service - SLSA Level 2</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED.</li>
+                    </ul>
+                </td>
+                <td class=green_bg>PASSED</td>
+            </tr>
+            <tr>
+                <td>mcn_version_control_system_1</td>
+                <td>Check whether the target repo uses a version control system.</td>
+                <td>
+                    <ul>
+                        <li>Version controlled - SLSA Level 2</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>This is a Git repository: <a href="https://github.com/reactor/reactor-core" target="_blank" class="" id = "">https://github.com/reactor/reactor-core</a></li>
+                    </ul>
+                </td>
+                <td class=green_bg>PASSED</td>
+            </tr>
+            <tr>
+                <td>mcn_provenance_available_1</td>
+                <td>Check whether the target has intoto provenance.</td>
+                <td>
+                    <ul>
+                        <li>Provenance - Available - SLSA Level 1</li>
+                        <li>Provenance content - Identifies build instructions - SLSA Level 1</li>
+                        <li>Provenance content - Identifies artifacts - SLSA Level 1</li>
+                        <li>Provenance content - Identifies builder - SLSA Level 1</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>Could not find any SLSA provenances.</li>
+                    </ul>
+                </td>
+                <td class=red_bg>FAILED</td>
+            </tr>
+            <tr>
+                <td>mcn_provenance_expectation_1</td>
+                <td>Check whether the SLSA provenance for the produced artifact conforms to the expected value.</td>
+                <td>
+                    <ul>
+                        <li>Provenance conforms with expectations - SLSA Level 3</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>Check mcn_provenance_expectation_1 is set to FAILED because mcn_provenance_level_three_1 FAILED.</li>
+                    </ul>
+                </td>
+                <td class=red_bg>FAILED</td>
+            </tr>
+            <tr>
+                <td>mcn_provenance_level_three_1</td>
+                <td>Check whether the target has SLSA provenance level 3.</td>
+                <td>
+                    <ul>
+                        <li>Provenance - Non falsifiable - SLSA Level 3</li>
+                        <li>Provenance content - Includes all build parameters - SLSA Level 3</li>
+                        <li>Provenance content - Identifies entry point - SLSA Level 3</li>
+                        <li>Provenance content - Identifies source code - SLSA Level 2</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>Check mcn_provenance_level_three_1 is set to FAILED because mcn_provenance_available_1 FAILED.</li>
+                    </ul>
+                </td>
+                <td class=red_bg>FAILED</td>
+            </tr>
+            <tr>
+                <td>mcn_trusted_builder_level_three_1</td>
+                <td>Check whether the target uses a trusted SLSA level 3 builder.</td>
+                <td>
+                    <ul>
+                        <li>Hermetic - SLSA Level 4</li>
+                        <li>Isolated - SLSA Level 3</li>
+                        <li>Parameterless - SLSA Level 4</li>
+                        <li>Ephemeral environment - SLSA Level 3</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>Could not find a trusted level 3 builder as a GitHub Actions workflow.</li>
+                    </ul>
+                </td>
+                <td class=red_bg>FAILED</td>
+            </tr>
+
+        </tbody>
+    </table>
+
+    <div class='space_divider'></div>
+
+
+    <footer class='footer'>
+        <p>To see the details of all SLSA requirements, please visit <a href='https://slsa.dev/spec/v0.1/requirements'
+                target='_blank'>SLSA requirements.</a></p>
+        <div class="space_divider"></div>
+        <p>This report was generated by Macaron, a product of Oracle Labs.
+        </p>
+        <p>Please visit our <a href='https://github.com/oracle-samples/macaron' target='_blank'>repository</a> to know more about Macaron.</p>
+        <div class="space_divider"></div>
+        <p>Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.</p>
+    </footer>
+    <button id='scroll_to_top' onclick='scroll_to_top()'>⬆</button>
+    <script>
+        function scroll_to_top() {
+            document.body.scrollTop = 0; // for Safari
+            document.documentElement.scrollTop = 0; // for Chrome, Firefox, IE and Opera
+        }
+
+        function empty_children(element) {
+            while (element.lastChild) {
+                element.removeChild(element.lastChild);
+            }
+        }
+
+        // This method set expanded state of the list of items to:
+        //      collapsed if expanded = false
+        //      expanded if expanded = true
+        // Note that the effect only apply to items that has class "caret"
+        function setExpandState(itemList, expanded) {
+            for (let i = 0; i < itemList.length; i++) {
+                if (itemList[i].classList.contains("caret")) {
+                    if (expanded) {
+                        itemList[i].parentElement.querySelector(".nested-ul").classList.add("active");
+                        itemList[i].classList.add("caret-down");
+                    } else {
+                        itemList[i].parentElement.querySelector(".nested-ul").classList.remove("active");
+                        itemList[i].classList.remove("caret-down");
+                    }
+                }
+            }
+        }
+
+        // This method expand all of elements in the provenances.
+        function expandAll() {
+            setExpandState(document.querySelectorAll(".tree-view-nested-list *"), true);
+        }
+
+        // This method collapse all of elements in the provenances.
+        function collapseAll() {
+            setExpandState(document.querySelectorAll(".tree-view-nested-list *"), false);
+        }
+
+        function prepare_report() {
+            // Add a listener to each caret in the tree display of the provenance.
+            let caret_toggler = document.getElementsByClassName("caret");
+            for (let i = 0; i < caret_toggler.length; i++) {
+                caret_toggler[i].addEventListener("click", function() {
+                    this.parentElement.querySelector(".nested-ul").classList.toggle("active");
+                    this.classList.toggle("caret-down");
+                });
+            }
+
+            // When loaded, expand all CI services.<n> elements
+            setExpandState(document.querySelectorAll(".tree-view-nested-list > * > .caret"), true);
+            setExpandState(document.querySelectorAll(".tree-view-nested-list > * > * > * > .caret"), true);
+        }
+    </script>
+</body>
+
+</html>
