@@ -283,6 +283,21 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
 
+  # Publish docs to GitHub pages.
+  github-pages:
+    needs: [build, release]
+    name: Deploy GitHub pages
+    uses: ./.github/workflows/_deploy-github-pages.yaml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    with:
+      # TODO: use ${{ env.ARTIFACT_NAME }} when this issue is addressed:
+      # https://github.com/actions/runner/issues/2394.
+      artifact-name: artifact-ubuntu-latest-python-3.11
+      artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
+
   # Send out release notifications after the Release was published on GitHub.
   # Uncomment the `if` to disable sending release notifications.
   notifications:
