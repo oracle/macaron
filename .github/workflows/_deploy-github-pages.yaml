@@ -70,11 +70,13 @@ jobs:
 
     - name: Setup Pages
       uses: actions/configure-pages@f156874f8191504dae5b037505266ed5dda6c382 # v3.0.6
-    - name: Upload artifact
+
+    - name: Upload documentation artifact
       uses: actions/upload-pages-artifact@64bcae551a7b18bcb9a09042ddf1960979799187 # v1.0.8
       with:
         # Upload html/ directory.
         path: html
+
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@af48cf94a42f2c634308b1c9dc0151830b6f190a # v2.0.1
