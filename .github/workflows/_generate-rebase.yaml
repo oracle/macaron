@@ -1,0 +1,56 @@
+# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# Automatically rebase one staging branch on top of main after a new package version was published.
+
+name: Rebase branch
+on:
+  workflow_call:
+    inputs:
+      to_head:
+        type: string
+        required: true
+        description: Branch that is being rebased
+      from_base:
+        type: string
+        required: true
+        description: Base branch
+      git_user_name:
+        required: true
+        type: string
+        description: Name of the git user that rebases and pushes the to_head branch
+      git_user_email:
+        required: true
+        type: string
+        description: Email address of said git user
+    secrets:
+      REPO_ACCESS_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Check out repository
+      uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.REPO_ACCESS_TOKEN }}
+        ref: ${{ github.ref_name }}
+
+    - name: Do rebase
+      run: |
+        git config --global user.name "$USER_NAME"
+        git config --global user.email "$USER_EMAIL"
+        git checkout "$TO_HEAD"
+        git rebase "$FROM_BASE"
+        git push --force-with-lease
+      env:
+        USER_NAME: ${{ inputs.git_user_name }}
+        USER_EMAIL: ${{ inputs.git_user_email }}
+        TO_HEAD: ${{ inputs.to_head }}
+        FROM_BASE: ${{ inputs.from_base }}
