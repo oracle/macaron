@@ -29,6 +29,7 @@ dependencies = [
     "jinja2 >=3.1.2,<4.0.0",
     "SQLAlchemy >=2.0.0,<3.0.0",
     "defusedxml >=0.7.1,<1.0.0",
+    "problog >=2.2.4,<3.0.0"
 ]
 keywords = []
 # https://pypi.org/classifiers/
