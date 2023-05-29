@@ -293,8 +293,8 @@ jobs:
       pages: write
       id-token: write
     with:
-      # TODO: use ${{ env.ARTIFACT_OS }} and ${{ env.ARTIFACT_PYTHON }}
-      # when this issue is addressed: https://github.com/actions/runner/issues/2394.
+      # TODO: use ${{ env.ARTIFACT_NAME }} when this issue is addressed:
+      # https://github.com/actions/runner/issues/2394.
       artifact-name: artifact-ubuntu-latest-python-3.11
       artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
 
