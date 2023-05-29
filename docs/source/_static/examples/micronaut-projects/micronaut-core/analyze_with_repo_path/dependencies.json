@@ -1,0 +1,410 @@
+[
+    {
+        "id": "io.micronaut:http-server-tck",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-geb",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:jackson-core",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:router",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-http-client-tck-netty",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:inject-groovy",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:websocket",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-http-client-jdk-ssl",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:inject",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-kotlin-ksp",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:json-core",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-kotlin",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "micronaut:test-suite-http-server-tck-netty",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:messaging",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-groovy",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-helper",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:inject-kotlin",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:retry",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:inject-java-test",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:inject-kotlin-test",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-logback",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-jakarta-inject-bean-import",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:http-tck",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:runtime",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:management",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-http-client-tck-jdk",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:jackson-databind",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-utils",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-http-server-tck-jdk",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:inject-java",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:runtime-osx",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-logback-external-configuration",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:inject-test-utils",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:inject-groovy-test",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:test-suite-javax-inject",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut:http-validation",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.slf4j:slf4j-api",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.netty:netty-codec-http",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.projectreactor:reactor-core",
+        "path": "https://github.com/reactor/reactor-core",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.junit.jupiter:junit-jupiter",
+        "path": "https://github.com/junit-team/junit5",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "io.netty:netty-buffer",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.ow2.asm:asm-tree",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.ow2.asm:asm",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.ow2.asm:asm-commons",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "com.github.javaparser:javaparser-symbol-solver-core",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.micronaut.validation:micronaut-validation",
+        "path": "https://github.com/micronaut-projects/micronaut-validation",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.reactivestreams:reactive-streams",
+        "path": "https://github.com/reactive-streams/reactive-streams",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "io.netty:netty-handler-proxy",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.netty:netty-codec-http2",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "io.netty:netty-handler",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    }
+]
