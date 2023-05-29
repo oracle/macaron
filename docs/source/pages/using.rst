@@ -90,7 +90,7 @@ Assume that the dir tree at the local repository has the following components:
   ├── foo
   │   └── target
 
-We can run Macaron against the local repository at `target` by using this command:
+We can run Macaron against the local repository at ``target`` by using this command:
 
 .. code-block:: shell
 

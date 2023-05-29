@@ -3,15 +3,15 @@
 
 .. _installation-guide:
 
-============
-Installation
-============
+==================
+Installation Guide
+==================
 
 -------------
 Prerequisites
 -------------
 - Installations of ``wget`` or ``curl`` and ``bash`` must be available and on the path.
-- Docker (or docker equivalent for your host OS) must be installed, with a docker command line equivalent to Docker 17.06 (Oracle Container Runtime 19.03) and the user that is executing a member of the operating system group ``docker`` (to run Docker in `rootless mode <https://docs.docker.com/engine/security/rootless/>`_).
+- Docker (or docker equivalent for your host OS) must be installed, with a docker command line equivalent to Docker 17.06 (Oracle Container Runtime 19.03) and the user should be a member of the operating system group ``docker`` (to run Docker in `rootless mode <https://docs.docker.com/engine/security/rootless/>`_).
 
 --------
 Download
