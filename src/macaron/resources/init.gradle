@@ -8,7 +8,7 @@ initscript {
     }
   }
   dependencies {
-    classpath "org.cyclonedx:cyclonedx-gradle-plugin:1.7.3"
+    classpath "org.cyclonedx:cyclonedx-gradle-plugin:1.7.4"
   }
 }
 
@@ -21,7 +21,7 @@ allprojects{
        // skipConfigs is a list of configuration names to exclude when generating the BOM
        skipConfigs = ["compileClasspath", "testCompileClasspath"]
        // skipProjects is a list of project names to exclude when generating the BOM
-       skipProjects = [rootProject.name, "yourTestSubProject"]
+       skipProjects = []
        // Specified the type of project being built. Defaults to 'library'
        projectType = "application"
        // Specified the version of the CycloneDX specification to use. Defaults to 1.4.
