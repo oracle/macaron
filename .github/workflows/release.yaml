@@ -104,8 +104,8 @@ jobs:
     needs: [build]
     name: Release
     outputs:
-      release-tag: ${{ steps.upload-assets.outputs.release-tag }}
-      release-url: ${{ steps.upload-assets.outputs.release-url }}
+      release-tag: ${{ steps.release-info.outputs.release-tag }}
+      release-url: ${{ steps.release-info.outputs.release-url }}
     runs-on: ubuntu-latest
     permissions:
       contents: write # To publish release notes.
@@ -116,6 +116,14 @@ jobs:
       uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       with:
         fetch-depth: 0
+
+    # Determine the release tag and url, and set them as outputs.
+    - name: Determine release info
+      id: release-info
+      run: |
+        TAG=$(git describe --tags --abbrev=0)
+        echo "release-tag=$TAG" >> "$GITHUB_OUTPUT"
+        echo "release-url=$(gh release view """$TAG""" --json url --jq .url)" >> "$GITHUB_OUTPUT"
 
     - name: Download artifact
       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -139,29 +147,27 @@ jobs:
 
     # Build the Docker image with tags: latest and RELEASE_TAG
     - name: Build the Docker image
-      run: |
-        RELEASE_TAG=$(git describe --tags --abbrev=0)
-        export RELEASE_TAG
-        make build-docker
+      env:
+        RELEASE_TAG: ${{ steps.release-info.outputs.release-tag }}
+      run: make build-docker
 
     # Push the Docker image as part of the release pipeline.
     - name: Push the Docker image
-      run: |
-        RELEASE_TAG=$(git describe --tags --abbrev=0)
-        export RELEASE_TAG
-        make push-docker
+      env:
+        RELEASE_TAG: ${{ steps.release-info.outputs.release-tag }}
+      run: make push-docker
 
     # Generate the Docker image SBOM under the dist/ directory which will be published as part of the release assets.
     - name: Generate Docker sbom
       env:
         SYFT_BIN: ${{ github.workspace }}/bin
+        RELEASE_TAG: ${{ steps.release-info.outputs.release-tag }}
+        SYFT_VERSION: 0.82.0
       # We install Syft, which is an SBOM generator tool for Docker images, using the instructions from:
       #   https://github.com/anchore/syft#installation
       # We only generate SBOM in CycloneDX format.
       run: |
         mkdir -p "$SYFT_BIN"
-        RELEASE_TAG=$(git describe --tags --abbrev=0)
-        SYFT_VERSION=0.82.0
         ASSET_NAME="syft_${SYFT_VERSION}_linux_amd64.tar.gz"
         CHECKSUMS="syft_${SYFT_VERSION}_checksums.txt"
 
@@ -213,11 +219,8 @@ jobs:
       id: upload-assets
       env:
         GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
-      run: |
-        TAG=$(git describe --tags --abbrev=0)
-        gh release create "$TAG" dist/* --title "$TAG" --notes-file RELEASE_NOTES.md
-        echo "release-tag=$TAG" >> "$GITHUB_OUTPUT"
-        echo "release-url=$(gh release view """$TAG""" --json url --jq .url)" >> "$GITHUB_OUTPUT"
+        RELEASE_TAG: ${{ steps.release-info.outputs.release-tag }}
+      run: gh release create "$RELEASE_TAG" dist/* --title "$RELEASE_TAG" --notes-file RELEASE_NOTES.md
 
     # Uncomment the following steps to publish to a PyPI server.
     # At the moment PyPI does not provide a mechanism to publish
