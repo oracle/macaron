@@ -145,19 +145,19 @@
     },
     {
         "id": "commons-cli:commons-cli",
-        "path": "",
+        "path": "https://github.com/apache/maven-apache-parent",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "org.apache.commons:commons-lang3",
-        "path": "",
+        "path": "https://github.com/apache/maven-apache-parent",
         "branch": "",
         "digest": "",
-        "note": "Manual configuration required. Could not find SCM URL.",
-        "available": "MISSING REPO URL"
+        "note": "",
+        "available": "AVAILABLE"
     },
     {
         "id": "org.mockito:mockito-core",
