@@ -8,27 +8,43 @@ import os
 from pathlib import Path
 
 from macaron.config.defaults import defaults
-from macaron.dependency_analyzer.java_repo_finder import create_urls, parse_gav, parse_pom
+from macaron.dependency_analyzer.java_repo_finder import create_urls, find_parent, find_scm, parse_pom
 
 
 def test_java_repo_finder() -> None:
     """Test the functions of the repo finder."""
-    gav = "group:artifact:version"
-    group, artifact, version = parse_gav(gav)
-    assert group != ""
     repositories = defaults.get_list(
         "repofinder.java", "artifact_repositories", fallback=["https://repo.maven.apache.org/maven2"]
     )
+    group = "group"
+    artifact = "artifact"
+    version = "version"
     created_urls = create_urls(group, artifact, version, repositories)
     assert created_urls
 
     resources_dir = Path(__file__).parent.joinpath("resources")
     with open(os.path.join(resources_dir, "example_pom.xml"), encoding="utf8") as file:
         file_data = file.read()
-        found_urls = parse_pom(file_data, ["scm.url", "scm.connection", "scm.developerConnection"])
+        pom = parse_pom(file_data)
+        assert pom is not None
+        found_urls, count = find_scm(pom, ["scm.url", "scm.connection", "scm.developerConnection"])
+        assert count == 3
         expected = [
             "https://github.com/owner/project",
             "ssh://git@hostname:port/owner/project.git",
             "git@github.com:owner/project.git",
         ]
         assert expected == list(found_urls)
+
+
+def test_java_repo_finder_hierarchical() -> None:
+    """Test the hierarchical capabilities of the repo finder."""
+    resources_dir = Path(__file__).parent.joinpath("resources")
+    with open(os.path.join(resources_dir, "example_pom_no_scm.xml"), encoding="utf8") as file:
+        file_data = file.read()
+        pom = parse_pom(file_data)
+        assert pom is not None
+        group, artifact, version = find_parent(pom)
+        assert group == "owner"
+        assert artifact == "parent"
+        assert version == "1"
