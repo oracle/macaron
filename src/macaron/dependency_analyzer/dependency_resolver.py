@@ -9,10 +9,12 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import TypedDict
 
+import sqlalchemy
 from packaging import version
 
 from macaron.config.defaults import defaults
 from macaron.config.target_config import Configuration
+from macaron.database.database_manager import DatabaseManager
 from macaron.dependency_analyzer.java_repo_finder import find_java_repo
 from macaron.errors import MacaronError
 from macaron.output_reporter.scm import SCMStatus
@@ -111,6 +113,7 @@ class DependencyAnalyzer(ABC):
 
     @staticmethod
     def add_latest_version(
+        db_man: DatabaseManager | None,
         item: DependencyInfo,
         key: str,
         all_versions: dict[str, list[DependencyInfo]],
@@ -121,6 +124,8 @@ class DependencyAnalyzer(ABC):
 
         Parameters
         ----------
+        db_man : DatabaseManager | None
+            The database manager for accessing the database (optional).
         item : DependencyInfo
             The dictionary containing info about the dependency to be added.
         key : str
@@ -133,7 +138,7 @@ class DependencyAnalyzer(ABC):
             Used to detect artifacts that have similar repos.
         """
         if defaults.getboolean("repofinder.java", "find_repos"):
-            DependencyAnalyzer._find_repo(item)
+            DependencyAnalyzer._find_repo(db_man, item)
 
         # Check if the URL is already seen for a different artifact.
         if item["url"] != "":
@@ -173,15 +178,28 @@ class DependencyAnalyzer(ABC):
                 logger.error("Could not parse dependency version number: %s", error)
 
     @staticmethod
-    def _find_repo(item: DependencyInfo) -> None:
+    def _find_repo(db_man: DatabaseManager | None, item: DependencyInfo) -> None:
         """Find the repo for the current item, if the criteria are met."""
         if item["url"] != "" or item["version"] == "unspecified" or not item["group"] or not item["name"]:
             logger.debug("Item URL already exists, or item is missing information: %s", item)
             return
-        gav = f"{item['group']}:{item['name']}:{item['version']}"
+        artifact = f"{item['group']}:{item['name']}"
         if f"{item['group']}:{item['name']}" in defaults.get_list("repofinder.java", "artifact_ignore_list"):
-            logger.debug("Skipping GAV: %s", gav)
+            logger.debug("Skipping artifact: %s", artifact)
             return
+
+        if db_man and not defaults.getboolean("repofinder.java", "ignore_database"):
+            # Perform database lookup
+            query = sqlalchemy.text(
+                "SELECT remote_path FROM _repository WHERE namespace = :group and name = :artifact"
+            ).bindparams(group=item["group"], artifact=item["name"])
+            result: sqlalchemy.engine.cursor.CursorResult = db_man.execute_and_return(query)
+            row = result.first()
+            if row and row.remote_path:
+                logger.debug("Found database url: %s for artifact: %s", row.remote_path, artifact)
+                item["url"] = row.remote_path
+                return
+            logger.debug("No database url found for GAV: %s", artifact)
 
         urls = find_java_repo(
             item["group"],
@@ -191,7 +209,7 @@ class DependencyAnalyzer(ABC):
         )
         item["url"] = DependencyAnalyzer.find_valid_url(list(urls))
         if item["url"] == "":
-            logger.debug("Failed to find url for GAV: %s", gav)
+            logger.debug("Failed to find url for artifact: %s", artifact)
 
     @staticmethod
     def find_valid_url(urls: Iterable[str]) -> str:

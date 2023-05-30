@@ -12,6 +12,7 @@ from typing import Optional
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
+from macaron.database.database_manager import DatabaseManager
 from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, DependencyInfo
 from macaron.errors import MacaronError
 from macaron.output_reporter.scm import SCMStatus
@@ -139,12 +140,14 @@ def get_dep_components(
 
 
 def convert_components_to_artifacts(
-    components: Iterable[dict], root_component: Optional[dict | None] = None
+    db_man: DatabaseManager | None, components: Iterable[dict], root_component: Optional[dict | None] = None
 ) -> dict[str, DependencyInfo]:
     """Convert CycloneDX components using internal artifact representation.
 
     Parameters
     ----------
+    db_man : DatabaseManager
+        The database manager for accessing the database (optional).
     components : list[dict]
         The dependency components.
     root_component: Optional[dict|None]
@@ -196,7 +199,12 @@ def convert_components_to_artifacts(
                 )
 
             DependencyAnalyzer.add_latest_version(
-                item=item, key=key, all_versions=all_versions, latest_deps=latest_deps, url_to_artifact=url_to_artifact
+                db_man=db_man,
+                item=item,
+                key=key,
+                all_versions=all_versions,
+                latest_deps=latest_deps,
+                url_to_artifact=url_to_artifact,
             )
         except KeyError as error:
             logger.debug(error)
@@ -210,11 +218,13 @@ def convert_components_to_artifacts(
     return latest_deps
 
 
-def get_deps_from_sbom(sbom_path: str | Path) -> dict[str, DependencyInfo]:
+def get_deps_from_sbom(db_man: DatabaseManager | None, sbom_path: str | Path) -> dict[str, DependencyInfo]:
     """Get the dependencies from a provided SBOM.
 
     Parameters
     ----------
+    db_man : DatabaseManager
+        The database manager for accessing the database (optional).
     sbom_path : str | Path
         The path to the SBOM file.
 
@@ -223,6 +233,7 @@ def get_deps_from_sbom(sbom_path: str | Path) -> dict[str, DependencyInfo]:
         A dictionary where dependency artifacts are grouped based on "artifactId:groupId".
     """
     return convert_components_to_artifacts(
+        db_man,
         get_dep_components(
             root_bom_path=Path(sbom_path),
             recursive=defaults.getboolean(
@@ -230,5 +241,5 @@ def get_deps_from_sbom(sbom_path: str | Path) -> dict[str, DependencyInfo]:
                 "recursive",
                 fallback=False,
             ),
-        )
+        ),
     )

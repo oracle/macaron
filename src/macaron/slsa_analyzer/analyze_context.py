@@ -56,6 +56,8 @@ class AnalyzeContext:
         output_dir: str = "",
         remote_path: str = "",
         current_date: str = "",
+        namespace: str = "",
+        name: str = "",
     ):
         """Initialize instance.
 
@@ -74,11 +76,17 @@ class AnalyzeContext:
         commit_date : str
             The commit date of the target repo.
         macaron_path : str
-            The Macaron's root path.
+            The Macaron root path.
         output_dir : str
             The output dir.
         remote_path : str
             The remote path for the target repo.
+        current_date: str
+            The current date.
+        namespace : str
+            The purl namespace element, a.k.a group id.
+        name : str
+            The purl name element, a.k.a artifact id.
         """
         # <owner>/<repo_name>
         self.repo_full_name = full_name
@@ -122,6 +130,9 @@ class AnalyzeContext:
             is_inferred_prov=True,
             policy=None,
         )
+
+        self.namespace = namespace
+        self.name = name
 
         self.repository_table = RepositoryTable(**self.get_repository_data())
 
@@ -208,6 +219,8 @@ class AnalyzeContext:
             "branch_name": self.branch_name,
             "commit_sha": self.commit_sha,
             "remote_path": self.remote_path,
+            "namespace": self.namespace,
+            "name": self.name,
         }
 
     def get_analysis_result_data(self) -> dict:

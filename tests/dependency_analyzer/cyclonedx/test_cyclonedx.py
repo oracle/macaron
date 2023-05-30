@@ -74,7 +74,7 @@ def test_convert_components_to_artifacts(snapshot: dict[str, DependencyInfo]) ->
 
     # Pass a root bom.json and two sub-project bom.json files in recursive mode.
     result = convert_components_to_artifacts(
-        get_dep_components(root_bom_path=root_bom_path, child_bom_paths=child_bom_paths, recursive=True)
+        None, get_dep_components(root_bom_path=root_bom_path, child_bom_paths=child_bom_paths, recursive=True)
     )
     assert snapshot == result
 
@@ -93,7 +93,7 @@ def test_low_quality_bom(snapshot: dict[str, DependencyInfo], name: str) -> None
     """
     # Path to the BOM file.
     bom_path = Path(RESOURCES_DIR, name)
-    result = get_deps_from_sbom(bom_path)
+    result = get_deps_from_sbom(None, bom_path)
     assert snapshot == result
 
 
@@ -104,5 +104,5 @@ def test_multiple_versions(snapshot: dict[str, DependencyInfo]) -> None:
     """
     # Path to the BOM file.
     bom_path = Path(RESOURCES_DIR, "bom_multi_versions.json")
-    result = get_deps_from_sbom(bom_path)
+    result = get_deps_from_sbom(None, bom_path)
     assert snapshot == result
