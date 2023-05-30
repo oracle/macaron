@@ -36,6 +36,7 @@ from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 
 # To load all checks into the registry
+from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
 from macaron.slsa_analyzer.checks.check_result import CheckResult, SkippedInfo
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.database_store import store_analysis_to_db, store_analyze_context_to_db
