@@ -13,7 +13,7 @@ from packaging import version
 
 from macaron.config.defaults import defaults
 from macaron.config.target_config import Configuration
-from macaron.dependency_analyzer.java_repo_finder import find_repo
+from macaron.dependency_analyzer.java_repo_finder import find_java_repo
 from macaron.errors import MacaronError
 from macaron.output_reporter.scm import SCMStatus
 from macaron.slsa_analyzer.git_url import get_remote_vcs_url, get_repo_full_name_from_url
@@ -133,12 +133,7 @@ class DependencyAnalyzer(ABC):
             Used to detect artifacts that have similar repos.
         """
         if defaults.getboolean("repofinder.java", "find_repos"):
-            if item["url"] == "" and item["version"] != "unspecified" and item["group"] and item["name"]:
-                gav = f"{item['group']}:{item['name']}:{item['version']}"
-                urls = find_repo(gav, ["scm.url", "scm.connection", "scm.developerConnection"])
-                item["url"] = DependencyAnalyzer.find_valid_url(urls)
-                if item["url"] == "":
-                    logger.warning("Failed to find url for GAV: %s", gav)
+            DependencyAnalyzer._find_repo(item)
 
         # Check if the URL is already seen for a different artifact.
         if item["url"] != "":
@@ -176,6 +171,27 @@ class DependencyAnalyzer(ABC):
                     latest_deps[key] = item
             except ValueError as error:
                 logger.error("Could not parse dependency version number: %s", error)
+
+    @staticmethod
+    def _find_repo(item: DependencyInfo) -> None:
+        """Find the repo for the current item, if the criteria are met."""
+        if item["url"] != "" or item["version"] == "unspecified" or not item["group"] or not item["name"]:
+            logger.debug("Item URL already exists, or item is missing information: %s", item)
+            return
+        gav = f"{item['group']}:{item['name']}:{item['version']}"
+        if f"{item['group']}:{item['name']}" in defaults.get_list("repofinder.java", "artifact_ignore_list"):
+            logger.debug("Skipping GAV: %s", gav)
+            return
+
+        urls = find_java_repo(
+            item["group"],
+            item["name"],
+            item["version"],
+            defaults.get_list("repofinder.java", "repo_pom_paths"),
+        )
+        item["url"] = DependencyAnalyzer.find_valid_url(list(urls))
+        if item["url"] == "":
+            logger.debug("Failed to find url for GAV: %s", gav)
 
     @staticmethod
     def find_valid_url(urls: Iterable[str]) -> str:
