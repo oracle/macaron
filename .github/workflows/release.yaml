@@ -105,6 +105,7 @@ jobs:
     name: Release
     outputs:
       release-tag: ${{ steps.release-info.outputs.release-tag }}
+      release-version: ${{ steps.release-info.outputs.release-version }}
       release-url: ${{ steps.release-info.outputs.release-url }}
     runs-on: ubuntu-latest
     permissions:
@@ -122,8 +123,11 @@ jobs:
       id: release-info
       run: |
         TAG=$(git describe --tags --abbrev=0)
-        echo "release-tag=$TAG" >> "$GITHUB_OUTPUT"
-        echo "release-url=$(gh release view """$TAG""" --json url --jq .url)" >> "$GITHUB_OUTPUT"
+        {
+          echo "release-tag=$TAG"
+          echo "release-version=${TAG#v}"
+          echo "release-url=$(gh release view """$TAG""" --json url --jq .url)"
+        } >> "$GITHUB_OUTPUT"
 
     - name: Download artifact
       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -162,6 +166,7 @@ jobs:
       env:
         SYFT_BIN: ${{ github.workspace }}/bin
         RELEASE_TAG: ${{ steps.release-info.outputs.release-tag }}
+        RELEASE_VERSION: ${{ steps.release-info.outputs.release-version }}
         SYFT_VERSION: 0.82.0
       # We install Syft, which is an SBOM generator tool for Docker images, using the instructions from:
       #   https://github.com/anchore/syft#installation
@@ -190,7 +195,7 @@ jobs:
           "$SYFT_BIN"/syft --version
           "$SYFT_BIN"/syft \
             ghcr.io/oracle-samples/macaron:"$RELEASE_TAG" \
-            -o cyclonedx-json=dist/macaron-"$RELEASE_TAG"-sbom-docker.json
+            -o cyclonedx-json=dist/macaron-"$RELEASE_VERSION"-sbom-docker.json
         else
           echo "Checksum for '$ASSET_NAME' did not verify: expected $EXPECTED but got $SYFT_DIGEST"
         fi
@@ -257,6 +262,7 @@ jobs:
       # Set private-repository to true for private repositories. Note that the repository name is
       # uploaded as part of the transparency log entry on the public Rekor instance (rekor.sigstore.dev).
       private-repository: false
+      provenance-name: macaron-${{ needs.release.outputs.release-version }}.intoto.jsonl
     permissions:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
