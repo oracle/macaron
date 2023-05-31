@@ -7,6 +7,7 @@ import argparse
 import logging
 import os
 import sys
+from importlib import metadata as importlib_metadata
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from yamale.schema.validationresults import ValidationResult
@@ -132,10 +133,32 @@ def perform_action(action_args: argparse.Namespace) -> None:
             sys.exit(os.EX_USAGE)
 
 
-def main() -> None:
-    """Execute Macaron as a standalone command-line tool."""
+def main(argv: list[str] | None = None) -> None:
+    """Execute Macaron as a standalone command-line tool.
+
+    Parameters
+    ----------
+    argv: list[str] | None
+        Command-line arguments.
+        If ``argv`` is ``None``, argparse automatically looks at ``sys.argv``.
+        Hence, we set ``argv = None`` by default.
+    """
     main_parser = argparse.ArgumentParser(prog="macaron")
-    main_parser.add_argument("-v", "--verbose", help="Run Macaron with more debug logs", action="store_true")
+
+    main_parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s {importlib_metadata.version('macaron')}",
+        help="Show Macaron's version number and exit",
+    )
+
+    main_parser.add_argument(
+        "-v",
+        "--verbose",
+        help="Run Macaron with more debug logs",
+        action="store_true",
+    )
 
     main_parser.add_argument(
         "-o",
@@ -246,7 +269,7 @@ def main() -> None:
     vp_parser.add_argument("-f", "--file", required=True, type=str, help="Path to the Datalog policy.")
     vp_parser.add_argument("-s", "--show-prelude", required=False, action="store_true", help="Show policy prelude.")
 
-    args = main_parser.parse_args(sys.argv[1:])
+    args = main_parser.parse_args(argv)
 
     if not args.action:
         main_parser.print_help()
