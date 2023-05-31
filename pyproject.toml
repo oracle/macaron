@@ -188,6 +188,7 @@ module = [
     "gitdb.*",
     "yamale.*",
     "defusedxml.*",
+    "problog.*"
 ]
 ignore_missing_imports = true
 

@@ -86,6 +86,7 @@ class BaseCheck:
             justification=[],
             result_type=CheckResultType.SKIPPED,
             result_tables=[],
+            confidence_score=0,
         )
 
         if skipped_info:
