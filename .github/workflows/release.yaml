@@ -107,6 +107,8 @@ jobs:
       release-tag: ${{ steps.release-info.outputs.release-tag }}
       release-version: ${{ steps.release-info.outputs.release-version }}
       release-url: ${{ steps.release-info.outputs.release-url }}
+      image-name: ${{ steps.push-docker.outputs.image-name }}
+      image-digest: ${{ steps.push-docker.outputs.image-digest }}
     runs-on: ubuntu-latest
     permissions:
       contents: write # To publish release notes.
@@ -157,9 +159,18 @@ jobs:
 
     # Push the Docker image as part of the release pipeline.
     - name: Push the Docker image
+      id: push-docker
       env:
         RELEASE_TAG: ${{ steps.release-info.outputs.release-tag }}
-      run: make push-docker
+      run: |
+        make push-docker
+        IMAGE_AND_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE_NAME")
+        NAME=$(echo "$IMAGE_AND_DIGEST" | cut -d'@' -f1 | cut -d':' -f1)
+        DIGEST=$(echo "$IMAGE_AND_DIGEST" | cut -d'@' -f2)
+        {
+          echo "image-name=${NAME}"
+          echo "image-digest=${DIGEST}"
+        } >> "$GITHUB_OUTPUT"
 
     # Generate the Docker image SBOM under the dist/ directory which will be published as part of the release assets.
     - name: Generate Docker sbom
@@ -267,6 +278,21 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
+
+  # Generate SLSA provenance for the Docker image and push it to the container registry.
+  provenance-docker:
+    needs: [release]
+    permissions:
+      actions: read # To detect the Github Actions environment.
+      id-token: write # To create OIDC tokens for signing.
+      packages: write # To upload provenance.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.6.0
+    with:
+      image: ${{ needs.release.outputs.image-name }}
+      digest: ${{ needs.release.outputs.image-digest }}
+      registry-username: ${{ github.actor }}
+    secrets:
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
 
   # Publish the SLSA provenance as the GitHub release asset.
   publish_provenance:
