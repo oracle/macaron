@@ -10,5 +10,5 @@ Macaron documentation
    pages/installation
    pages/using
    pages/output_files
-   pages/cli_options
+   pages/cli_usage/index
    pages/apidoc/index

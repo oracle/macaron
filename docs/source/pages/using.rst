@@ -19,7 +19,7 @@ To run Macaron on a Github public repository, we use the following command:
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -rp <repo_path>
+  ./run_macaron.sh macaron analyze -rp <repo_path>
 
 With ``repo_path`` being the remote path to your target repository.
 
@@ -27,13 +27,13 @@ By default, Macaron will analyze the latest commit of the default branch. Howeve
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -rp <repo_path> -b <branch_name> -d <digest>
+  ./run_macaron.sh macaron analyze -rp <repo_path> -b <branch_name> -d <digest>
 
 For example, to analyze the SLSA posture of `micronaut-core <https://github.com/micronaut-projects/micronaut-core>`_ at branch 4.0.x and commit ``82d115b4901d10226552ac67b0a10978cd5bc603`` we could use the following command:
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -rp https://github.com/micronaut-projects/micronaut-core -b 4.0.x -d 82d115b4901d10226552ac67b0a10978cd5bc603
+  ./run_macaron.sh macaron analyze -rp https://github.com/micronaut-projects/micronaut-core -b 4.0.x -d 82d115b4901d10226552ac67b0a10978cd5bc603
 
 .. note:: Macaron automatically detects and analyzes **direct** dependencies for Java Maven and Gradle projects. This process might take a while and can be skipped by using the ``--skip-deps`` option.
 
@@ -41,7 +41,7 @@ Take the same example as above, to disable analyzing `micronaut-core <https://gi
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -rp https://github.com/micronaut-projects/micronaut-core -b 4.0.x -d 82d115b4901d10226552ac67b0a10978cd5bc603 --skip-deps
+  ./run_macaron.sh macaron analyze -rp https://github.com/micronaut-projects/micronaut-core -b 4.0.x -d 82d115b4901d10226552ac67b0a10978cd5bc603 --skip-deps
 
 .. note:: During the analysis, Macaron would generate report files into the output directory in the current workspace. To understand the structure of this directory please see :ref:`Output Files Guide <output_files_guide>`.
 
@@ -67,7 +67,7 @@ To run the analysis against that SBOM, run this command:
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -rp https://github.com/micronaut-projects/micronaut-core -sbom <path_to_sbom>
+  ./run_macaron.sh macaron analyze -rp https://github.com/micronaut-projects/micronaut-core -sbom <path_to_sbom>
 
 With ``path_to_sbom`` is the path to the SBOM you want to use.
 
@@ -94,10 +94,10 @@ We can run Macaron against the local repository at ``target`` by using this comm
 
 .. code-block:: shell
 
-  ./run_macaron.sh -lr path/to/boo/foo analyze -rp target <rest_of_args>
+  ./run_macaron.sh macaron -lr path/to/boo/foo analyze -rp target <rest_of_args>
 
 With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``-b``, ``-d`` or ``--skip-deps`` similar to two previous examples)
 
-The ``-lr`` flag configure Macaron to looks into ``path/to/boo/foo`` for local repositories. For more information, please see :ref:`CLI options <cli-options>`.
+The ``-lr`` flag configure Macaron to looks into ``path/to/boo/foo`` for local repositories. For more information, please see :ref:`CLI options <cli-usage>`.
 
 .. note:: If ``-lr`` is not provided, Macaron will looks inside ``<working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``-rp``.
