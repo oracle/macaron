@@ -18,7 +18,7 @@ from macaron.config.global_config import global_config
 from macaron.config.target_config import TARGET_CONFIG_SCHEMA
 from macaron.output_reporter.reporter import HTMLReporter, JSONReporter, PolicyReporter
 from macaron.parsers.yaml.loader import YamlLoader
-from macaron.policy_engine.policy_engine import run_policy_engine
+from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
 from macaron.slsa_analyzer.analyzer import Analyzer
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -95,18 +95,25 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
         logger.critical("The database file does not exist.")
         return os.EX_OSFILE
 
-    if not os.path.isfile(verify_policy_args.file):
-        logger.critical('The policy file "%s" does not exist.', verify_policy_args.file)
-        return os.EX_OSFILE
+    if verify_policy_args.show_prelude:
+        show_prelude(verify_policy_args.database)
+        return os.EX_OK
 
-    result = run_policy_engine(verify_policy_args.database, verify_policy_args.show_prelude, verify_policy_args.file)
-    policy_reporter = PolicyReporter()
-    policy_reporter.generate(global_config.output_path, result)
+    if verify_policy_args.file:
+        if not os.path.isfile(verify_policy_args.file):
+            logger.critical('The policy file "%s" does not exist.', verify_policy_args.file)
+            return os.EX_OSFILE
 
-    if ("failed_policies" in result) and any(result["failed_policies"]):
-        return os.EX_DATAERR
+        result = run_policy_engine(verify_policy_args.database, verify_policy_args.file)
+        policy_reporter = PolicyReporter()
+        policy_reporter.generate(global_config.output_path, result)
 
-    return os.EX_OK
+        if ("failed_policies" in result) and any(result["failed_policies"]):
+            return os.EX_DATAERR
+
+        return os.EX_OK
+
+    return os.EX_USAGE
 
 
 def perform_action(action_args: argparse.Namespace) -> None:
@@ -264,10 +271,11 @@ def main(argv: list[str] | None = None) -> None:
 
     # Verify the Datalog policy.
     vp_parser = sub_parser.add_parser(name="verify-policy")
+    vp_group = vp_parser.add_mutually_exclusive_group(required=True)
 
     vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
-    vp_parser.add_argument("-f", "--file", required=True, type=str, help="Path to the Datalog policy.")
-    vp_parser.add_argument("-s", "--show-prelude", required=False, action="store_true", help="Show policy prelude.")
+    vp_group.add_argument("-f", "--file", type=str, help="Path to the Datalog policy.")
+    vp_group.add_argument("-s", "--show-prelude", action="store_true", help="Show policy prelude.")
 
     args = main_parser.parse_args(argv)
 
