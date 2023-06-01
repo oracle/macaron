@@ -31,8 +31,8 @@ def test_java_repo_finder() -> None:
         assert count == 3
         expected = [
             "https://github.com/owner/project",
-            "ssh://git@hostname:port/owner/project.git",
-            "git@github.com:owner/project.git",
+            "ssh://git@hostname:port/owner/Example_License.git",
+            "git@github.com:owner/project1.8.git",
         ]
         assert expected == list(found_urls)
 

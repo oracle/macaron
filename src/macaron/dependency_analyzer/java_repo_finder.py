@@ -3,6 +3,7 @@
 
 """This module tries to find urls of repositories that match artifacts passed in 'group:artifact:version' form."""
 import logging
+import re
 import typing
 from collections.abc import Iterator
 from xml.etree.ElementTree import Element  # nosec
@@ -141,7 +142,14 @@ def find_scm(pom: Element, tags: list[str]) -> tuple[Iterator[str], int]:
     # Try to match each tag with the contents of the POM.
     for tag in tags:
         element: typing.Optional[Element] = pom
-        tag_parts = tag.split(".")
+
+        if tag.startswith("properties."):
+            # Tags under properties are often "." separated -- split into only two tags
+            tag_parts = ["properties", tag[11:]]
+        else:
+            # Other tags can be split into distinct elements via "."
+            tag_parts = tag.split(".")
+
         for index, tag_part in enumerate(tag_parts):
             element = _find_element(element, tag_part)
             if element is None:
@@ -150,7 +158,51 @@ def find_scm(pom: Element, tags: list[str]) -> tuple[Iterator[str], int]:
                 # Add the contents of the final tag
                 results.append(element.text.strip())
 
+    # Resolve any Maven properties within the results
+    results = _resolve_properties(pom, results)
+
     return iter(results), len(results)
+
+
+def _resolve_properties(pom: Element, values: list[str]) -> list[str]:
+    """Resolve any Maven properties found within the passed list of values.
+
+    Maven POM files have five different use cases for properties (see https://maven.apache.org/pom.html).
+    Only the two that relate to contents found elsewhere within the same POM file are considered here.
+    That is: ${project.x} where x can be a child tag at any depth, or ${x} where x is found at project.properties.x
+    Entries with rejected properties are removed from the value list.
+    """
+    resolved_values = []
+    print(f"\nValues: {values}\n")
+    for value in values:
+        replacements: list = []
+        # Calculate replacements
+        found = False
+        print(f"\nValue: {value}\n")
+        for match in re.finditer("\\$\\{[^}]+}", value):
+            found = True
+            text = match.group().replace("$", "").replace("{", "").replace("}", "")
+            print(f"Text: {text}")
+            if text.startswith("project."):
+                text = text.replace("project.", "")
+            else:
+                text = f"properties.{text}"
+            print(f"Final Text: {text}")
+            value_iterator, count = find_scm(pom, [text])
+            print(f"Found: {count}")
+            if count == 0:
+                break
+            replacements.insert(0, [match.start(), next(value_iterator), match.end()])
+
+        # Apply replacements in reverse order
+        for replacement in replacements:
+            value = f"{value[:replacement[0]]}{replacement[1]}{value[replacement[2]:]}"
+            resolved_values.append(value)
+
+        if not found:
+            resolved_values.append(value)
+
+    return resolved_values
 
 
 def parse_pom(pom: str) -> Element | None:
