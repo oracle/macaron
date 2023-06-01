@@ -476,7 +476,10 @@ class Analyzer:
             commit_date_str,
         )
 
-        artifact_id, group_id = repo_id.split(":")
+        artifact_id = ""
+        group_id = ""
+        if defaults.getboolean("repofinder.java", "use_database") and not repo_id.startswith("http") and ":" in repo_id:
+            artifact_id, group_id = repo_id.split(":")
 
         # Initialize the analyzing context for this repository.
         analyze_ctx = AnalyzeContext(

@@ -25,7 +25,7 @@ is_check(check_name) :- check_result(_, check_name, _, _, _).
  *  This fact exists iff a repository is hosted on a trusted public platform.
  */
 .decl not_self_hosted_git(repo:number, message:symbol)
-not_self_hosted_git(repo, message) :- repository(repo, name, remote, branch, release, commit_sha, commit_date),
+not_self_hosted_git(repo, message) :- repository(repo, name, remote, branch, release, commit_sha, commit_date,_,_),
     match("^.*(github.com|gitlab.com).*$", remote), message=remote.
 
 /**
@@ -40,7 +40,7 @@ transitive_dependency(repo, dependency) :-
  *  Extract the id and full name from the repository relation.
  */
 .decl is_repo(repo: number, repo_full_name: symbol)
- is_repo(repo, name) :- repository(repo, name,_,_,_,_,_).
+ is_repo(repo, name) :- repository(repo, name,_,_,_,_,_,_,_).
 
 /**
  *  ADT recursively describing a JSON object.

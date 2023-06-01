@@ -188,7 +188,7 @@ class DependencyAnalyzer(ABC):
             logger.debug("Skipping artifact: %s", artifact)
             return
 
-        if db_man and not defaults.getboolean("repofinder.java", "ignore_database"):
+        if db_man and defaults.getboolean("repofinder.java", "use_database"):
             # Perform database lookup
             query = sqlalchemy.text(
                 "SELECT remote_path FROM _repository WHERE namespace = :group and name = :artifact"
