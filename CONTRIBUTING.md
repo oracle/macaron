@@ -63,7 +63,7 @@ See below for instructions to set up the development environment.
 
 ### Merging PRs
 
-- Before a PR is merged, all commits in the PR should meaningful commits.
+- Before a PR is merged, all commits in the PR should be meaningful.
   - Its commit message should be the same as the PR title if there only one commit.
 - PRs should be merged using the `Squash and merge` strategy. In most cases a single commit with
 a detailed commit message body is preferred. Make sure to keep the `Signed-off-by` line in the body.
@@ -125,9 +125,15 @@ usage: macaron [-h]
 ```
 
 ### Obtaining the GitHub personal access token
-Create your own Github access token (please refer to the instructions [here](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token)). When creating this token, make sure to assign **at least** `repo` permissions.
 
-The GitHub token should be stored in an **environment variable** called `GITHUB_TOKEN`. Macaron will read the value of this Github token from the environment variable **only** if we use the `analyze` command (see instructions below).
+To obtain a GitHub access token, please see the official instructions [here](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token).
+
+Ideally, the GitHub token must have **read** permissions for the repositories that you want to analyze:
+
+- Every [fine-grained personal-access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-fine-grained-personal-access-token) should have read permission to public GitHub repositories. However, if you are analyzing a private repository, please select it in the ``Repository Access section``.
+- For [classic personal-access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic), the ``repo.public_repo`` scope must be selected. Please select the whole ``repo`` scope if you are running the analysis against private repositories.
+
+After generating a GitHub personal-access token, please store its value in an environment variable called ``GITHUB_TOKEN``. This environment variable will be read by Macaron for its **analyze** command.
 
 ### Running checks and tests locally
 

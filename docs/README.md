@@ -4,7 +4,7 @@ This directory contains the source for the documentation of Macaron hosted [here
 ## Build the documentation
 
 To build the documentation, please follow these steps:
-1. Setup the dev environment for Macaron using the instructions [here](../README.md#getting-started).
+1. Setup the dev environment for Macaron using the instructions [here](../CONTRIBUTING.md).
 2. Build the documentation by running this command from the root directory of Macaron:
 ```
 make docs
