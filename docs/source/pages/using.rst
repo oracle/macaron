@@ -1,7 +1,7 @@
 .. Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 .. Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-.. _using-guide:
+.. _using-macaron:
 
 =============
 Using Macaron
@@ -98,6 +98,6 @@ We can run Macaron against the local repository at ``target`` by using this comm
 
 With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``-b``, ``-d`` or ``--skip-deps`` similar to two previous examples)
 
-The ``-lr`` flag configure Macaron to looks into ``path/to/boo/foo`` for local repositories. For more information, please see :ref:`CLI options <cli-options>`.
+The ``-lr`` flag configure Macaron to looks into ``path/to/boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
 
 .. note:: If ``-lr`` is not provided, Macaron will looks inside ``<working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``-rp``.
