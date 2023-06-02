@@ -14,7 +14,7 @@ Usage
 
 .. code-block:: shell
 
-    usage: macaron dump-defaults [-h]
+    usage: ./run_macaron.sh dump-defaults [-h]
 
 -------
 Options

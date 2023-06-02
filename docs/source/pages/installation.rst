@@ -38,7 +38,7 @@ To verify your setup, go to the directory containing the downloaded ``run_macaro
 
 .. code-block:: shell
 
-  ./run_macaron.sh macaron --help
+  ./run_macaron.sh --help
 
 
 .. note:: In the first execution, this script will download the Macaron Docker image from ``ghcr.io/oracle-samples/macaron`` which can take some time. However, the next time you run it, the docker image available on your local host will be used.
@@ -55,7 +55,7 @@ A GitHub access token is **always** required when using the **analyze** command 
 
 .. code-block:: shell
 
-  ./run_macaron.sh macaron analyze <rest_of_arguments>
+  ./run_macaron.sh analyze <rest_of_arguments>
 
 To obtain a GitHub access token, please see the official instructions `here <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token>`_.
 

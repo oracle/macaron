@@ -14,7 +14,7 @@ Usage
 
 .. code-block:: shell
 
-    usage: macaron analyze
+    usage: ./run_macaron.sh analyze
         [-h] [-sbom SBOM_PATH] [-rp REPO_PATH] [-b BRANCH]
         [-d DIGEST] [-pe PROVENANCE_EXPECTATION] [-c CONFIG_PATH]
         [--skip-deps] [-g TEMPLATE_PATH]
