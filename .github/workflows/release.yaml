@@ -336,7 +336,7 @@ jobs:
   # Send out release notifications after the Release was published on GitHub.
   # Uncomment the `if` to disable sending release notifications.
   notifications:
-    # if: ${{ false }}
+    if: ${{ false }}
     needs: [release]
     name: Send Release notifications
     uses: ./.github/workflows/_release-notifications.yaml
