@@ -7,8 +7,7 @@
 Command Line Usage
 ==================
 
-You could use the bash script ``run_macaron.sh`` we provided to run Macaron as a Docker image (For more information on how to get this script, please see :ref:`Download Macaron <download-macaron>`).
-
+Use the bash script ``run_macaron.sh`` to run Macaron as a Docker container (for more information on how to get this script, please see :ref:`Download <download-macaron>`).
 
 -----
 Usage

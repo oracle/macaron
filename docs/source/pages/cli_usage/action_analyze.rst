@@ -1,3 +1,5 @@
+.. _analyze-action-cli:
+
 =======
 Analyze
 =======
@@ -6,7 +8,7 @@ Analyze
 Description
 -----------
 
-Analyze a Github public repository (and potentially the repositories of it dependencies) to determine its SLSA posture following the specification of `SLSA v0.1 <https://slsa.dev/spec/v0.1/>`_.
+Analyze a public GitHub repository (and optionally the repositories of its dependencies) to determine its SLSA posture. We currently support `SLSA v0.1 <https://slsa.dev/spec/v0.1/>`_. The support for `SLSA v1.0 <https://slsa.dev/spec/v1.0/>`_ will be added in future.
 
 -----
 Usage
@@ -64,4 +66,4 @@ Options
 Environment
 -----------
 
-``GITHUB_TOKEN`` – The GitHub personal access token needed for Macaron to run the analysis. For more information on how to obtain a token for Macaron, please see instructions in :ref:`Prepare GitHub access token <prepare-github-token>`.
+``GITHUB_TOKEN`` – The GitHub personal access token is needed for to run the analysis. For more information on how to obtain a GitHub token, see instructions in :ref:`Prepare GitHub access token <prepare-github-token>`.

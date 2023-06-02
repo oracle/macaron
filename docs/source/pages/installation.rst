@@ -43,7 +43,7 @@ To verify your setup, go to the directory containing the downloaded ``run_macaro
 
 .. note:: In the first execution, this script will download the Macaron Docker image from ``ghcr.io/oracle-samples/macaron`` which can take some time. However, the next time you run it, the docker image available on your local host will be used.
 
-.. note:: By default, ``latest`` is used as the tag for the downloaded image. You could specify the tag you want to run by assigning the environment variable ``MACARON_IMAGE_TAG``. For example to run Macaron v0.1: ``MACARON_IMAGE_TAG=0.1 && ./run_macaron.sh macaron --help``
+.. note:: By default, ``latest`` is used as the tag for the downloaded image. You can choose a specific tag by assigning the environment variable ``MACARON_IMAGE_TAG``. For example to run Macaron v0.1.0 run: ``MACARON_IMAGE_TAG=v0.1.0 && ./run_macaron.sh --help``
 
 .. _prepare-github-token:
 
@@ -51,7 +51,7 @@ To verify your setup, go to the directory containing the downloaded ``run_macaro
 Prepare GitHub access token
 ---------------------------
 
-A GitHub access token is **always** required when using the **analyze** command (see example below) of Macaron as it may query information from GitHub API about public repositories. More information on this analyze command is can be found in :ref:`Using Guide <using-guide>`.
+A GitHub access token is **always** required when using the **analyze** command (see example below) of Macaron as it may query information from GitHub API about public repositories. More information on this analyze command is can be found in :ref:`Using Macaron <using-macaron>`.
 
 .. code-block:: shell
 
@@ -66,4 +66,4 @@ Ideally, the GitHub token must have **read** permissions for the repositories th
 
 After generating a GitHub personal-access token, please store its value in an environment variable called ``GITHUB_TOKEN``. This environment variable will be read by Macaron for its **analyze** command.
 
-Now that you have successfully downloaded and installed Macaron, please refer to :ref:`Using Guide <using-guide>` for the instructions on how to use Macaron.
+Now that you have successfully downloaded and installed Macaron, please refer to :ref:`Using Macaron <using-macaron>` for the instructions on how to use Macaron.
