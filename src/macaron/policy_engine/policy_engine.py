@@ -139,15 +139,25 @@ def _check_version(database_path: str) -> None:
             sys.exit(os.EX_DATAERR)
 
 
-def run_policy_engine(database_path: str, show_prelude: bool, policy_file: str) -> dict:
+def show_prelude(database_path: str) -> None:
+    """Show the Datalog prelude for a database and exit.
+
+    Parameters
+    ----------
+    database_path: str
+        The SQLite database file to show the prelude for.
+    """
+    prelude = get_generated(database_path)
+    logger.info("\n%s", prelude)
+
+
+def run_policy_engine(database_path: str, policy_file: str) -> dict:
     """Evaluate a policy based on configuration and exit.
 
     Parameters
     ----------
     database_path: str
         The SQLite database file to evaluate the policy against
-    show_prelude: bool
-        Just show the policy prelude and exit.
     policy_file: str
         The policy file to evaluate
 
@@ -156,11 +166,6 @@ def run_policy_engine(database_path: str, show_prelude: bool, policy_file: str) 
     dict
         The policy engine result.
     """
-    if show_prelude:
-        prelude = get_generated(database_path)
-        logger.info("\n%s", prelude)
-        return {}
-
     # TODO: uncomment the following line when the check is improved.
     # _check_version(database_path)
 
