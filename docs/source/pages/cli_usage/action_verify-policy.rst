@@ -14,7 +14,7 @@ Usage
 
 .. code-block:: shell
 
-    usage: ./run_macaron.sh verify-policy [-h] -d DATABASE -f FILE [-s]
+    usage: ./run_macaron.sh verify-policy [-h] -d DATABASE (-f FILE | -s)
 
 -------
 Options
