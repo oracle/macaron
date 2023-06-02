@@ -258,64 +258,66 @@ jobs:
     #     TWINE_PASSWORD=<PASSWORD>
     #     TWINE_REPOSITORY_URL=<REPOSITORY_URL>
 
+  # Uncomment the provenance generation once we have approval for running its third-party
+  # GitHub Actions. See https://github.com/slsa-framework/slsa-github-generator/issues/2204.
   # Generate the build provenance. The generator should be referenced with a semantic version.
   # The build will fail if we reference it using the commit SHA. To avoid using a pre-built
   # provenance generator which depends on an external service Rekor (https://github.com/sigstore/rekor)
   # we build this generator from source for now. For more information see this discussion:
   # https://github.com/slsa-framework/slsa-github-generator/issues/942
-  provenance:
-    needs: [build, release]
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.6.0
-    with:
-      base64-subjects: ${{ needs.build.outputs.artifacts-sha256 }}
-      compile-generator: true # Build the generator from source.
-      # Set private-repository to true for private repositories. Note that the repository name is
-      # uploaded as part of the transparency log entry on the public Rekor instance (rekor.sigstore.dev).
-      private-repository: false
-      provenance-name: macaron-${{ needs.release.outputs.release-version }}.intoto.jsonl
-    permissions:
-      actions: read # To read the workflow path.
-      id-token: write # To sign the provenance.
-      contents: write # To add assets to a release.
+  # provenance:
+  #   needs: [build, release]
+  #   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.6.0
+  #   with:
+  #     base64-subjects: ${{ needs.build.outputs.artifacts-sha256 }}
+  #     compile-generator: true # Build the generator from source.
+  #     # Set private-repository to true for private repositories. Note that the repository name is
+  #     # uploaded as part of the transparency log entry on the public Rekor instance (rekor.sigstore.dev).
+  #     private-repository: false
+  #     provenance-name: macaron-${{ needs.release.outputs.release-version }}.intoto.jsonl
+  #   permissions:
+  #     actions: read # To read the workflow path.
+  #     id-token: write # To sign the provenance.
+  #     contents: write # To add assets to a release.
 
   # Generate SLSA provenance for the Docker image and push it to the container registry.
-  provenance-docker:
-    needs: [release]
-    permissions:
-      actions: read # To detect the Github Actions environment.
-      id-token: write # To create OIDC tokens for signing.
-      packages: write # To upload provenance.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.6.0
-    with:
-      image: ${{ needs.release.outputs.image-name }}
-      digest: ${{ needs.release.outputs.image-digest }}
-      registry-username: ${{ github.actor }}
-    secrets:
-      registry-password: ${{ secrets.GITHUB_TOKEN }}
+  # provenance-docker:
+  #   needs: [release]
+  #   permissions:
+  #     actions: read # To detect the Github Actions environment.
+  #     id-token: write # To create OIDC tokens for signing.
+  #     packages: write # To upload provenance.
+  #   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.6.0
+  #   with:
+  #     image: ${{ needs.release.outputs.image-name }}
+  #     digest: ${{ needs.release.outputs.image-digest }}
+  #     registry-username: ${{ github.actor }}
+  #   secrets:
+  #     registry-password: ${{ secrets.GITHUB_TOKEN }}
 
   # Publish the SLSA provenance as the GitHub release asset.
-  publish_provenance:
-    needs: [release, provenance]
-    name: Publish provenance
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # To publish release notes.
-    steps:
+  # publish_provenance:
+  #   needs: [release, provenance]
+  #   name: Publish provenance
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write # To publish release notes.
+  #   steps:
 
-    - name: Check out repository
-      uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-      with:
-        fetch-depth: 0
+  #   - name: Check out repository
+  #     uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+  #     with:
+  #       fetch-depth: 0
 
-    - name: Download provenance
-      uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-      with:
-        name: ${{ needs.provenance.outputs.provenance-name }}
+  #   - name: Download provenance
+  #     uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+  #     with:
+  #       name: ${{ needs.provenance.outputs.provenance-name }}
 
-    - name: Upload provenance
-      run: gh release upload ${{ needs.release.outputs.release-tag }} ${{ needs.provenance.outputs.provenance-name }}
-      env:
-        GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+  #   - name: Upload provenance
+  #     run: gh release upload ${{ needs.release.outputs.release-tag }} ${{ needs.provenance.outputs.provenance-name }}
+  #     env:
+  #       GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
 
   # Publish docs to GitHub pages.
   github-pages:
