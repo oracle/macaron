@@ -1,6 +1,6 @@
 # Contributing to Macaron
 
-Oracle welcomes contributions to this repository from anyone.
+We welcome contributions to this repository from anyone.
 
 If you want to submit a pull request to fix a bug or enhance an existing feature, please first open an issue and link to that issue when you submit your pull request.
 
@@ -25,8 +25,8 @@ or `-s`, e.g.
 git commit --signoff
 ```
 
-Only pull requests from committers that can be verified as having signed the OCA
-can be accepted.
+Finally, make sure to sign your commits using a GPG key. See the instructions [here](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key) for more information. A green `verified` label will appear next to your commit on GitHub if it is successfully signed.
+
 
 ### Pull request process
 
@@ -58,18 +58,129 @@ can be accepted.
 
 - Each new feature or change PR should provide meaningful CI tests.
 - All the tests and security scanning checks in CI should pass and achieve the expected coverage.
+- To avoid unnecessary failures in GitHub Actions, make sure `make check` and `make test` work locally.
+See below for instructions to set up the development environment.
 
 ### Merging PRs
 
-- Before a PR is merged, all commits in the PR should be rebased into meaningful commits.
+- Before a PR is merged, all commits in the PR should meaningful commits.
   - Its commit message should be the same as the PR title if there only one commit.
-- PRs should be merged using the fast-forward only strategy.
-  - This ensures a linear commit history for the project.
-  - If the fast-forward merge does not work due to new commits on `main` (in this case the two branches diverge and the PR branch cannot be fast-forwarded), the PR branch should be rebased onto `main` first.
+- PRs should be merged using the `Squash and merge` strategy. In most cases a single commit with
+a detailed commit message body is preferred. Make sure to keep the `Signed-off-by` line in the body.
 
 ## Branching model
 
 * The `main` branch is only used for releases and the `staging` branch is used for development. We only merge to `main` when we want to create a new release for Macaron.
+
+## Setting up the development environment
+
+### Prerequisites
+
+- Python 3.11
+- Go 1.18
+- JDK 17
+
+### Prepare the environment
+
+To contribute to Macaron, clone the project and create a [virtual environment](https://docs.python.org/3/tutorial/venv.html) by using the [Makefile](https://www.gnu.org/software/make/manual/make.html#toc-An-Introduction-to-Makefiles):
+
+```bash
+make venv  # Create a new virtual environment in .venv folder using Python 3.11.
+```
+
+or for a specific version of Python:
+
+```bash
+PYTHON=python3.11 make venv  # Same virtual environment for a different Python version.
+```
+
+Activate the virtual environment:
+
+```bash
+. .venv/bin/activate
+```
+
+Finally, set up Macaron with all of its extras and initialize the local git hooks:
+
+```bash
+make setup
+```
+
+**Note**: Running the above command will prompt you for sudo access to install [Soufflé Datalog engine](https://github.com/souffle-lang/souffle). You can install Soufflé on your system before running `make setup` to avoid getting prompted.
+
+With that in place, you’re ready to build and contribute to Macaron!
+
+### Updating dependent packages
+
+It’s likely that during development you’ll add or update dependent packages in the `pyproject.toml` or `go.mod` files, which requires an update to the environment:
+
+```bash
+make upgrade
+```
+
+### Running Macaron as a Python package
+
+```bash
+usage: macaron [-h]
+```
+
+### Obtaining the GitHub personal access token
+Create your own Github access token (please refer to the instructions [here](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token)). When creating this token, make sure to assign **at least** `repo` permissions.
+
+The GitHub token should be stored in an **environment variable** called `GITHUB_TOKEN`. Macaron will read the value of this Github token from the environment variable **only** if we use the `analyze` command (see instructions below).
+
+### Running checks and tests locally
+
+#### Git hooks
+
+Using the pre-commit tool and its `.pre-commit-config.yaml` configuration, a number of [pre-commit hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#_committing_workflow_hooks) ensure that your code is formatted correctly.
+
+You can also run these hooks manually, which comes in very handy during daily development tasks. For example
+
+```bash
+make check-code
+```
+
+runs all the code checks (i.e. `bandit`, `flake8`, `pylint`, `mypy`, `actionlint`), whereas
+
+```bash
+make check
+```
+
+runs _all_ installed git hooks over your code. For more control over the code checks, the Makefile also implements the `check-bandit`, `check-flake8`, `check-lint`, `check-mypy`, and `check-actionlint` goals.
+
+
+#### Testing
+
+This repository is set up to test either standalone or as a pre-push git hook. Tests are stored in the `tests/` folder, and you can run them manually like so:
+```bash
+make test
+```
+which runs all unit tests in both your local environment. Test code and branch coverage is already tracked using [coverage](https://github.com/nedbat/coveragepy) and the [pytest-cov](https://github.com/pytest-dev/pytest-cov) plugin for pytest, and it measures how much code in the `src/package/` folder is covered by tests.
+
+You can also run integration tests locally:
+```bash
+make integration-test
+```
+
+Note that integration tests can take a long time to complete. Also the repositories that we clone for these tests will be stored under `output/` directory. If you do not remove/move this directory and run the pre-commit tool you might get errors.
+
+
+#### Generating documentation
+
+As mentioned above, all package code should make use of [Python docstrings](https://www.python.org/dev/peps/pep-0257/) in [reStructured text format](https://www.python.org/dev/peps/pep-0287/). Using these docstrings and the documentation template in the `docs/source/` folder, you can then generate proper documentation in different formats using the [Sphinx](https://github.com/sphinx-doc/sphinx/) tool:
+
+```bash
+make docs
+```
+
+This example generates documentation in HTML, which can then be found here:
+
+```bash
+open docs/_build/html/index.html
+```
+
+For more information see the instructions [here](docs/README.md).
 
 ## Code of conduct
 
