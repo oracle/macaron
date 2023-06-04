@@ -43,7 +43,7 @@ Take the same example as above, to disable analyzing `micronaut-core <https://gi
 
   ./run_macaron.sh analyze -rp https://github.com/micronaut-projects/micronaut-core -b 4.0.x -d 82d115b4901d10226552ac67b0a10978cd5bc603 --skip-deps
 
-.. note:: During the analysis, Macaron would generate report files into the output directory in the current workspace. To understand the structure of this directory please see :ref:`Output Files Guide <output_files_guide>`.
+.. note:: By default, Macaron would generate report files into the ``output`` directory in the current workspace. To understand the structure of this directory please see :ref:`Output Files Guide <output_files_guide>`.
 
 With the example above, the generated output reports can be seen here:
 
