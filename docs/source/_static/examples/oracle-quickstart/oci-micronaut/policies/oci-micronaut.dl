@@ -1,0 +1,49 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+
+#include "prelude.dl"
+
+/**
+ *  This is an example policy for OCI Micronaut project.
+ *  See: https://github.com/oracle-quickstart/oci-micronaut
+ */
+
+Policy("oci_micronaut_dependencies", parent, "") :-
+    check_passed(parent, "mcn_build_service_1"),
+    !violating_dependencies(parent, "mcn_build_service_1"), // There should not be any violating dependencies.
+    verify_provenance(dependency, "micronaut-projects/micronaut-core").
+
+// Projects that violate an expected check result.
+.decl violating_dependencies(parent: number, property: symbol)
+violating_dependencies(parent, property) :-
+    is_check(property),
+    transitive_dependency(parent, dependency), // note that since macaron by default does not traverse
+                                               // to transitive, dependencies, in most cases this is
+                                               // identical to `dependency(parent, repo)`.
+    !check_passed(dependency, property),
+    !exception_dependencies(dependency).
+
+// Exceptions for violating dependencies.
+.decl exception_dependencies(dependency: number)
+exception_dependencies(dependency) :-
+    is_repo(dependency, "mapstruct/mapstruct").
+
+exception_dependencies(dependency) :-
+    is_repo(dependency, "mysql/mysql-connector-j").
+
+exception_dependencies(dependency) :-
+    is_repo(dependency, "aws/aws-msk-iam-auth").
+
+exception_dependencies(dependency) :-
+    is_repo(dependency, "h2database/h2database").
+
+// Projects that we expect to generate a provenance.
+.decl verify_provenance(repo_num: number, repo_name: symbol)
+verify_provenance(repo_num, repo_name) :-
+    is_repo(repo_num, repo_name),
+    check_passed(repo_num, "mcn_provenance_level_three_1"),
+    check_passed(repo_num, "mcn_provenance_expectation_1").
+
+// Apply the policy.
+apply_policy_to("oci_micronaut_dependencies", repo) :- is_repo(repo, "oracle-quickstart/oci-micronaut").
