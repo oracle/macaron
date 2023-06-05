@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # Configuration file for the Sphinx documentation builder.
@@ -21,9 +21,7 @@ sys.path.insert(0, os.path.abspath("../../src"))
 year = datetime.datetime.now().year
 
 project = "Macaron"
-copyright = (  # noqa: A001
-    f"{year}, Oracle and/or its affiliates. " + "All rights reserved. Proprietary/Confidential - Oracle Internal"
-)
+copyright = f"{year}, Oracle and/or its affiliates. " + "All rights reserved"  # noqa: A001
 version = pkg_resources.get_distribution("macaron").version
 html_logo = "assets/macaron.svg"
 author = "Macaron"
