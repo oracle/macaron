@@ -41,7 +41,7 @@ The report files of Macaron (from using the :ref:`analyze action <analyze-action
 Unique result path
 ''''''''''''''''''
 
-Macaron creates a different directory under ``reports`` to store the report files for each target repository. This directory
+For each target repository, Macaron creates a directory under ``reports`` to store the report files. This directory
 path is formed from the git host name (e.g ``github.com``), the owner and the name of that
 repository. The final path is created using the following template:
 
@@ -51,14 +51,14 @@ repository. The final path is created using the following template:
 
 .. note:: The git host name has all occurrence of ``.`` in the URL replaced by ``_``.
 
-For example, when analyze the repository at `<https://github.com/micronaut-projects/micronaut-core>`_, Macaron will store
-the report files into ``<path_to_output>/reports/github_com/micronaut-projects/micronaut-core``.
+For example, the reports for `<https://github.com/micronaut-projects/micronaut-core>`_ repository will be stored under
+``<path_to_output>/reports/github_com/micronaut-projects/micronaut-core``.
 
 ''''''''''''
 Report types
 ''''''''''''
 
-There are currently three types of report that Macaron creates:
+Macaron creates three types of reports:
 
 #. JSON reports (``*.json`` files): contain the analysis result.
 #. HTML reports (``*.html`` files): display the analysis result in HTML pages.
