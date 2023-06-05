@@ -40,7 +40,7 @@ the requirements that are currently supported by Macaron.
    :header-rows: 1
 
    * - SLSA level
-     - SLSA spec
+     - SLSA spec v0.1
      - Concrete check
    * - 1
      - **Scripted build** - All build steps were fully defined in a “build script”.
