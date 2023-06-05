@@ -278,9 +278,10 @@ dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt:
 	echo $(SOURCE_DATE_EPOCH) > dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt
 
 # Build the HTML documentation from the package's source.
+DOCS_SOURCE := $(shell find docs/source -type f -name '*.rst')
 .PHONY: docs
 docs: docs/_build/html/index.html
-docs/_build/html/index.html:
+docs/_build/html/index.html: $(DOCS_SOURCE)
 	$(MAKE) -C docs/ html
 
 # Build the Docker image. The image name and tag are read from IMAGE_NAME and RELEASE_TAG
