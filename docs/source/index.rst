@@ -7,6 +7,7 @@
    :description: macaron - A CI/CD security analysis tool for supply-chain attacks
    :keywords: CI/CD, SLSA, supply-chain security
 
+=====================
 Macaron documentation
 =====================
 
@@ -20,15 +21,17 @@ To tackle these problems, `Supply-chain Levels for Software Artifacts (SLSA or "
 protection of the software supply-chain. Macaron can analyze a software
 repository to determine its SLSA level and provide supply-chain transparency of the build process.
 
+--------
 Overview
-********
+--------
 
 Macaron is an analysis tool which focuses on the build process for an artifact and its dependencies. As the SLSA requirements
 are at a high-level, Macaron first defines these requirements as specific
 concrete rules that can be checked automatically. Macaron has a customizable checker platform that makes it easy to define checks that depend on each other.
 
-Current checks in Macaron:
-**************************
+-------------------------
+Current checks in Macaron
+-------------------------
 
 The table below shows the current set of actionable checks derived from
 the requirements that are currently supported by Macaron.
@@ -64,8 +67,9 @@ the requirements that are currently supported by Macaron.
      - **Provenance expectation** - Check if the provenance meets an expectation.
      - The user can provide an expectation for the provenance as a CUE policy, which will be compared against the SLSA provenance.
 
+----------------------
 How does Macaron work?
-**********************
+----------------------
 
 .. _fig_macaron:
 
