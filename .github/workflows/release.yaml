@@ -177,7 +177,7 @@ jobs:
         SYFT_BIN: ${{ github.workspace }}/bin
         RELEASE_TAG: ${{ steps.release-info.outputs.release-tag }}
         RELEASE_VERSION: ${{ steps.release-info.outputs.release-version }}
-        SYFT_VERSION: 0.82.0
+        SYFT_VERSION: 0.83.0
       # We install Syft, which is an SBOM generator tool for Docker images, using the instructions from:
       #   https://github.com/anchore/syft#installation
       # We only generate SBOM in CycloneDX format.
