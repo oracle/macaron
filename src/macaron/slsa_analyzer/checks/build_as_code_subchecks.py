@@ -98,7 +98,7 @@ class BuildAsCodeSubchecks:
     def deploy_command(self) -> float:
         """Check for the use of deploy command to deploy."""
         check_certainty = 0.7
-        depends_on = [self.ci_parsed() > 0]
+        depends_on = [self.ci_parsed() > 0.0]
         if not all(depends_on):
             return self.failed_check
 
@@ -184,8 +184,6 @@ class BuildAsCodeSubchecks:
         # TODO: verify that deployment is legitimate and not a test
         check_certainty = 0.8
         depends_on = [self.ci_parsed() > 0]
-        # If this check has already been run on this repo, return certainty.
-        print("CI PARSED: ", self.ci_parsed())
         if not all(depends_on):
             return self.failed_check
 
