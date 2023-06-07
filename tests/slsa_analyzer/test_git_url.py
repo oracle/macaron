@@ -38,19 +38,19 @@ def test_get_repo_name_from_url() -> None:
         "",
         f"{repo_name}.git",
         f"{repo_name}.git/",
-        "ssh://git@github.com:8080/invalid/repo/name",
-        "https://gitlab.com/invalid/repo/name.git",
+        "ssh://git@github.com:8080/invalid/",
+        "https://gitlab.com/invalid.git",
         "ssh://git@github.com:8080/",
-        "git@gitlab.com:owner/invalid/repo/name.git",
+        "git@gitlab.com:owner",
     ]
 
     # Test get repo name
     assert all(git_url.get_repo_name_from_url(url) == repo_name for url in valid_git_urls)
-    assert not all(git_url.get_repo_name_from_url(url) for url in invalid_git_urls)
+    assert not any(git_url.get_repo_name_from_url(url) for url in invalid_git_urls)
 
     # Test get repo full name
     assert all(git_url.get_repo_full_name_from_url(url) == repo_full_name for url in valid_git_urls)
-    assert not all(git_url.get_repo_full_name_from_url(url) for url in invalid_git_urls)
+    assert not any(git_url.get_repo_full_name_from_url(url) for url in invalid_git_urls)
 
 
 def test_clone_remote_repo() -> None:
@@ -73,9 +73,9 @@ def test_is_remote_repo() -> None:
         f"https://github.com/owner/{repo_name}",
         f"git+https://github.com/owner/{repo_name}",
     ]
-    not_remote_urls = ["", "/home/user/repo"]
+    not_remote_urls = ["", "/home/user/repo", "https://invalid/repo/name"]
     assert all(git_url.is_remote_repo(url) for url in remote_urls)
-    assert not all(git_url.is_remote_repo(url) for url in not_remote_urls)
+    assert not any(git_url.is_remote_repo(url) for url in not_remote_urls)
 
 
 def test_clean_up_repo_path() -> None:
