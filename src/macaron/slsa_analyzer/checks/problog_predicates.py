@@ -4,7 +4,7 @@
 """Contains ProbLog predicates that return the results stored in the BuildAsCodeSubchecks dataclass."""
 from problog.extern import problog_export
 
-from macaron.slsa_analyzer.checks.bac_ import build_as_code_subchecks
+from macaron.slsa_analyzer.checks.build_as_code_subchecks import build_as_code_subcheck_results
 
 
 @problog_export("-int")  # type: ignore
@@ -16,7 +16,7 @@ def ci_parsed_check() -> float:
     Certainty
         The certainty of the check.
     """
-    return build_as_code_subchecks.ci_parsed
+    return build_as_code_subcheck_results.ci_parsed()
 
 
 @problog_export("-int")  # type: ignore
@@ -28,7 +28,7 @@ def deploy_action_check() -> float:
     Certainty
         The certainty of the check.
     """
-    return build_as_code_subchecks.deploy_action
+    return build_as_code_subcheck_results.deploy_action()
 
 
 @problog_export("-int")  # type: ignore
@@ -40,7 +40,7 @@ def deploy_command_check() -> float:
     Certainty
         The certainty of the check.
     """
-    return build_as_code_subchecks.deploy_command
+    return build_as_code_subcheck_results.deploy_command()
 
 
 @problog_export("-int")  # type: ignore
@@ -52,4 +52,4 @@ def deploy_kws_check() -> float:
     Certainty
         The certainty of the check.
     """
-    return build_as_code_subchecks.deploy_kws
+    return build_as_code_subcheck_results.deploy_kws()

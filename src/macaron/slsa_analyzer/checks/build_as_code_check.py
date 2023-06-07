@@ -4,31 +4,23 @@
 """This module contains the BuildAsCodeCheck class."""
 
 import logging
-import os
 
 from problog import get_evaluatable
 from problog.program import PrologString
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import Float, String
 
-from macaron.config.defaults import defaults
 from macaron.database.database_manager import ORMBase
 from macaron.database.table_definitions import CheckFactsTable
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, NoneBuildTool
-from macaron.slsa_analyzer.build_tool.pip import Pip
-from macaron.slsa_analyzer.checks import bac_
+from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
+from macaron.slsa_analyzer.checks import build_as_code_subchecks
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
+from macaron.slsa_analyzer.checks.build_as_code_subchecks import BuildAsCodeSubchecks
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
-from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
-from macaron.slsa_analyzer.ci_service.circleci import CircleCI
-from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType
-from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
-from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
-from macaron.slsa_analyzer.ci_service.travis import Travis
+from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
-from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -43,196 +35,6 @@ class BuildAsCodeTable(CheckFactsTable, ORMBase):
     deploy_command: Mapped[str] = mapped_column(String, nullable=True)
     build_status_url: Mapped[str] = mapped_column(String, nullable=True)
     confidence_score: Mapped[float] = mapped_column(Float, nullable=True)
-
-
-def has_deploy_command(commands: list[list[str]], build_tool: BaseBuildTool) -> str:
-    """Check if the bash command is a build and deploy command."""
-    # Account for Python projects having separate tools for packaging and publishing.
-    deploy_tool = build_tool.publisher if build_tool.publisher else build_tool.builder
-    for com in commands:
-
-        # Check for empty or invalid commands.
-        if not com or not com[0]:
-            continue
-        # The first argument in a bash command is the program name.
-        # So first check that the program name is a supported build tool name.
-        # We need to handle cases where the first argument is a path to the program.
-        cmd_program_name = os.path.basename(com[0])
-        if not cmd_program_name:
-            logger.debug("Found invalid program name %s.", com[0])
-            continue
-
-        check_build_commands = any(build_cmd for build_cmd in deploy_tool if build_cmd == cmd_program_name)
-
-        # Support the use of interpreters like Python that load modules, i.e., 'python -m pip install'.
-        check_module_build_commands = any(
-            interpreter == cmd_program_name
-            and com[1]
-            and com[1] in build_tool.interpreter_flag
-            and com[2]
-            and com[2] in deploy_tool
-            for interpreter in build_tool.interpreter
-        )
-        prog_name_index = 2 if check_module_build_commands else 0
-
-        if check_build_commands or check_module_build_commands:
-            # Check the arguments in the bash command for the deploy goals.
-            # If there are no deploy args for this build tool, accept as deploy command.
-            if not build_tool.deploy_arg:
-                logger.info("No deploy arguments required. Accept %s as deploy command.", str(com))
-                return str(com)
-
-            for word in com[(prog_name_index + 1) :]:
-                # TODO: allow plugin versions in arguments, e.g., maven-plugin:1.6.8:deploy.
-                if word in build_tool.deploy_arg:
-                    logger.info("Found deploy command %s.", str(com))
-                    return str(com)
-    return ""
-
-
-def ci_parsed_subcheck(ci_info: CIInfo) -> dict:
-    """Check whether parsing is supported for this CI service's CI config files."""
-    check_certainty = 1
-
-    justification: list[str | dict[str, str]] = ["The CI workflow files for this CI service are parsed."]
-
-    if ci_info["bash_commands"]:
-        return {"certainty": check_certainty, "justification": justification}
-    return {"certainty": 0, "justification": [{"The CI workflow files for this CI service aren't parsed."}]}
-
-
-def deploy_action_subcheck(
-    ctx: AnalyzeContext, ci_info: CIInfo, ci_service: BaseCIService, build_tool: BaseBuildTool
-) -> dict:
-    """Check for use of a trusted Github Actions workflow to publish/deploy."""
-    # TODO: verify that deployment is legitimate and not a test
-    check_certainty = 0.8
-
-    if isinstance(build_tool, Pip):
-        trusted_deploy_actions = defaults.get_list("builder.pip.ci.deploy", "github_actions", fallback=[])
-
-        for callee in ci_info["callgraph"].bfs():
-            workflow_name = callee.name.split("@")[0]
-
-            if not workflow_name or callee.node_type not in [
-                GHWorkflowType.EXTERNAL,
-                GHWorkflowType.REUSABLE,
-            ]:
-                logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
-                continue
-            if workflow_name in trusted_deploy_actions:
-                trigger_link = ci_service.api_client.get_file_link(
-                    ctx.repo_full_name,
-                    ctx.commit_sha,
-                    ci_service.api_client.get_relative_path_of_workflow(os.path.basename(callee.caller_path)),
-                )
-                deploy_action_source_link = ci_service.api_client.get_file_link(
-                    ctx.repo_full_name, ctx.commit_sha, callee.caller_path
-                )
-
-                html_url = ci_service.has_latest_run_passed(
-                    ctx.repo_full_name,
-                    ctx.branch_name,
-                    ctx.commit_sha,
-                    ctx.commit_date,
-                    os.path.basename(callee.caller_path),
-                )
-
-                # TODO: include in the justification multiple cases of external action usage
-                justification: list[str | dict[str, str]] = [
-                    {
-                        "To deploy": deploy_action_source_link,
-                        "The build is triggered by": trigger_link,
-                    },
-                    f"Deploy action: {workflow_name}",
-                    {"The status of the build can be seen at": html_url}
-                    if html_url
-                    else "However, could not find a passing workflow run.",
-                ]
-
-                return {
-                    "certainty": check_certainty,
-                    "justification": justification,
-                    "deploy_command": workflow_name,
-                    "trigger_link": trigger_link,
-                    "deploy_action_source_link": deploy_action_source_link,
-                    "html_url": html_url,
-                }
-
-    return {"certainty": 0, "justification": []}
-
-
-def deploy_command_subcheck(
-    ctx: AnalyzeContext, ci_info: CIInfo, ci_service: BaseCIService, build_tool: BaseBuildTool
-) -> dict:
-    """Check for the use of deploy command to deploy."""
-    check_certainty = 0.7
-    for bash_cmd in ci_info["bash_commands"]:
-        deploy_cmd = has_deploy_command(bash_cmd["commands"], build_tool)
-        if deploy_cmd:
-            # Get the permalink and HTML hyperlink tag of the CI file that triggered the bash command.
-            trigger_link = ci_service.api_client.get_file_link(
-                ctx.repo_full_name,
-                ctx.commit_sha,
-                ci_service.api_client.get_relative_path_of_workflow(os.path.basename(bash_cmd["CI_path"])),
-            )
-            # Get the permalink of the source file of the bash command.
-            bash_source_link = ci_service.api_client.get_file_link(
-                ctx.repo_full_name, ctx.commit_sha, bash_cmd["caller_path"]
-            )
-
-            html_url = ci_service.has_latest_run_passed(
-                ctx.repo_full_name,
-                ctx.branch_name,
-                ctx.commit_sha,
-                ctx.commit_date,
-                os.path.basename(bash_cmd["CI_path"]),
-            )
-
-            justification: list[str | dict[str, str]] = [
-                {
-                    f"The target repository uses build tool {build_tool.name} to deploy": bash_source_link,
-                    "The build is triggered by": trigger_link,
-                },
-                f"Deploy command: {deploy_cmd}",
-                {"The status of the build can be seen at": html_url}
-                if html_url
-                else "However, could not find a passing workflow run.",
-            ]
-            return {
-                "certainty": check_certainty,
-                "justification": justification,
-                "deploy_cmd": deploy_cmd,
-                "trigger_link": trigger_link,
-                "bash_source_link": bash_source_link,
-                "html_url": html_url,
-            }
-    return {"certainty": 0, "justification": ""}
-
-
-def deploy_kws_subcheck(ctx: AnalyzeContext, ci_service: BaseCIService, build_tool: BaseBuildTool) -> dict:
-    """Check for the use of deploy keywords to deploy."""
-    check_certainty = 0.6
-    # We currently don't parse these CI configuration files.
-    # We just look for a keyword for now.
-    for unparsed_ci in (Jenkins, Travis, CircleCI, GitLabCI):
-        if isinstance(ci_service, unparsed_ci):
-            if build_tool.ci_deploy_kws[ci_service.name]:
-                deploy_kw, config_name = ci_service.has_kws_in_config(
-                    build_tool.ci_deploy_kws[ci_service.name], repo_path=ctx.repo_path
-                )
-                if not config_name:
-                    return {"certainty": 0, "justification": ""}
-
-                justification: list[str | dict[str, str]] = [f"The target repository uses {deploy_kw} to deploy."]
-
-                return {
-                    "certainty": check_certainty,
-                    "justification": justification,
-                    "deploy_kw": deploy_kw,
-                    "config_name": config_name,
-                }
-    return {"certainty": 0, "justification": []}
 
 
 class BuildAsCodeCheck(BaseCheck):
@@ -290,65 +92,8 @@ class BuildAsCodeCheck(BaseCheck):
                 if isinstance(ci_service, NoneCIService):
                     continue
 
-                # Run subchecks
-                ci_parsed = ci_parsed_subcheck(ci_info)
-                deploy_action = deploy_action_subcheck(
-                    ctx=ctx, ci_info=ci_info, ci_service=ci_service, build_tool=build_tool
-                )
-                deploy_command = deploy_command_subcheck(
-                    ctx=ctx, ci_info=ci_info, ci_service=ci_service, build_tool=build_tool
-                )
-                deploy_kws = deploy_kws_subcheck(ctx=ctx, ci_service=ci_service, build_tool=build_tool)
-
-                # Compile justifications from subchecks
-                for subcheck in [ci_parsed, deploy_action, deploy_command, deploy_kws]:
-                    check_result["justification"].extend(subcheck["justification"])
-
-                deploy_source_link = deploy_cmd = html_url = trigger_link = ""
-
-                # TODO: do we want to populate this information regardless of whether the check passes or not?
-                if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
-
-                    if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
-                        predicate = ci_info["provenances"][0]["predicate"]
-                        predicate["buildType"] = f"Custom {ci_service.name}"
-                        predicate["invocation"]["configSource"][
-                            "uri"
-                        ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
-                        predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
-
-                        # TODO: Change this. Need a better method for deciding which of the values to store.
-                        # Could decide based on preliminary queries in the prolog string.
-                        if deploy_action["certainty"]:
-                            deploy_source_link = deploy_action["deploy_action_source_link"]
-                            deploy_cmd = deploy_action["deploy_command"]
-                            html_url = deploy_action["html_url"]
-                            trigger_link = deploy_action["trigger_link"]
-                            predicate["metadata"]["buildInvocationId"] = html_url
-                            predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
-                            predicate["builder"]["id"] = deploy_source_link
-                        elif deploy_command["certainty"]:
-                            deploy_source_link = deploy_command["deploy_action_source_link"]
-                            deploy_cmd = deploy_command["deploy_command"]
-                            html_url = deploy_command["html_url"]
-                            predicate["metadata"]["buildInvocationId"] = html_url
-                            predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
-                            predicate["builder"]["id"] = deploy_source_link
-                        elif deploy_kws["certainty"]:
-                            deploy_cmd = deploy_kws["config_name"]
-                            predicate["builder"]["id"] = deploy_command
-                            predicate["invocation"]["configSource"]["entryPoint"] = deploy_command
-
-                # TODO: BuildAsCodeTable should contain the results from subchecks and the confidence scores.
-                # TODO: just decide on one deploy method to pass to the database.
-
                 # Populate the BuildAsCodeSubchecks object with the certainty results from subchecks.
-                bac_.build_as_code_subchecks = bac_.BuildAsCodeSubchecks(
-                    ci_parsed=ci_parsed["certainty"],
-                    deploy_action=deploy_action["certainty"],
-                    deploy_command=deploy_command["certainty"],
-                    deploy_kws=deploy_kws["certainty"],
-                )
+                build_as_code_subchecks.build_as_code_subcheck_results = BuildAsCodeSubchecks(ctx=ctx, ci_info=ci_info)
 
                 prolog_string = PrologString(
                     """
@@ -377,10 +122,10 @@ class BuildAsCodeCheck(BaseCheck):
                 confidence_score = 0.0
                 result = get_evaluatable().create_from(prolog_string).evaluate()
                 for key, value in result.items():
+                    print(key, value)
                     if str(key) == "build_as_code_check":
                         confidence_score = float(value)
-                    # logger.info("%s : %s", key, value)
-                results = vars(bac_.build_as_code_subchecks)
+                results = vars(build_as_code_subchecks.build_as_code_subcheck_results)
 
                 # TODO: Ideas:
                 #  - Query the intermediate checks to construct the check_result table for the highest
@@ -394,17 +139,52 @@ class BuildAsCodeCheck(BaseCheck):
                 subcheck_results: list[str | dict[str, str]] = [results]
                 check_result["justification"].extend(subcheck_results)
 
+                # TODO: BuildAsCodeTable should contain the results from subchecks and the confidence scores.
+                # TODO: determine a better way to save these values to the database.
+
+                # if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
+
+                #     if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
+                #         predicate = ci_info["provenances"][0]["predicate"]
+                #         predicate["buildType"] = f"Custom {ci_service.name}"
+                #         predicate["invocation"]["configSource"][
+                #             "uri"
+                #         ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
+                #         predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
+
+                #         # TODO: Change this. Need a better method for deciding which of the values to store.
+                #         # Could decide based on preliminary queries in the prolog string.
+                #         if deploy_action["certainty"]:
+                #             deploy_source_link = deploy_action["deploy_action_source_link"]
+                #             deploy_cmd = deploy_action["deploy_command"]
+                #             html_url = deploy_action["html_url"]
+                #             trigger_link = deploy_action["trigger_link"]
+                #             predicate["metadata"]["buildInvocationId"] = html_url
+                #             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
+                #             predicate["builder"]["id"] = deploy_source_link
+                #         elif deploy_command["certainty"]:
+                #             deploy_source_link = deploy_command["deploy_action_source_link"]
+                #             deploy_cmd = deploy_command["deploy_command"]
+                #             html_url = deploy_command["html_url"]
+                #             predicate["metadata"]["buildInvocationId"] = html_url
+                #             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
+                #             predicate["builder"]["id"] = deploy_source_link
+                #         elif deploy_kws["certainty"]:
+                #             deploy_cmd = deploy_kws["config_name"]
+                #             predicate["builder"]["id"] = deploy_command
+                #             predicate["invocation"]["configSource"]["entryPoint"] = deploy_command
+
                 # TODO: Return subcheck certainties
-                check_result["result_tables"] = [
-                    BuildAsCodeTable(
-                        build_tool_name=build_tool.name,
-                        ci_service_name=ci_service.name,
-                        build_trigger=trigger_link,
-                        deploy_command=deploy_cmd,
-                        build_status_url=html_url,
-                        confidence_score=confidence_score,
-                    )
-                ]
+                # check_result["result_tables"] = [
+                #     BuildAsCodeTable(
+                #         build_tool_name=build_tool.name,
+                #         ci_service_name=ci_service.name,
+                #         build_trigger=trigger_link,
+                #         deploy_command=deploy_cmd,
+                #         build_status_url=html_url,
+                #         confidence_score=confidence_score,
+                #     )
+                # ]
 
                 # Check whether the confidence score is greater than the minimum threshold for this check.
                 if confidence_score >= self.confidence_score_threshold:
