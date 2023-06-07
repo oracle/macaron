@@ -6,7 +6,7 @@
 import logging
 
 from problog import get_evaluatable
-from problog.program import PrologString
+from problog.program import PrologString, Term
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import Float, String
 
@@ -86,15 +86,16 @@ class BuildAsCodeCheck(BaseCheck):
         # Checking if a build tool is discovered for this repo.
         if build_tool and not isinstance(build_tool, NoneBuildTool):
             for ci_info in ci_services:
-
+                confidence_score = 0.0
                 ci_service = ci_info["service"]
                 # Checking if a CI service is discovered for this repo.
                 if isinstance(ci_service, NoneCIService):
                     continue
 
-                # Populate the BuildAsCodeSubchecks object with the certainty results from subchecks.
+                # Initialize the BuildAsCodeSubchecks object with the AnalyzeContext.
                 build_as_code_subchecks.build_as_code_subcheck_results = BuildAsCodeSubchecks(ctx=ctx, ci_info=ci_info)
 
+                # ProbLog rules to be evaluated.
                 prolog_string = PrologString(
                     """
                     :- use_module('src/macaron/slsa_analyzer/checks/problog_predicates.py').
@@ -114,18 +115,20 @@ class BuildAsCodeCheck(BaseCheck):
 
                     build_as_code_check :- deploy_action_certainty; deploy_command_certainty; deploy_kws_certainty.
 
+                    query(deploy_command_certainty).
+                    query(deploy_action_certainty).
+                    query(deploy_kws_certainty).
                     query(build_as_code_check).
                     """
                 )
 
                 # TODO: query each of the methods, and take the values from the one with the highest confidence.
-                confidence_score = 0.0
-                result = get_evaluatable().create_from(prolog_string).evaluate()
-                for key, value in result.items():
-                    print(key, value)
-                    if str(key) == "build_as_code_check":
-                        confidence_score = float(value)
-                results = vars(build_as_code_subchecks.build_as_code_subcheck_results)
+
+                # Convert the result dictionary from Term:float to str:float
+                term_result: dict[Term, float] = get_evaluatable().create_from(prolog_string).evaluate()
+                result: dict[str, float] = {str(k): v for k, v in term_result.items()}
+
+                confidence_score = result["build_as_code_check"]
 
                 # TODO: Ideas:
                 #  - Query the intermediate checks to construct the check_result table for the highest
@@ -135,9 +138,6 @@ class BuildAsCodeCheck(BaseCheck):
                 #  - Print intermediate proofs?
 
                 check_result["confidence_score"] = confidence_score
-
-                subcheck_results: list[str | dict[str, str]] = [results]
-                check_result["justification"].extend(subcheck_results)
 
                 # TODO: BuildAsCodeTable should contain the results from subchecks and the confidence scores.
                 # TODO: determine a better way to save these values to the database.
