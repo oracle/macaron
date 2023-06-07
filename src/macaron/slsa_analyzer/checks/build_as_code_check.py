@@ -16,7 +16,7 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 from macaron.slsa_analyzer.checks import build_as_code_subchecks
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.build_as_code_subchecks import BuildAsCodeSubchecks
+from macaron.slsa_analyzer.checks.build_as_code_subchecks import BuildAsCodeSubchecks, DeploySubcheckResults
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.registry import registry
@@ -122,69 +122,57 @@ class BuildAsCodeCheck(BaseCheck):
                     """
                 )
 
-                # TODO: query each of the methods, and take the values from the one with the highest confidence.
-
                 # Convert the result dictionary from Term:float to str:float
                 term_result: dict[Term, float] = get_evaluatable().create_from(prolog_string).evaluate()
-                result: dict[str, float] = {str(k): v for k, v in term_result.items()}
-
+                result: dict[str, float] = {str(key): value for key, value in term_result.items()}
+                deploy_methods = {
+                    "deploy_command": result["deploy_command_certainty"],
+                    "deploy_action": result["deploy_action_certainty"],
+                    "deploy_kws": result["deploy_kws_certainty"],
+                }
+                deploy_methods_valid = {key: value for key, value in deploy_methods.items() if value != 0}
                 confidence_score = result["build_as_code_check"]
-
-                # TODO: Ideas:
-                #  - Query the intermediate checks to construct the check_result table for the highest
-                #       confidence score?
-                #  - Can we find the evidence that contributes the most to this check to output the confidence
-                #       scores for it, and populate the check_result table.
-                #  - Print intermediate proofs?
-
                 check_result["confidence_score"] = confidence_score
 
-                # TODO: BuildAsCodeTable should contain the results from subchecks and the confidence scores.
-                # TODO: determine a better way to save these values to the database.
+                if deploy_methods_valid.values():
+                    # Determine the deployment method with the highest certainty score.
+                    highest_certainty = max(deploy_methods_valid, key=deploy_methods_valid.__getitem__)
+                    deploy_method = build_as_code_subchecks.build_as_code_subcheck_results.get_subcheck_results(
+                        highest_certainty
+                    )
 
-                # if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
+                    if isinstance(deploy_method, DeploySubcheckResults):
+                        if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
+                            predicate = ci_info["provenances"][0]["predicate"]
+                            predicate["buildType"] = f"Custom {ci_service.name}"
+                            predicate["invocation"]["configSource"][
+                                "uri"
+                            ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
+                            predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
 
-                #     if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
-                #         predicate = ci_info["provenances"][0]["predicate"]
-                #         predicate["buildType"] = f"Custom {ci_service.name}"
-                #         predicate["invocation"]["configSource"][
-                #             "uri"
-                #         ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
-                #         predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
+                            predicate["metadata"]["buildInvocationId"] = deploy_method.html_url
+                            predicate["builder"]["id"] = deploy_method.source_link
+                            predicate["invocation"]["configSource"]["entryPoint"] = deploy_method.trigger_link
 
-                #         # TODO: Change this. Need a better method for deciding which of the values to store.
-                #         # Could decide based on preliminary queries in the prolog string.
-                #         if deploy_action["certainty"]:
-                #             deploy_source_link = deploy_action["deploy_action_source_link"]
-                #             deploy_cmd = deploy_action["deploy_command"]
-                #             html_url = deploy_action["html_url"]
-                #             trigger_link = deploy_action["trigger_link"]
-                #             predicate["metadata"]["buildInvocationId"] = html_url
-                #             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
-                #             predicate["builder"]["id"] = deploy_source_link
-                #         elif deploy_command["certainty"]:
-                #             deploy_source_link = deploy_command["deploy_action_source_link"]
-                #             deploy_cmd = deploy_command["deploy_command"]
-                #             html_url = deploy_command["html_url"]
-                #             predicate["metadata"]["buildInvocationId"] = html_url
-                #             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
-                #             predicate["builder"]["id"] = deploy_source_link
-                #         elif deploy_kws["certainty"]:
-                #             deploy_cmd = deploy_kws["config_name"]
-                #             predicate["builder"]["id"] = deploy_command
-                #             predicate["invocation"]["configSource"]["entryPoint"] = deploy_command
+                            if highest_certainty == "deploy_kws":
+                                predicate["builder"]["id"] = deploy_method.config_name
+                                predicate["invocation"]["configSource"]["entryPoint"] = deploy_method.config_name
 
-                # TODO: Return subcheck certainties
-                # check_result["result_tables"] = [
-                #     BuildAsCodeTable(
-                #         build_tool_name=build_tool.name,
-                #         ci_service_name=ci_service.name,
-                #         build_trigger=trigger_link,
-                #         deploy_command=deploy_cmd,
-                #         build_status_url=html_url,
-                #         confidence_score=confidence_score,
-                #     )
-                # ]
+                        check_result["result_tables"] = [
+                            BuildAsCodeTable(
+                                build_tool_name=build_tool.name,
+                                ci_service_name=ci_service.name,
+                                build_trigger=deploy_method.trigger_link,
+                                deploy_command=deploy_method.deploy_cmd,
+                                build_status_url=deploy_method.html_url,
+                                confidence_score=confidence_score,
+                            )
+                        ]
+
+                # TODO: compile all justifications
+                # check_result["justification"].append()
+
+                # TODO: Investigate using proofs
 
                 # Check whether the confidence score is greater than the minimum threshold for this check.
                 if confidence_score >= self.confidence_score_threshold:

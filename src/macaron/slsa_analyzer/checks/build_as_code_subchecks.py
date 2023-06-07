@@ -6,6 +6,8 @@
 import logging
 import os
 
+from attr import dataclass
+
 from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
@@ -65,6 +67,19 @@ def has_deploy_command(commands: list[list[str]], build_tool: BaseBuildTool) -> 
     return ""
 
 
+@dataclass
+class DeploySubcheckResults:
+    """DataClass containing information required from deploy command subchecks."""
+
+    certainty: float = 0.0
+    justification: list[str | dict[str, str]] = [""]
+    deploy_cmd: str = ""
+    trigger_link: str = ""
+    source_link: str = ""
+    html_url: str = ""
+    config_name: str = ""
+
+
 class BuildAsCodeSubchecks:
     """Class for storing the results from the BuildAsCodeCheck subchecks."""
 
@@ -73,9 +88,10 @@ class BuildAsCodeSubchecks:
         self.ctx = ctx
         self.build_tool: BaseBuildTool = ctx.dynamic_data["build_spec"].get("tool")  # type: ignore
         self.ci_services = ctx.dynamic_data["ci_services"]
-        self.check_results: dict = {}  # Update this with each check.
+        self.check_results: dict[str, dict | DeploySubcheckResults] = {}  # Update this with each check.
         self.ci_info = ci_info
         self.ci_service = ci_info["service"]
+        # Certainty value to be returned if a subcheck fails.
         self.failed_check = 0.0
 
         # TODO: Make subcheck functions available to other checks.
@@ -88,9 +104,8 @@ class BuildAsCodeSubchecks:
         check_certainty = 1.0
         # If this check has already been run on this repo, return certainty.
 
-        justification: list[str | dict[str, str]] = ["The CI workflow files for this CI service are parsed."]
-
         if self.ci_info["bash_commands"]:
+            justification: list[str | dict[str, str]] = ["The CI workflow files for this CI service are parsed."]
             self.check_results["ci_parsed"] = {"certainty": check_certainty, "justification": justification}
             return check_certainty
         return self.failed_check
@@ -135,14 +150,14 @@ class BuildAsCodeSubchecks:
                     else "However, could not find a passing workflow run.",
                 ]
 
-                self.check_results["deploy_command"] = {
-                    "certainty": check_certainty,
-                    "justification": justification,
-                    "deploy_cmd": deploy_cmd,
-                    "trigger_link": trigger_link,
-                    "bash_source_link": bash_source_link,
-                    "html_url": html_url,
-                }
+                self.check_results["deploy_command"] = DeploySubcheckResults(
+                    certainty=check_certainty,
+                    justification=justification,
+                    deploy_cmd=deploy_cmd,
+                    trigger_link=trigger_link,
+                    source_link=bash_source_link,
+                    html_url=html_url,
+                )
 
                 return check_certainty
         return self.failed_check
@@ -169,12 +184,12 @@ class BuildAsCodeSubchecks:
 
                     justification: list[str | dict[str, str]] = [f"The target repository uses {deploy_kw} to deploy."]
 
-                    self.check_results["deploy_kws"] = {
-                        "certainty": check_certainty,
-                        "justification": justification,
-                        "deploy_kw": deploy_kw,
-                        "config_name": config_name,
-                    }
+                    self.check_results["deploy_kws"] = DeploySubcheckResults(
+                        certainty=check_certainty,
+                        justification=justification,
+                        deploy_cmd=deploy_kw,
+                        config_name=config_name,
+                    )
                     return check_certainty
 
         return self.failed_check
@@ -229,18 +244,22 @@ class BuildAsCodeSubchecks:
                         else "However, could not find a passing workflow run.",
                     ]
 
-                    self.check_results["deploy_action"] = {
-                        "certainty": check_certainty,
-                        "justification": justification,
-                        "deploy_command": workflow_name,
-                        "trigger_link": trigger_link,
-                        "deploy_action_source_link": deploy_action_source_link,
-                        "html_url": html_url,
-                    }
+                    self.check_results["deploy_action"] = DeploySubcheckResults(
+                        certainty=check_certainty,
+                        justification=justification,
+                        deploy_cmd=workflow_name,
+                        trigger_link=trigger_link,
+                        source_link=deploy_action_source_link,
+                        html_url=html_url,
+                    )
 
                     return check_certainty
 
         return self.failed_check
+
+    def get_subcheck_results(self, subcheck_name: str) -> dict | DeploySubcheckResults:
+        """Return the results for a particular subcheck."""
+        return self.check_results[subcheck_name]
 
 
 build_as_code_subcheck_results: BuildAsCodeSubchecks = None  # type: ignore # pylint: disable=invalid-name
