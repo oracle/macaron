@@ -6,3 +6,19 @@
 
 class MacaronError(Exception):
     """The base class for Macaron errors."""
+
+
+class InvalidExpectationError(MacaronError):
+    """Happens when the provenance expectation is invalid."""
+
+
+class ExpectationRuntimeError(MacaronError):
+    """Happens if there are errors while validating the expectation against a target."""
+
+
+class CUEExpectationError(MacaronError):
+    """Happens when the CUE expectation is invalid."""
+
+
+class CUERuntimeError(MacaronError):
+    """Happens when there are errors in CUE expectation validation."""

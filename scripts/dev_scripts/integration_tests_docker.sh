@@ -77,19 +77,19 @@ echo "The CUE expectation file is provided as a single file path."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
-CUE_POLICY=$WORKSPACE/tests/policy_engine/resources/policies/urllib3/urllib3.cue
-$RUN_MACARON_SCRIPT analyze -pe $CUE_POLICY -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
+EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/urllib3_PASS.cue
+$RUN_MACARON_SCRIPT analyze -pe $EXPECTATION_FILE -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
 $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
-echo "The CUE expectation file and datalog policy should be found via the directory path."
+echo "The CUE expectation file should be found via the directory path."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3_cue_datalog.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
-POLICY_DIR=$WORKSPACE/tests/policy_engine/resources/policies/urllib3/
-$RUN_MACARON_SCRIPT analyze -pe $POLICY_DIR -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
+EXPECTATION_DIR=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/
+$RUN_MACARON_SCRIPT analyze -pe $EXPECTATION_DIR -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
 $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
@@ -100,16 +100,6 @@ echo -e "-----------------------------------------------------------------------
 JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_datalog.json
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
-
-$RUN_MACARON_SCRIPT analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
-
-$COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Test verifying YAML-based provenance expectation."
-echo -e "----------------------------------------------------------------------------------\n"
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/slsa_verifier.yaml
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_yaml_poc.json
 
 $RUN_MACARON_SCRIPT analyze -pe $POLICY_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 

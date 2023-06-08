@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This modules contains tests for the provenance available check."""
@@ -43,7 +43,7 @@ class MockAnalyzeContext(AnalyzeContext):
             build_spec=BuildSpec(tool=NoneBuildTool()),
             ci_services=[],
             is_inferred_prov=True,
-            policy=None,
+            expectation=None,
         )
         self.wrapper_path = ""
         self.output_dir = ""

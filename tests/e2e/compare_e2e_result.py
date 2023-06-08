@@ -115,30 +115,7 @@ def compare_result_json(result_path: str, expect_path: str) -> int:
         fail_count = 0
         fail_count += compare_target_info(result["target"]["info"], expected["target"]["info"])
         fail_count += compare_check_results(result["target"]["checks"], expected["target"]["checks"])
-        fail_count += compare_policy_results(result["policies_failed"], expected["policies_failed"])
-        fail_count += compare_policy_results(result["policies_passed"], expected["policies_passed"])
         return fail_count
-
-
-def compare_policy_results(result: list, expected: list) -> int:
-    """Compare the policy results in policies_failed" and policies_passed attributes."""
-    res = set(result)
-    exp = set(expected)
-    fail_count = 0
-    if len(res) == len(exp):
-        if (fails := len(res.difference(exp))) > 0:
-            fail_count += fails
-    else:
-        fail_count += abs(len(res) - len(exp))
-
-    if fail_count > 0:
-        logger.error(
-            "Results do not match in %s item(s): Result is [%s] but expected [%s]",
-            fail_count,
-            ",".join(res),
-            ",".join(exp),
-        )
-    return fail_count
 
 
 def main() -> None:

@@ -1,11 +1,11 @@
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module checks if a SLSA provenances conforms to a given policy."""
+"""This module checks if a SLSA provenances conforms to a given expectation."""
 
 import logging
 
-from macaron.policy_engine.policy import PolicyRuntimeError
+from macaron.errors import ExpectationRuntimeError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckResultType
 from macaron.slsa_analyzer.checks.check_result import CheckResult
@@ -17,19 +17,19 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 logger: logging.Logger = logging.getLogger(__name__)
 
 # Note: the ORM mappings for the results of this check are separately created per
-# policy object by calling policy.get_policy_table() in the body of the check.
+# expectation object by calling expectation.get_policy_table() in the body of the check.
 # There is no need to declare mappings explicitly again.
 
 
 class ProvenanceL3ContentCheck(BaseCheck):
-    """This check compares a SLSA provenance with a given policy and checks whether they match."""
+    """This check compares a SLSA provenance with a given expectation and checks whether they match."""
 
     def __init__(self) -> None:
         """Initialize instance."""
         check_id = "mcn_provenance_expectation_1"
         description = "Check whether the SLSA provenance for the produced artifact conforms to the expected value."
         depends_on: list[tuple[str, CheckResultType]] = [("mcn_provenance_level_three_1", CheckResultType.PASSED)]
-        eval_reqs = [ReqName.POLICY]
+        eval_reqs = [ReqName.EXPECTATION]
         super().__init__(
             check_id=check_id,
             description=description,
@@ -53,10 +53,10 @@ class ProvenanceL3ContentCheck(BaseCheck):
         CheckResultType
             The result type of the check (e.g. PASSED).
         """
-        policy = ctx.dynamic_data["policy"]
-        if not policy:
-            check_result["justification"].append("No policy defined for this repository.")
-            logger.info("%s check was unable to find any policies.", self.check_id)
+        expectation = ctx.dynamic_data["expectation"]
+        if not expectation:
+            check_result["justification"].append("No expectation defined for this repository.")
+            logger.info("%s check was unable to find any expectations.", self.check_id)
             return CheckResultType.UNKNOWN
 
         ci_services = ctx.dynamic_data["ci_services"]
@@ -73,20 +73,22 @@ class ProvenanceL3ContentCheck(BaseCheck):
 
             for payload in ci_info["provenances"]:
                 try:
-                    logger.info("Validating the provenance against %s.", policy)
+                    logger.info("Validating the provenance against %s.", expectation)
 
                     # TODO: Is it worth returning more information rather than returning early?
-                    if policy.validate(payload):
-                        check_result["result_tables"].append(policy.get_policy_table())
-                        check_result["justification"].append("Successfully verified the policy against provenance.")
+                    if expectation.validate(payload):
+                        check_result["result_tables"].append(expectation.get_policy_table())
+                        check_result["justification"].append(
+                            "Successfully verified the expectation against provenance."
+                        )
                         return CheckResultType.PASSED
 
-                except (SLSAProvenanceError, PolicyRuntimeError) as error:
+                except (SLSAProvenanceError, ExpectationRuntimeError) as error:
                     logger.error(error)
-                    check_result["justification"].append("Could not verify policy against the provenance.")
+                    check_result["justification"].append("Could not verify expectation against the provenance.")
                     return CheckResultType.FAILED
 
-        check_result["justification"].append("Could not verify policy against the provenance.")
+        check_result["justification"].append("Could not verify expectation against the provenance.")
         return CheckResultType.FAILED
 
 

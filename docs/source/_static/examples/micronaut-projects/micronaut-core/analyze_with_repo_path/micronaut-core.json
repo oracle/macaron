@@ -1902,7 +1902,5 @@
                 "status": "MISSING REPO URL"
             }
         ]
-    },
-    "policies_passed": [],
-    "policies_failed": []
+    }
 }

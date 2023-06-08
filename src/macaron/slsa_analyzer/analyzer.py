@@ -29,7 +29,6 @@ from macaron.dependency_analyzer import (
 from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
-from macaron.policy_engine.policy_registry import PolicyRegistry
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
@@ -42,6 +41,7 @@ from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.database_store import store_analysis_to_db, store_analyze_context_to_db
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
+from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
@@ -94,8 +94,8 @@ class Analyzer:
         if not os.path.exists(self.local_repos_path):
             os.makedirs(self.local_repos_path, exist_ok=True)
 
-        # Load the policies from global config.
-        self.policies = PolicyRegistry(global_config.expectation_paths)
+        # Load the expectations from global config.
+        self.expectations = ExpectationRegistry(global_config.expectation_paths)
 
         # Initialize the reporters to store analysis data to files.
         self.reporters: list[FileReporter] = []
@@ -158,8 +158,6 @@ class Analyzer:
                     dep_record: Record = Record(
                         record_id=config.get_value("id"),
                         description=config.get_value("note"),
-                        policies_failed=[],
-                        policies_passed=[],
                         pre_config=config,
                         status=config.get_value("available"),
                     )
@@ -195,19 +193,6 @@ class Analyzer:
 
         self.db_man.session.commit()
 
-        # Evaluate policy
-        self.policies.evaluate_souffle_policies(self.database_path, restrict_to_analysis=analysis.id)
-
-        for record in report.get_records():
-            if record.context:
-                passed, failed = self.policies.get_souffle_results(repo_id=record.context.repository_table.id)
-                record.policies_passed += [x.policy for x in passed]
-                record.policies_failed += [x.policy for x in failed]
-
-        _, failed_policies = self.policies.get_souffle_results()
-        for policy in failed_policies:
-            logger.error("Policy Failed: %s", policy)
-
         # Store the analysis result into report files.
         self.generate_reports(report)
 
@@ -215,7 +200,7 @@ class Analyzer:
         logger.info(str(report))
 
         logger.info("Analysis Completed!")
-        return any(failed_policies)
+        return os.EX_OK
 
     def generate_reports(self, report: Report) -> None:
         """Generate the report of the analysis to all registered reporters.
@@ -369,8 +354,6 @@ class Analyzer:
             return Record(
                 record_id=repo_id,
                 description=error_msg,
-                policies_failed=[],
-                policies_passed=[],
                 pre_config=config,
                 status=SCMStatus.ANALYSIS_FAILED,
             )
@@ -388,12 +371,12 @@ class Analyzer:
                 pre_config=config,
                 status=SCMStatus.DUPLICATED_SCM,
                 context=existing_record.context,
-                policies_failed=[],
-                policies_passed=[],
             )
 
         analyze_ctx = self.get_analyze_ctx(req_branch, git_obj)
-        analyze_ctx.dynamic_data["policy"] = self.policies.get_policy_for_target(analyze_ctx.repo_full_name)
+        analyze_ctx.dynamic_data["expectation"] = self.expectations.get_expectation_for_target(
+            analyze_ctx.repo_full_name
+        )
         analyze_ctx.check_results = self.perform_checks(analyze_ctx)
 
         return Record(
@@ -401,8 +384,6 @@ class Analyzer:
             description="Analysis Completed.",
             pre_config=config,
             status=SCMStatus.AVAILABLE,
-            policies_failed=[],
-            policies_passed=[],
             context=analyze_ctx,
         )
 
@@ -705,7 +686,6 @@ class Analyzer:
         # TODO: Get the list of skipped checks from user configuration
         skipped_checks: list[SkippedInfo] = []
 
-        # Get the reference to the policy.
         results = registry.scan(analyze_ctx, skipped_checks)
 
         return results

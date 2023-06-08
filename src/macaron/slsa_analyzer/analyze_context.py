@@ -13,12 +13,12 @@ from typing import TypedDict
 from pydriller.git import Git
 
 from macaron.database.table_definitions import RepositoryTable, SLSALevelTable
-from macaron.policy_engine.policy import Policy
 from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.git_service import BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.levels import SLSALevels
+from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReq, get_requirements_dict
 from macaron.slsa_analyzer.specs.build_spec import BuildSpec
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
@@ -37,8 +37,8 @@ class ChecksOutputs(TypedDict):
     """The CI services information for this repository."""
     is_inferred_prov: bool
     """True if we cannot find the provenance and Macaron need to infer the provenance."""
-    policy: Policy | None
-    """The policy to verify the provenance for this repository."""
+    expectation: Expectation | None
+    """The expectation to verify the provenance for this repository."""
 
 
 class AnalyzeContext:
@@ -120,7 +120,7 @@ class AnalyzeContext:
             build_spec=BuildSpec(tool=NoneBuildTool()),
             ci_services=[],
             is_inferred_prov=True,
-            policy=None,
+            expectation=None,
         )
 
         self.repository_table = RepositoryTable(**self.get_repository_data())
