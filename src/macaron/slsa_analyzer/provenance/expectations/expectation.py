@@ -4,9 +4,8 @@
 """This module provides a base class for provenance expectation verifiers."""
 
 import os
+from dataclasses import dataclass, field
 from typing import Any, Callable, Self
-
-from attr import dataclass, field
 
 from macaron.database.table_definitions import PolicyTable
 from macaron.errors import ExpectationRuntimeError
@@ -15,6 +14,7 @@ from macaron.util import JsonType
 ExpectationFn = Callable[[Any], bool]
 
 
+# pylint: disable=invalid-name
 @dataclass
 class Expectation:
     """The expectation is used to validate a target provenance.

@@ -3,25 +3,6 @@ Macaron Policy Engine
 
 This module is used to enforce policy requirements using the output of Macaron's analysis.
 
-It has two modes of operation:
-
-1. When running macaron in `analyze` mode, pass `-po policyfile.dl` and it will enforce the policy on the analyzed
-   repositories.
-2. Independently, by running `macaron.policy_engine`, and passing it a database file from historical analyses.
-
-```
-usage: policy_engine [-h] -d DATABASE [-f FILE] [-s] [-v] [-l LOG_PATH]
-
-options:
-  -h, --help            show this help message and exit
-  -d DATABASE, --database DATABASE
-                        Database path
-  -f FILE, --file FILE  Replace policy file
-  -s, --show-prelude    Show policy prelude
-  -v, --verbose         Enable verbose logging
-  -l LOG_PATH, --log-path LOG_PATH
-                        Log file path
-```
 
 Writing Policies
 ----------------
@@ -40,7 +21,10 @@ This includes
 4. Some simple pre-written Policies
 
 These can be found in the folder [prelude/](prelude). The automatically generated rules can be found by running
-`macaron.policy_engine -d database.db -s`.
+
+```bash
+`python -m macaron verify-policy -d output/macaron.db -s`
+```
 
 A policy consists of two statements, a definition clause and an enforcement clause. For example, to write a policy that
 requires that the repository has verified authenticated provenance we can write:
@@ -63,8 +47,8 @@ invocation. When being evaluated independently on a database, this means every r
 
 When we evaluate this policy with, for example
 
-```sh
-python -m macaron.policy_engine -d output/macaron.db -f src/macaron/policy_engine/examples/simple_example.dl
+```bash
+python -m macaron verify-policy -d output/macaron.db -f src/macaron/policy_engine/examples/simple_example.dl
 ```
 
 We get
