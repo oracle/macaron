@@ -77,6 +77,8 @@ class RepositoryTable(ORMBase):
     release_tag: Mapped[str] = mapped_column(String, nullable=True)
     commit_sha: Mapped[str] = mapped_column(String, nullable=False)
     commit_date: Mapped[str] = mapped_column(String, nullable=False)
+    namespace: Mapped[str] = mapped_column(String, nullable=True)
+    name: Mapped[str] = mapped_column(String, nullable=True)
 
 
 class SLSALevelTable(ORMBase):

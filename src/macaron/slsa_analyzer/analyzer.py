@@ -140,7 +140,7 @@ class Analyzer:
         if skip_deps:
             logger.info("Skipping automatic dependency analysis...")
         else:
-            deps_resolved = self.resolve_dependencies(main_record.context, sbom_path)
+            deps_resolved = self.resolve_dependencies(self.db_man, main_record.context, sbom_path)
 
         # Merge the automatically resolved dependencies with the manual configuration.
         deps_config = DependencyAnalyzer.merge_configs(deps_config, deps_resolved)
@@ -240,11 +240,15 @@ class Analyzer:
         for reporter in self.reporters:
             reporter.generate(output_target_path, report)
 
-    def resolve_dependencies(self, main_ctx: AnalyzeContext, sbom_path: str) -> dict[str, DependencyInfo]:
+    def resolve_dependencies(
+        self, db_man: DatabaseManager, main_ctx: AnalyzeContext, sbom_path: str
+    ) -> dict[str, DependencyInfo]:
         """Resolve the dependencies of the main target repo.
 
         Parameters
         ----------
+        db_man : DatabaseManager
+            The database manager for accessing the database.
         main_ctx : AnalyzeContext
             The context of object of the target repository.
         sbom_path: str
@@ -257,7 +261,7 @@ class Analyzer:
         """
         if sbom_path:
             logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
-            return get_deps_from_sbom(sbom_path)
+            return get_deps_from_sbom(db_man, sbom_path)
 
         deps_resolved: dict[str, DependencyInfo] = {}
 
@@ -392,7 +396,7 @@ class Analyzer:
                 policies_passed=[],
             )
 
-        analyze_ctx = self.get_analyze_ctx(req_branch, git_obj)
+        analyze_ctx = self.get_analyze_ctx(req_branch, git_obj, repo_id)
         analyze_ctx.dynamic_data["policy"] = self.policies.get_policy_for_target(analyze_ctx.repo_full_name)
         analyze_ctx.check_results = self.perform_checks(analyze_ctx)
 
@@ -406,7 +410,7 @@ class Analyzer:
             context=analyze_ctx,
         )
 
-    def get_analyze_ctx(self, branch_name: str, git_obj: Git) -> AnalyzeContext:
+    def get_analyze_ctx(self, branch_name: str, git_obj: Git, repo_id: str) -> AnalyzeContext:
         """Return the analyze context for a target repository.
 
         Parameters
@@ -417,6 +421,8 @@ class Analyzer:
             the current branch name cannot be determined.
         git_obj : Git
             The pydriller Git object of the target repository.
+        repo_id : str
+            The id of the target repository.
 
         Returns
         -------
@@ -470,6 +476,11 @@ class Analyzer:
             commit_date_str,
         )
 
+        artifact_id = ""
+        group_id = ""
+        if defaults.getboolean("repofinder.java", "use_database") and not repo_id.startswith("http") and ":" in repo_id:
+            artifact_id, group_id = repo_id.split(":")
+
         # Initialize the analyzing context for this repository.
         analyze_ctx = AnalyzeContext(
             full_name,
@@ -481,6 +492,8 @@ class Analyzer:
             global_config.macaron_path,
             self.output_path,
             origin_remote_path,
+            group_id,
+            artifact_id,
         )
 
         self.db_man.add(analyze_ctx.repository_table)

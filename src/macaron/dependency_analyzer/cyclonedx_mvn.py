@@ -89,7 +89,7 @@ class CycloneDxMaven(DependencyAnalyzer):
                 fallback=False,
             ),
         )
-        return convert_components_to_artifacts(components, root_component)
+        return convert_components_to_artifacts(None, components, root_component)
 
     def remove_sboms(self, dir_path: str) -> bool:
         """Remove all the SBOM files in the provided directory recursively.

@@ -35,7 +35,7 @@ agg_levels(n+1) :- n <= 4, agg_levels(n).
  * Everything has a repository and uses a scripted build service.
  */
 aggregate_level_requirement(1, repo) :-
-    repository(repo, _,_,_,_,_,_),
+    repository(repo, _,_,_,_,_,_,_,_),
     check_passed(repo, "mcn_build_service_1"),
     check_passed(repo, "mcn_version_control_system_1").
 
@@ -44,7 +44,7 @@ aggregate_level_requirement(1, repo) :-
  * The build is verifiably automated and deployable.
  */
 aggregate_level_requirement(2, repo) :-
-    repository(repo, _,_,_,_,_,_),
+    repository(repo, _,_,_,_,_,_,_,_),
     aggregate_level_requirement(1, repo),
     check_passed(repo, "mcn_build_script_1"),
     check_passed(repo, "mcn_build_service_1"),
@@ -55,7 +55,7 @@ aggregate_level_requirement(2, repo) :-
  *  provenance information.
  */
 aggregate_level_requirement(3, repo) :-
-    repository(repo, _,_,_,_,_,_),
+    repository(repo, _,_,_,_,_,_,_,_),
     check_passed(repo, "mcn_provenance_level_three_1"),
     aggregate_level_requirement(2, repo).
 
@@ -63,7 +63,7 @@ aggregate_level_requirement(3, repo) :-
  *   The release provenance passes verification.
  */
 aggregate_level_requirement(4, repo) :-
-    repository(repo, _,_,_,_,_,_),
+    repository(repo, _,_,_,_,_,_,_,_),
     aggregate_level_requirement(3, repo),
     check_passed(repo, "mcn_provenance_level_three_1"),
     check_passed(repo, "mcn_trusted_builder_level_three_1"),
@@ -94,9 +94,9 @@ aggregate_level_min_dependency_level(level, repo) <= aggregate_level_min_depende
 /**
  *  The aggregate level for each repository that does not have any dependencies asserts the requirements are met.
  */
-aggregate_level(0, repo) :- repository(repo, _,_,_,_,_,_).
+aggregate_level(0, repo) :- repository(repo, _,_,_,_,_,_,_,_).
 aggregate_level(level, repo) :-
-    repository(repo, name,_,_,_,_,_),
+    repository(repo, name,_,_,_,_,_,_,_),
     agg_levels(level),
     // this level's requirements
     aggregate_level_requirement(level, repo),
@@ -108,7 +108,7 @@ aggregate_level(level, repo) :-
  *  reach the required minimum level.
  */
 aggregate_level(level, repo) :-
-    repository(repo, name,_,_,_,_,_),
+    repository(repo, name,_,_,_,_,_,_,_),
     agg_levels(level),
     // this level's requirements
     aggregate_level_requirement(level, repo),
@@ -130,17 +130,17 @@ aggregate_level(level, repo) <= aggregate_level(higher_level, repo) :-
 meets_aggregate_level(level, repo) :- aggregate_level(real_level, repo), agg_levels(level), level <= real_level.
 
 Policy("aggregate_level_4", repo, reponame) :-
-        repository(repo, reponame,_,_,_,_,_),
+        repository(repo, reponame,_,_,_,_,_,_,_),
         meets_aggregate_level(4, repo).
 
 Policy("aggregate_level_3", repo, reponame) :-
-        repository(repo, reponame,_,_,_,_,_),
+        repository(repo, reponame,_,_,_,_,_,_,_),
         meets_aggregate_level(3, repo).
 
 Policy("aggregate_level_2", repo, reponame) :-
-        repository(repo, reponame,_,_,_,_,_),
+        repository(repo, reponame,_,_,_,_,_,_,_),
         meets_aggregate_level(2, repo).
 
 Policy("aggregate_level_1", repo, reponame) :-
-        repository(repo, reponame,_,_,_,_,_),
+        repository(repo, reponame,_,_,_,_,_,_,_),
         meets_aggregate_level(1, repo).

@@ -96,9 +96,9 @@ class DatabaseManager:
         Parameters
         ----------
         table: Table
-            The Table to insert to
+            The Table to insert to.
         values: dict
-            The mapping from column names to values to insert into the Table
+            The mapping from column names to values to insert into the Table.
         """
         try:
             self.execute(insert(table).values(**values))
@@ -112,11 +112,28 @@ class DatabaseManager:
         Parameters
         ----------
         query: Any
-            The SQLalchemy query to execute
+            The SQLAlchemy query to execute.
         """
         with self.engine.connect() as conn:
             conn.execute(query)
             conn.commit()
+
+    def execute_and_return(self, query: Any) -> sqlalchemy.engine.cursor.CursorResult:
+        """
+        Execute a SQLAlchemy core api query using a short-lived engine connection and returns the result.
+
+        Parameters
+        ----------
+        query: Any
+            The SQLAlchemy query to execute.
+
+        Returns
+        -------
+        Any :
+            The result of the query.
+        """
+        with self.engine.connect() as conn:
+            return conn.execute(query)
 
     def create_tables(self) -> None:
         """
