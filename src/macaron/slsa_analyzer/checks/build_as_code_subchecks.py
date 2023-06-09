@@ -78,6 +78,7 @@ class DeploySubcheckResults:
     source_link: str = ""
     html_url: str = ""
     config_name: str = ""
+    workflow_name: str = ""
 
 
 class BuildAsCodeSubchecks:
@@ -88,7 +89,7 @@ class BuildAsCodeSubchecks:
         self.ctx = ctx
         self.build_tool: BaseBuildTool = ctx.dynamic_data["build_spec"].get("tool")  # type: ignore
         self.ci_services = ctx.dynamic_data["ci_services"]
-        self.check_results: dict[str, dict | DeploySubcheckResults] = {}  # Update this with each check.
+        self.check_results: dict[str, DeploySubcheckResults] = {}  # Update this with each check.
         self.ci_info = ci_info
         self.ci_service = ci_info["service"]
         # Certainty value to be returned if a subcheck fails.
@@ -106,7 +107,9 @@ class BuildAsCodeSubchecks:
 
         if self.ci_info["bash_commands"]:
             justification: list[str | dict[str, str]] = ["The CI workflow files for this CI service are parsed."]
-            self.check_results["ci_parsed"] = {"certainty": check_certainty, "justification": justification}
+            self.check_results["ci_parsed"] = DeploySubcheckResults(
+                certainty=check_certainty, justification=justification
+            )
             return check_certainty
         return self.failed_check
 
@@ -139,6 +142,8 @@ class BuildAsCodeSubchecks:
                     os.path.basename(bash_cmd["CI_path"]),
                 )
 
+                workflow_name = os.path.basename(html_url)
+
                 justification: list[str | dict[str, str]] = [
                     {
                         f"The target repository uses build tool {self.build_tool.name} to deploy": bash_source_link,
@@ -157,6 +162,7 @@ class BuildAsCodeSubchecks:
                     trigger_link=trigger_link,
                     source_link=bash_source_link,
                     html_url=html_url,
+                    workflow_name=workflow_name,
                 )
 
                 return check_certainty
@@ -251,13 +257,57 @@ class BuildAsCodeSubchecks:
                         trigger_link=trigger_link,
                         source_link=deploy_action_source_link,
                         html_url=html_url,
+                        workflow_name=workflow_name,
                     )
 
                     return check_certainty
 
         return self.failed_check
 
-    def get_subcheck_results(self, subcheck_name: str) -> dict | DeploySubcheckResults:
+    def workflow_trigger(self, workflow_name: str) -> str:
+        """Check that the workflow is triggered by a valid event."""
+        valid_trigger_events = ["workflow-dispatch", "push", "release"]
+        for callee in self.ci_info["callgraph"].bfs():
+            if callee.name == workflow_name:
+                trigger_events = callee.parsed_obj.get("On", {})
+                for event in trigger_events:
+                    hook = event.get("Hook", {})
+                    trigger_type = str(hook.get("Value", ""))
+                    if trigger_type in valid_trigger_events:
+                        return trigger_type
+        return ""
+
+    def workflow_trigger_deploy_command(self) -> float:
+        """Check the workflow trigger for the required deploy_command workflow file."""
+        check_certainty = 0.9
+        depends_on = [self.deploy_command() > 0.0]
+        if not all(depends_on):
+            return self.failed_check
+
+        workflow_name = self.check_results["deploy_command"].workflow_name
+        if workflow_name:
+            trigger_type = self.workflow_trigger(workflow_name=workflow_name)
+            if trigger_type:
+                logger.info("Valid trigger event %s found for the workflow file %s.", trigger_type, workflow_name)
+                return check_certainty
+        return self.failed_check
+
+    def workflow_trigger_deploy_action(self) -> float:
+        """Check the workflow trigger for the required deploy_action workflow file."""
+        check_certainty = 0.9
+        depends_on = [self.deploy_action() > 0.0]
+        if not all(depends_on):
+            return self.failed_check
+
+        workflow_name = self.check_results["deploy_action"].workflow_name
+        if workflow_name:
+            trigger_type = self.workflow_trigger(workflow_name=workflow_name)
+        if trigger_type:
+            logger.info("Valid trigger event %s found for the workflow file %s.", trigger_type, workflow_name)
+            return check_certainty
+        return self.failed_check
+
+    def get_subcheck_results(self, subcheck_name: str) -> DeploySubcheckResults:
         """Return the results for a particular subcheck."""
         return self.check_results[subcheck_name]
 

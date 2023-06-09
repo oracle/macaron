@@ -53,3 +53,27 @@ def deploy_kws_check() -> float:
         The certainty of the check.
     """
     return build_as_code_subcheck_results.deploy_kws()
+
+
+@problog_export("-int")  # type: ignore
+def workflow_trigger_deploy_commmand() -> float:
+    """Get the value of the subcheck.
+
+    Returns
+    -------
+    Certainty
+        The certainty of the check.
+    """
+    return build_as_code_subcheck_results.workflow_trigger_deploy_command()
+
+
+@problog_export("-int")  # type: ignore
+def workflow_trigger_deploy_action() -> float:
+    """Get the value of the subcheck.
+
+    Returns
+    -------
+    Certainty
+        The certainty of the check.
+    """
+    return build_as_code_subcheck_results.workflow_trigger_deploy_action()

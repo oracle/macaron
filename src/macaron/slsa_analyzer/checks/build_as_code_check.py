@@ -122,6 +122,8 @@ class BuildAsCodeCheck(BaseCheck):
                     """
                 )
 
+                build_as_code_subchecks.build_as_code_subcheck_results.workflow_trigger("publish.yaml")
+
                 # Convert the result dictionary from Term:float to str:float
                 term_result: dict[Term, float] = get_evaluatable().create_from(prolog_string).evaluate()
                 result: dict[str, float] = {str(key): value for key, value in term_result.items()}
@@ -143,6 +145,7 @@ class BuildAsCodeCheck(BaseCheck):
 
                     if isinstance(deploy_method, DeploySubcheckResults):
                         if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
+                            # Store the values for the inferred provenance representation.
                             predicate = ci_info["provenances"][0]["predicate"]
                             predicate["buildType"] = f"Custom {ci_service.name}"
                             predicate["invocation"]["configSource"][
