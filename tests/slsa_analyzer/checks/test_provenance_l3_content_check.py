@@ -110,7 +110,13 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
         )
         assert check.run_check(ctx, check_result) == CheckResultType.UNKNOWN
 
-        # Repo has a provenance and valid expectation.
+        # Repo has a provenance and valid expectation, but expectation fails.
+        ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
+            os.path.join(expectation_dir, "valid_expectations", "slsa_verifier_FAIL.cue")
+        )
+        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+
+        # Repo has a provenance and valid expectation, and expectation passes.
         ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
             os.path.join(expectation_dir, "valid_expectations", "slsa_verifier_PASS.cue")
         )

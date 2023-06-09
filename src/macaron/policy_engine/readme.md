@@ -23,7 +23,7 @@ This includes
 These can be found in the folder [prelude/](prelude). The automatically generated rules can be found by running
 
 ```bash
-`python -m macaron verify-policy -d output/macaron.db -s`
+python -m macaron verify-policy -d output/macaron.db -s
 ```
 
 A policy consists of two statements, a definition clause and an enforcement clause. For example, to write a policy that

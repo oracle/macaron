@@ -19,9 +19,9 @@ class CUEExpectation(Expectation):
 
     @classmethod
     def make_expectation(cls, expectation_path: os.PathLike | str) -> Self | None:
-        """Construct a cue expectation.
+        """Construct a CUE expectation from a CUE file.
 
-        Note: we require CUE expectation to have a "target" field.
+        Note: we require the CUE expectation file to have a "target" field.
 
         Parameters
         ----------
@@ -34,7 +34,7 @@ class CUEExpectation(Expectation):
             The instantiated expectation object.
         """
         logger.info("Generating an expectation from file %s", expectation_path)
-        expectation: Expectation = Expectation(
+        expectation: CUEExpectation = CUEExpectation(
             "CUE expectation has no ID",
             "CUE expectation has no description",
             expectation_path,

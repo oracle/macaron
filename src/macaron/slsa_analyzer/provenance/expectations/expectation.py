@@ -46,7 +46,7 @@ class Expectation:
     expectation_type: str
     _validator: ExpectationFn | None = field(default=None)
 
-    def get_policy_table(self) -> PolicyTable:
+    def get_expectation_table(self) -> PolicyTable:
         """Get the bound ORM object for the policy."""
         return PolicyTable(
             policy_id=self.ID,
@@ -58,7 +58,7 @@ class Expectation:
 
     @classmethod
     def make_expectation(cls, expectation_path: os.PathLike | str) -> Self | None:
-        """Generate an expectation instance.
+        """Generate an expectation instance from an expectation file.
 
         Parameters
         ----------
@@ -73,7 +73,7 @@ class Expectation:
         raise NotImplementedError()
 
     def __str__(self) -> str:
-        return f"Expectation(id='{self.ID}', description='{self.description}, path='{self.path}')"
+        return f"Expectation(id='{self.ID}', description='{self.description}', path='{self.path}')"
 
     def validate(self, prov: JsonType) -> bool:
         """Validate the provenance against this expectation.
