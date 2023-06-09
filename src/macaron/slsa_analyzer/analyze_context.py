@@ -275,6 +275,8 @@ class AnalyzeContext:
                     result[CheckResultType.FAILED].append(check_result)
                 case CheckResultType.DISABLED:
                     result[CheckResultType.DISABLED].append(check_result)
+                case CheckResultType.UNKNOWN:
+                    result[CheckResultType.UNKNOWN].append(check_result)
 
         return result
 
