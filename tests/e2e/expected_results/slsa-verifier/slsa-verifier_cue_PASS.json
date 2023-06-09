@@ -1686,7 +1686,7 @@
                 "FAILED": 0,
                 "PASSED": 8,
                 "SKIPPED": 0,
-                "UNKNOWN": 1
+                "UNKNOWN": 0
             },
             "results": [
                 {
