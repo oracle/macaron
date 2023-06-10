@@ -34,8 +34,6 @@ class MockRecord(Record):
             status=SCMStatus.AVAILABLE,
             context=MagicMock(),
             dependencies=[],
-            policies_failed=[],
-            policies_passed=[],
         )
         self.mock_data = mock_data
 

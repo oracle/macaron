@@ -1,13 +1,12 @@
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This modules contains tests for the policy check."""
+"""This modules contains tests for the expectation check."""
 
 import os
 from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.policy_engine.policy import Policy
 from macaron.slsa_analyzer.analyzer import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.checks.provenance_l3_content_check import ProvenanceL3ContentCheck
@@ -17,6 +16,7 @@ from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
+from macaron.slsa_analyzer.provenance.expectations.cue.cue_expectation import CUEExpectation
 from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 
@@ -55,10 +55,10 @@ class MockGhAPIClient(GhAPIClient):
 
 
 class TestProvenanceL3ContentCheck(MacaronTestCase):
-    """Test the policy check."""
+    """Test the expectation check."""
 
-    def test_policy_check(self) -> None:
-        """Test the policy check."""
+    def test_expectation_check(self) -> None:
+        """Test the expectation check."""
         check = ProvenanceL3ContentCheck()
         check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
         github_actions = MockGitHubActions()
@@ -74,8 +74,10 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
         gitlab_ci = GitLabCI()
         gitlab_ci.load_defaults()
 
-        prov_dir = os.path.join(self.macaron_test_dir, "policy_engine", "resources", "provenances")
-        policy_dir = os.path.join(self.macaron_test_dir, "policy_engine", "resources", "policies")
+        prov_dir = os.path.join(self.macaron_test_dir, "slsa_analyzer", "provenance", "resources", "valid_provenances")
+        expectation_dir = os.path.join(
+            self.macaron_test_dir, "slsa_analyzer", "provenance", "expectations", "cue", "resources"
+        )
         ctx = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
 
         # Test GitHub Actions.
@@ -89,25 +91,35 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
         )
         ctx.dynamic_data["ci_services"] = [ci_info]
 
-        # Repo has inferred provenance and no policy.
+        # Repo has inferred provenance and no expectation.
         ctx.dynamic_data["is_inferred_prov"] = True
-        ctx.dynamic_data["policy"] = None
+        ctx.dynamic_data["expectation"] = None
         assert check.run_check(ctx, check_result) == CheckResultType.UNKNOWN
 
-        # Repo has a provenance, but no policy.
+        # Repo has a provenance, but no expectation.
         ci_info["provenances"] = [
             ProvPayloadLoader.load(os.path.join(prov_dir, "slsa-verifier-linux-amd64.intoto.jsonl"))
         ]
         ctx.dynamic_data["is_inferred_prov"] = False
-        ctx.dynamic_data["policy"] = None
+        ctx.dynamic_data["expectation"] = None
         assert check.run_check(ctx, check_result) == CheckResultType.UNKNOWN
 
-        # Repo has a provenance but invalid policy.
-        ctx.dynamic_data["policy"] = Policy.make_policy(os.path.join(policy_dir, "invalid.yaml"))
+        # Repo has a provenance but invalid expectation.
+        ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
+            os.path.join(expectation_dir, "invalid_expectations", "invalid.cue")
+        )
         assert check.run_check(ctx, check_result) == CheckResultType.UNKNOWN
 
-        # Repo has a provenance and valid policy.
-        ctx.dynamic_data["policy"] = Policy.make_policy(os.path.join(policy_dir, "slsa_verifier.yaml"))
+        # Repo has a provenance and valid expectation, but expectation fails.
+        ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
+            os.path.join(expectation_dir, "valid_expectations", "slsa_verifier_FAIL.cue")
+        )
+        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+
+        # Repo has a provenance and valid expectation, and expectation passes.
+        ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
+            os.path.join(expectation_dir, "valid_expectations", "slsa_verifier_PASS.cue")
+        )
         assert check.run_check(ctx, check_result) == CheckResultType.PASSED
 
         # Test Jenkins.

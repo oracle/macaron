@@ -5,61 +5,68 @@
 
 import os
 from pathlib import Path
-from unittest import TestCase
 
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
 
+FACT_DIR = Path(__file__).parent.joinpath("resources").joinpath("facts")
+# Test from https://souffle-lang.github.io/simple
+TEXT = """.decl edge(x:number, y:number)
+.input edge
 
-class TestSouffle(TestCase):
-    """This class tests the Policy Parser."""
+.decl path(x:number, y:number)
+.output path
 
-    FACT_DIR = Path(__file__).parent.joinpath("resources").joinpath("facts")
-    # Test from https://souffle-lang.github.io/simple
-    TEXT = """.decl edge(x:number, y:number)
-    .input edge
+path(x, y) :- edge(x, y).
+path(x, y) :- path(x, z), edge(z, y).
+"""
 
-    .decl path(x:number, y:number)
-    .output path
 
-    path(x, y) :- edge(x, y).
-    path(x, y) :- path(x, z), edge(z, y).
-    """
+def test_interpret_file() -> None:
+    """Test basic call to interpreting a file."""
+    with SouffleWrapper(fact_dir=str(FACT_DIR)) as sfl:
+        result = sfl.interpret_file(os.path.join(FACT_DIR, "test.dl"), with_prelude=".output edge")
+        assert result == {"edge": [["1", "2"], ["2", "3"]], "path": [["1", "2"], ["1", "3"], ["2", "3"]]}
 
-    def test_interpret_file(self) -> None:
-        """Test basic call to interpreting a file."""
-        with SouffleWrapper(fact_dir=str(self.FACT_DIR)) as sfl:
-            result = sfl.interpret_file(os.path.join(self.FACT_DIR, "test.dl"), with_prelude=".output edge")
-            assert result == {"edge": [["1", "2"], ["2", "3"]], "path": [["1", "2"], ["1", "3"], ["2", "3"]]}
 
-    def test_interpret_text(self) -> None:
-        """Test basic call to interpreting a string literal"""
-        with SouffleWrapper(fact_dir=str(self.FACT_DIR)) as sfl:
-            result = sfl.interpret_text(self.TEXT)
-            assert result == {"path": [["1", "2"], ["1", "3"], ["2", "3"]]}
+def test_interpret_text() -> None:
+    """Test basic call to interpreting a string literal"""
+    with SouffleWrapper(fact_dir=str(FACT_DIR)) as sfl:
+        result = sfl.interpret_text(TEXT)
+        assert result == {"path": [["1", "2"], ["1", "3"], ["2", "3"]]}
 
-    def test_error(self) -> None:
-        """Test throwing an error on an invalid souffle program."""
+
+def test_error() -> None:
+    """Test throwing an error on an invalid souffle program."""
+    try:
         with SouffleWrapper() as sfl:
-            self.assertRaises(SouffleError, sfl.interpret_text, ".input edge")
+            sfl.interpret_text(".input edge")
+    except SouffleError:
+        return
+    raise ValueError()
 
-    def test_consecuitve(self) -> None:
-        """
-        Test running different programs in the same context.
 
-        We expect the output to accumulate; the output files are
-        attached to the context.
-        """
-        with SouffleWrapper(fact_dir=str(self.FACT_DIR)) as sfl:
-            result = sfl.interpret_file(os.path.join(self.FACT_DIR, "test.dl"), with_prelude=".output edge")
-            assert result == {"edge": [["1", "2"], ["2", "3"]], "path": [["1", "2"], ["1", "3"], ["2", "3"]]}
+def test_consecuitve() -> None:
+    """
+    Test running different programs in the same context.
 
-            result = sfl.interpret_text(self.TEXT)
-            assert result["path"] == [["1", "2"], ["1", "3"], ["2", "3"]]
+    We expect the output to accumulate; the output files are
+    attached to the context.
+    """
+    with SouffleWrapper(fact_dir=str(FACT_DIR)) as sfl:
+        result = sfl.interpret_file(os.path.join(FACT_DIR, "test.dl"), with_prelude=".output edge")
+        assert result == {"edge": [["1", "2"], ["2", "3"]], "path": [["1", "2"], ["1", "3"], ["2", "3"]]}
 
-            result = sfl.interpret_file(os.path.join(self.FACT_DIR, "test.dl"), with_prelude=".output edge")
-            assert result == {"edge": [["1", "2"], ["2", "3"]], "path": [["1", "2"], ["1", "3"], ["2", "3"]]}
+        result = sfl.interpret_text(TEXT)
+        assert result["path"] == [["1", "2"], ["1", "3"], ["2", "3"]]
 
+        result = sfl.interpret_file(os.path.join(FACT_DIR, "test.dl"), with_prelude=".output edge")
+        assert result == {"edge": [["1", "2"], ["2", "3"]], "path": [["1", "2"], ["1", "3"], ["2", "3"]]}
+
+        try:
             with SouffleWrapper() as sfl:
-                self.assertRaises(SouffleError, sfl.interpret_text, ".input edge")
+                sfl.interpret_text(".input edge")
+        except SouffleError:
+            return
+        raise ValueError()
 
-            ## sfl is terminated after here
+        ## sfl is terminated after here

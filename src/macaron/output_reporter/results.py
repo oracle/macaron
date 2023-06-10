@@ -74,11 +74,6 @@ class Record(Generic[RecordNode]):
     dependencies : list[RecordNode]
         The list of Records for the analyzed dependencies of this repo.
 
-    policies_passed: list[str]
-        The list of policy IDs that this repository failed.
-    policies_failed: list[str]
-        The list of policy IDs that this repository failed.
-
     See Also
     --------
     SCMStatus
@@ -90,8 +85,6 @@ class Record(Generic[RecordNode]):
     description: str
     pre_config: Configuration
     status: SCMStatus
-    policies_passed: list[str]
-    policies_failed: list[str]
     context: AnalyzeContext | None = field(default=None)
     dependencies: list[RecordNode] = field(default_factory=list)
 
@@ -129,8 +122,6 @@ class Record(Generic[RecordNode]):
             },
             "target": self.context.get_dict() if self.context else {},
             "dependencies": self.get_dep_summary(),
-            "policies_passed": self.policies_passed,
-            "policies_failed": self.policies_failed,
         }
         return result
 
@@ -315,11 +306,5 @@ class Report:
         for record in self.get_records():
             if not record.context:
                 continue
-            output += f"\n\nTARGET: {record.context.repo_full_name}"
-            output += "\n\tPOLICIES FAILED: "
-            output += ", ".join(record.policies_failed)
-            output += "\n\tPOLICIES PASSED: "
-            output += ", ".join(record.policies_passed)
-            output += "\n"
 
         return output
