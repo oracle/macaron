@@ -12,34 +12,10 @@ macaron.policy\_engine package
 Submodules
 ----------
 
-macaron.policy\_engine.exceptions module
-----------------------------------------
-
-.. automodule:: macaron.policy_engine.exceptions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-macaron.policy\_engine.policy module
-------------------------------------
-
-.. automodule:: macaron.policy_engine.policy
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 macaron.policy\_engine.policy\_engine module
 --------------------------------------------
 
 .. automodule:: macaron.policy_engine.policy_engine
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-macaron.policy\_engine.policy\_registry module
-----------------------------------------------
-
-.. automodule:: macaron.policy_engine.policy_registry
    :members:
    :undoc-members:
    :show-inheritance:

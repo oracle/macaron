@@ -1,87 +1,41 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module tests the policy parser."""
+"""This module tests the policies supported by the policy engine."""
 
 import os
+import subprocess  # nosec B404
 from pathlib import Path
-from typing import Any, Callable
-from unittest import TestCase
 
-from hypothesis import given
+import pytest
 
-from macaron.policy_engine.policy import InvalidPolicyError, Policy, PolicyFn, _gen_policy_func
+from macaron.policy_engine.policy_engine import get_generated, run_souffle
 
-from ..st import RECURSIVE_ST
+POLICY_DIR = Path(__file__).parent.joinpath("resources").joinpath("policies")
+POLICY_FILE = os.path.join(POLICY_DIR, "testpolicy.dl")
+DATABASE_FILE = os.path.join(Path(__file__).parent.joinpath("resources", "facts", "macaron.db"))
 
 
-class TestPolicyParser(TestCase):
-    """This class tests the Policy Parser."""
+@pytest.fixture()
+def database_setup() -> None:
+    """Prepare the database file."""
+    if not os.path.exists(DATABASE_FILE):
+        if os.path.exists(DATABASE_FILE + ".gz"):
+            subprocess.run(["gunzip", "-k", DATABASE_FILE + ".gz"], check=True, shell=False)  # nosec B603 B607
 
-    POLICY_DIR = Path(__file__).parent.joinpath("resources").joinpath("policies")
 
-    class MockClass:
-        """This class only exists in this test case."""
+def test_dump_prelude(database_setup) -> None:  # type: ignore # pylint: disable=unused-argument,redefined-outer-name
+    """Test loading the policy from file."""
+    res = str(get_generated(DATABASE_FILE))
+    assert len(res) > 10
 
-    def test_get_policy_from_file(self) -> None:
-        """Test loading the policy from file."""
-        assert not Policy.make_policy(os.path.join(self.POLICY_DIR, "invalid.yaml"))
-        assert Policy.make_policy(os.path.join(self.POLICY_DIR, "slsa_verifier.yaml"))
 
-    # pylint: disable=not-callable
-    def test_validating_data(self) -> None:
-        """Test validating data using the function returned by gen_policy_func."""
-        # float('nan') is not equal to itself.
-        assert not _gen_policy_func({"A": float("nan")})({"A": float("nan")})
-
-        policy = {
-            "A": {
-                "B": {"C": {"D": 435223}},
-                "F": [1, "foo", 3, 4],
-                "G": "blah",
-            }
-        }
-        policy_f: PolicyFn = _gen_policy_func(policy)
-
-        assert not policy_f(None)
-        assert not policy_f(float("nan"))
-        assert not policy_f(self.MockClass())
-        assert not policy_f(
-            {
-                "A": {
-                    "B": {"C": {"D": 435223}},
-                    "G": "blah",
-                }
-            }
-        )
-
-        # Different orders of elements in a dictionary do not affect the result.
-        assert policy_f(
-            {
-                "A": {
-                    "B": {"C": {"D": 435223}},
-                    "G": "blah",
-                    "F": [1, "foo", 3, 4],
-                }
-            }
-        )
-
-        # The order of elements in a list is important.
-        assert not policy_f(
-            {
-                "A": {
-                    "B": {"C": {"D": 435223}},
-                    "G": "blah",
-                    "F": [1, 3, "foo", 4],
-                }
-            }
-        )
-
-    @given(policy=RECURSIVE_ST)
-    def test_gen_policy_func(self, policy: Any) -> None:
-        """Test the gen_policy_func method"""
-        policy_f = _gen_policy_func(policy)
-        assert isinstance(policy_f, Callable)  # type:ignore
-
-        with self.assertRaises(InvalidPolicyError):
-            _gen_policy_func({"A": self.MockClass()})
+def test_eval_policy(database_setup) -> None:  # type: ignore # pylint: disable=unused-argument,redefined-outer-name
+    """Test loading the policy from file."""
+    res = run_souffle(os.path.join(POLICY_FILE, DATABASE_FILE), POLICY_FILE)
+    res.pop("repo_satisfies_policy")
+    res.pop("repo_violates_policy")
+    assert res == {
+        "passed_policies": [["trusted_builder"]],
+        "failed_policies": [["aggregate_l4"], ["aggregate_l2"]],
+    }

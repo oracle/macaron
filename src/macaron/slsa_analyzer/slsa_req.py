@@ -52,7 +52,7 @@ class ReqName(Enum):
     SECURITY = "Security"
     ACCESS = "Access"
     SUPERUSERS = "Superusers"
-    POLICY = "Provenance conforms with expectations"
+    EXPECTATION = "Provenance conforms with expectations"
 
 
 class Category(Enum):
@@ -90,8 +90,8 @@ BUILD_REQ_DESC = {
     ReqName.RETAINED_INDEFINITELY: [
         """
         The revision and its change history are preserved indefinitely and cannot be deleted,
-        except when subject to an established and transparent policy for obliteration,
-        such as a legal or policy requirement.
+        except when subject to an established and transparent expectation for obliteration,
+        such as a legal or expectation requirement.
         """,
         Category.SOURCE,
         SLSALevels.LEVEL3,
@@ -304,9 +304,9 @@ BUILD_REQ_DESC = {
         Category.PROVENANCE_CONTENT,
         SLSALevels.LEVEL4,
     ],
-    ReqName.POLICY: [
+    ReqName.EXPECTATION: [
         """
-        Check whether the SLSA provenance for the produced artifact conforms to the policy.
+        Check whether the SLSA provenance for the produced artifact conforms to the expectation.
         """,
         Category.PROVENANCE_CONTENT,
         SLSALevels.LEVEL3,
