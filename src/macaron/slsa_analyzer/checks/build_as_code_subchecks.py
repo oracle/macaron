@@ -200,6 +200,29 @@ class BuildAsCodeSubchecks:
 
         return self.failed_check
 
+    def test_deploy_action(self, workflow_name: str) -> float:
+        """Check for the use of a test deploy to PyPi given a CI workflow."""
+        check_certainty = 0.7
+        for callee in self.ci_info["callgraph"].bfs():
+            # TODO: figure out a way to generalize this implementation for other external GHAs.
+            # Currently just checks for the pypa/gh-action-pypi-publish action.
+            if not workflow_name or callee.node_type not in [
+                GHWorkflowType.EXTERNAL,
+                GHWorkflowType.REUSABLE,
+            ]:
+                logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
+                continue
+            callee_name = callee.name.split("@")[0]
+
+            if callee_name == workflow_name == "pypa/gh-action-pypi-publish":
+                workflow_info = callee.parsed_obj
+                inputs = workflow_info.get("Inputs", {})
+                repo_url = inputs.get("repository_url", {}).get("Value", {}).get("Value", "")
+                # TODO: Use values that come from defaults.ini rather than hardcoded.
+                if repo_url == "https://test.pypi.org/legacy/":
+                    return check_certainty
+        return self.failed_check
+
     def deploy_action(self) -> float:
         """Check for use of a trusted Github Actions workflow to publish/deploy."""
         # TODO: verify that deployment is legitimate and not a test

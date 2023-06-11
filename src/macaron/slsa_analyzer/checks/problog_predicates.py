@@ -6,6 +6,8 @@ from problog.extern import problog_export
 
 from macaron.slsa_analyzer.checks.build_as_code_subchecks import build_as_code_subcheck_results
 
+FAILED_CHECK = 0.0
+
 
 @problog_export("-int")  # type: ignore
 def ci_parsed_check() -> float:
@@ -68,7 +70,7 @@ def workflow_trigger_deploy_commmand() -> float:
 
 
 @problog_export("-int")  # type: ignore
-def workflow_trigger_deploy_action() -> float:
+def test_deploy_action_check() -> float:
     """Get the value of the subcheck.
 
     Returns
@@ -76,4 +78,8 @@ def workflow_trigger_deploy_action() -> float:
     Certainty
         The certainty of the check.
     """
-    return build_as_code_subcheck_results.workflow_trigger_deploy_action()
+    depends_on = [deploy_action_check() > 0.0]
+    if not all(depends_on):
+        return FAILED_CHECK
+    workflow_name = build_as_code_subcheck_results.check_results["deploy_action"].workflow_name
+    return build_as_code_subcheck_results.test_deploy_action(workflow_name=workflow_name)
