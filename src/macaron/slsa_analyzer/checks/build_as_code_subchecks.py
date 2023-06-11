@@ -221,6 +221,18 @@ class BuildAsCodeSubchecks:
                     logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
                     continue
                 if workflow_name in trusted_deploy_actions:
+                    workflow_info = callee.parsed_obj
+                    inputs = workflow_info.get("Inputs", {})
+
+                    # Deployment is to Pypi if there isn't a repository url
+                    if inputs and inputs.get("repository_url"):
+                        logger.debug(
+                            "Workflow %s has a repository url, indicating a non-legit publish to PyPi. Skipping...",
+                            callee.name,
+                        )
+                        continue
+
+                    # TODO: all of this logic could be generalized in build_as_code body.
                     trigger_link = self.ci_service.api_client.get_file_link(
                         self.ctx.repo_full_name,
                         self.ctx.commit_sha,
