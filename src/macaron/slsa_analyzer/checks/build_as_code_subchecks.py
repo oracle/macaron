@@ -104,6 +104,7 @@ class BuildAsCodeSubchecks:
         """Check whether parsing is supported for this CI service's CI config files."""
         check_certainty = 1.0
         # If this check has already been run on this repo, return certainty.
+        logger.info("CI PARSED")
 
         if self.ci_info["bash_commands"]:
             justification: list[str | dict[str, str]] = ["The CI workflow files for this CI service are parsed."]
@@ -119,6 +120,8 @@ class BuildAsCodeSubchecks:
         depends_on = [self.ci_parsed() > 0.0]
         if not all(depends_on):
             return self.failed_check
+
+        logger.info("DEPLOY COMMAND")
 
         for bash_cmd in self.ci_info["bash_commands"]:
             deploy_cmd = has_deploy_command(bash_cmd["commands"], self.build_tool)
@@ -299,9 +302,14 @@ class BuildAsCodeSubchecks:
 
         return self.failed_check
 
-    def workflow_trigger(self, workflow_name: str) -> str:
+    def workflow_trigger(self, workflow_name: str = "") -> float:
         """Check that the workflow is triggered by a valid event."""
+        check_certainty = 0.9
+        if not workflow_name:
+            return self.failed_check
+
         valid_trigger_events = ["workflow-dispatch", "push", "release"]
+
         for callee in self.ci_info["callgraph"].bfs():
             if callee.name == workflow_name:
                 trigger_events = callee.parsed_obj.get("On", {})
@@ -309,38 +317,49 @@ class BuildAsCodeSubchecks:
                     hook = event.get("Hook", {})
                     trigger_type = str(hook.get("Value", ""))
                     if trigger_type in valid_trigger_events:
-                        return trigger_type
-        return ""
-
-    def workflow_trigger_deploy_command(self) -> float:
-        """Check the workflow trigger for the required deploy_command workflow file."""
-        check_certainty = 0.9
-        depends_on = [self.deploy_command() > 0.0]
-        if not all(depends_on):
-            return self.failed_check
-
-        workflow_name = self.check_results["deploy_command"].workflow_name
-        if workflow_name:
-            trigger_type = self.workflow_trigger(workflow_name=workflow_name)
-            if trigger_type:
-                logger.info("Valid trigger event %s found for the workflow file %s.", trigger_type, workflow_name)
-                return check_certainty
+                        logger.info(
+                            "Valid trigger event %s found for the workflow file %s.", trigger_type, workflow_name
+                        )
+                        return check_certainty
         return self.failed_check
 
-    def workflow_trigger_deploy_action(self) -> float:
-        """Check the workflow trigger for the required deploy_action workflow file."""
-        check_certainty = 0.9
-        depends_on = [self.deploy_action() > 0.0]
-        if not all(depends_on):
-            return self.failed_check
+    # def workflow_uses_secrets(self, ) -> float:
+    #     # TODO: we just want for this specific workflow
+    #     for callee in self.ci_info["callgraph"].bfs():
+    #         workflow_name = callee.name.split("@")[0]
+    #         blah = callee.parsed_obj
 
-        workflow_name = self.check_results["deploy_action"].workflow_name
-        if workflow_name:
-            trigger_type = self.workflow_trigger(workflow_name=workflow_name)
-        if trigger_type:
-            logger.info("Valid trigger event %s found for the workflow file %s.", trigger_type, workflow_name)
-            return check_certainty
-        return self.failed_check
+    #         logger.info("WORKFLOW NAME: %s", workflow_name)
+    #         logger.info(blah)
+
+    #         if not workflow_name or callee.node_type not in [
+    #             GHWorkflowType.EXTERNAL,
+    #             GHWorkflowType.REUSABLE,
+    #         ]:
+    #             logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
+    #             continue
+    #         if workflow_name in trusted_deploy_actions:
+    #             return 0.0
+
+    # def pypi_publishing_workflow(self, workflow_id):
+    #     depends_on = [self.workflow_trigger_deploy_command() > 0.0 or self.workflow_trigger_deploy_action() > 0.0]
+
+    #     # TODO:
+    #     #   1. Figure out how to get the pypi name etc.
+
+    #     # 1. Get timestamp of the PyPi package
+    #     # To do this, we need the url of the pypi package
+
+    #     # curl returns null if it doesn't exist
+
+    #     # 2. Get timestamp of github workflow run
+    #     # Depends on has_latest_run_passed
+
+    #     # 2. If timestamp of the publishing workflow is close enough, then chance of the workflow
+    #     # being the one to publish the package is high (rather than manual upload).
+
+    #     # http_request
+    #     return
 
     def get_subcheck_results(self, subcheck_name: str) -> DeploySubcheckResults:
         """Return the results for a particular subcheck."""

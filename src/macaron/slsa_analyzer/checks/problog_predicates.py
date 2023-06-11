@@ -58,7 +58,7 @@ def deploy_kws_check() -> float:
 
 
 @problog_export("-int")  # type: ignore
-def workflow_trigger_deploy_commmand() -> float:
+def workflow_trigger_deploy_command_check() -> float:
     """Get the value of the subcheck.
 
     Returns
@@ -66,7 +66,29 @@ def workflow_trigger_deploy_commmand() -> float:
     Certainty
         The certainty of the check.
     """
-    return build_as_code_subcheck_results.workflow_trigger_deploy_command()
+    depends_on = [deploy_command_check() > 0.0]
+    print(all(depends_on))
+    if not all(depends_on):
+        return FAILED_CHECK
+    workflow_name = build_as_code_subcheck_results.check_results["deploy_command"].workflow_name
+    return build_as_code_subcheck_results.workflow_trigger(workflow_name=workflow_name)
+
+
+@problog_export("-int")  # type: ignore
+def workflow_trigger_deploy_action_check() -> float:
+    """Get the value of the subcheck.
+
+    Returns
+    -------
+    Certainty
+        The certainty of the check.
+    """
+    depends_on = [deploy_action_check() > 0.0]
+    print(all(depends_on))
+    if not all(depends_on):
+        return FAILED_CHECK
+    workflow_name = build_as_code_subcheck_results.check_results["deploy_action"].workflow_name
+    return build_as_code_subcheck_results.workflow_trigger(workflow_name=workflow_name)
 
 
 @problog_export("-int")  # type: ignore
