@@ -117,11 +117,6 @@ class BuildAsCodeSubchecks:
     def deploy_command(self) -> float:
         """Check for the use of deploy command to deploy."""
         check_certainty = 0.7
-        depends_on = [self.ci_parsed() > 0.0]
-        if not all(depends_on):
-            return self.failed_check
-
-        logger.info("DEPLOY COMMAND")
 
         for bash_cmd in self.ci_info["bash_commands"]:
             deploy_cmd = has_deploy_command(bash_cmd["commands"], self.build_tool)
@@ -174,11 +169,6 @@ class BuildAsCodeSubchecks:
     def deploy_kws(self) -> float:
         """Check for the use of deploy keywords to deploy."""
         check_certainty = 0.6
-        depends_on = [self.ci_parsed() == 0.0]
-        # If this check has already been run on this repo, return certainty.
-
-        if not all(depends_on):
-            return self.failed_check
 
         # We currently don't parse these CI configuration files.
         # We just look for a keyword for now.
@@ -228,11 +218,7 @@ class BuildAsCodeSubchecks:
 
     def deploy_action(self) -> float:
         """Check for use of a trusted Github Actions workflow to publish/deploy."""
-        # TODO: verify that deployment is legitimate and not a test
         check_certainty = 0.8
-        depends_on = [self.ci_parsed() > 0]
-        if not all(depends_on):
-            return self.failed_check
 
         if isinstance(self.build_tool, Pip):
             trusted_deploy_actions = defaults.get_list("builder.pip.ci.deploy", "github_actions", fallback=[])
@@ -251,7 +237,7 @@ class BuildAsCodeSubchecks:
                     inputs = workflow_info.get("Inputs", {})
 
                     # Deployment is to Pypi if there isn't a repository url
-                    if inputs and inputs.get("repository_url"):
+                    if inputs.get("repository_url"):
                         logger.debug(
                             "Workflow %s has a repository url, indicating a non-legit publish to PyPi. Skipping...",
                             callee.name,
@@ -310,6 +296,8 @@ class BuildAsCodeSubchecks:
 
         valid_trigger_events = ["workflow-dispatch", "push", "release"]
 
+        # TODO: Consider activity types for release, i.e. prereleased
+
         for callee in self.ci_info["callgraph"].bfs():
             if callee.name == workflow_name:
                 trigger_events = callee.parsed_obj.get("On", {})
@@ -324,22 +312,7 @@ class BuildAsCodeSubchecks:
         return self.failed_check
 
     # def workflow_uses_secrets(self, ) -> float:
-    #     # TODO: we just want for this specific workflow
-    #     for callee in self.ci_info["callgraph"].bfs():
-    #         workflow_name = callee.name.split("@")[0]
-    #         blah = callee.parsed_obj
-
-    #         logger.info("WORKFLOW NAME: %s", workflow_name)
-    #         logger.info(blah)
-
-    #         if not workflow_name or callee.node_type not in [
-    #             GHWorkflowType.EXTERNAL,
-    #             GHWorkflowType.REUSABLE,
-    #         ]:
-    #             logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
-    #             continue
-    #         if workflow_name in trusted_deploy_actions:
-    #             return 0.0
+    #     return
 
     # def pypi_publishing_workflow(self, workflow_id):
     #     depends_on = [self.workflow_trigger_deploy_command() > 0.0 or self.workflow_trigger_deploy_action() > 0.0]

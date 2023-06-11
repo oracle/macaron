@@ -30,6 +30,9 @@ def deploy_action_check() -> float:
     Certainty
         The certainty of the check.
     """
+    depends_on = [ci_parsed_check() > 0]
+    if not all(depends_on):
+        return FAILED_CHECK
     return build_as_code_subcheck_results.deploy_action()
 
 
@@ -42,6 +45,9 @@ def deploy_command_check() -> float:
     Certainty
         The certainty of the check.
     """
+    depends_on = [ci_parsed_check() > 0.0]
+    if not all(depends_on):
+        return FAILED_CHECK
     return build_as_code_subcheck_results.deploy_command()
 
 
@@ -54,6 +60,9 @@ def deploy_kws_check() -> float:
     Certainty
         The certainty of the check.
     """
+    depends_on = [ci_parsed_check() == 0.0]
+    if not all(depends_on):
+        return FAILED_CHECK
     return build_as_code_subcheck_results.deploy_kws()
 
 
