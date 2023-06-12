@@ -6,7 +6,11 @@
 This module is used to work with repositories that use pip for dependency management.
 """
 
+import ast
+import configparser
 import logging
+import os
+import tomllib
 
 from macaron.config.defaults import defaults
 from macaron.dependency_analyzer import DependencyAnalyzer, NoneDependencyAnalyzer
@@ -49,7 +53,57 @@ class Pip(BaseBuildTool):
         """
         for file in self.build_configs:
             if file_exists(repo_path, file):
-                return True
+                # Find project name value from the config file.
+                # TODO: improve this approach.
+                file_path = os.path.join(repo_path, file)
+                file_found = ""
+                if file == "pyproject.toml":
+                    try:
+                        with open(file_path, "rb") as toml_file:
+                            try:
+                                data = tomllib.load(toml_file)
+                                poetry_tool = data.get("tool", {}).get("poetry", {})
+                                if poetry_tool:
+                                    # Store the project name
+                                    self.project_name = poetry_tool.get("name")
+                                    file_found = file
+                            except tomllib.TOMLDecodeError:
+                                logger.error("Failed to read the %s file: invalid toml file.", file)
+                    except FileNotFoundError:
+                        logger.error("Failed to read the %s file.", file)
+
+                if file == "setup.cfg":
+                    config = configparser.ConfigParser()
+                    try:
+                        config.read(file_path, encoding="utf8")
+                        if "metadata" in config and "name" in config["metadata"]:
+                            self.project_name = config["metadata"]["name"]
+                            file_found = file
+                    except (configparser.Error, ValueError) as error:
+                        logger.error("Failed to read the %s file.", file)
+                        logger.error(error)
+
+                if file == "setup.py":
+                    try:
+                        with open(file_path, "rb") as config_file:
+                            content = config_file.read()
+                            tree = ast.parse(content)
+                            for node in ast.walk(tree):
+                                if (
+                                    isinstance(node, ast.Call)
+                                    and isinstance(node.func, ast.Name)
+                                    and node.func.id == "setup"
+                                ):
+                                    for keyword in node.keywords:
+                                        if keyword.arg == "name":
+                                            self.project_name = str(keyword.value)
+                                            file_found = file
+                    except FileNotFoundError:
+                        logger.info("Failed to read the %s file.", file)
+                if self.project_name:
+                    return True
+        if file_found:
+            return True
         return False
 
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
