@@ -1,5 +1,5 @@
 # Macaron documentation
-This directory contains the source for the documentation of Macaron hosted [here](https://oracle-samples.github.io/macaron/).
+This directory contains the source for the documentation of Macaron hosted [here](https://oracle.github.io/macaron/).
 
 ## Build the documentation
 

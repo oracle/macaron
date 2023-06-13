@@ -97,7 +97,7 @@ For example, with `micronaut-core <https://github.com/micronaut-projects/microna
 To run the analysis against that SBOM, run this command:
 
 ..
-  TODO: Remove the -rp path after https://github.com/oracle-samples/macaron/issues/108 is merged.
+  TODO: Remove the -rp path after https://github.com/oracle/macaron/issues/108 is merged.
 
 .. code-block:: shell
 

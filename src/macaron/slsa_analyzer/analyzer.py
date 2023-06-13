@@ -406,7 +406,7 @@ class Analyzer:
         """
         # We get the origin url from the git repository.
         # If it is a remote url, we could get the full name of the repository directly.
-        # For example, https://github.com/oracle-samples/macaron -> oracle-samples/macaron.
+        # For example, https://github.com/oracle/macaron -> oracle/macaron.
         # However, if the origin url is a path to a local repository, we will assign a default
         # name for it (i.e local_repos/<basename_of_the_local_path>).
         # For example, /home/path/to/repo -> local_repos/repo.
