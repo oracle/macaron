@@ -20,9 +20,9 @@ Macaron uses [SLSA requirements specifications v0.1](https://slsa.dev/spec/v0.1/
 
 To learn how to download and run Macaron, see our documentation [here](https://oracle-samples.github.io/macaron/).
 
-## How to Contribute
+## Contributing
 
-We welcome contributions! See our [contribution guidelines](./CONTRIBUTING.md).
+This project welcomes contributions from the community. Before submitting a pull request, please [review our contribution guide](./CONTRIBUTING.md)
 
 ## Defining new checks
 
@@ -34,9 +34,9 @@ To learn how to define your own checks, see the steps in the [checks documentati
 
 We have integrated [SLSA provenance generation](https://github.com/slsa-framework/slsa-github-generator) for our Docker image and release artifacts. However, due to a strict policy regarding the use of third-party GitHub Actions, we cannot generate the provenances in this repository yet until [this issue](https://github.com/slsa-framework/slsa-github-generator/issues/2204) is resolved.
 
-## Security issue reports
+## Security
 
-Security issue reports should follow our [reporting guidelines](./SECURITY.md).
+Please consult the [security guide](./SECURITY.md) for our responsible security vulnerability disclosure process
 
 ## License
 
