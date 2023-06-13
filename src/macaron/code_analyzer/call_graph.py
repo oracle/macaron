@@ -10,7 +10,7 @@ from typing import Generic, TypeVar
 Node = TypeVar("Node", bound="BaseNode")
 # The documentation below for `TypeVar` is commented out due to a breaking
 # change in Sphinx version (^=6.1.0).
-# Reported at: https://github.com/oracle-samples/macaron/issues/58.
+# Reported at: https://github.com/oracle/macaron/issues/58.
 # """This binds type ``Node`` to ``BaseNode`` and any of its subclasses.
 
 # Therefore, any node of type ``Node`` that is stored in the call graph

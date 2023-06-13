@@ -1,16 +1,16 @@
 # Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-# This Dockerfile is for building the final production image. It's based on ghcr.io/oracle-samples/macaron-base.
+# This Dockerfile is for building the final production image. It's based on ghcr.io/oracle/macaron-base.
 # For the build, two files will be copied into the image:
 #   - Macaron wheel file (its path must be provided to the build argument WHEEL_PATH)
 #   - user.sh for the entrypoint of the final image.
 # For example, using Docker, we could build the image using:
-#   docker build --build-arg WHEEL_PATH=<path_to_wheel> -t ghcr.io/oracle-samples/macaron -f docker/Dockerfile.final ./
-# Note that the local machine must login to ghcr.io so that Docker could pull the ghcr.io/oracle-samples/macaron-base
+#   docker build --build-arg WHEEL_PATH=<path_to_wheel> -t ghcr.io/oracle/macaron -f docker/Dockerfile.final ./
+# Note that the local machine must login to ghcr.io so that Docker could pull the ghcr.io/oracle/macaron-base
 # image for this build.
 
-FROM ghcr.io/oracle-samples/macaron-base:latest@sha256:5f2ed797b2b1e7e80d151fabc85e220a6bd57a9808c73aaa3cf466a038061a1d
+FROM ghcr.io/oracle/macaron-base:latest@sha256:5f2ed797b2b1e7e80d151fabc85e220a6bd57a9808c73aaa3cf466a038061a1d
 
 ENV HOME="/home/macaron"
 

@@ -1,4 +1,4 @@
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-yellow?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit) [![conventional-commits](https://img.shields.io/badge/conventional%20commits-1.0.0-yellow)](https://www.conventionalcommits.org/en/v1.0.0/) [![black](https://img.shields.io/badge/code%20style-black-000000)](https://github.com/psf/black) [![mypy](https://img.shields.io/badge/mypy-checked-brightgreen)](http://mypy-lang.org/) [![pylint](https://img.shields.io/badge/pylint-required%2010.0-brightgreen)](http://pylint.org/) [![pytest](https://img.shields.io/badge/pytest-enabled-brightgreen)](https://github.com/pytest-dev/pytest) [![hypothesis](https://img.shields.io/badge/hypothesis-tested-brightgreen.svg)](https://hypothesis.readthedocs.io/) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/oracle-samples/macaron/badge)](https://github.com/ossf/scorecard)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-yellow?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit) [![conventional-commits](https://img.shields.io/badge/conventional%20commits-1.0.0-yellow)](https://www.conventionalcommits.org/en/v1.0.0/) [![black](https://img.shields.io/badge/code%20style-black-000000)](https://github.com/psf/black) [![mypy](https://img.shields.io/badge/mypy-checked-brightgreen)](http://mypy-lang.org/) [![pylint](https://img.shields.io/badge/pylint-required%2010.0-brightgreen)](http://pylint.org/) [![pytest](https://img.shields.io/badge/pytest-enabled-brightgreen)](https://github.com/pytest-dev/pytest) [![hypothesis](https://img.shields.io/badge/hypothesis-tested-brightgreen.svg)](https://hypothesis.readthedocs.io/) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/oracle/macaron/badge)](https://github.com/ossf/scorecard)
 
 # Macaron
 
@@ -18,7 +18,7 @@ Macaron uses [SLSA requirements specifications v0.1](https://slsa.dev/spec/v0.1/
 
 ## Getting started
 
-To learn how to download and run Macaron, see our documentation [here](https://oracle-samples.github.io/macaron/).
+To learn how to download and run Macaron, see our documentation [here](https://oracle.github.io/macaron/).
 
 ## Contributing
 

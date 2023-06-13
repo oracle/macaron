@@ -50,7 +50,7 @@ jobs:
     # Build the Docker image without pushing it.
     - name: Build the Docker image
       env:
-        IMAGE_NAME: ghcr.io/oracle-samples/macaron
+        IMAGE_NAME: ghcr.io/oracle/macaron
       run: make build-docker
 
     # Run the integration tests against the built Docker image.

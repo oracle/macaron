@@ -18,7 +18,7 @@ env:
   # commit. In an organisation that should be a dedicated devops account.
   USER_NAME: behnazh-w
   USER_EMAIL: behnazh-w@users.noreply.github.com
-  IMAGE_NAME: ghcr.io/oracle-samples/macaron
+  IMAGE_NAME: ghcr.io/oracle/macaron
 
 jobs:
   check:
@@ -204,7 +204,7 @@ jobs:
           tar -zxvf "$ASSET_NAME" -C "$SYFT_BIN" syft
           "$SYFT_BIN"/syft --version
           "$SYFT_BIN"/syft \
-            ghcr.io/oracle-samples/macaron:"$RELEASE_TAG" \
+            ghcr.io/oracle/macaron:"$RELEASE_TAG" \
             -o cyclonedx-json=dist/macaron-"$RELEASE_VERSION"-sbom-docker.json
         else
           echo "Checksum for '$ASSET_NAME' did not verify: expected $EXPECTED but got $SYFT_DIGEST"
