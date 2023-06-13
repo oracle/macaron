@@ -10,7 +10,7 @@ If you have any questions about a possible submission, feel free to open an issu
 
 For bugs or enhancement requests, please file a GitHub issue unless it's security related. When filing a bug remember that the better written the bug is, the more likely it is to be fixed. If you think you've found a security vulnerability, do not raise a GitHub issue and follow the instructions in our [security policy](./SECURITY.md).
 
-## Pull requests (PRs)
+## Contributing code
 
 We welcome your code contributions. Before submitting code via a pull request, you will need to have signed the [Oracle Contributor Agreement][OCA] (OCA) and your commits need to include the following line using the name and e-mail address you used to sign the OCA:
 
