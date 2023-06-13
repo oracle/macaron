@@ -1,7 +1,7 @@
 // Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
 // Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-module github.com/oracle-samples/macaron
+module github.com/oracle/macaron
 
 go 1.18
 

@@ -111,7 +111,7 @@ python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-core.json
 $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_core_config.yaml || log_fail
 
-# TODO: uncomment the test below after resolving https://github.com/oracle-samples/macaron/issues/60.
+# TODO: uncomment the test below after resolving https://github.com/oracle/macaron/issues/60.
 # python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -294,7 +294,7 @@ $RUN_MACARON -lr $WORKSPACE/output/git_repos/local_repos/ analyze -rp test_repo 
 
 # We don't compare the report content because the remote_path fields in the reports are undeterministic when running
 # this test locally and running it in the GitHub Actions runner. We only check if the reports are generated as
-# expected without the issue described in https://github.com/oracle-samples/macaron/issues/116.
+# expected without the issue described in https://github.com/oracle/macaron/issues/116.
 ls $JSON_EXPECTED || log_fail
 ls $HTML_EXPECTED || log_fail
 
