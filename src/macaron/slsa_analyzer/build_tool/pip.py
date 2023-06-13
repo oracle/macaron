@@ -77,7 +77,7 @@ class Pip(BaseBuildTool):
                     try:
                         config.read(file_path, encoding="utf8")
                         if "metadata" in config and "name" in config["metadata"]:
-                            self.project_name = config["metadata"]["name"]
+                            self.project_name = str(config["metadata"]["name"])
                             file_found = file
                     except (configparser.Error, ValueError) as error:
                         logger.error("Failed to read the %s file.", file)
@@ -96,7 +96,7 @@ class Pip(BaseBuildTool):
                                 ):
                                     for keyword in node.keywords:
                                         if keyword.arg == "name":
-                                            self.project_name = str(keyword.value)
+                                            self.project_name = ast.literal_eval(keyword.value)
                                             file_found = file
                     except FileNotFoundError:
                         logger.info("Failed to read the %s file.", file)

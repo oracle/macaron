@@ -17,6 +17,7 @@ from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
+from macaron.slsa_analyzer.registry_service.api_client import PyPIAPIClient
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -103,9 +104,7 @@ class BuildAsCodeSubchecks:
     def ci_parsed(self) -> float:
         """Check whether parsing is supported for this CI service's CI config files."""
         check_certainty = 1.0
-        # If this check has already been run on this repo, return certainty.
-        logger.info("CI PARSED")
-
+        # TODO: If this check has already been run on this repo, return certainty.
         if self.ci_info["bash_commands"]:
             justification: list[str | dict[str, str]] = ["The CI workflow files for this CI service are parsed."]
             self.check_results["ci_parsed"] = DeploySubcheckResults(
@@ -193,9 +192,10 @@ class BuildAsCodeSubchecks:
 
         return self.failed_check
 
-    def test_deploy_action(self, workflow_name: str) -> float:
+    def test_deploy_action(self, workflow_file: str = "", workflow_name: str = "") -> float:
         """Check for the use of a test deploy to PyPi given a CI workflow."""
         check_certainty = 0.7
+        logger.info("File name: %s", workflow_file)
         for callee in self.ci_info["callgraph"].bfs():
             # TODO: figure out a way to generalize this implementation for other external GHAs.
             # Currently just checks for the pypa/gh-action-pypi-publish action.
@@ -288,10 +288,12 @@ class BuildAsCodeSubchecks:
 
         return self.failed_check
 
-    def workflow_trigger(self, workflow_name: str = "") -> float:
+    # TODO: workflow_name isn't used as a file in some places!
+
+    def workflow_trigger(self, workflow_file: str = "") -> float:
         """Check that the workflow is triggered by a valid event."""
         check_certainty = 0.9
-        if not workflow_name:
+        if not workflow_file:
             return self.failed_check
 
         valid_trigger_events = ["workflow-dispatch", "push", "release"]
@@ -299,40 +301,45 @@ class BuildAsCodeSubchecks:
         # TODO: Consider activity types for release, i.e. prereleased
 
         for callee in self.ci_info["callgraph"].bfs():
-            if callee.name == workflow_name:
+            if callee.name == workflow_file:
                 trigger_events = callee.parsed_obj.get("On", {})
                 for event in trigger_events:
                     hook = event.get("Hook", {})
                     trigger_type = str(hook.get("Value", ""))
                     if trigger_type in valid_trigger_events:
                         logger.info(
-                            "Valid trigger event %s found for the workflow file %s.", trigger_type, workflow_name
+                            "Valid trigger event %s found for the workflow file %s.", trigger_type, workflow_file
                         )
                         return check_certainty
         return self.failed_check
 
-    # def workflow_uses_secrets(self, ) -> float:
-    #     return
+    def pypi_publishing_workflow(self) -> float:
+        """Compare PyPI release timestamp with GHA publishing workflow timestamps."""
+        check_certainty = 0.5
+        project_name = self.build_tool.project_name
+        pypi_timestamp = ""
+        # Query PyPI API for the timestamp of the latest release.
+        if project_name:
+            api_client = PyPIAPIClient()
+            response = api_client.get_all_project_data(project_name=project_name)
+            latest = response.get("urls", [""])[0]
+            if latest:
+                pypi_timestamp = latest.get("upload_time")
+        if not pypi_timestamp:
+            return self.failed_check
 
-    # def pypi_publishing_workflow(self, workflow_id):
-    #     depends_on = [self.workflow_trigger_deploy_command() > 0.0 or self.workflow_trigger_deploy_action() > 0.0]
+        # TODO: Collect 10 (?) of the most recent successful workflow runs
+        workflow_data: dict = {}
 
-    #     # TODO:
-    #     #   1. Figure out how to get the pypi name etc.
+        workflow_created_timestamp = workflow_data.get("created_at", "")
+        workflow_updated_timestamp = workflow_data.get("updated_at", "")
 
-    #     # 1. Get timestamp of the PyPi package
-    #     # To do this, we need the url of the pypi package
-
-    #     # curl returns null if it doesn't exist
-
-    #     # 2. Get timestamp of github workflow run
-    #     # Depends on has_latest_run_passed
-
-    #     # 2. If timestamp of the publishing workflow is close enough, then chance of the workflow
-    #     # being the one to publish the package is high (rather than manual upload).
-
-    #     # http_request
-    #     return
+        # Compare timestamp of most recent PyPI release with several GHAs workflow runs.
+        if workflow_created_timestamp and workflow_updated_timestamp:
+            # TODO: convert into datetime object to compare
+            if workflow_created_timestamp <= pypi_timestamp <= workflow_updated_timestamp:
+                return check_certainty
+        return self.failed_check
 
     def get_subcheck_results(self, subcheck_name: str) -> DeploySubcheckResults:
         """Return the results for a particular subcheck."""
