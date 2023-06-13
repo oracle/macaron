@@ -84,12 +84,10 @@ class Poetry(BaseBuildTool):
                                 return True
                         except tomllib.TOMLDecodeError:
                             logger.error("Failed to read the %s file: invalid toml file.", conf)
-                            return False
-                    return False
                 except FileNotFoundError:
                     logger.error("Failed to read the %s file.", conf)
-                    return False
-
+                if package_lock_exists:
+                    return True
         return False
 
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
