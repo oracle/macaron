@@ -113,7 +113,6 @@ $(PACKAGE_PATH)/resources/gradlew:
 		&& unzip -o gradle-$$GRADLE_VERSION-bin.zip \
 		&& rm -r gradle-$$GRADLE_VERSION-bin.zip \
 		&& gradle-$$GRADLE_VERSION/bin/gradle wrapper \
-		&& rm -rf gradle-$$GRADLE_VERSION \
 		&& cd $(REPO_PATH)
 
 # Supports OL8+, Fedora 34+, and Ubuntu 20.04+
