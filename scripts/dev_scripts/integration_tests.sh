@@ -68,6 +68,20 @@ $RUN_MACARON analyze -pe $EXPECTATION_DIR -rp https://github.com/urllib3/urllib3
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
+echo "timyarkov/multibuild_test: Analyzing the repo path, the branch name and the commit digest"
+echo "with dependency resolution using cyclonedx Gradle plugin (default)."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/multibuild_test/multibuild_test.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/multibuild_test/multibuild_test.json
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_timyarkov_multibuild_test.json
+DEP_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/multibuild_test/dependencies.json
+$RUN_MACARON analyze -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
+
+python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
