@@ -1,0 +1,18 @@
+[
+    {
+        "id": "org.springframework.boot:spring-boot-starter-thymeleaf",
+        "path": "https://github.com/spring-projects/spring-boot",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.springframework.boot:spring-boot-starter-web",
+        "path": "https://github.com/spring-projects/spring-boot",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/spring-projects/spring-boot is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    }
+]

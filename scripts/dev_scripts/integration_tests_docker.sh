@@ -24,6 +24,20 @@ function log_fail() {
 }
 
 echo -e "\n----------------------------------------------------------------------------------"
+echo "timyarkov/multibuild_test: Analyzing the repo path, the branch name and the commit digest"
+echo "with dependency resolution using cyclonedx Gradle plugin (default)."
+echo -e "----------------------------------------------------------------------------------\n"
+DEP_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/multibuild_test/dependencies.json
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_timyarkov_multibuild_test.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/multibuild_test/multibuild_test.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/multibuild_test/multibuild_test.json
+$RUN_MACARON_SCRIPT analyze -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
+
+$COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+
+$COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
