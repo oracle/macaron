@@ -1,3 +1,14 @@
+## v0.1.1 (2023-06-14)
+
+### Fix
+
+- fix links as part of transition to oracle/macaron (#307)
+- fixes the result summary for UNKNOWN check results (#299)
+
+### Refactor
+
+- separate provenance expectation from Datalog policies (#297)
+
 ## v0.1.0 (2023-06-05)
 
 ### Feat
