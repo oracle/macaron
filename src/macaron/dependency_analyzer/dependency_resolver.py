@@ -15,6 +15,7 @@ from packaging import version
 from macaron.config.defaults import defaults
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager
+from macaron.database.table_definitions import RepositoryTable
 from macaron.dependency_analyzer.java_repo_finder import find_java_repo
 from macaron.errors import MacaronError
 from macaron.output_reporter.scm import SCMStatus
@@ -190,9 +191,9 @@ class DependencyAnalyzer(ABC):
 
         if db_man and defaults.getboolean("repofinder.java", "use_database"):
             # Perform database lookup
-            query = sqlalchemy.text(
-                "SELECT remote_path FROM _repository WHERE namespace = :group and name = :artifact"
-            ).bindparams(group=item["group"], artifact=item["name"])
+            query = sqlalchemy.select(RepositoryTable.remote_path).where(
+                RepositoryTable.namespace == item["group"], RepositoryTable.name == item["name"]
+            )
             result: sqlalchemy.engine.cursor.CursorResult = db_man.execute_and_return(query)
             row = result.first()
             if row and row.remote_path:

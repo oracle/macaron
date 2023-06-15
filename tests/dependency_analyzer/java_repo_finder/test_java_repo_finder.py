@@ -81,7 +81,9 @@ def test_java_repo_database(database_fixture: DatabaseManager) -> None:  # pylin
     table = RepositoryTable(**data)
     database_fixture.add(table)
     database_fixture.session.commit()
-    query = sqlalchemy.text("SELECT remote_path FROM _repository WHERE namespace = namespace and name = name")
+    query = sqlalchemy.select(RepositoryTable).where(
+        RepositoryTable.namespace == "namespace", RepositoryTable.name == "name"
+    )
     result = database_fixture.execute_and_return(query)
     row = result.first()
     assert row is not None
