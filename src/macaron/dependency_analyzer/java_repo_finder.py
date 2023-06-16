@@ -121,7 +121,7 @@ def find_parent(pom: Element) -> tuple[str, str, str]:
     return "", "", ""
 
 
-def find_scm(pom: Element, tags: list[str]) -> tuple[Iterator[str], int]:
+def find_scm(pom: Element, tags: list[str], resolve_properties: bool = True) -> tuple[Iterator[str], int]:
     """
     Parse the passed pom and extract the passed tags.
 
@@ -131,6 +131,8 @@ def find_scm(pom: Element, tags: list[str]) -> tuple[Iterator[str], int]:
         The parsed POM.
     tags : list[str]
         The list of tags to try extracting from the POM.
+    resolve_properties: bool
+        Whether to attempt resolution of Maven properties within the POM.
 
     Returns
     -------
@@ -144,7 +146,8 @@ def find_scm(pom: Element, tags: list[str]) -> tuple[Iterator[str], int]:
         element: typing.Optional[Element] = pom
 
         if tag.startswith("properties."):
-            # Tags under properties are often "." separated -- split into only two tags
+            # Tags under properties are often "." separated
+            # These can be safely split into two resulting tags as nested tags are not allowed here
             tag_parts = ["properties", tag[11:]]
         else:
             # Other tags can be split into distinct elements via "."
@@ -159,7 +162,8 @@ def find_scm(pom: Element, tags: list[str]) -> tuple[Iterator[str], int]:
                 results.append(element.text.strip())
 
     # Resolve any Maven properties within the results
-    results = _resolve_properties(pom, results)
+    if resolve_properties:
+        results = _resolve_properties(pom, results)
 
     return iter(results), len(results)
 
@@ -173,34 +177,25 @@ def _resolve_properties(pom: Element, values: list[str]) -> list[str]:
     Entries with rejected properties are removed from the value list.
     """
     resolved_values = []
-    print(f"\nValues: {values}\n")
     for value in values:
         replacements: list = []
         # Calculate replacements
-        found = False
-        print(f"\nValue: {value}\n")
         for match in re.finditer("\\$\\{[^}]+}", value):
-            found = True
             text = match.group().replace("$", "").replace("{", "").replace("}", "")
-            print(f"Text: {text}")
             if text.startswith("project."):
                 text = text.replace("project.", "")
             else:
                 text = f"properties.{text}"
-            print(f"Final Text: {text}")
-            value_iterator, count = find_scm(pom, [text])
-            print(f"Found: {count}")
+            value_iterator, count = find_scm(pom, [text], False)
             if count == 0:
                 break
-            replacements.insert(0, [match.start(), next(value_iterator), match.end()])
+            replacements.append([match.start(), next(value_iterator), match.end()])
 
         # Apply replacements in reverse order
-        for replacement in replacements:
+        for replacement in reversed(replacements):
             value = f"{value[:replacement[0]]}{replacement[1]}{value[replacement[2]:]}"
-            resolved_values.append(value)
 
-        if not found:
-            resolved_values.append(value)
+        resolved_values.append(value)
 
     return resolved_values
 

@@ -25,7 +25,7 @@
         <license>
             <name>Example_License</name>
             <url>https://example.example/license</url>
-            <distribution>repo</distribution>
+            <distribution>${licenses.license.distribution}</distribution>
         </license>
     </licenses>
     <scm>
@@ -33,7 +33,7 @@
             ssh://git@hostname:port/owner/${project.licenses.license.name}.git
         </connection>
         <developerConnection>
-            git@github.com:owner/project${javac.src.version}.git
+            git@github.com:owner/project${javac.src.version}-${project.inceptionYear}.git
         </developerConnection>
         <url>https://github.com/owner/project</url>
         <tag>example-0.0.1</tag>
