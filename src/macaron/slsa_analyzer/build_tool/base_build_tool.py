@@ -79,6 +79,7 @@ class BaseBuildTool(ABC):
         }
         self.build_log: list[str] = []
         self.wrapper_files: list[str] = []
+        self.project_name: str = ""
 
     def __str__(self) -> str:
         return self.name

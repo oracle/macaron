@@ -375,6 +375,7 @@ class Registry:
                             justification=[message],
                             result_type=CheckResultType.UNKNOWN,
                             result_tables=[],
+                            confidence_score=0,
                         )
                         graph.done(check_id)
                     else:

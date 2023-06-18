@@ -64,8 +64,9 @@ class Poetry(BaseBuildTool):
 
             if files_detected:
                 # If a package_lock file exists, and a config file is present, Poetry build tool is detected.
+                # TODO: package_lock_exists check removed for now so poetry # tool name is stored.
                 if package_lock_exists:
-                    return True
+                    logger.info("Lock file found.")  # return True
                 # TODO: this implementation assumes one build type, so when multiple build types are supported, this
                 # needs to be updated.
                 # Take the highest level file, if there are two at the same level, take the first in the list.
@@ -76,16 +77,17 @@ class Poetry(BaseBuildTool):
                         try:
                             data = tomllib.load(toml_file)
                             # Check for the existence of a [tool.poetry] section.
-                            if ("tool" in data) and ("poetry" in data["tool"]):
+                            poetry_tool = data.get("tool", {}).get("poetry", {})
+                            if poetry_tool:
+                                # Store the project name
+                                self.project_name = poetry_tool.get("name")
                                 return True
                         except tomllib.TOMLDecodeError:
                             logger.error("Failed to read the %s file: invalid toml file.", conf)
-                            return False
-                    return False
                 except FileNotFoundError:
                     logger.error("Failed to read the %s file.", conf)
-                    return False
-
+                if package_lock_exists:
+                    return True
         return False
 
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:

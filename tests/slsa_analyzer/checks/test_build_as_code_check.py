@@ -180,9 +180,10 @@ def test_gha_workflow_deployment(
     """Test the use of verified GitHub Actions to deploy."""
     check = BuildAsCodeCheck()
     check_result = CheckResult(justification=[])  # type: ignore
+    bash_commands = BashCommands(caller_path="source_file", CI_path="ci_file", CI_type="github_actions", commands=[[]])
     ci_info = CIInfo(
         service=github_actions_service,
-        bash_commands=[],
+        bash_commands=[bash_commands],
         callgraph=CallGraph(BaseNode(), ""),
         provenance_assets=[],
         latest_release={},
