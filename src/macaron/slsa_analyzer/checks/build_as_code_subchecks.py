@@ -95,6 +95,7 @@ class BuildAsCodeSubchecks:
         self.ci_service = ci_info["service"]
         # Certainty value to be returned if a subcheck fails.
         self.failed_check = 0.0
+        self.evidence: list[str] = []
 
         # TODO: Make subcheck functions available to other checks.
 
@@ -110,12 +111,13 @@ class BuildAsCodeSubchecks:
             self.check_results["ci_parsed"] = DeploySubcheckResults(
                 certainty=check_certainty, justification=justification
             )
+            self.evidence.append("ci_parsed")
             return check_certainty
         return self.failed_check
 
     def deploy_command(self) -> float:
         """Check for the use of deploy command to deploy."""
-        check_certainty = 0.7
+        check_certainty = 0.8
 
         for bash_cmd in self.ci_info["bash_commands"]:
             deploy_cmd = has_deploy_command(bash_cmd["commands"], self.build_tool)
@@ -151,6 +153,7 @@ class BuildAsCodeSubchecks:
                     if html_url
                     else "However, could not find a passing workflow run.",
                 ]
+                self.evidence.append("deploy_command")
 
                 self.check_results["deploy_command"] = DeploySubcheckResults(
                     certainty=check_certainty,
@@ -167,7 +170,7 @@ class BuildAsCodeSubchecks:
 
     def deploy_kws(self) -> float:
         """Check for the use of deploy keywords to deploy."""
-        check_certainty = 0.6
+        check_certainty = 0.4
 
         # We currently don't parse these CI configuration files.
         # We just look for a keyword for now.
@@ -181,6 +184,7 @@ class BuildAsCodeSubchecks:
                         return self.failed_check
 
                     justification: list[str | dict[str, str]] = [f"The target repository uses {deploy_kw} to deploy."]
+                    self.evidence.append("deploy_kws")
 
                     self.check_results["deploy_kws"] = DeploySubcheckResults(
                         certainty=check_certainty,
@@ -192,9 +196,9 @@ class BuildAsCodeSubchecks:
 
         return self.failed_check
 
-    def test_deploy_action(self, workflow_file: str = "", workflow_name: str = "") -> float:
+    def tested_deploy_action(self, workflow_file: str = "", workflow_name: str = "") -> float:
         """Check for the use of a test deploy to PyPi given a CI workflow."""
-        check_certainty = 0.7
+        check_certainty = 0.9
         logger.info("File name: %s", workflow_file)
         for callee in self.ci_info["callgraph"].bfs():
             # TODO: figure out a way to generalize this implementation for other external GHAs.
@@ -213,12 +217,13 @@ class BuildAsCodeSubchecks:
                 repo_url = inputs.get("repository_url", {}).get("Value", {}).get("Value", "")
                 # TODO: Use values that come from defaults.ini rather than hardcoded.
                 if repo_url == "https://test.pypi.org/legacy/":
+                    self.evidence.append("tested_deploy_action")
                     return check_certainty
         return self.failed_check
 
     def deploy_action(self) -> float:
         """Check for use of a trusted Github Actions workflow to publish/deploy."""
-        check_certainty = 0.8
+        check_certainty = 0.95
 
         if isinstance(self.build_tool, Pip):
             trusted_deploy_actions = defaults.get_list("builder.pip.ci.deploy", "github_actions", fallback=[])
@@ -232,11 +237,15 @@ class BuildAsCodeSubchecks:
                 ]:
                     logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
                     continue
+
+                # TODO
                 if workflow_name in trusted_deploy_actions:
                     workflow_info = callee.parsed_obj
                     inputs = workflow_info.get("Inputs", {})
 
                     # Deployment is to Pypi if there isn't a repository url
+                    # https://packaging.python.org/en/latest/guides/
+                    # publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
                     if inputs.get("repository_url"):
                         logger.debug(
                             "Workflow %s has a repository url, indicating a non-legit publish to PyPi. Skipping...",
@@ -274,6 +283,8 @@ class BuildAsCodeSubchecks:
                         else "However, could not find a passing workflow run.",
                     ]
 
+                    self.evidence.append("deploy_action")
+
                     self.check_results["deploy_action"] = DeploySubcheckResults(
                         certainty=check_certainty,
                         justification=justification,
@@ -290,7 +301,7 @@ class BuildAsCodeSubchecks:
 
     # TODO: workflow_name isn't used as a file in some places!
 
-    def workflow_trigger(self, workflow_file: str = "") -> float:
+    def release_workflow_trigger(self, workflow_file: str = "") -> float:
         """Check that the workflow is triggered by a valid event."""
         check_certainty = 0.9
         if not workflow_file:
@@ -299,7 +310,6 @@ class BuildAsCodeSubchecks:
         valid_trigger_events = ["workflow-dispatch", "push", "release"]
 
         # TODO: Consider activity types for release, i.e. prereleased
-
         for callee in self.ci_info["callgraph"].bfs():
             if callee.name == workflow_file:
                 trigger_events = callee.parsed_obj.get("On", {})
@@ -310,12 +320,19 @@ class BuildAsCodeSubchecks:
                         logger.info(
                             "Valid trigger event %s found for the workflow file %s.", trigger_type, workflow_file
                         )
+                        self.evidence.append("release_workflow_trigger")
+                        justification: list[str | dict[str, str]] = [
+                            f"Valid trigger event type {trigger_type} used in workflow: {workflow_file}"
+                        ]
+                        self.check_results["release_workflow_trigger"] = DeploySubcheckResults(
+                            justification=justification
+                        )
                         return check_certainty
         return self.failed_check
 
-    def pypi_publishing_workflow(self) -> float:
+    def pypi_publishing_workflow_timestamp(self) -> float:
         """Compare PyPI release timestamp with GHA publishing workflow timestamps."""
-        check_certainty = 0.5
+        check_certainty = 0.9
         project_name = self.build_tool.project_name
         pypi_timestamp = ""
         # Query PyPI API for the timestamp of the latest release.
@@ -328,8 +345,9 @@ class BuildAsCodeSubchecks:
         if not pypi_timestamp:
             return self.failed_check
 
-        # TODO: Collect 10 (?) of the most recent successful workflow runs
+        # TODO: Collect 5 of the most recent successful workflow runs
         workflow_data: dict = {}
+        workflow_name = ""
 
         workflow_created_timestamp = workflow_data.get("created_at", "")
         workflow_updated_timestamp = workflow_data.get("updated_at", "")
@@ -338,8 +356,18 @@ class BuildAsCodeSubchecks:
         if workflow_created_timestamp and workflow_updated_timestamp:
             # TODO: convert into datetime object to compare
             if workflow_created_timestamp <= pypi_timestamp <= workflow_updated_timestamp:
+                self.evidence.append("publish_timestamp")
+                justification: list[str | dict[str, str]] = [
+                    f"The timestamp of workflow {workflow_name} matches with the PyPI package release time."
+                ]
+                self.check_results["publish_timestamp"] = DeploySubcheckResults(justification=justification)
                 return check_certainty
         return self.failed_check
+
+    def step_uses_secrets(self) -> float:
+        """Identify whether a workflow step uses secrets."""
+        check_certainty = 0.85
+        return check_certainty
 
     def get_subcheck_results(self, subcheck_name: str) -> DeploySubcheckResults:
         """Return the results for a particular subcheck."""

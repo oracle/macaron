@@ -35,6 +35,7 @@ class BuildAsCodeTable(CheckFactsTable, ORMBase):
     deploy_command: Mapped[str] = mapped_column(String, nullable=True)
     build_status_url: Mapped[str] = mapped_column(String, nullable=True)
     confidence_score: Mapped[float] = mapped_column(Float, nullable=True)
+    evidence: Mapped[str] = mapped_column(String, nullable=True)
 
 
 class BuildAsCodeCheck(BaseCheck):
@@ -98,31 +99,36 @@ class BuildAsCodeCheck(BaseCheck):
                 # ProbLog rules to be evaluated.
                 prolog_string = PrologString(
                     """
-                    :- use_module('src/macaron/slsa_analyzer/checks/problog_predicates.py').
+                :- use_module('src/macaron/slsa_analyzer/checks/problog_predicates.py').
 
-                    A :: ci_parsed :- ci_parsed_check(A).
-                    B :: deploy_action :- deploy_action_check(B).
-                    C :: deploy_command :- deploy_command_check(C).
-                    D :: deploy_kws :- deploy_kws_check(D).
+                A :: ci_parsed :- ci_parsed_check(A).
+                B :: deploy_action :- deploy_action_check(B).
+                C :: deploy_command :- deploy_command_check(C).
+                D :: deploy_kws :- deploy_kws_check(D).
+                E :: release_workflow_trigger_deploy_command :- release_workflow_trigger_deploy_command_check(E).
+                F :: release_workflow_trigger_deploy_action :- release_workflow_trigger_deploy_action_check(F).
+                G :: tested_deploy_action :- tested_deploy_action_check(G).
+                H :: publishing_workflow_deploy_command :- publishing_workflow_deploy_command_check(H).
+                I :: publishing_workflow_deploy_action :- publishing_workflow_deploy_action_check(I).
 
-                    0.80 :: deploy_action_certainty :- deploy_action.
-                    0.15 :: deploy_action_certainty :- deploy_action, ci_parsed.
+                0.6 :: deploy_action_certainty :- deploy_action.
+                %0.10 :: deploy_action_certainty :- tested_deploy_action.
+                %0.80 :: deploy_action_certainty :- release_workflow_trigger_deploy_action.
+                %0.90 :: deploy_action_certainty :- publishing_workflow_deploy_action.
 
-                    0.70 :: deploy_command_certainty :- deploy_command.
-                    0.15 :: deploy_command_certainty :- deploy_command, ci_parsed.
+                0.45 :: deploy_command_certainty :- deploy_command.
+                %0.80 :: deploy_command_certainty :- release_workflow_trigger_deploy_command.
+                %0.90 :: deploy_command_certainty :- publishing_workflow_deploy_command.
 
-                    0.60 :: deploy_kws_certainty :- deploy_kws.
+                0.60 :: deploy_kws_certainty :- deploy_kws.
 
-                    build_as_code_check :- deploy_action_certainty; deploy_command_certainty; deploy_kws_certainty.
-
-                    query(deploy_command_certainty).
-                    query(deploy_action_certainty).
-                    query(deploy_kws_certainty).
-                    query(build_as_code_check).
-                    """
+                query(deploy_command_certainty).
+                query(deploy_action_certainty).
+                query(deploy_kws_certainty).
+                """
                 )
-
-                build_as_code_subchecks.build_as_code_subcheck_results.workflow_trigger("publish.yaml")
+                # TODO: we want all the logic to be happening inside the rules,
+                # can we make decisions in here instead of intermediate querying?
 
                 # Convert the result dictionary from Term:float to str:float
                 term_result: dict[Term, float] = get_evaluatable().create_from(prolog_string).evaluate()
@@ -133,12 +139,11 @@ class BuildAsCodeCheck(BaseCheck):
                     "deploy_kws": result["deploy_kws_certainty"],
                 }
                 deploy_methods_valid = {key: value for key, value in deploy_methods.items() if value != 0}
-                confidence_score = result["build_as_code_check"]
-                check_result["confidence_score"] = confidence_score
 
                 if deploy_methods_valid.values():
                     # Determine the deployment method with the highest certainty score.
                     highest_certainty = max(deploy_methods_valid, key=deploy_methods_valid.__getitem__)
+                    highest_certainty_score = deploy_methods[highest_certainty]
                     deploy_method = build_as_code_subchecks.build_as_code_subcheck_results.get_subcheck_results(
                         highest_certainty
                     )
@@ -161,6 +166,15 @@ class BuildAsCodeCheck(BaseCheck):
                                 predicate["builder"]["id"] = deploy_method.config_name
                                 predicate["invocation"]["configSource"]["entryPoint"] = deploy_method.config_name
 
+                        logger.info(build_as_code_subchecks.build_as_code_subcheck_results.check_results.values())
+
+                        all_evidence = build_as_code_subchecks.build_as_code_subcheck_results.evidence
+
+                        distinct_evidence = [*set(all_evidence)]
+                        ev_string = ", ".join(distinct_evidence)
+                        logger.info("Evidence vals %s", ev_string)
+
+                        confidence_score = round(highest_certainty_score, 4)
                         check_result["result_tables"] = [
                             BuildAsCodeTable(
                                 build_tool_name=build_tool.name,
@@ -169,17 +183,19 @@ class BuildAsCodeCheck(BaseCheck):
                                 deploy_command=deploy_method.deploy_cmd,
                                 build_status_url=deploy_method.html_url,
                                 confidence_score=confidence_score,
+                                evidence=ev_string,
                             )
                         ]
+                check_result["confidence_score"] = confidence_score
 
                 # TODO: compile all justifications
                 # check_result["justification"].append()
 
                 # TODO: Investigate using proofs
+                logger.info("The certainty of this check passing is: %s", confidence_score)
 
                 # Check whether the confidence score is greater than the minimum threshold for this check.
                 if confidence_score >= self.confidence_score_threshold:
-                    logger.info("The certainty of this check passing is: %s", confidence_score)
                     return CheckResultType.PASSED
 
             pass_msg = f"The target repository does not use {build_tool.name} to deploy."
