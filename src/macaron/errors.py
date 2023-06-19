@@ -22,3 +22,7 @@ class CUEExpectationError(MacaronError):
 
 class CUERuntimeError(MacaronError):
     """Happens when there are errors in CUE expectation validation."""
+
+
+class ConfigurationError(MacaronError):
+    """Happens when there is an error in the configuration (.ini) file."""

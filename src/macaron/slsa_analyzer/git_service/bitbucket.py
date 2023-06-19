@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the spec for the BitBucket service."""
@@ -19,7 +19,8 @@ class BitBucket(BaseGitService):
         super().__init__("bitbucket")
 
     def load_defaults(self) -> None:
-        """Load the default values from defaults.ini."""
+        """Load the values for this git service from the ini configuration."""
+        return None
 
     def can_clone_remote_repo(self, url: str) -> bool:
         """Return True if the remote repository can be cloned.
