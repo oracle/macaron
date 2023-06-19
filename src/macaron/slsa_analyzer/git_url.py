@@ -9,7 +9,7 @@ import os
 import re
 import string
 import urllib.parse
-from typing import Optional
+from configparser import ConfigParser
 
 from git import GitCommandError
 from git.objects import Commit
@@ -481,7 +481,7 @@ def get_remote_vcs_url(url: str, clean_up: bool = True) -> str:
     return url_as_str
 
 
-def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse.ParseResult | None:
+def parse_remote_url(url: str, allowed_git_service_domains: list[str] | None = None) -> urllib.parse.ParseResult | None:
     """Verify if the given repository path is a valid vcs.
 
     This method converts the url to a ``https://`` url and return a
@@ -492,8 +492,10 @@ def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse
     ----------
     url: str
         The path of the repository to check.
-    git_hosts: Optional[list]
-        The list of allowed network locations (default: None).
+    allowed_git_service_domains: list[str] | None
+        The list of allowed git service domains.
+        If this is ``None``, fall back to the  ``.ini`` configuration.
+        (Default: None).
 
     Returns
     -------
@@ -505,7 +507,8 @@ def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse
     >>> parse_remote_url("ssh://git@github.com:7999/owner/org.git")
     ParseResult(scheme='https', netloc='github.com', path='owner/org.git', params='', query='', fragment='')
     """
-    allowed_git_hosts = git_hosts if git_hosts else defaults.get_list("git", "allowed_hosts", fallback=[])
+    if allowed_git_service_domains is None:
+        allowed_git_service_domains = get_allowed_git_service_domains(defaults)
 
     try:
         # Remove prefixes, such as "scm:" and "git:".
@@ -526,7 +529,7 @@ def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse
 
     # e.g., https://github.com/owner/project.git
     if parsed_url.scheme in ("http", "https", "ftp", "ftps", "git+https"):
-        if parsed_url.netloc not in allowed_git_hosts:
+        if parsed_url.netloc not in allowed_git_service_domains:
             return None
         path_params = parsed_url.path.strip("/").split("/")
         if len(path_params) < 2:
@@ -543,7 +546,7 @@ def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse
         user_host, _, port = parsed_url.netloc.partition(":")
         user, _, host = user_host.rpartition("@")
 
-        if not user or host not in allowed_git_hosts:
+        if not user or host not in allowed_git_service_domains:
             return None
 
         path = ""
@@ -571,7 +574,7 @@ def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse
         if not user_host or not port_path:
             return None
         user, _, host = user_host.rpartition("@")
-        if not user or host not in allowed_git_hosts:
+        if not user or host not in allowed_git_service_domains:
             return None
 
         path = ""
@@ -605,6 +608,40 @@ def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse
     except ValueError:
         logger.debug("Could not reconstruct %s.", url)
         return None
+
+
+def get_allowed_git_service_domains(config: ConfigParser) -> list[str]:
+    """Load allowed git service domains from ini configuration.
+
+    Some notes for future improvements:
+
+    The fact that this method is here is not ideal.
+
+    Q: Why do we need this method here in this ``git_url`` module in the first place?
+    A: A number of functions in this module also do "URL validation" as part of their logic.
+    This requires loading in the allowed git service domains from the ini config.
+
+    Q: Why don't we use the ``GIT_SERVICES`` list from the ``macaron.slsa_analyzer.git_service``
+    instead of having this second place of loading git service configuration?
+    A: Referencing ``GIT_SERVICES`` in this module results in cyclic imports since the module
+    where ``GIT_SERVICES`` is defined in also reference this module.
+    """
+    git_service_section_names = [
+        section_name for section_name in config.sections() if section_name.startswith("git_service")
+    ]
+
+    allowed_git_service_domains = []
+
+    for section_name in git_service_section_names:
+        git_service_section = config[section_name]
+
+        domain = git_service_section.get("domain")
+        if not domain:
+            continue
+
+        allowed_git_service_domains.append(domain)
+
+    return allowed_git_service_domains
 
 
 def get_repo_dir_name(url: str, sanitize: bool = True) -> str:

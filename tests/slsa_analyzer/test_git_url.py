@@ -5,8 +5,10 @@
 
 import os
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
-from macaron.config.defaults import defaults
+import pytest
+
 from macaron.slsa_analyzer import git_url
 
 
@@ -122,36 +124,28 @@ def test_get_remote_vcs_url() -> None:
     assert git_url.get_remote_vcs_url("git@github.com:7999/org/") == ""
 
 
-def test_invalid_git_allowed_hosts() -> None:
+@patch("macaron.slsa_analyzer.git_url.get_allowed_git_service_domains")
+def test_get_remote_vcs_url_with_invalid_allowed_domains(
+    get_allowed_domains_fn: MagicMock,
+) -> None:
     """Test the vcs URL validator method without any allowed git hosts."""
-    original_allowed_hosts = defaults.get("git", "allowed_hosts")
-
-    # Test running with no git hosts defined in defaults.ini
-    defaults.remove_option("git", "allowed_hosts")
+    get_allowed_domains_fn.return_value = []
     assert git_url.get_remote_vcs_url("https://github.com/org/name.git") == ""
     assert git_url.get_remote_vcs_url("https://gitlab.com/org") == ""
 
-    # Test running with invalid git hosts defined in defaults.ini
-    defaults["git"]["allowed_hosts"] = "invalid host"
+    get_allowed_domains_fn.return_value = ["invalid host"]
     assert git_url.get_remote_vcs_url("https://github.com/org/name.git") == ""
     assert git_url.get_remote_vcs_url("https://gitlab.com/org") == ""
 
-    defaults["git"]["allowed_hosts"] = original_allowed_hosts
 
-
-def test_get_unique_path() -> None:
+@pytest.mark.parametrize(
+    ("url", "path"),
+    [
+        ("https://github.com/apache/maven", "github_com/apache/maven"),
+        ("https://gitlab.com/apache/maven", "gitlab_com/apache/maven"),
+        ("git@github.com:apache/maven", "github_com/apache/maven"),
+    ],
+)
+def test_get_unique_path(url: str, path: str) -> None:
     """Test the get unique path method."""
-    assert git_url.get_repo_dir_name("https://github.com/apache/maven") == os.path.normpath("github_com/apache/maven")
-    assert git_url.get_repo_dir_name("https://gitlab.com/apache/maven") == os.path.normpath("gitlab_com/apache/maven")
-    assert git_url.get_repo_dir_name("git@github.com:apache/maven") == os.path.normpath("github_com/apache/maven")
-
-    # TODO: use pytest fixtures to properly set and cleanup defaults after each run.
-    back_up = defaults["git"]["allowed_hosts"]
-    defaults["git"]["allowed_hosts"] = f"{back_up} \n git.host.blah \n ** \n wrong_host##format"
-
-    assert git_url.get_repo_dir_name("git@git.host.blah:apache/maven") == os.path.normpath("git_host_blah/apache/maven")
-    assert git_url.get_repo_dir_name("https://**/apache/maven") == os.path.normpath("mcn__/apache/maven")
-    assert git_url.get_repo_dir_name("https://wrong_host##format/apache/maven") == ""
-    assert git_url.get_repo_dir_name("git@not.supported.githost.com/apache/maven") == ""
-
-    defaults["git"]["allowed_hosts"] = back_up
+    assert git_url.get_repo_dir_name(url) == os.path.normpath(path)
