@@ -86,6 +86,9 @@ test = [
     "pytest-cov >=4.0.0,<5.0.0",
     "pytest-env >=0.8.1,<1.0.0",
     "syrupy >=4.0.0,<5.0.0",
+    # Update the version once this issue is resolved:
+    # https://github.com/tophat/syrupy/issues/758
+    "colored >=1.0.0,<1.5.0",
 ]
 
 [project.urls]
