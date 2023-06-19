@@ -7,6 +7,7 @@ from abc import abstractmethod
 
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError
+from macaron.slsa_analyzer import git_url
 
 
 class BaseGitService:
@@ -67,7 +68,10 @@ class BaseGitService:
         return domain
 
     def is_detected(self, url: str) -> bool:
-        """Return True if the remote repo is using this git service.
+        """Check if the remote repo at the given ``url`` is hosted on this git service.
+
+        This check is done by checking the URL of the repo against the domain of this
+        git service.
 
         Parameters
         ----------
@@ -77,9 +81,17 @@ class BaseGitService:
         Returns
         -------
         bool
-            True if this git service is detected else False.
+            True if the repo is indeed hosted on this git service.
         """
-        raise NotImplementedError
+        if self.domain is None:
+            return False
+        return (
+            git_url.parse_remote_url(
+                url,
+                allowed_git_service_domains=[self.domain],
+            )
+            is not None
+        )
 
     @abstractmethod
     def can_clone_remote_repo(self, url: str) -> bool:

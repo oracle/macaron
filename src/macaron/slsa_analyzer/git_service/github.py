@@ -62,21 +62,3 @@ class GitHub(BaseGitService):
 
         return True
 
-    def is_detected(self, url: str) -> bool:
-        """Return True if the remote repo is using this git service.
-
-        Parameters
-        ----------
-        url : str
-            The url of the remote repo.
-
-        Returns
-        -------
-        bool
-            True if this git service is detected else False.
-        """
-        parsed_url = git_url.parse_remote_url(url)
-        if not parsed_url or self.name not in parsed_url.netloc:
-            return False
-
-        return True
