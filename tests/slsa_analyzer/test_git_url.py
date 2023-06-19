@@ -4,7 +4,6 @@
 """This module tests the generic actions on Git repositories."""
 
 import os
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -53,13 +52,6 @@ def test_get_repo_name_from_url() -> None:
     # Test get repo full name
     assert all(git_url.get_repo_full_name_from_url(url) == repo_full_name for url in valid_git_urls)
     assert not any(git_url.get_repo_full_name_from_url(url) for url in invalid_git_urls)
-
-
-def test_clone_remote_repo() -> None:
-    """
-    Test the clone remote repository method
-    """
-    assert not git_url.clone_remote_repo(str(Path(__file__).parent), "")
 
 
 def test_is_remote_repo() -> None:

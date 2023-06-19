@@ -21,7 +21,8 @@ is in the ``[git_service.gitlab.private]`` section.
 import os
 from abc import abstractmethod
 
-from macaron.errors import ConfigurationError
+from macaron.errors import CloneError, ConfigurationError
+from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
 
 
@@ -53,7 +54,71 @@ class GitLab(BaseGitService):
         """
         return False
 
+    def construct_clone_url(self, url: str) -> str:
+        """Construct a clone URL for GitLab, with or without access token.
 
+        Parameters
+        ----------
+        url : str
+            The URL of the repository to be cloned.
+
+        Returns
+        -------
+        str
+            The URL that is actually used for cloning, containing the access token.
+            See GitLab documentation: https://docs.gitlab.com/ee/gitlab-basics/start-using-git.html#clone-using-a-token.
+
+        Raises
+        ------
+        CloneError
+            If there is an error parsing the URL.
+        """
+        class_name = type(self).__name__
+        if not self.domain:
+            # This should not happen.
+            raise CloneError(
+                f"Internal error: The repository '{url} should not be cloned from the git service '{class_name}'."
+            )
+
+        url_parse_result = git_url.parse_remote_url(
+            url,
+            allowed_git_service_domains=[self.domain],
+        )
+        if not url_parse_result:
+            raise CloneError(
+                f"Cannot clone the repo '{url}' from the git service '{class_name}'"
+                "the URL format is invalid or not supported by Macaron."
+            )
+
+        if self.access_token:
+            # https://docs.gitlab.com/ee/gitlab-basics/start-using-git.html#clone-using-a-token
+            clone_url = f"https://oauth2:{self.access_token}@{self.domain}/{url_parse_result.path}"
+        else:
+            clone_url = f"https://{self.domain}/{url_parse_result.path}"
+
+        return clone_url
+
+    def clone_repo(self, clone_dir: str, url: str) -> None:
+        """Clone a repository.
+
+        To clone a GitLab repository with access token, we embed the access token in the https URL.
+        See GitLab documentation: https://docs.gitlab.com/ee/gitlab-basics/start-using-git.html#clone-using-a-token.
+
+        Parameters
+        ----------
+        clone_dir: str
+            The name of the directory to clone into.
+            This is equivalent to the <directory> argument of ``git clone``.
+        url : str
+            The url to the GitLab repository.
+
+        Raises
+        ------
+        CloneError
+            If there is an error cloning the repository.
+        """
+        clone_url = self.construct_clone_url(url)
+        git_url.clone_remote_repo(clone_dir, clone_url)
 
 
 class PrivateGitLab(GitLab):

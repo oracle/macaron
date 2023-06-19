@@ -62,3 +62,17 @@ class GitHub(BaseGitService):
 
         return True
 
+    def clone_repo(self, clone_dir: str, url: str) -> None:
+        """Clone a GitHub repository.
+
+        clone_dir: str
+            The name of the directory to clone into.
+            This is equivalent to the <directory> argument of ``git clone``.
+            The url to the repository.
+
+        Raises
+        ------
+        CloneError
+            If there is an error cloning the repo.
+        """
+        git_url.clone_remote_repo(clone_dir, url)

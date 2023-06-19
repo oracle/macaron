@@ -18,6 +18,7 @@ from git.repo import Repo
 from pydriller.git import Git
 
 from macaron.config.defaults import defaults
+from macaron.errors import CloneError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -298,26 +299,33 @@ def is_remote_repo(path_to_repo: str) -> bool:
 def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
     """Clone the remote repository and return the `git.Repo` object for that repository.
 
-    If ``clone_dir`` already exists, the repository is not cloned.
+    If there is an existing non-empty ``clone_dir``, Macaron assumes the repository has
+    been cloned already and cancels the clone.
+    This could happen when multiple runs of Macaron use the same `<output_dir>`, leading
+    to Macaron potentially trying to clone a repository multiple times.
 
     Parameters
     ----------
     clone_dir : str
         The directory to clone the repo to.
     url : str
-        The remote url to clone the repository.
+        The url to clone the repository.
+        Important: this can contain secrets! (e.g. cloning with GitLab token)
 
     Returns
     -------
-    git.Repo
-        The Repo object of the repository or None if errors.
-    """
-    # Validate the url first.
-    parsed_url = get_remote_vcs_url(url)
-    if parsed_url == "":
-        logger.debug("URL '%s' is not valid.", url)
-        return None
+    git.Repo | None
+        The ``git.Repo`` object of the repository, or ``None`` if the clone directory already exists.
 
+    Raises
+    ------
+    CloneError
+        If the repository has not been cloned and the clone attempt fails.
+    """
+    # Handle the case where the repository already exists in `<output_dir>/git_repos`.
+    # This could happen when multiple runs of Macaron use the same `<output_dir>`, leading to
+    # Macaron attempting to clone a repository multiple times.
+    # In these cases, we should not error since it may interrupt the analysis.
     if os.path.isdir(clone_dir):
         try:
             os.rmdir(clone_dir)
@@ -331,17 +339,18 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
 
     # The Repo.clone_from method handles creating intermediate dirs.
     try:
-        logger.info("Cloning the repo %s to %s", url, clone_dir)
-        return Repo.clone_from(url=url, to_path=clone_dir)
-    except GitCommandError as error:
-        logger.error(
-            "Cannot clone with the repo path %s to %s. Error: %s",
-            url,
-            clone_dir,
-            str(error),
+        return Repo.clone_from(
+            url=url,
+            to_path=clone_dir,
+            env={
+                # Setting the GIT_TERMINAL_PROMPT environment variable to ``0`` stops
+                # ``git clone`` from prompting for login credentials.
+                "GIT_TERMINAL_PROMPT": "0",
+            },
         )
-
-    return None
+    except GitCommandError as error:
+        # stderr here does not contain secrets, so it is safe for logging.
+        raise CloneError(error.stderr) from None
 
 
 def get_repo_name_from_url(url: str) -> str:
@@ -430,6 +439,23 @@ def get_remote_origin_of_local_repo(git_obj: Git) -> str:
     # We don't need to validate this path as we are getting it from an already cloned repository. If the path is invalid
     # it should have been caught during the preparing process of the git repository.
     remote_origin_path = valid_remote_path_set.pop()
+
+    # Hide the GitLab OAuth token from the repo's remote.
+    # This is because cloning from GitLab with an access token requires us to embed
+    # the token in the URL.
+    if "oauth2" in remote_origin_path:
+        url_parse_result = urllib.parse.urlparse(remote_origin_path)
+        _, _, domain = url_parse_result.netloc.rpartition("@")
+        new_url_parse_result = urllib.parse.ParseResult(
+            scheme=url_parse_result.scheme,
+            netloc=domain,
+            path=url_parse_result.path,
+            params=url_parse_result.params,
+            query=url_parse_result.query,
+            fragment=url_parse_result.fragment,
+        )
+        remote_origin_path = urllib.parse.urlunparse(new_url_parse_result)
+
     return remote_origin_path or ""
 
 

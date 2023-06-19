@@ -26,3 +26,7 @@ class CUERuntimeError(MacaronError):
 
 class ConfigurationError(MacaronError):
     """Happens when there is an error in the configuration (.ini) file."""
+
+
+class CloneError(MacaronError):
+    """Happens when cannot clone a git repository."""

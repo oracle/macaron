@@ -6,7 +6,7 @@
 from abc import abstractmethod
 
 from macaron.config.defaults import defaults
-from macaron.errors import ConfigurationError
+from macaron.errors import CloneError, ConfigurationError
 from macaron.slsa_analyzer import git_url
 
 
@@ -109,6 +109,25 @@ class BaseGitService:
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def clone_repo(self, clone_dir: str, url: str) -> None:
+        """Clone a repository.
+
+        Parameters
+        ----------
+        clone_dir: str
+            The name of the directory to clone into.
+            This is equivalent to the <directory> argument of ``git clone``.
+        url : str
+            The url to the repository.
+
+        Raises
+        ------
+        CloneError
+            If there is an error cloning the repo.
+        """
+        raise NotImplementedError()
+
 
 class NoneGitService(BaseGitService):
     """This class can be used to initialize an empty git service."""
@@ -153,3 +172,16 @@ class NoneGitService(BaseGitService):
             True if the repo can be cloned, else False.
         """
         return False
+
+    def clone_repo(self, _clone_dir: str, url: str) -> None:
+        """Clone a repo.
+
+        In this particular case, since this class represents a ``None`` git service,
+        we do nothing but raise a ``CloneError``.
+
+        Raises
+        ------
+        CloneError
+            Always raise, since this method should not be used to clone any repository.
+        """
+        raise CloneError(f"Internal error encountered when cloning the repo '{url}'.")

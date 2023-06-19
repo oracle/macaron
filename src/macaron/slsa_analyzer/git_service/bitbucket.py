@@ -19,7 +19,13 @@ class BitBucket(BaseGitService):
 
     def load_defaults(self) -> None:
         """Load the values for this git service from the ini configuration."""
+        # TODO: implement this once support for BitBucket is added.
         return None
+
+    def clone_repo(self, _clone_dir: str, _url: str) -> None:
+        """Clone a BitBucket repo."""
+        # TODO: implement this once support for BitBucket is added.
+        logger.info("Cloning BitBucket repositories is not supported yet. Please clone the repository manually.")
 
     def can_clone_remote_repo(self, url: str) -> bool:
         """Return True if the remote repository can be cloned.
