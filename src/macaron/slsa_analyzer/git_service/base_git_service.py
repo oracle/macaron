@@ -94,22 +94,6 @@ class BaseGitService:
         )
 
     @abstractmethod
-    def can_clone_remote_repo(self, url: str) -> bool:
-        """Return True if the remote repository can be cloned.
-
-        Parameters
-        ----------
-        url : str
-            The remote url.
-
-        Returns
-        -------
-        bool
-            True if the repo can be cloned, else False.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def clone_repo(self, clone_dir: str, url: str) -> None:
         """Clone a repository.
 
@@ -155,21 +139,6 @@ class NoneGitService(BaseGitService):
         -------
         bool
             True if this git service is detected else False.
-        """
-        return False
-
-    def can_clone_remote_repo(self, url: str) -> bool:
-        """Return True if the remote repository can be cloned.
-
-        Parameters
-        ----------
-        url : str
-            The remote url.
-
-        Returns
-        -------
-        bool
-            True if the repo can be cloned, else False.
         """
         return False
 

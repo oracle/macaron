@@ -5,10 +5,8 @@
 This module tests the GitHub git service.
 """
 
-from unittest.mock import patch
 
 from macaron.slsa_analyzer.git_service import GitHub
-from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
 
 from ...macaron_testcase import MacaronTestCase
 
@@ -29,12 +27,3 @@ class TestGitHub(MacaronTestCase):
         assert not github.is_detected("git@githubb.com:org/name")
         assert not github.is_detected("git@not_supported_git_host.com:7999/org/name")
         assert not github.is_detected("ssh://git@bitbucket.com:7999/org/name")
-
-    def test_can_clone_remote_repo(self) -> None:
-        """Test the can clone remote repo method."""
-        github = GitHub()
-        with patch.object(GhAPIClient, "get_repo_data", return_value=True):
-            assert github.can_clone_remote_repo("can_clone_repo_url")
-
-        with patch.object(GhAPIClient, "get_repo_data", return_value=False):
-            assert not github.can_clone_remote_repo("invalid_repo_url")

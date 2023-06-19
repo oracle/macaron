@@ -42,26 +42,6 @@ class GitHub(BaseGitService):
 
         return self._api_client
 
-    def can_clone_remote_repo(self, url: str) -> bool:
-        """Return True if the remote repository can be cloned.
-
-        Parameters
-        ----------
-        url : str
-            The remote url.
-
-        Returns
-        -------
-        bool
-            True if the repo can be cloned, else False.
-        """
-        remote_url = git_url.get_remote_vcs_url(url)
-        full_name = git_url.get_repo_full_name_from_url(remote_url)
-        if not self.api_client.get_repo_data(full_name):
-            return False
-
-        return True
-
     def clone_repo(self, clone_dir: str, url: str) -> None:
         """Clone a GitHub repository.
 

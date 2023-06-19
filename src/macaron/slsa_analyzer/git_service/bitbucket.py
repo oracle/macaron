@@ -26,19 +26,3 @@ class BitBucket(BaseGitService):
         """Clone a BitBucket repo."""
         # TODO: implement this once support for BitBucket is added.
         logger.info("Cloning BitBucket repositories is not supported yet. Please clone the repository manually.")
-
-    def can_clone_remote_repo(self, url: str) -> bool:
-        """Return True if the remote repository can be cloned.
-
-        Parameters
-        ----------
-        url : str
-            The remote url.
-
-        Returns
-        -------
-        bool
-            True if the repo can be cloned, else False.
-        """
-        logger.info("Cloning BitBucket repositories is not supported yet. Please clone the repository manually.")
-        return False

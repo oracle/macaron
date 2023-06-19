@@ -39,21 +39,6 @@ class GitLab(BaseGitService):
         """Load the .ini configuration."""
         raise NotImplementedError()
 
-    def can_clone_remote_repo(self, url: str) -> bool:
-        """Return True if the remote repository can be cloned.
-
-        Parameters
-        ----------
-        url : str
-            The remote url.
-
-        Returns
-        -------
-        bool
-            True if the repo can be cloned, else False.
-        """
-        return False
-
     def construct_clone_url(self, url: str) -> str:
         """Construct a clone URL for GitLab, with or without access token.
 
