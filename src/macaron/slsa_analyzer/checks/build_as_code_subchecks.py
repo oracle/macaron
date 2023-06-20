@@ -112,6 +112,7 @@ class BuildAsCodeSubchecks:
                 certainty=check_certainty, justification=justification
             )
             self.evidence.append("ci_parsed")
+            logger.info("Evidence found: ci_parsed -> %s", check_certainty)
             return check_certainty
         return self.failed_check
 
@@ -154,7 +155,7 @@ class BuildAsCodeSubchecks:
                     else "However, could not find a passing workflow run.",
                 ]
                 self.evidence.append("deploy_command")
-
+                logger.info("Evidence found: deploy_command -> %s", check_certainty)
                 self.check_results["deploy_command"] = DeploySubcheckResults(
                     certainty=check_certainty,
                     justification=justification,
@@ -192,6 +193,7 @@ class BuildAsCodeSubchecks:
                         deploy_cmd=deploy_kw,
                         config_name=config_name,
                     )
+                    logger.info("Evidence found: deploy_kws -> %s", check_certainty)
                     return check_certainty
 
         return self.failed_check
@@ -218,6 +220,7 @@ class BuildAsCodeSubchecks:
                 # TODO: Use values that come from defaults.ini rather than hardcoded.
                 if repo_url == "https://test.pypi.org/legacy/":
                     self.evidence.append("tested_deploy_action")
+                    logger.info("Evidence found: tested_deploy_action -> %s", check_certainty)
                     return check_certainty
         return self.failed_check
 
@@ -246,7 +249,8 @@ class BuildAsCodeSubchecks:
                     # Deployment is to Pypi if there isn't a repository url
                     # https://packaging.python.org/en/latest/guides/
                     # publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
-                    if inputs and inputs.get("repository_url"):
+                    logger.info("inputs")
+                    if inputs and inputs.get("repository_url", ""):
                         logger.debug(
                             "Workflow %s has a repository url, indicating a non-legit publish to PyPi. Skipping...",
                             callee.name,
@@ -284,6 +288,7 @@ class BuildAsCodeSubchecks:
                     ]
 
                     self.evidence.append("deploy_action")
+                    logger.info("Evidence found: deploy_action -> %s", check_certainty)
 
                     self.check_results["deploy_action"] = DeploySubcheckResults(
                         certainty=check_certainty,
@@ -327,6 +332,8 @@ class BuildAsCodeSubchecks:
                         self.check_results["release_workflow_trigger"] = DeploySubcheckResults(
                             justification=justification
                         )
+                        logger.info("Evidence found: release_workflow_trigger -> %s", check_certainty)
+
                         return check_certainty
         return self.failed_check
 
@@ -361,12 +368,16 @@ class BuildAsCodeSubchecks:
                     f"The timestamp of workflow {workflow_name} matches with the PyPI package release time."
                 ]
                 self.check_results["publish_timestamp"] = DeploySubcheckResults(justification=justification)
+                logger.info("Evidence found: publishing_workflow_timestamp -> %s", check_certainty)
                 return check_certainty
+
         return self.failed_check
 
     def step_uses_secrets(self) -> float:
         """Identify whether a workflow step uses secrets."""
-        check_certainty = 0.85
+        check_certainty = 0  # 0.85
+        logger.info("Evidence found: step_secrets -> %s", check_certainty)
+
         return check_certainty
 
     def get_subcheck_results(self, subcheck_name: str) -> DeploySubcheckResults:
