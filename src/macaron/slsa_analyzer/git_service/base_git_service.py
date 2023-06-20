@@ -32,7 +32,7 @@ class BaseGitService:
     def load_domain(self, section_name: str) -> str | None:
         """Load the domain of the git service from the ini configuration section ``section_name``.
 
-        The section may or may not be available in the configuration. In both case,
+        The section may or may not be available in the configuration. In both cases,
         the method should not raise ``ConfigurationError``.
 
         Meanwhile, if the section is present but there is a schema violation (e.g. a key such as
