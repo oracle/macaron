@@ -143,7 +143,7 @@ def perform_action(action_args: argparse.Namespace) -> None:
                 for git_service in GIT_SERVICES:
                     git_service.load_defaults()
             except ConfigurationError as error:
-                logger.error(str(error))
+                logger.error(error)
                 sys.exit(os.EX_USAGE)
 
             analyze_slsa_levels_single(action_args)
