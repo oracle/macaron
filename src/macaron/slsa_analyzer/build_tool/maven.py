@@ -66,7 +66,7 @@ class Maven(BaseBuildTool):
             return False
         maven_config_files = self.build_configs
         for file in maven_config_files:
-            if file_exists(repo_path, file):
+            if file_exists(repo_path, file, self.exclude_paths):
                 return True
 
         return False

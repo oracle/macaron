@@ -2,12 +2,13 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Fixtures for tests."""
+import os
 from pathlib import Path
 from typing import NoReturn
 
 import pytest
 
-from macaron.config.defaults import create_defaults, defaults, load_defaults
+from macaron.config.defaults import defaults, load_defaults
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.build_tool.pip import Pip
@@ -47,7 +48,7 @@ def macaron_path() -> Path:
 
 
 @pytest.fixture(autouse=True)
-def setup_test(test_dir: Path, macaron_path: Path) -> NoReturn:  # type: ignore
+def setup_test(test_dir: Path) -> NoReturn:  # type: ignore
     """Set up the necessary values for the tests.
 
     Parameters
@@ -62,10 +63,7 @@ def setup_test(test_dir: Path, macaron_path: Path) -> NoReturn:  # type: ignore
     NoReturn
     """
     # Load values from defaults.ini.
-    if not test_dir.joinpath("defaults.ini").exists():
-        create_defaults(str(test_dir), str(macaron_path))
-
-    load_defaults(str(macaron_path))
+    load_defaults(os.path.join(str(test_dir), "defaults.ini"))
     yield
     defaults.clear()
 

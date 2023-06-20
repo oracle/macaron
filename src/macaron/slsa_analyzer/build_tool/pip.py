@@ -48,7 +48,7 @@ class Pip(BaseBuildTool):
             True if this build tool is detected, else False.
         """
         for file in self.build_configs:
-            if file_exists(repo_path, file):
+            if file_exists(repo_path, file, self.exclude_paths):
                 return True
         return False
 

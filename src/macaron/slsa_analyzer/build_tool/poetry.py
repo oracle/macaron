@@ -53,7 +53,7 @@ class Poetry(BaseBuildTool):
         """
         package_lock_exists = ""
         for file in self.package_lock:
-            if file_exists(repo_path, file):
+            if file_exists(repo_path, file, self.exclude_paths):
                 package_lock_exists = file
                 break
 

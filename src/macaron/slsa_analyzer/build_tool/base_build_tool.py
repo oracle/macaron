@@ -15,7 +15,7 @@ from macaron.dependency_analyzer import DependencyAnalyzer
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def file_exists(path: str, file_name: str) -> bool:
+def file_exists(path: str, file_name: str, exclude_paths: list[str] | None = None) -> bool:
     """Return True if a file exists in a directory.
 
     This method searches in the directory recursively.
@@ -26,6 +26,8 @@ def file_exists(path: str, file_name: str) -> bool:
         The path to search for the file.
     file_name : str
         The name of the file to search.
+    exclude_paths: list[str] | None
+        The list of sub-paths that should be ignored.
 
     Returns
     -------
@@ -35,7 +37,9 @@ def file_exists(path: str, file_name: str) -> bool:
     pattern = os.path.join(path, "**", file_name)
     files_detected = glob.iglob(pattern, recursive=True)
     try:
-        next(files_detected)
+        path = next(files_detected)
+        if exclude_paths and any(exc in path.lower() for exc in exclude_paths):
+            return False
         return True
     except StopIteration:
         return False
@@ -53,6 +57,7 @@ class BaseBuildTool(ABC):
             The name of this build tool.
         """
         self.name = name
+        self.exclude_paths: list[str] = []
         self.entry_conf: list[str] = []
         self.build_configs: list[str] = []
         self.package_lock: list[str] = []

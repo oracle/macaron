@@ -58,7 +58,7 @@ class Gradle(BaseBuildTool):
         """
         gradle_config_files = self.build_configs + self.entry_conf
         for file in gradle_config_files:
-            if file_exists(repo_path, file):
+            if file_exists(repo_path, file, self.exclude_paths):
                 return True
 
         return False
