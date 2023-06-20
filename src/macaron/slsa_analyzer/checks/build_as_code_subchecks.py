@@ -5,6 +5,7 @@
 
 import logging
 import os
+import re
 
 from attr import dataclass
 
@@ -80,6 +81,7 @@ class DeploySubcheckResults:
     html_url: str = ""
     config_name: str = ""
     workflow_name: str = ""
+    workflow_info: dict = {}
 
 
 class BuildAsCodeSubchecks:
@@ -143,6 +145,7 @@ class BuildAsCodeSubchecks:
                 )
 
                 workflow_name = os.path.basename(html_url)
+                workflow_info = bash_cmd["workflow_info"]
 
                 justification: list[str | dict[str, str]] = [
                     {
@@ -164,6 +167,7 @@ class BuildAsCodeSubchecks:
                     source_link=bash_source_link,
                     html_url=html_url,
                     workflow_name=workflow_name,
+                    workflow_info=workflow_info,
                 )
 
                 return check_certainty
@@ -249,8 +253,7 @@ class BuildAsCodeSubchecks:
                     # Deployment is to Pypi if there isn't a repository url
                     # https://packaging.python.org/en/latest/guides/
                     # publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
-                    logger.info("inputs")
-                    if inputs and inputs.get("repository_url", ""):
+                    if inputs and inputs.get("repository_url"):
                         logger.debug(
                             "Workflow %s has a repository url, indicating a non-legit publish to PyPi. Skipping...",
                             callee.name,
@@ -298,6 +301,7 @@ class BuildAsCodeSubchecks:
                         source_link=deploy_action_source_link,
                         html_url=html_url,
                         workflow_name=workflow_name,
+                        workflow_info=workflow_info,
                     )
 
                     return check_certainty
@@ -373,12 +377,43 @@ class BuildAsCodeSubchecks:
 
         return self.failed_check
 
-    def step_uses_secrets(self) -> float:
+    def step_uses_secrets(self, step_info: dict) -> float:
         """Identify whether a workflow step uses secrets."""
-        check_certainty = 0  # 0.85
-        logger.info("Evidence found: step_secrets -> %s", check_certainty)
+        check_certainty = 0.9
 
-        return check_certainty
+        logger.info("STEP")
+        logger.info(step_info)
+
+        # inputs = step_info.get("Inputs", {})
+        logger.info("inputs: %s", step_info)
+        if self._step_uses_secrets(step_info):
+            self.evidence.append("deploy_step_uses_secrets")
+            logger.info("Evidence found: step_secrets -> %s", check_certainty)
+            justification: list[str | dict[str, str]] = [
+                "The workflow step that contains the deployment method uses secrets."
+            ]
+            self.check_results["step_secrets"] = DeploySubcheckResults(justification=justification)
+            return check_certainty
+        return self.failed_check
+
+    def _step_uses_secrets(self, inputs: dict) -> bool:
+        """Recurse through GitHub Actions syntax tree to find the use of secrets."""
+        for value in inputs.values():
+            if isinstance(value, str):
+                # Match the pattern '${{ content }}'
+                pattern = re.compile(r"\$\{\{([^}]*)\}\}", re.IGNORECASE)
+                match = pattern.match(value)
+                if match is not None:
+                    content = match.group(1).strip()
+                    contents = content.split(".")
+                    # Note that we only support the case: ${{ secrets.TOKEN }} for now.
+                    # Exclude 'secrets.GITHUB_TOKEN'..
+                    if len(contents) == 2 and (contents[0] == "secrets") and (contents[1] != "GITHUB_TOKEN"):
+                        return True
+            elif isinstance(value, dict):
+                if self._step_uses_secrets(value):
+                    return True
+        return False
 
     def get_subcheck_results(self, subcheck_name: str) -> DeploySubcheckResults:
         """Return the results for a particular subcheck."""

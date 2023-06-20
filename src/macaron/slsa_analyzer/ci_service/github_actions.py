@@ -278,6 +278,7 @@ class GitHubActions(BaseCIService):
                                 step["Exec"]["Run"]["Value"],
                                 ci_file=self.api_client.get_relative_path_of_workflow(callee.name),
                                 ci_type="github_actions",
+                                workflow_info=step,
                                 recursive=True,
                                 repo_path=callgraph.repo_path,
                                 working_dir=step["Exec"]["WorkingDirectory"] or "",

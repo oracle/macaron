@@ -55,7 +55,7 @@ class BuildAsCodeCheck(BaseCheck):
             ("mcn_trusted_builder_level_three_1", CheckResultType.FAILED),
         ]
         eval_reqs = [ReqName.BUILD_AS_CODE]
-        self.confidence_score_threshold = 0.3
+        self.confidence_score_threshold = 0.7
 
         super().__init__(
             check_id="mcn_build_as_code_1",
@@ -110,15 +110,19 @@ class BuildAsCodeCheck(BaseCheck):
                 G :: tested_deploy_action :- tested_deploy_action_check(G).
                 H :: publishing_workflow_deploy_command :- publishing_workflow_deploy_command_check(H).
                 I :: publishing_workflow_deploy_action :- publishing_workflow_deploy_action_check(I).
+                J :: step_uses_secrets_deploy_action :- step_uses_secrets_deploy_action_check(J).
+                K :: step_uses_secrets_deploy_command :- step_uses_secrets_deploy_command_check(K).
 
                 0.8 :: deploy_action_certainty :- deploy_action.
                 %0.10 :: deploy_action_certainty :- tested_deploy_action.
                 %0.85 :: deploy_action_certainty :- release_workflow_trigger_deploy_action.
                 %0.95 :: deploy_action_certainty :- publishing_workflow_deploy_action.
+                0.65 :: deploy_action_certainty :- step_uses_secrets_deploy_action.
 
                 0.75 :: deploy_command_certainty :- deploy_command.
                 %0.85 :: deploy_command_certainty :- release_workflow_trigger_deploy_command.
                 %0.95 :: deploy_command_certainty :- publishing_workflow_deploy_command.
+                0.65 :: deploy_command_certainty :- step_uses_secrets_deploy_command.
 
                 0.70 :: deploy_kws_certainty :- deploy_kws.
 
@@ -138,6 +142,7 @@ class BuildAsCodeCheck(BaseCheck):
                     "deploy_action": result["deploy_action_certainty"],
                     "deploy_kws": result["deploy_kws_certainty"],
                 }
+
                 deploy_methods_valid = {key: value for key, value in deploy_methods.items() if value != 0}
 
                 if deploy_methods_valid.values():

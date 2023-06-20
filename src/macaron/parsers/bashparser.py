@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module is a Python wrapper for the compiled bashparser binary.
@@ -33,6 +33,7 @@ class BashCommands(TypedDict):
     """CI service type."""
     commands: list[list[str]]
     """Parsed bash commands."""
+    workflow_info: dict
 
 
 def parse_file(file_path: str, macaron_path: str = "") -> dict:
@@ -115,6 +116,7 @@ def extract_bash_from_ci(
     bash_content: str,
     ci_file: str,
     ci_type: str,
+    workflow_info: dict,
     macaron_path: str = "",
     recursive: bool = False,
     repo_path: str = "",
@@ -152,7 +154,9 @@ def extract_bash_from_ci(
     parsed_parent = parse(bash_content)
     caller_commands = parsed_parent.get("commands", [])
     if caller_commands:
-        yield BashCommands(caller_path=ci_file, CI_path=ci_file, CI_type=ci_type, commands=caller_commands)
+        yield BashCommands(
+            caller_path=ci_file, CI_path=ci_file, CI_type=ci_type, commands=caller_commands, workflow_info=workflow_info
+        )
 
     # Parse the bash script files called from the current script.
     if recursive and repo_path:
@@ -171,4 +175,5 @@ def extract_bash_from_ci(
                     CI_path=ci_file,
                     CI_type=ci_type,
                     commands=callee_commands,
+                    workflow_info=workflow_info,
                 )
