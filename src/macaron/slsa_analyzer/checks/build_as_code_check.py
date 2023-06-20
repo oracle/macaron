@@ -111,16 +111,16 @@ class BuildAsCodeCheck(BaseCheck):
                 H :: publishing_workflow_deploy_command :- publishing_workflow_deploy_command_check(H).
                 I :: publishing_workflow_deploy_action :- publishing_workflow_deploy_action_check(I).
 
-                0.6 :: deploy_action_certainty :- deploy_action.
+                0.8 :: deploy_action_certainty :- deploy_action.
                 %0.10 :: deploy_action_certainty :- tested_deploy_action.
-                %0.80 :: deploy_action_certainty :- release_workflow_trigger_deploy_action.
-                %0.90 :: deploy_action_certainty :- publishing_workflow_deploy_action.
+                %0.85 :: deploy_action_certainty :- release_workflow_trigger_deploy_action.
+                %0.95 :: deploy_action_certainty :- publishing_workflow_deploy_action.
 
-                0.45 :: deploy_command_certainty :- deploy_command.
-                %0.80 :: deploy_command_certainty :- release_workflow_trigger_deploy_command.
-                %0.90 :: deploy_command_certainty :- publishing_workflow_deploy_command.
+                0.75 :: deploy_command_certainty :- deploy_command.
+                %0.85 :: deploy_command_certainty :- release_workflow_trigger_deploy_command.
+                %0.95 :: deploy_command_certainty :- publishing_workflow_deploy_command.
 
-                0.60 :: deploy_kws_certainty :- deploy_kws.
+                0.70 :: deploy_kws_certainty :- deploy_kws.
 
                 query(deploy_command_certainty).
                 query(deploy_action_certainty).
