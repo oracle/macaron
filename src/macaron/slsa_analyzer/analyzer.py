@@ -32,7 +32,6 @@ from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
-from macaron.slsa_analyzer.build_tool.base_build_tool import NoneBuildTool
 
 # To load all checks into the registry
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
@@ -246,71 +245,74 @@ class Analyzer:
 
         deps_resolved: dict[str, DependencyInfo] = {}
 
-        build_tool = main_ctx.dynamic_data["build_spec"]["tool"]
-        if not build_tool or isinstance(build_tool, NoneBuildTool):
-            logger.info("Unable to find a valid build tool.")
+        build_tools = main_ctx.dynamic_data["build_spec"]["tools"]
+        if not build_tools:
+            logger.info("Unable to find any valid build tools.")
             return {}
 
-        try:
-            dep_analyzer = build_tool.get_dep_analyzer(main_ctx.repo_path)
-        except DependencyAnalyzerError as error:
-            logger.error("Unable to find a dependency analyzer: %s", error)
-            return {}
-
-        if isinstance(dep_analyzer, NoneDependencyAnalyzer):
-            logger.info(
-                "Dependency analyzer is not available for %s",
-                main_ctx.dynamic_data["build_spec"]["tool"].name,
-            )
-            return {}
-
-        # Start resolving dependencies.
-        logger.info(
-            "Running %s version %s dependency analyzer on %s",
-            dep_analyzer.tool_name,
-            dep_analyzer.tool_version,
-            main_ctx.repo_path,
-        )
-
-        log_path = os.path.join(
-            global_config.build_log_path,
-            f"{main_ctx.repo_name}.{dep_analyzer.tool_name}.log",
-        )
-
-        # Clean up existing SBOM files.
-        dep_analyzer.remove_sboms(main_ctx.repo_path)
-
-        commands = dep_analyzer.get_cmd()
-        working_dirs: Iterable[Path] = build_tool.get_build_dirs(main_ctx.repo_path)
-        for working_dir in working_dirs:
-            # Get the absolute path to use as the working dir in the subprocess.
-            working_dir = Path(main_ctx.repo_path).joinpath(working_dir)
+        # Grab dependencies for each build tool, collate all into the deps_resolved
+        for tool in build_tools:
             try:
-                # Suppressing Bandit's B603 report because the repo paths are validated.
-                analyzer_output = subprocess.run(  # nosec B603
-                    commands,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    check=True,
-                    cwd=str(working_dir),
-                    timeout=defaults.getint("dependency.resolver", "timeout", fallback=1200),
+                dep_analyzer = tool.get_dep_analyzer(main_ctx.repo_path)
+            except DependencyAnalyzerError as error:
+                logger.error("Unable to find a dependency analyzer for %s: %s", tool.name, error)
+                continue
+
+            if isinstance(dep_analyzer, NoneDependencyAnalyzer):
+                logger.info(
+                    "Dependency analyzer is not available for %s",
+                    tool.name,
                 )
-                with open(log_path, mode="a", encoding="utf-8") as log_file:
-                    log_file.write(analyzer_output.stdout.decode("utf-8"))
+                continue
 
-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
-                logger.error(error)
-                with open(log_path, mode="a", encoding="utf-8") as log_file:
-                    log_file.write(error.output.decode("utf-8"))
-            except FileNotFoundError as error:
-                logger.error(error)
+            # Start resolving dependencies.
+            logger.info(
+                "Running %s version %s dependency analyzer on %s",
+                dep_analyzer.tool_name,
+                dep_analyzer.tool_version,
+                main_ctx.repo_path,
+            )
 
-            # We collect the generated SBOM as a best effort, even if the build exits with errors.
-            # TODO: add improvements to help the SBOM build succeed as much as possible.
-            # Update deps_resolved with new dependencies.
-            deps_resolved |= dep_analyzer.collect_dependencies(str(working_dir))
+            log_path = os.path.join(
+                global_config.build_log_path,
+                f"{main_ctx.repo_name}.{dep_analyzer.tool_name}.log",
+            )
 
-        logger.info("Stored dependency resolver log to %s.", log_path)
+            # Clean up existing SBOM files.
+            dep_analyzer.remove_sboms(main_ctx.repo_path)
+
+            commands = dep_analyzer.get_cmd()
+            working_dirs: Iterable[Path] = tool.get_build_dirs(main_ctx.repo_path)
+            for working_dir in working_dirs:
+                # Get the absolute path to use as the working dir in the subprocess.
+                working_dir = Path(main_ctx.repo_path).joinpath(working_dir)
+                try:
+                    # Suppressing Bandit's B603 report because the repo paths are validated.
+                    analyzer_output = subprocess.run(  # nosec B603
+                        commands,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        check=True,
+                        cwd=str(working_dir),
+                        timeout=defaults.getint("dependency.resolver", "timeout", fallback=1200),
+                    )
+                    with open(log_path, mode="a", encoding="utf-8") as log_file:
+                        log_file.write(analyzer_output.stdout.decode("utf-8"))
+
+                except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+                    logger.error(error)
+                    with open(log_path, mode="a", encoding="utf-8") as log_file:
+                        log_file.write(error.output.decode("utf-8"))
+                except FileNotFoundError as error:
+                    logger.error(error)
+
+                # We collect the generated SBOM as a best effort, even if the build exits with errors.
+                # TODO: add improvements to help the SBOM build succeed as much as possible.
+                # Update deps_resolved with new dependencies.
+                deps_resolved |= dep_analyzer.collect_dependencies(str(working_dir))
+
+            logger.info("Stored dependency resolver log for %s to %s.", dep_analyzer.tool_name, log_path)
+
         return deps_resolved
 
     def run_single(self, config: Configuration, existing_records: Optional[dict[str, Record]] = None) -> Record:
@@ -649,12 +651,11 @@ class Analyzer:
 
             if build_tool.is_detected(analyze_ctx.git_obj.path):
                 logger.info("The repo uses %s build tool.", build_tool.name)
-                analyze_ctx.dynamic_data["build_spec"]["tool"] = build_tool
-                break
+                analyze_ctx.dynamic_data["build_spec"]["tools"].append(build_tool)
 
-        if not analyze_ctx.dynamic_data["build_spec"].get("tool"):
+        if not analyze_ctx.dynamic_data["build_spec"]["tools"]:
             logger.info(
-                "Cannot discover any build tool for %s or the build tool is not supported.",
+                "Cannot discover any build tools for %s or the build tools found are not supported.",
                 analyze_ctx.repo_full_name,
             )
 

@@ -47,8 +47,6 @@ class CycloneDxMaven(DependencyAnalyzer):
             f"org.cyclonedx:cyclonedx-maven-plugin:{self.tool_version}:makeAggregateBom",
             "-D",
             "includeTestScope=true",
-            "-f",
-            self.repo_path,
         ]
 
     def collect_dependencies(self, dir_path: str) -> dict[str, DependencyInfo]:

@@ -13,7 +13,7 @@ from macaron.config.defaults import defaults
 from macaron.database.database_manager import ORMBase
 from macaron.database.table_definitions import CheckFactsTable
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, NoneBuildTool
+from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
@@ -24,6 +24,7 @@ from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
+from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -108,13 +109,19 @@ class BuildAsCodeCheck(BaseCheck):
                         return str(com)
         return ""
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
-        """Implement the check in this method.
+    def _check_build_tool(
+        self, build_tool: BaseBuildTool, ctx: AnalyzeContext, ci_services: list[CIInfo], check_result: CheckResult
+    ) -> CheckResultType | None:
+        """Run the check for a single build tool to determine if "build as code" holds for it.
 
         Parameters
         ----------
+        build_tool: BaseBuildTool
+            The build tool to run the check for.
         ctx : AnalyzeContext
             The object containing processed data for the target repo.
+        ci_services: list[CIInfo]
+            List of CI services in use.
         check_result : CheckResult
             The object containing result data of a check.
 
@@ -123,12 +130,7 @@ class BuildAsCodeCheck(BaseCheck):
         CheckResultType
             The result type of the check (e.g. PASSED).
         """
-        # Get the build tool identified by the mcn_version_control_system_1, which we depend on.
-        build_tool = ctx.dynamic_data["build_spec"].get("tool")
-        ci_services = ctx.dynamic_data["ci_services"]
-
-        # Checking if a build tool is discovered for this repo.
-        if build_tool and not isinstance(build_tool, NoneBuildTool):
+        if build_tool:
             for ci_info in ci_services:
                 ci_service = ci_info["service"]
                 # Checking if a CI service is discovered for this repo.
@@ -246,7 +248,7 @@ class BuildAsCodeCheck(BaseCheck):
                             predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
                             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                             predicate["metadata"]["buildInvocationId"] = html_url
-                            check_result["result_tables"] = [
+                            check_result["result_tables"].append(
                                 BuildAsCodeTable(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
@@ -254,7 +256,8 @@ class BuildAsCodeCheck(BaseCheck):
                                     deploy_command=deploy_cmd,
                                     build_status_url=html_url,
                                 )
-                            ]
+                            )
+
                         return CheckResultType.PASSED
 
                 # We currently don't parse these CI configuration files.
@@ -280,23 +283,59 @@ class BuildAsCodeCheck(BaseCheck):
                                 ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
                                 predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = config_name
-                            check_result["result_tables"] = [
+                            check_result["result_tables"].append(
                                 BuildAsCodeTable(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
                                     deploy_command=deploy_kw,
                                 )
-                            ]
+                            )
                             return CheckResultType.PASSED
 
-            pass_msg = f"The target repository does not use {build_tool.name} to deploy."
-            check_result["justification"].append(pass_msg)
-            check_result["result_tables"] = [BuildAsCodeTable(build_tool_name=build_tool.name)]
+        pass_msg = f"The target repository does not use {build_tool.name} to deploy."
+        check_result["justification"].append(pass_msg)
+        check_result["result_tables"].append(BuildAsCodeTable(build_tool_name=build_tool.name))
+        return CheckResultType.FAILED
+
+    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+        """Implement the check in this method.
+
+        Parameters
+        ----------
+        ctx : AnalyzeContext
+            The object containing processed data for the target repo.
+        check_result : CheckResult
+            The object containing result data of a check.
+
+        Returns
+        -------
+        CheckResultType
+            The result type of the check (e.g. PASSED).
+        """
+        # Get the build tool identified by the mcn_version_control_system_1, which we depend on.
+        build_tools = ctx.dynamic_data["build_spec"]["tools"]
+
+        if not build_tools:
+            check_result["result_tables"] = [BuildAsCodeTable()]
+            failed_msg = "The target repository does not have any build tools."
+            check_result["justification"].append(failed_msg)
             return CheckResultType.FAILED
 
-        check_result["result_tables"] = [BuildAsCodeTable()]
-        failed_msg = "The target repository does not have a build tool."
-        check_result["justification"].append(failed_msg)
+        ci_services = ctx.dynamic_data["ci_services"]
+
+        # Check if "build as code" holds for each build tool.
+        for tool in build_tools:
+            res = self._check_build_tool(tool, ctx, ci_services, check_result)
+
+            if res == CheckResultType.PASSED:
+                # Since the check passing is contingent on at least one passing,
+                # short-circuit if we do get a pass
+                # TODO: When more sophisticated build tool detection is
+                # implemented, consider whether this should be one fail = whole
+                # check fails instead
+                return CheckResultType.PASSED
+
+        # No passes, so overall fail
         return CheckResultType.FAILED
 
 

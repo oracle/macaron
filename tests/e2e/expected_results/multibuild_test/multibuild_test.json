@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-06-14 15:45:41"
+        "timestamps": "2023-06-18 21:51:40"
     },
     "target": {
         "info": {
@@ -177,11 +177,23 @@
         }
     },
     "dependencies": {
-        "analyzed_deps": 2,
-        "unique_dep_repos": 1,
+        "analyzed_deps": 3,
+        "unique_dep_repos": 2,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 2
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 2
+            },
+            {
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 2
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
                 "num_deps_pass": 0
             },
             {
@@ -193,24 +205,12 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 1
-            },
-            {
-                "check_id": "mcn_trusted_builder_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_script_1",
-                "num_deps_pass": 1
-            },
-            {
                 "check_id": "mcn_provenance_level_three_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_service_1",
-                "num_deps_pass": 1
+                "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
             }
         ],
         "dep_status": [
@@ -225,6 +225,12 @@
                 "description": "https://github.com/spring-projects/spring-boot is already analyzed.",
                 "report": "",
                 "status": "DUPLICATED REPO URL"
+            },
+            {
+                "id": "com.google.code.gson:gson",
+                "description": "Analysis Completed.",
+                "report": "gson.html",
+                "status": "AVAILABLE"
             }
         ]
     }

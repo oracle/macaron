@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
 
-from macaron.dependency_analyzer import DependencyAnalyzer, NoneDependencyAnalyzer
+from macaron.dependency_analyzer import DependencyAnalyzer
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -171,63 +171,3 @@ class BaseBuildTool(ABC):
 
         except StopIteration:
             pass
-
-
-class NoneBuildTool(BaseBuildTool):
-    """This class can be used to initialize an empty build tool."""
-
-    def __init__(self) -> None:
-        """Initialize instance."""
-        super().__init__(name="")
-
-    def is_detected(self, repo_path: str) -> bool:
-        """Return True if this build tool is used in the target repo.
-
-        Parameters
-        ----------
-        repo_path : str
-            The path to the target repo.
-
-        Returns
-        -------
-        bool
-            True if this build tool is detected, else False.
-        """
-        return False
-
-    def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
-        """Prepare the necessary wrapper files for running the build.
-
-        This method will return False if there is any errors happened during operation.
-
-        Parameters
-        ----------
-        wrapper_path : str
-            The path where all necessary wrapper files are located.
-        build_dir : str
-            The path of the build dir. This is where all files are copied to.
-
-        Returns
-        -------
-        bool
-            True if succeed else False.
-        """
-        return False
-
-    def load_defaults(self) -> None:
-        """Load the default values from defaults.ini."""
-
-    def get_dep_analyzer(self, repo_path: str) -> DependencyAnalyzer:
-        """Create an invalid DependencyAnalyzer for the empty build tool.
-
-        Parameters
-        ----------
-        repo_path: str
-            The path to the target repo.
-
-        Returns
-        -------
-        DependencyAnalyzer
-            The DependencyAnalyzer object.
-        """
-        return NoneDependencyAnalyzer()
