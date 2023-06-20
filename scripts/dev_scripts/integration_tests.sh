@@ -69,7 +69,7 @@ python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "timyarkov/multibuild_test: Analyzing the repo path, the branch name and the commit digest"
-echo "with dependency resolution using cyclonedx Gradle plugin (default)."
+echo "with dependency resolution using cyclonedx Gradle and Maven plugins (defaults)."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/multibuild_test/multibuild_test.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/multibuild_test/multibuild_test.json

@@ -41,7 +41,7 @@ def test_build_as_code_check(
 ) -> None:
     """Test the Build As Code Check."""
     check = BuildAsCodeCheck()
-    check_result = CheckResult(justification=[])  # type: ignore
+    check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
     bash_commands = BashCommands(caller_path="source_file", CI_path="ci_file", CI_type="github_actions", commands=[[]])
     ci_info = CIInfo(
         service=github_actions_service,
@@ -54,22 +54,22 @@ def test_build_as_code_check(
 
     # The target repo uses Maven build tool but does not deploy artifacts.
     use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    use_build_tool.dynamic_data["build_spec"]["tool"] = maven_tool
+    use_build_tool.dynamic_data["build_spec"]["tools"] = [maven_tool]
     assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
     # The target repo uses Gradle build tool but does not deploy artifacts.
     use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    use_build_tool.dynamic_data["build_spec"]["tool"] = gradle_tool
+    use_build_tool.dynamic_data["build_spec"]["tools"] = [gradle_tool]
     assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
     # The target repo uses Poetry build tool but does not deploy artifacts.
     use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    use_build_tool.dynamic_data["build_spec"]["tool"] = poetry_tool
+    use_build_tool.dynamic_data["build_spec"]["tools"] = [poetry_tool]
     assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
     # The target repo uses Pip build tool but does not deploy artifacts.
     use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    use_build_tool.dynamic_data["build_spec"]["tool"] = pip_tool
+    use_build_tool.dynamic_data["build_spec"]["tools"] = [pip_tool]
     assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
     # The target repo does not use a build tool.
@@ -78,7 +78,7 @@ def test_build_as_code_check(
 
     # Use mvn deploy to deploy the artifact.
     maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    maven_deploy.dynamic_data["build_spec"]["tool"] = maven_tool
+    maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     bash_commands["commands"] = [["mvn", "deploy"]]
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(maven_deploy, check_result) == CheckResultType.PASSED
@@ -95,7 +95,7 @@ def test_build_as_code_check(
 
     # Use mvn but do not deploy artifacts.
     no_maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    no_maven_deploy.dynamic_data["build_spec"]["tool"] = maven_tool
+    no_maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     bash_commands["commands"] = [["mvn", "verify"]]
     no_maven_deploy.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(no_maven_deploy, check_result) == CheckResultType.FAILED
@@ -107,42 +107,42 @@ def test_build_as_code_check(
 
     # Use gradle to deploy the artifact.
     gradle_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    gradle_deploy.dynamic_data["build_spec"]["tool"] = gradle_tool
+    gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool]
     bash_commands["commands"] = [["./gradlew", "publishToSonatype"]]
     gradle_deploy.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(gradle_deploy, check_result) == CheckResultType.PASSED
 
     # Use poetry publish to publish the artifact.
     poetry_publish = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    poetry_publish.dynamic_data["build_spec"]["tool"] = poetry_tool
+    poetry_publish.dynamic_data["build_spec"]["tools"] = [poetry_tool]
     bash_commands["commands"] = [["poetry", "publish"]]
     poetry_publish.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(poetry_publish, check_result) == CheckResultType.PASSED
 
     # Use Poetry but do not deploy artifacts.
     no_poetry_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    no_poetry_deploy.dynamic_data["build_spec"]["tool"] = poetry_tool
+    no_poetry_deploy.dynamic_data["build_spec"]["tools"] = [poetry_tool]
     bash_commands["commands"] = [["poetry", "upload"]]
     no_poetry_deploy.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(no_maven_deploy, check_result) == CheckResultType.FAILED
 
     # Use twine upload to deploy the artifact.
     twine_upload = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    twine_upload.dynamic_data["build_spec"]["tool"] = pip_tool
+    twine_upload.dynamic_data["build_spec"]["tools"] = [pip_tool]
     bash_commands["commands"] = [["twine", "upload", "dist/*"]]
     twine_upload.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(twine_upload, check_result) == CheckResultType.PASSED
 
     # Use flit publish to deploy the artifact.
     flit_publish = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    flit_publish.dynamic_data["build_spec"]["tool"] = pip_tool
+    flit_publish.dynamic_data["build_spec"]["tools"] = [pip_tool]
     bash_commands["commands"] = [["flit", "publish"]]
     flit_publish.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(flit_publish, check_result) == CheckResultType.PASSED
 
     # Test Jenkins.
     maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    maven_deploy.dynamic_data["build_spec"]["tool"] = maven_tool
+    maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     ci_info["service"] = jenkins_service
     bash_commands["commands"] = []
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
@@ -150,7 +150,7 @@ def test_build_as_code_check(
 
     # Test Travis.
     maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    maven_deploy.dynamic_data["build_spec"]["tool"] = maven_tool
+    maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     ci_info["service"] = travis_service
     bash_commands["commands"] = []
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
@@ -158,7 +158,7 @@ def test_build_as_code_check(
 
     # Test Circle CI.
     maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    maven_deploy.dynamic_data["build_spec"]["tool"] = maven_tool
+    maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     ci_info["service"] = circle_ci_service
     bash_commands["commands"] = []
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
@@ -166,11 +166,38 @@ def test_build_as_code_check(
 
     # Test GitLab CI.
     maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    maven_deploy.dynamic_data["build_spec"]["tool"] = maven_tool
+    maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     ci_info["service"] = gitlab_ci_service
     bash_commands["commands"] = []
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
+
+    # Using both gradle and maven with valid commands to deploy
+    gradle_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
+    bash_commands["commands"] = [["./gradlew", "publishToSonatype"], ["mvn", "deploy"]]
+    gradle_deploy.dynamic_data["ci_services"] = [ci_info]
+    assert check.run_check(gradle_deploy, check_result) == CheckResultType.PASSED
+
+    # Using both gradle and maven, but maven incorrect (singular failure in a list)
+    gradle_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
+    bash_commands["commands"] = [["./gradlew", "publishToSonatype"], ["mvn", "verify"]]
+    gradle_deploy.dynamic_data["ci_services"] = [ci_info]
+    assert check.run_check(gradle_deploy, check_result) == CheckResultType.PASSED
+
+    # Using both gradle and maven, both incorrect
+    gradle_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
+    bash_commands["commands"] = [["./gradlew", "build"], ["mvn", "verify"]]
+    gradle_deploy.dynamic_data["ci_services"] = [ci_info]
+    assert check.run_check(gradle_deploy, check_result) == CheckResultType.FAILED
+
+    # No build tools present
+    gradle_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    gradle_deploy.dynamic_data["build_spec"]["tools"] = []
+    gradle_deploy.dynamic_data["ci_services"] = [ci_info]
+    assert check.run_check(gradle_deploy, check_result) == CheckResultType.FAILED
 
 
 def test_gha_workflow_deployment(
@@ -179,7 +206,7 @@ def test_gha_workflow_deployment(
 ) -> None:
     """Test the use of verified GitHub Actions to deploy."""
     check = BuildAsCodeCheck()
-    check_result = CheckResult(justification=[])  # type: ignore
+    check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
     ci_info = CIInfo(
         service=github_actions_service,
         bash_commands=[],
@@ -193,7 +220,7 @@ def test_gha_workflow_deployment(
 
     # This Github Actions workflow uses gh-action-pypi-publish to publish the artifact.
     gha_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-    gha_deploy.dynamic_data["build_spec"]["tool"] = pip_tool
+    gha_deploy.dynamic_data["build_spec"]["tools"] = [pip_tool]
     gha_deploy.dynamic_data["ci_services"] = [ci_info]
 
     root = GitHubNode(name="root", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
@@ -251,9 +278,9 @@ def test_travis_ci_deploy(
         latest_release={},
         provenances=[],
     )
-    check_result = CheckResult(justification=[])  # type: ignore
+    check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
     gradle_deploy = AnalyzeContext("use_build_tool", str(repo_path.absolute()), MagicMock())
-    gradle_deploy.dynamic_data["build_spec"]["tool"] = gradle_tool
+    gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool]
     gradle_deploy.dynamic_data["ci_services"] = [ci_info]
 
     assert check.run_check(gradle_deploy, check_result) == expect_result

@@ -12,7 +12,7 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.database.database_manager import ORMBase
 from macaron.database.table_definitions import CheckFactsTable
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, NoneBuildTool
+from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
@@ -22,6 +22,7 @@ from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
+from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -95,6 +96,125 @@ class BuildServiceCheck(BaseCheck):
                         return str(com)
         return ""
 
+    def _check_build_tool(
+        self, build_tool: BaseBuildTool, ctx: AnalyzeContext, check_result: CheckResult, ci_services: list[CIInfo]
+    ) -> CheckResultType | None:
+        """
+        Check that a single build tool has a build service associated to it.
+
+        Parameters
+        ----------
+        build_tool : BaseBuildTool
+            Build tool to analyse for
+        ctx : AnalyzeContext
+            The object containing processed data for the target repo.
+        check_result : CheckResult
+            The object containing result data of a check.
+        ci_services: list[CIInfo]
+            List of objects containing information on present CI services.
+
+        Returns
+        -------
+        CheckResultType
+            The result type of the check (e.g. PASSED).
+        """
+        for ci_info in ci_services:
+            ci_service = ci_info["service"]
+            # Checking if a CI service is discovered for this repo.
+            if isinstance(ci_service, NoneCIService):
+                continue
+            for bash_cmd in ci_info["bash_commands"]:
+                build_cmd = self._has_build_command(bash_cmd["commands"], build_tool)
+                if build_cmd:
+                    # Get the permalink and HTML hyperlink tag of the CI file that triggered the bash command.
+                    trigger_link = ci_service.api_client.get_file_link(
+                        ctx.repo_full_name,
+                        ctx.commit_sha,
+                        ci_service.api_client.get_relative_path_of_workflow(os.path.basename(bash_cmd["CI_path"])),
+                    )
+                    # Get the permalink and HTML hyperlink tag of the source file of the bash command.
+                    bash_source_link = ci_service.api_client.get_file_link(
+                        ctx.repo_full_name, ctx.commit_sha, bash_cmd["caller_path"]
+                    )
+
+                    html_url = ci_service.has_latest_run_passed(
+                        ctx.repo_full_name,
+                        ctx.branch_name,
+                        ctx.commit_sha,
+                        ctx.commit_date,
+                        os.path.basename(bash_cmd["CI_path"]),
+                    )
+
+                    justification: list[str | dict[str, str]] = [
+                        {
+                            f"The target repository uses build tool {build_tool.name} to deploy": bash_source_link,
+                            "The build is triggered by": trigger_link,
+                        },
+                        f"Build command: {build_cmd}",
+                        {"The status of the build can be seen at": html_url}
+                        if html_url
+                        else "However, could not find a passing workflow run.",
+                    ]
+                    check_result["justification"].extend(justification)
+                    check_result["result_tables"].append(
+                        BuildServiceTable(
+                            build_tool_name=build_tool.name,
+                            build_trigger=trigger_link,
+                            ci_service_name=ci_service.name,
+                        )
+                    )
+
+                    if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
+                        predicate = ci_info["provenances"][0]["predicate"]
+                        predicate["buildType"] = f"Custom {ci_service.name}"
+                        predicate["builder"]["id"] = bash_source_link
+                        predicate["invocation"]["configSource"][
+                            "uri"
+                        ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
+                        predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
+                        predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
+                        predicate["metadata"]["buildInvocationId"] = html_url
+                    return CheckResultType.PASSED
+
+            # We currently don't parse these CI configuration files.
+            # We just look for a keyword for now.
+            for unparsed_ci in (Jenkins, Travis, CircleCI, GitLabCI):
+                if isinstance(ci_service, unparsed_ci):
+                    if build_tool.ci_build_kws[ci_service.name]:
+                        _, config_name = ci_service.has_kws_in_config(
+                            build_tool.ci_build_kws[ci_service.name], repo_path=ctx.repo_path
+                        )
+                        if not config_name:
+                            break
+
+                        check_result["justification"].append(
+                            f"The target repository uses "
+                            f"build tool {build_tool.name} in {ci_service.name} to "
+                            f"build."
+                        )
+                        check_result["result_tables"].append(
+                            BuildServiceTable(
+                                build_tool_name=build_tool.name,
+                                ci_service_name=ci_service.name,
+                            )
+                        )
+
+                        if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
+                            predicate = ci_info["provenances"][0]["predicate"]
+                            predicate["buildType"] = f"Custom {ci_service.name}"
+                            predicate["builder"]["id"] = config_name
+                            predicate["invocation"]["configSource"][
+                                "uri"
+                            ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
+                            predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
+                            predicate["invocation"]["configSource"]["entryPoint"] = config_name
+                        return CheckResultType.PASSED
+
+        # Nothing found; fail
+        fail_msg = f"The target repository does not have a build service for {build_tool}."
+        check_result["justification"].append(fail_msg)
+        return CheckResultType.FAILED
+
     def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
         """Implement the check in this method.
 
@@ -110,106 +230,30 @@ class BuildServiceCheck(BaseCheck):
         CheckResultType
             The result type of the check (e.g. PASSED).
         """
-        build_tool = ctx.dynamic_data["build_spec"].get("tool")
+        build_tools = ctx.dynamic_data["build_spec"]["tools"]
         ci_services = ctx.dynamic_data["ci_services"]
 
-        # Checking if a build tool is discovered for this repo.
-        if build_tool and not isinstance(build_tool, NoneBuildTool):
-            for ci_info in ci_services:
-                ci_service = ci_info["service"]
-                # Checking if a CI service is discovered for this repo.
-                if isinstance(ci_service, NoneCIService):
-                    continue
-                for bash_cmd in ci_info["bash_commands"]:
-                    build_cmd = self._has_build_command(bash_cmd["commands"], build_tool)
-                    if build_cmd:
-                        # Get the permalink and HTML hyperlink tag of the CI file that triggered the bash command.
-                        trigger_link = ci_service.api_client.get_file_link(
-                            ctx.repo_full_name,
-                            ctx.commit_sha,
-                            ci_service.api_client.get_relative_path_of_workflow(os.path.basename(bash_cmd["CI_path"])),
-                        )
-                        # Get the permalink and HTML hyperlink tag of the source file of the bash command.
-                        bash_source_link = ci_service.api_client.get_file_link(
-                            ctx.repo_full_name, ctx.commit_sha, bash_cmd["caller_path"]
-                        )
+        # Checking if at least one build tool is discovered for this repo.
+        # No build tools is auto fail.
+        # TODO: When more sophisticated build tool detection is
+        # implemented, consider whether this should be one fail = whole
+        # check fails instead
+        all_passing = False
 
-                        html_url = ci_service.has_latest_run_passed(
-                            ctx.repo_full_name,
-                            ctx.branch_name,
-                            ctx.commit_sha,
-                            ctx.commit_date,
-                            os.path.basename(bash_cmd["CI_path"]),
-                        )
+        for tool in build_tools:
+            res = self._check_build_tool(tool, ctx, check_result, ci_services)
 
-                        justification: list[str | dict[str, str]] = [
-                            {
-                                f"The target repository uses build tool {build_tool.name} to deploy": bash_source_link,
-                                "The build is triggered by": trigger_link,
-                            },
-                            f"Build command: {build_cmd}",
-                            {"The status of the build can be seen at": html_url}
-                            if html_url
-                            else "However, could not find a passing workflow run.",
-                        ]
-                        check_result["justification"].extend(justification)
-                        check_result["result_tables"] = [
-                            BuildServiceTable(
-                                build_tool_name=build_tool.name,
-                                build_trigger=trigger_link,
-                                ci_service_name=ci_service.name,
-                            )
-                        ]
+            if res == CheckResultType.PASSED:
+                # Pass at some point so treat as entire check pass; short-circuit
+                all_passing = True
+                break
 
-                        if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
-                            predicate = ci_info["provenances"][0]["predicate"]
-                            predicate["buildType"] = f"Custom {ci_service.name}"
-                            predicate["builder"]["id"] = bash_source_link
-                            predicate["invocation"]["configSource"][
-                                "uri"
-                            ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
-                            predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
-                            predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
-                            predicate["metadata"]["buildInvocationId"] = html_url
-                        return CheckResultType.PASSED
+        if not all_passing or not build_tools:
+            fail_msg = "The target repository does not have a build service for at least one build tool."
+            check_result["justification"].append(fail_msg)
+            return CheckResultType.FAILED
 
-                # We currently don't parse these CI configuration files.
-                # We just look for a keyword for now.
-                for unparsed_ci in (Jenkins, Travis, CircleCI, GitLabCI):
-                    if isinstance(ci_service, unparsed_ci):
-                        if build_tool.ci_build_kws[ci_service.name]:
-                            _, config_name = ci_service.has_kws_in_config(
-                                build_tool.ci_build_kws[ci_service.name], repo_path=ctx.repo_path
-                            )
-                            if not config_name:
-                                break
-
-                            check_result["justification"].append(
-                                f"The target repository uses "
-                                f"build tool {build_tool.name} in {ci_service.name} to "
-                                f"build."
-                            )
-                            check_result["result_tables"] = [
-                                BuildServiceTable(
-                                    build_tool_name=build_tool.name,
-                                    ci_service_name=ci_service.name,
-                                )
-                            ]
-
-                            if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
-                                predicate = ci_info["provenances"][0]["predicate"]
-                                predicate["buildType"] = f"Custom {ci_service.name}"
-                                predicate["builder"]["id"] = config_name
-                                predicate["invocation"]["configSource"][
-                                    "uri"
-                                ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
-                                predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
-                                predicate["invocation"]["configSource"]["entryPoint"] = config_name
-                            return CheckResultType.PASSED
-
-        fail_msg = "The target repository does not have a build service."
-        check_result["justification"].append(fail_msg)
-        return CheckResultType.FAILED
+        return CheckResultType.PASSED
 
 
 registry.register(BuildServiceCheck())

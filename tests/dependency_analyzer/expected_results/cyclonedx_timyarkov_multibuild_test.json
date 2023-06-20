@@ -14,5 +14,13 @@
         "digest": "",
         "note": "https://github.com/spring-projects/spring-boot is already analyzed.",
         "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "com.google.code.gson:gson",
+        "path": "https://github.com/google/gson",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
     }
 ]

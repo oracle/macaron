@@ -47,8 +47,8 @@ class BuildSpec(TypedDict):
     # sourceRmFiles: str
 
     ## Rebuild environment prerequisites
-    tool: BaseBuildTool
-    """The build tool used for building this artifact."""
+    tools: list[BaseBuildTool]
+    """The build tools used for building this artifact."""
     # jdk: str
     # newline: str
     ## crlf for Windows, lf for Unix

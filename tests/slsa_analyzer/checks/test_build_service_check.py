@@ -40,7 +40,7 @@ class TestBuildServiceCheck(MacaronTestCase):
     def test_build_service_check(self) -> None:
         """Test the Build Service Check."""
         check = BuildServiceCheck()
-        check_result = CheckResult(justification=[])  # type: ignore
+        check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
         maven = Maven()
         maven.load_defaults()
         gradle = Gradle()
@@ -74,31 +74,36 @@ class TestBuildServiceCheck(MacaronTestCase):
 
         # The target repo uses Maven build tool but does not use a service.
         use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        use_build_tool.dynamic_data["build_spec"]["tool"] = maven
+        use_build_tool.dynamic_data["build_spec"]["tools"] = [maven]
         assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
         # The target repo uses Gradle build tool but does not use a service.
         use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        use_build_tool.dynamic_data["build_spec"]["tool"] = gradle
+        use_build_tool.dynamic_data["build_spec"]["tools"] = [gradle]
         assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
         # The target repo uses Poetry build tool but does not use a service.
         use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        use_build_tool.dynamic_data["build_spec"]["tool"] = poetry
+        use_build_tool.dynamic_data["build_spec"]["tools"] = [poetry]
         assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
         # The target repo uses Pip build tool but does not use a service.
         use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        use_build_tool.dynamic_data["build_spec"]["tool"] = pip
+        use_build_tool.dynamic_data["build_spec"]["tools"] = [pip]
         assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
         # The target repo does not use a build tool.
         no_build_tool = AnalyzeContext("no_build_tool", os.path.abspath("./"), MagicMock())
         assert check.run_check(no_build_tool, check_result) == CheckResultType.FAILED
 
+        # The target repo has multiple build tools, but does not use a service.
+        use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        use_build_tool.dynamic_data["build_spec"]["tools"] = [maven, gradle]
+        assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
+
         # Use mvn build args in CI to build the artifact.
         maven_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        maven_build_ci.dynamic_data["build_spec"]["tool"] = maven
+        maven_build_ci.dynamic_data["build_spec"]["tools"] = [maven]
         bash_commands["commands"] = [["mvn", "package"]]
         maven_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(maven_build_ci, check_result) == CheckResultType.PASSED
@@ -115,7 +120,7 @@ class TestBuildServiceCheck(MacaronTestCase):
 
         # Use mvn but do not use CI to build artifacts.
         no_maven_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        no_maven_build_ci.dynamic_data["build_spec"]["tool"] = maven
+        no_maven_build_ci.dynamic_data["build_spec"]["tools"] = [maven]
         bash_commands["commands"] = [["mvn", "test"]]
         no_maven_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(no_maven_build_ci, check_result) == CheckResultType.FAILED
@@ -127,56 +132,76 @@ class TestBuildServiceCheck(MacaronTestCase):
 
         # Use gradle in CI to build the artifact.
         gradle_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        gradle_build_ci.dynamic_data["build_spec"]["tool"] = gradle
+        gradle_build_ci.dynamic_data["build_spec"]["tools"] = [gradle]
         bash_commands["commands"] = [["./gradlew", "build"]]
         gradle_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(gradle_build_ci, check_result) == CheckResultType.PASSED
 
         # Use poetry in CI to build the artifact.
         poetry_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        poetry_build_ci.dynamic_data["build_spec"]["tool"] = poetry
+        poetry_build_ci.dynamic_data["build_spec"]["tools"] = [poetry]
         bash_commands["commands"] = [["poetry", "build"]]
         poetry_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(poetry_build_ci, check_result) == CheckResultType.PASSED
 
         # Use pip in CI to build the artifact.
         pip_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        pip_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        pip_build_ci.dynamic_data["build_spec"]["tools"] = [pip]
         bash_commands["commands"] = [["pip", "install"]]
         pip_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(pip_build_ci, check_result) == CheckResultType.PASSED
 
         # Use flit in CI to build the artifact.
         flit_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        flit_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        flit_build_ci.dynamic_data["build_spec"]["tools"] = [pip]
         bash_commands["commands"] = [["flit", "build"]]
         flit_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(flit_build_ci, check_result) == CheckResultType.PASSED
 
         # Use pip as a module in CI to build the artifact.
         pip_interpreter_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        pip_interpreter_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        pip_interpreter_build_ci.dynamic_data["build_spec"]["tools"] = [pip]
         bash_commands["commands"] = [["python", "-m", "pip", "install"]]
         pip_interpreter_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(pip_interpreter_build_ci, check_result) == CheckResultType.PASSED
 
         # Use pip as a module incorrectly in CI to build the artifact.
         no_pip_interpreter_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        no_pip_interpreter_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        no_pip_interpreter_build_ci.dynamic_data["build_spec"]["tools"] = [pip]
         bash_commands["commands"] = [["python", "pip", "install"]]
         no_pip_interpreter_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(no_pip_interpreter_build_ci, check_result) == CheckResultType.FAILED
 
         # Use pip as a module in CI with invalid goal to build the artifact.
         no_pip_interpreter_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        no_pip_interpreter_build_ci.dynamic_data["build_spec"]["tool"] = pip
+        no_pip_interpreter_build_ci.dynamic_data["build_spec"]["tools"] = [pip]
         bash_commands["commands"] = [["python", "-m", "pip", "installl"]]
         no_pip_interpreter_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(no_pip_interpreter_build_ci, check_result) == CheckResultType.FAILED
 
+        # Maven and Gradle are both used in CI to build the artifact
+        gradle_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        gradle_build_ci.dynamic_data["build_spec"]["tools"] = [gradle, maven]
+        bash_commands["commands"] = [["./gradlew", "build"], ["mvn", "package"]]
+        gradle_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(gradle_build_ci, check_result) == CheckResultType.PASSED
+
+        # Maven is used in CI to build the artifact, Gradle is not
+        gradle_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        gradle_build_ci.dynamic_data["build_spec"]["tools"] = [gradle, maven]
+        bash_commands["commands"] = [["mvn", "package"]]
+        gradle_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(gradle_build_ci, check_result) == CheckResultType.PASSED
+
+        # No build tools used
+        gradle_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        gradle_build_ci.dynamic_data["build_spec"]["tools"] = []
+        gradle_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(gradle_build_ci, check_result) == CheckResultType.FAILED
+
         # Test Jenkins.
         maven_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        maven_build_ci.dynamic_data["build_spec"]["tool"] = maven
+        maven_build_ci.dynamic_data["build_spec"]["tools"] = [maven]
         bash_commands["commands"] = []
         ci_info["service"] = jenkins
         maven_build_ci.dynamic_data["ci_services"] = [ci_info]
@@ -184,7 +209,7 @@ class TestBuildServiceCheck(MacaronTestCase):
 
         # Test Travis.
         maven_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        maven_build_ci.dynamic_data["build_spec"]["tool"] = maven
+        maven_build_ci.dynamic_data["build_spec"]["tools"] = [maven]
         bash_commands["commands"] = []
         ci_info["service"] = travis
         maven_build_ci.dynamic_data["ci_services"] = [ci_info]
@@ -192,7 +217,7 @@ class TestBuildServiceCheck(MacaronTestCase):
 
         # Test Circle CI.
         maven_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        maven_build_ci.dynamic_data["build_spec"]["tool"] = maven
+        maven_build_ci.dynamic_data["build_spec"]["tools"] = [maven]
         bash_commands["commands"] = []
         ci_info["service"] = circle_ci
         maven_build_ci.dynamic_data["ci_services"] = [ci_info]
@@ -200,7 +225,7 @@ class TestBuildServiceCheck(MacaronTestCase):
 
         # Test GitLab CI.
         maven_build_ci = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
-        maven_build_ci.dynamic_data["build_spec"]["tool"] = maven
+        maven_build_ci.dynamic_data["build_spec"]["tools"] = [maven]
         bash_commands["commands"] = []
         ci_info["service"] = gitlab_ci
         maven_build_ci.dynamic_data["ci_services"] = [ci_info]
