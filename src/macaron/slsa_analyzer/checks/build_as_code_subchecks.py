@@ -246,7 +246,7 @@ class BuildAsCodeSubchecks:
                     # Deployment is to Pypi if there isn't a repository url
                     # https://packaging.python.org/en/latest/guides/
                     # publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
-                    if inputs.get("repository_url"):
+                    if inputs and inputs.get("repository_url"):
                         logger.debug(
                             "Workflow %s has a repository url, indicating a non-legit publish to PyPi. Skipping...",
                             callee.name,
