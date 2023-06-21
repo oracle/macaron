@@ -69,8 +69,12 @@ def get_root_component(root_bom_path: Path) -> Optional[dict | None]:
     """
     try:
         root_bom = deserialize_bom_json(root_bom_path)
+    except CycloneDXParserError as error:
+        logger.error(error)
+        return None
+    try:
         return root_bom.get("metadata").get("component")  # type: ignore
-    except (CycloneDXParserError, AttributeError) as error:
+    except AttributeError as error:
         logger.error(error)
 
     return None
@@ -98,9 +102,13 @@ def get_dep_components(
     bom_objects: list[dict] = []
     try:
         root_bom = deserialize_bom_json(root_bom_path)
+    except CycloneDXParserError as error:
+        logger.error(error)
+        return
+    try:
         components = root_bom.get("components")
         bom_objects.append(root_bom)
-    except (CycloneDXParserError, AttributeError) as error:
+    except AttributeError as error:
         logger.error(error)
         return
 
