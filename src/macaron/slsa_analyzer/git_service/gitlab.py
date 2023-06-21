@@ -18,12 +18,15 @@ In the ini configuration file, settings for the ``public`` GitLab service is in 
 is in the ``[git_service.gitlab.private]`` section.
 """
 
+import logging
 import os
 from abc import abstractmethod
 
 from macaron.errors import CloneError, ConfigurationError
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class GitLab(BaseGitService):
@@ -58,12 +61,10 @@ class GitLab(BaseGitService):
         CloneError
             If there is an error parsing the URL.
         """
-        class_name = type(self).__name__
         if not self.domain:
             # This should not happen.
-            raise CloneError(
-                f"Internal error: The repository '{url} should not be cloned from the git service '{class_name}'."
-            )
+            logger.debug("Cannot clone with a Git service having no domain.")
+            raise CloneError(f"Cannot clone the repo '{url}' due to an internal error.")
 
         url_parse_result = git_url.parse_remote_url(
             url,
@@ -71,8 +72,7 @@ class GitLab(BaseGitService):
         )
         if not url_parse_result:
             raise CloneError(
-                f"Cannot clone the repo '{url}' from the git service '{class_name}'"
-                "the URL format is invalid or not supported by Macaron."
+                f"Cannot clone the repo '{url}' due to the URL format being invalid or not supported by Macaron."
             )
 
         if self.access_token:
