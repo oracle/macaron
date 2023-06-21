@@ -13,6 +13,7 @@ from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.pip import Pip
+from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
@@ -235,7 +236,7 @@ class BuildAsCodeSubchecks:
         """Check for use of a trusted Github Actions workflow to publish/deploy."""
         check_certainty = 0.95
 
-        if isinstance(self.build_tool, Pip):
+        if isinstance(self.build_tool, (Pip, Poetry)):
             trusted_deploy_actions = defaults.get_list("builder.pip.ci.deploy", "github_actions", fallback=[])
 
             for callee in self.ci_info["callgraph"].bfs():
@@ -336,11 +337,11 @@ class BuildAsCodeSubchecks:
                     # Check that the identified event trigger type is a valid release event.
                     if trigger_type in valid_trigger_events:
                         logger.info(
-                            "Valid trigger event %s found for the workflow file %s.", trigger_type, workflow_file
+                            "Valid trigger event '%s' found for the workflow file: %s.", trigger_type, workflow_file
                         )
                         self.evidence.append("release_workflow_trigger")
                         justification: list[str | dict[str, str]] = [
-                            f"Valid trigger event type {trigger_type} used in workflow: {workflow_file}"
+                            f"Valid trigger event type '{trigger_type}' used in workflow file: {workflow_file}"
                         ]
                         self.check_results["release_workflow_trigger"] = DeploySubcheckResults(
                             justification=justification
