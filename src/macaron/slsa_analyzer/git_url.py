@@ -453,8 +453,14 @@ def get_remote_origin_of_local_repo(git_obj: Git) -> str:
     # This is because cloning from GitLab with an access token requires us to embed
     # the token in the URL.
     if "oauth2" in remote_origin_path:
-        url_parse_result = urllib.parse.urlparse(remote_origin_path)
+        try:
+            url_parse_result = urllib.parse.urlparse(remote_origin_path)
+        except ValueError:
+            logger.error("Error occurs while processing the remote URL of repo %s.", git_obj.project_name)
+            return ""
+
         _, _, domain = url_parse_result.netloc.rpartition("@")
+
         new_url_parse_result = urllib.parse.ParseResult(
             scheme=url_parse_result.scheme,
             netloc=domain,
