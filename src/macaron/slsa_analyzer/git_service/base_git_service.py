@@ -46,7 +46,7 @@ class BaseGitService:
         Returns
         -------
         str | None
-            The domain. This can be ``None`` if the git section is not found in
+            The domain. This can be ``None`` if the git service section is not found in
             the ini configuration file, meaning the user does not enable the
             corresponding git service.
 
