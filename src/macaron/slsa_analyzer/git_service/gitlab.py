@@ -21,6 +21,7 @@ is in the ``[git_service.gitlab.private]`` section.
 import logging
 import os
 from abc import abstractmethod
+from urllib.parse import ParseResult, urlunparse
 
 from macaron.errors import CloneError, ConfigurationError
 from macaron.slsa_analyzer import git_url
@@ -75,11 +76,23 @@ class GitLab(BaseGitService):
                 f"Cannot clone the repo '{url}' due to the URL format being invalid or not supported by Macaron."
             )
 
+        # Construct clone URL from ``urlparse`` result, with or without an access token.
+        # https://docs.gitlab.com/ee/gitlab-basics/start-using-git.html#clone-using-a-token
         if self.access_token:
-            # https://docs.gitlab.com/ee/gitlab-basics/start-using-git.html#clone-using-a-token
-            clone_url = f"https://oauth2:{self.access_token}@{self.domain}/{url_parse_result.path}"
+            clone_url_netloc = f"oauth2:{self.access_token}@{self.domain}"
         else:
-            clone_url = f"https://{self.domain}/{url_parse_result.path}"
+            clone_url_netloc = self.domain
+
+        clone_url = urlunparse(
+            ParseResult(
+                scheme=url_parse_result.scheme,
+                netloc=clone_url_netloc,
+                path=url_parse_result.path,
+                params="",
+                query="",
+                fragment="",
+            )
+        )
 
         return clone_url
 
