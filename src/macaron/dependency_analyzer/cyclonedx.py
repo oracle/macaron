@@ -70,7 +70,7 @@ def get_root_component(root_bom_path: Path) -> Optional[dict | None]:
     try:
         root_bom = deserialize_bom_json(root_bom_path)
         return root_bom.get("metadata").get("component")  # type: ignore
-    except (CycloneDXParserError, KeyError) as error:
+    except (CycloneDXParserError, AttributeError) as error:
         logger.error(error)
 
     return None
@@ -100,7 +100,7 @@ def get_dep_components(
         root_bom = deserialize_bom_json(root_bom_path)
         components = root_bom.get("components")
         bom_objects.append(root_bom)
-    except (CycloneDXParserError, KeyError) as error:
+    except (CycloneDXParserError, AttributeError) as error:
         logger.error(error)
         return
 
@@ -124,7 +124,7 @@ def get_dep_components(
             for node in bom.get("dependencies"):  # type: ignore
                 if node.get("ref") == bom_ref or recursive:
                     dependencies.extend(node.get("dependsOn"))
-        except KeyError as error:
+        except AttributeError as error:
             logger.debug(error)
 
     for dependency in dependencies:
@@ -134,7 +134,7 @@ def get_dep_components(
             try:
                 if dependency == component.get("bom-ref"):
                     yield component
-            except KeyError as error:
+            except AttributeError as error:
                 logger.debug(error)
 
 
@@ -198,7 +198,7 @@ def convert_components_to_artifacts(
             DependencyAnalyzer.add_latest_version(
                 item=item, key=key, all_versions=all_versions, latest_deps=latest_deps, url_to_artifact=url_to_artifact
             )
-        except KeyError as error:
+        except (KeyError, AttributeError) as error:
             logger.debug(error)
 
     try:
