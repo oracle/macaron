@@ -81,6 +81,7 @@ class DeploySubcheckResults:
     html_url: str = ""
     config_name: str = ""
     workflow_name: str = ""
+    workflow_file: str = ""
     workflow_info: dict = {}
 
 
@@ -144,7 +145,7 @@ class BuildAsCodeSubchecks:
                     os.path.basename(bash_cmd["CI_path"]),
                 )
 
-                workflow_name = os.path.basename(html_url)
+                workflow_file = os.path.basename(trigger_link)
                 workflow_info = bash_cmd["workflow_info"]
 
                 justification: list[str | dict[str, str]] = [
@@ -166,7 +167,7 @@ class BuildAsCodeSubchecks:
                     trigger_link=trigger_link,
                     source_link=bash_source_link,
                     html_url=html_url,
-                    workflow_name=workflow_name,
+                    workflow_file=workflow_file,
                     workflow_info=workflow_info,
                 )
 
@@ -220,7 +221,9 @@ class BuildAsCodeSubchecks:
             if callee_name == workflow_name == "pypa/gh-action-pypi-publish":
                 workflow_info = callee.parsed_obj
                 inputs = workflow_info.get("Inputs", {})
-                repo_url = inputs.get("repository_url", {}).get("Value", {}).get("Value", "")
+                repo_url = ""
+                if inputs:
+                    repo_url = inputs.get("repository_url", {}).get("Value", {}).get("Value", "")
                 # TODO: Use values that come from defaults.ini rather than hardcoded.
                 if repo_url == "https://test.pypi.org/legacy/":
                     self.evidence.append("tested_deploy_action")
@@ -245,7 +248,6 @@ class BuildAsCodeSubchecks:
                     logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
                     continue
 
-                # TODO
                 if workflow_name in trusted_deploy_actions:
                     workflow_info = callee.parsed_obj
                     inputs = workflow_info.get("Inputs", {})
@@ -278,6 +280,8 @@ class BuildAsCodeSubchecks:
                         os.path.basename(callee.caller_path),
                     )
 
+                    workflow_file = os.path.basename(trigger_link)
+
                     # TODO: include in the justification multiple cases of external action usage
                     justification: list[str | dict[str, str]] = [
                         {
@@ -301,6 +305,7 @@ class BuildAsCodeSubchecks:
                         source_link=deploy_action_source_link,
                         html_url=html_url,
                         workflow_name=workflow_name,
+                        workflow_file=workflow_file,
                         workflow_info=workflow_info,
                     )
 
@@ -313,6 +318,7 @@ class BuildAsCodeSubchecks:
     def release_workflow_trigger(self, workflow_file: str = "") -> float:
         """Check that the workflow is triggered by a valid event."""
         check_certainty = 0.9
+
         if not workflow_file:
             return self.failed_check
 
@@ -320,11 +326,14 @@ class BuildAsCodeSubchecks:
 
         # TODO: Consider activity types for release, i.e. prereleased
         for callee in self.ci_info["callgraph"].bfs():
+            # Find the workflow file that the deployment method was used in and
+            # extract the trigger event types.
             if callee.name == workflow_file:
                 trigger_events = callee.parsed_obj.get("On", {})
                 for event in trigger_events:
                     hook = event.get("Hook", {})
                     trigger_type = str(hook.get("Value", ""))
+                    # Check that the identified event trigger type is a valid release event.
                     if trigger_type in valid_trigger_events:
                         logger.info(
                             "Valid trigger event %s found for the workflow file %s.", trigger_type, workflow_file
@@ -380,9 +389,6 @@ class BuildAsCodeSubchecks:
     def step_uses_secrets(self, step_info: dict) -> float:
         """Identify whether a workflow step uses secrets."""
         check_certainty = 0.9
-
-        logger.info("STEP")
-        logger.info(step_info)
 
         # inputs = step_info.get("Inputs", {})
         logger.info("inputs: %s", step_info)

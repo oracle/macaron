@@ -24,6 +24,9 @@ def ci_parsed_check() -> float:
     Certainty
         The certainty of the check.
     """
+    check = build_as_code_subcheck_results.check_results.get("ci_parsed")
+    if check:
+        return check.certainty
     return build_as_code_subcheck_results.ci_parsed()
 
 
@@ -92,8 +95,8 @@ def release_workflow_trigger_deploy_command_check() -> float:
     depends_on = [deploy_command_check() > 0.0]
     if not all(depends_on):
         return FAILED_CHECK
-    workflow_name = build_as_code_subcheck_results.check_results["deploy_command"].workflow_name
-    return build_as_code_subcheck_results.release_workflow_trigger(workflow_file=workflow_name)
+    workflow_file = build_as_code_subcheck_results.check_results["deploy_command"].workflow_file
+    return build_as_code_subcheck_results.release_workflow_trigger(workflow_file=workflow_file)
 
 
 @problog_export("-int")  # type: ignore
@@ -106,11 +109,10 @@ def release_workflow_trigger_deploy_action_check() -> float:
         The certainty of the check.
     """
     depends_on = [deploy_action_check() > 0.0]
-    print(all(depends_on))
     if not all(depends_on):
         return FAILED_CHECK
-    workflow_name = build_as_code_subcheck_results.check_results["deploy_action"].workflow_name
-    return build_as_code_subcheck_results.release_workflow_trigger(workflow_file=workflow_name)
+    workflow_file = build_as_code_subcheck_results.check_results["deploy_action"].workflow_file
+    return build_as_code_subcheck_results.release_workflow_trigger(workflow_file=workflow_file)
 
 
 @problog_export("-int")  # type: ignore

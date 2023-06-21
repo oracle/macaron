@@ -114,13 +114,13 @@ class BuildAsCodeCheck(BaseCheck):
                 K :: step_uses_secrets_deploy_command :- step_uses_secrets_deploy_command_check(K).
 
                 0.8 :: deploy_action_certainty :- deploy_action.
-                %0.10 :: deploy_action_certainty :- tested_deploy_action.
-                %0.85 :: deploy_action_certainty :- release_workflow_trigger_deploy_action.
+                0.10 :: deploy_action_certainty :- tested_deploy_action.
+                0.85 :: deploy_action_certainty :- release_workflow_trigger_deploy_action.
                 %0.95 :: deploy_action_certainty :- publishing_workflow_deploy_action.
                 0.65 :: deploy_action_certainty :- step_uses_secrets_deploy_action.
 
                 0.75 :: deploy_command_certainty :- deploy_command.
-                %0.85 :: deploy_command_certainty :- release_workflow_trigger_deploy_command.
+                0.85 :: deploy_command_certainty :- release_workflow_trigger_deploy_command.
                 %0.95 :: deploy_command_certainty :- publishing_workflow_deploy_command.
                 0.65 :: deploy_command_certainty :- step_uses_secrets_deploy_command.
 
