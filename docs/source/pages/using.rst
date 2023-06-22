@@ -92,7 +92,7 @@ Macaron can run the analysis against an existing SBOM in `CycloneDX <https://cyc
 
 CycloneDX provides open-source SBOM generators for different types of project (e.g Maven, Gradle, etc). For instructions on generating a CycloneDX SBOM for your project, see `CycloneDX documentation <https://github.com/CycloneDX>`_.
 
-For example, with `micronaut-core <https://github.com/micronaut-projects/micronaut-core>`_ at branch 4.0.x commit ``82d115b4901d10226552ac67b0a10978cd5bc603``, using the `CycloneDX Gradle plugin <https://github.com/CycloneDX/cyclonedx-gradle-plugin>`_ would give us the following `SBOM <./_static/micronaut-projects/micronaut-core/analyze_with_sbom/sbom.json>`_.
+For example, with `micronaut-core <https://github.com/micronaut-projects/micronaut-core>`_ at branch 4.0.x commit ``82d115b4901d10226552ac67b0a10978cd5bc603``, using the `CycloneDX Gradle plugin <https://github.com/CycloneDX/cyclonedx-gradle-plugin>`_ would give us the following `SBOM <../_static/examples/micronaut-projects/micronaut-core/analyze_with_sbom/sbom.json>`_.
 
 To run the analysis against that SBOM, run this command:
 
