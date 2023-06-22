@@ -27,6 +27,7 @@ from macaron.dependency_analyzer import (
     NoneDependencyAnalyzer,
 )
 from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
+from macaron.errors import CloneError
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.slsa_analyzer import git_url
@@ -529,13 +530,13 @@ class Analyzer:
                 return None
 
             git_service = self.get_git_service(resolved_remote_path)
-            if not git_service.can_clone_remote_repo(resolved_remote_path):
-                logger.error("Cannot clone the remote repo at %s", resolved_remote_path)
-                return None
-
             repo_unique_path = git_url.get_repo_dir_name(resolved_remote_path)
             resolved_local_path = os.path.join(target_dir, repo_unique_path)
-            git_url.clone_remote_repo(resolved_local_path, resolved_remote_path)
+            try:
+                git_service.clone_repo(resolved_local_path, resolved_remote_path)
+            except CloneError as error:
+                logger.error("Cannot clone %s: %s", resolved_remote_path, str(error))
+                return None
         else:
             logger.info("The path to repo %s is a local path.", repo_path)
             resolved_local_path = self._resolve_local_path(self.local_repos_path, repo_path)
@@ -579,7 +580,6 @@ class Analyzer:
             The git service derived from the remote path.
         """
         for git_service in GIT_SERVICES:
-            git_service.load_defaults()
             if git_service.is_detected(remote_path):
                 return git_service
 

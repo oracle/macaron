@@ -3,10 +3,13 @@
 
 """This module tests the generic actions on Git repositories."""
 
+import configparser
 import os
 from pathlib import Path
 
-from macaron.config.defaults import defaults
+import pytest
+
+from macaron.config.defaults import defaults, load_defaults
 from macaron.slsa_analyzer import git_url
 
 
@@ -51,13 +54,6 @@ def test_get_repo_name_from_url() -> None:
     # Test get repo full name
     assert all(git_url.get_repo_full_name_from_url(url) == repo_full_name for url in valid_git_urls)
     assert not any(git_url.get_repo_full_name_from_url(url) for url in invalid_git_urls)
-
-
-def test_clone_remote_repo() -> None:
-    """
-    Test the clone remote repository method
-    """
-    assert not git_url.clone_remote_repo(str(Path(__file__).parent), "")
 
 
 def test_is_remote_repo() -> None:
@@ -122,36 +118,110 @@ def test_get_remote_vcs_url() -> None:
     assert git_url.get_remote_vcs_url("git@github.com:7999/org/") == ""
 
 
-def test_invalid_git_allowed_hosts() -> None:
-    """Test the vcs URL validator method without any allowed git hosts."""
-    original_allowed_hosts = defaults.get("git", "allowed_hosts")
+@pytest.mark.parametrize(
+    ("config_input", "expected_allowed_domain_set"),
+    [
+        (
+            """
+            [git_service.github]
+            domain = github.com
 
-    # Test running with no git hosts defined in defaults.ini
-    defaults.remove_option("git", "allowed_hosts")
-    assert git_url.get_remote_vcs_url("https://github.com/org/name.git") == ""
-    assert git_url.get_remote_vcs_url("https://gitlab.com/org") == ""
+            [git_service.gitlab.public]
+            domain = gitlab.com
+            """,
+            {"github.com", "gitlab.com"},
+        ),
+        (
+            """
+            [git_service.gitlab.public]
+            domain = gitlab.com
 
-    # Test running with invalid git hosts defined in defaults.ini
-    defaults["git"]["allowed_hosts"] = "invalid host"
-    assert git_url.get_remote_vcs_url("https://github.com/org/name.git") == ""
-    assert git_url.get_remote_vcs_url("https://gitlab.com/org") == ""
+            [git_service.gitlab.private]
+            domain = internal.gitlab.org
+            """,
+            {"gitlab.com", "internal.gitlab.org"},
+        ),
+    ],
+)
+def test_get_allowed_git_service_domains(
+    config_input: str,
+    expected_allowed_domain_set: set[str],
+) -> None:
+    """Test the get allowed git service domains function."""
+    config = configparser.ConfigParser()
+    config.read_string(config_input)
+    assert set(git_url.get_allowed_git_service_domains(config)) == expected_allowed_domain_set
 
-    defaults["git"]["allowed_hosts"] = original_allowed_hosts
+
+@pytest.mark.parametrize(
+    ("user_config_input", "expected_allowed_domain_set"),
+    [
+        pytest.param(
+            # The current behavior is: we always enable GitHub and public GitLab by default.
+            # User config cannot disable either of the two.
+            """
+            [git_service.github]
+            domain = github.com
+            """,
+            {"github.com", "gitlab.com"},
+            id="Only GitHub in user config",
+        ),
+        pytest.param(
+            """
+            [git_service.gitlab.private]
+            domain = internal.gitlab.org
+            """,
+            {"github.com", "gitlab.com", "internal.gitlab.org"},
+            id="Private GitLab in user config",
+        ),
+    ],
+)
+def test_get_allowed_git_service_domains_with_override(
+    user_config_input: str,
+    expected_allowed_domain_set: set[str],
+    tmp_path: Path,
+) -> None:
+    """Test the get allowed git service domains function, in multi-config files scenario."""
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(user_config_input)
+    # We don't have to worry about modifying the ``defaults`` object causing test
+    # pollution here, since we reload the ``defaults`` object before every test with the
+    # ``setup_test`` fixture.
+    load_defaults(user_config_path)
+
+    assert set(git_url.get_allowed_git_service_domains(defaults)) == expected_allowed_domain_set
 
 
-def test_get_unique_path() -> None:
+def test_get_remote_vcs_url_with_user_defined_allowed_domains(tmp_path: Path) -> None:
+    """Test the vcs URL validator method with user-defined allowed domains."""
+    url = "https://internal.gitlab.org/org/name"
+    assert git_url.get_remote_vcs_url(url) == ""
+
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(
+            """
+            [git_service.gitlab.private]
+            domain = internal.gitlab.org
+            """
+        )
+    # We don't have to worry about modifying the ``defaults`` object causing test
+    # pollution here, since we reload the ``defaults`` object before every test with the
+    # ``setup_test`` fixture.
+    load_defaults(user_config_path)
+
+    assert git_url.get_remote_vcs_url(url) == url
+
+
+@pytest.mark.parametrize(
+    ("url", "path"),
+    [
+        ("https://github.com/apache/maven", "github_com/apache/maven"),
+        ("https://gitlab.com/apache/maven", "gitlab_com/apache/maven"),
+        ("git@github.com:apache/maven", "github_com/apache/maven"),
+    ],
+)
+def test_get_unique_path(url: str, path: str) -> None:
     """Test the get unique path method."""
-    assert git_url.get_repo_dir_name("https://github.com/apache/maven") == os.path.normpath("github_com/apache/maven")
-    assert git_url.get_repo_dir_name("https://gitlab.com/apache/maven") == os.path.normpath("gitlab_com/apache/maven")
-    assert git_url.get_repo_dir_name("git@github.com:apache/maven") == os.path.normpath("github_com/apache/maven")
-
-    # TODO: use pytest fixtures to properly set and cleanup defaults after each run.
-    back_up = defaults["git"]["allowed_hosts"]
-    defaults["git"]["allowed_hosts"] = f"{back_up} \n git.host.blah \n ** \n wrong_host##format"
-
-    assert git_url.get_repo_dir_name("git@git.host.blah:apache/maven") == os.path.normpath("git_host_blah/apache/maven")
-    assert git_url.get_repo_dir_name("https://**/apache/maven") == os.path.normpath("mcn__/apache/maven")
-    assert git_url.get_repo_dir_name("https://wrong_host##format/apache/maven") == ""
-    assert git_url.get_repo_dir_name("git@not.supported.githost.com/apache/maven") == ""
-
-    defaults["git"]["allowed_hosts"] = back_up
+    assert git_url.get_repo_dir_name(url) == os.path.normpath(path)
