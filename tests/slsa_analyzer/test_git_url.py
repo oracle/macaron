@@ -6,10 +6,10 @@
 import configparser
 import os
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
+from macaron.config.defaults import defaults, load_defaults
 from macaron.slsa_analyzer import git_url
 
 
@@ -154,18 +154,11 @@ def test_get_allowed_git_service_domains(
 
 
 @pytest.mark.parametrize(
-    ("default_config_input", "override_config_input", "expected_allowed_domain_set"),
+    ("user_config_input", "expected_allowed_domain_set"),
     [
         pytest.param(
             # The current behavior is: we always enable GitHub and public GitLab by default.
             # User config cannot disable either of the two.
-            """
-            [git_service.github]
-            domain = github.com
-
-            [git_service.gitlab.public]
-            domain = gitlab.com
-            """,
             """
             [git_service.github]
             domain = github.com
@@ -174,13 +167,6 @@ def test_get_allowed_git_service_domains(
             id="Only GitHub in user config",
         ),
         pytest.param(
-            """
-            [git_service.github]
-            domain = github.com
-
-            [git_service.gitlab.public]
-            domain = gitlab.com
-            """,
             """
             [git_service.gitlab.private]
             domain = internal.gitlab.org
@@ -191,37 +177,41 @@ def test_get_allowed_git_service_domains(
     ],
 )
 def test_get_allowed_git_service_domains_with_override(
-    default_config_input: str,
-    override_config_input: str,
+    user_config_input: str,
     expected_allowed_domain_set: set[str],
     tmp_path: Path,
 ) -> None:
     """Test the get allowed git service domains function, in multi-config files scenario."""
-    default_filepath = tmp_path / "default.ini"
-    override_filepath = tmp_path / "override.ini"
-    with open(default_filepath, "w", encoding="utf-8") as default_file:
-        default_file.write(default_config_input)
-    with open(override_filepath, "w", encoding="utf-8") as override_file:
-        override_file.write(override_config_input)
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(user_config_input)
+    # We don't have to worry about modifying the ``defaults`` object causing test
+    # pollution here, since we reload the ``defaults`` object before every test with the
+    # ``setup_test`` fixture.
+    load_defaults(user_config_path)
 
-    config = configparser.ConfigParser()
-    config.read([default_filepath, override_filepath])
-
-    assert set(git_url.get_allowed_git_service_domains(config)) == expected_allowed_domain_set
+    assert set(git_url.get_allowed_git_service_domains(defaults)) == expected_allowed_domain_set
 
 
-@patch("macaron.slsa_analyzer.git_url.get_allowed_git_service_domains")
-def test_get_remote_vcs_url_with_invalid_allowed_domains(
-    get_allowed_domains_fn: MagicMock,
-) -> None:
-    """Test the vcs URL validator method without any allowed git hosts."""
-    get_allowed_domains_fn.return_value = []
-    assert git_url.get_remote_vcs_url("https://github.com/org/name.git") == ""
-    assert git_url.get_remote_vcs_url("https://gitlab.com/org") == ""
+def test_get_remote_vcs_url_with_user_defined_allowed_domains(tmp_path: Path) -> None:
+    """Test the vcs URL validator method with user-defined allowed domains."""
+    url = "https://internal.gitlab.org/org/name"
+    assert git_url.get_remote_vcs_url(url) == ""
 
-    get_allowed_domains_fn.return_value = ["invalid host"]
-    assert git_url.get_remote_vcs_url("https://github.com/org/name.git") == ""
-    assert git_url.get_remote_vcs_url("https://gitlab.com/org") == ""
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(
+            """
+                               [git_service.gitlab.private]
+                               domain = internal.gitlab.org
+                               """
+        )
+    # We don't have to worry about modifying the ``defaults`` object causing test
+    # pollution here, since we reload the ``defaults`` object before every test with the
+    # ``setup_test`` fixture.
+    load_defaults(user_config_path)
+
+    assert git_url.get_remote_vcs_url(url) == url
 
 
 @pytest.mark.parametrize(
