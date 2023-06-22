@@ -9,7 +9,7 @@ import os
 import re
 import string
 import urllib.parse
-from typing import Optional
+from configparser import ConfigParser
 
 from git import GitCommandError
 from git.objects import Commit
@@ -18,6 +18,7 @@ from git.repo import Repo
 from pydriller.git import Git
 
 from macaron.config.defaults import defaults
+from macaron.errors import CloneError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -298,50 +299,67 @@ def is_remote_repo(path_to_repo: str) -> bool:
 def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
     """Clone the remote repository and return the `git.Repo` object for that repository.
 
-    If ``clone_dir`` already exists, the repository is not cloned.
+    If there is an existing non-empty ``clone_dir``, Macaron assumes the repository has
+    been cloned already and cancels the clone.
+    This could happen when multiple runs of Macaron use the same `<output_dir>`, leading
+    to Macaron potentially trying to clone a repository multiple times.
 
     Parameters
     ----------
     clone_dir : str
         The directory to clone the repo to.
     url : str
-        The remote url to clone the repository.
+        The url to clone the repository.
+        Important: this can contain secrets! (e.g. cloning with GitLab token)
 
     Returns
     -------
-    git.Repo
-        The Repo object of the repository or None if errors.
-    """
-    # Validate the url first.
-    parsed_url = get_remote_vcs_url(url)
-    if parsed_url == "":
-        logger.debug("URL '%s' is not valid.", url)
-        return None
+    git.Repo | None
+        The ``git.Repo`` object of the repository, or ``None`` if the clone directory already exists.
 
+    Raises
+    ------
+    CloneError
+        If the repository has not been cloned and the clone attempt fails.
+    """
+    # Handle the case where the repository already exists in `<output_dir>/git_repos`.
+    # This could happen when multiple runs of Macaron use the same `<output_dir>`, leading to
+    # Macaron attempting to clone a repository multiple times.
+    # In these cases, we should not error since it may interrupt the analysis.
     if os.path.isdir(clone_dir):
+        logger.info("Checking if the repo %s needs cloning.", url)
         try:
             os.rmdir(clone_dir)
             logger.info(
-                "The clone dir %s is empty. It has been deleted for cloning the repo.",
+                "The clone dir %s is empty. It has been deleted for cloning the repo %s.",
                 clone_dir,
+                url,
             )
         except OSError:
-            logger.info("The clone dir %s is not empty. No cloning is proceeded.", clone_dir)
+            logger.info(
+                "The clone dir %s is not empty. This probably means the repo %s has already been clone. "
+                "No cloning is proceeded.",
+                clone_dir,
+                url,
+            )
             return None
 
-    # The Repo.clone_from method handles creating intermediate dirs.
-    try:
-        logger.info("Cloning the repo %s to %s", url, clone_dir)
-        return Repo.clone_from(url=url, to_path=clone_dir)
-    except GitCommandError as error:
-        logger.error(
-            "Cannot clone with the repo path %s to %s. Error: %s",
-            url,
-            clone_dir,
-            str(error),
-        )
+    logger.info("Cloning the repo %s to %s.", url, clone_dir)
 
-    return None
+    try:
+        # The Repo.clone_from method handles creating intermediate dirs.
+        return Repo.clone_from(
+            url=url,
+            to_path=clone_dir,
+            env={
+                # Setting the GIT_TERMINAL_PROMPT environment variable to ``0`` stops
+                # ``git clone`` from prompting for login credentials.
+                "GIT_TERMINAL_PROMPT": "0",
+            },
+        )
+    except GitCommandError as error:
+        # stderr here does not contain secrets, so it is safe for logging.
+        raise CloneError(error.stderr) from None
 
 
 def get_repo_name_from_url(url: str) -> str:
@@ -430,6 +448,29 @@ def get_remote_origin_of_local_repo(git_obj: Git) -> str:
     # We don't need to validate this path as we are getting it from an already cloned repository. If the path is invalid
     # it should have been caught during the preparing process of the git repository.
     remote_origin_path = valid_remote_path_set.pop()
+
+    # Hide the GitLab OAuth token from the repo's remote.
+    # This is because cloning from GitLab with an access token requires us to embed
+    # the token in the URL.
+    if "oauth2" in remote_origin_path:
+        try:
+            url_parse_result = urllib.parse.urlparse(remote_origin_path)
+        except ValueError:
+            logger.error("Error occurs while processing the remote URL of repo %s.", git_obj.project_name)
+            return ""
+
+        _, _, domain = url_parse_result.netloc.rpartition("@")
+
+        new_url_parse_result = urllib.parse.ParseResult(
+            scheme=url_parse_result.scheme,
+            netloc=domain,
+            path=url_parse_result.path,
+            params=url_parse_result.params,
+            query=url_parse_result.query,
+            fragment=url_parse_result.fragment,
+        )
+        remote_origin_path = urllib.parse.urlunparse(new_url_parse_result)
+
     return remote_origin_path or ""
 
 
@@ -481,7 +522,7 @@ def get_remote_vcs_url(url: str, clean_up: bool = True) -> str:
     return url_as_str
 
 
-def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse.ParseResult | None:
+def parse_remote_url(url: str, allowed_git_service_domains: list[str] | None = None) -> urllib.parse.ParseResult | None:
     """Verify if the given repository path is a valid vcs.
 
     This method converts the url to a ``https://`` url and return a
@@ -492,8 +533,10 @@ def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse
     ----------
     url: str
         The path of the repository to check.
-    git_hosts: Optional[list]
-        The list of allowed network locations (default: None).
+    allowed_git_service_domains: list[str] | None
+        The list of allowed git service domains.
+        If this is ``None``, fall back to the  ``.ini`` configuration.
+        (Default: None).
 
     Returns
     -------
@@ -505,7 +548,8 @@ def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse
     >>> parse_remote_url("ssh://git@github.com:7999/owner/org.git")
     ParseResult(scheme='https', netloc='github.com', path='owner/org.git', params='', query='', fragment='')
     """
-    allowed_git_hosts = git_hosts if git_hosts else defaults.get_list("git", "allowed_hosts", fallback=[])
+    if allowed_git_service_domains is None:
+        allowed_git_service_domains = get_allowed_git_service_domains(defaults)
 
     try:
         # Remove prefixes, such as "scm:" and "git:".
@@ -526,7 +570,7 @@ def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse
 
     # e.g., https://github.com/owner/project.git
     if parsed_url.scheme in ("http", "https", "ftp", "ftps", "git+https"):
-        if parsed_url.netloc not in allowed_git_hosts:
+        if parsed_url.netloc not in allowed_git_service_domains:
             return None
         path_params = parsed_url.path.strip("/").split("/")
         if len(path_params) < 2:
@@ -543,7 +587,7 @@ def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse
         user_host, _, port = parsed_url.netloc.partition(":")
         user, _, host = user_host.rpartition("@")
 
-        if not user or host not in allowed_git_hosts:
+        if not user or host not in allowed_git_service_domains:
             return None
 
         path = ""
@@ -571,7 +615,7 @@ def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse
         if not user_host or not port_path:
             return None
         user, _, host = user_host.rpartition("@")
-        if not user or host not in allowed_git_hosts:
+        if not user or host not in allowed_git_service_domains:
             return None
 
         path = ""
@@ -605,6 +649,40 @@ def parse_remote_url(url: str, git_hosts: Optional[list] = None) -> urllib.parse
     except ValueError:
         logger.debug("Could not reconstruct %s.", url)
         return None
+
+
+def get_allowed_git_service_domains(config: ConfigParser) -> list[str]:
+    """Load allowed git service domains from ini configuration.
+
+    Some notes for future improvements:
+
+    The fact that this method is here is not ideal.
+
+    Q: Why do we need this method here in this ``git_url`` module in the first place?
+    A: A number of functions in this module also do "URL validation" as part of their logic.
+    This requires loading in the allowed git service domains from the ini config.
+
+    Q: Why don't we use the ``GIT_SERVICES`` list from the ``macaron.slsa_analyzer.git_service``
+    instead of having this second place of loading git service configuration?
+    A: Referencing ``GIT_SERVICES`` in this module results in cyclic imports since the module
+    where ``GIT_SERVICES`` is defined in also reference this module.
+    """
+    git_service_section_names = [
+        section_name for section_name in config.sections() if section_name.startswith("git_service")
+    ]
+
+    allowed_git_service_domains = []
+
+    for section_name in git_service_section_names:
+        git_service_section = config[section_name]
+
+        domain = git_service_section.get("domain")
+        if not domain:
+            continue
+
+        allowed_git_service_domains.append(domain)
+
+    return allowed_git_service_domains
 
 
 def get_repo_dir_name(url: str, sanitize: bool = True) -> str:

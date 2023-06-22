@@ -16,10 +16,12 @@ import macaron
 from macaron.config.defaults import create_defaults, load_defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import TARGET_CONFIG_SCHEMA
+from macaron.errors import ConfigurationError
 from macaron.output_reporter.reporter import HTMLReporter, JSONReporter, PolicyReporter
 from macaron.parsers.yaml.loader import YamlLoader
 from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
 from macaron.slsa_analyzer.analyzer import Analyzer
+from macaron.slsa_analyzer.git_service import GIT_SERVICES
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -134,6 +136,16 @@ def perform_action(action_args: argparse.Namespace) -> None:
                 logger.error("GitHub access token not set.")
                 sys.exit(os.EX_USAGE)
             global_config.gh_token = gh_token
+
+            # TODO: Here we should try to statically analyze the config before
+            # actually running the analysis.
+            try:
+                for git_service in GIT_SERVICES:
+                    git_service.load_defaults()
+            except ConfigurationError as error:
+                logger.error(error)
+                sys.exit(os.EX_USAGE)
+
             analyze_slsa_levels_single(action_args)
         case _:
             logger.error("Macaron does not support command option %s.", action_args.action)
