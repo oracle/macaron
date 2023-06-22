@@ -202,9 +202,9 @@ def test_get_remote_vcs_url_with_user_defined_allowed_domains(tmp_path: Path) ->
     with open(user_config_path, "w", encoding="utf-8") as user_config_file:
         user_config_file.write(
             """
-                               [git_service.gitlab.private]
-                               domain = internal.gitlab.org
-                               """
+            [git_service.gitlab.private]
+            domain = internal.gitlab.org
+            """
         )
     # We don't have to worry about modifying the ``defaults`` object causing test
     # pollution here, since we reload the ``defaults`` object before every test with the
