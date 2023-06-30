@@ -96,7 +96,8 @@ class BuildAsCodeCheck(BaseCheck):
                 # Initialize the BuildAsCodeSubchecks object with the AnalyzeContext.
                 build_as_code_subchecks.build_as_code_subcheck_results = BuildAsCodeSubchecks(ctx=ctx, ci_info=ci_info)
 
-                # ProbLog rules to be evaluated.
+                # TODO:
+                # 1. run deploy_command and deploy_action sub-tasks first.
                 prolog_string = PrologString(
                     """
                 :- use_module('src/macaron/slsa_analyzer/checks/problog_predicates.py').
@@ -117,12 +118,12 @@ class BuildAsCodeCheck(BaseCheck):
                 0.10 :: deploy_action_certainty :- tested_deploy_action.
                 0.85 :: deploy_action_certainty :- release_workflow_trigger_deploy_action.
                 %0.95 :: deploy_action_certainty :- publishing_workflow_deploy_action.
-                0.65 :: deploy_action_certainty :- step_uses_secrets_deploy_action.
+                0.45 :: deploy_action_certainty :- step_uses_secrets_deploy_action.
 
                 0.75 :: deploy_command_certainty :- deploy_command.
                 0.85 :: deploy_command_certainty :- release_workflow_trigger_deploy_command.
                 %0.95 :: deploy_command_certainty :- publishing_workflow_deploy_command.
-                0.65 :: deploy_command_certainty :- step_uses_secrets_deploy_command.
+                0.45 :: deploy_command_certainty :- step_uses_secrets_deploy_command.
 
                 0.70 :: deploy_kws_certainty :- deploy_kws.
 
@@ -131,8 +132,67 @@ class BuildAsCodeCheck(BaseCheck):
                 query(deploy_kws_certainty).
                 """
                 )
-                # TODO: we want all the logic to be happening inside the rules,
-                # can we make decisions in here instead of intermediate querying?
+                prolog_string_deploy_command = PrologString(
+                    """
+                :- use_module('src/macaron/slsa_analyzer/checks/problog_predicates.py').
+
+                C :: deploy_command :- deploy_command_check(C).
+                E :: release_workflow_trigger_deploy_command :- release_workflow_trigger_deploy_command_check(E).
+                H :: publishing_workflow_deploy_command :- publishing_workflow_deploy_command_check(H).
+                K :: step_uses_secrets_deploy_command :- step_uses_secrets_deploy_command_check(K).
+
+                0.75 :: deploy_command_certainty :- deploy_command.
+                0.85 :: deploy_command_certainty :- release_workflow_trigger_deploy_command.
+                %0.95 :: deploy_command_certainty :- publishing_workflow_deploy_command.
+                0.45 :: deploy_command_certainty :- step_uses_secrets_deploy_command.
+
+                query(deploy_command_certainty).
+                """
+                )
+                # NOTE: implementation explanation.
+                # The deploy_command sub-task was updated to iterate until all potential deploy commands were found.
+                # These are stored in the build_as_code_subcheck_resutls object, so are accessed below.
+                # Then, each are iterated over and the build_as_code_subcheck_results object has the information
+                # for that deploy command stored and the inference (and all sub-tasks are run) for that method.
+                # This is by no means the most efficient way, was just the fastest way to get results in the time.
+                cmds: list[DeploySubcheckResults] = []
+                build_as_code_subchecks.build_as_code_subcheck_results.deploy_command()
+                for cmd in build_as_code_subchecks.build_as_code_subcheck_results.deploy_commands:
+                    cmds.append(cmd)
+                logger.info("Deploy commands found: %s", cmds)
+
+                deploy_command_results: list[(float, DeploySubcheckResults)] = []
+                # 2. if there are multiple commands found, iterate through per command.
+                for deploy_command_found in cmds:
+                    # Reinitialize the object with the deploy command results
+                    build_as_code_subchecks.build_as_code_subcheck_results.check_results["deploy_command"] = deploy_command_found
+
+                    # Run ProbLog inference.
+                    term_result: dict[Term, float] = get_evaluatable().create_from(
+                        prolog_string_deploy_command).evaluate()
+                    result: dict[str, float] = {str(key): value for key, value in term_result.items()}
+                    cmd_certainty = result["deploy_command_certainty"]
+                    subcheck_results = build_as_code_subchecks.build_as_code_subcheck_results.check_results[
+                        "deploy_command"]
+                    deploy_command_results.append((cmd_certainty, subcheck_results))
+
+                for cert, item in deploy_command_results:
+                    logger.info("Deploy command: %s, in workflow file: %s has certainty: %s",
+                                item.deploy_cmd, item.workflow_file, cert)
+
+                if deploy_command_results:
+                    highest_certainty_deploy_command = max(deploy_command_results, key=lambda x: x[0])[0]
+                    highest_certainty_deploy_command_obj = max(deploy_command_results, key=lambda x: x[0])[1]
+
+                logger.info("Deploy command %s, in workflow file: %s has the highest certainty: %s",
+                            highest_certainty_deploy_command_obj.deploy_cmd, highest_certainty_deploy_command_obj.workflow_file, highest_certainty_deploy_command)
+                # Save the final results to build_as_code_subcheck_results
+                build_as_code_subchecks.build_as_code_subcheck_results = None
+                build_as_code_subchecks.build_as_code_subcheck_results = BuildAsCodeSubchecks(
+                    ctx=ctx, ci_info=ci_info)
+
+                # NOTE: I introduced the above changes as a test, the check still runs below as normal, I hadn't
+                # updated the schema or anything else. Just logged the above results as a proof of concept.
 
                 # Convert the result dictionary from Term:float to str:float
                 term_result: dict[Term, float] = get_evaluatable().create_from(prolog_string).evaluate()
