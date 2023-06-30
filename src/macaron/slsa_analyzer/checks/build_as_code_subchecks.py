@@ -319,11 +319,15 @@ class BuildAsCodeSubchecks:
     def release_workflow_trigger(self, workflow_file: str = "") -> float:
         """Check that the workflow is triggered by a valid event."""
         check_certainty = 0.9
+        check_certainty_lowered = 0.75
 
         if not workflow_file:
             return self.failed_check
 
-        valid_trigger_events = ["workflow-dispatch", "push", "release"]
+        valid_trigger_events = ["workflow_dispatch", "push", "release", "create"]
+        invalid_trigger_events = ["pull_request"]
+        valid_trigger = [""]
+        invalid_trigger = ""
 
         # TODO: Consider activity types for release, i.e. prereleased
         for callee in self.ci_info["callgraph"].bfs():
@@ -336,19 +340,25 @@ class BuildAsCodeSubchecks:
                     trigger_type = str(hook.get("Value", ""))
                     # Check that the identified event trigger type is a valid release event.
                     if trigger_type in valid_trigger_events:
-                        logger.info(
-                            "Valid trigger event '%s' found for the workflow file: %s.", trigger_type, workflow_file
-                        )
-                        self.evidence.append("release_workflow_trigger")
-                        justification: list[str | dict[str, str]] = [
-                            f"Valid trigger event type '{trigger_type}' used in workflow file: {workflow_file}"
-                        ]
-                        self.check_results["release_workflow_trigger"] = DeploySubcheckResults(
-                            justification=justification
-                        )
-                        logger.info("Evidence found: release_workflow_trigger -> %s", check_certainty)
+                        valid_trigger.append(trigger_type)
+                    if trigger_type in invalid_trigger_events:
+                        invalid_trigger = trigger_type
 
-                        return check_certainty
+                if valid_trigger:
+                    logger.info(
+                        "Valid trigger event '%s' found for the workflow file: %s.", valid_trigger[0], workflow_file
+                    )
+                    self.evidence.append("release_workflow_trigger")
+                    justification: list[str | dict[str, str]] = [
+                        f"Valid trigger event type '{valid_trigger[0]}' used in workflow file: {workflow_file}"
+                    ]
+                    self.check_results["release_workflow_trigger"] = DeploySubcheckResults(justification=justification)
+                    if invalid_trigger:
+                        logger.info("Evidence found: release_workflow_trigger -> %s", check_certainty_lowered)
+                        return check_certainty_lowered
+
+                    logger.info("Evidence found: release_workflow_trigger -> %s", check_certainty)
+                    return check_certainty
         return self.failed_check
 
     def pypi_publishing_workflow_timestamp(self) -> float:
@@ -409,7 +419,7 @@ class BuildAsCodeSubchecks:
             if isinstance(value, str):
                 # Match the pattern '${{ content }}'
                 pattern = re.compile(r"\$\{\{([^}]*)\}\}", re.IGNORECASE)
-                match = pattern.match(value)
+                match = pattern.search(value)
                 if match is not None:
                     content = match.group(1).strip()
                     contents = content.split(".")
