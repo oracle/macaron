@@ -168,3 +168,18 @@ Thanks to Datalog’s expressive language model, it’s easy to add exception ru
 requirement. For example, `the Mysql Connector/J <https://slsa.dev/spec/v0.1/requirements#build-service>`_ dependency in
 the Micronaut MuShop project does not pass the ``build_service`` check, but can be manually investigated and exempted if trusted. Overall, policies expressed in Datalog can be
 enforced by Macaron as part of your CI/CD pipeline to detect regressions or unexpected behavior.
+
+---------------------------
+Analyzing more dependencies
+---------------------------
+
+In some cases the dependencies that Macaron discovers lack a direct connection to a repository for it to analyze. To improve results in these instances, the Repository Finding feature can be enabled. This feature makes use of a dependency's identifying information and the matching information that can be found within package managing repositories located on the Internet.
+
+.. note:: The Repository Finding feature currently only works for Java projects via SCM meta data found within artifact POM files.
+
+Enabling this feature requires modification of the ``defaults.ini`` config file located at: ``<macaron_root_directory>/src/config/``. Under the ``repofinder.java`` header, four options of importance exist: ``find_repos``, ``artifact_repositories``, ``repo_pom_paths``, ``find_parents``. These options behave as follows:
+
+- ``find_repos`` (Values: True or False) - Enables or disables the Repository Finding feature.
+- ``artifact_repositories`` (Values: List of URLs) - Determines the remote artifact repositories to attempt to retrieve dependency information from.
+- ``repo_pom_paths`` (Values: List of POM tags) - Determines where to search for repository information in the POM files. E.g. scm.url.
+- ``find_parents`` (Values: True or False) - When enabled, the Repository Finding feature will also search for repository URLs in parents POM files of the current dependency.
