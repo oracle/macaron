@@ -177,9 +177,12 @@ In some cases the dependencies that Macaron discovers lack a direct connection t
 
 .. note:: The Repository Finding feature currently only works for Java projects via SCM meta data found within artifact POM files.
 
-Enabling this feature requires modification of the ``defaults.ini`` config file located at: ``<macaron_root_directory>/src/config/``. Under the ``repofinder.java`` header, four options of importance exist: ``find_repos``, ``artifact_repositories``, ``repo_pom_paths``, ``find_parents``. These options behave as follows:
+This feature is enabled by default. To disable, or configure its behaviour in other ways, a custom ``defaults.ini`` should be passed to Macaron during execution. Under the ``repofinder.java`` header, five options exist: ``find_repos``, ``artifact_repositories``, ``repo_pom_paths``, ``find_parents``, ``artifact_ignore_list``. These options behave as follows:
 
 - ``find_repos`` (Values: True or False) - Enables or disables the Repository Finding feature.
 - ``artifact_repositories`` (Values: List of URLs) - Determines the remote artifact repositories to attempt to retrieve dependency information from.
 - ``repo_pom_paths`` (Values: List of POM tags) - Determines where to search for repository information in the POM files. E.g. scm.url.
 - ``find_parents`` (Values: True or False) - When enabled, the Repository Finding feature will also search for repository URLs in parents POM files of the current dependency.
+- ``artifact_ignore_list`` (Values: List of GAs) - The Repository Finding feature will skip any artifact in this list. Format is "GroupId":"ArtifactId". E.g. org.apache.maven:maven
+
+.. note:: Finding repositories requires at least one remote call, adding some additional overhead to an analysis run.
