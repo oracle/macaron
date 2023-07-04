@@ -118,7 +118,7 @@ In some cases the dependencies that Macaron discovers lack a direct connection t
 
 .. note:: The Repository Finding feature currently only works for Java projects via SCM meta data found within artifact POM files.
 
-This feature is enabled by default. To disable, or configure its behaviour in other ways, a custom ``defaults.ini`` should be passed to Macaron during execution. Under the ``repofinder.java`` header, five options exist: ``find_repos``, ``artifact_repositories``, ``repo_pom_paths``, ``find_parents``, ``artifact_ignore_list``. These options behave as follows:
+This feature is enabled by default. To disable, or configure its behaviour in other ways, a custom ``defaults.ini`` should be passed to Macaron during execution (See :ref:`dump-defaults <reference to docs/source/pages/cli_usage/action_dump_defaults.rst >`, the CLI command to dump the default configurations in ``defaults.ini``. After making changes, see :ref:`analyze <analyze-action-cli>` CLI command for the option to pass the modified ``defaults.ini`` file.) Within the configuration file under the ``repofinder.java`` header, five options exist: ``find_repos``, ``artifact_repositories``, ``repo_pom_paths``, ``find_parents``, ``artifact_ignore_list``. These options behave as follows:
 
 - ``find_repos`` (Values: True or False) - Enables or disables the Repository Finding feature.
 - ``artifact_repositories`` (Values: List of URLs) - Determines the remote artifact repositories to attempt to retrieve dependency information from.
@@ -127,6 +127,21 @@ This feature is enabled by default. To disable, or configure its behaviour in ot
 - ``artifact_ignore_list`` (Values: List of GAs) - The Repository Finding feature will skip any artifact in this list. Format is "GroupId":"ArtifactId". E.g. org.apache.maven:maven
 
 .. note:: Finding repositories requires at least one remote call, adding some additional overhead to an analysis run.
+
+An example configuration file for utilising this feature:
+
+.. code-block:: ini
+
+[repofinder.java]
+find_repos = True
+artifact_repositories = https://repo.maven.apache.org/maven2
+repo_pom_paths =
+    scm.url
+    scm.connection
+    scm.developerConnection
+find_parents = True
+artifact_ignore_list =
+    org.apache.maven:maven
 
 -------------------------------------
 Analyzing a locally cloned repository
