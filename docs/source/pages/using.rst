@@ -133,7 +133,7 @@ Analyzing a locally cloned repository
 -------------------------------------
 
 If you have a local repository that you want to analyze, Macaron also supports running the analysis against a local repository.
-''''''''''''''''''
+
 Assume that the dir tree at the local repository has the following components:
 
 .. code-block:: shell
