@@ -8,7 +8,7 @@ from unittest import mock
 
 import pytest
 
-from macaron.slsa_analyzer.git_service.gitlab import PublicGitLab
+from macaron.slsa_analyzer.git_service.gitlab import PubliclyHostedGitLab
 
 
 @pytest.mark.parametrize(
@@ -21,7 +21,7 @@ from macaron.slsa_analyzer.git_service.gitlab import PublicGitLab
 def test_construct_clone_url_without_token(repo_url: str) -> None:
     """Test if the ``construct_clone_url`` method produces proper clone URLs without the access token."""
     clone_url = repo_url
-    gitlab = PublicGitLab()
+    gitlab = PubliclyHostedGitLab()
     gitlab.load_defaults()
     assert gitlab.construct_clone_url(repo_url) == clone_url
 
@@ -41,7 +41,7 @@ def test_construct_clone_url_without_token(repo_url: str) -> None:
 )
 def test_construct_clone_url_with_token(repo_url: str, clone_url: str) -> None:
     """Test if the ``construct_clone_url`` method produces proper clone URLs with the access token."""
-    with mock.patch.dict(os.environ, {"MCN_PUBLIC_GITLAB_TOKEN": "abcxyz"}):
-        gitlab = PublicGitLab()
+    with mock.patch.dict(os.environ, {"MCN_GITLAB_TOKEN": "abcxyz"}):
+        gitlab = PubliclyHostedGitLab()
         gitlab.load_defaults()
         assert gitlab.construct_clone_url(repo_url) == clone_url
