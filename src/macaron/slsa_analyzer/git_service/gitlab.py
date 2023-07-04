@@ -33,10 +33,10 @@ logger: logging.Logger = logging.getLogger(__name__)
 class GitLab(BaseGitService):
     """This class contains the spec of the GitLab service."""
 
-    def __init__(self) -> None:
+    def __init__(self, access_token_env_name: str) -> None:
         """Initialize instance."""
         super().__init__("gitlab")
-        self.access_token: str | None = None
+        self.access_token_env_name = access_token_env_name
 
     @abstractmethod
     def load_defaults(self) -> None:
@@ -78,8 +78,9 @@ class GitLab(BaseGitService):
 
         # Construct clone URL from ``urlparse`` result, with or without an access token.
         # https://docs.gitlab.com/ee/gitlab-basics/start-using-git.html#clone-using-a-token
-        if self.access_token:
-            clone_url_netloc = f"oauth2:{self.access_token}@{self.domain}"
+        access_token = os.environ.get(self.access_token_env_name)
+        if access_token:
+            clone_url_netloc = f"oauth2:{access_token}@{self.domain}"
         else:
             clone_url_netloc = self.domain
 
@@ -122,6 +123,10 @@ class GitLab(BaseGitService):
 class PrivateGitLab(GitLab):
     """The private GitLab instance."""
 
+    def __init__(self) -> None:
+        """Initialize instance."""
+        super().__init__("MCN_PRIVATE_GITLAB_TOKEN")
+
     def load_defaults(self) -> None:
         """Load the values for this git service from the ini configuration and environment variables.
 
@@ -141,17 +146,19 @@ class PrivateGitLab(GitLab):
         if not self.domain:
             return
 
-        access_token_env_var = "MCN_PRIVATE_GITLAB_TOKEN"  # nosec B105
-        self.access_token = os.environ.get(access_token_env_var)
-
-        if not self.access_token:
+        if not os.environ.get(self.access_token_env_name):
             raise ConfigurationError(
-                f"Environment variable '{access_token_env_var}' is not set for private GitLab service '{self.domain}'."
+                f"Environment variable '{self.access_token_env_name}' is not set "
+                + f"for private GitLab service '{self.domain}'."
             )
 
 
 class PublicGitLab(GitLab):
     """The public GitLab instance."""
+
+    def __init__(self) -> None:
+        """Initialize instance."""
+        super().__init__("MCN_PUBLIC_GITLAB_TOKEN")
 
     def load_defaults(self) -> None:
         """Load the values for this git service from the ini configuration and environment variables.
@@ -168,5 +175,3 @@ class PublicGitLab(GitLab):
             self.domain = self.load_domain(section_name="git_service.gitlab.public")
         except ConfigurationError as error:
             raise error
-
-        self.access_token = os.environ.get("MCN_PUBLIC_GITLAB_TOKEN")
