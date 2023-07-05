@@ -156,7 +156,7 @@ def test_get_allowed_git_service_domains(
 @pytest.mark.parametrize(
     ("user_config_input", "expected_allowed_domain_set"),
     [
-        pytest.param(
+        (
             # The current behavior is: we always enable GitHub and public GitLab by default.
             # User config cannot disable either of the two.
             """
@@ -164,15 +164,13 @@ def test_get_allowed_git_service_domains(
             domain = github.com
             """,
             {"github.com", "gitlab.com"},
-            id="Only GitHub in user config",
         ),
-        pytest.param(
+        (
             """
             [git_service.gitlab.self_hosted]
             domain = internal.gitlab.org
             """,
             {"github.com", "gitlab.com", "internal.gitlab.org"},
-            id="Self-hosted GitLab in user config",
         ),
     ],
 )
