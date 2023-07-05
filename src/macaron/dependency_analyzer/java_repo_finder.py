@@ -173,13 +173,14 @@ def _resolve_properties(pom: Element, values: list[str]) -> list[str]:
 
     Maven POM files have five different use cases for properties (see https://maven.apache.org/pom.html).
     Only the two that relate to contents found elsewhere within the same POM file are considered here.
-    That is: ${project.x} where x can be a child tag at any depth, or ${x} where x is found at project.properties.x
-    Entries with rejected properties are removed from the value list.
+    That is: ${project.x} where x can be a child tag at any depth, or ${x} where x is found at project.properties.x.
+    Entries with unresolved properties are not included in the returned list. In the case of chained properties,
+    only the top most property is evaluated.
     """
     resolved_values = []
     for value in values:
         replacements: list = []
-        # Calculate replacements
+        # Calculate replacements - matches any number of ${...} entries in the current value
         for match in re.finditer("\\$\\{[^}]+}", value):
             text = match.group().replace("$", "").replace("{", "").replace("}", "")
             if text.startswith("project."):
@@ -192,6 +193,12 @@ def _resolve_properties(pom: Element, values: list[str]) -> list[str]:
             replacements.append([match.start(), next(value_iterator), match.end()])
 
         # Apply replacements in reverse order
+        # E.g.
+        # git@github.com:owner/project${javac.src.version}-${project.inceptionYear}.git
+        # ->
+        # git@github.com:owner/project${javac.src.version}-2023.git
+        # ->
+        # git@github.com:owner/project1.8-2023.git
         for replacement in reversed(replacements):
             value = f"{value[:replacement[0]]}{replacement[1]}{value[replacement[2]:]}"
 
