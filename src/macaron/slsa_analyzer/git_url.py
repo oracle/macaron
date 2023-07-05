@@ -329,7 +329,13 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
     if os.path.isdir(clone_dir):
         try:
             os.rmdir(clone_dir)
+            logger.debug("The clone dir %s is empty. It has been deleted for cloning the repo.", clone_dir)
         except OSError:
+            logger.debug(
+                "The clone dir %s is not empty. This probably means the repo has already been clone. "
+                "No cloning is proceeded.",
+                clone_dir,
+            )
             return None
 
     try:
