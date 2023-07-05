@@ -7,7 +7,7 @@ Note: We are making the assumption that we are only supporting two different Git
 services: one is called ``publicly_hosted`` and the other is called ``self_hosted``.
 
 The corresponding access tokens are stored in the environment variables
-``MCNGITLAB_TOKEN`` and ``MCN_SELF_HOSTED_GITLAB_TOKEN``, respectively.
+``MCN_GITLAB_TOKEN`` and ``MCN_SELF_HOSTED_GITLAB_TOKEN``, respectively.
 
 Reason for this is mostly because of our assumption that Macaron is used as a
 container. Fixing static names for the environment variables allows for easier
