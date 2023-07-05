@@ -187,6 +187,7 @@ def _resolve_properties(pom: Element, values: list[str]) -> list[str]:
                 text = text.replace("project.", "")
             else:
                 text = f"properties.{text}"
+            # Call find_scm with property resolution flag set to False to prevent the possibility of endless looping
             value_iterator, count = find_scm(pom, [text], False)
             if count == 0:
                 break
