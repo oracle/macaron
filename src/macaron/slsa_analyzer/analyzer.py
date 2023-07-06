@@ -27,7 +27,7 @@ from macaron.dependency_analyzer import (
     NoneDependencyAnalyzer,
 )
 from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
-from macaron.errors import CloneError
+from macaron.errors import CloneError, RepoError
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.slsa_analyzer import git_url
@@ -560,11 +560,13 @@ class Analyzer:
             logger.error("Cannot reset the target repository.")
             return None
 
-        if not git_url.check_out_repo_target(git_obj, branch_name, digest, (not is_remote)):
-            logger.error("Cannot checkout the specific branch or commit of the target repo.")
+        try:
+            check_out_git_obj = git_service.check_out_repo(git_obj, branch_name, digest, not is_remote)
+        except RepoError as error:
+            logger.error(error)
             return None
 
-        return git_obj
+        return check_out_git_obj
 
     @staticmethod
     def get_git_service(remote_path: str) -> BaseGitService:

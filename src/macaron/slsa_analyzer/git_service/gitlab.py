@@ -23,7 +23,9 @@ import os
 from abc import abstractmethod
 from urllib.parse import ParseResult, urlunparse
 
-from macaron.errors import CloneError, ConfigurationError
+from pydriller.git import Git
+
+from macaron.errors import CloneError, ConfigurationError, RepoError
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
 
@@ -103,6 +105,10 @@ class GitLab(BaseGitService):
         To clone a GitLab repository with access token, we embed the access token in the https URL.
         See GitLab documentation: https://docs.gitlab.com/ee/gitlab-basics/start-using-git.html#clone-using-a-token.
 
+        If we clone using the https URL with the token embedded, this URL will be store as plain text in .git/config as
+        the origin remote URL. Therefore, after a repository is cloned, this remote origin URL will be set
+        with the value of the original ``url`` (which does not have the embed token).
+
         Parameters
         ----------
         clone_dir: str
@@ -117,7 +123,74 @@ class GitLab(BaseGitService):
             If there is an error cloning the repository.
         """
         clone_url = self.construct_clone_url(url)
-        git_url.clone_remote_repo(clone_dir, clone_url)
+        repo = git_url.clone_remote_repo(clone_dir, clone_url)
+
+        # If ``git_url.clone_remote_repo`` return an Repo instance, this means that the repository is freshly cloned
+        # with the token embedded URL. We will set its value back to the original non-token URL.
+        # If ``git_url.clone_remote_repo`` returns None, it means that the repository already exists so we don't need
+        # to do anything.
+        if repo:
+            try:
+                origin_remote = repo.remote("origin")
+            except ValueError as error:
+                raise CloneError("Cannot find the remote origin for this repository.") from error
+
+            origin_remote.set_url(url)
+
+    def check_out_repo(self, git_obj: Git, branch: str, digest: str, offline_mode: bool) -> Git:
+        """Checkout the branch and commit specified by the user of a repository.
+
+        For GitLab, this method set the origin remote URL of the target repository to the token-embedded URL if
+        a token is available before performing the checkout operation.
+
+        After the checkout operation finishes, the origin remote URL is set back again to ensure that no token-embedded
+        URL remains.
+
+        Parameters
+        ----------
+        git_obj : Git
+            The Git object for the repository to check out.
+        branch : str
+            The branch to check out.
+        digest : str
+            The sha of the commit to check out.
+        offline_mode: bool
+            If true, no fetching is performed.
+
+        Returns
+        -------
+        Git
+            The same Git object from the input.
+
+        Raises
+        ------
+        RepoError
+            If there is error while checkout the specific branch and digest.
+        """
+        remote_origin_url = git_url.get_remote_origin_of_local_repo(git_obj)
+
+        try:
+            origin_remote = git_obj.repo.remote("origin")
+        except ValueError as error:
+            raise RepoError("Cannot find the remote origin for this repository.") from error
+
+        try:
+            reconstructed_url = self.construct_clone_url(remote_origin_url)
+        except CloneError as error:
+            raise RepoError("Internal error prevent preparing the repo for the analysis.") from error
+
+        origin_remote.set_url(reconstructed_url, remote_origin_url)
+
+        check_out_status = git_url.check_out_repo_target(git_obj, branch, digest, offline_mode)
+
+        origin_remote.set_url(remote_origin_url, reconstructed_url)
+
+        if not check_out_status:
+            raise RepoError(
+                f"Internal error when checking out branch {branch} and commit {digest} for repo {git_obj.project_name}."
+            )
+
+        return git_obj
 
 
 class SelfHostedGitLab(GitLab):
