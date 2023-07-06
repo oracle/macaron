@@ -413,8 +413,8 @@ docker run \
     -e "USER_UID=${USER_UID}" \
     -e "USER_GID=${USER_GID}" \
     -e "GITHUB_TOKEN=${GITHUB_TOKEN}" \
-    -e "MCN_PUBLIC_GITLAB_TOKEN=${MCN_PUBLIC_GITLAB_TOKEN}" \
-    -e "MCN_PRIVATE_GITLAB_TOKEN=${MCN_PRIVATE_GITLAB_TOKEN}" \
+    -e "MCN_GITLAB_TOKEN=${MCN_GITLAB_TOKEN}" \
+    -e "MCN_SELF_HOSTED_GITLAB_TOKEN=${MCN_SELF_HOSTED_GITLAB_TOKEN}" \
     "${proxy_vars[@]}" \
     "${prod_vars[@]}" \
     "${mounts[@]}" \
