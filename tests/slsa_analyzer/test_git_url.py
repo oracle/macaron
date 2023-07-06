@@ -133,10 +133,10 @@ def test_get_remote_vcs_url() -> None:
         ),
         (
             """
-            [git_service.gitlab.public]
+            [git_service.gitlab.publicly_hosted]
             domain = gitlab.com
 
-            [git_service.gitlab.private]
+            [git_service.gitlab.self_hosted]
             domain = internal.gitlab.org
             """,
             {"gitlab.com", "internal.gitlab.org"},
@@ -156,7 +156,7 @@ def test_get_allowed_git_service_domains(
 @pytest.mark.parametrize(
     ("user_config_input", "expected_allowed_domain_set"),
     [
-        pytest.param(
+        (
             # The current behavior is: we always enable GitHub and public GitLab by default.
             # User config cannot disable either of the two.
             """
@@ -164,15 +164,13 @@ def test_get_allowed_git_service_domains(
             domain = github.com
             """,
             {"github.com", "gitlab.com"},
-            id="Only GitHub in user config",
         ),
-        pytest.param(
+        (
             """
-            [git_service.gitlab.private]
+            [git_service.gitlab.self_hosted]
             domain = internal.gitlab.org
             """,
             {"github.com", "gitlab.com", "internal.gitlab.org"},
-            id="Private GitLab in user config",
         ),
     ],
 )
@@ -202,7 +200,7 @@ def test_get_remote_vcs_url_with_user_defined_allowed_domains(tmp_path: Path) ->
     with open(user_config_path, "w", encoding="utf-8") as user_config_file:
         user_config_file.write(
             """
-            [git_service.gitlab.private]
+            [git_service.gitlab.self_hosted]
             domain = internal.gitlab.org
             """
         )

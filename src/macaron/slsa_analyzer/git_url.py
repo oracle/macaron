@@ -327,24 +327,15 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
     # Macaron attempting to clone a repository multiple times.
     # In these cases, we should not error since it may interrupt the analysis.
     if os.path.isdir(clone_dir):
-        logger.info("Checking if the repo %s needs cloning.", url)
         try:
             os.rmdir(clone_dir)
-            logger.info(
-                "The clone dir %s is empty. It has been deleted for cloning the repo %s.",
-                clone_dir,
-                url,
-            )
+            logger.debug("The clone dir %s is empty. It has been deleted for cloning the repo.", clone_dir)
         except OSError:
-            logger.info(
-                "The clone dir %s is not empty. This probably means the repo %s has already been clone. "
-                "No cloning is proceeded.",
+            logger.debug(
+                "The clone dir %s is not empty. Cloning will not be proceeded.",
                 clone_dir,
-                url,
             )
             return None
-
-    logger.info("Cloning the repo %s to %s.", url, clone_dir)
 
     try:
         # The Repo.clone_from method handles creating intermediate dirs.

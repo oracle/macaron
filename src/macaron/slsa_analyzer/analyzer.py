@@ -532,6 +532,7 @@ class Analyzer:
             git_service = self.get_git_service(resolved_remote_path)
             repo_unique_path = git_url.get_repo_dir_name(resolved_remote_path)
             resolved_local_path = os.path.join(target_dir, repo_unique_path)
+            logger.info("Cloning the repository.")
             try:
                 git_service.clone_repo(resolved_local_path, resolved_remote_path)
             except CloneError as error:
