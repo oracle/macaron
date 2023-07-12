@@ -29,7 +29,6 @@ class BaseGitService:
     @abstractmethod
     def load_defaults(self) -> None:
         """Load the values for this git service from the ini configuration."""
-        raise NotImplementedError
 
     def load_domain(self, section_name: str) -> str | None:
         """Load the domain of the git service from the ini configuration section ``section_name``.
@@ -112,7 +111,6 @@ class BaseGitService:
         CloneError
             If there is an error cloning the repo.
         """
-        raise NotImplementedError()
 
     @abstractmethod
     def check_out_repo(self, git_obj: Git, branch: str, digest: str, offline_mode: bool) -> Git:
@@ -139,7 +137,6 @@ class BaseGitService:
         RepoError
             If there is an error while checking out the specific branch or commit.
         """
-        raise NotImplementedError()
 
 
 class NoneGitService(BaseGitService):
