@@ -25,7 +25,7 @@ from urllib.parse import ParseResult, urlunparse
 
 from pydriller.git import Git
 
-from macaron.errors import CloneError, ConfigurationError, RepoError
+from macaron.errors import CloneError, ConfigurationError, RepoCheckOutError
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
 
@@ -172,12 +172,12 @@ class GitLab(BaseGitService):
         try:
             origin_remote = git_obj.repo.remote("origin")
         except ValueError as error:
-            raise RepoError("Cannot find the remote origin for this repository.") from error
+            raise RepoCheckOutError("Cannot find the remote origin for this repository.") from error
 
         try:
             reconstructed_url = self.construct_clone_url(remote_origin_url)
         except CloneError as error:
-            raise RepoError("Internal error prevent preparing the repo for the analysis.") from error
+            raise RepoCheckOutError("Internal error prevent preparing the repo for the analysis.") from error
 
         origin_remote.set_url(reconstructed_url, remote_origin_url)
 
@@ -186,7 +186,7 @@ class GitLab(BaseGitService):
         origin_remote.set_url(remote_origin_url, reconstructed_url)
 
         if not check_out_status:
-            raise RepoError(
+            raise RepoCheckOutError(
                 f"Internal error when checking out branch {branch} and commit {digest} for repo {git_obj.project_name}."
             )
 

@@ -7,7 +7,7 @@ import logging
 
 from pydriller.git import Git
 
-from macaron.errors import RepoError
+from macaron.errors import RepoCheckOutError
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -32,4 +32,4 @@ class BitBucket(BaseGitService):
 
     def check_out_repo(self, git_obj: Git, branch: str, digest: str, offline_mode: bool) -> Git:
         """Checkout the branch and commit specified by the user of a repository."""
-        raise RepoError("Checking out a branch or commit on a Bitbucket repository is not supported yet.")
+        raise RepoCheckOutError("Checking out a branch or commit on a Bitbucket repository is not supported yet.")

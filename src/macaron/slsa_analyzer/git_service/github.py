@@ -6,7 +6,7 @@
 from pydriller.git import Git
 
 from macaron.config.global_config import global_config
-from macaron.errors import ConfigurationError, RepoError
+from macaron.errors import ConfigurationError, RepoCheckOutError
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient, get_default_gh_client
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
@@ -84,7 +84,7 @@ class GitHub(BaseGitService):
             If there is error while checkout the specific branch and digest.
         """
         if not git_url.check_out_repo_target(git_obj, branch, digest, offline_mode):
-            raise RepoError(
+            raise RepoCheckOutError(
                 f"Internal error when checking out branch {branch} and commit {digest} for repo {git_obj.project_name}."
             )
 

@@ -27,7 +27,7 @@ from macaron.dependency_analyzer import (
     NoneDependencyAnalyzer,
 )
 from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
-from macaron.errors import CloneError, RepoError
+from macaron.errors import CloneError, RepoCheckOutError
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.slsa_analyzer import git_url
@@ -584,7 +584,7 @@ class Analyzer:
 
         try:
             git_service.check_out_repo(git_obj, branch_name, digest, not is_remote)
-        except RepoError as error:
+        except RepoCheckOutError as error:
             logger.error(error)
             return None
 
