@@ -201,8 +201,8 @@ def test_origin_remote_url_masking(self_hosted_gitlab: Git, expected_origin_url:
         with mock.patch("macaron.slsa_analyzer.git_url.check_out_repo_target", return_value=self_hosted_gitlab.repo):
             # We check that after checking out the latest commit in the default branch, the origin remote
             # URL is as expected.
-            gitlab.check_out_repo(self_hosted_gitlab, "", "", True)
+            gitlab.check_out_repo(self_hosted_gitlab, branch="", digest="", offline_mode=True)
             assert git_url.get_remote_origin_of_local_repo(self_hosted_gitlab) == expected_origin_url
 
-            gitlab.check_out_repo(self_hosted_gitlab, "", "", False)
+            gitlab.check_out_repo(self_hosted_gitlab, branch="", digest="", offline_mode=False)
             assert git_url.get_remote_origin_of_local_repo(self_hosted_gitlab) == expected_origin_url
