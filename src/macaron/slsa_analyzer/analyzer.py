@@ -477,7 +477,7 @@ class Analyzer:
         repo_path: str,
         branch_name: str = "",
         digest: str = "",
-    ) -> Git:
+    ) -> Git | None:
         """Prepare the target repository for analysis.
 
         If ``repo_path`` is a remote path, the target repo is cloned to ``{target_dir}/{unique_path}``.
@@ -501,7 +501,7 @@ class Analyzer:
 
         Returns
         -------
-        Git
+        Git | None
             The pydriller.Git object of the repository or None if error.
         """
         # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
