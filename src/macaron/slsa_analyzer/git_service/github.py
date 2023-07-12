@@ -85,7 +85,7 @@ class GitHub(BaseGitService):
         """
         if not git_url.check_out_repo_target(git_obj, branch, digest, offline_mode):
             raise RepoCheckOutError(
-                f"Internal error when checking out branch {branch} and commit {digest} for repo {git_obj.project_name}."
+                f"Failed to check out branch {branch} and commit {digest} for repo {git_obj.project_name}."
             )
 
         return git_obj

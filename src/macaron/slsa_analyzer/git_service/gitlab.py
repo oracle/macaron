@@ -177,7 +177,7 @@ class GitLab(BaseGitService):
         try:
             reconstructed_url = self.construct_clone_url(remote_origin_url)
         except CloneError as error:
-            raise RepoCheckOutError("Internal error prevent preparing the repo for the analysis.") from error
+            raise RepoCheckOutError("Cannot parse the remote origin URL of this repository.") from error
 
         origin_remote.set_url(reconstructed_url, remote_origin_url)
 
@@ -187,7 +187,7 @@ class GitLab(BaseGitService):
 
         if not check_out_status:
             raise RepoCheckOutError(
-                f"Internal error when checking out branch {branch} and commit {digest} for repo {git_obj.project_name}."
+                f"Failed to check out branch {branch} and commit {digest} for repo {git_obj.project_name}."
             )
 
         return git_obj

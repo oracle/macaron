@@ -193,5 +193,6 @@ class NoneGitService(BaseGitService):
             Always raise, since this method should not be used to check out in any repository.
         """
         raise RepoCheckOutError(
-            f"Internal error when checking out branch {branch} and commit {digest} for repo {git_obj.project_name}."
+            f"Cannot check out branch {branch} and commit {digest} for repo {git_obj.project_name} "
+            + "from an empty git service"
         )
