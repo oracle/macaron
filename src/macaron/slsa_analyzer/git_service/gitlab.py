@@ -105,9 +105,9 @@ class GitLab(BaseGitService):
         To clone a GitLab repository with access token, we embed the access token in the https URL.
         See GitLab documentation: https://docs.gitlab.com/ee/gitlab-basics/start-using-git.html#clone-using-a-token.
 
-        If we clone using the https URL with the token embedded, this URL will be store as plain text in .git/config as
+        If we clone using the https URL with the token embedded, this URL will be stored as plain text in .git/config as
         the origin remote URL. Therefore, after a repository is cloned, this remote origin URL will be set
-        with the value of the original ``url`` (which does not have the embed token).
+        with the value of the original ``url`` (which does not have the embedded token).
 
         Parameters
         ----------
@@ -123,9 +123,13 @@ class GitLab(BaseGitService):
             If there is an error cloning the repository.
         """
         clone_url = self.construct_clone_url(url)
+        # In the ``git_url.clone_remote_repo`` function, CloneError exception is raised whenever the repository
+        # has not been cloned or the clone attempts failed.
+        # In both cases, the repository would not be available on the file system to contain the token-included URL.
+        # Therefore, we don't need to catch and handle the CloneError exceptions here.
         repo = git_url.clone_remote_repo(clone_dir, clone_url)
 
-        # If ``git_url.clone_remote_repo`` return an Repo instance, this means that the repository is freshly cloned
+        # If ``git_url.clone_remote_repo`` returns an Repo instance, this means that the repository is freshly cloned
         # with the token embedded URL. We will set its value back to the original non-token URL.
         # If ``git_url.clone_remote_repo`` returns None, it means that the repository already exists so we don't need
         # to do anything.
