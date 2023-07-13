@@ -70,7 +70,6 @@ class BuildAsCodeCheck(BaseCheck):
         # Account for Python projects having separate tools for packaging and publishing.
         deploy_tool = build_tool.publisher if build_tool.publisher else build_tool.builder
         for com in commands:
-
             # Check for empty or invalid commands.
             if not com or not com[0]:
                 continue

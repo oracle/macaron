@@ -50,7 +50,6 @@ def store_analyze_context_to_db(db_man: DatabaseManager, analysis: AnalysisTable
 
     # Store check result table
     for check in analyze_ctx.check_results.values():
-
         check_table = CheckResultTable()
         check_table.check_id = check["check_id"]
         check_table.repository = analyze_ctx.repository_table.id
