@@ -5,7 +5,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 default_install_hook_types: [pre-commit, commit-msg, pre-push]
 default_stages: [commit]
-minimum_pre_commit_version: 2.18.0
+minimum_pre_commit_version: 3.0.0
 
 repos:
 
@@ -17,7 +17,7 @@ repos:
 
 # Commitizen enforces semantic and conventional commit messages.
 - repo: https://github.com/commitizen-tools/commitizen
-  rev: v2.40.0
+  rev: 3.5.2
   hooks:
   - id: commitizen
     name: Check conventional commit message
@@ -33,13 +33,13 @@ repos:
 
 # Add Black code formatters.
 - repo: https://github.com/ambv/black
-  rev: 22.12.0
+  rev: 23.7.0
   hooks:
   - id: black
     name: Format code
     args: [--config, pyproject.toml]
 - repo: https://github.com/asottile/blacken-docs
-  rev: 1.13.0
+  rev: 1.15.0
   hooks:
   - id: blacken-docs
     name: Format code in docstrings
@@ -48,7 +48,7 @@ repos:
 
 # Upgrade and rewrite Python idioms.
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.3.1
+  rev: v3.9.0
   hooks:
   - id: pyupgrade
     name: Upgrade code idioms
@@ -69,7 +69,7 @@ repos:
 
 # Check GitHub Actions workflow files.
 - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
-  rev: v1.6.24
+  rev: v1.6.25
   hooks:
   - id: actionlint
 
@@ -98,7 +98,7 @@ repos:
 
 # Check for potential security issues.
 - repo: https://github.com/PyCQA/bandit
-  rev: 1.7.4
+  rev: 1.7.5
   hooks:
   - id: bandit
     name: Check for security issues
@@ -151,7 +151,7 @@ repos:
 
 # Check and prettify the configuration files.
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.6.0
+  rev: v2.10.0
   hooks:
   - id: pretty-format-ini
     args: [--autofix]
@@ -185,7 +185,7 @@ repos:
 
 # A linter for Golang
 - repo: https://github.com/golangci/golangci-lint
-  rev: v1.52.2
+  rev: v1.53.3
   hooks:
   - id: golangci-lint
 
