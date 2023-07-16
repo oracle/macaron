@@ -351,7 +351,6 @@ class ProvenanceL3Check(BaseCheck):
                 with tempfile.TemporaryDirectory() as temp_path:
                     downloaded_provs = []
                     for prov_asset in prov_assets:
-
                         # Check the size before downloading.
                         if self._size_large(prov_asset["size"]):
                             logger.info("Skip verifying the provenance %s: asset size too large.", prov_asset["name"])

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module is a Python wrapper for the compiled bashparser binary.
@@ -157,7 +157,6 @@ def extract_bash_from_ci(
     # Parse the bash script files called from the current script.
     if recursive and repo_path:
         for cmd in caller_commands:
-
             # Parse the scripts that end with `.sh`.
             # We only parse recursively at depth 1, so don't set the recursive argument in parse_file().
             # TODO: parse Makefiles for bash commands.
