@@ -57,6 +57,7 @@ html_theme_options = {
 }
 html_static_path = ["_static"]
 
+
 # We add the docstrings for class constructors in the `__init__` methods.
 def skip(app, what, name, obj, would_skip, options):
     if name == "__init__":
