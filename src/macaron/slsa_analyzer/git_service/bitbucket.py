@@ -5,6 +5,9 @@
 
 import logging
 
+from pydriller.git import Git
+
+from macaron.errors import RepoCheckOutError
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -26,3 +29,7 @@ class BitBucket(BaseGitService):
         """Clone a BitBucket repo."""
         # TODO: implement this once support for BitBucket is added.
         logger.info("Cloning BitBucket repositories is not supported yet. Please clone the repository manually.")
+
+    def check_out_repo(self, git_obj: Git, branch: str, digest: str, offline_mode: bool) -> Git:
+        """Checkout the branch and commit specified by the user of a repository."""
+        raise RepoCheckOutError("Checking out a branch or commit on a Bitbucket repository is not supported yet.")
