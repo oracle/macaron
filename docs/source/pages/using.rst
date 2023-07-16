@@ -238,4 +238,4 @@ To analyze a repository on a self-hosted GitLab instance, you need to do the fol
     [git_service.gitlab.self_hosted]
     domain = internal.gitlab.org
 
-- Obtain a GitLab access token having at least the ``read_repository`` permission and store it into the ``MCN_PUBLICLY_HOSTED_GITLAB_TOKEN`` environment variable. For more detailed instructions, see `GitLab documentation <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token>`_.
+- Obtain a GitLab access token having at least the ``read_repository`` permission and store it into the ``MCN_SELF_HOSTED_GITLAB_TOKEN`` environment variable. For more detailed instructions, see `GitLab documentation <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token>`_.
