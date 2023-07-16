@@ -30,3 +30,7 @@ class ConfigurationError(MacaronError):
 
 class CloneError(MacaronError):
     """Happens when cannot clone a git repository."""
+
+
+class RepoCheckOutError(MacaronError):
+    """Happens when there is an error when checking out the correct revision of a git repository."""

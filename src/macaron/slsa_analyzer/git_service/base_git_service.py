@@ -5,8 +5,10 @@
 
 from abc import abstractmethod
 
+from pydriller.git import Git
+
 from macaron.config.defaults import defaults
-from macaron.errors import CloneError, ConfigurationError
+from macaron.errors import CloneError, ConfigurationError, RepoCheckOutError
 from macaron.slsa_analyzer import git_url
 
 
@@ -27,7 +29,6 @@ class BaseGitService:
     @abstractmethod
     def load_defaults(self) -> None:
         """Load the values for this git service from the ini configuration."""
-        raise NotImplementedError
 
     def load_domain(self, section_name: str) -> str | None:
         """Load the domain of the git service from the ini configuration section ``section_name``.
@@ -110,7 +111,32 @@ class BaseGitService:
         CloneError
             If there is an error cloning the repo.
         """
-        raise NotImplementedError()
+
+    @abstractmethod
+    def check_out_repo(self, git_obj: Git, branch: str, digest: str, offline_mode: bool) -> Git:
+        """Checkout the branch and commit specified by the user of a repository.
+
+        Parameters
+        ----------
+        git_obj : Git
+            The Git object for the repository to check out.
+        branch : str
+            The branch to check out.
+        digest : str
+            The sha of the commit to check out.
+        offline_mode: bool
+            If true, no fetching is performed.
+
+        Returns
+        -------
+        Git
+            The same Git object from the input.
+
+        Raises
+        ------
+        RepoError
+            If there is an error while checking out the specific branch or commit.
+        """
 
 
 class NoneGitService(BaseGitService):
@@ -154,3 +180,19 @@ class NoneGitService(BaseGitService):
             Always raise, since this method should not be used to clone any repository.
         """
         raise CloneError(f"Internal error encountered when cloning the repo '{url}'.")
+
+    def check_out_repo(self, git_obj: Git, branch: str, digest: str, offline_mode: bool) -> Git:
+        """Checkout the branch and commit specified by the user of a repository.
+
+        In this particular case, since this class represents a ``None`` git service,
+        we do nothing but raise a ``RepoError``.
+
+        Raises
+        ------
+        RepoError
+            Always raise, since this method should not be used to check out in any repository.
+        """
+        raise RepoCheckOutError(
+            f"Cannot check out branch {branch} and commit {digest} for repo {git_obj.project_name} "
+            + "from an empty git service"
+        )

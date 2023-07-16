@@ -27,7 +27,7 @@ from macaron.dependency_analyzer import (
     NoneDependencyAnalyzer,
 )
 from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
-from macaron.errors import CloneError
+from macaron.errors import CloneError, RepoCheckOutError
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.slsa_analyzer import git_url
@@ -477,7 +477,7 @@ class Analyzer:
         repo_path: str,
         branch_name: str = "",
         digest: str = "",
-    ) -> Git:
+    ) -> Git | None:
         """Prepare the target repository for analysis.
 
         If ``repo_path`` is a remote path, the target repo is cloned to ``{target_dir}/{unique_path}``.
@@ -501,9 +501,10 @@ class Analyzer:
 
         Returns
         -------
-        Git
+        Git | None
             The pydriller.Git object of the repository or None if error.
         """
+        # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
         # Cannot specify a commit hash without specifying the branch.
         if not branch_name and digest:
             logger.error(
@@ -560,8 +561,31 @@ class Analyzer:
             logger.error("Cannot reset the target repository.")
             return None
 
-        if not git_url.check_out_repo_target(git_obj, branch_name, digest, (not is_remote)):
-            logger.error("Cannot checkout the specific branch or commit of the target repo.")
+        # Checking out the specific branch or commit. This operation varies depends on the git service that the
+        # repository uses.
+        if not is_remote:
+            # If the repo path provided by the user is a local path, we need to get the actual origin remote URL of
+            # the repo to decide on the suitable git service.
+            origin_remote_url = git_url.get_remote_origin_of_local_repo(git_obj)
+            if git_url.is_remote_repo(origin_remote_url):
+                # The local repo's origin remote url is a remote URL (e.g https://host.com/a/b): In this case, we obtain
+                # the corresponding git service using ``self.get_git_service``.
+                git_service = self.get_git_service(origin_remote_url)
+            else:
+                # The local repo's origin remote url is a local path (e.g /path/to/local/...). This happens when the
+                # target repository is a clone from another local repo or is a clone from a git archive -
+                # https://git-scm.com/docs/git-archive: In this case, we fall-back to the generic function
+                # ``git_url.check_out_repo_target``.
+                if not git_url.check_out_repo_target(git_obj, branch_name, digest, not is_remote):
+                    logger.error("Cannot checkout the specific branch or commit of the target repo.")
+                    return None
+
+                return git_obj
+
+        try:
+            git_service.check_out_repo(git_obj, branch_name, digest, not is_remote)
+        except RepoCheckOutError as error:
+            logger.error(error)
             return None
 
         return git_obj
