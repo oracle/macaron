@@ -120,7 +120,7 @@ version_files = [
     "src/macaron/__init__.py:__version__",
 ]
 major_version_zero = false
-version = "0.1.1"
+version = "0.2.0"
 
 
 # https://github.com/pytest-dev/pytest-cov
