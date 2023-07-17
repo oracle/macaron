@@ -220,7 +220,7 @@ Analyzing a repository on `gitlab.com <https://gitlab.com>`_
 
 Analyzing a public repository on `gitlab.com <https://gitlab.com>`_ is quite similar to analyzing a public GitHub repository -- you just need to pass a proper GitLab repository URL to ``macaron analyze``.
 
-If you want to analyze some private repository hosted on ``gitlab.com``, you need to obtain a GitLab access token having at least the ``read_repository`` permission and store it into the ``MCN_GITLAB_TOKEN`` environment variable. For more detailed instructions, see `GitLab documentation <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token>`_.
+To analyze a private repository hosted on ``gitlab.com``, you need to obtain a GitLab access token having at least the ``read_repository`` permission and store it into the ``MCN_GITLAB_TOKEN`` environment variable. For more detailed instructions, see `GitLab documentation <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token>`_.
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Analyzing a repository on a self-hosted GitLab instance
