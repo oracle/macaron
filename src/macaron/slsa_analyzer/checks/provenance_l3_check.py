@@ -239,21 +239,35 @@ class ProvenanceL3Check(BaseCheck):
         bool
             Returns True if successful.
         """
+
+        def _validate_path_traversal(path: str) -> bool:
+            """Check for path traversal attacks."""
+            if path.startswith("/") or ".." in path:
+                logger.debug("Found suspicious path in the archive file: %s.", path)
+                return False
+            try:
+                # Check if there are any symbolic links.
+                if os.path.realpath(path):
+                    return True
+            except OSError as error:
+                logger.debug("Failed to extract artifact from archive file: %s", error)
+                return False
+            return False
+
         try:
             if zipfile.is_zipfile(file_path):
                 with zipfile.ZipFile(file_path, "r") as zip_file:
-                    zip_file.extractall(temp_path)
+                    members = (path for path in zip_file.namelist() if _validate_path_traversal(path))
+                    zip_file.extractall(temp_path, members=members)  # nosec B202:tarfile_unsafe_members
                     return True
             elif tarfile.is_tarfile(file_path):
                 with tarfile.open(file_path, mode="r:gz") as tar_file:
-                    tar_file.extractall(temp_path)
+                    members_tarinfo = (
+                        tarinfo for tarinfo in tar_file.getmembers() if _validate_path_traversal(tarinfo.name)
+                    )
+                    tar_file.extractall(temp_path, members=members_tarinfo)  # nosec B202:tarfile_unsafe_members
                     return True
-        except (
-            tarfile.TarError,
-            zipfile.BadZipFile,
-            zipfile.LargeZipFile,
-            OSError,
-        ) as error:
+        except (tarfile.TarError, zipfile.BadZipFile, zipfile.LargeZipFile, OSError, ValueError) as error:
             logger.info(error)
 
         return False
