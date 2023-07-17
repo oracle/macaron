@@ -228,7 +228,7 @@ Analyzing a repository on a self-hosted GitLab instance
 
 To analyze a repository on a self-hosted GitLab instance, you need to do the following:
 
-- Add the following ``[git_service.gitlab.self_hosted]`` section into your ``.ini`` config. In :ref:`the default .ini configuration <action_dump_defaults>`, there is already this section commented out. You can start by un-commenting this section and modifying the ``domain`` value with the domain of your self-hosted GitLab instance.
+- Add the following ``[git_service.gitlab.self_hosted]`` section into your ``.ini`` config. In the default .ini configuration (generated using ``macaron dump-default`` -- :ref:`see instructions <action_dump_defaults>`), there is already this section commented out. You can start by un-commenting this section and modifying the ``domain`` value with the domain of your self-hosted GitLab instance.
 
 .. code-block:: ini
 
