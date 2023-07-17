@@ -32,7 +32,6 @@ def store_analyze_context_to_db(analyze_ctx: AnalyzeContext) -> None:
 
     # Store check result table.
     for check_result in analyze_ctx.check_results.values():
-
         check_result_row = CheckResult(
             check_id=check_result["check_id"],
             component=analyze_ctx.component,

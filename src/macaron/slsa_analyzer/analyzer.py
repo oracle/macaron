@@ -31,7 +31,7 @@ from macaron.dependency_analyzer import (
     NoneDependencyAnalyzer,
 )
 from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
-from macaron.errors import CloneError, DuplicateError, RepoNotFoundError, RepoCheckOutError
+from macaron.errors import CloneError, DuplicateError, PURLNotFoundError, RepoCheckOutError, RepoNotFoundError
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.slsa_analyzer import git_url
@@ -219,8 +219,6 @@ class Analyzer:
         except sqlalchemy.exc.SQLAlchemyError as error:
             logger.error("Database error %s", error)
             logger.critical("The main repository analysis failed. Cannot generate a report for it.")
-
-            # TODO: maybe return os.EX_DATAERR instead?
             sys.exit(os.EX_DATAERR)
 
     def generate_reports(self, report: Report) -> None:
@@ -364,7 +362,7 @@ class Analyzer:
         component = None
         try:
             component = self.add_component(config, analysis, existing_records)
-        except RepoNotFoundError as error:
+        except (RepoNotFoundError, PURLNotFoundError) as error:
             return Record(
                 record_id=repo_id,
                 description=str(error),
@@ -506,18 +504,18 @@ class Analyzer:
         ------
         RepoNotFoundError
             No corresponding repository was found.
+        PURLNotFoundError
+            No PURL is found for the component.
         DuplicateCmpError
             The component is analyzed in the same session.
-
         """
-        # TODO: docs: this function adds a component to DB. Be careful
-        # about the unique constraint.
+        # Note: the component created in this function will be added to the database.
         repo_path = config.get_value("path")
         req_branch = config.get_value("branch")
         req_digest = config.get_value("digest")
 
-        # TODO: read PURL from config.
-        purl = PackageURL(type="github.com", namespace="foo", name="bar")
+        # TODO: read PURL from config, CLI argument or via SBOM.
+        purl = None
 
         repository = None
         if repo_path:
@@ -540,7 +538,6 @@ class Analyzer:
 
             repository = self.add_repository(req_branch, git_obj)
 
-            # TODO: the purl can be provided as cmd arg or via SBOM.
             # mypy is not able to resolve the repository attributes.
             purl = PackageURL(
                 type=repository.type,  # type: ignore[union-attr]
@@ -548,6 +545,13 @@ class Analyzer:
                 name=repository.name,  # type: ignore[union-attr]
                 version=repository.commit_sha,  # type: ignore[union-attr]
             )
+
+        # If PURL is not found, raise an exception.
+        if not purl:
+            logger.debug(
+                "Failed to locate PURL for repo: %s at branch %s and commit %s", repo_path, req_branch, req_digest
+            )
+            raise PURLNotFoundError("Failed to locate a PURL identifier for the component.")
 
         return Component(purl=purl.to_string(), analysis=analysis, repository=repository)
 

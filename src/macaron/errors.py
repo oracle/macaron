@@ -37,9 +37,12 @@ class RepoCheckOutError(MacaronError):
 
 
 class RepoNotFoundError(MacaronError):
-    """The class for errors where a repository is not found."""
+    """Happens if a repository is not found."""
+
+
+class PURLNotFoundError(MacaronError):
+    """Happens if the PURL identifier for a software component is not found."""
 
 
 class DuplicateError(MacaronError):
     """The class for errors for duplicated data."""
-
