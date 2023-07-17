@@ -36,7 +36,9 @@ def send_get_http(url: str, headers: dict) -> dict:
         The response's json data or an empty dict if there is an error.
     """
     logger.debug("GET - %s", url)
-    response = requests.get(url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10))
+    response = requests.get(
+        url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
+    )  # nosec B113:request_without_timeout
     while response.status_code != 200:
         logger.error(
             "Receiving error code %s from server. Message: %s.",
@@ -47,7 +49,9 @@ def send_get_http(url: str, headers: dict) -> dict:
             check_rate_limit(response)
         else:
             return {}
-        response = requests.get(url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10))
+        response = requests.get(
+            url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
+        )  # nosec B113:request_without_timeout
 
     return dict(response.json())
 
@@ -70,7 +74,9 @@ def send_get_http_raw(url: str, headers: dict) -> Response | None:
         The response object or None if there is an error.
     """
     logger.debug("GET - %s", url)
-    response = requests.get(url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10))
+    response = requests.get(
+        url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
+    )  # nosec B113:request_without_timeout
     while response.status_code != 200:
         logger.error(
             "Receiving error code %s from server. Message: %s.",
@@ -81,7 +87,9 @@ def send_get_http_raw(url: str, headers: dict) -> Response | None:
             check_rate_limit(response)
         else:
             return None
-        response = requests.get(url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10))
+        response = requests.get(
+            url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
+        )  # nosec B113:request_without_timeout
 
     return response
 
@@ -155,7 +163,9 @@ def download_github_build_log(url: str, headers: dict) -> str:
         The content of the downloaded build log or empty if error.
     """
     logger.debug("Downloading content at link %s", url)
-    response = requests.get(url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10))
+    response = requests.get(
+        url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
+    )  # nosec B113:request_without_timeout
 
     return response.content.decode("utf-8")
 
