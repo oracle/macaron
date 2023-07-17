@@ -17,9 +17,9 @@ Using Macaron
 Analyzing a source code repository
 ----------------------------------
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+''''''''''''''''''''''''''''''''''''
 Analyzing a public Github repository
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+''''''''''''''''''''''''''''''''''''
 
 Macaron can analyze a Github public repository (and potentially the repositories of it dependencies) to determine its SLSA posture following the specification of `SLSA v0.1 <https://slsa.dev/spec/v0.1/>`_.
 
@@ -58,9 +58,9 @@ With the example above, the generated output reports can be seen here:
 - `micronaut-core.html <../_static/examples/micronaut-projects/micronaut-core/analyze_with_repo_path/micronaut-core.html>`__
 - `micronaut-core.json <../_static/examples/micronaut-projects/micronaut-core/analyze_with_repo_path/micronaut-core.json>`__
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+'''''''''''''''''''''''''''''
 Analyzing a GitLab repository
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+'''''''''''''''''''''''''''''
 
 Macaron supports analyzing GitLab repositories, whether they are hosted on `gitlab.com <https://gitlab.com>`_ or on your self-hosted GitLab instance. The set up in these two cases are a little bit different.
 
