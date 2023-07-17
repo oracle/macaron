@@ -13,9 +13,13 @@ Using Macaron
 
 .. contents:: :local:
 
-------------------------------------
+----------------------------------
+Analyzing a source code repository
+----------------------------------
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Analyzing a public Github repository
-------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Macaron can analyze a Github public repository (and potentially the repositories of it dependencies) to determine its SLSA posture following the specification of `SLSA v0.1 <https://slsa.dev/spec/v0.1/>`_.
 
@@ -53,6 +57,38 @@ With the example above, the generated output reports can be seen here:
 
 - `micronaut-core.html <../_static/examples/micronaut-projects/micronaut-core/analyze_with_repo_path/micronaut-core.html>`__
 - `micronaut-core.json <../_static/examples/micronaut-projects/micronaut-core/analyze_with_repo_path/micronaut-core.json>`__
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Analyzing a GitLab repository
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Macaron supports analyzing GitLab repositories, whether they are hosted on `gitlab.com <https://gitlab.com>`_ or on your self-hosted GitLab instance. The set up in these two cases are a little bit different.
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Analyzing a repository on `gitlab.com <https://gitlab.com>`_
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Analyzing a public repository on `gitlab.com <https://gitlab.com>`_ is quite similar to analyzing a public GitHub repository -- you just need to pass a proper GitLab repository URL to ``macaron analyze``.
+
+To analyze a private repository hosted on ``gitlab.com``, you need to obtain a GitLab access token having at least the ``read_repository`` permission and store it into the ``MCN_GITLAB_TOKEN`` environment variable. For more detailed instructions, see `GitLab documentation <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token>`_.
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Analyzing a repository on a self-hosted GitLab instance
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+To analyze a repository on a self-hosted GitLab instance, you need to do the following:
+
+- Add the following ``[git_service.gitlab.self_hosted]`` section into your ``.ini`` config. In the default .ini configuration (generated using ``macaron dump-default`` -- :ref:`see instructions <action_dump_defaults>`), there is already this section commented out. You can start by un-commenting this section and modifying the ``domain`` value with the domain of your self-hosted GitLab instance.
+
+.. code-block:: ini
+
+    # Access to a self-hosted GitLab instance (e.g. your organization's self-hosted GitLab instance).
+    # If this section is enabled, an access token must be provided through the ``MCN_SELF_HOSTED_GITLAB_TOKEN`` environment variable.
+    # The `read_repository` permission is required for this token.
+    [git_service.gitlab.self_hosted]
+    domain = internal.gitlab.org
+
+- Obtain a GitLab access token having at least the ``read_repository`` permission and store it into the ``MCN_SELF_HOSTED_GITLAB_TOKEN`` environment variable. For more detailed instructions, see `GitLab documentation <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token>`_.
 
 -------------------------------------------------
 Verifying provenance expectations in CUE language
@@ -207,35 +243,3 @@ Thanks to Datalog’s expressive language model, it’s easy to add exception ru
 requirement. For example, `the Mysql Connector/J <https://slsa.dev/spec/v0.1/requirements#build-service>`_ dependency in
 the Micronaut MuShop project does not pass the ``build_service`` check, but can be manually investigated and exempted if trusted. Overall, policies expressed in Datalog can be
 enforced by Macaron as part of your CI/CD pipeline to detect regressions or unexpected behavior.
-
------------------------------
-Analyzing a GitLab repository
------------------------------
-
-Macaron supports analyzing GitLab repositories, whether they are hosted on `gitlab.com <https://gitlab.com>`_ or on your self-hosted GitLab instance. The set up in these two cases are a little bit different.
-
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-Analyzing a repository on `gitlab.com <https://gitlab.com>`_
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-Analyzing a public repository on `gitlab.com <https://gitlab.com>`_ is quite similar to analyzing a public GitHub repository -- you just need to pass a proper GitLab repository URL to ``macaron analyze``.
-
-To analyze a private repository hosted on ``gitlab.com``, you need to obtain a GitLab access token having at least the ``read_repository`` permission and store it into the ``MCN_GITLAB_TOKEN`` environment variable. For more detailed instructions, see `GitLab documentation <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token>`_.
-
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''
-Analyzing a repository on a self-hosted GitLab instance
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-To analyze a repository on a self-hosted GitLab instance, you need to do the following:
-
-- Add the following ``[git_service.gitlab.self_hosted]`` section into your ``.ini`` config. In the default .ini configuration (generated using ``macaron dump-default`` -- :ref:`see instructions <action_dump_defaults>`), there is already this section commented out. You can start by un-commenting this section and modifying the ``domain`` value with the domain of your self-hosted GitLab instance.
-
-.. code-block:: ini
-
-    # Access to a self-hosted GitLab instance (e.g. your organization's self-hosted GitLab instance).
-    # If this section is enabled, an access token must be provided through the ``MCN_SELF_HOSTED_GITLAB_TOKEN`` environment variable.
-    # The `read_repository` permission is required for this token.
-    [git_service.gitlab.self_hosted]
-    domain = internal.gitlab.org
-
-- Obtain a GitLab access token having at least the ``read_repository`` permission and store it into the ``MCN_SELF_HOSTED_GITLAB_TOKEN`` environment variable. For more detailed instructions, see `GitLab documentation <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token>`_.
