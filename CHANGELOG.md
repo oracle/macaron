@@ -1,3 +1,16 @@
+## v0.2.0 (2023-07-17)
+
+### Feat
+
+- resolve Maven properties in found POMs (#271)
+- add support for cloning GitLab repositories (#316)
+- multi build tool detection (#179)
+
+### Fix
+
+- check paths in an archive file before extracting (#366)
+- fix CycloneDx Gradle automatic dependency resolver bug (#315)
+
 ## v0.1.1 (2023-06-14)
 
 ### Fix
