@@ -12,7 +12,7 @@ import pytest
 from macaron.policy_engine.policy_engine import get_generated, run_souffle
 
 POLICY_DIR = Path(__file__).parent.joinpath("resources").joinpath("policies")
-POLICY_FILE = os.path.join(POLICY_DIR, "testpolicy.dl")
+POLICY_FILE = os.path.join(POLICY_DIR, "valid", "testpolicy.dl")
 DATABASE_FILE = os.path.join(Path(__file__).parent.joinpath("resources", "facts", "macaron.db"))
 
 
@@ -33,9 +33,14 @@ def test_dump_prelude(database_setup) -> None:  # type: ignore # pylint: disable
 def test_eval_policy(database_setup) -> None:  # type: ignore # pylint: disable=unused-argument,redefined-outer-name
     """Test loading the policy from file."""
     res = run_souffle(os.path.join(POLICY_FILE, DATABASE_FILE), POLICY_FILE)
-    res.pop("repo_satisfies_policy")
-    res.pop("repo_violates_policy")
+    # res.pop("component_satisfies_policy")
+    # res.pop("component_violates_policy")
     assert res == {
         "passed_policies": [["trusted_builder"]],
+        "component_satisfies_policy": [["1", "github.com/slsa-framework/slsa-verifier", "trusted_builder"]],
         "failed_policies": [["aggregate_l4"], ["aggregate_l2"]],
+        "component_violates_policy": [
+            ["1", "github.com/slsa-framework/slsa-verifier", "aggregate_l4"],
+            ["1", "github.com/slsa-framework/slsa-verifier", "aggregate_l2"],
+        ],
     }

@@ -1,12 +1,11 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This modules contains tests for the provenance l3 check."""
 
-import os
-from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyzer import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.checks.provenance_l3_check import ProvenanceL3Check
@@ -52,6 +51,18 @@ class MockGhAPIClient(GhAPIClient):
         return True
 
 
+class MockAnalyzeContext(AnalyzeContext):
+    """This class initializes a Component for the AnalyzeContext."""
+
+    def __init__(self, *args, **kwargs) -> None:  # type: ignore
+        component = Component(
+            purl="pkg:github.com/package-url/purl-spec@244fd47e07d1004f0aed9c",
+            analysis=Analysis(),
+            repository=Repository(complete_name="github.com/package-url/purl-spec", fs_path=""),
+        )
+        super().__init__(component, *args, **kwargs)
+
+
 class TestProvL3Check(MacaronTestCase):
     """Test the provenance l3 check."""
 
@@ -89,7 +100,7 @@ class TestProvL3Check(MacaronTestCase):
                 {"name": "artifact.txt", "url": "URL", "size": "10"},
             ]
         }
-        ctx = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        ctx = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
         ctx.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(ctx, check_result) == CheckResultType.FAILED
 

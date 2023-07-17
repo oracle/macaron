@@ -104,7 +104,7 @@ class Record(Generic[RecordNode]):
         return {
             "id": self.record_id,
             "description": self.description,
-            "report": f"{self.context.repo_name}.html" if self.context else "",
+            "report": f"{self.context.component.report_file_name}.html" if self.context else "",
             "status": self.status,
         }
 
@@ -275,7 +275,7 @@ class Report:
 
         output = "".join(
             [
-                f"\n{main_ctx.remote_path} ANALYSIS RESULT:\n\n",
+                f"\n{main_ctx.component.purl} ANALYSIS RESULT:\n\n",
                 "\nCHECK RESULTS:\n\n",
                 str(main_ctx),
                 "\nSLSA REQUIREMENT RESULTS:\n",

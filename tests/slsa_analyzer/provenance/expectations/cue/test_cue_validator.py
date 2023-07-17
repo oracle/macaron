@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from macaron.slsa_analyzer.provenance.expectations.cue.cue_expectation import CUEExpectation
+from macaron.database.table_definitions import CUEExpectation
 from macaron.slsa_analyzer.provenance.expectations.cue.cue_validator import get_target, validate_expectation
 
 EXPEC_RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
@@ -35,7 +35,7 @@ def test_make_expectation(expectation_path: str) -> None:
 @pytest.mark.parametrize(
     ("expectation_path", "expected"),
     [
-        (os.path.join(EXPEC_RESOURCE_PATH, "valid_expectations", "urllib3_PASS.cue"), "urllib3/urllib3"),
+        (os.path.join(EXPEC_RESOURCE_PATH, "valid_expectations", "urllib3_PASS.cue"), "pkg:github.com/urllib3/urllib3"),
         (os.path.join(EXPEC_RESOURCE_PATH, "valid_expectations", "urllib3_FAIL.cue"), ""),
     ],
 )

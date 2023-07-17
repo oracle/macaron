@@ -4,7 +4,7 @@
     },
     "target": {
         "info": {
-            "full_name": "tinyMediaManager/tinyMediaManager",
+            "full_name": "pkg:gitlab.com/tinyMediaManager/tinyMediaManager@cca6b67a335074eca42136556f0a321f75dc4f48",
             "local_cloned_path": "git_repos/gitlab_com/tinyMediaManager/tinyMediaManager",
             "remote_path": "https://gitlab.com/tinyMediaManager/tinyMediaManager",
             "branch": "main",

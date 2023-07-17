@@ -10,16 +10,15 @@
  */
 
 // Make sure we ran our analysis with the repo cloned using TLS
-Policy("clone-with-tls", repo, message) :-
-    is_repo(repo, message),
-    repository_attribute(repo,"remote_path", $String(url)),
+Policy("clone-with-tls", repo_id, name) :-
+    repository(repo_id, _, name, _, _, _, _, url, _, _, _, _, _),
     match("^(ssh|https)://.*$", url).
 
 // enforce on micronaut and its dependencies
-apply_policy_to("clone-with-tls", repo) :-
-    is_repo(repo, "micronaut-projects/micronaut-core").
+apply_policy_to("clone-with-tls", repo_id) :-
+    is_repo(repo_id, "github.com/micronaut-projects/micronaut-core", _).
 
 // enforce on micronaut and its dependencies
 apply_policy_to("clone-with-tls", dependency) :-
-    is_repo(repo, "micronaut-projects/micronaut-core"),
-    dependency(repo, dependency).
+    repository_analysis(_, component_id, _, "github.com/micronaut-projects/micronaut-core"),
+    dependency(component_id, dependency).

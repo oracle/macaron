@@ -453,7 +453,7 @@ $RUN_MACARON analyze -pe $EXPECTATION_FILE -rp https://github.com/slsa-framework
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "slsa-framework/slsa-verifier: Analyzing the repo path when automatic dependency resolution is skipped"
+echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped"
 echo "and CUE file is provided as expectation."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3_cue_invalid.json

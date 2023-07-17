@@ -6,12 +6,12 @@
 import logging
 import os
 
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
 from macaron.config.defaults import defaults
-from macaron.database.database_manager import ORMBase
-from macaron.database.table_definitions import CheckFactsTable
+from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
@@ -29,15 +29,32 @@ from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class BuildAsCodeTable(CheckFactsTable, ORMBase):
-    """Check justification table for build_as_code."""
+class BuildAsCodeFacts(CheckFacts):
+    """The ORM mapping for justifications in build_as_code check."""
 
     __tablename__ = "_build_as_code_check"
-    build_tool_name: Mapped[str] = mapped_column(String, nullable=True)
-    ci_service_name: Mapped[str] = mapped_column(String, nullable=True)
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+
+    #: The name of the tool used to build.
+    build_tool_name: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: The CI service name used to build and deploy.
+    ci_service_name: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: The entrypoint script that triggers the build and deploy.
     build_trigger: Mapped[str] = mapped_column(String, nullable=True)
+
+    #: The command used to deploy.
     deploy_command: Mapped[str] = mapped_column(String, nullable=True)
+
+    #: The run status of the CI service for this build.
     build_status_url: Mapped[str] = mapped_column(String, nullable=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "_build_as_code_check",
+    }
 
 
 class BuildAsCodeCheck(BaseCheck):
@@ -152,21 +169,23 @@ class BuildAsCodeCheck(BaseCheck):
                             continue
                         if workflow_name in trusted_deploy_actions:
                             trigger_link = ci_service.api_client.get_file_link(
-                                ctx.repo_full_name,
-                                ctx.commit_sha,
+                                ctx.component.repository.full_name,
+                                ctx.component.repository.commit_sha,
                                 ci_service.api_client.get_relative_path_of_workflow(
                                     os.path.basename(callee.caller_path)
                                 ),
                             )
                             deploy_action_source_link = ci_service.api_client.get_file_link(
-                                ctx.repo_full_name, ctx.commit_sha, callee.caller_path
+                                ctx.component.repository.full_name,
+                                ctx.component.repository.commit_sha,
+                                callee.caller_path,
                             )
 
                             html_url = ci_service.has_latest_run_passed(
-                                ctx.repo_full_name,
-                                ctx.branch_name,
-                                ctx.commit_sha,
-                                ctx.commit_date,
+                                ctx.component.repository.full_name,
+                                ctx.component.repository.branch_name,
+                                ctx.component.repository.commit_sha,
+                                ctx.component.repository.commit_date,
                                 os.path.basename(callee.caller_path),
                             )
 
@@ -187,21 +206,24 @@ class BuildAsCodeCheck(BaseCheck):
                                 predicate = ci_info["provenances"][0]["predicate"]
                                 predicate["buildType"] = f"Custom {ci_service.name}"
                                 predicate["builder"]["id"] = deploy_action_source_link
-                                predicate["invocation"]["configSource"][
-                                    "uri"
-                                ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
-                                predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
+                                predicate["invocation"]["configSource"]["uri"] = (
+                                    f"{ctx.component.repository.remote_path}"
+                                    f"@refs/heads/{ctx.component.repository.branch_name}"
+                                )
+                                predicate["invocation"]["configSource"]["digest"][
+                                    "sha1"
+                                ] = ctx.component.repository.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                                 predicate["metadata"]["buildInvocationId"] = html_url
-                                check_result["result_tables"] = [
-                                    BuildAsCodeTable(
-                                        build_tool_name=build_tool.name,
-                                        ci_service_name=ci_service.name,
-                                        build_trigger=trigger_link,
-                                        deploy_command=workflow_name,
-                                        build_status_url=html_url,
-                                    )
-                                ]
+                            check_result["result_tables"] = [
+                                BuildAsCodeFacts(
+                                    build_tool_name=build_tool.name,
+                                    ci_service_name=ci_service.name,
+                                    build_trigger=trigger_link,
+                                    deploy_command=workflow_name,
+                                    build_status_url=html_url,
+                                )
+                            ]
                             return CheckResultType.PASSED
 
                 for bash_cmd in ci_info["bash_commands"]:
@@ -209,20 +231,22 @@ class BuildAsCodeCheck(BaseCheck):
                     if deploy_cmd:
                         # Get the permalink and HTML hyperlink tag of the CI file that triggered the bash command.
                         trigger_link = ci_service.api_client.get_file_link(
-                            ctx.repo_full_name,
-                            ctx.commit_sha,
+                            ctx.component.repository.full_name,
+                            ctx.component.repository.commit_sha,
                             ci_service.api_client.get_relative_path_of_workflow(os.path.basename(bash_cmd["CI_path"])),
                         )
                         # Get the permalink of the source file of the bash command.
                         bash_source_link = ci_service.api_client.get_file_link(
-                            ctx.repo_full_name, ctx.commit_sha, bash_cmd["caller_path"]
+                            ctx.component.repository.full_name,
+                            ctx.component.repository.commit_sha,
+                            bash_cmd["caller_path"],
                         )
 
                         html_url = ci_service.has_latest_run_passed(
-                            ctx.repo_full_name,
-                            ctx.branch_name,
-                            ctx.commit_sha,
-                            ctx.commit_date,
+                            ctx.component.repository.full_name,
+                            ctx.component.repository.branch_name,
+                            ctx.component.repository.commit_sha,
+                            ctx.component.repository.commit_date,
                             os.path.basename(bash_cmd["CI_path"]),
                         )
 
@@ -241,21 +265,24 @@ class BuildAsCodeCheck(BaseCheck):
                             predicate = ci_info["provenances"][0]["predicate"]
                             predicate["buildType"] = f"Custom {ci_service.name}"
                             predicate["builder"]["id"] = bash_source_link
-                            predicate["invocation"]["configSource"][
-                                "uri"
-                            ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
-                            predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
+                            predicate["invocation"]["configSource"]["uri"] = (
+                                f"{ctx.component.repository.remote_path}"
+                                f"@refs/heads/{ctx.component.repository.branch_name}"
+                            )
+                            predicate["invocation"]["configSource"]["digest"][
+                                "sha1"
+                            ] = ctx.component.repository.commit_sha
                             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                             predicate["metadata"]["buildInvocationId"] = html_url
-                            check_result["result_tables"].append(
-                                BuildAsCodeTable(
-                                    build_tool_name=build_tool.name,
-                                    ci_service_name=ci_service.name,
-                                    build_trigger=trigger_link,
-                                    deploy_command=deploy_cmd,
-                                    build_status_url=html_url,
-                                )
+                        check_result["result_tables"] = [
+                            BuildAsCodeFacts(
+                                build_tool_name=build_tool.name,
+                                ci_service_name=ci_service.name,
+                                build_trigger=trigger_link,
+                                deploy_command=deploy_cmd,
+                                build_status_url=html_url,
                             )
+                        ]
 
                         return CheckResultType.PASSED
 
@@ -265,7 +292,7 @@ class BuildAsCodeCheck(BaseCheck):
                     if isinstance(ci_service, unparsed_ci):
                         if build_tool.ci_deploy_kws[ci_service.name]:
                             deploy_kw, config_name = ci_service.has_kws_in_config(
-                                build_tool.ci_deploy_kws[ci_service.name], repo_path=ctx.repo_path
+                                build_tool.ci_deploy_kws[ci_service.name], repo_path=ctx.component.repository.fs_path
                             )
                             if not config_name:
                                 break
@@ -277,23 +304,25 @@ class BuildAsCodeCheck(BaseCheck):
                                 predicate = ci_info["provenances"][0]["predicate"]
                                 predicate["buildType"] = f"Custom {ci_service.name}"
                                 predicate["builder"]["id"] = config_name
-                                predicate["invocation"]["configSource"][
-                                    "uri"
-                                ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
-                                predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
+                                predicate["invocation"]["configSource"]["uri"] = (
+                                    f"{ctx.component.repository.remote_path}"
+                                    f"@refs/heads/{ctx.component.repository.branch_name}"
+                                )
+                                predicate["invocation"]["configSource"]["digest"][
+                                    "sha1"
+                                ] = ctx.component.repository.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = config_name
-                            check_result["result_tables"].append(
-                                BuildAsCodeTable(
+                            check_result["result_tables"] = [
+                                BuildAsCodeFacts(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
                                     deploy_command=deploy_kw,
                                 )
-                            )
+                            ]
                             return CheckResultType.PASSED
 
         pass_msg = f"The target repository does not use {build_tool.name} to deploy."
         check_result["justification"].append(pass_msg)
-        check_result["result_tables"].append(BuildAsCodeTable(build_tool_name=build_tool.name))
         return CheckResultType.FAILED
 
     def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
@@ -315,7 +344,6 @@ class BuildAsCodeCheck(BaseCheck):
         build_tools = ctx.dynamic_data["build_spec"]["tools"]
 
         if not build_tools:
-            check_result["result_tables"] = [BuildAsCodeTable()]
             failed_msg = "The target repository does not have any build tools."
             check_result["justification"].append(failed_msg)
             return CheckResultType.FAILED

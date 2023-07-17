@@ -35,5 +35,5 @@ def test_get_build_dirs(snapshot: list, maven_tool: Maven, mock_repo: Path) -> N
 def test_maven_build_tool(maven_tool: Maven, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
     """Test the Maven build tool."""
     base_dir = Path(__file__).parent
-    repo = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
-    assert maven_tool.is_detected(repo.git_obj.path) == expected_value
+    ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
+    assert maven_tool.is_detected(ctx.component.repository.fs_path) == expected_value

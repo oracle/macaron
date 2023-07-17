@@ -16,9 +16,8 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-# Note: the ORM mappings for the results of this check are separately created per
-# expectation object by calling expectation.get_expectation_table() in the body of the check.
-# There is no need to declare mappings explicitly again.
+# Note: the ORM mappings for the results of this check are separately created per expectation
+# object in the body of the check. There is no need to declare mappings explicitly again.
 
 
 class ProvenanceL3ContentCheck(BaseCheck):
@@ -77,7 +76,9 @@ class ProvenanceL3ContentCheck(BaseCheck):
 
                     # TODO: Is it worth returning more information rather than returning early?
                     if expectation.validate(payload):
-                        check_result["result_tables"].append(expectation.get_expectation_table())
+                        # We need to use typing.Protocol for multiple inheritance, however, the Expectation
+                        # class uses inlined functions, which is not supported by Protocol.
+                        check_result["result_tables"].append(expectation)  # type: ignore[arg-type]
                         check_result["justification"].append(
                             "Successfully verified the expectation against provenance."
                         )

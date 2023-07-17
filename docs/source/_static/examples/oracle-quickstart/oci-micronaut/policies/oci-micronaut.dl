@@ -46,4 +46,4 @@ verify_provenance(repo_num, repo_name) :-
     check_passed(repo_num, "mcn_provenance_expectation_1").
 
 // Apply the policy.
-apply_policy_to("oci_micronaut_dependencies", repo) :- is_repo(repo, "oracle-quickstart/oci-micronaut").
+apply_policy_to("oci_micronaut_dependencies", repo) :- is_repo(repo_id, "oracle-quickstart/oci-micronaut").

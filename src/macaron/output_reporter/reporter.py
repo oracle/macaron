@@ -125,7 +125,7 @@ class JSONReporter(FileReporter):
 
             for record in report.get_records():
                 if record.context and record.status == SCMStatus.AVAILABLE:
-                    file_name = os.path.join(target_dir, f"{record.context.repo_name}.json")
+                    file_name = os.path.join(target_dir, f"{record.context.component.report_file_name}.json")
                     json_data = json.dumps(record.get_dict(), indent=self.indent)
                     self.write_file(file_name, json_data)
         except TypeError as error:
@@ -214,7 +214,7 @@ class HTMLReporter(FileReporter):
         try:
             for record in report.get_records():
                 if record.context and record.status == SCMStatus.AVAILABLE:
-                    file_name = os.path.join(target_dir, f"{record.context.repo_name}.html")
+                    file_name = os.path.join(target_dir, f"{record.context.component.report_file_name}.html")
                     # Make a deep copy because we don't want to keep any modification from Jinja
                     # in the original data.
                     html = self.template.render(deepcopy(record.get_dict()))

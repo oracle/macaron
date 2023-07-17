@@ -4,10 +4,9 @@
 """This modules contains tests for the expectation check."""
 
 import os
-from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.slsa_analyzer.analyzer import AnalyzeContext
+from macaron.database.table_definitions import CUEExpectation
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.checks.provenance_l3_content_check import ProvenanceL3ContentCheck
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -16,9 +15,9 @@ from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
-from macaron.slsa_analyzer.provenance.expectations.cue.cue_expectation import CUEExpectation
 from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from tests.conftest import MockAnalyzeContext
 
 from ...macaron_testcase import MacaronTestCase
 
@@ -78,7 +77,7 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
         expectation_dir = os.path.join(
             self.macaron_test_dir, "slsa_analyzer", "provenance", "expectations", "cue", "resources"
         )
-        ctx = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        ctx = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
 
         # Test GitHub Actions.
         ci_info = CIInfo(

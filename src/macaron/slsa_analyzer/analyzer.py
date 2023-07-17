@@ -8,18 +8,22 @@ import os
 import subprocess  # nosec B404
 import sys
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+import sqlalchemy.exc
 from git import InvalidGitRepositoryError
+from packageurl import PackageURL
 from pydriller.git import Git
+from sqlalchemy.orm import Session
 
+from macaron import __version__
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
-from macaron.database.database_manager import DatabaseManager
-from macaron.database.table_definitions import RepositoryDependency
+from macaron.database.database_manager import get_db_manager, get_db_session
+from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.dependency_analyzer import (
     DependencyAnalyzer,
     DependencyAnalyzerError,
@@ -27,7 +31,7 @@ from macaron.dependency_analyzer import (
     NoneDependencyAnalyzer,
 )
 from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
-from macaron.errors import CloneError, RepoCheckOutError
+from macaron.errors import CloneError, DuplicateError, RepoNotFoundError, RepoCheckOutError
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.slsa_analyzer import git_url
@@ -38,7 +42,7 @@ from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
 from macaron.slsa_analyzer.checks.check_result import CheckResult, SkippedInfo
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
-from macaron.slsa_analyzer.database_store import store_analysis_to_db, store_analyze_context_to_db
+from macaron.slsa_analyzer.database_store import store_analyze_context_to_db
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
@@ -81,8 +85,6 @@ class Analyzer:
         if not os.path.isdir(self.build_log_path):
             os.makedirs(self.build_log_path)
 
-        self.database_path = os.path.join(output_path, defaults.get("database", "db_name", fallback="macaron.db"))
-
         # If provided with local_repos_path, we resolve the path of the target repo
         # to the path within local_repos_path.
         # If not, we use the default value <output_path>/git_repos/local_repos.
@@ -100,7 +102,9 @@ class Analyzer:
         # Initialize the reporters to store analysis data to files.
         self.reporters: list[FileReporter] = []
 
-        self.db_man = DatabaseManager(self.database_path)
+        # Get the db manager singleton object.
+        self.db_man = get_db_manager()
+
         # Create database tables: all checks have been registered so all tables should be mapped now
         self.db_man.create_tables()
 
@@ -128,79 +132,96 @@ class Analyzer:
         deps_config: list[Configuration] = [Configuration(dep) for dep in user_config.get("dependencies", [])]
         deps_resolved: dict[str, DependencyInfo] = {}
 
-        # Analyze the main target.
-        main_record = self.run_single(main_config)
+        # Get a single session once for the whole analysis.
+        # Note if anything goes wrong, we will not commit anything
+        # to the database. So, atomicity is at analysis level.
+        # TODO: change the atomicity level per component run to allow
+        # parallelizing dependencies.
+        try:
+            with Session(self.db_man.engine) as session, session.begin():
+                # Cache the singleton session object.
+                db_session = get_db_session(session)
 
-        # Write the results of main target to DB.
-        if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
-            logger.info("Analysis has failed.")
-            return 1
+                # Create a transient SQLAlchemy instance for Analysis.
+                # Note that the changes will be committed to the DB when the
+                # current Session context terminates.
+                analysis = Analysis(
+                    analysis_time=datetime.now(tz=timezone.utc),
+                    macaron_version=__version__,
+                )
 
-        # Run the chosen dependency analyzer plugin.
-        if skip_deps:
-            logger.info("Skipping automatic dependency analysis...")
-        else:
-            deps_resolved = self.resolve_dependencies(main_record.context, sbom_path)
+                # Analyze the main target.
+                main_record = self.run_single(main_config, analysis)
 
-        # Merge the automatically resolved dependencies with the manual configuration.
-        deps_config = DependencyAnalyzer.merge_configs(deps_config, deps_resolved)
+                if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
+                    logger.info("Analysis has failed.")
+                    return os.EX_DATAERR
 
-        # Create a report instance with the record of the main repo.
-        report = Report(main_record)
+                # Run the chosen dependency analyzer plugin.
+                if skip_deps:
+                    logger.info("Skipping automatic dependency analysis...")
+                else:
+                    deps_resolved = self.resolve_dependencies(main_record.context, sbom_path)
 
-        duplicated_scm_records: list[Record] = []
+                # Merge the automatically resolved dependencies with the manual configuration.
+                deps_config = DependencyAnalyzer.merge_configs(deps_config, deps_resolved)
 
-        if deps_config:
-            logger.info("Start analyzing the dependencies.")
-            for config in deps_config:
-                dep_status: SCMStatus = config.get_value("available")
-                if dep_status != SCMStatus.AVAILABLE:
-                    dep_record: Record = Record(
-                        record_id=config.get_value("id"),
-                        description=config.get_value("note"),
-                        pre_config=config,
-                        status=config.get_value("available"),
-                    )
-                    report.add_dep_record(dep_record)
-                    if dep_status == SCMStatus.DUPLICATED_SCM:
-                        duplicated_scm_records.append(dep_record)
+                # Create a report instance with the record of the main repo.
+                report = Report(main_record)
 
-                    continue
-                dep_record = self.run_single(config, report.record_mapping)
-                report.add_dep_record(dep_record)
-        else:
-            logger.info("Found no dependencies to analyze.")
+                duplicated_scm_records: list[Record] = []
 
-        # Populate the record of duplicated scm dependencies with the
-        # context of analyzed dependencies if available.
-        for dup_record in duplicated_scm_records:
-            find_ctx = report.find_ctx(dup_record.pre_config.get_value("id"))
-            dup_record.context = find_ctx
+                if deps_config:
+                    logger.info("Start analyzing the dependencies.")
+                    for config in deps_config:
+                        dep_status: SCMStatus = config.get_value("available")
+                        if dep_status != SCMStatus.AVAILABLE:
+                            dep_record: Record = Record(
+                                record_id=config.get_value("id"),
+                                description=config.get_value("note"),
+                                pre_config=config,
+                                status=config.get_value("available"),
+                            )
+                            report.add_dep_record(dep_record)
+                            if dep_status == SCMStatus.DUPLICATED_SCM:
+                                duplicated_scm_records.append(dep_record)
 
-        analysis = store_analysis_to_db(self.db_man, main_record)
+                            continue
+                        dep_record = self.run_single(config, analysis, report.record_mapping)
+                        report.add_dep_record(dep_record)
+                else:
+                    logger.info("Found no dependencies to analyze.")
 
-        for record in report.get_records():
-            if not record.status == SCMStatus.DUPLICATED_SCM:
-                if record.context:
-                    store_analyze_context_to_db(self.db_man, analysis, record.context)
+                # Populate the record of duplicated scm dependencies with the
+                # context of analyzed dependencies if available.
+                for dup_record in duplicated_scm_records:
+                    find_ctx = report.find_ctx(dup_record.pre_config.get_value("id"))
+                    dup_record.context = find_ctx
 
-        # Store dependency relations
-        for parent, child in report.get_dependencies():
-            dependency = RepositoryDependency(
-                dependent_repository=parent.repository_table.id, dependency_repository=child.repository_table.id
-            )
-            self.db_man.add_and_commit(dependency)
+                for record in report.get_records():
+                    if not record.status == SCMStatus.DUPLICATED_SCM:
+                        if record.context:
+                            store_analyze_context_to_db(record.context)
 
-        self.db_man.session.commit()
+                # Store dependency relations.
+                for parent, child in report.get_dependencies():
+                    parent.component.dependencies.append(child.component)
 
-        # Store the analysis result into report files.
-        self.generate_reports(report)
+                # Store the analysis result into report files.
+                self.generate_reports(report)
 
-        # Print the analysis result into the console output.
-        logger.info(str(report))
+                # Print the analysis result into the console output.
+                logger.info(str(report))
 
-        logger.info("Analysis Completed!")
-        return os.EX_OK
+                db_session.add(analysis)
+                logger.info("Analysis Completed!")
+                return os.EX_OK
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            logger.error("Database error %s", error)
+            logger.critical("The main repository analysis failed. Cannot generate a report for it.")
+
+            # TODO: maybe return os.EX_DATAERR instead?
+            sys.exit(os.EX_DATAERR)
 
     def generate_reports(self, report: Report) -> None:
         """Generate the report of the analysis to all registered reporters.
@@ -214,12 +235,9 @@ class Analyzer:
             logger.critical("The main repository analysis failed. Cannot generate a report for it.")
             return
 
-        target_dir = (
-            git_url.get_repo_dir_name(report.root_record.context.remote_path)
-            or report.root_record.context.repo_full_name
+        output_target_path = os.path.join(
+            global_config.output_path, "reports", report.root_record.context.component.report_dir_name
         )
-
-        output_target_path = os.path.join(global_config.output_path, "reports", target_dir)
         os.makedirs(output_target_path, exist_ok=True)
 
         for reporter in self.reporters:
@@ -252,41 +270,42 @@ class Analyzer:
             return {}
 
         # Grab dependencies for each build tool, collate all into the deps_resolved
-        for tool in build_tools:
+        for build_tool in build_tools:
             try:
-                dep_analyzer = tool.get_dep_analyzer(main_ctx.repo_path)
+                dep_analyzer = build_tool.get_dep_analyzer(main_ctx.component.repository.fs_path)
             except DependencyAnalyzerError as error:
-                logger.error("Unable to find a dependency analyzer for %s: %s", tool.name, error)
-                continue
+                logger.error("Unable to find a dependency analyzer: %s", error)
+                return {}
 
             if isinstance(dep_analyzer, NoneDependencyAnalyzer):
                 logger.info(
                     "Dependency analyzer is not available for %s",
-                    tool.name,
+                    build_tool.name,
                 )
-                continue
+                return {}
 
             # Start resolving dependencies.
             logger.info(
                 "Running %s version %s dependency analyzer on %s",
                 dep_analyzer.tool_name,
                 dep_analyzer.tool_version,
-                main_ctx.repo_path,
+                main_ctx.component.repository.fs_path,
             )
 
             log_path = os.path.join(
                 global_config.build_log_path,
-                f"{main_ctx.repo_name}.{dep_analyzer.tool_name}.log",
+                f"{main_ctx.component.report_file_name}.{dep_analyzer.tool_name}.log",
             )
 
             # Clean up existing SBOM files.
-            dep_analyzer.remove_sboms(main_ctx.repo_path)
+            dep_analyzer.remove_sboms(main_ctx.component.repository.fs_path)
 
             commands = dep_analyzer.get_cmd()
-            working_dirs: Iterable[Path] = tool.get_build_dirs(main_ctx.repo_path)
+            working_dirs: Iterable[Path] = build_tool.get_build_dirs(main_ctx.component.repository.fs_path)
             for working_dir in working_dirs:
                 # Get the absolute path to use as the working dir in the subprocess.
-                working_dir = Path(main_ctx.repo_path).joinpath(working_dir)
+                working_dir = Path(main_ctx.component.repository.fs_path).joinpath(working_dir)
+
                 try:
                     # Suppressing Bandit's B603 report because the repo paths are validated.
                     analyzer_output = subprocess.run(  # nosec B603
@@ -316,7 +335,12 @@ class Analyzer:
 
         return deps_resolved
 
-    def run_single(self, config: Configuration, existing_records: Optional[dict[str, Record]] = None) -> Record:
+    def run_single(
+        self,
+        config: Configuration,
+        analysis: Analysis,
+        existing_records: Optional[dict[str, Record]] = None,
+    ) -> Record:
         """Run the checks for a single repository target.
 
         Please use Analyzer.run if you want to run the analysis for a config parsed from
@@ -324,9 +348,10 @@ class Analyzer:
 
         Parameters
         ----------
-        config : str
+        config: Configuration
             The configuration for running Macaron.
-
+        analysis: Analysis
+            The row added for the analysis.
         existing_records : Optional[dict[str, Record]]
             The mapping of existing records that the analysis has run successfully.
 
@@ -336,49 +361,33 @@ class Analyzer:
             The record of the analysis for this repository.
         """
         repo_id = config.get_value("id")
-        repo_path = config.get_value("path")
-        req_branch = config.get_value("branch")
-        req_digest = config.get_value("digest")
-
-        logger.info("=====================================")
-        logger.info("Analyzing %s", repo_id)
-        logger.info("Repo path: %s", repo_path)
-        logger.info("=====================================")
-
-        git_obj = self._prepare_repo(
-            os.path.join(self.output_path, self.GIT_REPOS_DIR),
-            repo_path,
-            req_branch,
-            req_digest,
-        )
-        if not git_obj:
-            error_msg = "Cannot prepare the repository for analysis."
-            logger.error(error_msg)
+        component = None
+        try:
+            component = self.add_component(config, analysis, existing_records)
+        except RepoNotFoundError as error:
             return Record(
                 record_id=repo_id,
-                description=error_msg,
+                description=str(error),
                 pre_config=config,
                 status=SCMStatus.ANALYSIS_FAILED,
             )
-
-        # TODO: use both the repo URL and the commit hash to check.
-        if (
-            existing_records
-            and (existing_record := existing_records.get(git_url.get_remote_origin_of_local_repo(git_obj))) is not None
-        ):
-            info_msg = f"{repo_path} is already analyzed."
-            logger.info(info_msg)
+        except DuplicateCmpError as error:
             return Record(
                 record_id=repo_id,
-                description=info_msg,
+                description=str(error),
                 pre_config=config,
                 status=SCMStatus.DUPLICATED_SCM,
-                context=existing_record.context,
+                context=error.context,
             )
 
-        analyze_ctx = self.get_analyze_ctx(req_branch, git_obj)
+        logger.info("=====================================")
+        logger.info("Analyzing %s", repo_id)
+        logger.info("With PURL: %s", component.purl)
+        logger.info("=====================================")
+
+        analyze_ctx = self.get_analyze_ctx(component)
         analyze_ctx.dynamic_data["expectation"] = self.expectations.get_expectation_for_target(
-            analyze_ctx.repo_full_name
+            analyze_ctx.component.purl.split("@")[0]
         )
         analyze_ctx.check_results = self.perform_checks(analyze_ctx)
 
@@ -390,8 +399,8 @@ class Analyzer:
             context=analyze_ctx,
         )
 
-    def get_analyze_ctx(self, branch_name: str, git_obj: Git) -> AnalyzeContext:
-        """Return the analyze context for a target repository.
+    def add_repository(self, branch_name: str, git_obj: Git) -> Repository | None:
+        """Create a repository instance for a target repository.
 
         Parameters
         ----------
@@ -404,8 +413,8 @@ class Analyzer:
 
         Returns
         -------
-        AnalyzeContext
-            The context of object of the target repository.
+        Repository | None
+            The target repository or None if not found.
         """
         # We get the origin url from the git repository.
         # If it is a remote url, we could get the full name of the repository directly.
@@ -415,10 +424,11 @@ class Analyzer:
         # For example, /home/path/to/repo -> local_repos/repo.
         origin_remote_path = git_url.get_remote_origin_of_local_repo(git_obj)
         full_name = git_url.get_repo_full_name_from_url(origin_remote_path)
-        if not full_name:
-            full_name = f"local_repos/{Path(origin_remote_path).name}"
+        complete_name = git_url.get_repo_complete_name_from_url(origin_remote_path)
+        if not complete_name:
+            complete_name = f"local_repos/{Path(origin_remote_path).name}"
 
-        logger.info("The full name of this repository is %s", full_name)
+        logger.info("The complete name of this repository is %s", complete_name)
 
         res_branch = ""
 
@@ -447,6 +457,23 @@ class Analyzer:
         # GitHub API uses the ISO format datetime string.
         commit_date_str = commit_date.isoformat(sep="T", timespec="seconds")
 
+        # We only allow complete_name's length to be 2 or 3 because we need to construct PURL
+        # strings using the complete_name, i.e., type/namespace/name@commitsha
+        if (parts_len := len(Path(complete_name).parts)) < 2 or parts_len > 3:
+            logger.error("The repository path %s is not valid.", complete_name)
+            return None
+
+        repository = Repository(
+            full_name=full_name,
+            complete_name=complete_name,
+            remote_path=origin_remote_path,
+            branch_name=res_branch,
+            commit_sha=commit_sha,
+            commit_date=commit_date_str,
+            fs_path=str(git_obj.path),
+            files=git_obj.files(),
+        )
+
         logger.info(
             "Running the analysis on branch %s, commit_sha %s, commit_date: %s",
             res_branch,
@@ -454,20 +481,95 @@ class Analyzer:
             commit_date_str,
         )
 
+        return repository
+
+    def add_component(
+        self, config: Configuration, analysis: Analysis, existing_records: dict[str, Record] | None = None
+    ) -> Component:
+        """Add a software component if it does not exist in the DB already.
+
+        Parameters
+        ----------
+        config: Configuration
+            The configuration for running Macaron.
+        analysis: Analysis
+            The row added for the analysis.
+        existing_records : dict[str, Record] | None
+            The mapping of existing records that the analysis has run successfully.
+
+        Returns
+        -------
+        Component
+            The software component.
+
+        Raises
+        ------
+        RepoNotFoundError
+            No corresponding repository was found.
+        DuplicateCmpError
+            The component is analyzed in the same session.
+
+        """
+        # TODO: docs: this function adds a component to DB. Be careful
+        # about the unique constraint.
+        repo_path = config.get_value("path")
+        req_branch = config.get_value("branch")
+        req_digest = config.get_value("digest")
+
+        # TODO: read PURL from config.
+        purl = PackageURL(type="github.com", namespace="foo", name="bar")
+
+        repository = None
+        if repo_path:
+            git_obj = self._prepare_repo(
+                os.path.join(self.output_path, self.GIT_REPOS_DIR),
+                repo_path,
+                req_branch,
+                req_digest,
+            )
+            if not git_obj:
+                raise RepoNotFoundError("Failed to prepare the corresponding repository for analysis.")
+
+            # TODO: use both the repo URL and the commit hash to check.
+            if (
+                existing_records
+                and (existing_record := existing_records.get(git_url.get_remote_origin_of_local_repo(git_obj)))
+                is not None
+            ):
+                raise DuplicateCmpError(f"{repo_path} is already analyzed.", context=existing_record.context)
+
+            repository = self.add_repository(req_branch, git_obj)
+
+            # TODO: the purl can be provided as cmd arg or via SBOM.
+            # mypy is not able to resolve the repository attributes.
+            purl = PackageURL(
+                type=repository.type,  # type: ignore[union-attr]
+                namespace=repository.owner,  # type: ignore[union-attr]
+                name=repository.name,  # type: ignore[union-attr]
+                version=repository.commit_sha,  # type: ignore[union-attr]
+            )
+
+        return Component(purl=purl.to_string(), analysis=analysis, repository=repository)
+
+    def get_analyze_ctx(self, component: Component) -> AnalyzeContext:
+        """Return the analyze context for a target repository.
+
+        Parameters
+        ----------
+        component: Component
+            The target software component.
+
+        Returns
+        -------
+        AnalyzeContext
+            The context of object of the target software component.
+        """
         # Initialize the analyzing context for this repository.
         analyze_ctx = AnalyzeContext(
-            full_name,
-            str(git_obj.path),
-            git_obj,
-            res_branch,
-            commit_sha,
-            commit_date_str,
+            component,
             global_config.macaron_path,
             self.output_path,
-            origin_remote_path,
         )
-
-        self.db_man.add(analyze_ctx.repository_table)
 
         return analyze_ctx
 
@@ -591,12 +693,12 @@ class Analyzer:
         return git_obj
 
     @staticmethod
-    def get_git_service(remote_path: str) -> BaseGitService:
+    def get_git_service(remote_path: str | None) -> BaseGitService:
         """Return the git service used from the remote path.
 
         Parameters
         ----------
-        remote_path : str
+        remote_path : str | None
             The remote path of the repo.
 
         Returns
@@ -604,9 +706,10 @@ class Analyzer:
         BaseGitService
             The git service derived from the remote path.
         """
-        for git_service in GIT_SERVICES:
-            if git_service.is_detected(remote_path):
-                return git_service
+        if remote_path:
+            for git_service in GIT_SERVICES:
+                if git_service.is_detected(remote_path):
+                    return git_service
 
         return NoneGitService()
 
@@ -658,56 +761,61 @@ class Analyzer:
             The mapping between the check id and its result.
         """
         # Determine the git service.
-        git_service = self.get_git_service(analyze_ctx.remote_path)
-        if isinstance(git_service, NoneGitService):
-            logger.error("Unsupported git service for %s", analyze_ctx.repo_full_name)
+        remote_path = analyze_ctx.component.repository.remote_path if analyze_ctx.component.repository else None
+        git_service = self.get_git_service(remote_path)
+        # Check remote_path to help mypy.
+        if remote_path is None or isinstance(git_service, NoneGitService):
+            logger.error("Unsupported git service for %s", analyze_ctx.component.purl)
         else:
-            logger.info("Detect git service %s for %s.", git_service.name, analyze_ctx.repo_full_name)
+            logger.info(
+                "Detect git service %s for %s.", git_service.name, analyze_ctx.component.repository.complete_name
+            )
             analyze_ctx.dynamic_data["git_service"] = git_service
 
-        # Determine the build tool.
-        for build_tool in BUILD_TOOLS:
-            build_tool.load_defaults()
-            logger.info(
-                "Checking if the repo %s uses build tool %s",
-                analyze_ctx.repo_full_name,
-                build_tool.name,
-            )
-
-            if build_tool.is_detected(analyze_ctx.git_obj.path):
-                logger.info("The repo uses %s build tool.", build_tool.name)
-                analyze_ctx.dynamic_data["build_spec"]["tools"].append(build_tool)
-
-        if not analyze_ctx.dynamic_data["build_spec"]["tools"]:
-            logger.info(
-                "Cannot discover any build tools for %s or the build tools found are not supported.",
-                analyze_ctx.repo_full_name,
-            )
-
-        # Determine the CI services.
-        for ci_service in CI_SERVICES:
-            ci_service.load_defaults()
-            ci_service.set_api_client()
-
-            if ci_service.is_detected(analyze_ctx.git_obj.path):
-                logger.info("The repo uses %s CI service.", ci_service.name)
-
-                # Parse configuration files and generate IRs.
-                # Add the bash commands to the context object to be used by other checks.
-                callgraph = ci_service.build_call_graph(
-                    analyze_ctx.repo_path, os.path.relpath(analyze_ctx.repo_path, analyze_ctx.output_dir)
+            # Determine the build tool.
+            for build_tool in BUILD_TOOLS:
+                build_tool.load_defaults()
+                logger.info(
+                    "Checking if the repo %s uses build tool %s",
+                    analyze_ctx.component.repository.complete_name,
+                    build_tool.name,
                 )
-                bash_commands = list(ci_service.extract_all_bash(callgraph)) if callgraph else []
-                analyze_ctx.dynamic_data["ci_services"].append(
-                    CIInfo(
-                        service=ci_service,
-                        bash_commands=bash_commands,
-                        callgraph=callgraph,
-                        provenance_assets=[],
-                        latest_release={},
-                        provenances=[Provenance().payload],
+
+                if build_tool.is_detected(analyze_ctx.component.repository.fs_path):
+                    logger.info("The repo uses %s build tool.", build_tool.name)
+                    analyze_ctx.dynamic_data["build_spec"]["tools"].append(build_tool)
+
+            if not analyze_ctx.dynamic_data["build_spec"]["tools"]:
+                logger.info(
+                    "Cannot discover any build tools for %s or the build tools are not supported.",
+                    analyze_ctx.component.repository.complete_name,
+                )
+
+            # Determine the CI services.
+            for ci_service in CI_SERVICES:
+                ci_service.load_defaults()
+                ci_service.set_api_client()
+
+                if ci_service.is_detected(analyze_ctx.component.repository.fs_path):
+                    logger.info("The repo uses %s CI service.", ci_service.name)
+
+                    # Parse configuration files and generate IRs.
+                    # Add the bash commands to the context object to be used by other checks.
+                    callgraph = ci_service.build_call_graph(
+                        analyze_ctx.component.repository.fs_path,
+                        os.path.relpath(analyze_ctx.component.repository.fs_path, analyze_ctx.output_dir),
                     )
-                )
+                    bash_commands = list(ci_service.extract_all_bash(callgraph)) if callgraph else []
+                    analyze_ctx.dynamic_data["ci_services"].append(
+                        CIInfo(
+                            service=ci_service,
+                            bash_commands=bash_commands,
+                            callgraph=callgraph,
+                            provenance_assets=[],
+                            latest_release={},
+                            provenances=[Provenance().payload],
+                        )
+                    )
 
         # TODO: Get the list of skipped checks from user configuration
         skipped_checks: list[SkippedInfo] = []
@@ -715,3 +823,18 @@ class Analyzer:
         results = registry.scan(analyze_ctx, skipped_checks)
 
         return results
+
+
+class DuplicateCmpError(DuplicateError):
+    """This class is used for duplicated software component errors."""
+
+    def __init__(self, *args, context: AnalyzeContext | None = None, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        """Create a DuplicateCmpError instance.
+
+        Parameters
+        ----------
+        context: AnalyzeContext | None
+            The context in which the exception is raised.
+        """
+        super().__init__(*args, **kwargs)
+        self.context: AnalyzeContext | None = context

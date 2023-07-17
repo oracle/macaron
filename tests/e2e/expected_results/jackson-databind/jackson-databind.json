@@ -1,10 +1,10 @@
 {
     "metadata": {
-        "timestamps": "2023-03-16 18:17:02"
+        "timestamps": "2023-06-14 14:08:20"
     },
     "target": {
         "info": {
-            "full_name": "FasterXML/jackson-databind",
+            "full_name": "pkg:github.com/FasterXML/jackson-databind@f0af53d085eb2aa9f7f6199846cc526068e09977",
             "local_cloned_path": "git_repos/github_com/FasterXML/jackson-databind",
             "remote_path": "https://github.com/FasterXML/jackson-databind",
             "branch": "2.14",

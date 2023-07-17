@@ -13,47 +13,66 @@ from macaron.config.defaults import defaults, load_defaults
 from macaron.slsa_analyzer import git_url
 
 
-def test_get_repo_name_from_url() -> None:
-    """
-    Test the extract repo name and full name from url method
-    """
-    repo_name = "repo_name"
-    repo_full_name = "owner/repo_name"
-
-    valid_git_urls = [
-        f"git@github.com:owner/{repo_name}.git",
-        f"git@gitlab.com:owner/{repo_name}.git",
-        f"https://gitlab.com/owner/{repo_name}",
-        f"https://github.com/owner/{repo_name}.git",
-        f"https://github.com/owner/{repo_name}",
-        f"git+https://github.com/owner/{repo_name}",
-        f"git+ssh://git@github.com/owner/{repo_name}.git",
-        f"git+ssh://git@github.com/owner/{repo_name}",
-        f"git+ssh://git@github.com:owner/{repo_name}.git",
-        f"git+ssh://git@github.com:8080/owner/{repo_name}",
-        f"ssh://git@github.com/owner/{repo_name}.git",
-        f"ssh://git@github.com/owner/{repo_name}",
-        f"ssh://git@github.com:owner/{repo_name}.git",
-        f"ssh://git@github.com:8080/owner/{repo_name}",
-        f"scm:ssh://git@github.com:8080/owner/{repo_name}",
-    ]
-    invalid_git_urls = [
-        "",
-        f"{repo_name}.git",
-        f"{repo_name}.git/",
-        "ssh://git@github.com:8080/invalid/",
-        "https://gitlab.com/invalid.git",
-        "ssh://git@github.com:8080/",
-        "git@gitlab.com:owner",
-    ]
-
-    # Test get repo name
+@pytest.mark.parametrize(
+    ("valid_git_urls", "invalid_git_urls", "repo_name", "repo_full_name", "repo_complete_name"),
+    [
+        (
+            [
+                "git@github.com:owner/repo_name.git",
+                "https://github.com/owner/repo_name.git",
+                "https://github.com/owner/repo_name",
+                "git+https://github.com/owner/repo_name",
+                "git+ssh://git@github.com/owner/repo_name.git",
+                "git+ssh://git@github.com/owner/repo_name",
+                "git+ssh://git@github.com:owner/repo_name.git",
+                "git+ssh://git@github.com:8080/owner/repo_name",
+                "ssh://git@github.com/owner/repo_name.git",
+                "ssh://git@github.com/owner/repo_name",
+                "ssh://git@github.com:owner/repo_name.git",
+                "ssh://git@github.com:8080/owner/repo_name",
+                "scm:ssh://git@github.com:8080/owner/repo_name",
+            ],
+            [
+                "",
+                "repo_name.git",
+                "repo_name.git/",
+                "ssh://git@github.com:8080/invalid/",
+                "ssh://git@github.com:8080/",
+            ],
+            "repo_name",
+            "owner/repo_name",
+            "github.com/owner/repo_name",
+        ),
+        (
+            [
+                "git@gitlab.com:owner/repo_name.git",
+            ],
+            [
+                "https://gitlab.com/invalid",
+                "git@gitlab.com/name.git",
+                "git@gitlab.com:owner/",
+            ],
+            "repo_name",
+            "owner/repo_name",
+            "gitlab.com/owner/repo_name",
+        ),
+    ],
+)
+def test_get_repo_name_from_url(
+    valid_git_urls: list[str], invalid_git_urls: list[str], repo_name: str, repo_full_name: str, repo_complete_name: str
+) -> None:
+    """Test the extract repo name, full name, and complete name from url method."""
+    # Test get repo name.
     assert all(git_url.get_repo_name_from_url(url) == repo_name for url in valid_git_urls)
     assert not any(git_url.get_repo_name_from_url(url) for url in invalid_git_urls)
 
-    # Test get repo full name
+    # Test get repo full name.
     assert all(git_url.get_repo_full_name_from_url(url) == repo_full_name for url in valid_git_urls)
     assert not any(git_url.get_repo_full_name_from_url(url) for url in invalid_git_urls)
+
+    # Test get repo complete name.
+    assert all(git_url.get_repo_complete_name_from_url(url) == repo_complete_name for url in valid_git_urls)
+    assert not any(git_url.get_repo_complete_name_from_url(url) for url in invalid_git_urls)
 
 
 def test_is_remote_repo() -> None:

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the implementation of the VCS check."""
@@ -39,11 +39,11 @@ class VCSCheck(BaseCheck):
         """
         # TODO: refactor and use the git_service and its API client to create
         # the hyperlink tag to allow validation.
-        if not ctx.git_obj:
-            check_result["justification"].append({"This is not a Git repository": ctx.remote_path})
+        if not ctx.component.repository:
+            check_result["justification"].append({"This is not a Git repository": ctx.component.purl})
             return CheckResultType.FAILED
 
-        check_result["justification"].append({"This is a Git repository": ctx.remote_path})
+        check_result["justification"].append({"This is a Git repository": ctx.component.repository.remote_path})
         return CheckResultType.PASSED
 
 

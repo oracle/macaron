@@ -5,11 +5,11 @@
 
 import logging
 
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
-from macaron.database.database_manager import ORMBase
-from macaron.database.table_definitions import CheckFactsTable
+from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
@@ -19,11 +19,20 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class BuildScriptTable(CheckFactsTable, ORMBase):
-    """Check result table for build_script."""
+class BuildScriptFacts(CheckFacts):
+    """The ORM mapping for justifications in build_script check."""
 
     __tablename__ = "_build_script_check"
-    build_tool_name: Mapped[str] = mapped_column(String)
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+
+    #: The name of the tool used to build.
+    build_tool_name: Mapped[str] = mapped_column(String, nullable=False)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "_build_script_check",
+    }
 
 
 class BuildScriptCheck(BaseCheck):
@@ -71,7 +80,7 @@ class BuildScriptCheck(BaseCheck):
         for tool in build_tools:
             pass_msg = f"The target repository uses build tool {tool.name}."
             check_result["justification"].append(pass_msg)
-            check_result["result_tables"].append(BuildScriptTable(build_tool_name=tool.name))
+            check_result["result_tables"].append(BuildScriptFacts(build_tool_name=tool.name))
 
         return CheckResultType.PASSED
 

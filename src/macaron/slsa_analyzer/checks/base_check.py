@@ -94,7 +94,7 @@ class BaseCheck:
             logger.info(
                 "Check %s is skipped on target %s, comment: %s",
                 self.check_id,
-                target.repo_full_name,
+                target.component.purl,
                 skipped_info["suppress_comment"],
             )
         else:
@@ -103,7 +103,7 @@ class BaseCheck:
                 "Check %s run %s on target %s, result: %s",
                 self.check_id,
                 check_result["result_type"].value,
-                target.repo_full_name,
+                target.component.purl,
                 check_result["justification"],
             )
 

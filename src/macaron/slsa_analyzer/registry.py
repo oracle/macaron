@@ -393,7 +393,12 @@ class Registry:
                                 current_future.cancel()
                                 self.runner_queue.put(current_runner)
                                 return results
-                        except concurrent.futures.TimeoutError:
+                        except (
+                            concurrent.futures.TimeoutError,
+                            concurrent.futures.CancelledError,
+                            concurrent.futures.InvalidStateError,
+                            concurrent.futures.BrokenExecutor,
+                        ):
                             # The check is still running, put the future back into the queue.
                             futures_queue.put((current_runner, current_check_id, current_future))
 

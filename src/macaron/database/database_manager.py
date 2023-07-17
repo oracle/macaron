@@ -2,14 +2,17 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This DatabaseManager module handles the sqlite database connection."""
+import functools
 import logging
-from types import TracebackType
-from typing import Any, Optional
+import os
+import typing
 
 import sqlalchemy.exc
-from sqlalchemy import Table, create_engine, insert, select
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Session
 
+from macaron.config.defaults import defaults
+from macaron.config.global_config import global_config
 from macaron.database.views import create_view
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -20,13 +23,7 @@ class ORMBase(DeclarativeBase):
 
 
 class DatabaseManager:
-    """
-    This class handles and manages the connection to sqlite database during the session.
-
-    Note that since SQLAlchemy lazy-loads the fields of mapped ORM objects, if the database connection is closed any
-    orm-mapped objects will become invalid. As such the lifetime of the database manager must be longer than any of the
-    objects added to the database (using add() or add_and_commit()).
-    """
+    """This class handles and manages the connection to sqlite database during the session."""
 
     def __init__(self, db_path: str, base: type[DeclarativeBase] = ORMBase):
         """Initialize instance.
@@ -36,87 +33,9 @@ class DatabaseManager:
         db_path : str
             The path to the target database.
         """
-        self.engine = create_engine(f"sqlite+pysqlite:///{db_path}", echo=False, future=True)
+        self.engine = create_engine(f"sqlite+pysqlite:///{db_path}", echo=False)
         self.db_name = db_path
-        self.session = Session(self.engine)
         self._base = base
-
-    def terminate(self) -> None:
-        """Terminate the connection to the database, discarding any transaction in progress."""
-        self.session.close()
-
-    def __enter__(self) -> "DatabaseManager":
-        return self
-
-    def __exit__(
-        self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
-    ) -> None:
-        self.terminate()
-
-    def add_and_commit(self, item) -> None:  # type: ignore
-        """Add an ORM object to the session and commit it.
-
-        Following commit any auto-updated primary key values in the object will be populated and readable.
-        The object can still be modified and read after being committed.
-
-        Parameters
-        ----------
-        item: the orm-mapped object to add to the database.
-        """
-        try:
-            self.session.add(item)
-            self.session.commit()
-        except sqlalchemy.exc.SQLAlchemyError as error:
-            logger.error("Database error %s", error)
-            self.session.rollback()
-
-    def add(self, item) -> None:  # type: ignore
-        """Add an item to the database and flush it.
-
-        Once added the row remains accessible and modifiable, and the primary key field is populated to reflect its
-        record in the database.
-
-        If terminate is called before commit the object will be lost.
-
-        Parameters
-        ----------
-        item:
-            the orm-mapped object to add to the database.
-        """
-        try:
-            self.session.add(item)
-            self.session.flush()
-        except sqlalchemy.exc.SQLAlchemyError as error:
-            logger.error("Database error %s", error)
-            self.session.rollback()
-
-    def insert(self, table: Table, values: dict) -> None:
-        """Populate the table with provided values and add it to the database using the core api.
-
-        Parameters
-        ----------
-        table: Table
-            The Table to insert to
-        values: dict
-            The mapping from column names to values to insert into the Table
-        """
-        try:
-            self.execute(insert(table).values(**values))
-        except sqlalchemy.exc.SQLAlchemyError as error:
-            logger.error("Database error %s", error)
-
-    def execute(self, query: Any) -> None:
-        """
-        Execute a SQLAlchemy core api query using a short-lived engine connection.
-
-        Parameters
-        ----------
-        query: Any
-            The SQLalchemy query to execute
-        """
-        with self.engine.connect() as conn:
-            conn.execute(query)
-            conn.commit()
 
     def create_tables(self) -> None:
         """
@@ -135,3 +54,62 @@ class DatabaseManager:
             self._base.metadata.create_all(self.engine, checkfirst=True)
         except sqlalchemy.exc.SQLAlchemyError as error:
             logger.error("Database error on create tables %s", error)
+
+
+class cache_return:  # pylint: disable=invalid-name # noqa: N801
+    """The decorator to create a singleton DB session."""
+
+    def __init__(self, function: typing.Callable) -> None:
+        functools.update_wrapper(self, function)
+        self.function = function
+
+    def __call__(self, *args: typing.Any, **kwargs: typing.Any) -> typing.Any:
+        """Store or get the cached function return value."""
+        try:
+            return self.return_value  # type: ignore[has-type]
+        except AttributeError:
+            self.return_value = self.function(*args, **kwargs)  # pylint: disable=attribute-defined-outside-init
+            return self.return_value
+
+    def clear(self) -> None:
+        """Remove the cached return value."""
+        try:
+            delattr(self, "return_value")
+        except AttributeError:
+            logger.debug("No cached return value to remove.")
+
+
+@cache_return
+def get_db_manager() -> DatabaseManager:
+    """
+    Get the database manager singleton object.
+
+    Returns
+    -------
+    DatabaseManager
+        The database manager singleton object.
+    """
+    db_path = os.path.join(global_config.output_path, defaults.get("database", "db_name", fallback="macaron.db"))
+    db_man = DatabaseManager(db_path)
+    return db_man
+
+
+@cache_return
+def get_db_session(session: Session | None = None) -> Session | None:
+    """Get the current database session as a singleton object.
+
+    This function expects to receive the Session object on the first
+    call to cache it. The subsequent calls do not need to pass the
+    Session object unless `get_db_session.clear()` is called.
+
+    Parameters
+    ----------
+    Session | None
+        The session object to be cached.
+
+    Returns
+    -------
+    Session | None
+        The current database session as a singleton object.
+    """
+    return session

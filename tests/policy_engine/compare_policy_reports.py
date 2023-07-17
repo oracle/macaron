@@ -7,6 +7,7 @@
 import json
 import logging
 import sys
+from collections import Counter
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -14,15 +15,15 @@ logger: logging.Logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def check_policies(result: list, expected: list) -> bool:
+def check_policies(results: list, expectations: list) -> bool:
     """
     Compare result policies against expected policies.
 
     Parameters
     ----------
-    result: list
+    results: list
         The result policy list.
-    expected:
+    expectations:
         The expected policy list.
 
     Returns
@@ -36,18 +37,25 @@ def check_policies(result: list, expected: list) -> bool:
     """
     # If not empty, policy is always a list with one item.
     # For example, Datalog declaration for failed_policies is `failed_policies(policy_id: symbol)`.
-    res = {policy[0] for policy in result if policy}
-    exp = {policy[0] for policy in expected if policy}
     fail_count = 0
-    if len(res) == len(exp):
-        if (fails := len(res.difference(exp))) > 0:
-            fail_count += fails
+    if len(results) == len(expectations):
+        # Iterate through the rows returned by the policy engine.
+        for index, exp in enumerate(expectations):
+            res = results[index]
+            if (fails := abs(len(res) - len(exp))) > 0:
+                fail_count += fails
+                continue
+            # Do not check the first element, which is the primary key.
+            c_fail = Counter(exp[1:])
+            c_fail.subtract(Counter(res[1:]))
+            if (fails := len([value for value in c_fail.values() if value != 0])) > 0:
+                fail_count += fails
     else:
-        fail_count += abs(len(res) - len(exp))
+        fail_count += abs(len(results) - len(expectations))
 
     if fail_count > 0:
         raise ValueError(
-            f"Results do not match in {fail_count} item(s): Result is [{','.join(res)}] but expected [{','.join(exp)}]"
+            f"Results do not match in {fail_count} item(s): Result is {results} but expected {expectations}"
         )
     return True
 
@@ -64,13 +72,26 @@ def main() -> int:
                 check_policies(result["failed_policies"], expected["failed_policies"])
             except ValueError as error:
                 return_code = 1
-                logger.error("Failed policies: %s", error)
+                logger.error("failed_policies: %s", error)
 
             try:
                 check_policies(result["passed_policies"], expected["passed_policies"])
             except ValueError as error:
                 return_code = 1
-                logger.error("Passed policies: %s", error)
+                logger.error("passed_policies: %s", error)
+
+            try:
+                check_policies(result["component_violates_policy"], expected["component_violates_policy"])
+            except ValueError as error:
+                return_code = 1
+                logger.error("component_violates_policy: %s", error)
+
+            try:
+                check_policies(result["component_satisfies_policy"], expected["component_satisfies_policy"])
+            except ValueError as error:
+                return_code = 1
+                logger.error("component_satisfies_policy: %s", error)
+
     except FileNotFoundError as error:
         logger.error(error)
         return_code = 1

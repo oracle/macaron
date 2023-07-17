@@ -1,10 +1,10 @@
 {
     "metadata": {
-        "timestamps": "2023-03-17 10:54:29"
+        "timestamps": "2023-06-14 13:33:34"
     },
     "target": {
         "info": {
-            "full_name": "apache/maven",
+            "full_name": "pkg:github.com/apache/maven@6767f2500f1d005924ccff27f04350c253858a84",
             "local_cloned_path": "git_repos/github_com/apache/maven",
             "remote_path": "https://github.com/apache/maven",
             "branch": "master",
@@ -116,7 +116,7 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "The target repository uses build tool maven in jenkins to deploy."
+                        "The target repository uses build tool maven in jenkins using artifactsPublisher to deploy."
                     ],
                     "result_type": "PASSED"
                 },
@@ -212,8 +212,8 @@
         }
     },
     "dependencies": {
-        "analyzed_deps": 0,
-        "unique_dep_repos": 0,
+        "analyzed_deps": 2,
+        "unique_dep_repos": 2,
         "checks_summary": [
             {
                 "check_id": "mcn_provenance_expectation_1",
@@ -225,11 +225,11 @@
             },
             {
                 "check_id": "mcn_build_as_code_1",
-                "num_deps_pass": 0
+                "num_deps_pass": 2
             },
             {
                 "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 0
+                "num_deps_pass": 2
             },
             {
                 "check_id": "mcn_trusted_builder_level_three_1",
@@ -237,7 +237,7 @@
             },
             {
                 "check_id": "mcn_build_script_1",
-                "num_deps_pass": 0
+                "num_deps_pass": 2
             },
             {
                 "check_id": "mcn_provenance_level_three_1",
@@ -245,9 +245,22 @@
             },
             {
                 "check_id": "mcn_build_service_1",
-                "num_deps_pass": 0
+                "num_deps_pass": 2
             }
         ],
-        "dep_status": []
+        "dep_status": [
+            {
+                "id": "guava",
+                "description": "Analysis Completed.",
+                "report": "guava.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "mockito",
+                "description": "Analysis Completed.",
+                "report": "mockito.html",
+                "status": "AVAILABLE"
+            }
+        ]
     }
 }

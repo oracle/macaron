@@ -1,10 +1,10 @@
 {
     "metadata": {
-        "timestamps": "2023-03-16 18:18:15"
+        "timestamps": "2023-06-14 13:33:34"
     },
     "target": {
         "info": {
-            "full_name": "google/guava",
+            "full_name": "pkg:github.com/google/guava@d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4",
             "local_cloned_path": "git_repos/github_com/google/guava",
             "remote_path": "https://github.com/google/guava",
             "branch": "master",

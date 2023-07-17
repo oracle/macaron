@@ -10,7 +10,7 @@ import sys
 from sqlalchemy import MetaData, create_engine, select
 
 from macaron import __version__ as mcn_version
-from macaron.database.table_definitions import AnalysisTable
+from macaron.database.table_definitions import Analysis
 from macaron.policy_engine.souffle import SouffleError, SouffleWrapper
 from macaron.policy_engine.souffle_code_generator import (
     SouffleProgram,
@@ -131,7 +131,7 @@ def _check_version(database_path: str) -> None:
 
     with engine.connect() as conn:
         versions = conn.execute(
-            select(AnalysisTable.macaron_version).where(AnalysisTable.macaron_version != mcn_version)
+            select(Analysis.macaron_version).where(Analysis.macaron_version != mcn_version)
         ).scalar()
         if versions is not None:
             logger.error("Database generated with unsupported versions (%s).", versions)

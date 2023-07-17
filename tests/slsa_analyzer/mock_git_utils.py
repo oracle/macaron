@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -11,6 +11,7 @@ import git
 from git.exc import GitError
 from pydriller.git import Git
 
+from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 
 
@@ -91,8 +92,20 @@ def prepare_repo_for_testing(
     if git_repo.repo.untracked_files:
         commit_files(git_repo, git_repo.repo.untracked_files)
 
-    analyze_ctx = AnalyzeContext(
-        "repo_name", str(repo_path), git_repo, "master", "", "", str(macaron_path), str(output_dir)
+    component = Component(
+        purl="pkg:github/package-url/purl-spec@244fd47e07d1004f0aed9c",
+        analysis=Analysis(),
+        repository=Repository(
+            complete_name="github.com/package-url/purl-spec",
+            remote_path=str(repo_path),
+            branch_name="master",
+            commit_sha="",
+            commit_date="",
+            files=git_repo.files(),
+            fs_path=str(repo_path),
+        ),
     )
+
+    analyze_ctx = AnalyzeContext(component=component, macaron_path=str(macaron_path), output_dir=str(output_dir))
 
     return analyze_ctx

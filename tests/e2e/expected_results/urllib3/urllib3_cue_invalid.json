@@ -1,10 +1,10 @@
 {
     "metadata": {
-        "timestamps": "2023-06-08 10:26:11"
+        "timestamps": "2023-06-16 20:26:58"
     },
     "target": {
         "info": {
-            "full_name": "urllib3/urllib3",
+            "full_name": "pkg:github.com/urllib3/urllib3@87a0ecee6e691fe5ff93cd000c0158deebef763b",
             "local_cloned_path": "git_repos/github_com/urllib3/urllib3",
             "remote_path": "https://github.com/urllib3/urllib3",
             "branch": "main",
@@ -352,7 +352,7 @@
                     ],
                     "justification": [
                         "Successfully verified level 3: ",
-                        "verify passed: urllib3-2.0.3-py3-none-any.whl,verify passed: urllib3-2.0.3.tar.gz"
+                        "verify passed : urllib3-2.0.3-py3-none-any.whl,verify passed : urllib3-2.0.3.tar.gz"
                     ],
                     "result_type": "PASSED"
                 },
