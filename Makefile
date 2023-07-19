@@ -277,8 +277,7 @@ dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt:
 	echo $(SOURCE_DATE_EPOCH) > dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt
 
 # Build the HTML documentation from the package's source.
-DOCS_SOURCE := $(shell find docs/source -type f -name '*.rst' -or -name '*.py' -or \
-	-name '*.png' -or -name '*.json' -or -name '*.cue' -or -name '*.dl')
+DOCS_SOURCE := $(shell git ls-files docs/source)
 .PHONY: docs
 docs: docs/_build/.built-on
 docs/_build/.built-on: $(DOCS_SOURCE)
