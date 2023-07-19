@@ -4,6 +4,10 @@
 """
 ORM Table definitions used by macaron internally.
 
+The current ERD of Macaron is shown below:
+
+.. figure:: /assets/er-diagram.svg
+
 For tables associated with checks see base_check.py.
 """
 from datetime import datetime
