@@ -217,9 +217,12 @@ class Analyzer:
                 logger.info("Analysis Completed!")
                 return os.EX_OK
         except sqlalchemy.exc.SQLAlchemyError as error:
-            logger.error("Database error %s", error)
+            logger.critical("Database error %s", error)
             logger.critical("The main repository analysis failed. Cannot generate a report for it.")
-            sys.exit(os.EX_DATAERR)
+            return os.EX_DATAERR
+        except RuntimeError as error:
+            logger.critical(error)
+            return os.EX_DATAERR
 
     def generate_reports(self, report: Report) -> None:
         """Generate the report of the analysis to all registered reporters.

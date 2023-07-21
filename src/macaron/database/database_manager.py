@@ -62,19 +62,23 @@ class DatabaseManager:
             logger.error("Database error on create tables %s", error)
 
 
-class cache_return:  # pylint: disable=invalid-name # noqa: N801
+_T = typing.TypeVar("_T")
+_P = typing.ParamSpec("_P")
+
+
+class cache_return(typing.Generic[_T, _P]):  # pylint: disable=invalid-name # noqa: N801
     """The decorator to create a singleton DB session."""
 
-    def __init__(self, function: typing.Callable) -> None:
+    def __init__(self, function: typing.Callable[_P, _T]) -> None:
         functools.update_wrapper(self, function)
         self.function = function
 
-    def __call__(self, *args: typing.Any, **kwargs: typing.Any) -> typing.Any:
+    def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _T:
         """Store or get the cached function return value."""
         try:
-            return self.return_value  # type: ignore[has-type]
+            return self.return_value
         except AttributeError:
-            self.return_value = self.function(*args, **kwargs)  # pylint: disable=attribute-defined-outside-init
+            self.return_value: _T = self.function(*args, **kwargs)  # pylint: disable=attribute-defined-outside-init
             return self.return_value
 
     def clear(self) -> None:
@@ -101,7 +105,7 @@ def get_db_manager() -> DatabaseManager:
 
 
 @cache_return
-def get_db_session(session: Session | None = None) -> Session | None:
+def get_db_session(session: Session | None = None) -> Session:
     """Get the current database session as a singleton object.
 
     This function expects to receive the Session object on the first
@@ -115,7 +119,14 @@ def get_db_session(session: Session | None = None) -> Session | None:
 
     Returns
     -------
-    Session | None
+    Session
         The current database session as a singleton object.
+
+    Raises
+    ------
+    RuntimeError
+        Happens if a database session is not created.
     """
+    if session is None:
+        raise RuntimeError("Failed to create a database session.")
     return session
