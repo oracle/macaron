@@ -22,7 +22,7 @@ from macaron import __version__
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
-from macaron.database.database_manager import get_db_manager, get_db_session
+from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.dependency_analyzer import (
     DependencyAnalyzer,
@@ -103,7 +103,7 @@ class Analyzer:
         self.reporters: list[FileReporter] = []
 
         # Get the db manager singleton object.
-        self.db_man = get_db_manager()
+        self.db_man: DatabaseManager = get_db_manager()
 
         # Create database tables: all checks have been registered so all tables should be mapped now
         self.db_man.create_tables()
@@ -140,7 +140,7 @@ class Analyzer:
         try:
             with Session(self.db_man.engine) as session, session.begin():
                 # Cache the singleton session object.
-                db_session = get_db_session(session)
+                db_session: Session = get_db_session(session)
 
                 # Create a transient SQLAlchemy instance for Analysis.
                 # Note that the changes will be committed to the DB when the
