@@ -18,6 +18,8 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
 
     # It is stored in the database as a string
     impl = String
+
+    #: :meta private:
     cache_ok = True
 
     def process_bind_param(self, value: Optional[Any], dialect: Any) -> None | str:

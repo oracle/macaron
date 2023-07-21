@@ -6,7 +6,7 @@
 import logging
 
 from macaron.config.defaults import defaults
-from macaron.database.table_definitions import CheckFacts, CheckResult, SLSARequirement
+from macaron.database.table_definitions import CheckFacts, MappedCheckResult, SLSARequirement
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 
@@ -32,7 +32,7 @@ def store_analyze_context_to_db(analyze_ctx: AnalyzeContext) -> None:
 
     # Store check result table.
     for check_result in analyze_ctx.check_results.values():
-        check_result_row = CheckResult(
+        check_result_row = MappedCheckResult(
             check_id=check_result["check_id"],
             component=analyze_ctx.component,
             passed=check_result["result_type"] == CheckResultType.PASSED,

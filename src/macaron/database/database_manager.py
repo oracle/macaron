@@ -19,7 +19,13 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ORMBase(DeclarativeBase):
-    """ORM base class."""
+    """ORM base class.
+
+    To prevent Sphinx from rendering the docstrings in `DeclarativeBase`, make
+    this docstring private:
+
+    :meta private:
+    """
 
 
 class DatabaseManager:

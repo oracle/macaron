@@ -139,7 +139,7 @@ class Component(PackageURLMixin, ORMBase):
     slsarequirement: Mapped[list["SLSARequirement"]] = relationship(back_populates="component", lazy="immediate")
 
     #: The one-to-many relationship with the result table.
-    checkresult: Mapped[list["CheckResult"]] = relationship(back_populates="component", lazy="immediate")
+    checkresult: Mapped[list["MappedCheckResult"]] = relationship(back_populates="component", lazy="immediate")
 
     #: The one-to-many relationship with checks.
     checkfacts: Mapped[list["CheckFacts"]] = relationship(back_populates="component", lazy="immediate")
@@ -349,7 +349,8 @@ class SLSARequirement(ORMBase):
     component: Mapped["Component"] = relationship(back_populates="slsarequirement", lazy="immediate")
 
 
-class CheckResult(ORMBase):
+# TODO: Rename this class to CheckResult once the `check_result.CheckResult` is removed.
+class MappedCheckResult(ORMBase):
     """ORM class for the result of a check, is automatically added for each check."""
 
     __tablename__ = "_check_result"
@@ -406,7 +407,7 @@ class CheckFacts(ORMBase):
     check_type: Mapped[str]
 
     #: A many-to-one relationship with check results.
-    checkresult: Mapped["CheckResult"] = relationship(back_populates="checkfacts")
+    checkresult: Mapped["MappedCheckResult"] = relationship(back_populates="checkfacts")
 
     #: The polymorphic inheritance configuration.
     __mapper_args__ = {
