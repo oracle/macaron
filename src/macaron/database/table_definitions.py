@@ -62,7 +62,13 @@ class Analysis(ORMBase):
 
 
 class PackageURLMixin:
-    """The SQLAlchemy mixin for Package URLs (PURL)."""
+    """The SQLAlchemy mixin for Package URLs (PURL).
+
+    See https://github.com/package-url/purl-spec
+
+    TODO: Use the PackageURLMixin from https://github.com/package-url/packageurl-python
+    once it makes a new release (> 0.11.1).
+    """
 
     #: A short code to identify the type of the package.
     type: Mapped[str] = mapped_column(  # noqa: A003

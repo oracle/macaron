@@ -19,6 +19,7 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
     # It is stored in the database as a string
     impl = String
 
+    # To prevent Sphinx from rendering the docstrings for `cache_ok`, make this docstring private.
     #: :meta private:
     cache_ok = True
 
