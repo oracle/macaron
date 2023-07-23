@@ -5,7 +5,7 @@
 # to build and run the Docker image.
 # This image is based on the container-registry.oracle.com/os/oraclelinux:9-slim image and contains the following
 # components:
-#   Python3.11.2 (with pip 22.3.1 and setuptools 65.5.1) compiled and installed from source.
+#   Python3.11.4 (with pip 22.3.1 and setuptools 65.5.1) compiled and installed from source.
 #   Oracle JDK 17 installed from dnf.
 #   Souffle 2.3 compiled and installed from source.
 #   Other runtime libraries (e.g sqlite-devel) which are installed from dnf.
@@ -14,7 +14,7 @@ FROM container-registry.oracle.com/os/oraclelinux:9-slim@sha256:e2aa8053b4a15f27
 
 ENV HOME="/home/macaron" \
     # Setting Python related environment variables.
-    PYTHON3_VERSION=3.11.2 \
+    PYTHON3_VERSION=3.11.4 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L12
