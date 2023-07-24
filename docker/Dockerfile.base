@@ -5,7 +5,7 @@
 # to build and run the Docker image.
 # This image is based on the container-registry.oracle.com/os/oraclelinux:9-slim image and contains the following
 # components:
-#   Python3.11.4 (with pip 22.3.1 and setuptools 65.5.1) compiled and installed from source.
+#   Python3.11.4 compiled and installed from source.
 #   Oracle JDK 17 installed from dnf.
 #   Souffle 2.3 compiled and installed from source.
 #   Other runtime libraries (e.g sqlite-devel) which are installed from dnf.
