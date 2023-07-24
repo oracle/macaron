@@ -777,10 +777,10 @@ class Analyzer:
         remote_path = analyze_ctx.component.repository.remote_path if analyze_ctx.component.repository else None
         git_service = self.get_git_service(remote_path)
         if isinstance(git_service, NoneGitService):
-            logger.error("Unsupported git service for %s", analyze_ctx.component.purl)
+            logger.error("Unable to find repository or unsupported git service for %s", analyze_ctx.component.purl)
         else:
             logger.info(
-                "Detect git service %s for %s.", git_service.name, analyze_ctx.component.repository.complete_name
+                "Detected git service %s for %s.", git_service.name, analyze_ctx.component.repository.complete_name
             )
             analyze_ctx.dynamic_data["git_service"] = git_service
 
