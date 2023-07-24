@@ -33,8 +33,6 @@ def test_dump_prelude(database_setup) -> None:  # type: ignore # pylint: disable
 def test_eval_policy(database_setup) -> None:  # type: ignore # pylint: disable=unused-argument,redefined-outer-name
     """Test loading the policy from file."""
     res = run_souffle(os.path.join(POLICY_FILE, DATABASE_FILE), POLICY_FILE)
-    # res.pop("component_satisfies_policy")
-    # res.pop("component_violates_policy")
     assert res == {
         "passed_policies": [["trusted_builder"]],
         "component_satisfies_policy": [["1", "github.com/slsa-framework/slsa-verifier", "trusted_builder"]],
