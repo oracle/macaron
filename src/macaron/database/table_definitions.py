@@ -302,7 +302,7 @@ class Repository(ORMBase):
             # It is a locally cloned repository.
             self.name = parts[1]
 
-        self.files = [str(f) for f in files] if files else []
+        self.files = files or []
 
 
 class SLSALevel(ORMBase):
