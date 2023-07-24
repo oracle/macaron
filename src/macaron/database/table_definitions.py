@@ -288,7 +288,7 @@ class Repository(ORMBase):
         # We populate the PURL type, namespace, and name columns using the complete_name.
         # Because locally cloned repositories may miss the namespace, we need to check the length.
         # Note that the length of parts is already checked and should be either 2 or 3.
-        parts = [str(p) for p in Path(self.complete_name).parts]
+        parts = Path(self.complete_name).parts
 
         # TODO: check if we need to trim ".com" from the netloc following the examples in
         # https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst
