@@ -403,6 +403,9 @@ class Analyzer:
     def add_repository(self, branch_name: str, git_obj: Git) -> Repository | None:
         """Create a repository instance for a target repository.
 
+        The repository instances are transient objects for SQLAlchemy, which may be
+        added to the database ultimately.
+
         Parameters
         ----------
         branch_name : str
@@ -488,6 +491,9 @@ class Analyzer:
         self, config: Configuration, analysis: Analysis, existing_records: dict[str, Record] | None = None
     ) -> Component:
         """Add a software component if it does not exist in the DB already.
+
+        The component instances are transient objects for SQLAlchemy, which may be
+        added to the database ultimately.
 
         Parameters
         ----------
