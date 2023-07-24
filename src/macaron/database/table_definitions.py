@@ -332,8 +332,9 @@ class SLSARequirement(ORMBase):
     __tablename__ = "_slsa_requirement"
 
     # A unique constraint as defined below makes sure a component will have only one slsa requirement
-    # of the same name.
-    __table_args__ = (UniqueConstraint("component_id", "requirement_name", name="uq__requirement_name_component_id"),)
+    # of the same name. We follow Alembic's uq_%(table_name)s_%(column_0_name) naming convention.
+    # See https://alembic.sqlalchemy.org/en/latest/naming.html
+    __table_args__ = (UniqueConstraint("component_id", "requirement_name", name="uq__slsa_requirement_component_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
 
