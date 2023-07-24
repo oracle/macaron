@@ -541,13 +541,13 @@ class Analyzer:
 
             repository = self.add_repository(req_branch, git_obj)
 
-            # mypy is not able to resolve the repository attributes.
-            purl = PackageURL(
-                type=repository.type,  # type: ignore[union-attr]
-                namespace=repository.owner,  # type: ignore[union-attr]
-                name=repository.name,  # type: ignore[union-attr]
-                version=repository.commit_sha,  # type: ignore[union-attr]
-            )
+            if repository:
+                purl = PackageURL(
+                    type=repository.type,
+                    namespace=repository.owner,
+                    name=repository.name,
+                    version=repository.commit_sha,
+                )
 
         # If PURL is not found, raise an exception.
         if not purl:
@@ -559,7 +559,7 @@ class Analyzer:
         return Component(purl=purl.to_string(), analysis=analysis, repository=repository)
 
     def get_analyze_ctx(self, component: Component) -> AnalyzeContext:
-        """Return the analyze context for a target repository.
+        """Return the analyze context for a target component.
 
         Parameters
         ----------
