@@ -5,8 +5,6 @@
 
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.database.table_definitions import Analysis, Component, Repository
-from macaron.slsa_analyzer.analyzer import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.checks.provenance_l3_check import ProvenanceL3Check
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -16,6 +14,7 @@ from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from tests.conftest import MockAnalyzeContext
 
 from ...macaron_testcase import MacaronTestCase
 
@@ -49,18 +48,6 @@ class MockGhAPIClient(GhAPIClient):
 
     def download_asset(self, url: str, download_path: str) -> bool:
         return True
-
-
-class MockAnalyzeContext(AnalyzeContext):
-    """This class initializes a Component for the AnalyzeContext."""
-
-    def __init__(self, *args, **kwargs) -> None:  # type: ignore
-        component = Component(
-            purl="pkg:github.com/package-url/purl-spec@244fd47e07d1004f0aed9c",
-            analysis=Analysis(),
-            repository=Repository(complete_name="github.com/package-url/purl-spec", fs_path=""),
-        )
-        super().__init__(component, *args, **kwargs)
 
 
 class TestProvL3Check(MacaronTestCase):
