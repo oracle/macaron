@@ -391,9 +391,11 @@ class MappedCheckResult(ORMBase):
 
 class CheckFacts(ORMBase):
     """
-    This class allows SQLAlchemy to load elements polymorphically, using single table inheritance.
+    This class allows SQLAlchemy to load elements polymorphically, using joined table inheritance.
 
     All tables for checks must inherit this class, these fields are automatically filled in by the analyzer.
+
+    See https://docs.sqlalchemy.org/en/20/orm/inheritance.html#joined-table-inheritance
     """
 
     __tablename__ = "_check_facts"
