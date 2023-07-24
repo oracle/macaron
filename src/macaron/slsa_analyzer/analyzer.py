@@ -275,7 +275,7 @@ class Analyzer:
             try:
                 dep_analyzer = build_tool.get_dep_analyzer(main_ctx.component.repository.fs_path)
             except DependencyAnalyzerError as error:
-                logger.error("Unable to find a dependency analyzer: %s", error)
+                logger.error("Unable to find a dependency analyzer for %s: %s", build_tool.name, error)
                 return {}
 
             if isinstance(dep_analyzer, NoneDependencyAnalyzer):
@@ -352,7 +352,7 @@ class Analyzer:
         config: Configuration
             The configuration for running Macaron.
         analysis: Analysis
-            The row added for the analysis.
+            The current analysis instance.
         existing_records : Optional[dict[str, Record]]
             The mapping of existing records that the analysis has run successfully.
 
@@ -500,7 +500,7 @@ class Analyzer:
         config: Configuration
             The configuration for running Macaron.
         analysis: Analysis
-            The row added for the analysis.
+            The current analysis instance.
         existing_records : dict[str, Record] | None
             The mapping of existing records that the analysis has run successfully.
 
@@ -516,7 +516,7 @@ class Analyzer:
         PURLNotFoundError
             No PURL is found for the component.
         DuplicateCmpError
-            The component is analyzed in the same session.
+            The component is already analyzed in the same session.
         """
         # Note: the component created in this function will be added to the database.
         repo_path = config.get_value("path")
