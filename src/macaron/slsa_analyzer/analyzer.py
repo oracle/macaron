@@ -776,8 +776,7 @@ class Analyzer:
         # Determine the git service.
         remote_path = analyze_ctx.component.repository.remote_path if analyze_ctx.component.repository else None
         git_service = self.get_git_service(remote_path)
-        # Check remote_path to help mypy.
-        if remote_path is None or isinstance(git_service, NoneGitService):
+        if isinstance(git_service, NoneGitService):
             logger.error("Unsupported git service for %s", analyze_ctx.component.purl)
         else:
             logger.info(
