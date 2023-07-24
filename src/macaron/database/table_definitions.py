@@ -179,7 +179,7 @@ class Component(PackageURLMixin, ORMBase):
 
     @property
     def report_file_name(self) -> str:
-        """Set the report file name using the name.
+        """Return the report file name using the PURL string's name attribute.
 
         Return
         ------
@@ -192,7 +192,7 @@ class Component(PackageURLMixin, ORMBase):
 
     @property
     def report_file_purl(self) -> str:
-        """Set the report file name for this component using the PURL string.
+        """Return the report file name for this component using the PURL string.
 
         Return
         ------
@@ -208,7 +208,7 @@ class Component(PackageURLMixin, ORMBase):
 
     @property
     def report_dir_name(self) -> str:
-        """Set the report directory name for this component using the PURL string.
+        """Return the report directory name for this component using the PURL string.
 
         Return
         ------
