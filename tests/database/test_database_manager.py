@@ -40,9 +40,6 @@ def db_man() -> Iterable:
     db_manager = DatabaseManager(DB_PATH, base=Base)
     con = sqlite3.connect(DB_PATH)
     with con:
-        con.execute("drop table if exists test_table;")
-        con.execute("drop table if exists new_test_table;")
-        con.execute("drop table if exists _test_table;")
         con.execute("drop table if exists _test_orm_table;")
         con.execute("drop view if exists test_orm_table;")
         con.commit()
