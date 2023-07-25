@@ -120,7 +120,7 @@ update_changelog_on_bump = true
 version_files = [
     "src/macaron/__init__.py:__version__",
 ]
-major_version_zero = false
+major_version_zero = true
 version = "0.2.0"
 
 
