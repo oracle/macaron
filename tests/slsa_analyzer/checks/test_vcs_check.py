@@ -5,6 +5,7 @@
 
 import os
 
+from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext, ChecksOutputs
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.checks.vcs_check import VCSCheck
@@ -24,19 +25,11 @@ class MockAnalyzeContext(AnalyzeContext):
     """This class can be initiated without a git obj."""
 
     def __init__(self) -> None:
-        self.repo_full_name = "org/name"
-        self.repo_name = "name"
-        self.repo_path = "path/to/repo"
-        self.ctx_data: dict = {}
         # Make the VCS Check fails.
-        self.git_obj = None
-        self.file_list: list = []
+        self.component = Component(purl="pkg:invalid/invalid", analysis=Analysis(), repository=None)
+        self.ctx_data: dict = {}
         self.slsa_level = SLSALevels.LEVEL0
         self.is_full_reach = False
-        self.branch_name = "master"
-        self.commit_sha = ""
-        self.commit_date = ""
-        self.remote_path = "https://github.com/org/name"
         self.dynamic_data: ChecksOutputs = ChecksOutputs(
             git_service=NoneGitService(),
             build_spec=BuildSpec(tools=[]),
@@ -54,10 +47,15 @@ class TestVCSCheck(MacaronTestCase):
     def test_vcs_check(self) -> None:
         """Test the vcs check."""
         check = VCSCheck()
-        git_repo = initiate_repo(REPO_DIR)
+        initiate_repo(REPO_DIR)
         check_result = CheckResult(justification=[])  # type: ignore
 
-        use_git_repo = AnalyzeContext("repo_name", REPO_DIR, git_repo, "master", "", "")
+        component = Component(
+            purl="pkg:github/package-url/purl-spec@244fd47e07d1004f0aed9c",
+            analysis=Analysis(),
+            repository=Repository(complete_name="github.com/package-url/purl-spec"),
+        )
+        use_git_repo = AnalyzeContext(component=component, macaron_path=REPO_DIR, output_dir="")
         assert check.run_check(use_git_repo, check_result) == CheckResultType.PASSED
 
         no_git_repo = MockAnalyzeContext()

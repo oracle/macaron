@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Optional
 
-from macaron.slsa_analyzer.provenance.expectations.cue.cue_expectation import CUEExpectation
+from macaron.database.table_definitions import CUEExpectation
 from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -44,22 +44,22 @@ class ExpectationRegistry:
             else:
                 logger.error("Unsupported expectation format: %s", expectation_path)
 
-    def get_expectation_for_target(self, repo_full_name: str) -> Optional[Expectation]:
+    def get_expectation_for_target(self, repo_complete_name: str) -> Optional[Expectation]:
         """
         Get the expectation that applies to a repository.
 
         Parameters
         ----------
-        repo_full_name: str
-            The full name of the repository, formatted "organization/repo-name"
+        repo_complete_name: str
+            The complete name of the repository, formatted "git_host/organization/repo-name"
 
         Returns
         -------
         Optional[Expectation]
             An expectation if one is found, otherwise None.
         """
-        if repo_full_name in self.expectations:
-            return self.expectations[repo_full_name]
+        if repo_complete_name in self.expectations:
+            return self.expectations[repo_complete_name]
         if "any" in self.expectations:
             return self.expectations["any"]
         return None

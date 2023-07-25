@@ -4,92 +4,52 @@
 """The database_store module contains the methods to store analysis results to the database."""
 
 import logging
-from datetime import datetime, timezone
 
-from macaron import __version__
 from macaron.config.defaults import defaults
-from macaron.database.database_manager import DatabaseManager
-from macaron.database.table_definitions import (
-    AnalysisTable,
-    CheckFactsTable,
-    CheckResultTable,
-    RepositoryAnalysis,
-    SLSARequirement,
-)
-from macaron.output_reporter.results import Record
+from macaron.database.table_definitions import CheckFacts, MappedCheckResult, SLSARequirement
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def store_analyze_context_to_db(db_man: DatabaseManager, analysis: AnalysisTable, analyze_ctx: AnalyzeContext) -> dict:
+def store_analyze_context_to_db(analyze_ctx: AnalyzeContext) -> None:
     """Store the content of an analyzed context into the database.
 
     Parameters
     ----------
-    db_man : DatabaseManager
-        The database manager object managing the session to which to add the results.
-    analysis: AnalysisTable
-        The analysis record which this result belongs to.
     analyze_ctx : AnalyzeContext
         The analyze context to store into the database.
     """
-    logger.info(
+    logger.debug(
         "Inserting result of %s to %s",
-        analyze_ctx.repo_full_name,
+        analyze_ctx.component.purl,
         defaults.get("database", "db_name", fallback="macaron.db"),
     )
 
-    # Store old result format
-    repository_analysis = RepositoryAnalysis(repository_id=analyze_ctx.repository_table.id, analysis_id=analysis.id)
-    db_man.add_and_commit(repository_analysis)
+    # Store the context's slsa level.
+    analyze_ctx.get_slsa_level_table()
 
-    # Store the context's slsa level
-    db_man.add_and_commit(analyze_ctx.get_slsa_level_table())
+    # Store check result table.
+    for check_result in analyze_ctx.check_results.values():
+        check_result_row = MappedCheckResult(
+            check_id=check_result["check_id"],
+            component=analyze_ctx.component,
+            passed=check_result["result_type"] == CheckResultType.PASSED,
+        )
 
-    # Store check result table
-    for check in analyze_ctx.check_results.values():
-        check_table = CheckResultTable()
-        check_table.check_id = check["check_id"]
-        check_table.repository = analyze_ctx.repository_table.id
-        check_table.passed = check["result_type"] == CheckResultType.PASSED
-        check_table.skipped = check["result_type"] == CheckResultType.SKIPPED
-        db_man.add(check_table)
+        if "result_tables" in check_result:
+            for check_facts in check_result["result_tables"]:
+                if isinstance(check_facts, CheckFacts):
+                    check_facts.checkresult = check_result_row
+                    check_facts.component = check_result_row.component
 
-        if "result_tables" in check:
-            for table in check["result_tables"]:
-                if isinstance(table, CheckFactsTable):
-                    table.repository = analyze_ctx.repository_table.id
-                    table.check_result = check_table.id
-                db_man.add_and_commit(table)
-
-    # Store SLSA Requirements
-    results = analyze_ctx.get_analysis_result_data()
+    # Store SLSA Requirements.
     for key, value in analyze_ctx.ctx_data.items():
         if value.is_pass:
-            requirement = SLSARequirement(
-                repository=analyze_ctx.repository_table.id,
-                requirement=key.name,
-                requirement_name=value.name,
+            SLSARequirement(
+                component=analyze_ctx.component,
+                requirement_name=key.name,
+                requirement_short_description=value.name,
                 feedback=value.feedback,
             )
-            db_man.add_and_commit(requirement)
-
-    return results
-
-
-def store_analysis_to_db(db_man: DatabaseManager, main_record: Record) -> AnalysisTable:
-    """Store the analysis to the database."""
-    analysis = AnalysisTable(
-        analysis_time=datetime.now(tz=timezone.utc),
-        macaron_version=__version__,
-    )
-    if main_record.context is not None:
-        analysis.repository = main_record.context.repository_table.id
-    else:
-        return analysis
-
-    db_man.add_and_commit(analysis)
-
-    return analysis

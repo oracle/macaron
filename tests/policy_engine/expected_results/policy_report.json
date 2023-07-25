@@ -5,16 +5,11 @@
         ]
     ],
     "failed_policies": [],
-    "repo_violates_policy": [],
-    "repo_satisfies_policy": [
+    "component_violates_policy": [],
+    "component_satisfies_policy": [
         [
             "1",
-            "slsa-framework/slsa-verifier",
-            "auth-provenance"
-        ],
-        [
-            "2",
-            "slsa-framework/slsa-verifier",
+            "github.com/slsa-framework/slsa-verifier",
             "auth-provenance"
         ]
     ]

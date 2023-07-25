@@ -1,11 +1,11 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for the Runner module."""
 
 from graphlib import TopologicalSorter
-from unittest.mock import MagicMock
 
+from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
@@ -118,7 +118,12 @@ class TestRunner(MacaronTestCase):
 
         # The pre-defined checks do not use AnalyzeContext (for simplicity) so
         # we can create an empty AnalyzeContext instance.
-        target = AnalyzeContext("", "", MagicMock())
+        component = Component(
+            purl="pkg:github.com/package-url/purl-spec@244fd47e07d1004f0aed9c",
+            analysis=Analysis(),
+            repository=Repository(complete_name="github.com/package-url/purl-spec", fs_path=""),
+        )
+        target = AnalyzeContext(component=component)
         results = registry.scan(target, [])
 
         assert results["mcn_e_1"]["result_type"] == results["mcn_d_1"]["result_type"] == CheckResultType.SKIPPED

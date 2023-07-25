@@ -4,15 +4,14 @@
 """This module contains the tests for the Trusted Builder Level three check."""
 
 import os
-from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.parsers.actionparser import parse as parse_action
-from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.checks.trusted_builder_l3_check import TrustedBuilderL3Check
 from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType, GitHubActions, GitHubNode
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from tests.conftest import MockAnalyzeContext
 
 from ...macaron_testcase import MacaronTestCase
 
@@ -45,7 +44,7 @@ class TestTrustedBuilderL3Check(MacaronTestCase):
             latest_release={},
             provenances=[],
         )
-        ctx = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        ctx = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
         ctx.dynamic_data["ci_services"] = [ci_info]
 
         # This GitHub Actions workflow is using a trusted builder.

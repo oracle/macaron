@@ -35,5 +35,5 @@ def test_get_build_dirs(snapshot: list, poetry_tool: Poetry, mock_repo: Path) ->
 def test_poetry_build_tool(poetry_tool: Poetry, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
     """Test the Poetry build tool."""
     base_dir = Path(__file__).parent
-    repo = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
-    assert poetry_tool.is_detected(repo.git_obj.path) == expected_value
+    ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
+    assert poetry_tool.is_detected(ctx.component.repository.fs_path) == expected_value

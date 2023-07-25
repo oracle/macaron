@@ -4,7 +4,7 @@
     },
     "target": {
         "info": {
-            "full_name": "timyarkov/multibuild_test",
+            "full_name": "pkg:github.com/timyarkov/multibuild_test@a8b0efe24298bc81f63217aaa84776c3d48976c5",
             "local_cloned_path": "git_repos/github_com/timyarkov/multibuild_test",
             "remote_path": "https://github.com/timyarkov/multibuild_test",
             "branch": "main",

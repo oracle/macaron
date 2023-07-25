@@ -20,4 +20,4 @@ Policy("example-transitive", parent, "") :-
     !transitive_dependency(parent, _).
 
 // apply the policy to everything
-apply_policy_to("example-transitive", repo) :- is_repo(repo, _).
+apply_policy_to("example-transitive", repo_id) :- is_repo(repo_id, _, _).
