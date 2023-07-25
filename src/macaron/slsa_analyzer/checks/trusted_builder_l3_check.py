@@ -8,12 +8,12 @@ import logging
 import os
 from typing import Any
 
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
 from macaron.config.defaults import defaults
-from macaron.database.database_manager import ORMBase
-from macaron.database.table_definitions import CheckFactsTable
+from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
@@ -25,13 +25,26 @@ from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class ResultTable(CheckFactsTable, ORMBase):
-    """Check justification table for trusted_builder."""
+class TrustedBuilderFacts(CheckFacts):
+    """The ORM mapping for justifications in trusted_builder."""
 
     __tablename__ = "_trusted_builder_check"
-    build_tool_name: Mapped[str] = mapped_column(String)
-    ci_service_name: Mapped[str] = mapped_column(String)
-    build_trigger: Mapped[str] = mapped_column(String)
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+
+    #: The name of the tool used to build.
+    build_tool_name: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: The CI service name used to build.
+    ci_service_name: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: The entrypoint script that triggers the build.
+    build_trigger: Mapped[str] = mapped_column(String, nullable=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "_trusted_builder_check",
+    }
 
 
 class TrustedBuilderL3Check(BaseCheck):
@@ -110,16 +123,16 @@ class TrustedBuilderL3Check(BaseCheck):
                     continue
                 if workflow_name in trusted_builders:
                     html_url = ci_service.has_latest_run_passed(
-                        ctx.repo_full_name,
-                        ctx.branch_name,
-                        ctx.commit_sha,
-                        ctx.commit_date,
+                        ctx.component.repository.full_name,
+                        ctx.component.repository.branch_name,
+                        ctx.component.repository.commit_sha,
+                        ctx.component.repository.commit_date,
                         os.path.basename(callee.caller_path),
                     )
 
                     caller_link = ci_service.api_client.get_file_link(
-                        ctx.repo_full_name,
-                        ctx.commit_sha,
+                        ctx.component.repository.full_name,
+                        ctx.component.repository.commit_sha,
                         ci_service.api_client.get_relative_path_of_workflow(os.path.basename(callee.caller_path)),
                     )
 
@@ -130,8 +143,8 @@ class TrustedBuilderL3Check(BaseCheck):
                         predicate["builder"]["id"] = callee.name
                         predicate["invocation"]["configSource"][
                             "uri"
-                        ] = f"{ctx.remote_path}@refs/heads/{ctx.branch_name}"
-                        predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.commit_sha
+                        ] = f"{ctx.component.repository.remote_path}@refs/heads/{ctx.component.repository.branch_name}"
+                        predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.component.repository.commit_sha
                         predicate["invocation"]["configSource"]["entryPoint"] = caller_link
                         predicate["metadata"]["buildInvocationId"] = html_url
                         inferred_provenances.append(provenance)
@@ -157,7 +170,7 @@ class TrustedBuilderL3Check(BaseCheck):
             if inferred_provenances:
                 ci_info["provenances"] = inferred_provenances
 
-        check_result["result_tables"] = [ResultTable(**result) for result in result_values]
+        check_result["result_tables"] = [TrustedBuilderFacts(**result) for result in result_values]
 
         if found_builder:
             return CheckResultType.PASSED

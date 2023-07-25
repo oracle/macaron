@@ -27,23 +27,23 @@ violating_dependencies(parent, property) :-
 // Exceptions for violating dependencies.
 .decl exception_dependencies(dependency: number)
 exception_dependencies(dependency) :-
-    is_repo(dependency, "mapstruct/mapstruct").
+    is_repo(dependency, "github.com/mapstruct/mapstruct", _).
 
 exception_dependencies(dependency) :-
-    is_repo(dependency, "mysql/mysql-connector-j").
+    is_repo(dependency, "github.com/mysql/mysql-connector-j", _).
 
 exception_dependencies(dependency) :-
-    is_repo(dependency, "aws/aws-msk-iam-auth").
+    is_repo(dependency, "github.com/aws/aws-msk-iam-auth", _).
 
 exception_dependencies(dependency) :-
-    is_repo(dependency, "h2database/h2database").
+    is_repo(dependency, "github.com/h2database/h2database", _).
 
 // Projects that we expect to generate a provenance.
 .decl verify_provenance(repo_num: number, repo_name: symbol)
 verify_provenance(repo_num, repo_name) :-
-    is_repo(repo_num, repo_name),
+    is_repo(repo_num, repo_name, _),
     check_passed(repo_num, "mcn_provenance_level_three_1"),
     check_passed(repo_num, "mcn_provenance_expectation_1").
 
 // Apply the policy.
-apply_policy_to("oci_micronaut_dependencies", repo) :- is_repo(repo, "oracle-quickstart/oci-micronaut").
+apply_policy_to("oci_micronaut_dependencies", repo_id) :- is_repo(repo_id, "github.com/oracle-quickstart/oci-micronaut", _).

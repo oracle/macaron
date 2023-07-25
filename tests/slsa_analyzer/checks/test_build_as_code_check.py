@@ -5,7 +5,6 @@
 
 import os
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -13,7 +12,6 @@ import macaron
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.parsers.actionparser import parse as parse_action
 from macaron.parsers.bashparser import BashCommands
-from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.build_tool.pip import Pip
@@ -26,9 +24,11 @@ from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from tests.conftest import MockAnalyzeContext
 
 
 def test_build_as_code_check(
+    macaron_path: Path,
     maven_tool: Maven,
     gradle_tool: Gradle,
     poetry_tool: Poetry,
@@ -53,31 +53,32 @@ def test_build_as_code_check(
     )
 
     # The target repo uses Maven build tool but does not deploy artifacts.
-    use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    use_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     use_build_tool.dynamic_data["build_spec"]["tools"] = [maven_tool]
     assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
     # The target repo uses Gradle build tool but does not deploy artifacts.
-    use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    use_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     use_build_tool.dynamic_data["build_spec"]["tools"] = [gradle_tool]
     assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
     # The target repo uses Poetry build tool but does not deploy artifacts.
-    use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    use_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     use_build_tool.dynamic_data["build_spec"]["tools"] = [poetry_tool]
     assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
     # The target repo uses Pip build tool but does not deploy artifacts.
-    use_build_tool = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    use_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     use_build_tool.dynamic_data["build_spec"]["tools"] = [pip_tool]
     assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
 
     # The target repo does not use a build tool.
-    no_build_tool = AnalyzeContext("no_build_tool", os.path.abspath("./"), MagicMock())
+    no_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
+    no_build_tool.dynamic_data["build_spec"]["tools"] = []
     assert check.run_check(no_build_tool, check_result) == CheckResultType.FAILED
 
     # Use mvn deploy to deploy the artifact.
-    maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    maven_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     bash_commands["commands"] = [["mvn", "deploy"]]
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
@@ -94,7 +95,7 @@ def test_build_as_code_check(
     assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
 
     # Use mvn but do not deploy artifacts.
-    no_maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    no_maven_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     no_maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     bash_commands["commands"] = [["mvn", "verify"]]
     no_maven_deploy.dynamic_data["ci_services"] = [ci_info]
@@ -106,42 +107,42 @@ def test_build_as_code_check(
     assert check.run_check(no_maven_deploy, check_result) == CheckResultType.FAILED
 
     # Use gradle to deploy the artifact.
-    gradle_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool]
     bash_commands["commands"] = [["./gradlew", "publishToSonatype"]]
     gradle_deploy.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(gradle_deploy, check_result) == CheckResultType.PASSED
 
     # Use poetry publish to publish the artifact.
-    poetry_publish = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    poetry_publish = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     poetry_publish.dynamic_data["build_spec"]["tools"] = [poetry_tool]
     bash_commands["commands"] = [["poetry", "publish"]]
     poetry_publish.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(poetry_publish, check_result) == CheckResultType.PASSED
 
     # Use Poetry but do not deploy artifacts.
-    no_poetry_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    no_poetry_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     no_poetry_deploy.dynamic_data["build_spec"]["tools"] = [poetry_tool]
     bash_commands["commands"] = [["poetry", "upload"]]
     no_poetry_deploy.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(no_maven_deploy, check_result) == CheckResultType.FAILED
 
     # Use twine upload to deploy the artifact.
-    twine_upload = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    twine_upload = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     twine_upload.dynamic_data["build_spec"]["tools"] = [pip_tool]
     bash_commands["commands"] = [["twine", "upload", "dist/*"]]
     twine_upload.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(twine_upload, check_result) == CheckResultType.PASSED
 
     # Use flit publish to deploy the artifact.
-    flit_publish = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    flit_publish = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     flit_publish.dynamic_data["build_spec"]["tools"] = [pip_tool]
     bash_commands["commands"] = [["flit", "publish"]]
     flit_publish.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(flit_publish, check_result) == CheckResultType.PASSED
 
     # Test Jenkins.
-    maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    maven_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     ci_info["service"] = jenkins_service
     bash_commands["commands"] = []
@@ -149,7 +150,7 @@ def test_build_as_code_check(
     assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
 
     # Test Travis.
-    maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    maven_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     ci_info["service"] = travis_service
     bash_commands["commands"] = []
@@ -157,7 +158,7 @@ def test_build_as_code_check(
     assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
 
     # Test Circle CI.
-    maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    maven_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     ci_info["service"] = circle_ci_service
     bash_commands["commands"] = []
@@ -165,7 +166,7 @@ def test_build_as_code_check(
     assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
 
     # Test GitLab CI.
-    maven_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    maven_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     ci_info["service"] = gitlab_ci_service
     bash_commands["commands"] = []
@@ -173,34 +174,35 @@ def test_build_as_code_check(
     assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
 
     # Using both gradle and maven with valid commands to deploy
-    gradle_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
     bash_commands["commands"] = [["./gradlew", "publishToSonatype"], ["mvn", "deploy"]]
     gradle_deploy.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(gradle_deploy, check_result) == CheckResultType.PASSED
 
     # Using both gradle and maven, but maven incorrect (singular failure in a list)
-    gradle_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
     bash_commands["commands"] = [["./gradlew", "publishToSonatype"], ["mvn", "verify"]]
     gradle_deploy.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(gradle_deploy, check_result) == CheckResultType.PASSED
 
     # Using both gradle and maven, both incorrect
-    gradle_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
     bash_commands["commands"] = [["./gradlew", "build"], ["mvn", "verify"]]
     gradle_deploy.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(gradle_deploy, check_result) == CheckResultType.FAILED
 
     # No build tools present
-    gradle_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     gradle_deploy.dynamic_data["build_spec"]["tools"] = []
     gradle_deploy.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(gradle_deploy, check_result) == CheckResultType.FAILED
 
 
 def test_gha_workflow_deployment(
+    macaron_path: Path,
     pip_tool: Pip,
     github_actions_service: GitHubActions,
 ) -> None:
@@ -219,7 +221,7 @@ def test_gha_workflow_deployment(
     workflows_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "github", "workflow_files")
 
     # This Github Actions workflow uses gh-action-pypi-publish to publish the artifact.
-    gha_deploy = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+    gha_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     gha_deploy.dynamic_data["build_spec"]["tools"] = [pip_tool]
     gha_deploy.dynamic_data["ci_services"] = [ci_info]
 
@@ -265,7 +267,7 @@ def test_gha_workflow_deployment(
     ],
 )
 def test_travis_ci_deploy(
-    gradle_tool: Gradle, travis_service: Jenkins, repo_path: Path, expect_result: CheckResultType
+    macaron_path: Path, gradle_tool: Gradle, travis_service: Jenkins, repo_path: Path, expect_result: CheckResultType
 ) -> None:
     """Test the Gradle build tool."""
     check = BuildAsCodeCheck()
@@ -278,8 +280,9 @@ def test_travis_ci_deploy(
         latest_release={},
         provenances=[],
     )
-    check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
-    gradle_deploy = AnalyzeContext("use_build_tool", str(repo_path.absolute()), MagicMock())
+    check_result = CheckResult(justification=[])  # type: ignore
+    gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
+    gradle_deploy.component.repository.fs_path = str(repo_path.absolute())
     gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool]
     gradle_deploy.dynamic_data["ci_services"] = [ci_info]
 

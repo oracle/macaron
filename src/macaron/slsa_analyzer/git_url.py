@@ -410,6 +410,41 @@ def get_repo_full_name_from_url(url: str) -> str:
     return full_name
 
 
+def get_repo_complete_name_from_url(url: str) -> str:
+    """Return the complete name of the repo from a remote repo url.
+
+    The complete name will be in the form ``<git_host>/org/name``.
+
+    Parameters
+    ----------
+    url: str
+        The remote url of the target repository.
+
+    Returns
+    -------
+    str
+        The unique path resolved from the remote path or an empty string if errors.
+
+    Examples
+    --------
+    >>> get_repo_complete_name_from_url("github.com/apache/maven")
+    'github.com/apache/maven'
+    """
+    remote_url = get_remote_vcs_url(url)
+    if not remote_url:
+        logger.debug("URL '%s' is not valid.", url)
+        return ""
+
+    parsed_url = parse_remote_url(remote_url)
+    if not parsed_url:
+        # Shouldn't happen.
+        logger.critical("URL '%s' is not valid even though it has been validated.", url)
+        return ""
+
+    git_host = parsed_url.netloc
+    return os.path.join(git_host, parsed_url.path.strip("/"))
+
+
 def get_remote_origin_of_local_repo(git_obj: Git) -> str:
     """Get the origin remote of a repository.
 

@@ -1,13 +1,10 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This modules contains tests for the provenance available check."""
 
-import os
-from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.slsa_analyzer.analyzer import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.checks.provenance_available_check import ProvenanceAvailableCheck
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -17,6 +14,7 @@ from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from tests.conftest import MockAnalyzeContext
 
 from ...macaron_testcase import MacaronTestCase
 
@@ -82,7 +80,7 @@ class TestProvAvailableCheck(MacaronTestCase):
         )
 
         # Repo has provenances.
-        ctx = AnalyzeContext("use_build_tool", os.path.abspath("./"), MagicMock())
+        ctx = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
         ctx.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(ctx, check_result) == CheckResultType.PASSED
 

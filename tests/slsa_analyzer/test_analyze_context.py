@@ -9,11 +9,11 @@ from unittest import TestCase
 from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.slsa_req import Category, ReqName, SLSAReq
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from tests.conftest import MockAnalyzeContext
 
 
 class TestAnalyzeContext(TestCase):
@@ -38,10 +38,12 @@ class TestAnalyzeContext(TestCase):
         """
         Set up the sample AnalyzeContext instance
         """
-        self.analyze_ctx = AnalyzeContext("owner/repo_name", self.MOCK_REPO_PATH, self.MOCK_GIT_OBJ)
+        self.analyze_ctx = MockAnalyzeContext(macaron_path="", output_dir="")
+        self.analyze_ctx.component.repository.full_name = "owner/repo_name"
+        self.analyze_ctx.component.repository.fs_path = self.MOCK_REPO_PATH
+        self.analyze_ctx.component.repository.commit_sha = self.MOCK_COMMIT_HASH
+        self.analyze_ctx.component.repository.commit_date = self.MOCK_DATE
         self.analyze_ctx.ctx_data = self.MOCK_CTX_DATA
-        self.analyze_ctx.commit_sha = self.MOCK_COMMIT_HASH
-        self.analyze_ctx.commit_date = self.MOCK_DATE
 
     def test_update_req_status(self) -> None:
         """
@@ -73,13 +75,6 @@ class TestAnalyzeContext(TestCase):
             False,
             "bulk_update",
         )
-
-    def test_get_insert_data(self) -> None:
-        """
-        Test get_insert_data method
-        """
-        insert_data = self.analyze_ctx.get_analysis_result_data()
-        assert all(key.name in insert_data for key in self.analyze_ctx.ctx_data)
 
     def test_provenances(self) -> None:
         """Test getting the provenances data from an AnalyzeContext instance."""

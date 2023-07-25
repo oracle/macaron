@@ -34,3 +34,15 @@ class CloneError(MacaronError):
 
 class RepoCheckOutError(MacaronError):
     """Happens when there is an error when checking out the correct revision of a git repository."""
+
+
+class RepoNotFoundError(MacaronError):
+    """Happens if a repository is not found."""
+
+
+class PURLNotFoundError(MacaronError):
+    """Happens if the PURL identifier for a software component is not found."""
+
+
+class DuplicateError(MacaronError):
+    """The class for errors for duplicated data."""

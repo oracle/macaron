@@ -21,4 +21,4 @@ verify_provenance(id) :-
     check_passed(id, "mcn_provenance_expectation_1").
 
 // Apply the policy.
-apply_policy_to("urllib3", id) :- is_repo(id, "urllib3/urllib3").
+apply_policy_to("urllib3", id) :- is_repo(id, "github.com/urllib3/urllib3", _).

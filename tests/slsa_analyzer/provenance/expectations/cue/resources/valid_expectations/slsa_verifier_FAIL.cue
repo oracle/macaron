@@ -1,5 +1,5 @@
 {
-    target: "slsa-framework/slsa-verifier",
+    target: "pkg:github.com/slsa-framework/slsa-verifier",
     predicate: {
         invocation: {
             configSource: {

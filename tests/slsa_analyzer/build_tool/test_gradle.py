@@ -35,5 +35,5 @@ def test_get_build_dirs(snapshot: list, gradle_tool: Gradle, mock_repo: Path) ->
 def test_gradle_build_tool(gradle_tool: Gradle, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
     """Test the Gradle build tool."""
     base_dir = Path(__file__).parent
-    repo = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
-    assert gradle_tool.is_detected(repo.git_obj.path) == expected_value
+    ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
+    assert gradle_tool.is_detected(ctx.component.repository.fs_path) == expected_value

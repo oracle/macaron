@@ -3,11 +3,10 @@
 
 """This module provides a base class for provenance expectation verifiers."""
 
-import os
-from dataclasses import dataclass, field
 from typing import Any, Callable, Self
 
-from macaron.database.table_definitions import PolicyTable
+from sqlalchemy.orm import Mapped, mapped_column
+
 from macaron.errors import ExpectationRuntimeError
 from macaron.util import JsonType
 
@@ -15,54 +14,40 @@ ExpectationFn = Callable[[Any], bool]
 
 
 # pylint: disable=invalid-name
-@dataclass
 class Expectation:
-    """The expectation is used to validate a target provenance.
+    """The SQLAlchemy mixin for the expectation used to validate a target provenance."""
 
-    Parameters
-    ----------
-    ID : str
-        The ID of the expectation.
-    description : str
-        The description.
-    path: os.PathLike | str
-        The path to the expectation file.
-    target: str
-        The full repository name this expectation applies to.
-    text: str | None
-        The full text content of the expectation.
-    sha: str | None
-        The sha256sum digest of the expectation.
-    expectation_type: str
-        The kind of expectation, e.g., CUE
-    """
+    #: The description.
+    description: Mapped[str] = mapped_column(nullable=False)
 
-    ID: str
-    description: str
-    path: os.PathLike | str
-    target: str
-    text: str | None
-    sha: str | None
-    expectation_type: str
-    _validator: ExpectationFn | None = field(default=None)
+    #: The path to the expectation file.
+    path: Mapped[str] = mapped_column(nullable=False)
 
-    def get_expectation_table(self) -> PolicyTable:
-        """Get the bound ORM object for the policy."""
-        return PolicyTable(
-            policy_id=self.ID,
-            description=self.description,
-            policy_type=self.expectation_type,
-            sha=self.sha,
-            text=self.text,
-        )
+    #: The full repository name this expectation applies to.
+    target: Mapped[str] = mapped_column(nullable=False)
+
+    #: The full text content of the expectation.
+    text: Mapped[str] = mapped_column(nullable=True)
+
+    #: The sha256sum digest of the expectation.
+    sha: Mapped[str] = mapped_column(nullable=True)
+
+    #: The kind of expectation, e.g., CUE.
+    expectation_type: Mapped[str] = mapped_column(nullable=False)
+
+    # mypy cannot resolve *args, **kwargs, unfortunately.
+    def __init__(self, *args, **kwargs) -> None:  # type: ignore
+        """Create an instance provenance expectation."""
+        self._validator: ExpectationFn | None = None
+        super().__init__(*args, **kwargs)
 
     @classmethod
-    def make_expectation(cls, expectation_path: os.PathLike | str) -> Self | None:
+    def make_expectation(cls, expectation_path: str) -> Self | None:
         """Generate an expectation instance from an expectation file.
 
         Parameters
         ----------
-        expectation_path : os.PathLike
+        expectation_path : str
             The path to the expectation file.
 
         Returns
@@ -73,7 +58,7 @@ class Expectation:
         raise NotImplementedError()
 
     def __str__(self) -> str:
-        return f"Expectation(id='{self.ID}', description='{self.description}', path='{self.path}')"
+        return f"Expectation(description='{self.description}', path='{self.path}', target='{self.target}')"
 
     def validate(self, prov: JsonType) -> bool:
         """Validate the provenance against this expectation.
@@ -93,6 +78,6 @@ class Expectation:
             If there are errors happened during the validation process.
         """
         if not self._validator:
-            raise ExpectationRuntimeError(f"Cannot find the validator for expectation {self.ID}")
+            raise ExpectationRuntimeError(f"Cannot find the validator for expectation {self.path}")
 
         return self._validator(prov)  # pylint: disable=not-callable

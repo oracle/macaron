@@ -1,0 +1,37 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+/* ------------------------------- policies ------------------------------- */
+
+
+Policy("trusted_builder", repo_id, name) :-
+        repository_analysis(_, component_id, repo_id, name),
+        check_passed(component_id, "mcn_trusted_builder_level_three_1").
+
+Policy("trusted_builder", repo_id, name) :-
+        repository_analysis(_, component_id, repo_id, name),
+        check_facts(check_id, component_id, result_id, _),
+        build_service_check(check_id, build_tool_name, ci_service, build_trigger,
+        build_command, build_status_url),
+        passed = 1,
+        match("github-actions", build_tool_name).
+
+Policy("trusted_builder", repo_id, name) :-
+        repository_analysis(_, component_id, repo_id, name),
+        check_facts(check_id, component_id, result_id, _),
+        build_script_check(check_id, build_tool_name),
+        passed = 1,
+        match("github-actions", build_tool_name).
+
+
+apply_policy_to("trusted_builder", repo_id) :-
+    repository_analysis(_, component_id, repo_id, name),
+    provenance(_, component_id, _, _, _, _).
+
+apply_policy_to("aggregate_l4", repo_id) :-
+    repository(repo_id, _, "github.com/slsa-framework/slsa-verifier", _, _, _, _, _, _, _, _, _, _).
+
+apply_policy_to("aggregate_l2", repo_id) :-
+    repository(repo_id, _, _, _, _, _, _, _, _, _, _, _, _).

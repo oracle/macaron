@@ -1,10 +1,10 @@
 {
     "metadata": {
-        "timestamps": "2023-03-17 11:13:53"
+        "timestamps": "2023-06-14 11:15:48"
     },
     "target": {
         "info": {
-            "full_name": "jenkinsci/plot-plugin",
+            "full_name": "pkg:github.com/jenkinsci/plot-plugin@55b059187e252b35ac0d6cb52268833ee1bb7380",
             "local_cloned_path": "git_repos/github_com/jenkinsci/plot-plugin",
             "remote_path": "https://github.com/jenkinsci/plot-plugin",
             "branch": "master",

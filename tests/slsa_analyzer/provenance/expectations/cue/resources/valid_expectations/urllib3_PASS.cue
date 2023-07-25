@@ -1,5 +1,5 @@
 {
-    target: "urllib3/urllib3",
+    target: "pkg:github.com/urllib3/urllib3",
     predicate: {
         invocation: {
             configSource: {

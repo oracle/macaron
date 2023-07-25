@@ -9,14 +9,6 @@ macaron.slsa\_analyzer.provenance.expectations.cue package
 Submodules
 ----------
 
-macaron.slsa\_analyzer.provenance.expectations.cue.cue\_expectation module
---------------------------------------------------------------------------
-
-.. automodule:: macaron.slsa_analyzer.provenance.expectations.cue.cue_expectation
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 macaron.slsa\_analyzer.provenance.expectations.cue.cue\_validator module
 ------------------------------------------------------------------------
 

@@ -1,10 +1,10 @@
 {
     "metadata": {
-        "timestamps": "2023-03-16 18:18:15"
+        "timestamps": "2023-06-14 13:33:34"
     },
     "target": {
         "info": {
-            "full_name": "mockito/mockito",
+            "full_name": "pkg:github.com/mockito/mockito@512ee3949484e4765038a0410cd7a7f1b73cc655",
             "local_cloned_path": "git_repos/github_com/mockito/mockito",
             "remote_path": "https://github.com/mockito/mockito",
             "branch": "main",

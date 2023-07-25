@@ -6,12 +6,12 @@
 import logging
 import re
 
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
 from macaron.config.defaults import defaults
-from macaron.database.database_manager import ORMBase
-from macaron.database.table_definitions import CheckFactsTable
+from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
@@ -43,12 +43,23 @@ def is_in_toto_file(file_name: str) -> bool:
     return False
 
 
-class ProvenanceAvailableTable(CheckFactsTable, ORMBase):
-    """Check justification table for provenance_available."""
+class ProvenanceAvailableFacts(CheckFacts):
+    """The ORM mapping for justifications in provenance_available check."""
 
     __tablename__ = "_provenance_available_check"
-    asset_name: Mapped[str] = mapped_column(String)
-    asset_url: Mapped[str] = mapped_column(String)
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+
+    #: The provenance asset name.
+    asset_name: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: The URL for the provenance asset.
+    asset_url: Mapped[str] = mapped_column(String, nullable=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "_provenance_available_check",
+    }
 
 
 class ProvenanceAvailableCheck(BaseCheck):
@@ -89,7 +100,7 @@ class ProvenanceAvailableCheck(BaseCheck):
             if isinstance(ci_service, NoneCIService):
                 continue
             # Only get the latest release.
-            release = ci_service.api_client.get_latest_release(ctx.repo_full_name)
+            release = ci_service.api_client.get_latest_release(ctx.component.repository.full_name)
             if release:
                 # Store the release data for other checks.
                 ci_info["latest_release"] = release
@@ -112,7 +123,7 @@ class ProvenanceAvailableCheck(BaseCheck):
                         }
                         for asset in assets
                     ]
-                    check_result["result_tables"] = [ProvenanceAvailableTable(**res) for res in asset_results]
+                    check_result["result_tables"] = [ProvenanceAvailableFacts(**res) for res in asset_results]
 
                     return CheckResultType.PASSED
 

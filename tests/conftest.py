@@ -8,6 +8,8 @@ from typing import NoReturn
 import pytest
 
 from macaron.config.defaults import create_defaults, defaults, load_defaults
+from macaron.database.table_definitions import Analysis, Component, Repository
+from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.build_tool.pip import Pip
@@ -248,3 +250,15 @@ def gitlab_ci_service(setup_test):  # type: ignore # pylint: disable=unused-argu
     gitlab_ci = GitLabCI()
     gitlab_ci.load_defaults()
     return gitlab_ci
+
+
+class MockAnalyzeContext(AnalyzeContext):
+    """This class initializes a Component for the AnalyzeContext."""
+
+    def __init__(self, *args, **kwargs) -> None:  # type: ignore
+        component = Component(
+            purl="pkg:github.com/package-url/purl-spec@244fd47e07d1004f0aed9c",
+            analysis=Analysis(),
+            repository=Repository(complete_name="github.com/package-url/purl-spec", fs_path=""),
+        )
+        super().__init__(component, *args, **kwargs)

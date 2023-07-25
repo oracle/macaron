@@ -10,9 +10,7 @@ import logging
 import os
 from typing import TypedDict
 
-from pydriller.git import Git
-
-from macaron.database.table_definitions import RepositoryTable, SLSALevelTable
+from macaron.database.table_definitions import Component, SLSALevel
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.git_service import BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
@@ -36,6 +34,8 @@ class ChecksOutputs(TypedDict):
     """The CI services information for this repository."""
     is_inferred_prov: bool
     """True if we cannot find the provenance and Macaron need to infer the provenance."""
+    # We need to use typing.Protocol for multiple inheritance, however, the Expectation
+    # class uses inlined functions, which is not supported by Protocol.
     expectation: Expectation | None
     """The expectation to verify the provenance for this repository."""
 
@@ -45,64 +45,28 @@ class AnalyzeContext:
 
     def __init__(
         self,
-        full_name: str,
-        repo_path: str,
-        git_obj: Git,
-        branch_name: str = "",
-        commit_sha: str = "",
-        commit_date: str = "",
+        component: Component,
         macaron_path: str = "",
         output_dir: str = "",
-        remote_path: str = "",
-        current_date: str = "",
     ):
         """Initialize instance.
 
         Parameters
         ----------
-        full_name : str
-            Repository name in ``<owner>/<repo_name>`` format.
-        repo_path : str
-            Target repository path.
-        git_obj : Git
-            The Git object for the target path.
-        branch_name : str
-            The target branch.
-        commit_sha : str
-            The commit sha of the target repo.
-        commit_date : str
-            The commit date of the target repo.
+        component: Component
+            The target software component.
         macaron_path : str
             The Macaron's root path.
         output_dir : str
             The output dir.
-        remote_path : str
-            The remote path for the target repo.
         """
-        # <owner>/<repo_name>
-        self.repo_full_name = full_name
-
-        # <repo_name>
-        if full_name.rfind("/") != -1:
-            self.repo_name = self.repo_full_name.split("/")[1]
-        else:
-            self.repo_name = full_name
-
-        self.repo_path = repo_path
+        self.component = component
         self.ctx_data: dict[ReqName, SLSAReq] = get_requirements_dict()
-        self.git_obj = git_obj
-        self.file_list = git_obj.files()
 
         self.slsa_level = SLSALevels.LEVEL0
         # Indicate whether this repo fully reach a level or
         # it's just compliant for a SLSA level
         self.is_full_reach = False
-
-        self.branch_name = branch_name
-        self.commit_sha = commit_sha
-        self.commit_date = commit_date
-        self.current_date = current_date
-        self.remote_path = remote_path
 
         # The Macaron root path where the wrapper files exist.
         self.macaron_path = macaron_path
@@ -121,8 +85,6 @@ class AnalyzeContext:
             is_inferred_prov=True,
             expectation=None,
         )
-
-        self.repository_table = RepositoryTable(**self.get_repository_data())
 
     @property
     def provenances(self) -> dict:
@@ -191,39 +153,18 @@ class AnalyzeContext:
         for req in req_list:
             self.update_req_status(req, status, feedback)
 
-    def get_slsa_level_table(self) -> SLSALevelTable:
-        """Return filled ORM table storing the level for this repository."""
-        return SLSALevelTable(
-            repository=self.repository_table.id,
+    def get_slsa_level_table(self) -> SLSALevel:
+        """Return filled ORM table storing the level for this component."""
+        # TODO: right now `slsa_level` is always 0 and `is_full_reach` is False,
+        # which needs to be handled properly.
+        return SLSALevel(
+            component=self.component,
             slsa_level=int(self.slsa_level),
             reached=self.is_full_reach,
         )
 
-    def get_repository_data(self) -> dict:
-        """Get the data for the repository table."""
-        return {
-            "full_name": self.repo_full_name,
-            "commit_date": self.commit_date,
-            "branch_name": self.branch_name,
-            "commit_sha": self.commit_sha,
-            "remote_path": self.remote_path,
-        }
-
-    def get_analysis_result_data(self) -> dict:
-        """Get the dictionary of all the necessary data to be inserted into the database."""
-        return {
-            "full_name": self.repo_full_name,
-            "branch_name": self.branch_name,
-            "commit_sha": self.commit_sha,
-            "commit_date": self.commit_date,
-            "slsa_level": str(self.slsa_level.value),
-            "is_full_reach": self.is_full_reach,
-            **{key.name: value.is_pass for key, value in self.ctx_data.items()},
-        }
-
     def get_dict(self) -> dict:
         """Return the dictionary representation of the AnalyzeContext instance."""
-        rel_local_clone_path = os.path.relpath(self.repo_path, self.output_dir)
         _sorted_on_id = sorted(self.check_results.values(), key=lambda item: item["check_id"])
         # Remove result_tables since we don't have a good json representation for them.
         sorted_on_id = []
@@ -239,12 +180,14 @@ class AnalyzeContext:
         check_summary_sorted = dict(sorted(check_summary.items()))
         result = {
             "info": {
-                "full_name": self.repo_full_name,
-                "local_cloned_path": rel_local_clone_path,
-                "remote_path": self.remote_path,
-                "branch": self.branch_name,
-                "commit_hash": self.commit_sha,
-                "commit_date": self.commit_date,
+                "full_name": self.component.purl,
+                "local_cloned_path": os.path.relpath(self.component.repository.fs_path, self.output_dir)
+                if self.component.repository
+                else "Unable to find a repository.",
+                "remote_path": self.component.repository.remote_path if self.component.repository else "",
+                "branch": self.component.repository.branch_name if self.component.repository else "",
+                "commit_hash": self.component.repository.commit_sha if self.component.repository else "",
+                "commit_date": self.component.repository.commit_date if self.component.repository else "",
             },
             "provenances": {
                 "is_inferred": self.is_inferred_provenance,

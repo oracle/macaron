@@ -36,7 +36,7 @@ Policy("auth-provenance", repositoryid, "") :- check_passed(repositoryid, "mcn_p
 Then to actually enforce this policy on some repositories we write:
 
 ```c
-apply_policy_to("auth-provenance", repo) :- is_repo(repo, _).
+apply_policy_to("auth-provenance", repo) :- is_repo(repo_id, _).
 ```
 
 This rule applies the policy to every repository.
@@ -59,8 +59,8 @@ We get
 4. The list of policy ids where there _does not_ exist a repository where the policy does not pass
 
 ```
-repo_violates_policy
-repo_satisfies_policy
+component_violates_policy
+component_satisfies_policy
     ['1', 'slsa-framework/slsa-verifier', 'auth-provenance']
     ['2', 'slsa-framework/slsa-verifier', 'auth-provenance']
     ['3', 'slsa-framework/slsa-verifier', 'auth-provenance']

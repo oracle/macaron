@@ -4,43 +4,52 @@
 /* Souffle datalog rules to assist in policy authoring */
 
 /**
- * Existence of this fact indicates a check with the id check_name was passed on the repository with the id repo.
+ * Existence of this fact indicates a check with the id check_name was passed on the component with component_id.
  */
-.decl check_passed(repo: number, check_name: symbol)
-check_passed(repo, check_name) :- check_result(_, check_name, repo, 1, skipped).
-
-/**
- * Existence of this fact indicates a check with the id check_name was skipped on the repository with the id repo.
- */
-.decl check_skipped(repo: number, check_name: symbol)
-check_skipped(repo, check_name) :- check_result(_, check_name, repo, passed, 1).
+.decl check_passed(component_id: number, check_name: symbol)
+check_passed(component_id, check_name) :- check_result(_, check_name, 1, component_id).
 
 /**
  * Check name is valid.
  */
 .decl is_check(check_name: symbol)
-is_check(check_name) :- check_result(_, check_name, _, _, _).
+is_check(check_name) :- check_result(_, check_name, _, _).
 
 /**
  *  This fact exists iff a repository is hosted on a trusted public platform.
  */
-.decl not_self_hosted_git(repo:number, message:symbol)
-not_self_hosted_git(repo, message) :- repository(repo, name, remote, branch, release, commit_sha, commit_date),
+.decl not_self_hosted_git(repo_id:number, message:symbol)
+not_self_hosted_git(repo_id, message) :- repository(repo_id, _, _, _, _, _, _, remote, _, _, _, _, _),
     match("^.*(github.com|gitlab.com).*$", remote), message=remote.
 
 /**
  *  This fact exists iff a repository with id dependency is a dependency of repository with id repo.
  */
-.decl transitive_dependency(repo: number, dependency: number)
-transitive_dependency(repo, dependency) :- dependency(repo, dependency).
-transitive_dependency(repo, dependency) :-
-    transitive_dependency(repo, a), transitive_dependency(a, dependency).
+.decl transitive_dependency(repo_id: number, dependency: number)
+transitive_dependency(repo_id, dependency) :- dependency(repo_id, dependency).
+transitive_dependency(repo_id, dependency) :-
+    transitive_dependency(repo_id, a), transitive_dependency(a, dependency).
+
+/**
+ *  Extract the id and PURL from the component relation.
+ */
+.decl is_component(component_id: number, purl: symbol)
+ is_component(component_id, purl) :- component(component_id, purl,_, _, _, _, _, _, _).
 
 /**
  *  Extract the id and full name from the repository relation.
  */
-.decl is_repo(repo: number, repo_full_name: symbol)
- is_repo(repo, name) :- repository(repo, name,_,_,_,_,_).
+.decl is_repo(repo_id: number, repo_complete_name: symbol, component_id: number)
+ is_repo(repo_id, repo_complete_name, component_id) :- repository(repo_id, component_id, repo_complete_name, _, _, _, _, _, _, _, _, _, _).
+
+
+/**
+ * A convenience relation to find analyses conducted on a specific repository.
+ */
+ .decl repository_analysis(analysis_id: number, component_id: number, repo_id: number, repo_name: symbol)
+repository_analysis(analysis_id, component_id, repo_id, repo_name) :-
+    component(component_id, _, analysis_id, _, _, _, _, _, _),
+    is_repo(repo_id, repo_name, component_id).
 
 /**
  *  ADT recursively describing a JSON object.

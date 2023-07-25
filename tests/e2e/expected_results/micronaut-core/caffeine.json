@@ -1,10 +1,10 @@
 {
     "metadata": {
-        "timestamps": "2023-03-16 18:15:28"
+        "timestamps": "2023-06-14 13:20:54"
     },
     "target": {
         "info": {
-            "full_name": "ben-manes/caffeine",
+            "full_name": "pkg:github.com/ben-manes/caffeine@05a040c2478341bab8a58a02b3dc1fe14d626d72",
             "local_cloned_path": "git_repos/github_com/ben-manes/caffeine",
             "remote_path": "https://github.com/ben-manes/caffeine",
             "branch": "v2.9.3",

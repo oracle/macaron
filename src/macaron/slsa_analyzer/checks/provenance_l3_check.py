@@ -17,13 +17,12 @@ from enum import Enum
 from pathlib import Path
 from typing import NamedTuple
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.database.database_manager import ORMBase
-from macaron.database.table_definitions import CheckFactsTable, RepositoryTable
+from macaron.database.table_definitions import CheckFacts, HashDigest, Provenance, ReleaseArtifact
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
@@ -32,7 +31,6 @@ from macaron.slsa_analyzer.git_url import get_repo_dir_name
 from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader, SLSAProvenanceError
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
-from macaron.util import get_if_exists
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -44,7 +42,7 @@ class _VerifyArtifactResultType(Enum):
     PASSED = "verify passed"
     # slsa-verifier succeeded and the artifact failed verification
     FAILED = "verify failed"
-    # An error occured running slsa-verifier or downloading the artifact
+    # An error occurred running slsa-verifier or downloading the artifact
     ERROR = "verify error"
     # The artifact was unable to be downloaded because the url was missing or malformed
     NO_DOWNLOAD = "unable to download asset"
@@ -68,70 +66,20 @@ class _VerifyArtifactResult:
     artifact_name: str
 
     def __str__(self) -> str:
-        return str(self.result.value) + ": " + self.artifact_name
+        return f"{str(self.result.value)} : {self.artifact_name}"
 
 
-class ProvenanceResultTable(CheckFactsTable, ORMBase):
-    """Result table for provenenance l3 check."""
+class ProvenanceResultFacts(CheckFacts):
+    """The ORM mapping for justifications in provenance_l3 check."""
 
     __tablename__ = "_provenance_l3_check"
 
+    # The primary key.
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
-class ReleaseArtifact(ORMBase):
-    """Table to store artifacts."""
-
-    __tablename__ = "_release_artifact"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-
-
-class DigestSet(ORMBase):
-    """Table to store artifact digests."""
-
-    __tablename__ = "_digest_set"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    digest: Mapped[str] = mapped_column(String, nullable=False)
-    digest_algorithm: Mapped[str] = mapped_column(String, nullable=False)
-
-
-class Provenance(ORMBase):
-    """Table to store the information about a provenance document."""
-
-    __tablename__ = "_provenance"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    repository: Mapped[int] = mapped_column(Integer, ForeignKey(RepositoryTable.id), nullable=False)
-    release_commit_sha: Mapped[str] = mapped_column(String)
-    release_tag: Mapped[str] = mapped_column(String)
-    provenance_json: Mapped[str] = mapped_column(String, nullable=False)
-
-    # predicate stored here as there is one predicate per provenance
-    builder_id: Mapped[str] = mapped_column(String)
-    build_type: Mapped[str] = mapped_column(String)
-    config_source_uri: Mapped[str] = mapped_column(String)
-    config_source_entry_point: Mapped[str] = mapped_column(String)
-
-
-class ProvenanceArtifact(ORMBase):
-    """Mapping artifacts to the containing provenance."""
-
-    __tablename__ = "_provenance_artifact"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    name: Mapped[str] = mapped_column(String, nullable=False)
-    verified: Mapped[bool] = mapped_column(Boolean, nullable=False)
-
-    provenance: Mapped[int] = mapped_column(Integer, ForeignKey(Provenance.id), nullable=False)
-    _provenance = relationship(Provenance)
-
-
-class ArtifactDigest(ORMBase):
-    """Table to store artifact digests."""
-
-    __tablename__ = "_artifact_digest"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, nullable=False)  # noqa: A003
-    artifact: Mapped[int] = mapped_column(Integer, ForeignKey(ProvenanceArtifact.id), nullable=False)
-    digest: Mapped[int] = mapped_column(Integer, ForeignKey(DigestSet.id), nullable=False)
-
-    _artifact = relationship(ProvenanceArtifact)
-    _digest = relationship(DigestSet)
+    __mapper_args__ = {
+        "polymorphic_identity": "_provenance_l3_check",
+    }
 
 
 class ProvenanceL3Check(BaseCheck):
@@ -338,7 +286,7 @@ class ProvenanceL3Check(BaseCheck):
 
         all_feedback: list[Feedback] = []
         ci_services = ctx.dynamic_data["ci_services"]
-        check_result["result_tables"] = [ProvenanceResultTable()]
+        check_result["result_tables"] = [ProvenanceResultFacts()]
         for ci_info in ci_services:
             ci_service = ci_info["service"]
 
@@ -386,18 +334,11 @@ class ProvenanceL3Check(BaseCheck):
                         prov = Provenance()
                         # TODO: fix commit reference for provenance when release/artifact as an analysis entrypoint is
                         #  implemented ensure the provenance commit matches the actual release analyzed
+                        prov.version = "0.2"
                         prov.release_commit_sha = ""
                         prov.provenance_json = json.dumps(payload)
                         prov.release_tag = ci_info["latest_release"]["tag_name"]
-                        prov.repository = ctx.repository_table.id
-
-                        # predicate
-                        prov.build_type = payload["predicate"]["buildType"]
-                        prov.builder_id = payload["predicate"]["builder"]["id"]
-                        prov.config_source_uri = str(get_if_exists(payload, ["predicate", "invocation", "uri"]))
-                        prov.config_source_entry_point = str(
-                            get_if_exists(payload, ["predicate", "invocation", "entryPoint"])
-                        )
+                        prov.component = ctx.component
 
                         check_result["result_tables"].append(prov)
 
@@ -429,7 +370,11 @@ class ProvenanceL3Check(BaseCheck):
                                         break
 
                                 result = self._verify_slsa(
-                                    ctx.macaron_path, temp_path, prov_asset, sub_asset["name"], ctx.remote_path
+                                    ctx.macaron_path,
+                                    temp_path,
+                                    prov_asset,
+                                    sub_asset["name"],
+                                    ctx.component.repository.remote_path,
                                 )
 
                             if result:
@@ -450,21 +395,19 @@ class ProvenanceL3Check(BaseCheck):
                                     )
                                 )
 
-                                # Store artifact information result to database
-                                artifact = ProvenanceArtifact()
+                                # Store artifact information result to database.
+                                artifact = ReleaseArtifact()
                                 artifact.name = subject["name"]
-                                artifact.verified = result.result == _VerifyArtifactResultType.PASSED
-                                artifact._provenance = prov  # pylint: disable=protected-access
+                                artifact.slsa_verified = result.result == _VerifyArtifactResultType.PASSED
+                                artifact.provenance = prov  # pylint: disable=protected-access
                                 check_result["result_tables"].append(artifact)
 
                                 for k, val in subject["digest"].items():
-                                    digest = DigestSet()
-                                    artifact_digest = ArtifactDigest()
+                                    digest = HashDigest()
                                     digest.digest_algorithm = k
                                     digest.digest = val
                                     # foreign key relations
-                                    artifact_digest._artifact = artifact  # pylint: disable=protected-access
-                                    artifact_digest._digest = digest  # pylint: disable=protected-access
+                                    digest.artifact = artifact
                                     check_result["result_tables"].append(digest)
 
                 if downloaded_provs:
