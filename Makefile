@@ -118,11 +118,11 @@ $(PACKAGE_PATH)/resources/gradlew:
 # Supports OL8+, Fedora 34+, Ubuntu 20.04+, and macOS.
 OS := "$(shell uname)"
 ifeq ($(OS), "Darwin")
-	OS_DISTRO := "Darwin"
+  OS_DISTRO := "Darwin"
 else
-	ifeq ($(OS), "Linux")
-		OS_DISTRO := "$(shell grep '^NAME=' /etc/os-release | sed 's/^NAME=//' | sed 's/"//g')"
-	endif
+  ifeq ($(OS), "Linux")
+    OS_DISTRO := "$(shell grep '^NAME=' /etc/os-release | sed 's/^NAME=//' | sed 's/"//g')"
+  endif
 endif
 .PHONY: souffle
 souffle:
@@ -141,12 +141,12 @@ souffle:
                 sudo apt update; \
                 sudo apt install souffle; \
                 ;; \
-			"Darwin") \
-				if command -v brew; then \
-					sudo brew install --HEAD souffle-lang/souffle/souffle; \
-				else \
-					echo "Unable to install Souffle. Please install it manually." && exit 0; \
-				fi ;; \
+            "Darwin") \
+                if command -v brew; then \
+                    sudo brew install --HEAD souffle-lang/souffle/souffle; \
+                else \
+                    echo "Unable to install Souffle. Please install it manually." && exit 0; \
+                fi ;; \
 	esac;                                                                                                                                                  \
 	fi && \
     command -v souffle || true
