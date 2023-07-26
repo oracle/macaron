@@ -47,7 +47,7 @@ jobs:
       matrix:
         # It is recommended to pin a Runner version specifically:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         python: ['3.11']
     steps:
 
