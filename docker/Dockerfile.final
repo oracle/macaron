@@ -37,7 +37,7 @@ COPY --chown=macaron:macaron $WHEEL_PATH $HOME/dist/
 RUN : \
     && python3 -m venv $HOME/.venv \
     && . .venv/bin/activate \
-    && pip install --no-compile --no-cache-dir --upgrade pip \
+    && pip install --no-compile --no-cache-dir --upgrade pip setuptools \
     && find $HOME/dist -depth \( -type f \( -name "macaron-*.whl" \) \) -exec pip install --no-compile --no-cache-dir '{}' \; \
     && rm -rf $HOME/dist \
     && deactivate
