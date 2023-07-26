@@ -196,6 +196,7 @@ ignore_missing_imports = true
 fail-under = 10.0
 disable = [
     "fixme",
+    "line-too-long",  # Replaced by Flake8 Bugbear B950 check.
     "too-few-public-methods",
     "too-many-ancestors",
     "too-many-arguments",

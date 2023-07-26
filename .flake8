@@ -23,6 +23,7 @@ extend-select = B9, W504
 # https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes
 # E203: whitespace before ':'. Conflict with black.
 # E266: too many leading '#' for block comment
+# E501: line too long, managed better by Bugbear's B950
 # W503: line break before binary operator
 
 # http://www.pydocstyle.org/en/latest/error_codes.html
@@ -35,7 +36,7 @@ extend-select = B9, W504
 
 # https://github.com/peterjc/flake8-rst-docstrings#configuration
 # RST307: Error in "XXX" directive
-ignore = E203,E266,W503,D105,D404,PT009
+ignore = E203,E266,E501,W503,D105,D404,PT009
 
 # Disabling the following for tests:
 #
