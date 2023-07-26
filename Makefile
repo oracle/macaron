@@ -143,7 +143,7 @@ souffle:
                 ;; \
             "Darwin") \
                 if command -v brew; then \
-                    sudo brew install --HEAD souffle-lang/souffle/souffle; \
+                    brew install --HEAD souffle-lang/souffle/souffle; \
                 else \
                     echo "Unable to install Souffle. Please install it manually." && exit 0; \
                 fi ;; \
