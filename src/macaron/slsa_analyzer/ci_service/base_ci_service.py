@@ -11,6 +11,7 @@ from collections.abc import Iterable
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.parsers.bashparser import BashCommands
 from macaron.slsa_analyzer.git_service.api_client import BaseAPIClient
+from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -59,13 +60,18 @@ class BaseCIService:
         """
         raise NotImplementedError
 
-    def is_detected(self, repo_path: str) -> bool:
+    def is_detected(
+        self, repo_path: str, git_service: BaseGitService | None = None  # pylint: disable=unused-argument
+    ) -> bool:
         """Return True if this CI service is used in the target repo.
 
         Parameters
         ----------
         repo_path : str
             The path to the target repo.
+
+        git_service : BaseGitService
+            The Git service that hosts the target repo (currently an unused argument).
 
         Returns
         -------

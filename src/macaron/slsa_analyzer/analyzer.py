@@ -810,7 +810,10 @@ class Analyzer:
                 ci_service.load_defaults()
                 ci_service.set_api_client()
 
-                if ci_service.is_detected(analyze_ctx.component.repository.fs_path):
+                if ci_service.is_detected(
+                    repo_path=analyze_ctx.component.repository.fs_path,
+                    git_service=analyze_ctx.dynamic_data["git_service"],
+                ):
                     logger.info("The repo uses %s CI service.", ci_service.name)
 
                     # Parse configuration files and generate IRs.
