@@ -153,19 +153,22 @@ souffle:
 
 
 # Install or upgrade an existing virtual environment based on the
-# package dependencies declared in pyproject.toml and go.mod.
-# For Go dependencies, instead of using `go get -u` we use the
-# code snippet suggested here to avoid updating indirect dependencies,
-# which can result in a broken state:
+# package dependencies declared in pyproject.toml.
+# Go dependencies are only upgraded by Dependabot and managed differently
+# from Python dependencies and by default the upgrade target does not
+# upgrade Go dependencies. To upgrade the Go depenencies use the
+# `upgrade-go` target directly, which uses the code snippet suggested
+# here instead of `go get -u` to avoid updating indirect dependencies
+# and creating a broken state:
 # https://github.com/golang/go/issues/28424#issuecomment-1101896499
-.PHONY: upgrade force-upgrade upgrade-go
-upgrade: .venv/upgraded-on upgrade-go
+.PHONY: upgrade force-upgrade
+upgrade: .venv/upgraded-on
 .venv/upgraded-on: pyproject.toml
 	python -m pip install --upgrade pip
 	python -m pip install --upgrade wheel
 	python -m pip install --upgrade --upgrade-strategy eager --editable .[actions,dev,docs,hooks,test]
 	$(MAKE) upgrade-quiet
-force-upgrade: upgrade-go
+force-upgrade:
 	rm -f .venv/upgraded-on
 	$(MAKE) upgrade
 upgrade-quiet:
