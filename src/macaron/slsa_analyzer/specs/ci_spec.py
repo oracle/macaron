@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildSpec class."""
@@ -23,10 +23,17 @@ class CIInfo(TypedDict):
     """The call graph for this CI service."""
 
     provenance_assets: list[dict]
-    """Release assets for SLSA provenances, e.g., asset for attestation.intoto.jsonl."""
+    """Release assets for SLSA provenances, e.g., asset for attestation.intoto.jsonl.
+
+    For GitHub Actions, each asset is a member of the ``assets`` list in the GitHub
+    Actions latest release payload.
+    See: https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release.
+    """
 
     latest_release: dict
-    """The latest release."""
+    """The latest release.
+    Schema: https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release.
+    """
 
     provenances: list[dict]
-    """The SLSA provenances in in-toto format."""
+    """The JSON payloads of SLSA provenances in in-toto format."""

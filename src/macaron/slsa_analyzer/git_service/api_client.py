@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides API clients for VCS services, such as GitHub."""
@@ -418,6 +418,7 @@ class GhAPIClient(BaseAPIClient):
         -------
         dict
             The latest release object in JSON format.
+            Schema: https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release.
         """
         logger.debug("Get the latest release for %s.", full_name)
         url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/releases/latest"
@@ -434,6 +435,7 @@ class GhAPIClient(BaseAPIClient):
         ----------
         release : dict
             The release object in JSON format.
+            Schema: https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release.
         name : str
             The asset name to find.
         ext : str
