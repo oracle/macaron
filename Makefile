@@ -115,13 +115,20 @@ $(PACKAGE_PATH)/resources/gradlew:
 		&& gradle-$$GRADLE_VERSION/bin/gradle wrapper \
 		&& cd $(REPO_PATH)
 
-# Supports OL8+, Fedora 34+, and Ubuntu 20.04+
-LINUX_DISTRO := "$(shell grep '^NAME=' /etc/os-release | sed 's/^NAME=//' | sed 's/"//g')"
+# Supports OL8+, Fedora 34+, Ubuntu 20.04+, and macOS.
+OS := "$(shell uname)"
+ifeq ($(OS), "Darwin")
+  OS_DISTRO := "Darwin"
+else
+  ifeq ($(OS), "Linux")
+    OS_DISTRO := "$(shell grep '^NAME=' /etc/os-release | sed 's/^NAME=//' | sed 's/"//g')"
+  endif
+endif
 .PHONY: souffle
 souffle:
 	if ! command -v souffle; then \
 		echo "Installing system dependency: souffle" && \
-	    case $(LINUX_DISTRO) in \
+	    case $(OS_DISTRO) in \
 	        "Oracle Linux") \
                 sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.4/x86_64-oraclelinux-8-souffle-2.4-Linux.rpm \
                 ;; \
@@ -134,9 +141,15 @@ souffle:
                 sudo apt update; \
                 sudo apt install souffle; \
                 ;; \
+            "Darwin") \
+                if command -v brew; then \
+                    brew install --HEAD souffle-lang/souffle/souffle; \
+                else \
+                    echo "Unable to install Souffle. Please install it manually." && exit 0; \
+                fi ;; \
 	esac;                                                                                                                                                  \
 	fi && \
-    command -v souffle
+    command -v souffle || true
 
 
 # Install or upgrade an existing virtual environment based on the

@@ -163,9 +163,7 @@ def create_defaults(output_path: str, cwd_path: str) -> bool:
             os.path.relpath(os.path.join(output_path, "defaults.ini"), cwd_path),
         )
         return True
-    except shutil.Error as error:
+    # We catch OSError to support errors on different platforms.
+    except (OSError, shutil.Error) as error:
         logger.error("Failed to create %s: %s.", os.path.relpath(dest_path, cwd_path), error)
-        return False
-    except PermissionError as error:
-        logger.error(error)
         return False
