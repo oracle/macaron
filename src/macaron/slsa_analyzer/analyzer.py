@@ -45,10 +45,12 @@ from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.database_store import store_analyze_context_to_db
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
+from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
+from macaron.slsa_analyzer.specs.package_registry_data import PackageRegistryData
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -826,6 +828,19 @@ class Analyzer:
                             provenance_assets=[],
                             latest_release={},
                             provenances=[Provenance().payload],
+                        )
+                    )
+
+        # Determine the package registries.
+        # We match the repo against package registries through build tools.
+        build_tools = analyze_ctx.dynamic_data["build_spec"]["tools"]
+        for package_registry in PACKAGE_REGISTRIES:
+            for build_tool in build_tools:
+                if package_registry.is_detected(build_tool):
+                    analyze_ctx.dynamic_data["package_registries"].append(
+                        PackageRegistryData(
+                            build_tool=build_tool,
+                            package_registry=package_registry,
                         )
                     )
 
