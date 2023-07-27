@@ -1,7 +1,7 @@
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module checks if a SLSA provenances conforms to a given expectation."""
+"""This module checks if a SLSA provenance conforms to a given expectation."""
 
 import logging
 
@@ -10,9 +10,11 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckResultType
 from macaron.slsa_analyzer.checks.check_result import CheckResult
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
+from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
 from macaron.slsa_analyzer.provenance.loader import SLSAProvenanceError
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
+from macaron.slsa_analyzer.specs.package_registry_data import PackageRegistryData
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -27,7 +29,7 @@ class ProvenanceL3ContentCheck(BaseCheck):
         """Initialize instance."""
         check_id = "mcn_provenance_expectation_1"
         description = "Check whether the SLSA provenance for the produced artifact conforms to the expected value."
-        depends_on: list[tuple[str, CheckResultType]] = [("mcn_provenance_level_three_1", CheckResultType.PASSED)]
+        depends_on: list[tuple[str, CheckResultType]] = [("mcn_provenance_available_1", CheckResultType.PASSED)]
         eval_reqs = [ReqName.EXPECTATION]
         super().__init__(
             check_id=check_id,
@@ -58,7 +60,35 @@ class ProvenanceL3ContentCheck(BaseCheck):
             logger.info("%s check was unable to find any expectations.", self.check_id)
             return CheckResultType.UNKNOWN
 
+        package_registry_data_entries = ctx.dynamic_data["package_registries"]
         ci_services = ctx.dynamic_data["ci_services"]
+
+        # Check the provenances in package registries.
+        for package_registry_data_entry in package_registry_data_entries:
+            match package_registry_data_entry:
+                case PackageRegistryData(
+                    package_registry=JFrogMavenRegistry(),
+                ) as data_entry:
+                    for asset_url, payload in data_entry.provenances.items():
+                        try:
+                            logger.info(
+                                "Validating the provenance %s against %s.",
+                                asset_url,
+                                expectation,
+                            )
+
+                            if expectation.validate(payload):
+                                check_result["result_tables"].append(expectation)  # type: ignore[arg-type]
+                                check_result["justification"].append(
+                                    f"Successfully verified the expectation against the provenance {asset_url}."
+                                )
+                                return CheckResultType.PASSED
+
+                        except (SLSAProvenanceError, ExpectationRuntimeError) as error:
+                            logger.error(error)
+                            check_result["justification"].append("Could not verify expectation against the provenance.")
+                            return CheckResultType.FAILED
+
         for ci_info in ci_services:
             ci_service = ci_info["service"]
             # Checking if a CI service is discovered for this repo.
@@ -72,7 +102,7 @@ class ProvenanceL3ContentCheck(BaseCheck):
 
             for payload in ci_info["provenances"]:
                 try:
-                    logger.info("Validating the provenance against %s.", expectation)
+                    logger.info("Validating a provenance from %s against %s.", ci_info["service"].name, expectation)
 
                     # TODO: Is it worth returning more information rather than returning early?
                     if expectation.validate(payload):
@@ -89,7 +119,7 @@ class ProvenanceL3ContentCheck(BaseCheck):
                     check_result["justification"].append("Could not verify expectation against the provenance.")
                     return CheckResultType.FAILED
 
-        check_result["justification"].append("Could not verify expectation against the provenance.")
+        check_result["justification"].append("Failed to successfully verify expectation against any provenance files.")
         return CheckResultType.FAILED
 
 
