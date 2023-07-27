@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-06-14 14:13:33"
+        "timestamps": "2023-07-08 21:09:08"
     },
     "target": {
         "info": {
@@ -1684,7 +1684,7 @@
             "summary": {
                 "DISABLED": 0,
                 "FAILED": 0,
-                "PASSED": 8,
+                "PASSED": 9,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
@@ -1769,6 +1769,18 @@
                     "result_type": "PASSED"
                 },
                 {
+                    "check_id": "mcn_provenance_witness_level_one_1",
+                    "check_description": "Check whether the target has a level-1 witness provenance.",
+                    "slsa_requirements": [
+                        "Provenance - Available - SLSA Level 1",
+                        "Provenance content - Identifies build instructions - SLSA Level 1",
+                        "Provenance content - Identifies artifacts - SLSA Level 1",
+                        "Provenance content - Identifies builder - SLSA Level 1"
+                    ],
+                    "justification": [],
+                    "result_type": "PASSED"
+                },
+                {
                     "check_id": "mcn_trusted_builder_level_three_1",
                     "check_description": "Check whether the target uses a trusted SLSA level 3 builder.",
                     "slsa_requirements": [
@@ -1835,6 +1847,10 @@
             },
             {
                 "check_id": "mcn_build_service_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             }
         ],
