@@ -22,6 +22,7 @@ from macaron.parsers.yaml.loader import YamlLoader
 from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
 from macaron.slsa_analyzer.analyzer import Analyzer
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
+from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -142,6 +143,8 @@ def perform_action(action_args: argparse.Namespace) -> None:
             try:
                 for git_service in GIT_SERVICES:
                     git_service.load_defaults()
+                for package_registry in PACKAGE_REGISTRIES:
+                    package_registry.load_defaults()
             except ConfigurationError as error:
                 logger.error(error)
                 sys.exit(os.EX_USAGE)
