@@ -8,6 +8,7 @@ This module is used to work with repositories that use Gradle build tool.
 
 import logging
 import os
+import subprocess  # nosec B404
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
@@ -135,3 +136,42 @@ class Gradle(BaseBuildTool):
             )
 
         raise DependencyAnalyzerError(f"Unsupported SBOM generator for Gradle: {tool_name}.")
+
+    def get_group_id(self, project_path: str) -> str | None:
+        """Get the group id of a Gradle repository.
+
+        Parameters
+        ----------
+        project_path : str
+            Path to the Gradle repository.
+
+        Returns
+        -------
+        str | None
+            The group id, if exists.
+        """
+        # Use the gradlew that comes with the repository first, then use Macaron's
+        # built-in gradlew as a fallback option.
+        if os.path.isfile(os.path.join(project_path, "gradlew")):
+            gradlew = "./gradlew"
+        else:
+            gradlew = os.path.join(global_config.resources_path, "gradlew")
+        try:
+            result = subprocess.run(  # nosec B603
+                [gradlew, "properties"],
+                capture_output=True,
+                cwd=project_path,
+                check=False,
+            )
+        except (subprocess.CalledProcessError, OSError) as error:
+            logger.debug("Could not capture the group id of the repo at %s", project_path)
+            logger.debug("Error: %s", error)
+            return None
+
+        lines = result.stdout.decode().split("\n")
+        for line in lines:
+            if line.startswith("group: "):
+                return line.replace("group: ", "")
+
+        logger.debug("Could not capture the group id of the repo at %s", project_path)
+        return None

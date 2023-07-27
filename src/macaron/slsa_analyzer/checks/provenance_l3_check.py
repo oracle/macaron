@@ -410,12 +410,6 @@ class ProvenanceL3Check(BaseCheck):
                                     digest.artifact = artifact
                                     check_result["result_tables"].append(digest)
 
-                if downloaded_provs:
-                    # Store the provenance available results for other checks.
-                    # Note: this flag should only be turned off here.
-                    ctx.dynamic_data["is_inferred_prov"] = False
-                    ci_info["provenances"] = downloaded_provs
-
             except (OSError, SLSAProvenanceError) as error:
                 logger.error(" %s: %s.", self.check_id, error)
                 check_result["justification"].append("Could not verify level 3 provenance.")

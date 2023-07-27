@@ -1,11 +1,14 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the loaders for SLSA provenances."""
 
 import base64
 import json
-from typing import Any
+from typing import Any, cast
+
+from macaron.errors import ProvenanceLoadError
+from macaron.util import JsonType
 
 
 class SLSAProvenanceError(Exception):
@@ -52,3 +55,46 @@ class ProvPayloadLoader:
             raise SLSAProvenanceError(
                 f"Cannot decode the message content of the SLSA attestation - {error.reason}"
             ) from error
+
+
+def load_provenance(filepath: str) -> JsonType:
+    """Load a provenance JSON payload.
+
+    Inside a provenance file is a DSSE envelope containing a base64-encoded
+    provenance JSON payload. See: https://github.com/secure-systems-lab/dsse.
+
+    Returns
+    -------
+    JsonType
+        The provenance JSON payload.
+
+    Raises
+    ------
+    ProvenanceLoadError
+        If there is an error loading the provenance JSON payload.
+    """
+    try:
+        with open(filepath, encoding="utf-8") as file:
+            provenance = json.load(file)
+    except (json.JSONDecodeError, TypeError) as error:
+        raise ProvenanceLoadError(
+            "Cannot deserialize the file content as JSON",
+        ) from error
+
+    provenance_payload = provenance.get("payload", None)
+    if not provenance_payload:
+        raise ProvenanceLoadError(
+            'Cannot find the "payload" field in the decoded provenance',
+        )
+
+    try:
+        decoded_payload = base64.b64decode(provenance_payload)
+    except UnicodeDecodeError as error:
+        raise ProvenanceLoadError("Cannot decode the payload") from error
+
+    try:
+        return cast(JsonType, json.loads(decoded_payload))
+    except (json.JSONDecodeError, TypeError) as error:
+        raise ProvenanceLoadError(
+            "Cannot deserialize the provenance payload as JSON",
+        ) from error
