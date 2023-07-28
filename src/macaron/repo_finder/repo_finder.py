@@ -8,6 +8,7 @@ from collections.abc import Iterator
 
 from packageurl import PackageURL
 
+from macaron.config.defaults import defaults
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_dd import RepoFinderDD
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
@@ -35,17 +36,18 @@ def find_repo(purl_string: str) -> Iterator[str]:
         logger.debug("Invalid PURL: %s, %s", purl_string, error)
         return
 
+    # Find matching Repo Finder
     repo_finder: BaseRepoFinder
+    if purl.type == "maven":
+        repo_finder = JavaRepoFinder()
+    elif purl.type in ["pypi", "nuget", "cargo", "npm"] and defaults.getboolean(
+        "repofinder", "use_open_source_insights"
+    ):
+        repo_finder = RepoFinderDD(purl.type)
+    else:
+        logger.debug("No Repo Finder found for package type: %s of %s", purl.type, purl_string)
+        return
 
-    match purl.type:
-        case "maven":
-            repo_finder = JavaRepoFinder()
-        case "pypi" | "nuget" | "cargo" | "npm":
-            repo_finder = RepoFinderDD(purl.type)
-
-        case _:
-            logger.debug("Unsupported type in PURL: %s (%s)", purl.type, purl_string)
-            return
-
+    # Call Repo Finder
     logger.debug("Analyzing %s with Repo Finder: %s", purl_string, repo_finder.__class__)
     yield from repo_finder.find_repo(purl.namespace or "", purl.name, purl.version or "")

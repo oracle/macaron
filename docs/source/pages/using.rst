@@ -209,11 +209,14 @@ Within the configuration file under the ``repofinder.java`` header, three option
 - ``repo_pom_paths`` (Values: List of POM tags) - Determines where to search for repository information in the POM files. E.g. scm.url.
 - ``find_parents`` (Values: True or False) - When enabled, the Repository Finding feature will also search for repository URLs in parents POM files of the current dependency.
 
-The entire feature can be disabled via the ``find_repos`` option found under the configuration header ``repofinder``, as so:
+Under the related header ``repofinder``, two more options exist: ``find_repos``, and ``use_open_source_insights``:
 
 - ``find_repos`` (Values: True or False) - Enables or disables the Repository Finding feature.
+- ``use_open_source_insights`` (Values: True or False) - Enables or disables use of Google's Open Source Insights API.
 
 .. note:: Finding repositories requires at least one remote call, adding some additional overhead to an analysis run.
+
+.. note:: Google's Open Source Insights API is currently used to find repositories for: Python, Rust, .Net, NodeJS
 
 An example configuration file for utilising this feature:
 
@@ -221,6 +224,7 @@ An example configuration file for utilising this feature:
 
     [repofinder]
     find_repos = True
+    use_open_source_insights = True
 
     [repofinder.java]
     artifact_repositories = https://repo.maven.apache.org/maven2
