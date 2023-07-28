@@ -35,9 +35,10 @@ from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
 from macaron.errors import CloneError, DuplicateError, InvalidPURLError, PURLNotFoundError, RepoCheckOutError
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
+from macaron.repo_finder.repo_finder import find_repo
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
+from macaron.slsa_analyzer.build_tool import BUILD_TOOLS, Gradle, Maven, Pip, Poetry
 
 # To load all checks into the registry
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
@@ -166,6 +167,10 @@ class Analyzer:
                     logger.info("Skipping automatic dependency analysis...")
                 else:
                     deps_resolved = self.resolve_dependencies(main_record.context, sbom_path)
+
+                    # Use repo finder to find more repositories to analyze.
+                    if defaults.getboolean("repofinder", "find_repos"):
+                        self._resolve_more_dependencies(deps_resolved, main_record.context, main_record.description)
 
                 # Merge the automatically resolved dependencies with the manual configuration.
                 deps_config = DependencyAnalyzer.merge_configs(deps_config, deps_resolved)
@@ -1046,6 +1051,52 @@ class Analyzer:
         results = registry.scan(analyze_ctx, skipped_checks)
 
         return results
+
+    def _resolve_more_dependencies(
+        self, dependencies: dict[str, DependencyInfo], context: AnalyzeContext, description: str
+    ) -> None:
+        """Utilise the Repo Finder to resolve more dependencies to repositories."""
+        purl = PackageURL.from_string(context.component.purl)
+        build_tools = context.dynamic_data["build_spec"]["tools"]
+        if not purl.type or not build_tools:
+            logger.debug("No PURL type found for: %s", purl)
+        else:
+            # Get actual PURL type based on current build tool
+            build_tool = build_tools[0]
+            if len(build_tools) > 1:
+                logger.debug(
+                    "More than one build tool found for %s, assuming type based on class: %s",
+                    description,
+                    build_tool.__class__,
+                )
+            updated_type = ""
+
+            if isinstance(build_tool, Gradle):
+                # Currently not a supported PURL type
+                updated_type = "gradle"
+            elif isinstance(build_tool, Maven):
+                updated_type = "maven"
+            elif isinstance(build_tool, (Pip, Poetry)):
+                updated_type = "pypi"
+            else:
+                # A type that is not yet supported here
+                logger.debug("Unsupported PURL type: %s", build_tool.__class__)
+
+            for key, item in dependencies.items():
+                if item["available"] != SCMStatus.MISSING_SCM:
+                    continue
+                dep_namespace, dep_name = key.split(":")
+                purl_string = f"pkg:{updated_type}/{dep_namespace}/{dep_name}"
+                if item["version"] != "unspecified":
+                    purl_string = purl_string + "@" + item["version"]
+                urls = find_repo(purl_string)
+                item["url"] = DependencyAnalyzer.find_valid_url(urls)
+                if item["url"] == "":
+                    logger.debug("Failed to find url for purl: %s", purl_string)
+                else:
+                    # TODO decide how to handle possible duplicates here
+                    item["available"] = SCMStatus.AVAILABLE
+                    item["note"] = ""
 
 
 class DuplicateCmpError(DuplicateError):

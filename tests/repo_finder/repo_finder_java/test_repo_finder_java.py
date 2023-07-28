@@ -7,27 +7,24 @@ This module tests the repo finder.
 import os
 from pathlib import Path
 
-from macaron.config.defaults import defaults
-from macaron.dependency_analyzer.java_repo_finder import create_urls, find_parent, find_scm, parse_pom
+from macaron.repo_finder.repo_finder_java import JavaRepoFinder
 
 
 def test_java_repo_finder() -> None:
     """Test the functions of the repo finder."""
-    repositories = defaults.get_list(
-        "repofinder.java", "artifact_repositories", fallback=["https://repo.maven.apache.org/maven2"]
-    )
     group = "group"
     artifact = "artifact"
     version = "version"
-    created_urls = create_urls(group, artifact, version, repositories)
+    repo_finder = JavaRepoFinder()
+    created_urls = repo_finder.create_urls(group, artifact, version)
     assert created_urls
 
     resources_dir = Path(__file__).parent.joinpath("resources")
     with open(os.path.join(resources_dir, "example_pom.xml"), encoding="utf8") as file:
         file_data = file.read()
-        pom = parse_pom(file_data)
+        pom = repo_finder.parse_pom(file_data)
         assert pom is not None
-        found_urls, count = find_scm(
+        found_urls, count = repo_finder.find_scm(
             pom, ["scm.url", "scm.connection", "scm.developerConnection", "licenses.license.distribution"]
         )
         assert count == 4
@@ -43,11 +40,12 @@ def test_java_repo_finder() -> None:
 def test_java_repo_finder_hierarchical() -> None:
     """Test the hierarchical capabilities of the repo finder."""
     resources_dir = Path(__file__).parent.joinpath("resources")
+    repo_finder = JavaRepoFinder()
     with open(os.path.join(resources_dir, "example_pom_no_scm.xml"), encoding="utf8") as file:
         file_data = file.read()
-        pom = parse_pom(file_data)
+        pom = repo_finder.parse_pom(file_data)
         assert pom is not None
-        group, artifact, version = find_parent(pom)
+        group, artifact, version = repo_finder.find_parent(pom)
         assert group == "owner"
         assert artifact == "parent"
         assert version == "1"
