@@ -40,7 +40,7 @@ def find_repo(purl_string: str) -> Iterator[str]:
     match purl.type:
         case "maven":
             repo_finder = JavaRepoFinder()
-        case "pypi":
+        case "pypi" | "nuget" | "cargo" | "npm":
             repo_finder = RepoFinderDD(purl.type)
 
         case _:
