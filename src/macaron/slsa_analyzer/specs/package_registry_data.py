@@ -43,4 +43,4 @@ class PackageRegistryData:
     package_registry: PackageRegistry
     latest_version: str | None = None
     provenance_assets: list[Asset] = field(default_factory=list)
-    provenances: dict[str, JsonType] = field(default_factory=dict)
+    provenances: dict[str, dict[str, JsonType]] = field(default_factory=dict)

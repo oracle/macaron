@@ -5,7 +5,7 @@
 
 import base64
 import json
-from typing import Any, cast
+from typing import Any
 
 from macaron.errors import ProvenanceLoadError
 from macaron.util import JsonType
@@ -57,7 +57,7 @@ class ProvPayloadLoader:
             ) from error
 
 
-def load_provenance(filepath: str) -> JsonType:
+def load_provenance(filepath: str) -> dict[str, JsonType]:
     """Load a provenance JSON payload.
 
     Inside a provenance file is a DSSE envelope containing a base64-encoded
@@ -65,7 +65,7 @@ def load_provenance(filepath: str) -> JsonType:
 
     Returns
     -------
-    JsonType
+    dict[str, JsonType]
         The provenance JSON payload.
 
     Raises
@@ -78,23 +78,28 @@ def load_provenance(filepath: str) -> JsonType:
             provenance = json.load(file)
     except (json.JSONDecodeError, TypeError) as error:
         raise ProvenanceLoadError(
-            "Cannot deserialize the file content as JSON",
+            "Cannot deserialize the file content as JSON.",
         ) from error
 
     provenance_payload = provenance.get("payload", None)
     if not provenance_payload:
         raise ProvenanceLoadError(
-            'Cannot find the "payload" field in the decoded provenance',
+            'Cannot find the "payload" field in the decoded provenance.',
         )
 
     try:
         decoded_payload = base64.b64decode(provenance_payload)
     except UnicodeDecodeError as error:
-        raise ProvenanceLoadError("Cannot decode the payload") from error
+        raise ProvenanceLoadError("Cannot decode the payload.") from error
 
     try:
-        return cast(JsonType, json.loads(decoded_payload))
+        json_payload = json.loads(decoded_payload)
     except (json.JSONDecodeError, TypeError) as error:
         raise ProvenanceLoadError(
-            "Cannot deserialize the provenance payload as JSON",
+            "Cannot deserialize the provenance payload as JSON.",
         ) from error
+
+    if not isinstance(json_payload, dict):
+        raise ProvenanceLoadError("The provenance payload is not a JSON object.")
+
+    return json_payload

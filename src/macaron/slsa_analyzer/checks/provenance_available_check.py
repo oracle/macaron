@@ -183,7 +183,7 @@ class ProvenanceAvailableCheck(BaseCheck):
         download_dir: str,
         provenance_assets: list[JFrogMavenAsset],
         jfrog_maven_registry: JFrogMavenRegistry,
-    ) -> dict[str, JsonType]:
+    ) -> dict[str, dict[str, JsonType]]:
         """Download provenances from a JFrog Maven package registry.
 
         Parameters
