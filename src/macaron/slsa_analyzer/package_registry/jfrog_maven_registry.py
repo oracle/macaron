@@ -127,14 +127,10 @@ class JFrogMavenRegistry(PackageRegistry):
             )
 
         try:
-            self.request_timeout = section.getint(
-                "request_timeout",
-                fallback=self.request_timeout,
-            )
+            self.request_timeout = defaults.getint("requests", "timeout", fallback=10)
         except ValueError as error:
             raise ConfigurationError(
-                f'The value of "request_timeout" in section [{section_name}] '
-                f"of the .ini configuration file is invalid: {error}",
+                f'The value of "timeout" in section [requests] ' f"of the .ini configuration file is invalid: {error}",
             ) from error
 
         try:

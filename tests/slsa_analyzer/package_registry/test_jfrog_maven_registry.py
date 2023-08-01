@@ -35,7 +35,6 @@ def test_load_defaults(tmp_path: Path) -> None:
         [package_registry.jfrog.maven]
         domain = jfrog.registry.xyz
         repo = prod-repo
-        request_timeout = 5
         download_timeout = 300
     """
     with open(user_config_path, "w", encoding="utf-8") as user_config_file:
@@ -50,7 +49,6 @@ def test_load_defaults(tmp_path: Path) -> None:
     jfrog_maven.load_defaults()
     assert jfrog_maven.domain == "jfrog.registry.xyz"
     assert jfrog_maven.repo == "prod-repo"
-    assert jfrog_maven.request_timeout == 5
     assert jfrog_maven.download_timeout == 300
 
 
@@ -82,18 +80,21 @@ def test_load_defaults_without_jfrog_maven_config() -> None:
             [package_registry.jfrog.maven]
             domain = jfrog.registry.xyz
             repo = prod-repo
-            request_timeout = foo
+            download_timeout = foo
             """,
-            id="Invalid value for request_timeout",
+            id="Invalid value for download_timeout",
         ),
         pytest.param(
             """
+            [requests]
+            timeout = foo
+
             [package_registry.jfrog.maven]
             domain = jfrog.registry.xyz
             repo = prod-repo
             download_timeout = foo
             """,
-            id="Invalid value for download_timeout",
+            id="Invalid value for request timeout",
         ),
     ],
 )
