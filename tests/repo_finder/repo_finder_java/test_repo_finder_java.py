@@ -24,17 +24,17 @@ def test_java_repo_finder() -> None:
         file_data = file.read()
         pom = repo_finder.parse_pom(file_data)
         assert pom is not None
-        found_urls, count = repo_finder.find_scm(
+        found_urls = repo_finder.find_scm(
             pom, ["scm.url", "scm.connection", "scm.developerConnection", "licenses.license.distribution"]
         )
-        assert count == 4
+        assert len(found_urls) == 4
         expected = [
             "https://github.com/owner/project",
             "ssh://git@hostname:port/owner/Example_License.git",
             "git@github.com:owner/project1.8-2023.git",
             "${licenses.license.distribution}",
         ]
-        assert expected == list(found_urls)
+        assert expected == found_urls
 
 
 def test_java_repo_finder_hierarchical() -> None:

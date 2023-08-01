@@ -15,7 +15,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class RepoFinderDD(BaseRepoFinder):
-    """This class is used to find repositories using Google's Open Source Insights tool (deps.dev)."""
+    """This class is used to find repositories using Google's Open Source Insights A.K.A. deps.dev (DD)."""
 
     # The label used by deps.dev to denote repository urls (Based on observation ONLY)
     repo_url_label = "SOURCE_REPO"
@@ -59,12 +59,12 @@ class RepoFinderDD(BaseRepoFinder):
                 logger.debug("Failed to retrieve metadata for: %s", artifact)
                 return
 
-        urls, url_count = self.read_metadata(metadata)
-        if url_count == 0:
+        urls = self.read_metadata(metadata)
+        if not urls:
             logger.debug("Failed to extract repository URLs from metadata: %s", artifact)
             return
 
-        yield from urls
+        yield from iter(urls)
 
     def create_urls(self, group: str, artifact: str, version: str) -> list[str]:
         """
@@ -141,7 +141,7 @@ class RepoFinderDD(BaseRepoFinder):
 
         return result.text
 
-    def read_metadata(self, metadata: str) -> tuple[Iterator[str], int]:
+    def read_metadata(self, metadata: str) -> list[str]:
         """
         Parse the deps.dev metadata and extract the repository links.
 
@@ -152,20 +152,20 @@ class RepoFinderDD(BaseRepoFinder):
 
         Returns
         -------
-        tuple[Iterator[str], int] :
-            The extracted contents in iterable form and count as a tuple.
+        list[str] :
+            The extracted contents as a list of strings.
         """
         parsed = json.loads(metadata)
 
         if not parsed["links"]:
             logger.debug("Metadata had no URLs: %s", parsed["versionKey"])
-            return iter([]), 0
+            return []
 
         for link in parsed["links"]:
             if link["label"] == self.repo_url_label:
-                return iter([link["url"]]), 1
+                return list(link["url"])
 
-        return iter([]), 0
+        return []
 
     def create_type_specific_url(self, namespace: str, name: str) -> str:
         """Create a url for the deps.dev API based on the package type.

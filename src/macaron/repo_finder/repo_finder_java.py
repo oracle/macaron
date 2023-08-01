@@ -73,11 +73,11 @@ class JavaRepoFinder(BaseRepoFinder):
                 logger.debug("No POM found for %s:%s:%s", group, artifact, version)
                 return
 
-            urls, url_count = self.read_metadata(pom)
+            urls = self.read_metadata(pom)
 
-            if url_count > 0:
-                logger.debug("Found %s urls.", url_count)
-                yield from urls
+            if urls:
+                logger.debug("Found %s urls.", len(urls))
+                yield from iter(urls)
 
             if defaults.getboolean("repofinder.java", "find_parents") and self.pom_element is not None:
                 # Attempt to extract parent information from POM
@@ -146,7 +146,7 @@ class JavaRepoFinder(BaseRepoFinder):
 
         return res.text
 
-    def read_metadata(self, metadata: str) -> tuple[Iterator[str], int]:
+    def read_metadata(self, metadata: str) -> list[str]:
         """
         Parse the passed pom and extract the relevant tags.
 
@@ -157,19 +157,19 @@ class JavaRepoFinder(BaseRepoFinder):
 
         Returns
         -------
-        tuple[Iterator[str], int] :
-            The extracted contents in iterable form and count as a tuple.
+        list[str] :
+            The extracted contents as a list of strings.
         """
         # Retrieve tags
         tags = defaults.get_list("repofinder.java", "repo_pom_paths")
         if not any(tags):
             logger.debug("No POM tags found for URL discovery.")
-            return iter([]), 0
+            return []
 
         # Parse POM using defusedxml
         pom_element = self.parse_pom(metadata)
         if pom_element is None:
-            return iter([]), 0
+            return []
 
         # Attempt to extract SCM data and return URL
         return self.find_scm(pom_element, tags)
@@ -195,7 +195,7 @@ class JavaRepoFinder(BaseRepoFinder):
             logger.debug("Failed to parse XML: %s", error)
             return None
 
-    def find_scm(self, pom: Element, tags: list[str], resolve_properties: bool = True) -> tuple[Iterator[str], int]:
+    def find_scm(self, pom: Element, tags: list[str], resolve_properties: bool = True) -> list[str]:
         """
         Parse the passed pom and extract the passed tags.
 
@@ -210,8 +210,8 @@ class JavaRepoFinder(BaseRepoFinder):
 
         Returns
         -------
-        tuple[Iterator[str], int] :
-            The extracted contents of any matches tags, and the number of matches, as a tuple.
+        list[str] :
+            The extracted contents of any matches tags as a list of strings.
         """
         results = []
 
@@ -239,7 +239,7 @@ class JavaRepoFinder(BaseRepoFinder):
         if resolve_properties:
             results = self._resolve_properties(pom, results)
 
-        return iter(results), len(results)
+        return results
 
     def find_parent(self, pom: Element) -> tuple[str, str, str]:
         """
@@ -303,10 +303,10 @@ class JavaRepoFinder(BaseRepoFinder):
                 else:
                     text = f"properties.{text}"
                 # Call find_scm with property resolution flag set to False to prevent the possibility of endless looping
-                value_iterator, count = self.find_scm(pom, [text], False)
-                if count == 0:
+                result = self.find_scm(pom, [text], False)
+                if not result:
                     break
-                replacements.append([match.start(), next(value_iterator), match.end()])
+                replacements.append([match.start(), result[0], match.end()])
 
             # Apply replacements in reverse order
             # E.g.

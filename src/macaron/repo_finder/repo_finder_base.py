@@ -71,7 +71,7 @@ class BaseRepoFinder(ABC):
         """
 
     @abstractmethod
-    def read_metadata(self, metadata: str) -> tuple[Iterator[str], int]:
+    def read_metadata(self, metadata: str) -> list[str]:
         """
         Parse the passed metadata and extract the relevant information.
 
@@ -82,6 +82,6 @@ class BaseRepoFinder(ABC):
 
         Returns
         -------
-        tuple[Iterator[str], int] :
-            The extracted contents in iterable form and count as a tuple.
+        list[str] :
+            The extracted contents as a list of strings.
         """
