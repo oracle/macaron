@@ -48,7 +48,10 @@ class JFrogMavenAsset(NamedTuple):
 
     @property
     def url(self) -> str:
-        """Get the URL to the asset on the Maven package registry."""
+        """Get the URL to the asset.
+
+        This URL can be used to download the asset.
+        """
         return self.metadata.download_uri
 
     @property
