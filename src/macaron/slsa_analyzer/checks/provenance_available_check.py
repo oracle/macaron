@@ -5,7 +5,6 @@
 
 import logging
 import os
-import re
 import tempfile
 from collections.abc import Sequence
 from types import SimpleNamespace
@@ -17,7 +16,7 @@ from sqlalchemy.sql.sqltypes import String
 
 from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
-from macaron.errors import ProvenanceLoadError
+from macaron.errors import MacaronError, ProvenanceLoadError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import Asset
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
@@ -36,25 +35,8 @@ from macaron.util import JsonType
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def is_in_toto_file(file_name: str) -> bool:
-    """Return true if the file name matches the in-toto file format.
-
-    The format for those files is ``<stage_name>.<6_bytes_key_id>.link``.
-
-    Parameters
-    ----------
-    file_name : str
-        The name of the file to check.
-
-    Returns
-    -------
-    bool
-    """
-    in_toto_format = re.compile(r"\w+\.[0-9a-f]{6}\.link$")
-    if in_toto_format.match(file_name):
-        return True
-
-    return False
+class ProvenanceAvailableException(MacaronError):
+    """When there is an error while checking if a provenance is available."""
 
 
 class ProvenanceAvailableFacts(CheckFacts):
@@ -155,6 +137,28 @@ class ProvenanceAvailableCheck(BaseCheck):
 
                     if not provenance_assets:
                         continue
+
+                    # We check the size of the provenance against a max valid size.
+                    # This is a prevention against malicious denial-of-service attacks when an
+                    # adversary provides a super large malicious file.
+
+                    # TODO: refactor the size checking in this check and the `provenance_l3_check`
+                    # so that we have consistent behavior when checking provenance size.
+                    # The schema of the ini config also needs changing.
+                    max_valid_provenance_size = defaults.getint(
+                        "slsa.verifier",
+                        "max_download_size",
+                        fallback=1000000,
+                    )
+
+                    for provenance_asset in provenance_assets:
+                        if provenance_asset.size_in_bytes > max_valid_provenance_size:
+                            msg = (
+                                f"The provenance asset {provenance_asset.name} exceeds the "
+                                f"max valid file size of {max_valid_provenance_size} (bytes)."
+                            )
+                            logger.info(msg)
+                            raise ProvenanceAvailableException(msg)
 
                     logger.info("Found the following provenance assets:")
                     for provenance_asset in provenance_assets:
@@ -368,15 +372,19 @@ class ProvenanceAvailableCheck(BaseCheck):
 
         # We look for the provenances in the package registries first, then CI services.
         # (Note the short-circuit evaluation with OR.)
-        provenance_assets = self.find_provenance_assets_on_package_registries(
-            repo_full_name=ctx.component.repository.full_name,
-            package_registry_data_entries=ctx.dynamic_data["package_registries"],
-            provenance_extensions=provenance_extensions,
-        ) or self.find_provenance_assets_on_ci_services(
-            repo_full_name=ctx.component.repository.full_name,
-            ci_info_entries=ctx.dynamic_data["ci_services"],
-            provenance_extensions=provenance_extensions,
-        )
+        try:
+            provenance_assets = self.find_provenance_assets_on_package_registries(
+                repo_full_name=ctx.component.repository.full_name,
+                package_registry_data_entries=ctx.dynamic_data["package_registries"],
+                provenance_extensions=provenance_extensions,
+            ) or self.find_provenance_assets_on_ci_services(
+                repo_full_name=ctx.component.repository.full_name,
+                ci_info_entries=ctx.dynamic_data["ci_services"],
+                provenance_extensions=provenance_extensions,
+            )
+        except ProvenanceAvailableException as error:
+            check_result["justification"] = [str(error)]
+            return CheckResultType.FAILED
 
         if provenance_assets:
             ctx.dynamic_data["is_inferred_prov"] = False

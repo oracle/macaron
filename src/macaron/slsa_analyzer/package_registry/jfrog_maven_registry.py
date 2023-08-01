@@ -56,6 +56,11 @@ class JFrogMavenAsset(NamedTuple):
         """Get the SHA256 digest of the asset."""
         return self.metadata.sha256_digest
 
+    @property
+    def size_in_bytes(self) -> int:
+        """Get the size of the asset (in bytes)."""
+        return self.metadata.size_in_bytes
+
 
 class JFrogMavenAssetMetadata(NamedTuple):
     """Metadata of an asset on a JFrog Maven registry.
