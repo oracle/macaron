@@ -24,7 +24,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class JFrogMavenAsset(NamedTuple):
-    """An asset (file) hosted at a given URL.
+    """An asset hosted on a JFrog Artifactory repository with Maven layout.
 
     Attributes
     ----------
