@@ -10,7 +10,7 @@
 # Note that the local machine must login to ghcr.io so that Docker could pull the ghcr.io/oracle/macaron-base
 # image for this build.
 
-FROM ghcr.io/oracle/macaron-base:latest@sha256:5f2ed797b2b1e7e80d151fabc85e220a6bd57a9808c73aaa3cf466a038061a1d
+FROM ghcr.io/oracle/macaron-base:latest@sha256:79b3b8b03cb9b6a124c6450f4baa58f96f83ee9e37f572c88a97597b35c7bc51
 
 ENV HOME="/home/macaron"
 
