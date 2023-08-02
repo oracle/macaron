@@ -700,6 +700,7 @@ class Analyzer:
         try:
             git_service.check_out_repo(git_obj, branch_name, digest, not is_remote)
         except RepoCheckOutError as error:
+            logger.error("Failed to check out repository at %s", resolved_local_path)
             logger.error(error)
             return None
 
