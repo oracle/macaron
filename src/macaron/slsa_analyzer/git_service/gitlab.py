@@ -23,6 +23,7 @@ import os
 from abc import abstractmethod
 from urllib.parse import ParseResult, urlunparse
 
+from git import GitError
 from pydriller.git import Git
 
 from macaron.errors import CloneError, ConfigurationError, RepoCheckOutError
@@ -129,7 +130,7 @@ class GitLab(BaseGitService):
         # Therefore, we don't need to catch and handle the CloneError exceptions here.
         repo = git_url.clone_remote_repo(clone_dir, clone_url)
 
-        # If ``git_url.clone_remote_repo`` returns an Repo instance, this means that the repository is freshly cloned
+        # If ``git_url.clone_remote_repo`` returns a Repo instance, this means that the repository is freshly cloned
         # with the token embedded URL. We will set its value back to the original non-token URL.
         # If ``git_url.clone_remote_repo`` returns None, it means that the repository already exists so we don't need
         # to do anything.
@@ -139,7 +140,16 @@ class GitLab(BaseGitService):
             except ValueError as error:
                 raise CloneError("Cannot find the remote origin for this repository.") from error
 
-            origin_remote.set_url(url)
+            try:
+                # Even though the documentation of ``set_url`` function does not explicitly mention
+                # ``ValueError`` or ``GitError`` as raised errors, these errors might be raised based
+                # on the implementation.
+                origin_remote.set_url(url)
+            except (ValueError, GitError) as error:
+                raise CloneError(
+                    "Failed to set the remote origin URL because this repository is in an unexpected state."
+                    f" Consider removing the cloned repository at {clone_dir}."
+                ) from error
 
     def check_out_repo(self, git_obj: Git, branch: str, digest: str, offline_mode: bool) -> Git:
         """Checkout the branch and commit specified by the user of a repository.
@@ -168,7 +178,7 @@ class GitLab(BaseGitService):
 
         Raises
         ------
-        RepoError
+        RepoCheckOutError
             If there is error while checkout the specific branch and digest.
         """
         remote_origin_url = git_url.get_remote_origin_of_local_repo(git_obj)
@@ -183,11 +193,26 @@ class GitLab(BaseGitService):
         except CloneError as error:
             raise RepoCheckOutError("Cannot parse the remote origin URL of this repository.") from error
 
-        origin_remote.set_url(reconstructed_url, remote_origin_url)
+        try:
+            # Even though the documentation of ``set_url`` function does not explicitly mention
+            # ``ValueError`` or ``GitError`` as raised errors, these errors might be raised based
+            # on the implementation.
+            origin_remote.set_url(reconstructed_url, remote_origin_url)
+        except (ValueError, GitError) as error:
+            raise RepoCheckOutError(
+                "Failed to set the remote origin URL because this repository is in an unexpected state."
+                " Consider removing the cloned repository."
+            ) from error
 
         check_out_status = git_url.check_out_repo_target(git_obj, branch, digest, offline_mode)
 
-        origin_remote.set_url(remote_origin_url, reconstructed_url)
+        try:
+            origin_remote.set_url(remote_origin_url, reconstructed_url)
+        except (ValueError, GitError) as error:
+            raise RepoCheckOutError(
+                "Failed to set the remote origin URL because this repository is in an unexpected state."
+                " Consider removing the cloned repository."
+            ) from error
 
         if not check_out_status:
             raise RepoCheckOutError(
