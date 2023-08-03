@@ -4,7 +4,6 @@
 """This module tries to find urls of repositories that match artifacts passed in 'group:artifact:version' form."""
 import logging
 import re
-import typing
 from collections.abc import Iterator
 from xml.etree.ElementTree import Element  # nosec
 
@@ -77,7 +76,7 @@ def retrieve_pom(session: requests.Session, url: str) -> str:
     return res.text
 
 
-def _find_element(parent: typing.Optional[Element], target: str) -> typing.Optional[Element]:
+def _find_element(parent: Element | None, target: str) -> Element | None:
     if not parent:
         return None
 
@@ -143,7 +142,7 @@ def find_scm(pom: Element, tags: list[str], resolve_properties: bool = True) -> 
 
     # Try to match each tag with the contents of the POM.
     for tag in tags:
-        element: typing.Optional[Element] = pom
+        element: Element | None = pom
 
         if tag.startswith("properties."):
             # Tags under properties are often "." separated

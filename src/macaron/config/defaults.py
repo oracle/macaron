@@ -8,7 +8,6 @@ import logging
 import os
 import pathlib
 import shutil
-from typing import Optional
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -20,8 +19,8 @@ class ConfigParser(configparser.ConfigParser):
         self,
         section: str,
         item: str,
-        delimiter: Optional[str] = "\n",
-        fallback: Optional[list[str]] = None,
+        delimiter: str | None = "\n",
+        fallback: list[str] | None = None,
         duplicated_ok: bool = False,
         strip: bool = True,
     ) -> list[str]:
@@ -48,9 +47,9 @@ class ConfigParser(configparser.ConfigParser):
             The section in ``defaults.ini``.
         item : str
             The item to parse the list.
-        delimiter : Optional[str]
+        delimiter : str | None
             The delimiter used to split the strings.
-        fallback : Optional[list]
+        fallback : list | None
             The fallback value in case of errors.
         duplicated_ok : bool
             If True allow duplicate values.

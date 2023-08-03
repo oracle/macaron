@@ -8,7 +8,6 @@ import logging
 import os
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Optional
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
@@ -54,7 +53,7 @@ def deserialize_bom_json(file_path: Path) -> dict:
             raise CycloneDXParserError(f"Could not process the dependencies at {file_path}: {error}") from None
 
 
-def get_root_component(root_bom_path: Path) -> Optional[dict | None]:
+def get_root_component(root_bom_path: Path) -> dict | None:
     """Get the root dependency component.
 
     Parameters
@@ -64,7 +63,7 @@ def get_root_component(root_bom_path: Path) -> Optional[dict | None]:
 
     Returns
     -------
-    Optional[dict|None]
+    dict | None
         The root component.
     """
     try:
@@ -81,7 +80,7 @@ def get_root_component(root_bom_path: Path) -> Optional[dict | None]:
 
 
 def get_dep_components(
-    root_bom_path: Path, child_bom_paths: Optional[list[Path]] = None, recursive: bool = False
+    root_bom_path: Path, child_bom_paths: list[Path] | None = None, recursive: bool = False
 ) -> Iterable[dict]:
     """Get dependency components.
 
@@ -89,7 +88,7 @@ def get_dep_components(
     ----------
     root_bom_path : str
         Path to the root bom.json file.
-    child_bom_paths: Optional[list[Path]]
+    child_bom_paths: list[Path] | None
         The list of paths to sub-project bom.json files.
     recursive: bool
         Set to False to get the direct dependencies only (default).
@@ -147,7 +146,7 @@ def get_dep_components(
 
 
 def convert_components_to_artifacts(
-    components: Iterable[dict], root_component: Optional[dict | None] = None
+    components: Iterable[dict], root_component: dict | None = None
 ) -> dict[str, DependencyInfo]:
     """Convert CycloneDX components using internal artifact representation.
 
@@ -155,7 +154,7 @@ def convert_components_to_artifacts(
     ----------
     components : list[dict]
         The dependency components.
-    root_component: Optional[dict|None]
+    root_component: dict | None
         The root CycloneDX component.
 
     Returns

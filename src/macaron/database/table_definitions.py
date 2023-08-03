@@ -16,7 +16,7 @@ import os
 import string
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Self
+from typing import Self, Union
 
 from packageurl import PackageURL
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Table, UniqueConstraint
@@ -160,7 +160,7 @@ class Component(PackageURLMixin, ORMBase):
         secondaryjoin=components_association_table.c.child_component == id,
     )
 
-    def __init__(self, purl: str, analysis: Analysis, repository: Optional["Repository"]):
+    def __init__(self, purl: str, analysis: Analysis, repository: Union["Repository", None]):
         """
         Instantiate the software component using PURL identifier.
 

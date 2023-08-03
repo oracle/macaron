@@ -38,7 +38,7 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
         if not isinstance(value, datetime.datetime):
             raise TypeError("RFC3339DateTime type expects a datetime object")
         if not value.tzinfo:
-            value = value.astimezone(datetime.timezone.utc)  # Consider coercing to host timezone.
+            value = value.astimezone(datetime.UTC)  # Consider coercing to host timezone.
         return value.isoformat(timespec="seconds")
 
     def process_result_value(self, value: None | str, dialect: Any) -> None | datetime.datetime:
@@ -54,4 +54,4 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
         result = datetime.datetime.fromisoformat(value)
         if result.tzinfo:
             return result
-        return result.astimezone(datetime.timezone.utc)  # Consider coercing to host timezone.
+        return result.astimezone(datetime.UTC)  # Consider coercing to host timezone.

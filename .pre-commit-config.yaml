@@ -53,7 +53,7 @@ repos:
   - id: pyupgrade
     name: Upgrade code idioms
     files: ^src/macaron/|^tests/
-    args: [--py39-plus]
+    args: [--py311-plus]
 
 # Similar to pylint, with a few more/different checks. For more available
 # extensions: https://github.com/DmytroLitvinov/awesome-flake8-extensions

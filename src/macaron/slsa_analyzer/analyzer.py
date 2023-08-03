@@ -10,7 +10,6 @@ import sys
 from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 import sqlalchemy.exc
 from git import InvalidGitRepositoryError
@@ -340,7 +339,7 @@ class Analyzer:
         self,
         config: Configuration,
         analysis: Analysis,
-        existing_records: Optional[dict[str, Record]] = None,
+        existing_records: dict[str, Record] | None = None,
     ) -> Record:
         """Run the checks for a single repository target.
 
@@ -353,7 +352,7 @@ class Analyzer:
             The configuration for running Macaron.
         analysis: Analysis
             The current analysis instance.
-        existing_records : Optional[dict[str, Record]]
+        existing_records : dict[str, Record] | None
             The mapping of existing records that the analysis has run successfully.
 
         Returns

@@ -3,7 +3,8 @@
 
 """This module provides a base class for provenance expectation verifiers."""
 
-from typing import Any, Callable, Self
+from collections.abc import Callable
+from typing import Any, Self
 
 from sqlalchemy.orm import Mapped, mapped_column
 

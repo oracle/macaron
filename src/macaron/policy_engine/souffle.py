@@ -15,7 +15,6 @@ import shutil
 import subprocess  # nosec B404
 import tempfile
 from types import TracebackType
-from typing import Optional
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -26,7 +25,7 @@ class SouffleError(Exception):
     # TODO: Use generic Macaron error class
 
     def __init__(
-        self, command: Optional[list[str] | str] = None, message: str = "An error occurred with calling Souffle."
+        self, command: list[str] | str | None = None, message: str = "An error occurred with calling Souffle."
     ):
         self.message = message
         self.command = command
@@ -48,9 +47,9 @@ class SouffleWrapper:
     def __init__(
         self,
         souffle_full_path: str = "souffle",
-        output_dir: Optional[str] = None,
-        include_dir: Optional[str] = None,
-        fact_dir: Optional[str] = None,
+        output_dir: str | None = None,
+        include_dir: str | None = None,
+        fact_dir: str | None = None,
         library_dir: str = os.curdir,
     ):
         """
@@ -60,11 +59,11 @@ class SouffleWrapper:
         ----------
         souffle_full_path: str
             The path to the souffle executable.
-        output_dir: Optional[str]
+        output_dir: str | None
             The path to the souffle program's output directory.
-        include_dir: Optional[str]
+        include_dir: str | None
             The path to the directory to search for files when preprocessing the souffle program #include directives.
-        fact_dir: Optional[str]
+        fact_dir: str | None
             The path to search for files to import facts from.
         library_dir: str
             The path to the directory to search for shared object files when linking souffle functors.
@@ -82,8 +81,8 @@ class SouffleWrapper:
         # The directory to link Souffle functor shared libraries from.
         self.library_dir: str
 
-        self.souffle_stdout: Optional[str] = None
-        self.souffle_stderr: Optional[str] = None
+        self.souffle_stdout: str | None = None
+        self.souffle_stderr: str | None = None
 
         # The original execution directory when it is executed.
         self._orig_dir = os.path.abspath(os.curdir)
@@ -111,7 +110,7 @@ class SouffleWrapper:
 
         self.library_dir = os.path.abspath(library_dir)
 
-    def _invoke_souffle(self, source_file: str, additional_args: Optional[list[str]] = None) -> None:
+    def _invoke_souffle(self, source_file: str, additional_args: list[str] | None = None) -> None:
         additional_args = [] if additional_args is None else additional_args
         cmd = [
             self._souffle,
@@ -192,7 +191,7 @@ class SouffleWrapper:
         return self
 
     def __exit__(
-        self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
     ) -> None:
         self._cleanup()
 

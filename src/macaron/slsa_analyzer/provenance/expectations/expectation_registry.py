@@ -5,7 +5,6 @@
 
 import logging
 import os
-from typing import Optional
 
 from macaron.database.table_definitions import CUEExpectation
 from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
@@ -44,7 +43,7 @@ class ExpectationRegistry:
             else:
                 logger.error("Unsupported expectation format: %s", expectation_path)
 
-    def get_expectation_for_target(self, repo_complete_name: str) -> Optional[Expectation]:
+    def get_expectation_for_target(self, repo_complete_name: str) -> Expectation | None:
         """
         Get the expectation that applies to a repository.
 
@@ -55,7 +54,7 @@ class ExpectationRegistry:
 
         Returns
         -------
-        Optional[Expectation]
+        Expectation | None
             An expectation if one is found, otherwise None.
         """
         if repo_complete_name in self.expectations:
