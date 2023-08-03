@@ -86,7 +86,7 @@ class RepoFinderDD(BaseRepoFinder):
         list[str]
             The list of created URLs.
         """
-        package_name = f"{group}:{artifact}:{version}"
+        package_name = f"{group}:{artifact}@{version}"
         base_url = self.create_type_specific_url(group, artifact)
 
         if version:
