@@ -1,11 +1,11 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Configuration class for the target analyzed repository."""
 
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 import yamale
 from yamale.schema import Schema
@@ -21,12 +21,12 @@ TARGET_CONFIG_SCHEMA: Schema = yamale.make_schema(_SCHEMA_DIR)
 class Configuration:
     """This class contains the configuration for an analyzed repo in Macaron."""
 
-    def __init__(self, data: Optional[dict] = None) -> None:
+    def __init__(self, data: dict | None = None) -> None:
         """Construct the Configuration object.
 
         Parameters
         ----------
-        data : Optional[dict]
+        data : dict | None
             The dictionary contains the data to analyze a repository.
         """
         self.options = {"id": "", "path": "", "branch": "", "digest": "", "note": "", "available": ""}

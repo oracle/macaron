@@ -5,7 +5,6 @@
 
 import logging
 from abc import abstractmethod
-from typing import Optional
 
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType, SkippedInfo, get_result_as_bool
@@ -24,8 +23,8 @@ class BaseCheck:
         self,
         check_id: str = "",
         description: str = "",
-        depends_on: Optional[list[tuple[str, CheckResultType]]] = None,
-        eval_reqs: Optional[list[ReqName]] = None,
+        depends_on: list[tuple[str, CheckResultType]] | None = None,
+        eval_reqs: list[ReqName] | None = None,
         result_on_skip: CheckResultType = CheckResultType.SKIPPED,
     ) -> None:
         """Initialize instance.
@@ -36,11 +35,11 @@ class BaseCheck:
             The id of the check.
         description : str
             The description of the check.
-        depends_on : Optional[list[tuple(str, CheckResultType)]]
+        depends_on : list[tuple[str, CheckResultType]] | None
             The list of parent checks that this check depends on.
             Each member of the list is a tuple of the parent's id and the status
             of that parent check.
-        eval_reqs : Optional[list[ReqName]]
+        eval_reqs : list[ReqName] | None
             The list of SLSA requirements that this check addresses.
         result_on_skip : CheckResultType
             The status for this check when it's skipped based on another check's result.
@@ -60,14 +59,14 @@ class BaseCheck:
 
         self.result_on_skip = result_on_skip
 
-    def run(self, target: AnalyzeContext, skipped_info: Optional[SkippedInfo] = None) -> CheckResult:
+    def run(self, target: AnalyzeContext, skipped_info: SkippedInfo | None = None) -> CheckResult:
         """Run the check and return the results.
 
         Parameters
         ----------
         target : AnalyzeContext
             The object containing processed data for the target repo.
-        skipped_info : Optional[SkippedInfo]
+        skipped_info : SkippedInfo | None
             Determine whether the check is skipped.
 
         Returns

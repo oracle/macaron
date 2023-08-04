@@ -8,7 +8,6 @@ import json
 import logging
 import os
 from copy import deepcopy
-from typing import Optional
 
 from jinja2 import (
     Environment,
@@ -36,9 +35,9 @@ class FileReporter(abc.ABC):
 
         Parameters
         ----------
-        mode : str, optional
+        mode : str
             The mode to open the target files, by default "w".
-        encoding : str, optional
+        encoding : str
             The encoding used to handle disk files, by default "utf-8".
         """
         self.mode = mode
@@ -91,11 +90,11 @@ class JSONReporter(FileReporter):
 
         Parameters
         ----------
-        mode: str, optional
+        mode: str
             The file operation mode.
-        encoding: str, optional
+        encoding: str
             The encoding.
-        indent : int, optional
+        indent : int
             The indent for the JSON output, by default 4.
         """
         super().__init__(mode, encoding)
@@ -139,18 +138,18 @@ class HTMLReporter(FileReporter):
         self,
         mode: str = "w",
         encoding: str = "utf-8",
-        env: Optional[Environment] = None,
+        env: Environment | None = None,
         target_template: str = "macaron.html",
     ) -> None:
         """Initialize instance.
 
         Parameters
         ----------
-        mode: str, optional
+        mode: str
             The file operation mode.
-        encoding: str, optional
+        encoding: str
             The encoding.
-        env : Optional[Environment]
+        env : Environment | None
             The pre-initiated ``jinja2.Environment`` instance for the HTMLReporter. If this is not
             provided, a default jinja2.Environment will be initialized.
         target_template : str
@@ -237,11 +236,11 @@ class PolicyReporter(FileReporter):
 
         Parameters
         ----------
-        mode: str, optional
+        mode: str
             The file operation mode.
-        encoding: str, optional
+        encoding: str
             The encoding.
-        indent : int, optional
+        indent : int
             The indent for the JSON output, by default 4.
         """
         super().__init__(mode, encoding)
