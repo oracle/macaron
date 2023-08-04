@@ -6,7 +6,7 @@
 import ctypes
 import json
 import os
-from typing import Callable
+from collections.abc import Callable
 
 from macaron import MACARON_PATH
 from macaron.errors import CUEExpectationError, CUERuntimeError

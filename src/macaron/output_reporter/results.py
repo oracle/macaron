@@ -6,7 +6,7 @@
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Generic, Optional, TypedDict, TypeVar
+from typing import Generic, TypedDict, TypeVar
 
 from macaron.config.target_config import Configuration
 from macaron.output_reporter.scm import SCMStatus
@@ -229,12 +229,12 @@ class Report:
             if record.context:
                 yield record.context
 
-    def get_dependencies(self, root_record: Optional[Record] = None) -> Iterable[tuple[AnalyzeContext, AnalyzeContext]]:
+    def get_dependencies(self, root_record: Record | None = None) -> Iterable[tuple[AnalyzeContext, AnalyzeContext]]:
         """Get the generator for the dependency relations between repositories.
 
         Parameters
         ----------
-        root_record: Optional[Record]
+        root_record: Record | None
             The root record to find the dependencies of, if none is provided self.root_record is used.
 
         Yields
