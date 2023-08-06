@@ -183,13 +183,13 @@ def test_is_detected(
         ),
     ],
 )
-def test_construct_maven_path(
+def test_construct_maven_repository_path(
     jfrog_maven: JFrogMavenRegistry,
     args: dict,
     expected_path: str,
 ) -> None:
-    """Test the ``construct_maven_path`` method."""
-    assert jfrog_maven.construct_maven_path(**args) == expected_path
+    """Test the ``construct_maven_repository_path`` method."""
+    assert jfrog_maven.construct_maven_repository_path(**args) == expected_path
 
 
 @pytest.mark.parametrize(
@@ -211,7 +211,7 @@ def test_to_group_folder_path(
     expected_group_path: str,
 ) -> None:
     """Test the ``to_gorup_folder_path`` method."""
-    assert jfrog_maven.construct_maven_path(group_id) == expected_group_path
+    assert jfrog_maven.construct_maven_repository_path(group_id) == expected_group_path
 
 
 @pytest.mark.parametrize(

@@ -174,16 +174,18 @@ class JFrogMavenRegistry(PackageRegistry):
                 return True
         return False
 
-    def construct_maven_path(
+    def construct_maven_repository_path(
         self,
         group_id: str,
         artifact_id: str | None = None,
         version: str | None = None,
         asset_name: str | None = None,
     ) -> str:
-        """Construct a path to a folder or file on the registry, assuming Maven layout.
+        """Construct a path to a folder or file on the registry, assuming Maven repository layout.
 
-        This is simply done by replacing all dots (``.``) with forward-slashes (``/``).
+        For more details regarding Maven repository layout, see the following:
+        - https://maven.apache.org/repository/layout.html
+        - https://maven.apache.org/guides/mini/guide-naming-conventions.html
 
         Parameters
         ----------
@@ -226,7 +228,7 @@ class JFrogMavenRegistry(PackageRegistry):
             The artifacts ids under the group.
         """
         folder_info_url = self.construct_folder_info_url(
-            folder_path=self.construct_maven_path(group_id),
+            folder_path=self.construct_maven_repository_path(group_id),
         )
 
         try:
@@ -415,7 +417,7 @@ class JFrogMavenRegistry(PackageRegistry):
         list[str]
             The list of asset names.
         """
-        folder_path = self.construct_maven_path(
+        folder_path = self.construct_maven_repository_path(
             group_id=group_id,
             artifact_id=artifact_id,
             version=version,
@@ -590,7 +592,7 @@ class JFrogMavenRegistry(PackageRegistry):
         JFrogMavenAsset | None
             The asset's metadata, or ``None`` if the metadata cannot be retrieved.
         """
-        file_path = self.construct_maven_path(
+        file_path = self.construct_maven_repository_path(
             group_id=group_id,
             artifact_id=artifact_id,
             version=version,
@@ -763,7 +765,7 @@ class JFrogMavenRegistry(PackageRegistry):
         str
             The URL to the asset, which can be use for downloading the asset.
         """
-        group_path = self.construct_maven_path(group_id)
+        group_path = self.construct_maven_repository_path(group_id)
         return urlunsplit(
             SplitResult(
                 scheme="https",
