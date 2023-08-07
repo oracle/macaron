@@ -26,6 +26,12 @@ from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
 from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAsset
 from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader, SLSAProvenanceError, load_provenance
+from macaron.slsa_analyzer.provenance.witness import (
+    WitnessProvenance,
+    extract_repo_url,
+    is_witness_provenance_payload,
+    load_witness_verifier_config,
+)
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
@@ -77,6 +83,7 @@ class ProvenanceAvailableCheck(BaseCheck):
     def find_provenance_assets_on_package_registries(
         self,
         repo_fs_path: str,
+        repo_remote_path: str,
         package_registry_data_entries: list[PackageRegistryData],
         provenance_extensions: list[str],
     ) -> Sequence[IsAsset]:
@@ -175,22 +182,81 @@ class ProvenanceAvailableCheck(BaseCheck):
                             raise ProvenanceAvailableException(msg)
 
                     logger.info("Found the following provenance assets:")
-                    for provenance_asset in provenance_assets:
-                        logger.info("* %s", provenance_asset.url)
 
-                    # Persist the provenance assets in the package registry data entry.
-                    data_entry.provenance_assets.extend(provenance_assets)
+                    provenances = self.obtain_witness_provenances(
+                        provenance_assets=provenance_assets,
+                        repo_remote_path=repo_remote_path,
+                    )
 
-                    with tempfile.TemporaryDirectory() as temp_dir:
-                        data_entry.provenances = self.download_provenances_from_jfrog_maven_package_registry(
-                            download_dir=temp_dir,
-                            jfrog_maven_registry=jfrog_registry,
-                            provenance_assets=provenance_assets,
-                        )
+                    witness_provenance_assets = []
+                    for provenance in provenances:
+                        logger.info("* %s", provenance.asset.url)
+                        # Persist the provenance assets in the package registry data entry.
+                        witness_provenance_assets.append(provenance.asset)
 
+                    data_entry.provenances.extend(provenances)
                     return provenance_assets
 
         return []
+
+    def obtain_witness_provenances(
+        self,
+        provenance_assets: Sequence[IsAsset],
+        repo_remote_path: str,
+    ) -> list[WitnessProvenance]:
+        """Obtain the witness provenances produced from a repository.
+
+        Parameters
+        ----------
+        provenance_assets : Sequence[Asset]
+            A list of provenance assets, some of which can be witness provenances.
+        repo_remote_path : str
+            The remote path of the repo being analyzed.
+
+        Returns
+        -------
+        list[WitnessProvenance]
+            A list of witness provenances that are produced by the repo being analyzed.
+        """
+        provenances = []
+        witness_verifier_config = load_witness_verifier_config()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            for provenance_asset in provenance_assets:
+                provenance_filepath = os.path.join(temp_dir, provenance_asset.name)
+                if not provenance_asset.download(provenance_filepath):
+                    logger.debug(
+                        "Could not download the provenance %s. Skip verifying...",
+                        provenance_asset.name,
+                    )
+                    continue
+
+                try:
+                    provenance_payload = load_provenance(
+                        provenance_filepath,
+                    )
+                except ProvenanceLoadError as error:
+                    logger.error("Error while loading provenance: %s", error)
+                    continue
+
+                if not is_witness_provenance_payload(
+                    provenance_payload,
+                    witness_verifier_config.predicate_types,
+                ):
+                    continue
+
+                repo_url = extract_repo_url(provenance_payload)
+                if not repo_url != repo_remote_path:
+                    continue
+
+                provenances.append(
+                    WitnessProvenance(
+                        asset=provenance_asset,
+                        payload=provenance_payload,
+                    )
+                )
+
+        return provenances
 
     def download_provenances_from_jfrog_maven_package_registry(
         self,
@@ -211,7 +277,7 @@ class ProvenanceAvailableCheck(BaseCheck):
 
         Returns
         -------
-        dict[str, JsonType]
+        dict[str, dict[str, JsonType]]
             The downloaded provenance payloads. Each key is the URL where the provenance
             asset is hosted and each value is the corresponding provenance payload in JSON.
         """
@@ -389,6 +455,7 @@ class ProvenanceAvailableCheck(BaseCheck):
         try:
             provenance_assets = self.find_provenance_assets_on_package_registries(
                 repo_fs_path=ctx.component.repository.fs_path,
+                repo_remote_path=ctx.component.repository.remote_path,
                 package_registry_data_entries=ctx.dynamic_data["package_registries"],
                 provenance_extensions=provenance_extensions,
             ) or self.find_provenance_assets_on_ci_services(
