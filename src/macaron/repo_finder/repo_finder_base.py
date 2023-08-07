@@ -6,8 +6,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 
-import requests
-
 
 class BaseRepoFinder(ABC):
     """This abstract class is used to represent Repository Finders."""
@@ -53,14 +51,12 @@ class BaseRepoFinder(ABC):
         """
 
     @abstractmethod
-    def retrieve_metadata(self, session: requests.Session, url: str) -> str:
+    def retrieve_metadata(self, url: str) -> str:
         """
-        Attempt to retrieve the file located at the passed URL using the passed Session.
+        Attempt to retrieve the file located at the passed URL.
 
         Parameters
         ----------
-        session : requests.Session
-            The HTTP session to use for attempting the GET request.
         url : str
             The URL for the GET request.
 

@@ -10,7 +10,7 @@ from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
-from macaron.repo_finder.repo_finder_dd import RepoFinderDD
+from macaron.repo_finder.repo_finder_deps_dev import RepoFinderDepsDev
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ def find_repo(purl_string: str) -> Iterator[str]:
     elif purl.type in ["pypi", "nuget", "cargo", "npm"] and defaults.getboolean(
         "repofinder", "use_open_source_insights"
     ):
-        repo_finder = RepoFinderDD(purl.type)
+        repo_finder = RepoFinderDepsDev(purl.type)
     else:
         logger.debug("No Repo Finder found for package type: %s of %s", purl.type, purl_string)
         return

@@ -9,7 +9,6 @@ import os
 import sys
 from importlib import metadata as importlib_metadata
 
-import requests
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 import macaron
@@ -19,7 +18,7 @@ from macaron.errors import ConfigurationError
 from macaron.output_reporter.reporter import HTMLReporter, JSONReporter, PolicyReporter
 from macaron.parsers.yaml.loader import YamlLoader
 from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
-from macaron.repo_finder.repo_finder_dd import RepoFinderDD
+from macaron.repo_finder.repo_finder_deps_dev import RepoFinderDepsDev
 from macaron.slsa_analyzer.analyzer import Analyzer
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
@@ -168,21 +167,20 @@ def verify_repo_finder() -> int:
     - Other similar repositories to Maven central (internal Artifactory, etc.) can be provided by the user instead.
     """
     # Verify deps.dev for a Python package
-    repo_finder = RepoFinderDD("pypi")
+    repo_finder = RepoFinderDepsDev("pypi")
     urls = []
     # Without version
     urls.append(repo_finder.create_urls("", "packageurl-python", ""))
     # With version
     urls.append(repo_finder.create_urls("", "packageurl-python", "0.11.1"))
-    with requests.Session() as session:
-        for url in urls:
-            logger.debug("Verifying: %s", url[0])
-            metadata = repo_finder.retrieve_metadata(session, url[0])
-            if not metadata:
-                return 1
-            links = repo_finder.read_metadata(metadata)
-            if not links:
-                return 1
+    for url in urls:
+        logger.debug("Verifying: %s", url[0])
+        metadata = repo_finder.retrieve_metadata(url[0])
+        if not metadata:
+            return 1
+        links = repo_finder.read_metadata(metadata)
+        if not links:
+            return 1
     return 0
 
 

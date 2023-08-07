@@ -9,11 +9,11 @@ from collections.abc import Iterator
 from xml.etree.ElementTree import Element  # nosec
 
 import defusedxml.ElementTree
-import requests
 from defusedxml.ElementTree import fromstring
 
 from macaron.config.defaults import defaults
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
+from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -61,12 +61,11 @@ class JavaRepoFinder(BaseRepoFinder):
                 return
 
             # Try each POM URL in order, terminating early if a match is found
-            with requests.Session() as session:
-                pom = ""
-                for request_url in request_urls:
-                    pom = self.retrieve_metadata(session, request_url)
-                    if pom != "":
-                        break
+            pom = ""
+            for request_url in request_urls:
+                pom = self.retrieve_metadata(request_url)
+                if pom != "":
+                    break
 
             if pom == "":
                 # Abort if no POM was found
@@ -116,14 +115,12 @@ class JavaRepoFinder(BaseRepoFinder):
             urls.append(f"{repo}/{group}/{artifact}/{version}/{artifact}-{version}.pom")
         return urls
 
-    def retrieve_metadata(self, session: requests.Session, url: str) -> str:
+    def retrieve_metadata(self, url: str) -> str:
         """
-        Attempt to retrieve the file located at the passed URL using the passed Session.
+        Attempt to retrieve the file located at the passed URL.
 
         Parameters
         ----------
-        session : requests.Session
-            The HTTP session to use for attempting the GET request.
         url : str
             The URL for the GET request.
 
@@ -132,19 +129,12 @@ class JavaRepoFinder(BaseRepoFinder):
         str :
             The retrieved file data or an empty string.
         """
-        try:
-            res = session.get(url)
-        except (requests.RequestException, OSError) as error:
-            logger.debug("Error during pom retrieval: %s", error)
-            return ""
-
-        if not res.ok:
-            logger.debug("Failed to retrieve pom from: %s, error code: %s", url, res.status_code)
+        response = send_get_http_raw(url, {})
+        if not response:
             return ""
 
         logger.debug("Found artifact POM at: %s", url)
-
-        return res.text
+        return response.text
 
     def read_metadata(self, metadata: str) -> list[str]:
         """

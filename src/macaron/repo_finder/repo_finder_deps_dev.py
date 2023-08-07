@@ -7,14 +7,13 @@ import logging
 from collections.abc import Iterator
 from urllib.parse import quote as encode
 
-import requests
-
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
+from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class RepoFinderDD(BaseRepoFinder):
+class RepoFinderDepsDev(BaseRepoFinder):
     """This class is used to find repositories using Google's Open Source Insights A.K.A. deps.dev (DD)."""
 
     # The label used by deps.dev to denote repository urls (Based on observation ONLY)
@@ -53,11 +52,10 @@ class RepoFinderDD(BaseRepoFinder):
             logger.debug("No urls found for: %s", artifact)
             return
 
-        with requests.Session() as session:
-            metadata = self.retrieve_metadata(session, request_urls[0])
-            if not metadata:
-                logger.debug("Failed to retrieve metadata for: %s", artifact)
-                return
+        metadata = self.retrieve_metadata(request_urls[0])
+        if not metadata:
+            logger.debug("Failed to retrieve metadata for: %s", artifact)
+            return
 
         urls = self.read_metadata(metadata)
         if not urls:
@@ -86,25 +84,17 @@ class RepoFinderDD(BaseRepoFinder):
         list[str]
             The list of created URLs.
         """
-        package_name = f"{group}:{artifact}@{version}"
         base_url = self.create_type_specific_url(group, artifact)
 
         if version:
             return [f"{base_url}/versions/{version}"]
 
         # Find the latest version.
-        with requests.Session() as session:
-            try:
-                result = session.get(base_url)
-            except (requests.RequestException, OSError) as error:
-                logger.debug("Error during version retrieval: %s", error)
-                return []
+        response = send_get_http_raw(base_url, {})
+        if not response:
+            return []
 
-            if not result.ok:
-                logger.debug("Failed to retrieve versions for: %s, error code: %s", package_name, result.status_code)
-                return []
-
-        metadata = json.loads(result.text)
+        metadata = json.loads(response.text)
         versions = metadata["versions"]
         latest_version = versions[len(version) - 1]["versionKey"]["version"]
 
@@ -113,14 +103,12 @@ class RepoFinderDD(BaseRepoFinder):
 
         return []
 
-    def retrieve_metadata(self, session: requests.Session, url: str) -> str:
+    def retrieve_metadata(self, url: str) -> str:
         """
-        Attempt to retrieve the file located at the passed URL using the passed Session.
+        Attempt to retrieve the file located at the passed URL.
 
         Parameters
         ----------
-        session : requests.Session
-            The HTTP session to use for attempting the GET request.
         url : str
             The URL for the GET request.
 
@@ -129,17 +117,11 @@ class RepoFinderDD(BaseRepoFinder):
         str :
             The retrieved file data or an empty string.
         """
-        try:
-            result = session.get(url)
-        except (requests.RequestException, OSError) as error:
-            logger.debug("Error during metadata retrieval: %s", error)
+        response = send_get_http_raw(url, {})
+        if not response:
             return ""
 
-        if not result.ok:
-            logger.debug("Failed to retrieve metadata at: %s, error code: %s", url, result.status_code)
-            return ""
-
-        return result.text
+        return response.text
 
     def read_metadata(self, metadata: str) -> list[str]:
         """
