@@ -22,7 +22,7 @@ from macaron.slsa_analyzer.provenance.witness import (
 )
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
-from macaron.slsa_analyzer.specs.package_registry_data import PackageRegistryData
+from macaron.slsa_analyzer.specs.package_registry_info import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -139,12 +139,11 @@ class ProvenanceWitnessL1Check(BaseCheck):
         witness_verifier_config = load_witness_verifier_config()
         verified_artifact_assets = []
 
-        for package_registry_data_entry in ctx.dynamic_data["package_registries"]:
-            match package_registry_data_entry:
-                case PackageRegistryData(
+        for package_registry_info_entry in ctx.dynamic_data["package_registries"]:
+            match package_registry_info_entry:
+                case PackageRegistryInfo(
                     package_registry=JFrogMavenRegistry() as jfrog_registry,
                     provenances=provenances,
-                    # provenance_assets=provenance_assets,
                 ):
                     for provenance in provenances:
                         if not isinstance(provenance.asset, JFrogMavenAsset):

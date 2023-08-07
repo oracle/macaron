@@ -19,7 +19,7 @@ from macaron.slsa_analyzer.provenance.expectations.expectation import Expectatio
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReq, get_requirements_dict
 from macaron.slsa_analyzer.specs.build_spec import BuildSpec
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.specs.package_registry_data import PackageRegistryData
+from macaron.slsa_analyzer.specs.package_registry_info import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class ChecksOutputs(TypedDict):
     # class uses inlined functions, which is not supported by Protocol.
     expectation: Expectation | None
     """The expectation to verify the provenance for this repository."""
-    package_registries: list[PackageRegistryData]
+    package_registries: list[PackageRegistryInfo]
     """The package registries for this repository."""
 
 

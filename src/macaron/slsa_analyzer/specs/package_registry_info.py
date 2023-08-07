@@ -12,7 +12,7 @@ from macaron.slsa_analyzer.provenance.provenance import IsProvenance
 
 
 @dataclass
-class PackageRegistryData:
+class PackageRegistryInfo:
     """This class contains data for one package registry that is matched against a repository.
 
     Attributes

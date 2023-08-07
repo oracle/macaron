@@ -50,7 +50,7 @@ from macaron.slsa_analyzer.provenance.expectations.expectation_registry import E
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
-from macaron.slsa_analyzer.specs.package_registry_data import PackageRegistryData
+from macaron.slsa_analyzer.specs.package_registry_info import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -841,7 +841,7 @@ class Analyzer:
             for build_tool in build_tools:
                 if package_registry.is_detected(build_tool):
                     analyze_ctx.dynamic_data["package_registries"].append(
-                        PackageRegistryData(
+                        PackageRegistryInfo(
                             build_tool=build_tool,
                             package_registry=package_registry,
                         )

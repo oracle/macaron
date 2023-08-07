@@ -14,7 +14,7 @@ from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
 from macaron.slsa_analyzer.provenance.loader import SLSAProvenanceError
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
-from macaron.slsa_analyzer.specs.package_registry_data import PackageRegistryData
+from macaron.slsa_analyzer.specs.package_registry_info import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -60,16 +60,16 @@ class ProvenanceL3ContentCheck(BaseCheck):
             logger.info("%s check was unable to find any expectations.", self.check_id)
             return CheckResultType.UNKNOWN
 
-        package_registry_data_entries = ctx.dynamic_data["package_registries"]
+        package_registry_info_entries = ctx.dynamic_data["package_registries"]
         ci_services = ctx.dynamic_data["ci_services"]
 
         # Check the provenances in package registries.
-        for package_registry_data_entry in package_registry_data_entries:
-            match package_registry_data_entry:
-                case PackageRegistryData(
+        for package_registry_info_entry in package_registry_info_entries:
+            match package_registry_info_entry:
+                case PackageRegistryInfo(
                     package_registry=JFrogMavenRegistry(),
-                ) as data_entry:
-                    for provenance in data_entry.provenances:
+                ) as info_entry:
+                    for provenance in info_entry.provenances:
                         try:
                             logger.info(
                                 "Validating the provenance %s against %s.",

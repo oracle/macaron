@@ -35,7 +35,7 @@ from macaron.slsa_analyzer.provenance.witness import (
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.specs.package_registry_data import PackageRegistryData
+from macaron.slsa_analyzer.specs.package_registry_info import PackageRegistryInfo
 from macaron.util import JsonType
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ class ProvenanceAvailableCheck(BaseCheck):
         self,
         repo_fs_path: str,
         repo_remote_path: str,
-        package_registry_data_entries: list[PackageRegistryData],
+        package_registry_info_entries: list[PackageRegistryInfo],
         provenance_extensions: list[str],
     ) -> Sequence[IsAsset]:
         """Find provenance assets on package registries.
@@ -98,8 +98,8 @@ class ProvenanceAvailableCheck(BaseCheck):
             The path to the repo on the local file system.
         repo_remote_path : str
             The URL to the remote repository.
-        package_registry_data_entries : list[PackageRegistryData]
-            A list of package registry data entries.
+        package_registry_info_entries : list[PackageRegistryInfo]
+            A list of package registry info entries.
         provenance_extensions : list[str]
             A list of provenance extensions. Assets with these extensions are assumed
             to be provenances.
@@ -116,12 +116,12 @@ class ProvenanceAvailableCheck(BaseCheck):
             If there is an error finding provenance assets that should result in failing
             the check altogether.
         """
-        for package_registry_data_entry in package_registry_data_entries:
-            match package_registry_data_entry:
-                case PackageRegistryData(
+        for package_registry_info_entry in package_registry_info_entries:
+            match package_registry_info_entry:
+                case PackageRegistryInfo(
                     build_tool=Gradle() as gradle,
                     package_registry=JFrogMavenRegistry() as jfrog_registry,
-                ) as data_entry:
+                ) as info_entry:
                     # Triples of group id, artifact id, version.
                     gavs: list[tuple[str, str, str]] = []
 
@@ -191,10 +191,10 @@ class ProvenanceAvailableCheck(BaseCheck):
                     witness_provenance_assets = []
                     for provenance in provenances:
                         logger.info("* %s", provenance.asset.url)
-                        # Persist the provenance assets in the package registry data entry.
                         witness_provenance_assets.append(provenance.asset)
 
-                    data_entry.provenances.extend(provenances)
+                    # Persist the provenance assets in the package registry info entry.
+                    info_entry.provenances.extend(provenances)
                     return provenance_assets
 
         return []
@@ -327,8 +327,8 @@ class ProvenanceAvailableCheck(BaseCheck):
         ----------
         repo_full_name: str
             The full name of the repo, in the format of ``owner/repo_name``.
-        package_registry_data_entries : list[PackageRegistryData]
-            A list of package registry data entries.
+        package_registry_info_entries : list[PackageRegistryInfo]
+            A list of package registry info entries.
         provenance_extensions : list[str]
             A list of provenance extensions. Assets with these extensions are assumed
             to be provenances.
@@ -456,7 +456,7 @@ class ProvenanceAvailableCheck(BaseCheck):
             provenance_assets = self.find_provenance_assets_on_package_registries(
                 repo_fs_path=ctx.component.repository.fs_path,
                 repo_remote_path=ctx.component.repository.remote_path,
-                package_registry_data_entries=ctx.dynamic_data["package_registries"],
+                package_registry_info_entries=ctx.dynamic_data["package_registries"],
                 provenance_extensions=provenance_extensions,
             ) or self.find_provenance_assets_on_ci_services(
                 repo_full_name=ctx.component.repository.full_name,
