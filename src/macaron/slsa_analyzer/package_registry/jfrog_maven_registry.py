@@ -103,7 +103,26 @@ class JFrogMavenAssetMetadata(NamedTuple):
 
 
 class JFrogMavenRegistry(PackageRegistry):
-    """A JFrog package registry that acts as a Maven registry."""
+    """A JFrog Artifactory repository that acts as a package registry with Maven layout.
+
+    For more details on JFrog Artifactory repository, see:
+    https://jfrog.com/help/r/jfrog-artifactory-documentation/repository-management
+
+    Attributes
+    ----------
+    domain : str
+        The domain of the JFrog instance.
+    repo : str
+        The Artifactory repository with Maven layout on the JFrog instance.
+    request_timeout : int
+        The timeout (in seconds) for regular requests made to the package registry.
+    download_timeout : int
+        The timeout (in seconds) for downloading files from the package registry.
+    enabled : bool
+        Whether the package registry should be active in the analysis or not.
+        "Not active" means no target repo/software component can be matched against
+        this package registry.
+    """
 
     def __init__(
         self,
