@@ -9,7 +9,7 @@ Assets are essentially files published from some build.
 from typing import Protocol
 
 
-class Asset(Protocol):
+class IsAsset(Protocol):
     """Interface of an asset."""
 
     @property

@@ -18,7 +18,7 @@ from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
 from macaron.errors import MacaronError, ProvenanceLoadError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.asset import Asset
+from macaron.slsa_analyzer.asset import IsAsset
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
@@ -79,7 +79,7 @@ class ProvenanceAvailableCheck(BaseCheck):
         repo_fs_path: str,
         package_registry_data_entries: list[PackageRegistryData],
         provenance_extensions: list[str],
-    ) -> Sequence[Asset]:
+    ) -> Sequence[IsAsset]:
         """Find provenance assets on package registries.
 
         Note that we stop going through package registries once we encounter a package
@@ -99,8 +99,8 @@ class ProvenanceAvailableCheck(BaseCheck):
 
         Returns
         -------
-        Sequence[Asset]
-            A sequence of provenance assets found on one of the package registry.
+        Sequence[IsAsset]
+            A sequence of provenance assets found on one of the package registries.
             This sequence is empty if there is no provenance assets found.
         """
         for package_registry_data_entry in package_registry_data_entries:
@@ -241,7 +241,7 @@ class ProvenanceAvailableCheck(BaseCheck):
         repo_full_name: str,
         ci_info_entries: list[CIInfo],
         provenance_extensions: list[str],
-    ) -> Sequence[Asset]:
+    ) -> Sequence[IsAsset]:
         """Find provenance assets on CI services.
 
         Note that we stop going through the CI services once we encounter a CI service
@@ -299,7 +299,7 @@ class ProvenanceAvailableCheck(BaseCheck):
                 )
 
                 return [
-                    cast(Asset, SimpleNamespace(**provenance_asset))
+                    cast(IsAsset, SimpleNamespace(**provenance_asset))
                     for provenance_asset in ci_info["provenance_assets"]
                 ]
 
