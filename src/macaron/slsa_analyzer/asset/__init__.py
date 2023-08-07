@@ -19,3 +19,18 @@ class IsAsset(Protocol):
     @property
     def url(self) -> str:
         """Get the url to the asset."""
+
+    def download(self, dest: str) -> bool:
+        """Download the asset.
+
+        Parameters
+        ----------
+        dest : str
+            The local destination where the asset is downloaded to.
+            Note that this must includes the file name.
+
+        Returns
+        -------
+        bool
+            ``True`` if the asset is downloaded successfully; ``False`` if not.
+        """

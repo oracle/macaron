@@ -30,13 +30,15 @@ class JFrogMavenAsset(NamedTuple):
     ----------
     name : str
         The name of the Maven asset.
-    group_id: str
+    group_id : str
         The group id.
-    artifact_id: str
+    artifact_id : str
         The artifact id.
-    version: str
+    version : str
         The version of the Maven asset.
     metadata : JFrogMavenAssetMetadata
+        The metadata of the JFrog Maven asset.
+    jfrog_maven_registry : JFrogMavenRegistry
         The metadata of the JFrog Maven asset.
     """
 
@@ -45,6 +47,7 @@ class JFrogMavenAsset(NamedTuple):
     artifact_id: str
     version: str
     metadata: JFrogMavenAssetMetadata
+    jfrog_maven_registry: JFrogMavenRegistry
 
     @property
     def url(self) -> str:
@@ -63,6 +66,22 @@ class JFrogMavenAsset(NamedTuple):
     def size_in_bytes(self) -> int:
         """Get the size of the asset (in bytes)."""
         return self.metadata.size_in_bytes
+
+    def download(self, dest: str) -> bool:
+        """Download the asset.
+
+        Parameters
+        ----------
+        dest : str
+            The local destination where the asset is downloaded to.
+            Note that this must includes the file name.
+
+        Returns
+        -------
+        bool
+            ``True`` if the asset is downloaded successfully; ``False`` if not.
+        """
+        return self.jfrog_maven_registry.download_asset(self.url, dest)
 
 
 class JFrogMavenAssetMetadata(NamedTuple):
@@ -735,6 +754,7 @@ class JFrogMavenRegistry(PackageRegistry):
                         artifact_id=artifact_id,
                         version=version,
                         metadata=asset_metadata,
+                        jfrog_maven_registry=self,
                     )
                 )
 
