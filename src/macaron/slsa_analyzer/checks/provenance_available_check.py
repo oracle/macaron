@@ -102,6 +102,12 @@ class ProvenanceAvailableCheck(BaseCheck):
         Sequence[IsAsset]
             A sequence of provenance assets found on one of the package registries.
             This sequence is empty if there is no provenance assets found.
+
+        Raises
+        ------
+        ProvenanceAvailableException
+            If there is an error finding provenance assets that should result in failing
+            the check altogether.
         """
         for package_registry_data_entry in package_registry_data_entries:
             match package_registry_data_entry:
