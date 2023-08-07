@@ -144,12 +144,12 @@ class Gradle(BaseBuildTool):
         Parameters
         ----------
         repo_path: str
-            Path to a repository containing Gradle projects.
+            The absolute path to a repository containing Gradle projects.
 
         Returns
         -------
         str
-            The path to the Gradle executable.
+            The absolute path to the Gradle executable.
         """
         # We try to use the gradlew that comes with the repository first.
         repo_gradlew = os.path.join(repo_path, "gradlew")
@@ -174,7 +174,7 @@ class Gradle(BaseBuildTool):
         Parameters
         ----------
         repo_path: str
-            Path to a repository containing Gradle projects.
+            The absolute path to a repository containing Gradle projects.
 
         Returns
         -------
@@ -206,10 +206,10 @@ class Gradle(BaseBuildTool):
         Parameters
         ----------
         gradle_exec: str
-            Path to the Gradle executable.
+            The absolute path to the Gradle executable.
 
         project_path : str
-            Path to the Gradle project.
+            The absolute path to the Gradle project.
 
         Returns
         -------
