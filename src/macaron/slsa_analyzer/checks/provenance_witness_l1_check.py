@@ -144,28 +144,24 @@ class ProvenanceWitnessL1Check(BaseCheck):
                 case PackageRegistryData(
                     package_registry=JFrogMavenRegistry() as jfrog_registry,
                     provenances=provenances,
-                    provenance_assets=provenance_assets,
+                    # provenance_assets=provenance_assets,
                 ):
-                    for provenance_url, payload in provenances.items():
-                        provenance_asset = next(
-                            (asset for asset in provenance_assets if asset.url == provenance_url),
-                            None,
-                        )
-                        if not provenance_asset or not isinstance(provenance_asset, JFrogMavenAsset):
+                    for provenance in provenances:
+                        if not isinstance(provenance.asset, JFrogMavenAsset):
                             continue
                         if not is_witness_provenance_payload(
-                            payload=payload,
+                            payload=provenance.payload,
                             predicate_types=witness_verifier_config.predicate_types,
                         ):
                             continue
 
                         artifact_assets = jfrog_registry.fetch_assets(
-                            group_id=provenance_asset.group_id,
-                            artifact_id=provenance_asset.artifact_id,
-                            version=provenance_asset.version,
+                            group_id=provenance.asset.group_id,
+                            artifact_id=provenance.asset.artifact_id,
+                            version=provenance.asset.version,
                             extensions=witness_verifier_config.artifact_extensions,
                         )
-                        subjects = extract_witness_provenance_subjects(payload)
+                        subjects = extract_witness_provenance_subjects(provenance.payload)
                         failure_justification = verify_artifact_assets(artifact_assets, subjects)
 
                         if failure_justification:

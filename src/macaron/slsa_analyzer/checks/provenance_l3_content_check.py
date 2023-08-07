@@ -69,18 +69,18 @@ class ProvenanceL3ContentCheck(BaseCheck):
                 case PackageRegistryData(
                     package_registry=JFrogMavenRegistry(),
                 ) as data_entry:
-                    for asset_url, payload in data_entry.provenances.items():
+                    for provenance in data_entry.provenances:
                         try:
                             logger.info(
                                 "Validating the provenance %s against %s.",
-                                asset_url,
+                                provenance.asset.url,
                                 expectation,
                             )
 
-                            if expectation.validate(payload):
+                            if expectation.validate(provenance.payload):
                                 check_result["result_tables"].append(expectation)  # type: ignore[arg-type]
                                 check_result["justification"].append(
-                                    f"Successfully verified the expectation against the provenance {asset_url}."
+                                    f"Successfully verified the expectation against the provenance {provenance.asset.url}."
                                 )
                                 return CheckResultType.PASSED
 

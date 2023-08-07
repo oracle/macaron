@@ -6,10 +6,9 @@
 
 from dataclasses import dataclass, field
 
-from macaron.slsa_analyzer.asset import Asset
 from macaron.slsa_analyzer.build_tool import BaseBuildTool
 from macaron.slsa_analyzer.package_registry import PackageRegistry
-from macaron.util import JsonType
+from macaron.slsa_analyzer.provenance.provenance import IsProvenance
 
 
 @dataclass
@@ -24,23 +23,10 @@ class PackageRegistryData:
     package_registry : PackageRegistry
         The package registry matched against the repository. This is dependent on the build tool detected.
 
-    latest_version : str | None
-        The latest version of the artifact found on the registry.
-
-    provenance_assets : list[dict]
-        Release assets for SLSA provenances, e.g., asset for attestation.intoto.jsonl.
-        Each entry of the list is a dictionary with two keys: ``"name"`` - the name of the
-        provenance file, and ``"url"`` - the URL where the provenance can be retrieved.
-
-    provenances : dict[str, dict]
-        The JSON payloads of the SLSA provenances matched against the current repo, in
-        in-toto format.
-        Each key is the URL to where the provenance file is hosted and each value is the
-        JSON payload of the corresponding provenance.
+    provenances : list[IsProvenance]
+        The provenances matched against the current repo.
     """
 
     build_tool: BaseBuildTool
     package_registry: PackageRegistry
-    latest_version: str | None = None
-    provenance_assets: list[Asset] = field(default_factory=list)
-    provenances: dict[str, dict[str, JsonType]] = field(default_factory=dict)
+    provenances: list[IsProvenance] = field(default_factory=list)
