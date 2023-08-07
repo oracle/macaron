@@ -167,10 +167,11 @@ class ProvenanceAvailableCheck(BaseCheck):
                     for provenance_asset in provenance_assets:
                         if provenance_asset.size_in_bytes > max_valid_provenance_size:
                             msg = (
-                                f"The provenance asset {provenance_asset.name} exceeds the "
-                                f"max valid file size of {max_valid_provenance_size} (bytes)."
+                                f"The provenance asset {provenance_asset.name} unexpectedly exceeds the "
+                                f"max valid file size of {max_valid_provenance_size} (bytes). "
+                                "The check will not proceed due to potential security risks."
                             )
-                            logger.info(msg)
+                            logger.error(msg)
                             raise ProvenanceAvailableException(msg)
 
                     logger.info("Found the following provenance assets:")
