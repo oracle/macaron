@@ -50,7 +50,7 @@ from macaron.slsa_analyzer.provenance.expectations.expectation_registry import E
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
-from macaron.slsa_analyzer.specs.package_registry_info import PackageRegistryInfo
+from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 

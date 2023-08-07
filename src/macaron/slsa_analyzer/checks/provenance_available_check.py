@@ -35,7 +35,7 @@ from macaron.slsa_analyzer.provenance.witness import (
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.specs.package_registry_info import PackageRegistryInfo
+from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 from macaron.util import JsonType
 
 logger: logging.Logger = logging.getLogger(__name__)

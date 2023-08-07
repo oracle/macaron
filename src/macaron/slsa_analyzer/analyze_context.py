@@ -19,7 +19,7 @@ from macaron.slsa_analyzer.provenance.expectations.expectation import Expectatio
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReq, get_requirements_dict
 from macaron.slsa_analyzer.specs.build_spec import BuildSpec
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.specs.package_registry_info import PackageRegistryInfo
+from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
