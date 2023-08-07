@@ -10,6 +10,7 @@ import logging
 import os
 import subprocess  # nosec B404
 
+import macaron
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.dependency_analyzer import DependencyAnalyzer, DependencyAnalyzerError, DependencyTools
@@ -137,41 +138,106 @@ class Gradle(BaseBuildTool):
 
         raise DependencyAnalyzerError(f"Unsupported SBOM generator for Gradle: {tool_name}.")
 
-    def get_group_id(self, project_path: str) -> str | None:
-        """Get the group id of a Gradle repository.
+    def get_gradle_exec(self, repo_path: str) -> str:
+        """Get the Gradle executable for the repo.
 
         Parameters
         ----------
+        repo_path: str
+            Path to a repository containing Gradle projects.
+
+        Returns
+        -------
+        str
+            The path to the Gradle executable.
+        """
+        # We try to use the gradlew that comes with the repository first.
+        repo_gradlew = os.path.join(repo_path, "gradlew")
+        if os.path.isfile(repo_gradlew) and os.access(repo_gradlew, os.X_OK):
+            return repo_gradlew
+
+        # We use Macaron's built-in gradlew as a fallback option.
+        return os.path.join(os.path.join(macaron.MACARON_PATH, "resources"), "gradlew")
+
+    def get_group_ids(self, repo_path: str) -> set[str]:
+        """Get the group ids of all Gradle projects in a repository.
+
+        A Gradle project is a directory containing a ``build.gradle`` file.
+        According to the Gradle's documentation, there is a one-to-one mapping between
+        a "project" and a ``build.gradle`` file.
+        See: https://docs.gradle.org/current/javadoc/org/gradle/api/Project.html.
+
+        Note: This method makes the assumption that projects nested in a parent project
+        directory has the same group id with the parent. This behavior is consistent with
+        the behavior of the ``get_build_dirs`` method.
+
+        Parameters
+        ----------
+        repo_path: str
+            Path to a repository containing Gradle projects.
+
+        Returns
+        -------
+        set[str]
+            The set of group ids of all Gradle projects in the repository.
+        """
+        gradle_exec = self.get_gradle_exec(repo_path)
+        group_ids = set()
+
+        for gradle_project_relpath in self.get_build_dirs(repo_path):
+            gradle_project_path = os.path.join(repo_path, gradle_project_relpath)
+            group_id = self.get_group_id(
+                gradle_exec=gradle_exec,
+                project_path=gradle_project_path,
+            )
+            if group_id:
+                group_ids.add(group_id)
+
+        return group_ids
+
+    def get_group_id(self, gradle_exec: str, project_path: str) -> str | None:
+        """Get the group id of a Gradle project.
+
+        A Gradle project is a directory containing a ``build.gradle`` file.
+        According to the Gradle's documentation, there is a one-to-one mapping between
+        a "project" and a ``build.gradle`` file.
+        See: https://docs.gradle.org/current/javadoc/org/gradle/api/Project.html.
+
+        Parameters
+        ----------
+        gradle_exec: str
+            Path to the Gradle executable.
+
         project_path : str
-            Path to the Gradle repository.
+            Path to the Gradle project.
 
         Returns
         -------
         str | None
-            The group id, if exists.
+            The group id of the project, if exists.
         """
-        # Use the gradlew that comes with the repository first, then use Macaron's
-        # built-in gradlew as a fallback option.
-        if os.path.isfile(os.path.join(project_path, "gradlew")):
-            gradlew = "./gradlew"
-        else:
-            gradlew = os.path.join(global_config.resources_path, "gradlew")
         try:
             result = subprocess.run(  # nosec B603
-                [gradlew, "properties"],
+                [gradle_exec, "properties"],
                 capture_output=True,
                 cwd=project_path,
                 check=False,
             )
         except (subprocess.CalledProcessError, OSError) as error:
-            logger.debug("Could not capture the group id of the repo at %s", project_path)
+            logger.debug("Could not capture the group id of the Gradle project at %s", project_path)
             logger.debug("Error: %s", error)
             return None
 
-        lines = result.stdout.decode().split("\n")
-        for line in lines:
-            if line.startswith("group: "):
-                return line.replace("group: ", "")
+        if result.returncode == 0:
+            lines = result.stdout.decode().split("\n")
+            for line in lines:
+                if line.startswith("group: "):
+                    group = line.replace("group: ", "")
+                    # The value of group here can be an empty string.
+                    if group:
+                        return group
+                    break
 
         logger.debug("Could not capture the group id of the repo at %s", project_path)
+        logger.debug("Stderr:\n%s", result.stderr)
         return None

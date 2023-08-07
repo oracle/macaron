@@ -76,7 +76,7 @@ class ProvenanceAvailableCheck(BaseCheck):
 
     def find_provenance_assets_on_package_registries(
         self,
-        repo_full_name: str,
+        repo_fs_path: str,
         package_registry_data_entries: list[PackageRegistryData],
         provenance_extensions: list[str],
     ) -> Sequence[Asset]:
@@ -87,8 +87,10 @@ class ProvenanceAvailableCheck(BaseCheck):
 
         Parameters
         ----------
-        repo_full_name : str
-            The full name of the repo, in the format of ``owner/repo_name``.
+        repo_fs_path : str
+            The path to the repo on the local file system.
+        repo_remote_path : str
+            The URL to the remote repository.
         package_registry_data_entries : list[PackageRegistryData]
             A list of package registry data entries.
         provenance_extensions : list[str]
@@ -107,30 +109,35 @@ class ProvenanceAvailableCheck(BaseCheck):
                     build_tool=Gradle() as gradle,
                     package_registry=JFrogMavenRegistry() as jfrog_registry,
                 ) as data_entry:
-                    group_id = gradle.get_group_id(repo_full_name)
-                    if not group_id:
-                        continue
+                    # Triples of group id, artifact id, version.
+                    gavs: list[tuple[str, str, str]] = []
 
-                    artifact_ids = jfrog_registry.fetch_artifact_ids(group_id)
+                    group_ids = gradle.get_group_ids(repo_fs_path)
+                    for group_id in group_ids:
+                        artifact_ids = jfrog_registry.fetch_artifact_ids(group_id)
+
+                        for artifact_id in artifact_ids:
+                            latest_version = jfrog_registry.fetch_latest_version(
+                                group_id,
+                                artifact_id,
+                            )
+                            if not latest_version:
+                                continue
+                            logger.info(
+                                "Found the latest version %s for Maven package %s:%s",
+                                latest_version,
+                                group_id,
+                                artifact_id,
+                            )
+                            gavs.append((group_id, artifact_id, latest_version))
 
                     provenance_assets = []
-
-                    for artifact_id in artifact_ids:
-                        latest_version = jfrog_registry.fetch_latest_version(group_id, artifact_id)
-                        if not latest_version:
-                            continue
-                        logger.info(
-                            "Found the latest version %s for Maven package %s:%s",
-                            latest_version,
-                            group_id,
-                            artifact_id,
-                        )
-
+                    for group_id, artifact_id, version in gavs:
                         provenance_assets.extend(
                             jfrog_registry.fetch_assets(
                                 group_id=group_id,
                                 artifact_id=artifact_id,
-                                version=latest_version,
+                                version=version,
                                 extensions=set(provenance_extensions),
                             )
                         )
@@ -374,7 +381,7 @@ class ProvenanceAvailableCheck(BaseCheck):
         # (Note the short-circuit evaluation with OR.)
         try:
             provenance_assets = self.find_provenance_assets_on_package_registries(
-                repo_full_name=ctx.component.repository.full_name,
+                repo_fs_path=ctx.component.repository.fs_path,
                 package_registry_data_entries=ctx.dynamic_data["package_registries"],
                 provenance_extensions=provenance_extensions,
             ) or self.find_provenance_assets_on_ci_services(
