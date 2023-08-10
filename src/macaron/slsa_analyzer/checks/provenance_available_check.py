@@ -7,8 +7,6 @@ import logging
 import os
 import tempfile
 from collections.abc import Sequence
-from types import SimpleNamespace
-from typing import cast
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,16 +16,17 @@ from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
 from macaron.errors import MacaronError, ProvenanceLoadError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.asset import IsAsset
+from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
+from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
 from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAsset
 from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader, SLSAProvenanceError, load_provenance
 from macaron.slsa_analyzer.provenance.witness import (
-    WitnessProvenance,
+    WitnessProvenanceData,
     extract_repo_url,
     is_witness_provenance_payload,
     load_witness_verifier_config,
@@ -86,7 +85,7 @@ class ProvenanceAvailableCheck(BaseCheck):
         repo_remote_path: str,
         package_registry_info_entries: list[PackageRegistryInfo],
         provenance_extensions: list[str],
-    ) -> Sequence[IsAsset]:
+    ) -> Sequence[AssetLocator]:
         """Find provenance assets on package registries.
 
         Note that we stop going through package registries once we encounter a package
@@ -106,7 +105,7 @@ class ProvenanceAvailableCheck(BaseCheck):
 
         Returns
         -------
-        Sequence[IsAsset]
+        Sequence[AssetLocator]
             A sequence of provenance assets found on one of the package registries.
             This sequence is empty if there is no provenance assets found.
 
@@ -181,14 +180,14 @@ class ProvenanceAvailableCheck(BaseCheck):
                             logger.error(msg)
                             raise ProvenanceAvailableException(msg)
 
-                    logger.info("Found the following provenance assets:")
-
                     provenances = self.obtain_witness_provenances(
                         provenance_assets=provenance_assets,
                         repo_remote_path=repo_remote_path,
                     )
 
                     witness_provenance_assets = []
+
+                    logger.info("Found the following provenance assets:")
                     for provenance in provenances:
                         logger.info("* %s", provenance.asset.url)
                         witness_provenance_assets.append(provenance.asset)
@@ -201,9 +200,9 @@ class ProvenanceAvailableCheck(BaseCheck):
 
     def obtain_witness_provenances(
         self,
-        provenance_assets: Sequence[IsAsset],
+        provenance_assets: Sequence[AssetLocator],
         repo_remote_path: str,
-    ) -> list[WitnessProvenance]:
+    ) -> list[WitnessProvenanceData]:
         """Obtain the witness provenances produced from a repository.
 
         Parameters
@@ -250,7 +249,7 @@ class ProvenanceAvailableCheck(BaseCheck):
                     continue
 
                 provenances.append(
-                    WitnessProvenance(
+                    WitnessProvenanceData(
                         asset=provenance_asset,
                         payload=provenance_payload,
                     )
@@ -314,7 +313,7 @@ class ProvenanceAvailableCheck(BaseCheck):
         repo_full_name: str,
         ci_info_entries: list[CIInfo],
         provenance_extensions: list[str],
-    ) -> Sequence[IsAsset]:
+    ) -> Sequence[AssetLocator]:
         """Find provenance assets on CI services.
 
         Note that we stop going through the CI services once we encounter a CI service
@@ -344,37 +343,38 @@ class ProvenanceAvailableCheck(BaseCheck):
             if isinstance(ci_service, NoneCIService):
                 continue
 
-            # Only get the latest release.
-            release = ci_service.api_client.get_latest_release(repo_full_name)
-            if not release:
-                logger.info("Did not find any release on %s.", ci_service.name)
-                continue
-
-            # Store the release data for other checks.
-            ci_info["latest_release"] = release
-
-            # Get the provenance assets.
-            for prov_ext in provenance_extensions:
-                provenance_assets = ci_service.api_client.get_assets(release, ext=prov_ext)
-                if not provenance_assets:
+            if isinstance(ci_service, GitHubActions):
+                # Only get the latest release.
+                latest_release_payload = ci_service.api_client.get_latest_release(repo_full_name)
+                if not latest_release_payload:
+                    logger.debug("Could not fetch the latest release payload from %s.", ci_service.name)
                     continue
 
-                logger.info("Found the following provenance assets:")
-                for provenance_asset in provenance_assets:
-                    logger.info("* %s", provenance_asset["url"])
+                # Store the release data for other checks.
+                ci_info["latest_release"] = latest_release_payload
 
-                # Store the provenance assets for other checks.
-                ci_info["provenance_assets"].extend(provenance_assets)
+                # Get the provenance assets.
+                for prov_ext in provenance_extensions:
+                    provenance_assets = ci_service.api_client.fetch_assets(
+                        latest_release_payload,
+                        ext=prov_ext,
+                    )
+                    if not provenance_assets:
+                        continue
 
-                # Download the provenance assets and load the provenance payloads.
-                self.download_provenances_from_github_actions_ci_service(
-                    ci_info,
-                )
+                    logger.info("Found the following provenance assets:")
+                    for provenance_asset in provenance_assets:
+                        logger.info("* %s", provenance_asset.url)
 
-                return [
-                    cast(IsAsset, SimpleNamespace(**provenance_asset))
-                    for provenance_asset in ci_info["provenance_assets"]
-                ]
+                    # Store the provenance assets for other checks.
+                    ci_info["provenance_assets"].extend(provenance_assets)
+
+                    # Download the provenance assets and load the provenance payloads.
+                    self.download_provenances_from_github_actions_ci_service(
+                        ci_info,
+                    )
+
+                    return ci_info["provenance_assets"]
 
         return []
 
@@ -393,26 +393,26 @@ class ProvenanceAvailableCheck(BaseCheck):
             downloaded_provs = []
             for prov_asset in prov_assets:
                 # Check the size before downloading.
-                if int(prov_asset["size"]) > defaults.getint(
+                if prov_asset.size_in_bytes > defaults.getint(
                     "slsa.verifier",
                     "max_download_size",
                     fallback=1000000,
                 ):
                     logger.info(
                         "Skip verifying the provenance %s: asset size too large.",
-                        prov_asset["name"],
+                        prov_asset.name,
                     )
                     continue
 
-                provenance_filepath = os.path.join(temp_path, prov_asset["name"])
+                provenance_filepath = os.path.join(temp_path, prov_asset.name)
 
                 if not ci_service.api_client.download_asset(
-                    prov_asset["url"],
+                    prov_asset.url,
                     provenance_filepath,
                 ):
                     logger.debug(
                         "Could not download the provenance %s. Skip verifying...",
-                        prov_asset["name"],
+                        prov_asset.name,
                     )
                     continue
 

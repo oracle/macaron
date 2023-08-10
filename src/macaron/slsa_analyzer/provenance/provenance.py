@@ -8,15 +8,15 @@ Assets are essentially files published from some build.
 
 from typing import Protocol
 
-from macaron.slsa_analyzer.asset import IsAsset
+from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.util import JsonType
 
 
-class IsProvenance(Protocol):
-    """Interface of a provenance."""
+class DownloadedProvenanceData(Protocol):
+    """Interface of a provenance that has been downloaded (e.g. from a CI service or a package registry)."""
 
     @property
-    def asset(self) -> IsAsset:
+    def asset(self) -> AssetLocator:
         """Get the asset."""
 
     @property

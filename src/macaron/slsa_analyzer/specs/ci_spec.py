@@ -7,6 +7,7 @@ from typing import TypedDict
 
 from macaron.code_analyzer.call_graph import CallGraph
 from macaron.parsers.bashparser import BashCommands
+from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 
 
@@ -22,7 +23,7 @@ class CIInfo(TypedDict):
     callgraph: CallGraph
     """The call graph for this CI service."""
 
-    provenance_assets: list[dict]
+    provenance_assets: list[AssetLocator]
     """Release assets for SLSA provenances, e.g., asset for attestation.intoto.jsonl.
 
     For GitHub Actions, each asset is a member of the ``assets`` list in the GitHub

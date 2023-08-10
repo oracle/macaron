@@ -46,9 +46,6 @@ class MockGhAPIClient(GhAPIClient):
     def get_latest_release(self, full_name: str) -> dict:
         return self.release
 
-    def get_assets(self, release: dict, name: str = "", ext: str = "") -> list[dict]:
-        return [item for item in self.release["assets"] if item["name"] == name or item["name"].endswith(ext)]
-
     def download_asset(self, url: str, download_path: str) -> bool:
         return True
 

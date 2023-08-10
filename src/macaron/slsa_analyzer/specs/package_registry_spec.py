@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 
 from macaron.slsa_analyzer.build_tool import BaseBuildTool
 from macaron.slsa_analyzer.package_registry import PackageRegistry
-from macaron.slsa_analyzer.provenance.provenance import IsProvenance
+from macaron.slsa_analyzer.provenance.provenance import DownloadedProvenanceData
 
 
 @dataclass
@@ -29,4 +29,4 @@ class PackageRegistryInfo:
 
     build_tool: BaseBuildTool
     package_registry: PackageRegistry
-    provenances: list[IsProvenance] = field(default_factory=list)
+    provenances: list[DownloadedProvenanceData] = field(default_factory=list)

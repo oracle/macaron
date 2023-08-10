@@ -9,8 +9,8 @@ Assets are essentially files published from some build.
 from typing import Protocol
 
 
-class IsAsset(Protocol):
-    """Interface of an asset."""
+class AssetLocator(Protocol):
+    """Interface of an asset locator."""
 
     @property
     def name(self) -> str:
@@ -19,6 +19,10 @@ class IsAsset(Protocol):
     @property
     def url(self) -> str:
         """Get the url to the asset."""
+
+    @property
+    def size_in_bytes(self) -> int:
+        """Get the size of the asset in bytes."""
 
     def download(self, dest: str) -> bool:
         """Download the asset.

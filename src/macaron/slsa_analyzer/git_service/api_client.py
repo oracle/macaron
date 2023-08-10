@@ -3,13 +3,55 @@
 
 """The module provides API clients for VCS services, such as GitHub."""
 
+from __future__ import annotations
+
 import logging
+from collections.abc import Sequence
 from enum import Enum
+from typing import NamedTuple
 
 from macaron.config.defaults import defaults
+from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.util import construct_query, download_github_build_log, send_get_http, send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+class GitHubReleaseAsset(NamedTuple):
+    """An asset published from a GitHub Release.
+
+    Attributes
+    ----------
+    name : str
+        The asset name.
+    url : str
+        The URL to the asset.
+    size_in_bytes : int
+        The size of the asset, in bytes.
+    api_client : GhAPIClient
+        The GitHub API client.
+    """
+
+    name: str
+    url: str
+    size_in_bytes: int
+    api_client: GhAPIClient
+
+    def download(self, dest: str) -> bool:
+        """Download the asset.
+
+        Parameters
+        ----------
+        dest : str
+            The local destination where the asset is downloaded to.
+            Note that this must includes the file name.
+
+        Returns
+        -------
+        bool
+            ``True`` if the asset is downloaded successfully; ``False`` if not.
+        """
+        return self.api_client.download_asset(self.url, dest)
 
 
 class BaseAPIClient:
@@ -32,7 +74,7 @@ class BaseAPIClient:
         """
         return {}
 
-    def get_assets(self, release: dict, name: str = "", ext: str = "") -> list[dict]:  # pylint: disable=unused-argument
+    def fetch_assets(self, release: dict, ext: str = "") -> Sequence[AssetLocator]:  # pylint: disable=unused-argument
         """Return the release assets that match or empty if it doesn't exist.
 
         The extension is ignored if name is set.
@@ -41,8 +83,6 @@ class BaseAPIClient:
         ----------
         release : dict
             The release object in JSON format.
-        name : str
-            The asset name to find.
         ext : str
             The asset extension to find; this parameter is ignored if name is set.
 
@@ -426,7 +466,7 @@ class GhAPIClient(BaseAPIClient):
 
         return response_data or {}
 
-    def get_assets(self, release: dict, name: str = "", ext: str = "") -> list[dict]:
+    def fetch_assets(self, release: dict, ext: str = "") -> Sequence[AssetLocator]:
         """Return the release assets that match or empty if it doesn't exist.
 
         The extension is ignored if name is set.
@@ -434,27 +474,48 @@ class GhAPIClient(BaseAPIClient):
         Parameters
         ----------
         release : dict
-            The release object in JSON format.
+            The release payload in JSON format.
             Schema: https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release.
-        name : str
-            The asset name to find.
         ext : str
             The asset extension to find; this parameter is ignored if name is set.
 
         Returns
         -------
-        list[dict]
-            The list of release assets that match or empty if it doesn't exist.
+        Sequence[AssetLocator]
+            A sequence of release assets.
         """
-        if "assets" in release:
-            if name:
-                logger.debug("Search for the asset %s in the release.", name)
-                return [item for item in release["assets"] if item["name"] == name]
+        assets = release.get("assets", [])
+        if not isinstance(assets, list):
+            return []
 
-            if ext:
-                logger.debug("Search for the asset extension %s in the release.", ext)
-                return [item for item in release["assets"] if item["name"].endswith(ext)]
-        return []
+        asset_locators = []
+
+        for asset in assets:
+            name = asset.get("name")
+            if name is None or not isinstance(name, str):
+                continue
+
+            if ext and not name.endswith(ext):
+                continue
+
+            url = asset.get("url")
+            if url is None or not isinstance(url, str):
+                continue
+
+            size_in_bytes = asset.get("size")
+            if size_in_bytes is None or not isinstance(size_in_bytes, int):
+                continue
+
+            asset_locators.append(
+                GitHubReleaseAsset(
+                    name=name,
+                    url=url,
+                    size_in_bytes=size_in_bytes,
+                    api_client=self,
+                )
+            )
+
+        return asset_locators
 
     def download_asset(self, url: str, download_path: str) -> bool:
         """Download the assets of the release that match the pattern (if specified).

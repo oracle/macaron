@@ -7,16 +7,24 @@ import logging
 from typing import NamedTuple, TypeGuard
 
 from macaron.config.defaults import defaults
-from macaron.slsa_analyzer.asset import IsAsset
+from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.util import JsonType
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class WitnessProvenance(NamedTuple):
-    """Witness provenance."""
+class WitnessProvenanceData(NamedTuple):
+    """Data of a downloaded witness provenance.
 
-    asset: IsAsset
+    Attributes
+    ----------
+    asset : AssetLocator
+        The provenance asset.
+    payload : dict[str, JsonType]
+        The provenance payload.
+    """
+
+    asset: AssetLocator
     payload: dict[str, JsonType]
 
 
