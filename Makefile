@@ -293,6 +293,10 @@ dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt:
 	echo $(SOURCE_DATE_EPOCH) > dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt
 
 # Build the HTML documentation from the package's source.
+# We use the `git ls-files` command with the following flags to get the source files for docs:
+# * `--cached|-c` to include tracked files (Note: this flag is on by default but is off if the flags below are enabled).
+# * `--others|-o` to include untracked files.
+# * `--exclude-standard` to prevent listing files excluded by .gitignore.
 DOCS_SOURCE := $(shell git ls-files --cached --others --exclude-standard docs/source)
 .PHONY: docs
 docs: docs/_build/.built-on
