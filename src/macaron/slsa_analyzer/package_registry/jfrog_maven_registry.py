@@ -74,7 +74,7 @@ class JFrogMavenAsset(NamedTuple):
         ----------
         dest : str
             The local destination where the asset is downloaded to.
-            Note that this must includes the file name.
+            Note that this must include the file name.
 
         Returns
         -------
