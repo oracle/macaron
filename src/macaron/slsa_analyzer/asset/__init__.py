@@ -1,9 +1,9 @@
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module defines asset classes.
+"""This module defines classes and interfaces related to assets.
 
-Assets are essentially files published from some build.
+Assets are files published from some build.
 """
 
 from typing import Protocol
