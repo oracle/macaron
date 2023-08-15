@@ -253,7 +253,7 @@ class JFrogMavenRegistry(PackageRegistry):
     def fetch_artifact_ids(self, group_id: str) -> list[str]:
         """Get all artifact ids under a group id.
 
-        This is done by fetching all children folder under the group folder on the registry.
+        This is done by fetching all children folders under the group folder on the registry.
 
         Parameters
         ----------
