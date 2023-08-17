@@ -20,7 +20,7 @@ Usage
 .. code-block:: shell
 
     usage: ./run_macaron.sh analyze
-        [-h] [-sbom SBOM_PATH] [-rp REPO_PATH] [-b BRANCH]
+        [-h] [-sbom SBOM_PATH] [-purl PURL] [-rp REPO_PATH] [-b BRANCH]
         [-d DIGEST] [-pe PROVENANCE_EXPECTATION] [-c CONFIG_PATH]
         [--skip-deps] [-g TEMPLATE_PATH]
 
@@ -36,10 +36,13 @@ Options
 
     The path to the SBOM of the analysis target.
 
+.. option:: -purl PACKAGE_URL, --package-url PACKAGE_URL
+
+    The PURL string as the unique identifier of the analysis target.
+
 .. option:: -rp REPO_PATH, --repo-path REPO_PATH
 
     The path to the repository, can be local or remote
-
 
 .. option:: -b BRANCH, --branch BRANCH
 
