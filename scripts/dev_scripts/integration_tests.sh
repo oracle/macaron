@@ -91,6 +91,15 @@ python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: Analyzing with PURL and repository path without dependency resolution."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.json
+JSON_RESULT=$WORKSPACE/output/reports/maven/apache/maven/maven.json
+$RUN_MACARON analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
@@ -429,6 +438,28 @@ then
 fi
 
 GITHUB_TOKEN="$temp"
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: test analyzing with invalid PURL"
+echo -e "----------------------------------------------------------------------------------\n"
+$RUN_MACARON analyze -purl invalid-purl -rp https://github.com/apache/maven --skip-deps
+
+if [ $? -eq 0 ];
+then
+    echo -e "Expect non-zero status code but got $?."
+    log_fail
+fi
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: test analyzing with both PURL and repository path but no branch and digest are provided."
+echo -e "----------------------------------------------------------------------------------\n"
+$RUN_MACARON analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven --skip-deps
+
+if [ $? -eq 0 ];
+then
+    echo -e "Expect non-zero status code but got $?."
+    log_fail
+fi
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test using a custom template file that does not exist."

@@ -1,6 +1,7 @@
 [
     {
         "id": "slf4j",
+        "purl": "",
         "path": "https://github.com/qos-ch/slf4j.git",
         "branch": "v_1.7.36",
         "digest": "e9ee55cca93c2bf26f14482a9bdf961c750d2a56",
@@ -9,6 +10,7 @@
     },
     {
         "id": "caffeine",
+        "purl": "",
         "path": "https://github.com/ben-manes/caffeine.git",
         "branch": "v2.9.3",
         "digest": "05a040c2478341bab8a58a02b3dc1fe14d626d72",
@@ -17,6 +19,7 @@
     },
     {
         "id": "io.micronaut:inject-kotlin-test",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -25,6 +28,7 @@
     },
     {
         "id": "io.micronaut:test-suite-groovy",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -33,6 +37,7 @@
     },
     {
         "id": "io.micronaut:test-suite-http-server-tck-netty",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -41,6 +46,7 @@
     },
     {
         "id": "io.micronaut:validation",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -49,6 +55,7 @@
     },
     {
         "id": "micronaut:test-suite-graal",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -57,6 +64,7 @@
     },
     {
         "id": "io.micronaut:test-utils",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -65,6 +73,7 @@
     },
     {
         "id": "io.micronaut:runtime",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -73,6 +82,7 @@
     },
     {
         "id": "io.micronaut:test-suite-javax-inject",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -81,6 +91,7 @@
     },
     {
         "id": "io.micronaut:jackson-databind",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -89,6 +100,7 @@
     },
     {
         "id": "io.micronaut:session",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -97,6 +109,7 @@
     },
     {
         "id": "io.micronaut:parent",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -105,6 +118,7 @@
     },
     {
         "id": "io.micronaut:test-suite-kotlin",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -113,6 +127,7 @@
     },
     {
         "id": "io.micronaut:jackson-core",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -121,6 +136,7 @@
     },
     {
         "id": "io.micronaut:test-suite-jakarta-inject-bean-import",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -129,6 +145,7 @@
     },
     {
         "id": "io.micronaut:router",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -137,6 +154,7 @@
     },
     {
         "id": "io.micronaut:websocket",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -145,6 +163,7 @@
     },
     {
         "id": "io.micronaut:test-suite",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -153,6 +172,7 @@
     },
     {
         "id": "io.micronaut:json-core",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -161,6 +181,7 @@
     },
     {
         "id": "io.micronaut:messaging",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -169,6 +190,7 @@
     },
     {
         "id": "io.micronaut:runtime-osx",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -177,6 +199,7 @@
     },
     {
         "id": "io.micronaut:inject-java-test",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -185,6 +208,7 @@
     },
     {
         "id": "io.micronaut:test-suite-helper",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -193,6 +217,7 @@
     },
     {
         "id": "io.micronaut:inject-test-utils",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -201,6 +226,7 @@
     },
     {
         "id": "io.micronaut:management",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -209,6 +235,7 @@
     },
     {
         "id": "org.slf4j:slf4j-api",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -217,6 +244,7 @@
     },
     {
         "id": "org.reactivestreams:reactive-streams",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -225,6 +253,7 @@
     },
     {
         "id": "io.netty:netty-buffer",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -233,6 +262,7 @@
     },
     {
         "id": "io.projectreactor:reactor-core",
+        "purl": "",
         "path": "https://github.com/reactor/reactor-core",
         "branch": "",
         "digest": "",
@@ -241,6 +271,7 @@
     },
     {
         "id": "org.junit.jupiter:junit-jupiter-api",
+        "purl": "",
         "path": "https://github.com/junit-team/junit5",
         "branch": "",
         "digest": "",
@@ -249,6 +280,7 @@
     },
     {
         "id": "org.junit.jupiter:junit-jupiter-params",
+        "purl": "",
         "path": "https://github.com/junit-team/junit5",
         "branch": "",
         "digest": "",
@@ -257,6 +289,7 @@
     },
     {
         "id": "javax.validation:validation-api",
+        "purl": "",
         "path": "https://github.com/beanvalidation/beanvalidation-api",
         "branch": "",
         "digest": "",
@@ -265,6 +298,7 @@
     },
     {
         "id": "io.netty:netty-handler-proxy",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -273,6 +307,7 @@
     },
     {
         "id": "org.codehaus.groovy:groovy",
+        "purl": "",
         "path": "https://github.com/apache/groovy",
         "branch": "",
         "digest": "",
@@ -281,6 +316,7 @@
     },
     {
         "id": "io.netty:netty-codec-http",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -289,6 +325,7 @@
     },
     {
         "id": "javax.annotation:javax.annotation-api",
+        "purl": "",
         "path": "https://github.com/javaee/javax.annotation",
         "branch": "",
         "digest": "",
@@ -297,6 +334,7 @@
     },
     {
         "id": "jakarta.inject:jakarta.inject-api",
+        "purl": "",
         "path": "https://github.com/eclipse-ee4j/injection-api",
         "branch": "",
         "digest": "",
@@ -305,6 +343,7 @@
     },
     {
         "id": "jakarta.annotation:jakarta.annotation-api",
+        "purl": "",
         "path": "https://github.com/eclipse-ee4j/common-annotations-api",
         "branch": "",
         "digest": "",
@@ -313,6 +352,7 @@
     },
     {
         "id": "org.yaml:snakeyaml",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -321,6 +361,7 @@
     },
     {
         "id": "org.spockframework:spock-core",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -329,6 +370,7 @@
     },
     {
         "id": "com.fasterxml.jackson.core:jackson-databind",
+        "purl": "",
         "path": "https://github.com/FasterXML/jackson-databind",
         "branch": "",
         "digest": "",
@@ -337,6 +379,7 @@
     },
     {
         "id": "io.netty:netty-codec-http2",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -345,6 +388,7 @@
     },
     {
         "id": "io.netty:netty-handler",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",

@@ -1,6 +1,7 @@
 [
     {
         "id": "org.junit.jupiter:junit-jupiter-engine",
+        "purl": "",
         "path": "https://github.com/junit-team/junit5",
         "branch": "",
         "digest": "",
@@ -9,6 +10,7 @@
     },
     {
         "id": "org.hamcrest:hamcrest-core",
+        "purl": "",
         "path": "https://github.com/hamcrest/JavaHamcrest",
         "branch": "",
         "digest": "",
@@ -17,6 +19,7 @@
     },
     {
         "id": "org.eclipse.sisu:org.eclipse.sisu.plexus",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -25,6 +28,7 @@
     },
     {
         "id": "org.codehaus.plexus:plexus-utils",
+        "purl": "",
         "path": "https://github.com/codehaus-plexus/plexus-utils",
         "branch": "",
         "digest": "",
@@ -33,6 +37,7 @@
     },
     {
         "id": "org.codehaus.plexus:plexus-classworlds",
+        "purl": "",
         "path": "https://github.com/codehaus-plexus/plexus-classworlds",
         "branch": "",
         "digest": "",
@@ -41,6 +46,7 @@
     },
     {
         "id": "org.slf4j:slf4j-api",
+        "purl": "",
         "path": "https://github.com/qos-ch/slf4j",
         "branch": "",
         "digest": "",
@@ -49,6 +55,7 @@
     },
     {
         "id": "org.apache.maven.shared:maven-shared-utils",
+        "purl": "",
         "path": "https://github.com/apache/maven-shared-utils",
         "branch": "",
         "digest": "",
@@ -57,6 +64,7 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-api",
+        "purl": "",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
@@ -65,6 +73,7 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-util",
+        "purl": "",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
@@ -73,6 +82,7 @@
     },
     {
         "id": "com.google.inject:guice",
+        "purl": "",
         "path": "https://github.com/google/guice",
         "branch": "",
         "digest": "",
@@ -81,6 +91,7 @@
     },
     {
         "id": "com.google.guava:guava",
+        "purl": "",
         "path": "https://github.com/google/guava",
         "branch": "",
         "digest": "",
@@ -89,6 +100,7 @@
     },
     {
         "id": "com.google.guava:failureaccess",
+        "purl": "",
         "path": "https://github.com/google/guava",
         "branch": "",
         "digest": "",
@@ -97,6 +109,7 @@
     },
     {
         "id": "javax.inject:javax.inject",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -105,6 +118,7 @@
     },
     {
         "id": "javax.annotation:javax.annotation-api",
+        "purl": "",
         "path": "https://github.com/javaee/javax.annotation",
         "branch": "",
         "digest": "",
@@ -113,6 +127,7 @@
     },
     {
         "id": "org.codehaus.plexus:plexus-sec-dispatcher",
+        "purl": "",
         "path": "https://github.com/codehaus-plexus/plexus-sec-dispatcher",
         "branch": "",
         "digest": "",
@@ -121,6 +136,7 @@
     },
     {
         "id": "org.codehaus.plexus:plexus-cipher",
+        "purl": "",
         "path": "https://github.com/codehaus-plexus/plexus-cipher",
         "branch": "",
         "digest": "",
@@ -129,6 +145,7 @@
     },
     {
         "id": "org.slf4j:slf4j-simple",
+        "purl": "",
         "path": "https://github.com/qos-ch/slf4j",
         "branch": "",
         "digest": "",
@@ -137,6 +154,7 @@
     },
     {
         "id": "ch.qos.logback:logback-classic",
+        "purl": "",
         "path": "https://github.com/ceki/logback",
         "branch": "",
         "digest": "",
@@ -145,6 +163,7 @@
     },
     {
         "id": "commons-cli:commons-cli",
+        "purl": "",
         "path": "https://github.com/apache/maven-apache-parent",
         "branch": "",
         "digest": "",
@@ -153,6 +172,7 @@
     },
     {
         "id": "org.apache.commons:commons-lang3",
+        "purl": "",
         "path": "https://github.com/apache/maven-apache-parent",
         "branch": "",
         "digest": "",
@@ -161,6 +181,7 @@
     },
     {
         "id": "org.mockito:mockito-core",
+        "purl": "",
         "path": "https://github.com/mockito/mockito",
         "branch": "",
         "digest": "",
@@ -169,6 +190,7 @@
     },
     {
         "id": "org.fusesource.jansi:jansi",
+        "purl": "",
         "path": "https://github.com/fusesource/jansi",
         "branch": "",
         "digest": "",
@@ -177,6 +199,7 @@
     },
     {
         "id": "org.apache.maven.wagon:wagon-http",
+        "purl": "",
         "path": "https://github.com/apache/maven-wagon",
         "branch": "",
         "digest": "",
@@ -185,6 +208,7 @@
     },
     {
         "id": "org.apache.maven.wagon:wagon-file",
+        "purl": "",
         "path": "https://github.com/apache/maven-wagon",
         "branch": "",
         "digest": "",
@@ -193,6 +217,7 @@
     },
     {
         "id": "org.slf4j:jcl-over-slf4j",
+        "purl": "",
         "path": "https://github.com/qos-ch/slf4j",
         "branch": "",
         "digest": "",
@@ -201,6 +226,7 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-connector-basic",
+        "purl": "",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
@@ -209,6 +235,7 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-transport-file",
+        "purl": "",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
@@ -217,6 +244,7 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-transport-http",
+        "purl": "",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
@@ -225,6 +253,7 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-transport-wagon",
+        "purl": "",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
@@ -233,6 +262,7 @@
     },
     {
         "id": "org.codehaus.plexus:plexus-interpolation",
+        "purl": "",
         "path": "https://github.com/codehaus-plexus/plexus-interpolation",
         "branch": "",
         "digest": "",
@@ -241,6 +271,7 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-impl",
+        "purl": "",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
@@ -249,6 +280,7 @@
     },
     {
         "id": "org.codehaus.plexus:plexus-component-annotations",
+        "purl": "",
         "path": "https://github.com/codehaus-plexus/plexus-containers",
         "branch": "",
         "digest": "",
@@ -257,6 +289,7 @@
     },
     {
         "id": "org.apache.maven.wagon:wagon-provider-api",
+        "purl": "",
         "path": "https://github.com/apache/maven-wagon",
         "branch": "",
         "digest": "",
@@ -265,6 +298,7 @@
     },
     {
         "id": "org.codehaus.plexus:plexus-testing",
+        "purl": "",
         "path": "https://github.com/codehaus-plexus/plexus-testing",
         "branch": "",
         "digest": "",
@@ -273,6 +307,7 @@
     },
     {
         "id": "org.junit.jupiter:junit-jupiter-params",
+        "purl": "",
         "path": "https://github.com/junit-team/junit5",
         "branch": "",
         "digest": "",
@@ -281,6 +316,7 @@
     },
     {
         "id": "org.xmlunit:xmlunit-assertj",
+        "purl": "",
         "path": "https://github.com/xmlunit/xmlunit",
         "branch": "",
         "digest": "",
@@ -289,6 +325,7 @@
     },
     {
         "id": "org.hamcrest:hamcrest-library",
+        "purl": "",
         "path": "https://github.com/hamcrest/JavaHamcrest",
         "branch": "",
         "digest": "",
@@ -297,6 +334,7 @@
     },
     {
         "id": "org.eclipse.sisu:org.eclipse.sisu.inject",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
@@ -305,6 +343,7 @@
     },
     {
         "id": "org.xmlunit:xmlunit-core",
+        "purl": "",
         "path": "https://github.com/xmlunit/xmlunit",
         "branch": "",
         "digest": "",
@@ -313,6 +352,7 @@
     },
     {
         "id": "org.xmlunit:xmlunit-matchers",
+        "purl": "",
         "path": "https://github.com/xmlunit/xmlunit",
         "branch": "",
         "digest": "",
@@ -321,6 +361,7 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-spi",
+        "purl": "",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
@@ -329,6 +370,7 @@
     },
     {
         "id": "commons-jxpath:commons-jxpath",
+        "purl": "",
         "path": "",
         "branch": "",
         "digest": "",
