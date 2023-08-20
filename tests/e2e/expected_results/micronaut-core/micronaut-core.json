@@ -752,8 +752,8 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 1,
-                "PASSED": 7,
+                "FAILED": 2,
+                "PASSED": 6,
                 "SKIPPED": 0,
                 "UNKNOWN": 1
             },
@@ -846,8 +846,10 @@
                         "Provenance content - Identifies artifacts - SLSA Level 1",
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
-                    "justification": [],
-                    "result_type": "PASSED"
+                    "justification": [
+                        "Failed to discover any witness provenance."
+                    ],
+                    "result_type": "FAILED"
                 },
                 {
                     "check_id": "mcn_version_control_system_1",

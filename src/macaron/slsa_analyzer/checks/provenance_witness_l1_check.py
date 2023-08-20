@@ -169,12 +169,18 @@ class ProvenanceWitnessL1Check(BaseCheck):
 
                         verified_artifact_assets.extend(artifact_assets)
 
-        check_result["justification"].append("Successfully verified the following artifacts:")
-        for asset in verified_artifact_assets:
-            check_result["justification"].append(f"* {asset.url}")
+        # If Macaron cannot discover any witness provenance, we "fail" the check.
+        # Here, there status ``FAILED`` means: Macaron fails to discover any witness provenance.
+        # This is consistent with how Souffle works: facts in Souffle usually represent things that exist.
+        if len(verified_artifact_assets) > 0:
+            check_result["justification"].append("Successfully verified the following artifacts:")
+            for asset in verified_artifact_assets:
+                check_result["justification"].append(f"* {asset.url}")
+            check_result["result_tables"].append(ProvenanceWitnessL1Table())
+            return CheckResultType.PASSED
 
-        check_result["result_tables"].append(ProvenanceWitnessL1Table())
-        return CheckResultType.PASSED
+        check_result["justification"].append("Failed to discover any witness provenance.")
+        return CheckResultType.FAILED
 
 
 registry.register(ProvenanceWitnessL1Check())

@@ -1683,8 +1683,8 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 0,
-                "PASSED": 9,
+                "FAILED": 1,
+                "PASSED": 8,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
@@ -1777,8 +1777,10 @@
                         "Provenance content - Identifies artifacts - SLSA Level 1",
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
-                    "justification": [],
-                    "result_type": "PASSED"
+                    "justification": [
+                        "Failed to discover any witness provenance."
+                    ],
+                    "result_type": "FAILED"
                 },
                 {
                     "check_id": "mcn_trusted_builder_level_three_1",
