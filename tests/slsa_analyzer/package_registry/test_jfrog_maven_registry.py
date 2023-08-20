@@ -22,7 +22,7 @@ from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMav
 def jfrog_maven_instance() -> JFrogMavenRegistry:
     """Provide a default ``JFrogMavenRegistry`` object used in the tests below."""
     return JFrogMavenRegistry(
-        domain="registry.jfrog.com",
+        hostname="registry.jfrog.com",
         repo="repo",
         enabled=True,
     )
@@ -33,7 +33,7 @@ def test_load_defaults(tmp_path: Path) -> None:
     user_config_path = os.path.join(tmp_path, "config.ini")
     user_config_input = """
         [package_registry.jfrog.maven]
-        domain = jfrog.registry.xyz
+        hostname = jfrog.registry.xyz
         repo = prod-repo
         download_timeout = 300
     """
@@ -47,7 +47,7 @@ def test_load_defaults(tmp_path: Path) -> None:
 
     jfrog_maven = JFrogMavenRegistry()
     jfrog_maven.load_defaults()
-    assert jfrog_maven.domain == "jfrog.registry.xyz"
+    assert jfrog_maven.hostname == "jfrog.registry.xyz"
     assert jfrog_maven.repo == "prod-repo"
     assert jfrog_maven.download_timeout == 300
 
@@ -66,19 +66,19 @@ def test_load_defaults_without_jfrog_maven_config() -> None:
             [package_registry.jfrog.maven]
             repo = prod-repo
             """,
-            id="Missing domain",
+            id="Missing hostname",
         ),
         pytest.param(
             """
             [package_registry.jfrog.maven]
-            domain = jfrog.registry.xyz
+            hostname = jfrog.registry.xyz
             """,
             id="Missing repo",
         ),
         pytest.param(
             """
             [package_registry.jfrog.maven]
-            domain = jfrog.registry.xyz
+            hostname = jfrog.registry.xyz
             repo = prod-repo
             download_timeout = foo
             """,
@@ -90,7 +90,7 @@ def test_load_defaults_without_jfrog_maven_config() -> None:
             timeout = foo
 
             [package_registry.jfrog.maven]
-            domain = jfrog.registry.xyz
+            hostname = jfrog.registry.xyz
             repo = prod-repo
             download_timeout = foo
             """,

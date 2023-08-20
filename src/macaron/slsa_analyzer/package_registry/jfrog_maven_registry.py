@@ -110,8 +110,8 @@ class JFrogMavenRegistry(PackageRegistry):
 
     Attributes
     ----------
-    domain : str
-        The domain of the JFrog instance.
+    hostname : str
+        The hostname of the JFrog instance.
     repo : str
         The Artifactory repository with Maven layout on the JFrog instance.
     request_timeout : int
@@ -126,13 +126,13 @@ class JFrogMavenRegistry(PackageRegistry):
 
     def __init__(
         self,
-        domain: str | None = None,
+        hostname: str | None = None,
         repo: str | None = None,
         request_timeout: int | None = None,
         download_timeout: int | None = None,
         enabled: bool | None = None,
     ) -> None:
-        self.domain = domain or ""
+        self.hostname = hostname or ""
         self.repo = repo or ""
         self.request_timeout = request_timeout or 10
         self.download_timeout = download_timeout or 120
@@ -152,10 +152,10 @@ class JFrogMavenRegistry(PackageRegistry):
             return
         section = defaults[section_name]
 
-        self.domain = section.get("domain")
-        if not self.domain:
+        self.hostname = section.get("hostname")
+        if not self.hostname:
             raise ConfigurationError(
-                f'The "domain" key is missing in section [{section_name}] of the .ini configuration file.'
+                f'The "hostname" key is missing in section [{section_name}] of the .ini configuration file.'
             )
 
         self.repo = section.get("repo")
@@ -306,7 +306,7 @@ class JFrogMavenRegistry(PackageRegistry):
         url = urlunsplit(
             SplitResult(
                 scheme="https",
-                netloc=self.domain,
+                netloc=self.hostname,
                 path=f"/api/storage/{self.repo}/{folder_path}",
                 query="",
                 fragment="",
@@ -332,7 +332,7 @@ class JFrogMavenRegistry(PackageRegistry):
         return urlunsplit(
             SplitResult(
                 scheme="https",
-                netloc=self.domain,
+                netloc=self.hostname,
                 path=f"/api/storage/{self.repo}/{file_path}",
                 query="",
                 fragment="",
@@ -365,7 +365,7 @@ class JFrogMavenRegistry(PackageRegistry):
         return urlunsplit(
             SplitResult(
                 scheme="https",
-                netloc=self.domain,
+                netloc=self.hostname,
                 path="/api/search/latestVersion",
                 query="&".join(
                     [
@@ -808,7 +808,7 @@ class JFrogMavenRegistry(PackageRegistry):
         return urlunsplit(
             SplitResult(
                 scheme="https",
-                netloc=self.domain,
+                netloc=self.hostname,
                 path=f"{self.repo}/{group_path}/{artifact_id}/{version}/{asset_name}",
                 query="",
                 fragment="",
