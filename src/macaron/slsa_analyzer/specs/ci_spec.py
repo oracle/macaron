@@ -3,12 +3,14 @@
 
 """This module contains the BuildSpec class."""
 
+from collections.abc import Sequence
 from typing import TypedDict
 
 from macaron.code_analyzer.call_graph import CallGraph
 from macaron.parsers.bashparser import BashCommands
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 
 
 class CIInfo(TypedDict):
@@ -36,5 +38,5 @@ class CIInfo(TypedDict):
     Schema: https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release.
     """
 
-    provenances: list[dict]
+    provenances: Sequence[InTotoPayload]
     """The JSON payloads of SLSA provenances in in-toto format."""

@@ -47,6 +47,7 @@ from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
+from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
@@ -830,7 +831,7 @@ class Analyzer:
                             callgraph=callgraph,
                             provenance_assets=[],
                             latest_release={},
-                            provenances=[Provenance().payload],
+                            provenances=[InTotoV01Payload(statement=Provenance().payload)],
                         )
                     )
 

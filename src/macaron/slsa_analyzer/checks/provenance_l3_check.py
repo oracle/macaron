@@ -29,7 +29,9 @@ from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
 from macaron.slsa_analyzer.git_url import get_repo_dir_name
-from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader, SLSAProvenanceError
+from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload, v01
+from macaron.slsa_analyzer.provenance.intoto.errors import InTotoAttestationError, UnsupportedInTotoVersionError
+from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 
@@ -222,7 +224,11 @@ class ProvenanceL3Check(BaseCheck):
         return False
 
     def _find_asset(
-        self, subject: dict, all_assets: list[dict[str, str]], temp_path: str, ci_service: BaseCIService
+        self,
+        subject: v01.InTotoSubject,
+        all_assets: list[dict[str, str]],
+        temp_path: str,
+        ci_service: BaseCIService,
     ) -> dict | None:
         """Find the artifacts that appear in the provenance subject.
 
@@ -326,10 +332,17 @@ class ProvenanceL3Check(BaseCheck):
                             continue
 
                         # Read the provenance.
-                        payload = ProvPayloadLoader.load(os.path.join(temp_path, prov_asset.name))
+                        provenance_payload = load_provenance_payload(
+                            os.path.join(temp_path, prov_asset.name),
+                        )
+
+                        if not isinstance(provenance_payload, InTotoV01Payload):
+                            raise UnsupportedInTotoVersionError(
+                                f"The provenance asset '{prov_asset.name}' is under an unsupported in-toto version."
+                            )
 
                         # Add the provenance file.
-                        downloaded_provs.append(payload)
+                        downloaded_provs.append(provenance_payload.statement)
 
                         # Output provenance
                         prov = Provenance()
@@ -337,14 +350,14 @@ class ProvenanceL3Check(BaseCheck):
                         #  implemented ensure the provenance commit matches the actual release analyzed
                         prov.version = "0.2"
                         prov.release_commit_sha = ""
-                        prov.provenance_json = json.dumps(payload)
+                        prov.provenance_json = json.dumps(provenance_payload.statement)
                         prov.release_tag = ci_info["latest_release"]["tag_name"]
                         prov.component = ctx.component
 
                         check_result["result_tables"].append(prov)
 
                         # Iterate through the subjects and verify.
-                        for subject in payload["subject"]:
+                        for subject in provenance_payload.statement["subject"]:
                             sub_asset = self._find_asset(subject, all_assets, temp_path, ci_service)
 
                             result: None | _VerifyArtifactResult = None
@@ -411,7 +424,7 @@ class ProvenanceL3Check(BaseCheck):
                                     digest.artifact = artifact
                                     check_result["result_tables"].append(digest)
 
-            except (OSError, SLSAProvenanceError) as error:
+            except (OSError, InTotoAttestationError) as error:
                 logger.error(" %s: %s.", self.check_id, error)
                 check_result["justification"].append("Could not verify level 3 provenance.")
                 return CheckResultType.FAILED

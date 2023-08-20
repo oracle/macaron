@@ -29,7 +29,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 def verify_artifact_assets(
     artifact_assets: list[JFrogMavenAsset],
-    subjects: list[WitnessProvenanceSubject],
+    subjects: set[WitnessProvenanceSubject],
 ) -> list[str]:
     """Verify artifact assets against subjects in the witness provenance payload.
 

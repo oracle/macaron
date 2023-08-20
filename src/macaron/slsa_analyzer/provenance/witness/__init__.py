@@ -4,11 +4,12 @@
 """Witness provenance (https://github.com/testifysec/witness)."""
 
 import logging
-from typing import NamedTuple, TypeGuard
+from typing import NamedTuple
 
 from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.asset import AssetLocator
-from macaron.util import JsonType
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payload
+from macaron.slsa_analyzer.provenance.witness.attestor import GitLabWitnessAttestor, RepoAttestor
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -20,12 +21,12 @@ class WitnessProvenanceData(NamedTuple):
     ----------
     asset : AssetLocator
         The provenance asset.
-    payload : dict[str, JsonType]
+    payload : InTotoPayload
         The provenance payload.
     """
 
     asset: AssetLocator
-    payload: dict[str, JsonType]
+    payload: InTotoPayload
 
 
 class WitnessVerifierConfig(NamedTuple):
@@ -33,7 +34,7 @@ class WitnessVerifierConfig(NamedTuple):
 
     Attributes
     ----------
-    predicate_types: set[str]
+    predicate_types : set[str]
         A provenance payload is recognized by Macaron to be a witness provenance if its
         ``predicateType`` value is present within this set.
     artifact_extensions : set[str]
@@ -51,7 +52,7 @@ def load_witness_verifier_config() -> WitnessVerifierConfig:
     Returns
     -------
     WitnessVerifierConfig
-        Configuration for verifying witness provenance.
+        Configuration for verifying witness provenances.
     """
     return WitnessVerifierConfig(
         predicate_types=set(
@@ -72,30 +73,25 @@ def load_witness_verifier_config() -> WitnessVerifierConfig:
 
 
 def is_witness_provenance_payload(
-    payload: dict[str, JsonType],
+    payload: InTotoPayload,
     predicate_types: set[str],
-) -> TypeGuard[dict[str, JsonType]]:
+) -> bool:
     """Check if the given provenance payload is a witness provenance payload.
 
     Parameters
     ----------
-    payload : JsonType
+    payload : InTotoPayload
         The provenance payload.
     predicate_types : set[str]
         The allowed values for the ``"predicateType"`` field of the provenance payload.
 
     Returns
     -------
-    TypeGuard[dict[str, JsonType]]
+    bool
         ``True`` if the payload is a witness provenance payload, ``False`` otherwise.
-        If ``True`` is returned, the type of ``payload`` is narrowed to be a JSON object,
-        or ``dict[str, JsonType]`` in Python type.
     """
-    predicate_type = payload.get("predicateType")
-    if predicate_type is None:
-        logger.debug("Malformed provenance payload: missing the 'predicateType' field.")
-        return False
-    return predicate_type in predicate_types
+    # TODO: add support for in-toto v1 provenances.
+    return isinstance(payload, InTotoV01Payload) and payload.statement["predicateType"] in predicate_types
 
 
 class WitnessProvenanceSubject(NamedTuple):
@@ -119,12 +115,12 @@ class WitnessProvenanceSubject(NamedTuple):
         return artifact_name
 
 
-def extract_repo_url(witness_payload: dict[str, JsonType]) -> str | None:
+def extract_repo_url(witness_payload: InTotoPayload) -> str | None:
     """Extract the repo URL from the witness provenance payload.
 
     Parameters
     ----------
-    witness_payload : dict[str, JsonType]
+    witness_payload : InTotoPayload
         The witness provenance payload.
 
     Returns
@@ -133,34 +129,22 @@ def extract_repo_url(witness_payload: dict[str, JsonType]) -> str | None:
         The repo URL within the witness provenance payload, if the provenance payload
         can be processed and the repo URL is found.
     """
-    predicates = witness_payload.get("predicates", {})
-    if predicates is None or not isinstance(predicates, dict):
-        return None
-    attestations = predicates.get("attestations", [])
-    if attestations is None or not isinstance(attestations, list):
-        return None
-    for attestation_entry in attestations:
-        if not isinstance(attestation_entry, dict):
-            return None
-        attestation_type = attestation_entry.get("type")
-        if attestation_type != "https://witness.dev/attestations/gitlab/v0.1":
-            continue
-        attestation = attestation_entry.get("attestation")
-        if attestation is None or not isinstance(attestation, dict):
-            return None
-        project_url = attestation.get("projecturl")
-        if project_url is None or not isinstance(project_url, str):
-            return None
-        return project_url
+    repo_attestors: list[RepoAttestor] = [GitLabWitnessAttestor()]
+
+    for attestor in repo_attestors:
+        repo_url = attestor.extract_repo_url(witness_payload)
+        if repo_url is not None:
+            return repo_url
+
     return None
 
 
-def extract_witness_provenance_subjects(witness_payload: dict[str, JsonType]) -> list[WitnessProvenanceSubject]:
+def extract_witness_provenance_subjects(witness_payload: InTotoPayload) -> set[WitnessProvenanceSubject]:
     """Read the ``"subjects"`` field of the provenance to obtain the hash digests of each subject.
 
     Parameters
     ----------
-    witness_payload : dict[str, JsonType]
+    witness_payload : InTotoPayload
         The witness provenance payload.
     extensions : list[str]
         The allowed extensions of the subjects.
@@ -171,40 +155,27 @@ def extract_witness_provenance_subjects(witness_payload: dict[str, JsonType]) ->
     dict[str, str]
         A dictionary in which each key is a subject name and each value is the corresponding SHA256 digest.
     """
-    subjects = witness_payload.get("subject")
-    if subjects is None:
-        logger.debug("Could not find the 'subject' field in the witness provenance payload.")
-        return []
+    # TODO: add support for in-toto v1 provenances.
 
-    if not isinstance(subjects, list):
-        logger.debug(
-            "Got unexpected value type for the 'subject' field in the witness provenance payload. Expected a list."
-        )
-        return []
+    if isinstance(witness_payload, InTotoV01Payload):
+        subjects = witness_payload.statement["subject"]
+        subject_digests = set()
 
-    subject_digests = []
+        for subject in subjects:
+            name = subject["name"]
+            digest = subject["digest"]
 
-    for subject in subjects:
-        if not isinstance(subject, dict):
-            logger.debug("Got unexpected value type for an element in the 'subject' list. Expected a JSON object.")
-            continue
+            sha256 = digest.get("sha256")
+            if not sha256 or not isinstance(sha256, str):
+                continue
 
-        name = subject.get("name")
-        if not name or not isinstance(name, str):
-            continue
-
-        digest = subject.get("digest")
-        if not digest or not isinstance(digest, dict):
-            continue
-        sha256 = digest.get("sha256")
-        if not sha256 or not isinstance(sha256, str):
-            continue
-
-        subject_digests.append(
-            WitnessProvenanceSubject(
-                subject_name=name,
-                sha256_digest=sha256,
+            subject_digests.add(
+                WitnessProvenanceSubject(
+                    subject_name=name,
+                    sha256_digest=sha256,
+                )
             )
-        )
 
-    return subject_digests
+        return subject_digests
+
+    return set()

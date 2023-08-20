@@ -14,7 +14,7 @@ from sqlalchemy.sql.sqltypes import String
 
 from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
-from macaron.errors import MacaronError, ProvenanceLoadError
+from macaron.errors import MacaronError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
@@ -24,7 +24,8 @@ from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
 from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAsset
-from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader, SLSAProvenanceError, load_provenance
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
+from macaron.slsa_analyzer.provenance.loader import LoadIntotoAttestationError, load_provenance_payload
 from macaron.slsa_analyzer.provenance.witness import (
     WitnessProvenanceData,
     extract_repo_url,
@@ -35,7 +36,6 @@ from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
-from macaron.util import JsonType
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -231,10 +231,8 @@ class ProvenanceAvailableCheck(BaseCheck):
                     continue
 
                 try:
-                    provenance_payload = load_provenance(
-                        provenance_filepath,
-                    )
-                except ProvenanceLoadError as error:
+                    provenance_payload = load_provenance_payload(provenance_filepath)
+                except LoadIntotoAttestationError as error:
                     logger.error("Error while loading provenance: %s", error)
                     continue
 
@@ -262,7 +260,7 @@ class ProvenanceAvailableCheck(BaseCheck):
         download_dir: str,
         provenance_assets: list[JFrogMavenAsset],
         jfrog_maven_registry: JFrogMavenRegistry,
-    ) -> dict[str, dict[str, JsonType]]:
+    ) -> dict[str, InTotoPayload]:
         """Download provenances from a JFrog Maven package registry.
 
         Parameters
@@ -276,9 +274,9 @@ class ProvenanceAvailableCheck(BaseCheck):
 
         Returns
         -------
-        dict[str, dict[str, JsonType]]
+        dict[str, InTotoStatement]
             The downloaded provenance payloads. Each key is the URL where the provenance
-            asset is hosted and each value is the corresponding provenance payload in JSON.
+            asset is hosted and each value is the corresponding provenance payload.
         """
         # Note: In certain cases, Macaron can find the same provenance file in
         # multiple different places on a package registry.
@@ -299,10 +297,10 @@ class ProvenanceAvailableCheck(BaseCheck):
                 continue
 
             try:
-                provenances[prov_asset.url] = load_provenance(
+                provenances[prov_asset.url] = load_provenance_payload(
                     provenance_filepath,
                 )
-            except ProvenanceLoadError as error:
+            except LoadIntotoAttestationError as error:
                 logger.error("Error while loading provenance: %s", error)
                 continue
 
@@ -418,8 +416,8 @@ class ProvenanceAvailableCheck(BaseCheck):
 
                 # Read the provenance.
                 try:
-                    payload = ProvPayloadLoader.load(provenance_filepath)
-                except SLSAProvenanceError as error:
+                    payload = load_provenance_payload(provenance_filepath)
+                except LoadIntotoAttestationError as error:
                     logger.error("Error logging provenance: %s", error)
                     continue
 

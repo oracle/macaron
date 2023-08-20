@@ -18,6 +18,7 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType, GitHubActions
+from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
@@ -137,7 +138,7 @@ class TrustedBuilderL3Check(BaseCheck):
                     )
 
                     if ctx.dynamic_data["is_inferred_prov"]:
-                        provenance: dict[str, Any] = Provenance().payload
+                        provenance: Any = Provenance().payload
                         predicate = provenance["predicate"]
                         predicate["buildType"] = f"Trusted {ci_service.name}"
                         predicate["builder"]["id"] = callee.name
@@ -147,7 +148,7 @@ class TrustedBuilderL3Check(BaseCheck):
                         predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.component.repository.commit_sha
                         predicate["invocation"]["configSource"]["entryPoint"] = caller_link
                         predicate["metadata"]["buildInvocationId"] = html_url
-                        inferred_provenances.append(provenance)
+                        inferred_provenances.append(InTotoV01Payload(statement=provenance))
                     check_result["justification"].extend(
                         [
                             {f"Found trusted builder GitHub Actions: {callee.name} triggered by": caller_link},

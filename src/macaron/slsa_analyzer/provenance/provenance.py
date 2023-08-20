@@ -9,7 +9,7 @@ Assets are essentially files published from some build.
 from typing import Protocol
 
 from macaron.slsa_analyzer.asset import AssetLocator
-from macaron.util import JsonType
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 
 
 class DownloadedProvenanceData(Protocol):
@@ -20,7 +20,7 @@ class DownloadedProvenanceData(Protocol):
         """Get the asset."""
 
     @property
-    def payload(self) -> dict[str, JsonType]:
+    def payload(self) -> InTotoPayload:
         """Get the JSON payload of the provenance, in in-toto format.
 
         This payload must be a JSON object at the top-level, hence the return type.

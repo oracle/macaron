@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from macaron.config.defaults import load_defaults
+from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload, v01
 from macaron.slsa_analyzer.provenance.witness import (
     WitnessProvenanceSubject,
     WitnessVerifierConfig,
@@ -17,7 +18,6 @@ from macaron.slsa_analyzer.provenance.witness import (
     is_witness_provenance_payload,
     load_witness_verifier_config,
 )
-from macaron.util import JsonType
 
 
 @pytest.mark.parametrize(
@@ -66,7 +66,7 @@ def test_load_witness_predicate_types(
 
 
 @pytest.mark.parametrize(
-    ("payload", "predicate_types", "expected_result"),
+    ("payload_json", "predicate_types", "expected_result"),
     [
         pytest.param(
             json.loads(
@@ -88,25 +88,20 @@ def test_load_witness_predicate_types(
             False,
             id="Invalid predicateType",
         ),
-        pytest.param(
-            json.loads("{}"),
-            ["https://witness.testifysec.com/attestation-collection/v0.1"],
-            False,
-            id="Missing predicateType",
-        ),
     ],
 )
 def test_is_witness_provenance_payload(
-    payload: dict[str, JsonType],
+    payload_json: v01.InTotoStatement,
     predicate_types: set[str],
     expected_result: bool,
 ) -> None:
     """Test the ``is_witness_provenance_payload`` function."""
+    payload = InTotoV01Payload(statement=payload_json)
     assert is_witness_provenance_payload(payload, predicate_types) == expected_result
 
 
 @pytest.mark.parametrize(
-    ("payload", "expected_subjects"),
+    ("payload_json", "expected_subjects"),
     [
         pytest.param(
             json.loads(
@@ -129,7 +124,7 @@ def test_is_witness_provenance_payload(
 }
                 """
             ),
-            [
+            {
                 WitnessProvenanceSubject(
                     subject_name=(
                         "https://witness.dev/attestations/product/v0.1/file:target/jackson-annotations-2.9.9.jar"
@@ -140,20 +135,8 @@ def test_is_witness_provenance_payload(
                     subject_name="https://witness.dev/attestations/product/v0.1/file:foo/bar/baz.txt",
                     sha256_digest="cbc8f554dbfa17e5c5873c425a09cb1488c2f784ac52340747a92b7ec0aaefba",
                 ),
-            ],
+            },
             id="Valid payload",
-        ),
-        pytest.param(json.loads("{}"), [], id="Missing 'subject'"),
-        pytest.param(
-            json.loads(
-                """
-            {
-                "subject": {}
-            }
-            """
-            ),
-            [],
-            id="Invalid 'subject' value",
         ),
         pytest.param(
             json.loads(
@@ -167,45 +150,31 @@ def test_is_witness_provenance_payload(
             }
         },
         {
-            "name": "https://witness.dev/attestations/product/v0.1/file:foo/bar/baz.txt"
-        },
-        {
-            "name": "https://witness.dev/attestations/product/v0.1/file:foo/bar/baz2.txt",
-            "digest": {}
-        },
-        {
-            "name": "https://witness.dev/attestations/product/v0.1/file:foo/bar/baz2.txt",
+            "name": "https://witness.dev/attestations/product/v0.1/file:foo/bar/baz.txt",
             "digest": {
-                "sha256": {}
+                "sha1": "cbc8f554dbfa17e5c5873c425a09cb1488c2f784ac52340747a92b7ec0aaefba"
             }
-        },
-        {
-            "name": [],
-            "digest": {
-                "sha256": "6f97fe2094bd50435d6fbb7a2f6c2638fe44e6af17cfff98ce111d0abfffe17e"
-            }
-        },
-        {},
-        []
+        }
     ]
 }
             """
             ),
-            [
+            {
                 WitnessProvenanceSubject(
                     subject_name=(
                         "https://witness.dev/attestations/product/v0.1/file:target/jackson-annotations-2.9.9.jar"
                     ),
                     sha256_digest="6f97fe2094bd50435d6fbb7a2f6c2638fe44e6af17cfff98ce111d0abfffe17e",
                 ),
-            ],
-            id="Malformed subject",
+            },
+            id="Missing sha256",
         ),
     ],
 )
 def test_extract_witness_provenances_subjects(
-    payload: dict[str, JsonType],
-    expected_subjects: list[WitnessProvenanceSubject],
+    payload_json: v01.InTotoStatement,
+    expected_subjects: set[WitnessProvenanceSubject],
 ) -> None:
     """Test the ``extract_witness_provenance_subjects`` function."""
+    payload = InTotoV01Payload(statement=payload_json)
     assert extract_witness_provenance_subjects(payload) == expected_subjects

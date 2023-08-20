@@ -11,7 +11,7 @@ from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckResultType
 from macaron.slsa_analyzer.checks.check_result import CheckResult
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
-from macaron.slsa_analyzer.provenance.loader import SLSAProvenanceError
+from macaron.slsa_analyzer.provenance.loader import LoadIntotoAttestationError
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -84,7 +84,7 @@ class ProvenanceL3ContentCheck(BaseCheck):
                                 )
                                 return CheckResultType.PASSED
 
-                        except (SLSAProvenanceError, ExpectationRuntimeError) as error:
+                        except (LoadIntotoAttestationError, ExpectationRuntimeError) as error:
                             logger.error(error)
                             check_result["justification"].append("Could not verify expectation against the provenance.")
                             return CheckResultType.FAILED
@@ -114,7 +114,7 @@ class ProvenanceL3ContentCheck(BaseCheck):
                         )
                         return CheckResultType.PASSED
 
-                except (SLSAProvenanceError, ExpectationRuntimeError) as error:
+                except (LoadIntotoAttestationError, ExpectationRuntimeError) as error:
                     logger.error(error)
                     check_result["justification"].append("Could not verify expectation against the provenance.")
                     return CheckResultType.FAILED

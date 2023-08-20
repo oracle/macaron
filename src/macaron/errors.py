@@ -46,7 +46,3 @@ class PURLNotFoundError(MacaronError):
 
 class DuplicateError(MacaronError):
     """The class for errors for duplicated data."""
-
-
-class ProvenanceLoadError(MacaronError):
-    """Happens when there is an issue decoding and loading a provenance from a provenance asset."""

@@ -104,12 +104,12 @@ class AnalyzeContext:
             ci_services = self.dynamic_data["ci_services"]
             result = {}
             for ci_info in ci_services:
-                result[ci_info["service"].name] = ci_info["provenances"]
+                result[ci_info["service"].name] = [payload.statement for payload in ci_info["provenances"]]
             package_registry_entries = self.dynamic_data["package_registries"]
             for package_registry_entry in package_registry_entries:
-                result[package_registry_entry.package_registry.name] = []
-                for provenance in package_registry_entry.provenances:
-                    result[package_registry_entry.package_registry.name].append(provenance.payload)
+                result[package_registry_entry.package_registry.name] = [
+                    provenance.payload.statement for provenance in package_registry_entry.provenances
+                ]
             return result
         except KeyError:
             return {}
