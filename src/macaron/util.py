@@ -93,7 +93,7 @@ def send_get_http_raw(url: str, headers: dict | None = None, timeout: int | None
         else:
             return None
         response = requests.get(
-            url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
+            url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10), params=params
         )  # nosec B113:request_without_timeout
 
     return response
