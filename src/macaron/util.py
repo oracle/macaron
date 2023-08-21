@@ -56,7 +56,7 @@ def send_get_http(url: str, headers: dict) -> dict:
     return dict(response.json())
 
 
-def send_get_http_raw(url: str, headers: dict) -> Response | None:
+def send_get_http_raw(url: str, headers: dict, params: dict | None) -> Response | None:
     """Send the GET HTTP request with the given url and headers.
 
     This method also handle logging when the API server return error status code.
@@ -75,7 +75,7 @@ def send_get_http_raw(url: str, headers: dict) -> Response | None:
     """
     logger.debug("GET - %s", url)
     response = requests.get(
-        url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
+        url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10), params=params
     )  # nosec B113:request_without_timeout
     while response.status_code != 200:
         logger.error(
@@ -88,7 +88,7 @@ def send_get_http_raw(url: str, headers: dict) -> Response | None:
         else:
             return None
         response = requests.get(
-            url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
+            url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10), params=params
         )  # nosec B113:request_without_timeout
 
     return response

@@ -1,10 +1,12 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides API clients for VCS services, such as GitHub."""
 
 import logging
+import re
 from enum import Enum
+from typing import Any
 
 from macaron.config.defaults import defaults
 from macaron.util import construct_query, download_github_build_log, send_get_http, send_get_http_raw
@@ -478,6 +480,7 @@ class GhAPIClient(BaseAPIClient):
                 "Accept": "application/octet-stream",
                 "Authorization": self.headers["Authorization"],
             },
+            None,
         )
         if not response:
             logger.error("Could not download the asset.")
@@ -491,6 +494,92 @@ class GhAPIClient(BaseAPIClient):
             return False
 
         return True
+
+    def list_pull_requests(self, full_name: str) -> list:
+        """Query the GitHub API PR IDs within the target repository.
+
+        The url would be in the following form:
+        ``https://api.github.com/repos/{full_name}/pulls``
+
+        Parameters
+        ----------
+        full_name : str
+            The full name of the repository in the format {owner/name}.
+
+        Returns
+        -------
+        list
+            The IDs of each PR.
+
+        Examples
+        --------
+        The following call to this method will perform a query to:
+        ``https://api.github.com/repos/owner/repo/pulls``
+
+        """
+        url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/pulls"  # fetch PRs
+        params: dict = {"state": "all"}
+        pull_request_ids: list = []
+        while True:
+            # GitHub paginates responses to avoid overwhelming the client with a large amount of
+            # data in a single response.
+            # We need to handle pagination by making multiple requests and fetching all the pages.
+
+            response_data = send_get_http_raw(url, self.headers, params)
+            if not response_data:
+                logger.error("Could not find the PR IDs.")
+                return []
+
+            response_data_json = response_data.json()
+            pull_request_ids.extend([pr["number"] for pr in response_data_json])
+            link_header = response_data.headers.get("Link")
+
+            if link_header is not None and "next" in link_header:
+                next_page_match = re.search(r'<([^>]*)>; rel="next"', link_header)
+                if next_page_match:
+                    url = next_page_match.group(1)
+                else:
+                    url = ""
+            else:
+                break
+
+        return pull_request_ids
+
+    def get_a_review(self, full_name: str, pr_id: str) -> Any:
+        """Query the GitHub API for the reviews of a PR.
+
+        The url would be in the following form:
+        ``https://api.github.com/repos/{full_name}/pulls/{pr_number}/reviews``
+
+        Parameters
+        ----------
+        full_name : str
+            The full name of the repository in the format {owner/name}.
+        pr_number : str
+            The id of the pull request.
+
+        Returns
+        -------
+        dict
+            The json query result or an empty dict if failed.
+
+        Examples
+        --------
+        The following call to this method will perform a query to:
+        ``https://api.github.com/repos/owner/repo/pulls/9684/reviews``
+
+        """
+        logger.debug("Get the reviews for %s with PR id %s.", full_name, pr_id)
+        url = (
+            f"{GhAPIClient._REPO_END_POINT}/{full_name}/pulls/{pr_id}/reviews"  # fetch reviews only cocntain reviewers
+        )
+        params: dict = {"state": "all"}
+
+        response_data = send_get_http_raw(url, self.headers, params)
+        if not response_data:
+            logger.error("Could not fetch the review.")
+            return {}
+        return response_data.json()
 
 
 def get_default_gh_client(access_token: str) -> GhAPIClient:
