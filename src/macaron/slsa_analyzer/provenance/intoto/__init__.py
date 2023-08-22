@@ -93,17 +93,17 @@ def validate_intoto_payload(payload: dict[str, JsonType]) -> InTotoPayload:
     ValidateInTotoPayloadError
         When there is an error validating the payload.
     """
-    _type = payload.get("_type")
-    if _type is None:
+    type_ = payload.get("_type")
+    if type_ is None:
         raise ValidateInTotoPayloadError(
             "The attribute '_type' of the in-toto statement is missing.",
         )
-    if not isinstance(_type, str):
+    if not isinstance(type_, str):
         raise ValidateInTotoPayloadError(
             "The value of attribute '_type' in the in-toto statement is invalid: expecting a string.",
         )
 
-    if _type == "https://in-toto.io/Statement/v0.1":
+    if type_ == "https://in-toto.io/Statement/v0.1":
         # The type must always be this value for version v0.1.
         # See specification: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement.
 

@@ -59,12 +59,12 @@ def validate_intoto_statement(payload: dict[str, JsonType]) -> TypeGuard[InTotoS
     ValidateInTotoPayloadError
         When the payload does not follow the expected schema.
     """
-    _type = payload.get("_type")
-    if _type is None:
+    type_ = payload.get("_type")
+    if type_ is None:
         raise ValidateInTotoPayloadError(
             "The attribute '_type' of the in-toto statement is missing.",
         )
-    if not isinstance(_type, str):
+    if not isinstance(type_, str):
         raise ValidateInTotoPayloadError(
             "The value of attribute '_type' in the in-toto statement is invalid: expecting a string.",
         )
