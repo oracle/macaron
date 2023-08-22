@@ -20,7 +20,7 @@ This is currently either a v0.1 statement or v1 statement.
 """
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True)  # objects of this class are immutable and hashable
 class InTotoPayload(Generic[StatementT]):
     """The payload of an in-toto provenance.
 
