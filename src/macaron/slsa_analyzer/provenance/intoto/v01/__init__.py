@@ -51,7 +51,7 @@ def validate_intoto_statement(payload: dict[str, JsonType]) -> TypeGuard[InTotoS
     Returns
     -------
     TypeGuard[InTotoStatement]
-        ``True`` if the subject element is valid, in which case its type is narrowed to an
+        ``True`` if the attestation statement is valid, in which case its type is narrowed to an
         ``InTotoStatement``; ``False`` otherwise.
 
     Raises
