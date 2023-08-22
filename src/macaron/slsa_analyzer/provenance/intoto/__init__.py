@@ -22,7 +22,21 @@ This is currently either a v0.1 statement or v1 statement.
 
 @dataclass(frozen=True)
 class InTotoPayload(Generic[StatementT]):
-    """The payload of an in-toto provenance."""
+    """The payload of an in-toto provenance.
+
+    The payload is a field within a DSSE envelope, having the type "Statement".
+
+    For more details, see the following pages in in-toto spec:
+    - In-toto attestation layers: https://github.com/in-toto/attestation/tree/main/spec
+    v0.1: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#attestation-spec
+    v1  : https://github.com/in-toto/attestation/tree/main/spec/v1#specification-for-in-toto-attestation-layers
+    - Envelope layer:
+    v0.1: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#envelope
+    v1  : https://github.com/in-toto/attestation/blob/main/spec/v1/envelope.md
+    - Statement layer:
+    v0.1: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement
+    v1: https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md
+    """
 
     statement: StatementT
 
@@ -30,14 +44,30 @@ class InTotoPayload(Generic[StatementT]):
 class InTotoV01Payload(InTotoPayload[v01.InTotoStatement]):
     """The provenance payload following in-toto v0.1 schema.
 
-    Specification: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement.
+    The payload is a field within a DSSE envelope, having the type "Statement".
+
+    In-toto spec (v0.1):
+    - In-toto attestation layers:
+    https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#attestation-spec
+    - Envelope layer:
+    https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#envelope
+    - Statement layer:
+    https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement
     """
 
 
 class InTotoV1Payload(InTotoPayload[v1.InTotoStatement]):
     """The provenance payload following in-toto v1 schema.
 
-    Specification: https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md.
+    The payload is a field within a DSSE envelope, having the type "Statement".
+
+    In-toto spec (v1):
+    - In-toto attestation layers:
+    https://github.com/in-toto/attestation/tree/main/spec/v1#specification-for-in-toto-attestation-layers
+    - Envelope layer:
+    https://github.com/in-toto/attestation/blob/main/spec/v1/envelope.md
+    - Statement layer:
+    https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md
     """
 
 
