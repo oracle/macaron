@@ -7,6 +7,9 @@
    :description: macaron - A CI/CD security analysis tool for supply-chain attacks
    :keywords: CI/CD, SLSA, supply-chain security
 
+.. References/links
+.. _Witness: https://github.com/testifysec/witness
+
 =====================
 Macaron documentation
 =====================
@@ -58,10 +61,10 @@ the requirements that are currently supported by Macaron.
      - Identify and validate build script(s).
    * - 1
      - **Provenance available** - Provenances are available.
-     - Check for existence of provenances, which can be SLSA or Witness provenances. If there is no provenance, the repo can still be compliant to level 1 given the build script is available.
+     - Check for existence of provenances, which can be SLSA or `Witness`_ provenances. If there is no provenance, the repo can still be compliant to level 1 given the build script is available.
    * - 1
-     - **Witness provenance** - One or more Witness provenances are discovered.
-     - Check for existence of Witness provenances, and whether artifact digests match those in the provenances.
+     - **Witness provenance** - One or more `Witness`_ provenances are discovered.
+     - Check for existence of `Witness`_ provenances, and whether artifact digests match those in the provenances.
    * - 2
      - **Build service** - All build steps are run using some build service (e.g. GitHub Actions)
      - Identify and validate the CI service(s) used for the build process.
