@@ -243,7 +243,7 @@ class ProvenanceAvailableCheck(BaseCheck):
                     continue
 
                 repo_url = extract_repo_url(provenance_payload)
-                if not repo_url != repo_remote_path:
+                if repo_url != repo_remote_path:
                     continue
 
                 provenances.append(

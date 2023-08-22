@@ -137,6 +137,7 @@ class ProvenanceWitnessL1Check(BaseCheck):
             The result type of the check (e.g. PASSED).
         """
         witness_verifier_config = load_witness_verifier_config()
+        verified_provenances = []
         verified_artifact_assets = []
 
         for package_registry_info_entry in ctx.dynamic_data["package_registries"]:
@@ -168,10 +169,11 @@ class ProvenanceWitnessL1Check(BaseCheck):
                             return CheckResultType.FAILED
 
                         verified_artifact_assets.extend(artifact_assets)
+                        verified_provenances.append(provenance)
 
         # When this check passes, it means: "the project produces verifiable witness provenances".
         # Therefore, If Macaron cannot discover any witness provenance, we "fail" the check.
-        if len(verified_artifact_assets) > 0:
+        if len(verified_provenances) > 0:
             check_result["justification"].append("Successfully verified the following artifacts:")
             for asset in verified_artifact_assets:
                 check_result["justification"].append(f"* {asset.url}")
