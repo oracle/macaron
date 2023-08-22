@@ -54,7 +54,7 @@ For more information on the three fields ``type``, ``namespace`` and ``name`` of
 Typically, when a repository path is provided as the main software component of the :ref:`analyze action <analyze-action-cli>`,
 a PURL is generated from the repository path, which is then later used in generating the unique report path.
 
-For example, when run this command:
+For example, when running this command:
 
 .. code-block::
 

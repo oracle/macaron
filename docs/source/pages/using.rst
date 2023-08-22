@@ -120,19 +120,19 @@ The list bellow shows examples for the corresponding PURL string for different g
    * - ``https://gitlab.com/gitlab-org/gitlab``
      - ``pkg:gitlab.com/gitlab-org/gitlab``
 
-After the PURL string has been obtained, the analysis could be run with:
+After the PURL string has been obtained, the analysis can be run with:
 
 .. code-block:: shell
 
   ./run_macaron.sh analyze -purl <purl_string>
 
-You can also provide the PURL string together with the repository path. In this case, the PURL string will be used as the unique identifier to the analysis target:
+You can also provide the PURL string together with the repository path. In this case, the PURL string will be used as the unique identifier for the analysis target:
 
 .. code-block:: shell
 
   ./run_macaron.sh analyze -purl <purl_string> -rp <repo_path> -b <branch> -d <digest>
 
-.. note:: When provide the PURL and the repository path, both branch name and commit digest must be provided as well.
+.. note:: When providing the PURL and the repository path, both the branch name and commit digest must be provided as well.
 
 -------------------------------------------------
 Verifying provenance expectations in CUE language
@@ -262,7 +262,7 @@ Running the policy engine
 Macaron's policy engine accepts policies specified in `Datalog <https://en.wikipedia.org/wiki/Datalog>`_. An example policy
 can verify if a project and all its dependencies pass certain checks. We use `Soufflé <https://souffle-lang.github.io/index.html>`_
 as the Datalog engine in Macaron. Once you run the checks on a target project as described :ref:`here <analyze-action>`,
-the check results will be stored in ``macaron.db`` in the output directory. Because the check results of different software component can be stored into the database at ``macaron.db``, we must specify the target software component in the Datalog policy file to be enforced by the policy engine. There are two ways that we could
+the check results will be stored in ``macaron.db`` in the output directory. Because the check results of different software components can be stored in the database at ``macaron.db``, we must specify the target software component in the Datalog policy file to be enforced by the policy engine. There are two ways that we can
 specify the target software component in the Datalog policy file:
 
 #. Using the complete name of the target component (e.g. ``github.com/oracle-quickstart/oci-micronaut``)
@@ -298,7 +298,7 @@ The differences between the two policy files can be observed below:
 
     apply_policy_to("oci_micronaut_dependencies", component_id) :- is_component(component_id, "<target_software_component_purl>").
 
-The PURL string for the target software component could be obtained when the :ref:`analyze command <analyze-action>` finishes. For example:
+The PURL string for the target software component can be obtained when the :ref:`analyze command <analyze-action>` has finished. For example:
 
 .. code:: shell
 
