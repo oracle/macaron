@@ -7,6 +7,9 @@
    :description: macaron - A CI/CD security analysis tool for supply-chain attacks
    :keywords: CI/CD, SLSA, supply-chain security
 
+.. References/links
+.. _Witness: https://github.com/testifysec/witness
+
 =====================
 Macaron documentation
 =====================
@@ -29,6 +32,14 @@ Macaron is an analysis tool which focuses on the build process for an artifact a
 are at a high-level, Macaron first defines these requirements as specific
 concrete rules that can be checked automatically. Macaron has a customizable checker platform that makes it easy to define checks that depend on each other.
 
+---------------
+Getting started
+---------------
+
+To start with Macaron, see our :doc:`Installation </pages/installation>` and :doc:`Using </pages/using>` pages.
+
+For all services and technologies that Macaron supports, see our :doc:`Supported Technologies </pages/supported_technologies/index>` page.
+
 -------------------------
 Current checks in Macaron
 -------------------------
@@ -49,8 +60,11 @@ the requirements that are currently supported by Macaron.
      - **Scripted build** - All build steps were fully defined in a “build script”.
      - Identify and validate build script(s).
    * - 1
-     - **Provenance available** - The provenance is available.
-     - Check for existence of SLSA provenance. If there are no SLSA provenance, the repo can still be compliant to level 1 given the build script is available.
+     - **Provenance available** - Provenances are available.
+     - Check for existence of provenances, which can be SLSA or `Witness`_ provenances. If there is no provenance, the repo can still be compliant to level 1 given the build script is available.
+   * - 1
+     - **Witness provenance** - One or more `Witness`_ provenances are discovered.
+     - Check for existence of `Witness`_ provenances, and whether artifact digests match those in the provenances.
    * - 2
      - **Build service** - All build steps are run using some build service (e.g. GitHub Actions)
      - Identify and validate the CI service(s) used for the build process.
@@ -91,4 +105,5 @@ intermediate representations as abstractions. Using such abstractions, Macaron i
    pages/using
    pages/output_files
    pages/cli_usage/index
+   pages/supported_technologies/index
    pages/apidoc/index
