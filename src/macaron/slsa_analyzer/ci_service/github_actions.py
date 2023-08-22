@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module analyzes GitHub Actions CI."""
@@ -17,6 +17,8 @@ from macaron.parsers.actionparser import parse as parse_action
 from macaron.parsers.bashparser import BashCommands, extract_bash_from_ci
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient, get_default_gh_client
+from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
+from macaron.slsa_analyzer.git_service.github import GitHub
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -96,7 +98,7 @@ class GitHubActions(BaseCIService):
                 self, "max_workflow_persist", defaults.getint("ci.github_actions", "max_workflow_persist", fallback=90)
             )
 
-    def is_detected(self, repo_path: str) -> bool:
+    def is_detected(self, repo_path: str, git_service: BaseGitService | None = None) -> bool:
         """Return True if this CI service is used in the target repo.
 
         Parameters
@@ -104,11 +106,17 @@ class GitHubActions(BaseCIService):
         repo_path : str
             The path to the target repo.
 
+        git_service : BaseGitService
+            The Git service hosting the target repo.
+
         Returns
         -------
         bool
             True if this CI service is detected, else False.
         """
+        if git_service and not isinstance(git_service, GitHub):
+            return False
+
         # GitHub Actions need a special detection implementation.
         # We need to check if YAML files exist in the workflows dir.
         exists = False

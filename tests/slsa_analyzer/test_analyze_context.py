@@ -11,8 +11,10 @@ from unittest.mock import MagicMock
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.levels import SLSALevels
+from macaron.slsa_analyzer.provenance.intoto import validate_intoto_payload
 from macaron.slsa_analyzer.slsa_req import Category, ReqName, SLSAReq
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from macaron.util import JsonType
 from tests.conftest import MockAnalyzeContext
 
 
@@ -78,11 +80,14 @@ class TestAnalyzeContext(TestCase):
 
     def test_provenances(self) -> None:
         """Test getting the provenances data from an AnalyzeContext instance."""
-        expected_provenance = {
-            "predicate": "sample-predicate",
+        expected_provenance: dict[str, JsonType] = {
             "_type": "https://in-toto.io/Statement/v0.1",
+            "subject": [],
             "predicateType": "https://slsa.dev/provenance/v0.2",
+            "predicate": {},
         }
+
+        expected_payload = validate_intoto_payload(expected_provenance)
 
         gh_actions = GitHubActions()
 
@@ -92,7 +97,7 @@ class TestAnalyzeContext(TestCase):
             callgraph=CallGraph(BaseNode(), ""),
             provenance_assets=[],
             latest_release={},
-            provenances=[expected_provenance],
+            provenances=[expected_payload],
         )
 
         self.analyze_ctx.dynamic_data["ci_services"].append(gh_actions_ci_info)

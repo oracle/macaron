@@ -5,6 +5,7 @@
 
 import logging
 import os
+from typing import Any
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
@@ -20,6 +21,7 @@ from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
+from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
@@ -183,8 +185,12 @@ class BuildServiceCheck(BaseCheck):
                         )
                     ]
 
-                    if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
-                        predicate = ci_info["provenances"][0]["predicate"]
+                    if (
+                        ctx.dynamic_data["is_inferred_prov"]
+                        and ci_info["provenances"]
+                        and isinstance(ci_info["provenances"][0], InTotoV01Payload)
+                    ):
+                        predicate: Any = ci_info["provenances"][0].statement["predicate"]
                         predicate["buildType"] = f"Custom {ci_service.name}"
                         predicate["builder"]["id"] = bash_source_link
                         predicate["invocation"]["configSource"]["uri"] = (
@@ -219,8 +225,12 @@ class BuildServiceCheck(BaseCheck):
                             )
                         ]
 
-                        if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
-                            predicate = ci_info["provenances"][0]["predicate"]
+                        if (
+                            ctx.dynamic_data["is_inferred_prov"]
+                            and ci_info["provenances"]
+                            and isinstance(ci_info["provenances"][0], InTotoV01Payload)
+                        ):
+                            predicate = ci_info["provenances"][0].statement["predicate"]
                             predicate["buildType"] = f"Custom {ci_service.name}"
                             predicate["builder"]["id"] = config_name
                             predicate["invocation"]["configSource"]["uri"] = (

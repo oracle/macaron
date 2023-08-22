@@ -12,7 +12,7 @@ from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
-from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
+from macaron.slsa_analyzer.git_service.api_client import GhAPIClient, GitHubReleaseAsset
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from tests.conftest import MockAnalyzeContext
 
@@ -42,9 +42,6 @@ class MockGhAPIClient(GhAPIClient):
 
     def get_latest_release(self, full_name: str) -> dict:
         return self.release
-
-    def get_assets(self, release: dict, name: str = "", ext: str = "") -> list[dict]:
-        return [item for item in self.release["assets"] if item["name"] == name or item["name"].endswith(ext)]
 
     def download_asset(self, url: str, download_path: str) -> bool:
         return True
@@ -80,11 +77,21 @@ class TestProvL3Check(MacaronTestCase):
         )
 
         # Repo has provenances but no downloaded files.
-        ci_info["provenance_assets"] = [{"name": "attestation.intoto.jsonl", "url": "URL", "size": "10"}]
+        ci_info["provenance_assets"] = []
+        ci_info["provenance_assets"].extend(
+            [
+                GitHubReleaseAsset(
+                    name="attestation.intoto.jsonl",
+                    url="URL",
+                    size_in_bytes=10,
+                    api_client=api_client,
+                )
+            ]
+        )
         ci_info["latest_release"] = {
             "assets": [
-                {"name": "attestation.intoto.jsonl", "url": "URL", "size": "10"},
-                {"name": "artifact.txt", "url": "URL", "size": "10"},
+                {"name": "attestation.intoto.jsonl", "url": "URL", "size": 10},
+                {"name": "artifact.txt", "url": "URL", "size": 10},
             ]
         }
         ctx = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
@@ -92,11 +99,21 @@ class TestProvL3Check(MacaronTestCase):
         assert check.run_check(ctx, check_result) == CheckResultType.FAILED
 
         # Attestation size is too large.
-        ci_info["provenance_assets"] = [{"name": "attestation.intoto.jsonl", "url": "URL", "size": "100000000"}]
+        ci_info["provenance_assets"] = []
+        ci_info["provenance_assets"].extend(
+            [
+                GitHubReleaseAsset(
+                    name="attestation.intoto.jsonl",
+                    url="URL",
+                    size_in_bytes=100_000_000,
+                    api_client=api_client,
+                )
+            ]
+        )
         ci_info["latest_release"] = {
             "assets": [
-                {"name": "attestation.intoto.jsonl", "url": "URL", "size": "100000000"},
-                {"name": "artifact.txt", "url": "URL", "size": "10"},
+                {"name": "attestation.intoto.jsonl", "url": "URL", "size": 100_000_000},
+                {"name": "artifact.txt", "url": "URL", "size": 10},
             ]
         }
         assert check.run_check(ctx, check_result) == CheckResultType.FAILED
@@ -105,14 +122,24 @@ class TestProvL3Check(MacaronTestCase):
         ci_info["provenance_assets"] = []
         ci_info["latest_release"] = {
             "assets": [
-                {"name": "attestation.intoto.jsonl", "url": "URL", "size": "10"},
-                {"name": "artifact.txt", "url": "URL", "size": "10"},
+                {"name": "attestation.intoto.jsonl", "url": "URL", "size": 10},
+                {"name": "artifact.txt", "url": "URL", "size": 10},
             ]
         }
         assert check.run_check(ctx, check_result) == CheckResultType.FAILED
 
         # No release available
-        ci_info["provenance_assets"] = [{"name": "attestation.intoto.jsonl", "url": "URL", "size": "10"}]
+        ci_info["provenance_assets"] = []
+        ci_info["provenance_assets"].extend(
+            [
+                GitHubReleaseAsset(
+                    name="attestation.intoto.jsonl",
+                    url="URL",
+                    size_in_bytes=10,
+                    api_client=api_client,
+                )
+            ]
+        )
         ci_info["latest_release"] = {}
         assert check.run_check(ctx, check_result) == CheckResultType.FAILED
 

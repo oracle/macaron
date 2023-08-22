@@ -35,16 +35,13 @@ class MockGhAPIClient(GhAPIClient):
         super().__init__(profile)
         self.release = {
             "assets": [
-                {"name": "attestation.intoto.jsonl", "url": "URL", "size": "10"},
-                {"name": "artifact.txt", "url": "URL", "size": "10"},
+                {"name": "attestation.intoto.jsonl", "url": "URL", "size": 10},
+                {"name": "artifact.txt", "url": "URL", "size": 10},
             ]
         }
 
     def get_latest_release(self, full_name: str) -> dict:
         return self.release
-
-    def get_assets(self, release: dict, name: str = "", ext: str = "") -> list[dict]:
-        return [item for item in self.release["assets"] if item["name"] == name or item["name"].endswith(ext)]
 
     def download_asset(self, url: str, download_path: str) -> bool:
         return False
@@ -85,10 +82,10 @@ class TestProvAvailableCheck(MacaronTestCase):
         assert check.run_check(ctx, check_result) == CheckResultType.PASSED
 
         # Repo doesn't have a provenance.
-        api_client.release = {"assets": [{"name": "attestation.intoto", "url": "URL", "size": "10"}]}
+        api_client.release = {"assets": [{"name": "attestation.intoto", "url": "URL", "size": 10}]}
         assert check.run_check(ctx, check_result) == CheckResultType.FAILED
 
-        api_client.release = {"assets": [{"name": "attestation.intoto.jsonl", "url": "URL", "size": "10"}]}
+        api_client.release = {"assets": [{"name": "attestation.intoto.jsonl", "url": "URL", "size": 10}]}
 
         # Test Jenkins.
         ci_info["service"] = jenkins

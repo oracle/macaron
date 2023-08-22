@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-06-14 11:15:48"
+        "timestamps": "2023-07-08 03:11:33"
     },
     "target": {
         "info": {
@@ -103,7 +103,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 5,
+                "FAILED": 6,
                 "PASSED": 3,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -176,7 +176,7 @@
                         "Provenance conforms with expectations - SLSA Level 3"
                     ],
                     "justification": [
-                        "Check mcn_provenance_expectation_1 is set to FAILED because mcn_provenance_level_three_1 FAILED."
+                        "Check mcn_provenance_expectation_1 is set to FAILED because mcn_provenance_available_1 FAILED."
                     ],
                     "result_type": "FAILED"
                 },
@@ -191,6 +191,20 @@
                     ],
                     "justification": [
                         "Check mcn_provenance_level_three_1 is set to FAILED because mcn_provenance_available_1 FAILED."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_witness_level_one_1",
+                    "check_description": "Check whether the target has a level-1 witness provenance.",
+                    "slsa_requirements": [
+                        "Provenance - Available - SLSA Level 1",
+                        "Provenance content - Identifies build instructions - SLSA Level 1",
+                        "Provenance content - Identifies artifacts - SLSA Level 1",
+                        "Provenance content - Identifies builder - SLSA Level 1"
+                    ],
+                    "justification": [
+                        "Check mcn_provenance_witness_level_one_1 is set to FAILED because mcn_provenance_available_1 FAILED."
                     ],
                     "result_type": "FAILED"
                 },
@@ -245,6 +259,10 @@
             },
             {
                 "check_id": "mcn_build_service_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             }
         ],

@@ -1,0 +1,15 @@
+# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+"""This module defines the package registries."""
+
+from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAsset, JFrogMavenRegistry
+from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
+
+__all__ = [
+    "JFrogMavenAsset",
+    "JFrogMavenRegistry",
+    "PackageRegistry",
+]
+
+PACKAGE_REGISTRIES: list[PackageRegistry] = [JFrogMavenRegistry()]

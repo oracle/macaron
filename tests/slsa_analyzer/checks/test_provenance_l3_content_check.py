@@ -15,7 +15,7 @@ from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
-from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader
+from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from tests.conftest import MockAnalyzeContext
 
@@ -45,9 +45,6 @@ class MockGhAPIClient(GhAPIClient):
 
     def get_latest_release(self, full_name: str) -> dict:
         return self.release
-
-    def get_assets(self, release: dict, name: str = "", ext: str = "") -> list[dict]:
-        return [item for item in self.release["assets"] if item["name"] == name or item["name"].endswith(ext)]
 
     def download_asset(self, url: str, download_path: str) -> bool:
         return True
@@ -97,7 +94,7 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
 
         # Repo has a provenance, but no expectation.
         ci_info["provenances"] = [
-            ProvPayloadLoader.load(os.path.join(prov_dir, "slsa-verifier-linux-amd64.intoto.jsonl"))
+            load_provenance_payload(os.path.join(prov_dir, "slsa-verifier-linux-amd64.intoto.jsonl")),
         ]
         ctx.dynamic_data["is_inferred_prov"] = False
         ctx.dynamic_data["expectation"] = None
