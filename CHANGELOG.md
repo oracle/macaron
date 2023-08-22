@@ -1,3 +1,16 @@
+## v0.3.0 (2023-08-22)
+
+### Feat
+
+- add support for JFrog Artifactory and witness provenances produced on GitLab CI (#349)
+- introduce a new data model and software components based on PURL (#305)
+
+### Fix
+
+- **orm**: use the host’s timezone when persisting datetime objects without a timezone, instead of forcing them to UTC (#397)
+- handle cloning issues when repo is in an unexpected state (#395)
+- **orm**: serialize datetime object’s timezone instead of always coercing to UTC when persisting to the SQLite db (#381)
+
 ## v0.2.0 (2023-07-17)
 
 ### Feat
