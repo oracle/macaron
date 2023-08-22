@@ -36,6 +36,7 @@ class MockAnalyzeContext(AnalyzeContext):
             ci_services=[],
             is_inferred_prov=True,
             expectation=None,
+            package_registries=[],
         )
         self.wrapper_path = ""
         self.output_dir = ""

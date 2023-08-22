@@ -19,6 +19,7 @@ from macaron.slsa_analyzer.provenance.expectations.expectation import Expectatio
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReq, get_requirements_dict
 from macaron.slsa_analyzer.specs.build_spec import BuildSpec
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -38,6 +39,8 @@ class ChecksOutputs(TypedDict):
     # class uses inlined functions, which is not supported by Protocol.
     expectation: Expectation | None
     """The expectation to verify the provenance for this repository."""
+    package_registries: list[PackageRegistryInfo]
+    """The package registries for this repository."""
 
 
 class AnalyzeContext:
@@ -82,6 +85,7 @@ class AnalyzeContext:
             git_service=NoneGitService(),
             build_spec=BuildSpec(tools=[]),
             ci_services=[],
+            package_registries=[],
             is_inferred_prov=True,
             expectation=None,
         )
@@ -93,12 +97,19 @@ class AnalyzeContext:
         Returns
         -------
         dict
+            A dictionary in which each key is a CI service's name and each value is
+            the corresponding provenance payload.
         """
         try:
             ci_services = self.dynamic_data["ci_services"]
             result = {}
             for ci_info in ci_services:
-                result[ci_info["service"].name] = ci_info["provenances"]
+                result[ci_info["service"].name] = [payload.statement for payload in ci_info["provenances"]]
+            package_registry_entries = self.dynamic_data["package_registries"]
+            for package_registry_entry in package_registry_entries:
+                result[package_registry_entry.package_registry.name] = [
+                    provenance.payload.statement for provenance in package_registry_entry.provenances
+                ]
             return result
         except KeyError:
             return {}

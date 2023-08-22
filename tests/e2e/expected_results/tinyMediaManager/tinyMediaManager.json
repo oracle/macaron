@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-06-20 18:27:38"
+        "timestamps": "2023-07-08 12:28:33"
     },
     "target": {
         "info": {
@@ -61,7 +61,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 6,
+                "FAILED": 7,
                 "PASSED": 2,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -109,7 +109,8 @@
                         "Build service - SLSA Level 2"
                     ],
                     "justification": [
-                        "The target repository does not have a build service."
+                        "The target repository does not have a build service for maven.",
+                        "The target repository does not have a build service for at least one build tool."
                     ],
                     "result_type": "FAILED"
                 },
@@ -134,7 +135,7 @@
                         "Provenance conforms with expectations - SLSA Level 3"
                     ],
                     "justification": [
-                        "Check mcn_provenance_expectation_1 is set to FAILED because mcn_provenance_level_three_1 FAILED."
+                        "Check mcn_provenance_expectation_1 is set to FAILED because mcn_provenance_available_1 FAILED."
                     ],
                     "result_type": "FAILED"
                 },
@@ -149,6 +150,20 @@
                     ],
                     "justification": [
                         "Check mcn_provenance_level_three_1 is set to FAILED because mcn_provenance_available_1 FAILED."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_witness_level_one_1",
+                    "check_description": "Check whether the target has a level-1 witness provenance.",
+                    "slsa_requirements": [
+                        "Provenance - Available - SLSA Level 1",
+                        "Provenance content - Identifies build instructions - SLSA Level 1",
+                        "Provenance content - Identifies artifacts - SLSA Level 1",
+                        "Provenance content - Identifies builder - SLSA Level 1"
+                    ],
+                    "justification": [
+                        "Check mcn_provenance_witness_level_one_1 is set to FAILED because mcn_provenance_available_1 FAILED."
                     ],
                     "result_type": "FAILED"
                 },
@@ -195,6 +210,10 @@
             },
             {
                 "check_id": "mcn_provenance_available_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {

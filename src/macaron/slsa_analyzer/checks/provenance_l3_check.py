@@ -24,11 +24,14 @@ from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.database.table_definitions import CheckFacts, HashDigest, Provenance, ReleaseArtifact
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
+from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
 from macaron.slsa_analyzer.git_url import get_repo_dir_name
-from macaron.slsa_analyzer.provenance.loader import ProvPayloadLoader, SLSAProvenanceError
+from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload, v01
+from macaron.slsa_analyzer.provenance.intoto.errors import InTotoAttestationError, UnsupportedInTotoVersionError
+from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 
@@ -108,12 +111,12 @@ class ProvenanceL3Check(BaseCheck):
             result_on_skip=CheckResultType.FAILED,
         )
 
-    def _size_large(self, asset_size: str) -> bool:
+    def _size_large(self, asset_size: int) -> bool:
         """Check the size of the asset."""
-        return int(asset_size) > defaults.getint("slsa.verifier", "max_download_size", fallback=1000000)
+        return asset_size > defaults.getint("slsa.verifier", "max_download_size", fallback=1000000)
 
     def _verify_slsa(
-        self, macaron_path: str, temp_path: str, prov_asset: dict, asset_name: str, repository_url: str
+        self, macaron_path: str, temp_path: str, prov_asset: AssetLocator, asset_name: str, repository_url: str
     ) -> _VerifyArtifactResult:
         """Run SLSA verifier to verify the artifact."""
         source_path = get_repo_dir_name(repository_url, sanitize=False)
@@ -128,7 +131,7 @@ class ProvenanceL3Check(BaseCheck):
             "verify-artifact",
             os.path.join(temp_path, asset_name),
             "--provenance-path",
-            os.path.join(temp_path, prov_asset["name"]),
+            os.path.join(temp_path, prov_asset.name),
             "--source-uri",
             source_path,
         ]
@@ -221,7 +224,11 @@ class ProvenanceL3Check(BaseCheck):
         return False
 
     def _find_asset(
-        self, subject: dict, all_assets: list[dict[str, str]], temp_path: str, ci_service: BaseCIService
+        self,
+        subject: v01.InTotoSubject,
+        all_assets: list[dict[str, str]],
+        temp_path: str,
+        ci_service: BaseCIService,
     ) -> dict | None:
         """Find the artifacts that appear in the provenance subject.
 
@@ -314,21 +321,28 @@ class ProvenanceL3Check(BaseCheck):
                     downloaded_provs = []
                     for prov_asset in prov_assets:
                         # Check the size before downloading.
-                        if self._size_large(prov_asset["size"]):
-                            logger.info("Skip verifying the provenance %s: asset size too large.", prov_asset["name"])
+                        if self._size_large(prov_asset.size_in_bytes):
+                            logger.info("Skip verifying the provenance %s: asset size too large.", prov_asset.name)
                             continue
 
                         if not ci_service.api_client.download_asset(
-                            prov_asset["url"], os.path.join(temp_path, prov_asset["name"])
+                            prov_asset.url, os.path.join(temp_path, prov_asset.name)
                         ):
-                            logger.info("Could not download the provenance %s. Skip verifying...", prov_asset["name"])
+                            logger.info("Could not download the provenance %s. Skip verifying...", prov_asset.name)
                             continue
 
                         # Read the provenance.
-                        payload = ProvPayloadLoader.load(os.path.join(temp_path, prov_asset["name"]))
+                        provenance_payload = load_provenance_payload(
+                            os.path.join(temp_path, prov_asset.name),
+                        )
+
+                        if not isinstance(provenance_payload, InTotoV01Payload):
+                            raise UnsupportedInTotoVersionError(
+                                f"The provenance asset '{prov_asset.name}' is under an unsupported in-toto version."
+                            )
 
                         # Add the provenance file.
-                        downloaded_provs.append(payload)
+                        downloaded_provs.append(provenance_payload.statement)
 
                         # Output provenance
                         prov = Provenance()
@@ -336,14 +350,14 @@ class ProvenanceL3Check(BaseCheck):
                         #  implemented ensure the provenance commit matches the actual release analyzed
                         prov.version = "0.2"
                         prov.release_commit_sha = ""
-                        prov.provenance_json = json.dumps(payload)
+                        prov.provenance_json = json.dumps(provenance_payload.statement)
                         prov.release_tag = ci_info["latest_release"]["tag_name"]
                         prov.component = ctx.component
 
                         check_result["result_tables"].append(prov)
 
                         # Iterate through the subjects and verify.
-                        for subject in payload["subject"]:
+                        for subject in provenance_payload.statement["subject"]:
                             sub_asset = self._find_asset(subject, all_assets, temp_path, ci_service)
 
                             result: None | _VerifyArtifactResult = None
@@ -390,7 +404,7 @@ class ProvenanceL3Check(BaseCheck):
                                 all_feedback.append(
                                     Feedback(
                                         ci_service_name=ci_service.name,
-                                        asset_url=prov_asset["url"],
+                                        asset_url=prov_asset.url,
                                         verify_result=result,
                                     )
                                 )
@@ -410,13 +424,7 @@ class ProvenanceL3Check(BaseCheck):
                                     digest.artifact = artifact
                                     check_result["result_tables"].append(digest)
 
-                if downloaded_provs:
-                    # Store the provenance available results for other checks.
-                    # Note: this flag should only be turned off here.
-                    ctx.dynamic_data["is_inferred_prov"] = False
-                    ci_info["provenances"] = downloaded_provs
-
-            except (OSError, SLSAProvenanceError) as error:
+            except (OSError, InTotoAttestationError) as error:
                 logger.error(" %s: %s.", self.check_id, error)
                 check_result["justification"].append("Could not verify level 3 provenance.")
                 return CheckResultType.FAILED

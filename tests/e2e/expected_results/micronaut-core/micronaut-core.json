@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-06-14 13:20:54"
+        "timestamps": "2023-07-08 03:33:32"
     },
     "target": {
         "info": {
@@ -20,1192 +20,502 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "subject": [
                             {
-                                "name": "build/repo/io/micronaut/micronaut-aop/3.9.3/micronaut-aop-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-aop/4.0.0-RC5/micronaut-aop-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "f0c6c9effd0326dc0693cab5459a126d48ba65541a6eafa13ce1bc8f89e5021a"
+                                    "sha256": "fe81c7b4e6c95178604b96ef73f039fdc11c5f1d9975283b80a41a7b33c3e0c9"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-aop/3.9.3/micronaut-aop-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-aop/4.0.0-RC5/micronaut-aop-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "a061e7236808a89689c263c5b77841ab6dd853746941dab26fc61e76c18b0bd2"
+                                    "sha256": "2011e5d598945d4b57ff26be6095fd1112d5f2b6b05ac582da31d4c48cb85796"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-aop/3.9.3/micronaut-aop-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/4.0.0-RC5/micronaut-buffer-netty-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "35e5c74dfcd95ee1fc5d9a02008cd1094e6ec19ecd5fe9dd9ae7e57e7cfad818"
+                                    "sha256": "23d6730c4151324238b7feae3ef96ea3e6a9519b14f70e10e65282232d426f58"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-aop/3.9.3/micronaut-aop-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/4.0.0-RC5/micronaut-buffer-netty-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "bf486650a774829a7519b34c803727a4640ab907d4db534db35b2294a5a49bea"
+                                    "sha256": "4de36c140199d1b8d1a62a15b8a05d3448da6ee34064ce5bf3a71c8f92a90224"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-bom/3.9.3/micronaut-bom-3.9.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-context-propagation/4.0.0-RC5/micronaut-context-propagation-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "b18b167c24f1d7819871089b7b95acdec506d7739fc372ceaede6712ef25fdfc"
+                                    "sha256": "6386eaae3efb5dd4c083ddc6180453a6d4069d28aa508cb9866e56b1dfa98b61"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-bom/3.9.3/micronaut-bom-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-context-propagation/4.0.0-RC5/micronaut-context-propagation-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "d4439629b4074d7330355557f614c8128b660cca3713a9d5bc74d5f01507d90a"
+                                    "sha256": "35581cc3c527aa476e915f7dde7fed08ab3850e08f4cd09b24cb0328cf192309"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-bom/3.9.3/micronaut-bom-3.9.3.toml",
+                                "name": "build/repo/io/micronaut/micronaut-context/4.0.0-RC5/micronaut-context-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "554892313d132a9e312dd34b0f041ea909ed03ac395baa74ee06be8f7832ce8a"
+                                    "sha256": "8ca6348c7b338894b15f0719acd8d390c793c161b32369f9e14d8889f083ae06"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.9.3/micronaut-buffer-netty-3.9.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-context/4.0.0-RC5/micronaut-context-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "78174ef28e3cb26b81f72ddb297ca55d1251f01222fc2295668a8c7152c587e9"
+                                    "sha256": "2c070f5aeeeb34399945401c362b53a180bafffe9bf3fe3afce300d21a7c4e0f"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.9.3/micronaut-buffer-netty-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-core-bom/4.0.0-RC5/micronaut-core-bom-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "70b71d3d8b3a084e48fdfd0c547a7412d3682d071b43ddb2dfa6a1ef61f9d8a4"
+                                    "sha256": "2a58cb4bfb5fd8b2f55aa7fc3996e6893aa0152000a86922762d1afa6bcf978d"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.9.3/micronaut-buffer-netty-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-core-processor/4.0.0-RC5/micronaut-core-processor-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "f0e161ebc4b8c2eb74a1d8679b2f9f1a01987adff550b7735490f6eb6a69c3b0"
+                                    "sha256": "643d8da5bdbda12c132354c9e8b397f14df44e44099e3073067e1f9e38164f93"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.9.3/micronaut-buffer-netty-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-core-processor/4.0.0-RC5/micronaut-core-processor-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "1acff56128be759367d57d5cb5dc5d460c06a7a602dca4dfbc41b8e631532c19"
+                                    "sha256": "790a9ce4bf5478d8eb5892891c004065b0f60b3c4cb2c1de0193d49c072a9be0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.9.3/micronaut-buffer-netty-3.9.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-core-reactive/4.0.0-RC5/micronaut-core-reactive-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "d383ce393d2bd61d893378eba5fb0f844a40b694988b13b98d39a6a14358c744"
+                                    "sha256": "238a704fa9421ba79b4980e5da260a1039fc32b52fad7fa454bbbc28152f800f"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/3.9.3/micronaut-buffer-netty-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-core-reactive/4.0.0-RC5/micronaut-core-reactive-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "7bdf65137cc40eddfdd2a873308e4d0ff864eca3fa3acca7dbcb510133f54704"
+                                    "sha256": "339b93388c10169184a01ffffa4898a0bb2eca22673506b1b381517bc140db3c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-context/3.9.3/micronaut-context-3.9.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-core/4.0.0-RC5/micronaut-core-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "6b99bb82104448fb3a6aea8c886a5709bfbbd7d535b2f0a4f856c9e488b6ca54"
+                                    "sha256": "af51369feaf2b5d3764c4c920786dd3791371c846b569f9bea71b5d98fb09945"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-context/3.9.3/micronaut-context-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-core/4.0.0-RC5/micronaut-core-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "a2c7f7c05eff8872cb80391bcebc03905b086f0decc262969ccea93958f07a16"
+                                    "sha256": "fa4f43ed7a75ad5062276d1eac5dd910bc6fea98d460bb40b4eb47e3fe288c21"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-context/3.9.3/micronaut-context-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-discovery-core/4.0.0-RC5/micronaut-discovery-core-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "62e95ca637a6f1da8612340990eb92b18f1cb49f0cb1a939ddc122a3628bb80a"
+                                    "sha256": "e34a8810c4ba56dc2022be1bd7c48d55df4f310dffcb241f0a7c03c44900b850"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-context/3.9.3/micronaut-context-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-discovery-core/4.0.0-RC5/micronaut-discovery-core-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "68dcedb0e1edf2c2fd4211b11e42f85a5c8e5ccfa7aa50722545b7bbd39baf70"
+                                    "sha256": "fbc3751a2c68b94c60f4899812c20c6b468aabedb784e64c086336f0656609f5"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-context/3.9.3/micronaut-context-3.9.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-function-client/4.0.0-RC5/micronaut-function-client-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "209c401514231dfe9ea4d313a4d11a9effad502fcbd840a07434b88f647ffeaa"
+                                    "sha256": "e6aa43764625cd9cdfd15d8edf59e67a344990bf1181ca6c985d78b372bc332e"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-context/3.9.3/micronaut-context-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-function-client/4.0.0-RC5/micronaut-function-client-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "e3583006a15c1d8fd2b1449e4bf63c291e59c6063a73aee10cf3224261ca2a1e"
+                                    "sha256": "964a899f372855a19fce4dce81ee27d0370208fa1c4bd8beafd8df6fbceaee30"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.9.3/micronaut-core-reactive-3.9.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function-web/4.0.0-RC5/micronaut-function-web-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "42f197199dc444a18acbfeb6009b95f3943f6b977317a9bec3a0d816d20a49ac"
+                                    "sha256": "cfcf4066f68b5bc0e458a8e2b50666814a18f1ab8867f576b6d031963ced80cf"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.9.3/micronaut-core-reactive-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function-web/4.0.0-RC5/micronaut-function-web-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "d16ca4608cc978542703510dace16beb6e6c06bb932f8c2050f17d05fa103ede"
+                                    "sha256": "ec3d58f851336bbcf37b288678f11679df75ab12a95aeaa6d966e953310d6b74"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.9.3/micronaut-core-reactive-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function/4.0.0-RC5/micronaut-function-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "070adb6c3721885acebe184085c94ce08a7e1b78d4ff2d52465662c6104ddd46"
+                                    "sha256": "22a2dbce5eee597be0e248736f8235e5846527a7e2f05e23fd48093a8dec3e04"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.9.3/micronaut-core-reactive-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-function/4.0.0-RC5/micronaut-function-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "93126ed363aee45e3869eb4fbbd1784e7de8b9a164b586a5ffe7c98e6ea45da3"
+                                    "sha256": "b6802d87c77fdf83da7a6974c98e9fe22883599ed3d61b803fdf563cecfd7aef"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.9.3/micronaut-core-reactive-3.9.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-graal/4.0.0-RC5/micronaut-graal-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "ef929ef2646a6bf8416666b535b23cc4b30e919e84f668e905963bd44ea79f38"
+                                    "sha256": "91936348d741f625d7ae1c588a81dd7ce2862a0b00454d99c79aa1847cce8902"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/3.9.3/micronaut-core-reactive-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-graal/4.0.0-RC5/micronaut-graal-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "a85ab70aa0d088d99e69875c18920b425ebd50a9e099bc806c5119b97896c2bc"
+                                    "sha256": "e9ae61efd427f823a0f3d257292c6fc1dfb3af35202ffd354f34b08b840ecaa9"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core/3.9.3/micronaut-core-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client-core/4.0.0-RC5/micronaut-http-client-core-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "3c7cbc75df966af1816f9575179cff0d696963d0cc471518f7eb3a6fd4e41405"
+                                    "sha256": "c923a05bbf55d1c2284d17c4090981dc3d3fa60d2e322cf1d2fb6f1765bbff90"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core/3.9.3/micronaut-core-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client-core/4.0.0-RC5/micronaut-http-client-core-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "f0d1f2537cadb9ed72470323ca166bfc785856dff95d6c49692c8fb36eddc5e8"
+                                    "sha256": "28e22585b3b9949f00a626ff8f9ff7c1e94ae3a975d94a7a8c1e1a6ff15275bd"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core/3.9.3/micronaut-core-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client-jdk/4.0.0-RC5/micronaut-http-client-jdk-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "2f520f14ed27db7b5d355be7bfc97d13d8829a73b4c11c97ef12a23b5fa10467"
+                                    "sha256": "f23dfe8e3ca296baca472b7c3b08cb7eeb2d401720ae3f6512859a65d1a87293"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-core/3.9.3/micronaut-core-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-http-client-jdk/4.0.0-RC5/micronaut-http-client-jdk-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "2ae3510173aa21d1675b0403cae0c242e334026e54f1452ad61264de7d69753f"
+                                    "sha256": "bbaf41d0bf849fd3c86f1a2dceb6e700080ae18771721c5b66f0af6235eea992"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/3.9.3/micronaut-function-client-3.9.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client-tck/4.0.0-RC5/micronaut-http-client-tck-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "5266aecccb31d9caea87af259c66bb903be37cd7544ebf7ba0eb45bcef1fc31c"
+                                    "sha256": "565acd56712ca41bc735e32a35dc8dc699df9a940a29ddb3a4a74070c272d35f"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/3.9.3/micronaut-function-client-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client-tck/4.0.0-RC5/micronaut-http-client-tck-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "133e44956c7a06642a1f54a254ec98ec2d3a9d81463c7c12243c4dbf82ddfec2"
+                                    "sha256": "91e6315305d6e25f093ca542efc6932cbaf597d4af754ef0195a69c0c2a21ae4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/3.9.3/micronaut-function-client-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client/4.0.0-RC5/micronaut-http-client-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "8945d204d343fd91eaac7c02dda6b547ec883dbf0a2615f37469536592a0fe8a"
+                                    "sha256": "8d2c671bb8e3376dade2fe3dd2a17a07dde001b33d9af5f822e8152d528ff39b"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/3.9.3/micronaut-function-client-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-client/4.0.0-RC5/micronaut-http-client-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "fcc3515d7b1f3e8dd0660ddc1937131eb123350ac5293e3257c04beb6cc43886"
+                                    "sha256": "4d98f855295f211949adb0474bc58d62da6ad21ff1209cd9299ddf82fa954011"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/3.9.3/micronaut-function-client-3.9.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-http-netty/4.0.0-RC5/micronaut-http-netty-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "e4ff5b7ae19ae82c0777bb67471f8adeac8487b5c34f3744d8fa5896ac7a1d1d"
+                                    "sha256": "5833edc1d02d0d1835865a0c7a555db7d9a27bd91cc0c8f21de66e1526fa95e4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/3.9.3/micronaut-function-client-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-http-netty/4.0.0-RC5/micronaut-http-netty-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "a618f1a17d729b4a7f9d5a3681af6557e4d3496be81633dccbcd0e915dfba809"
+                                    "sha256": "970e4f4a09664da90a5bdd5d1d16dc45c970260a4d87267a6704ba8c78e9740e"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/3.9.3/micronaut-function-web-3.9.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/4.0.0-RC5/micronaut-http-server-netty-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "4c44fe5d97b2f740f0b6bd067d34dc0723cf0c63bb093fb8ddd23a2654410119"
+                                    "sha256": "70c17686fd31b7e706089efaa06a1524685548469c9ff0f71af94bae86b3bfc9"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/3.9.3/micronaut-function-web-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/4.0.0-RC5/micronaut-http-server-netty-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "32e50e8b937119207e34231091934c8a0bfca58b5979322cccaa0fd37e123f14"
+                                    "sha256": "90df32f7abb9b9aab9cf6be77d959e16fb3c80ffaf32c9b2ee5131da88526c2d"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/3.9.3/micronaut-function-web-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/4.0.0-RC5/micronaut-http-server-tck-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "26f499d74ac5afeca5d85795d6a4bacdd3392fe568ab3a0560513010c95e1f99"
+                                    "sha256": "1ce5f3e23038c79e8c17e07640f681db4333fd695639bda3b1f0e438a2ddec35"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/3.9.3/micronaut-function-web-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/4.0.0-RC5/micronaut-http-server-tck-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "0d004f6852cbffb75803d2376c9891c8bb2e40592c7cbcad026df68e97deddc5"
+                                    "sha256": "1ae3712dc4f225dc9d9a7df589b772025316c842b3941fa9b5c5518ea6587b10"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/3.9.3/micronaut-function-web-3.9.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-http-server/4.0.0-RC5/micronaut-http-server-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "2ed7e574b50a4de88e17b8d293768bfd120e6d911e98935d5ae1f192bb9877c7"
+                                    "sha256": "00e15f6ac19a5611229e9871304af48b7c504bd5920284d402b033e7e6c55395"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/3.9.3/micronaut-function-web-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-http-server/4.0.0-RC5/micronaut-http-server-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "c32f68b245ce6c887538d9103588178bec144077f38aa5948a9c9eb5f108aa79"
+                                    "sha256": "a4659a29ee319bad9b6a988f2ecd77f5e9e5857eddb43527c38fecfd47a816d4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function/3.9.3/micronaut-function-3.9.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-tck/4.0.0-RC5/micronaut-http-tck-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "d146611619bba2f51821f907d085811ca97789df5d88302d773bd99ced8b107c"
+                                    "sha256": "fde78743e5aa56dee7743e0e43f6ef5a4c350fb7d3b72be2757fa05183b912a8"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function/3.9.3/micronaut-function-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-tck/4.0.0-RC5/micronaut-http-tck-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "09373942aa7075c30dfb68a1b2f961340b6ca60e8dc7248140a37d5fa823b583"
+                                    "sha256": "07d3594834b5dd6ff911ac501d5e61c1439a99d28fd16856cb6315bf33337c56"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function/3.9.3/micronaut-function-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-validation/4.0.0-RC5/micronaut-http-validation-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "a29b0c3fc5e6dda131fe8084b03257bde78ebddeb3749de57f4062efb9435ad4"
+                                    "sha256": "a93dd3c02f30abec9689c7efb309178effeec18017b389b92dc1cf8707d37691"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function/3.9.3/micronaut-function-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-http-validation/4.0.0-RC5/micronaut-http-validation-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "7640c9e1a2896e82a924ca93853a83054d7012f3d17e630e27328661ae8ab487"
+                                    "sha256": "7aaa3042954d30107db2c5a05449d895fbeb35f21bed20a8d939ae3acaec954d"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function/3.9.3/micronaut-function-3.9.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-http/4.0.0-RC5/micronaut-http-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "69e39532995b6a088bdf1749a784d511c51900e46d417e64aad36dc5a71621a9"
+                                    "sha256": "0aa185755c5fb07b480ee67b0c159e2c485e86f0cb3ce3f17dd6c8bd667d763c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-function/3.9.3/micronaut-function-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-http/4.0.0-RC5/micronaut-http-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "eed21ba4e1d3c62a1b8272a156ff76a6f3939ebd43b9068407bdb23eb0999950"
+                                    "sha256": "3341efa6b3dde441c9eca29c639cb5faf65b010f552e31b8d0565cd95110e66d"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-graal/3.9.3/micronaut-graal-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/4.0.0-RC5/micronaut-inject-groovy-test-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "5bb8692380fa478f34f3f032b9edb197425d367ec9ff5c38521964b78613ff92"
+                                    "sha256": "fa3c62dd11de5df4acdbc1f33a2065936791b10b720cde45481b7cdea5c6a88b"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-graal/3.9.3/micronaut-graal-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/4.0.0-RC5/micronaut-inject-groovy-test-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "869321450f9222257946a9206f1e58e44c92865c8bda9833f49754a3c6a13d99"
+                                    "sha256": "ab4e2ab48d01aaaa4635731da9d88675f33fa52e2509c9aed82c90445e27ced2"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-graal/3.9.3/micronaut-graal-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/4.0.0-RC5/micronaut-inject-groovy-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "98e5b4d0ef54aaa1c538b6ad8b6a9b2788d9abad7d768ea8cc8698113e8a8557"
+                                    "sha256": "7721f712b997b38aef10360674a432023acfe5e840dd2d0cd788e9d14b868a14"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-graal/3.9.3/micronaut-graal-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/4.0.0-RC5/micronaut-inject-groovy-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "76410a8b0f9d0554a162bf0ae51ec676073a57b9eaaab67df4de8bb7c5e6378e"
+                                    "sha256": "fcafb0aab4242f74010aca94f7e6cb0ed4438d3e793b80f11898af8d844548e2"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.9.3/micronaut-http-client-core-3.9.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/4.0.0-RC5/micronaut-inject-java-test-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "604c332aa26353e982c31b25d24f3e16042619a39e08b9f452eb576785f182df"
+                                    "sha256": "9d416cc35858064d97ddc8235ae92d1c3f4acd0db753655660bcd18d7cd92389"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.9.3/micronaut-http-client-core-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/4.0.0-RC5/micronaut-inject-java-test-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "732728c98a64b869c13f8dd6824196025e291a8f642523260a7dca20938da722"
+                                    "sha256": "7b2a8ba8a352955b6f6b67ac428404f99d6c4b4b3c6e5b7c45e42a27685a050c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.9.3/micronaut-http-client-core-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java/4.0.0-RC5/micronaut-inject-java-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "2400991d67acd31c91edc0ef1b751304f902642e5e4a293669c5c066cd2ef10f"
+                                    "sha256": "d2e19535dc4c0d16692ba7770e485f38668beb21cefcb1ef938658a897763908"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.9.3/micronaut-http-client-core-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-java/4.0.0-RC5/micronaut-inject-java-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "c81c12f15a45d8c86bf8cb22a977b38f64dce8a607d5cf88dd117a136263a7c1"
+                                    "sha256": "a4f0c4ac912cf21ac4f5cc8a7a1d716ec1af000d12a7189860bc89b00592f846"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.9.3/micronaut-http-client-core-3.9.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/4.0.0-RC5/micronaut-inject-kotlin-test-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "106e14f04304eba164b807ad6946204e0d310a994e825c2c2088cb853e6385a5"
+                                    "sha256": "74e57557e71d24c58757d1b721b34c89ae03ee78b66045e805de29a0491896b7"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/3.9.3/micronaut-http-client-core-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/4.0.0-RC5/micronaut-inject-kotlin-test-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "cdae597ffdff6772b9d596f7a4250b0e2cd4dc2788f5973e8a2ed59214f26604"
+                                    "sha256": "d5e50842e13761b3a2ef6883c232b49d8626227852a7b2a5cdc8f18cd3afd6a0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/3.9.3/micronaut-http-client-3.9.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin/4.0.0-RC5/micronaut-inject-kotlin-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "18ad4a6e64a483a3011dbad4839abe2b302abd7fa1e4e832900fa4b3406fed16"
+                                    "sha256": "ce7c444748f4784e57ddc00fb35058e0e46a58965c188bea2f51a3f37a1c4be4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/3.9.3/micronaut-http-client-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin/4.0.0-RC5/micronaut-inject-kotlin-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "d2f67e2e68790ca93e0cf3faabfc70de2609e002fb813fe9e8e04d4d2400f587"
+                                    "sha256": "1c49d799df91bf1741e8bd26d5f8bfc38d59ffdbad167e92986008b627dbd670"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/3.9.3/micronaut-http-client-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject/4.0.0-RC5/micronaut-inject-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "ba5b511686ec8997f4ae91b035a5307f3ce24a9cb25b21d7785f2f3e95e02048"
+                                    "sha256": "634032462b55dc462949a53e90fa2d137d6246960f35d49fa6ab6ef194e09dc1"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/3.9.3/micronaut-http-client-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-inject/4.0.0-RC5/micronaut-inject-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "8468579bf913faf14c4bd0b704854bd6e2fe41aedbd943d6f9f2f92280a056b8"
+                                    "sha256": "8d0b0e651e375113b23aa437d9b9203d6b866ced981c58c7261c37a7cefdbfb6"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/3.9.3/micronaut-http-client-3.9.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-core/4.0.0-RC5/micronaut-jackson-core-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "0dc41aefec207e0e7162a540423b0214567069dabaed6ee5edce64b5981d978e"
+                                    "sha256": "04b936cce487200ec5b7d92db25e922c5c44f8b54851999376455c25b69ae924"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/3.9.3/micronaut-http-client-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-core/4.0.0-RC5/micronaut-jackson-core-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "ff46ee2aa91fb3f09f264ce0ca2ad89414b4b334bae1b6428660ee2dfdb9fafe"
+                                    "sha256": "8bf7dbd70c5fb09c0a54a56cc4cf480d3720eefa609f749d0efb9f4c447fb5e5"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.9.3/micronaut-http-netty-3.9.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/4.0.0-RC5/micronaut-jackson-databind-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "cfea6246ec49c137c610088f38b82b502ba16c9924d4048561357977accfce89"
+                                    "sha256": "7bf1e9a2d996633cbfc0a630378d58c7c0b3d49b859cb8c1e0b888d85b8738e4"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.9.3/micronaut-http-netty-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/4.0.0-RC5/micronaut-jackson-databind-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "0c055e7b6937aaeb6e241a367dc8a2e64b650adf7e5106182c5c66ec934f6339"
+                                    "sha256": "6d0efd68476e5b268439a17124ac575c5f7480f0990cbd5ebc6a03f6a83c9c8f"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.9.3/micronaut-http-netty-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-json-core/4.0.0-RC5/micronaut-json-core-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "bfca34e88c9b48552a7a08ba6aace4a435b40d83a0a60965ae4b3b327ed257a3"
+                                    "sha256": "e652e41aa28b5bbd75b703ec7e076ced217cbbb5ff25a3abf6732028814f0460"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.9.3/micronaut-http-netty-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-json-core/4.0.0-RC5/micronaut-json-core-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "e33d12d3ace2b0099cf01824922421e805b62e5eac5809ddc20b51b6aabc8ec4"
+                                    "sha256": "8dbfb5ae7b4fc603fb7477fa844c8c5a46ec8180f0812f474cc97761ed0c76c0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.9.3/micronaut-http-netty-3.9.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-management/4.0.0-RC5/micronaut-management-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "de8885925e4d72852b713c1c230d4d8d21755610dc658674cfb2cf843193c3ac"
+                                    "sha256": "bcb95d4f1de068897435599204e97a065373982822a9077610eedb9e46d22c25"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/3.9.3/micronaut-http-netty-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-management/4.0.0-RC5/micronaut-management-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "81f04a617f3cc6dd62e6e8d35e2c4f0e6bfe10b98aa145d4d747876f41dc5b67"
+                                    "sha256": "726bbf8b88651e614a897dc8130c58afcaefebda1742629c4117cfc903adf78a"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.9.3/micronaut-http-server-netty-3.9.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-messaging/4.0.0-RC5/micronaut-messaging-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "66d373b069d2d2c1fefc6de80e1a303f19714711fa4d7c11d99b611a8cd1b71c"
+                                    "sha256": "4fe01ddba472754bf19190e2ce98ef83c5a0cbc8490da14cf1430969b2f6b916"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.9.3/micronaut-http-server-netty-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-messaging/4.0.0-RC5/micronaut-messaging-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "09bd27eb376d6ad9bdbd6205d6639d294c03ffda14c6a3d79d978ccd43d88e56"
+                                    "sha256": "758cc5c219c39956f261f667758c4b4fbd9d23628bf3b679e670ee11d4199bdd"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.9.3/micronaut-http-server-netty-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-retry/4.0.0-RC5/micronaut-retry-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "d2a37823099296b3af5c8d852b484b82026c99570565ed5d115ccc3ff4a73d3d"
+                                    "sha256": "3c38f47fe976b5177baa7d2416957cb0e240e68dfa0e9b5388621b1dc62e36f1"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.9.3/micronaut-http-server-netty-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-retry/4.0.0-RC5/micronaut-retry-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "10b7a66dd2c887ef77009268f86c6fd897337fab0e3f58448acbb146513f9349"
+                                    "sha256": "17d5b16b66af914aa456e8323fe69ce329704275f3bfa7cca59aa3c74d4dd300"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.9.3/micronaut-http-server-netty-3.9.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-router/4.0.0-RC5/micronaut-router-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "10f8a5681ca47c7168764c560e05ef1a4a8c3a104a2b00f97461aeb2155dc650"
+                                    "sha256": "53c2ac2a841a0d71b94b700b6dc0125c56f07a75552820324b2f8db5ca3c7004"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/3.9.3/micronaut-http-server-netty-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-router/4.0.0-RC5/micronaut-router-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "b1f12a6f0527745e33eed089d6105dd3cf6e660b4d062b73858fe860f10dcf25"
+                                    "sha256": "e4b841fe554a880506aeaf249b161193f10604a1cb946b18cbd7acf8bc88d851"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.9.3/micronaut-http-server-tck-3.9.3-all.jar",
+                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/4.0.0-RC5/micronaut-runtime-osx-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "4dc93c49aa11bf29be95edf49fd4da93219828d335d3d7cfde519e22870c818c"
+                                    "sha256": "d107c6b971a9409115a3380a87ed0d0f4f59744a2e8bfd9e724475668f0d598c"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.9.3/micronaut-http-server-tck-3.9.3-javadoc.jar",
+                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/4.0.0-RC5/micronaut-runtime-osx-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "016b486ce602bc5b7898c0f2121193598c2e213ebcff8c93b66c42ee11e8f182"
+                                    "sha256": "810a954ebd4efbd10b841a6991ee7ad8cdc033315aa62e600c34fd46cb4d4539"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.9.3/micronaut-http-server-tck-3.9.3-sources.jar",
+                                "name": "build/repo/io/micronaut/micronaut-runtime/4.0.0-RC5/micronaut-runtime-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "a85595d12b4f0fa767b238b53507d81b6efd2b10a80f2aedd1b09ec697b2400a"
+                                    "sha256": "621ea91b4a532276b8b0419bebacb76599a2240c385f48e7f315387b8c64e173"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.9.3/micronaut-http-server-tck-3.9.3.jar",
+                                "name": "build/repo/io/micronaut/micronaut-runtime/4.0.0-RC5/micronaut-runtime-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "83aedef04f63a91cb5ccd592b92f2dc92e2698df7d160ca085f198f4d42a1c47"
+                                    "sha256": "e96b9174af2110956ba9a580c13e9ad6596d9c64b2066a1a233d721ccbc431ae"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.9.3/micronaut-http-server-tck-3.9.3.module",
+                                "name": "build/repo/io/micronaut/micronaut-websocket/4.0.0-RC5/micronaut-websocket-4.0.0-RC5.jar",
                                 "digest": {
-                                    "sha256": "35807608a88115726fca3842d6ee8dba9c371fba6c22e2caa39b80016d026bba"
+                                    "sha256": "d48b8f5b92fe411d51f39edb7af908064b21c8cc8e02ce3ee9bce8fc9077717f"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/3.9.3/micronaut-http-server-tck-3.9.3.pom",
+                                "name": "build/repo/io/micronaut/micronaut-websocket/4.0.0-RC5/micronaut-websocket-4.0.0-RC5.pom",
                                 "digest": {
-                                    "sha256": "4ce1c90d946862aa44154cfcf67fc84874757053f0bf5cd37599a8f31cda3bfb"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/3.9.3/micronaut-http-server-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "225047e6b106f09b260ed82923905719414bb9270c191aeca262cee4a83770f3"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/3.9.3/micronaut-http-server-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "4ce869deb7a8346bfab67be2357a7b8189b7727a058ec60facbf9f425f7620db"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/3.9.3/micronaut-http-server-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "d2b0277173f147725d26ebd57e1298e604f1e6510d318910495135d26e35cf38"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/3.9.3/micronaut-http-server-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "b339268d6ff0fc458b39c1071af7ad06f175c230a6047bf5360edc172607f492"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/3.9.3/micronaut-http-server-3.9.3.module",
-                                "digest": {
-                                    "sha256": "f2d25b89da0598982324b152b5b6e7e0bd520c8a5731a2ac88deb53382e76f65"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/3.9.3/micronaut-http-server-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "84e0d6d23445167aed4e49b50f563b746533288649c9e10b892edd5a1bfcf9bb"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.9.3/micronaut-http-validation-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "8f1364bd4c3b98312a04a32361952427e84b55d2f48b4f1c3b00b98004791825"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.9.3/micronaut-http-validation-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "b1037bfd929f292c4102ba0f80cfa8731ff93f3368a334c522bf78c221be5e0a"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.9.3/micronaut-http-validation-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "1c7c000f87f7be4b67b5ed15b20ed3d3526fa3fcf37b9849596bbe11d8e10686"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.9.3/micronaut-http-validation-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "7e4d73f99e95f1e5a548d2c8cb1fd2c7e99e4d395d612dfe09dd1c4c52258d63"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.9.3/micronaut-http-validation-3.9.3.module",
-                                "digest": {
-                                    "sha256": "88cf24dfe5fa2f750485b7cb8372a437f2a1adb80d5ff125938e05ac713d7a8e"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/3.9.3/micronaut-http-validation-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "7fe0410ddd972fb0d0e346ca8f5dbacc3a6c82d9991b3d585c4db3c2b869c2a2"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http/3.9.3/micronaut-http-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "0e5f01ff65b7fdcf08970e801cf51088b7426d181b6e44a278401eb765675c8e"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http/3.9.3/micronaut-http-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "a66d58221320094fa8daed0a845d80543ba817a999b817c39451b1cd5e9d1365"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http/3.9.3/micronaut-http-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "1bb64700f4b035f1cfcb04072ffd02d80228053a75a1eb02e4f9a5168d9f0248"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http/3.9.3/micronaut-http-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "010eb7823872abce004ede25252f496a43fd96ee9300c0818efb6d9658994f94"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http/3.9.3/micronaut-http-3.9.3.module",
-                                "digest": {
-                                    "sha256": "d6d169dcc9aa381d6bc34af0e9f299e4ab0ca8728419e15e3346d2109420f5ee"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http/3.9.3/micronaut-http-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "4d93abed78cdafbc645e0bcee47e7afec4e14181c48c562c10cd98c991b88438"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.9.3/micronaut-inject-groovy-test-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "a2cfbe0a4d78bbea1c22173da3a200ce8fc128f26a33dd31790fa319f523518a"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.9.3/micronaut-inject-groovy-test-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "b0a8ec42e66b156e558f05016594465e37f892935f235ee756e48348c94b222b"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.9.3/micronaut-inject-groovy-test-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "14e258ea39929baebe1808a5f474163572d9b4110e829cfd4c8f05ef0781842f"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.9.3/micronaut-inject-groovy-test-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "392c2fadc98307379ab0a354b385fe5f59dd793f1853204a2a8d7dccdbd8c5f4"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.9.3/micronaut-inject-groovy-test-3.9.3.module",
-                                "digest": {
-                                    "sha256": "e7032f091f233d181e1e0ad252e38b9c526a64df99d45ccf90ce04a2bd5b56c7"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/3.9.3/micronaut-inject-groovy-test-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "891462dbaaa764c96317975dcafd0cebbd7e1667cc62a42cabf0bed9103c484f"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.9.3/micronaut-inject-groovy-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "8bd910f06c3877f4ef030fcf2c873e195e749e4aefb296b1aea679a99b821870"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.9.3/micronaut-inject-groovy-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "e1bf42e66557db1bcf75112d467b56d26421db56e3695ef0eb1d87b7354c5456"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.9.3/micronaut-inject-groovy-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "dac0fe4aca7b9f6ff32e97983052ed156ec58194bc6d881b7545b7ac22a0abc3"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.9.3/micronaut-inject-groovy-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "30a5929514517121d0ad2c1115493b3283c801745ce67b3622f41d1b225a08b9"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.9.3/micronaut-inject-groovy-3.9.3.module",
-                                "digest": {
-                                    "sha256": "6b47ad9225d483543c69803b8f13230156732d92d66da9efcf0442dbbce78a5d"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/3.9.3/micronaut-inject-groovy-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "799f31190c6c16ca14b9e68f52f7f2972c3d4cb9b86d5c3c457de45e755eacea"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.9.3/micronaut-inject-java-test-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "70c0a9b525761eeef14bc082020177da89540ccfe8c5eecd56d613a0a8c51efe"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.9.3/micronaut-inject-java-test-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "65637187f26328a795a1d5ea919dfc372c7e58b3ac84022c3a93c0ceb7c807e6"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.9.3/micronaut-inject-java-test-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "11a6677f21df331268d22f5908fa70ee4e2e983c92c122c2471a3417b680905f"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.9.3/micronaut-inject-java-test-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "e0e4135a57cb84589af2c329c8b5b959083640f2a4e5d4a404411044751819e3"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.9.3/micronaut-inject-java-test-3.9.3.module",
-                                "digest": {
-                                    "sha256": "653234c3e63110a451dc179b7684ecfc42dc1bac03ceb6b1fb04c6cf1ddfd8c9"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/3.9.3/micronaut-inject-java-test-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "4c6f8d676b1e356a2747ec3442d04af5084e4ab13484d5f54e4e43946c64edcf"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.9.3/micronaut-inject-java-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "2fb94b5c520d19c7450c15d458ea326b157c5844d516a7f6ceef31190e6bb1b8"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.9.3/micronaut-inject-java-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "559c5bfef7020faaca0acdcbfcea52093994871f09de9597623ef7e098ff6496"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.9.3/micronaut-inject-java-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "742be340f1d4b39b6cb5b009e3d190a3525b4d6f40bc00be78f2a8eb4746b7b2"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.9.3/micronaut-inject-java-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "4730123516fb67816327b3c5ecedd4122c6297e1fa1d732b69a6ee94a83f4bee"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.9.3/micronaut-inject-java-3.9.3.module",
-                                "digest": {
-                                    "sha256": "a88c261d4b186bd78430623f207d2e9f5d620788806fa354dadc36f4dd9c778a"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/3.9.3/micronaut-inject-java-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "b1bbc72aa6d8f2e7246dc6a60e25d1799da7254073f4194247ba2dafd0965b65"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.9.3/micronaut-inject-kotlin-test-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "0f717b4399ba573721dff89ddbd6973c7e782fbc658be9cc301d14a46e3a9f66"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.9.3/micronaut-inject-kotlin-test-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "bf8c3f40044c79eb526baa6ad04d2aa5f4a4d9585b063eb5aec2bfc8cac207fc"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.9.3/micronaut-inject-kotlin-test-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "833b0a5f04a7e5b4a0189c3ffe66e2b2e55752048153540f7dcb3f144f5aac05"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.9.3/micronaut-inject-kotlin-test-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "268ec614170a6254e2d4f9d256b6b88486f3bc7b80eb156688309b24b96219f3"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.9.3/micronaut-inject-kotlin-test-3.9.3.module",
-                                "digest": {
-                                    "sha256": "0fb5702799dd7f0f7c9afc0d712c5739b8ace25fbb0daab6b28ceac6b5d8d75c"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/3.9.3/micronaut-inject-kotlin-test-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "edf35b8cb6f5ae996d1fb4994a26aa31580c7c20d9f4d5ee6c04484a747437bb"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject/3.9.3/micronaut-inject-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "f08e6367be09cbdca9c36613a5317c3071f76b2fc95a2caa65351078a257d419"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject/3.9.3/micronaut-inject-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "09c7ab9226d3142ec65cf5e0bd2abe19359cc762beebf5252ecc05a05c29abae"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject/3.9.3/micronaut-inject-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "9e06194ecff21f58f82d3a5ff8a2700c9c20ac0fca7c0ec9e8eda12bd488059f"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject/3.9.3/micronaut-inject-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "df637e3f999ce3c4ae84c89cd211c0d8a9db2f435c2ad7dc75386ddf3684124c"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.9.3/micronaut-jackson-core-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "fc90b18c49ce870906c9e4670afc57f4cc0eee2f9f5cd1539bd8c75ad4bb4fbc"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.9.3/micronaut-jackson-core-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "6cbf97d31874e8a14073df6c4efdf55490d2436a3719c2fa3d18a8663cbe111d"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.9.3/micronaut-jackson-core-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "0089154508694db94331948228c9140b3c4afb7e4af066f770a1166d45776c36"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.9.3/micronaut-jackson-core-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "004ccc227cae95a22cdfc9eabef83b58ed52e1725751ca942622e71e9141458a"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.9.3/micronaut-jackson-core-3.9.3.module",
-                                "digest": {
-                                    "sha256": "602d40404d4aef18c76333330b8509c7dc1a6bcf2498a1566403eab34d35ae7e"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/3.9.3/micronaut-jackson-core-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "6da7240fec15d4dacf22827e58dbe37efc682fc75f37977977d6ce0063c75b2d"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.9.3/micronaut-jackson-databind-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "b839f2f6add1bb2a9f0f5bcefddac0cd491f675e2e8c7bdb3fcec8aff6da686f"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.9.3/micronaut-jackson-databind-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "8e6df2858efcaae3e876c949457ca7afddc64a0b75dadb8efe96d4f38713590e"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.9.3/micronaut-jackson-databind-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "4adfbd5e6a995169cd156775ca737f63c09ff665c04f1ffea4c4ffefbd14574a"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.9.3/micronaut-jackson-databind-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "22e1e744f52cad75c06f3bbc4d3a567d78a6b438f3f04b28a626a4162d78d8fe"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.9.3/micronaut-jackson-databind-3.9.3.module",
-                                "digest": {
-                                    "sha256": "9720a6363c78826ead01faf259dbf8404ae424e35293fa593c13594526d00eda"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/3.9.3/micronaut-jackson-databind-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "0381d00f460c86277dc135a1dea2690cf17f9d657ac18a6616ea86df56e4b94c"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/3.9.3/micronaut-json-core-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "a7745dc876940d7e766b6dc38fea7ddbe1a0430c2028e05837f6b063bfb11727"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/3.9.3/micronaut-json-core-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "da32d5c2419cd73a03092ecbffd246c8022bab25562e61b3cb7e46470e3a7cc4"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/3.9.3/micronaut-json-core-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "d91234d69e099da22b012d1f17ee86efba36dc4e315f7b786596e89fb10956e8"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/3.9.3/micronaut-json-core-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "b12ca6e7977a82835732b9327d9e9e72358c997c19e0143251dc1609b0643b98"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/3.9.3/micronaut-json-core-3.9.3.module",
-                                "digest": {
-                                    "sha256": "0f0c6e981095b2d158b053df7c261ec296a507b660aba41b194ba8769aaac9f8"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/3.9.3/micronaut-json-core-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "23d0f89d5907035ce8a2b9242a282f9586e6051f4866e55494d6e70f0f5addf7"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-management/3.9.3/micronaut-management-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "d0d939a19d55fc75be472b3eb7c24a0db1a84f0482c799746decd9ee4288561a"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-management/3.9.3/micronaut-management-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "b1d286953deda77ef0e2756421bb76e28e107112f678435ca96c3d49d9b00eef"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-management/3.9.3/micronaut-management-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "ef8398fded497e25e04e5c1b5a272514bce93dbb61fa2d851d79642fcc3a647c"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-management/3.9.3/micronaut-management-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "aa0f634375768bdaf1cd711e13202d05e662826cddf51fbc343279afd5df90f2"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-management/3.9.3/micronaut-management-3.9.3.module",
-                                "digest": {
-                                    "sha256": "fb28bd6534029751fb50faba1f48ac89dc0ea5aaeb489051d035156ea5cb1c77"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-management/3.9.3/micronaut-management-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "cc48c8625d3b3d68e966c3680793baa0dd4575114f061c28da20590a932cc61e"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/3.9.3/micronaut-messaging-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "985a524f8975d704d2835cd214dd89f433ae66d2e04e944ef35617ace4fa8eb0"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/3.9.3/micronaut-messaging-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "f5689a5917442d70bebb6aaaf897bdcc5e55aecbf415beca524627fa79d7a72d"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/3.9.3/micronaut-messaging-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "cea869dcc77abac7bcfdfb0ad5f0bbe8d490283d8565e48aef8cdb9de8e914a3"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/3.9.3/micronaut-messaging-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "79d65004e6b2709b4ccffb0da12c1b7bbb241a918c377ec9adc8d605c950d3c9"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/3.9.3/micronaut-messaging-3.9.3.module",
-                                "digest": {
-                                    "sha256": "2b1f1a07d3db33e9c7a3d8f6e5f882c0820070b7b5c60893a197f8c4c888e164"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/3.9.3/micronaut-messaging-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "b428bc2b2e1b2a842a00a7ea600734e15c15ce28581ce0a79cb7f6f4f273c780"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-parent/3.9.3/micronaut-parent-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "f2e2678b31f7deeff6f2aab7bf9f33404736a93ebabad294e046184fdd0a081d"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-router/3.9.3/micronaut-router-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "fbde6b3d1a6023f157a09d297af91f385794939d89bdc1689393a536067e78ca"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-router/3.9.3/micronaut-router-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "13a7118e6aebf5d0633dffbd4305c3a8e9a8545faa7f159947dc78378115dcfc"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-router/3.9.3/micronaut-router-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "b5914dc2d367fd493b9cff07a7defb12e5010bf14698bc771dd8b81d412e1c1c"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-router/3.9.3/micronaut-router-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "daa113b67d7449ae6ce7fd55bfb372a89b5a81188af72d67233c923fd0d21183"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-router/3.9.3/micronaut-router-3.9.3.module",
-                                "digest": {
-                                    "sha256": "23550912ea273ea200c324558eaf88bead1ef11f69a6fc0e766967570c634abc"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-router/3.9.3/micronaut-router-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "b4e7ecda17b8ee1d6eb14cb300b19ba66fadbd39fef8ff3fc833da6670991868"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.9.3/micronaut-runtime-osx-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "6c0f187977930a269c9c93b36636fca45c2d235171dec6bcb8585853feb5b647"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.9.3/micronaut-runtime-osx-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "53125fd4411e8ba2c4a903d1d1c264a249dafaebaba225586b0e7fdd731a7029"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.9.3/micronaut-runtime-osx-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "063aef11419dd5e1f3bf53da08cd0cd944967b183adab38b567d618cde6f6107"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.9.3/micronaut-runtime-osx-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "9548f6a125f4c96d26922d32b686b2e158d931036c6e4a27d35a182ad74d47ee"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.9.3/micronaut-runtime-osx-3.9.3.module",
-                                "digest": {
-                                    "sha256": "161591a0326bf6e6f3a4e1f1a2657dca994d8193e9c59d3dc6c676c099f952e9"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/3.9.3/micronaut-runtime-osx-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "d230ce5a7c842c18d874d06e00efbe0d006f3d6ebf098f5e8f910c1f6022ddb7"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime/3.9.3/micronaut-runtime-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "7b093c6f1040e717878a09eabad9d1279c5fdddc91d93245352c1af17f048e74"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime/3.9.3/micronaut-runtime-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "d900dfd247e75c428c0d26ad6f79aedd2ebf249fca91dc2bc420fb0c38a85891"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime/3.9.3/micronaut-runtime-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "81ec81a162c38068ca2c9320b99ccf6bdd5c2694d2662a2eb29431813c2c3793"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime/3.9.3/micronaut-runtime-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "bc1828ca2a0438a62954a15de4c9ed348ab84bc0517bdc0174c84b9cb833e2a8"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-session/3.9.3/micronaut-session-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "43f7defe750b91b36d7adfb2cd00e10b7bbfada35572fe9a8ab2d465cff96dfa"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-session/3.9.3/micronaut-session-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "045f9c19a6f55aefb5086b07a5195536f51f8d5fc951596d3c77e64a26938021"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-session/3.9.3/micronaut-session-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "40c4b955956db6f7a4ddeca7c78a18fa2d531dd4ec634dcd6121c8c505084db6"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-session/3.9.3/micronaut-session-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "9bbfece0aa13a0efa40f9492a2b785c6cf007fd87f5a7eaf975920939836aaea"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-validation/3.9.3/micronaut-validation-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "37966e7c2cbb47bce9daac602f91dab7cf97c0b32f11a0ae8d3bc17b47cb9f4d"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-validation/3.9.3/micronaut-validation-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "3b5de180273e2a15f39a8f71ee6506c9c6068c12ac5fbd1336484582e756c1cb"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-validation/3.9.3/micronaut-validation-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "24d95b353ba5c60bba01eeea940307812d80b810665f1b01434f75a474b7c2b9"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-validation/3.9.3/micronaut-validation-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "af1f1685c95dc93dddc305d97f9d7b21396afacb112293dc46216cc75fc83db6"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-validation/3.9.3/micronaut-validation-3.9.3.module",
-                                "digest": {
-                                    "sha256": "2bdfff4de5b57ee2c5f233ad79f65a7e8130e6ea33d39299c724486033f681e9"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-validation/3.9.3/micronaut-validation-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "a92b68661ba89ae54249cd60d4ad0648954fabf34c6d52da9c11cd0f6d55ca8c"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/3.9.3/micronaut-websocket-3.9.3-all.jar",
-                                "digest": {
-                                    "sha256": "05c9ff6abffcba7198bc7071e747822fc3778612c90540495b3143f58012c744"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/3.9.3/micronaut-websocket-3.9.3-javadoc.jar",
-                                "digest": {
-                                    "sha256": "bccbb573b6949b870c2f83deb43491cc52200219e556efabbb5320f256e81b1b"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/3.9.3/micronaut-websocket-3.9.3-sources.jar",
-                                "digest": {
-                                    "sha256": "a51b33ad8811e2b469037cc177e93be83bf6b543df1973fb8277d951ab66a763"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/3.9.3/micronaut-websocket-3.9.3.jar",
-                                "digest": {
-                                    "sha256": "610f0df4e8957d67d920d7146afb5c2c34f13e5ddf7caec848ea9d470ba09bd0"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/3.9.3/micronaut-websocket-3.9.3.module",
-                                "digest": {
-                                    "sha256": "b05cf732a1d5fc75ecf372d2ad3c6846ef866a1f7c3ee351c86e294f8a3a4071"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/3.9.3/micronaut-websocket-3.9.3.pom",
-                                "digest": {
-                                    "sha256": "b9800fbe85adf2a0d2151140076b8f41b124ceb9ed1e662e0280f0ed8a20bbf3"
+                                    "sha256": "bfd407165ce21778c8ab390879e44c171a64e6fff022508f968e29ddd2fe7415"
                                 }
                             }
                         ],
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.4.0"
+                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.7.0"
                             },
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/micronaut-projects/micronaut-core@refs/tags/v3.9.3",
+                                    "uri": "git+https://github.com/micronaut-projects/micronaut-core@refs/tags/v4.0.0-RC5",
                                     "digest": {
-                                        "sha1": "2308675f75f2f9659fc53f3f0a1d9440c9421a78"
+                                        "sha1": "7d4ee93144d12094b0e4f7dad46cae4f67ff0e48"
                                     },
                                     "entryPoint": ".github/workflows/release.yml"
                                 },
@@ -1233,7 +543,7 @@
                                         },
                                         "release": {
                                             "assets": [],
-                                            "assets_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases/107597724/assets",
+                                            "assets_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases/111202087/assets",
                                             "author": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/864788?v=4",
                                                 "events_url": "https://api.github.com/users/sdelamo/events{/privacy}",
@@ -1254,22 +564,22 @@
                                                 "type": "User",
                                                 "url": "https://api.github.com/users/sdelamo"
                                             },
-                                            "body": "<!-- Release notes generated using configuration in .github/release.yml at 3.9.x -->\r\n\r\n## What's Changed\r\n### Dependency Upgrades \ud83d\ude80\r\n* Update netty monorepo to v4.1.92.Final by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/9277\r\n* Bump micronaut-maven-plugin to 3.5.4 (#9370)\r\n* Bump micronaut-servlet to 3.3.7 (#9398)\r\n* Bump micronaut-aws to 3.17.3 (#9368)\r\n\r\n### Tests \u2705\r\n* test: Writable in Controller and Filter by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/9286\r\n* TCK Test for JSON additional types codec by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/9272\r\n* Remove test limitation for TCK by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/9317\r\n* Add test for `@Body` not being required in 3.9.x by @timyates in https://github.com/micronaut-projects/micronaut-core/pull/9318\r\n* TCK tests for boolean textplain and default media type for String return type by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/9314\r\n\r\n**Full Changelog**: https://github.com/micronaut-projects/micronaut-core/compare/v3.9.2...v3.9.3",
-                                            "created_at": "2023-06-06T15:01:43Z",
+                                            "body": "<!-- Release notes generated using configuration in .github/release.yml at 4.0.x -->\r\n\r\n## What's Changed\r\n### Breaking Changes \ud83d\udee0\r\n* Change annotation-based CORS to match configuration-based defaults by @wetted in https://github.com/micronaut-projects/micronaut-core/pull/9509\r\n### Bug Fixes \ud83d\udc1e\r\n* KSP: Properly map suspended function class by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/9520\r\n* use binary name to store annotation names in metadata for KSP by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/9536\r\n* Fixed incorrect ability to disable slf4j by @altro3 in https://github.com/micronaut-projects/micronaut-core/pull/9532\r\n* Fix KSP nullability handling by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/9538\r\n* fix: txt/plain possible for BigDecimal by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/9535\r\n\r\n### Dependency updates \ud83d\ude80\r\n* Update dependency io.micronaut.build.internal:micronaut-gradle-plugins to v6.5.1 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/9521\r\n* Update dependency io.micronaut.rxjava2:micronaut-rxjava2-bom to v2.0.0-M6 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/9488\r\n* Update dependency io.micronaut.groovy:micronaut-runtime-groovy to v4.0.0-M4 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/9475\r\n* chore(deps): update dependency io.micronaut.build.internal:micronaut-gradle-plugins to v6.5.3 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/9540\r\n* fix(deps): update dependency com.github.javaparser:javaparser-symbol-solver-core to v3.25.4 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/9533\r\n\r\n### Build \ud83d\udc18\r\n* core: enable binary compatability check by @wetted in https://github.com/micronaut-projects/micronaut-core/pull/9505\r\n* Manual sync of graalvm workflows by @msupic in https://github.com/micronaut-projects/micronaut-core/pull/9539\r\n\r\n\r\n**Full Changelog**: https://github.com/micronaut-projects/micronaut-core/compare/v4.0.0-RC4...v4.0.0-RC5",
+                                            "created_at": "2023-07-06T03:49:56Z",
                                             "draft": false,
-                                            "html_url": "https://github.com/micronaut-projects/micronaut-core/releases/tag/v3.9.3",
-                                            "id": 107597724,
-                                            "mentions_count": 2,
-                                            "name": "Micronaut Framework 3.9.3",
-                                            "node_id": "RE_kwDOB2eaPM4Gac-c",
-                                            "prerelease": false,
-                                            "published_at": "2023-06-07T01:34:50Z",
-                                            "tag_name": "v3.9.3",
-                                            "tarball_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/tarball/v3.9.3",
-                                            "target_commitish": "3.9.x",
-                                            "upload_url": "https://uploads.github.com/repos/micronaut-projects/micronaut-core/releases/107597724/assets{?name,label}",
-                                            "url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases/107597724",
-                                            "zipball_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/zipball/v3.9.3"
+                                            "html_url": "https://github.com/micronaut-projects/micronaut-core/releases/tag/v4.0.0-RC5",
+                                            "id": 111202087,
+                                            "mentions_count": 7,
+                                            "name": "Micronaut Core 4.0.0-RC5",
+                                            "node_id": "RE_kwDOB2eaPM4GoM8n",
+                                            "prerelease": true,
+                                            "published_at": "2023-07-06T05:04:16Z",
+                                            "tag_name": "v4.0.0-RC5",
+                                            "tarball_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/tarball/v4.0.0-RC5",
+                                            "target_commitish": "4.0.x",
+                                            "upload_url": "https://uploads.github.com/repos/micronaut-projects/micronaut-core/releases/111202087/assets{?name,label}",
+                                            "url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases/111202087",
+                                            "zipball_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/zipball/v4.0.0-RC5"
                                         },
                                         "repository": {
                                             "allow_forking": true,
@@ -1293,8 +603,8 @@
                                             "downloads_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/downloads",
                                             "events_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/events",
                                             "fork": false,
-                                            "forks": 980,
-                                            "forks_count": 980,
+                                            "forks": 984,
+                                            "forks_count": 984,
                                             "forks_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/forks",
                                             "full_name": "micronaut-projects/micronaut-core",
                                             "git_commits_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/commits{/sha}",
@@ -1332,8 +642,8 @@
                                             "name": "micronaut-core",
                                             "node_id": "MDEwOlJlcG9zaXRvcnkxMjQyMzAyMDQ=",
                                             "notifications_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/notifications{?since,all,participating}",
-                                            "open_issues": 587,
-                                            "open_issues_count": 587,
+                                            "open_issues": 596,
+                                            "open_issues_count": 596,
                                             "owner": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/36880643?v=4",
                                                 "events_url": "https://api.github.com/users/micronaut-projects/events{/privacy}",
@@ -1356,11 +666,11 @@
                                             },
                                             "private": false,
                                             "pulls_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/pulls{/number}",
-                                            "pushed_at": "2023-06-07T01:34:50Z",
+                                            "pushed_at": "2023-07-06T05:04:16Z",
                                             "releases_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases{/id}",
-                                            "size": 97477,
+                                            "size": 98079,
                                             "ssh_url": "git@github.com:micronaut-projects/micronaut-core.git",
-                                            "stargazers_count": 5712,
+                                            "stargazers_count": 5744,
                                             "stargazers_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/stargazers",
                                             "statuses_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/statuses/{sha}",
                                             "subscribers_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/subscribers",
@@ -1377,11 +687,11 @@
                                                 "serverless"
                                             ],
                                             "trees_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/trees{/sha}",
-                                            "updated_at": "2023-06-06T23:55:12Z",
+                                            "updated_at": "2023-07-05T23:14:03Z",
                                             "url": "https://api.github.com/repos/micronaut-projects/micronaut-core",
                                             "visibility": "public",
-                                            "watchers": 5712,
-                                            "watchers_count": 5712,
+                                            "watchers": 5744,
+                                            "watchers_count": 5744,
                                             "web_commit_signoff_required": false
                                         },
                                         "sender": {
@@ -1406,19 +716,19 @@
                                         }
                                     },
                                     "github_head_ref": "",
-                                    "github_ref": "refs/tags/v3.9.3",
+                                    "github_ref": "refs/tags/v4.0.0-RC5",
                                     "github_ref_type": "tag",
                                     "github_repository_id": "124230204",
                                     "github_repository_owner": "micronaut-projects",
                                     "github_repository_owner_id": "36880643",
                                     "github_run_attempt": "1",
-                                    "github_run_id": "5195022256",
-                                    "github_run_number": "135",
-                                    "github_sha1": "2308675f75f2f9659fc53f3f0a1d9440c9421a78"
+                                    "github_run_id": "5471746976",
+                                    "github_run_number": "144",
+                                    "github_sha1": "7d4ee93144d12094b0e4f7dad46cae4f67ff0e48"
                                 }
                             },
                             "metadata": {
-                                "buildInvocationID": "5195022256-1",
+                                "buildInvocationID": "5471746976-1",
                                 "completeness": {
                                     "parameters": true,
                                     "environment": false,
@@ -1428,9 +738,9 @@
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/micronaut-projects/micronaut-core@refs/tags/v3.9.3",
+                                    "uri": "git+https://github.com/micronaut-projects/micronaut-core@refs/tags/v4.0.0-RC5",
                                     "digest": {
-                                        "sha1": "2308675f75f2f9659fc53f3f0a1d9440c9421a78"
+                                        "sha1": "7d4ee93144d12094b0e4f7dad46cae4f67ff0e48"
                                     }
                                 }
                             ]
@@ -1442,7 +752,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 1,
+                "FAILED": 2,
                 "PASSED": 6,
                 "SKIPPED": 0,
                 "UNKNOWN": 1
@@ -1467,10 +777,10 @@
                     ],
                     "justification": [
                         {
-                            "The target repository uses build tool gradle to deploy": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/gradle.yml",
-                            "The build is triggered by": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/gradle.yml"
+                            "The target repository uses build tool gradle to deploy": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/central-sync.yml",
+                            "The build is triggered by": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/central-sync.yml"
                         },
-                        "Deploy command: ['./gradlew', 'publishToSonatype', 'docs', '--no-daemon']",
+                        "Deploy command: ['./gradlew', 'publishToSonatype', 'closeAndReleaseSonatypeStagingRepository']",
                         "However, could not find a passing workflow run."
                     ],
                     "result_type": "PASSED"
@@ -1523,9 +833,23 @@
                     ],
                     "justification": [
                         "Successfully verified level 3: ",
-                        "verify passed : build/repo/micronaut-aop/3.9.3/micronaut-aop-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-aop/3.9.3/micronaut-aop-3.9.3-sources.jar,verify passed : build/repo/micronaut-aop/3.9.3/micronaut-aop-3.9.3.jar,verify passed : build/repo/micronaut-aop/3.9.3/micronaut-aop-3.9.3.pom,verify passed : build/repo/micronaut-bom/3.9.3/micronaut-bom-3.9.3.module,verify passed : build/repo/micronaut-bom/3.9.3/micronaut-bom-3.9.3.pom,verify passed : build/repo/micronaut-bom/3.9.3/micronaut-bom-3.9.3.toml,verify passed : build/repo/micronaut-buffer-netty/3.9.3/micronaut-buffer-netty-3.9.3-all.jar,verify passed : build/repo/micronaut-buffer-netty/3.9.3/micronaut-buffer-netty-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-buffer-netty/3.9.3/micronaut-buffer-netty-3.9.3-sources.jar,verify passed : build/repo/micronaut-buffer-netty/3.9.3/micronaut-buffer-netty-3.9.3.jar,verify passed : build/repo/micronaut-buffer-netty/3.9.3/micronaut-buffer-netty-3.9.3.module,verify passed : build/repo/micronaut-buffer-netty/3.9.3/micronaut-buffer-netty-3.9.3.pom,verify passed : build/repo/micronaut-context/3.9.3/micronaut-context-3.9.3-all.jar,verify passed : build/repo/micronaut-context/3.9.3/micronaut-context-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-context/3.9.3/micronaut-context-3.9.3-sources.jar,verify passed : build/repo/micronaut-context/3.9.3/micronaut-context-3.9.3.jar,verify passed : build/repo/micronaut-context/3.9.3/micronaut-context-3.9.3.module,verify passed : build/repo/micronaut-context/3.9.3/micronaut-context-3.9.3.pom,verify passed : build/repo/micronaut-core-reactive/3.9.3/micronaut-core-reactive-3.9.3-all.jar,verify passed : build/repo/micronaut-core-reactive/3.9.3/micronaut-core-reactive-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-core-reactive/3.9.3/micronaut-core-reactive-3.9.3-sources.jar,verify passed : build/repo/micronaut-core-reactive/3.9.3/micronaut-core-reactive-3.9.3.jar,verify passed : build/repo/micronaut-core-reactive/3.9.3/micronaut-core-reactive-3.9.3.module,verify passed : build/repo/micronaut-core-reactive/3.9.3/micronaut-core-reactive-3.9.3.pom,verify passed : build/repo/micronaut-core/3.9.3/micronaut-core-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-core/3.9.3/micronaut-core-3.9.3-sources.jar,verify passed : build/repo/micronaut-core/3.9.3/micronaut-core-3.9.3.jar,verify passed : build/repo/micronaut-core/3.9.3/micronaut-core-3.9.3.pom,verify passed : build/repo/micronaut-function-client/3.9.3/micronaut-function-client-3.9.3-all.jar,verify passed : build/repo/micronaut-function-client/3.9.3/micronaut-function-client-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-function-client/3.9.3/micronaut-function-client-3.9.3-sources.jar,verify passed : build/repo/micronaut-function-client/3.9.3/micronaut-function-client-3.9.3.jar,verify passed : build/repo/micronaut-function-client/3.9.3/micronaut-function-client-3.9.3.module,verify passed : build/repo/micronaut-function-client/3.9.3/micronaut-function-client-3.9.3.pom,verify passed : build/repo/micronaut-function-web/3.9.3/micronaut-function-web-3.9.3-all.jar,verify passed : build/repo/micronaut-function-web/3.9.3/micronaut-function-web-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-function-web/3.9.3/micronaut-function-web-3.9.3-sources.jar,verify passed : build/repo/micronaut-function-web/3.9.3/micronaut-function-web-3.9.3.jar,verify passed : build/repo/micronaut-function-web/3.9.3/micronaut-function-web-3.9.3.module,verify passed : build/repo/micronaut-function-web/3.9.3/micronaut-function-web-3.9.3.pom,verify passed : build/repo/micronaut-function/3.9.3/micronaut-function-3.9.3-all.jar,verify passed : build/repo/micronaut-function/3.9.3/micronaut-function-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-function/3.9.3/micronaut-function-3.9.3-sources.jar,verify passed : build/repo/micronaut-function/3.9.3/micronaut-function-3.9.3.jar,verify passed : build/repo/micronaut-function/3.9.3/micronaut-function-3.9.3.module,verify passed : build/repo/micronaut-function/3.9.3/micronaut-function-3.9.3.pom,verify passed : build/repo/micronaut-graal/3.9.3/micronaut-graal-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-graal/3.9.3/micronaut-graal-3.9.3-sources.jar,verify passed : build/repo/micronaut-graal/3.9.3/micronaut-graal-3.9.3.jar,verify passed : build/repo/micronaut-graal/3.9.3/micronaut-graal-3.9.3.pom,verify passed : build/repo/micronaut-http-client-core/3.9.3/micronaut-http-client-core-3.9.3-all.jar,verify passed : build/repo/micronaut-http-client-core/3.9.3/micronaut-http-client-core-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-http-client-core/3.9.3/micronaut-http-client-core-3.9.3-sources.jar,verify passed : build/repo/micronaut-http-client-core/3.9.3/micronaut-http-client-core-3.9.3.jar,verify passed : build/repo/micronaut-http-client-core/3.9.3/micronaut-http-client-core-3.9.3.module,verify passed : build/repo/micronaut-http-client-core/3.9.3/micronaut-http-client-core-3.9.3.pom,verify passed : build/repo/micronaut-http-client/3.9.3/micronaut-http-client-3.9.3-all.jar,verify passed : build/repo/micronaut-http-client/3.9.3/micronaut-http-client-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-http-client/3.9.3/micronaut-http-client-3.9.3-sources.jar,verify passed : build/repo/micronaut-http-client/3.9.3/micronaut-http-client-3.9.3.jar,verify passed : build/repo/micronaut-http-client/3.9.3/micronaut-http-client-3.9.3.module,verify passed : build/repo/micronaut-http-client/3.9.3/micronaut-http-client-3.9.3.pom,verify passed : build/repo/micronaut-http-netty/3.9.3/micronaut-http-netty-3.9.3-all.jar,verify passed : build/repo/micronaut-http-netty/3.9.3/micronaut-http-netty-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-http-netty/3.9.3/micronaut-http-netty-3.9.3-sources.jar,verify passed : build/repo/micronaut-http-netty/3.9.3/micronaut-http-netty-3.9.3.jar,verify passed : build/repo/micronaut-http-netty/3.9.3/micronaut-http-netty-3.9.3.module,verify passed : build/repo/micronaut-http-netty/3.9.3/micronaut-http-netty-3.9.3.pom,verify passed : build/repo/micronaut-http-server-netty/3.9.3/micronaut-http-server-netty-3.9.3-all.jar,verify passed : build/repo/micronaut-http-server-netty/3.9.3/micronaut-http-server-netty-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-http-server-netty/3.9.3/micronaut-http-server-netty-3.9.3-sources.jar,verify passed : build/repo/micronaut-http-server-netty/3.9.3/micronaut-http-server-netty-3.9.3.jar,verify passed : build/repo/micronaut-http-server-netty/3.9.3/micronaut-http-server-netty-3.9.3.module,verify passed : build/repo/micronaut-http-server-netty/3.9.3/micronaut-http-server-netty-3.9.3.pom,verify passed : build/repo/micronaut-http-server-tck/3.9.3/micronaut-http-server-tck-3.9.3-all.jar,verify passed : build/repo/micronaut-http-server-tck/3.9.3/micronaut-http-server-tck-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-http-server-tck/3.9.3/micronaut-http-server-tck-3.9.3-sources.jar,verify passed : build/repo/micronaut-http-server-tck/3.9.3/micronaut-http-server-tck-3.9.3.jar,verify passed : build/repo/micronaut-http-server-tck/3.9.3/micronaut-http-server-tck-3.9.3.module,verify passed : build/repo/micronaut-http-server-tck/3.9.3/micronaut-http-server-tck-3.9.3.pom,verify passed : build/repo/micronaut-http-server/3.9.3/micronaut-http-server-3.9.3-all.jar,verify passed : build/repo/micronaut-http-server/3.9.3/micronaut-http-server-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-http-server/3.9.3/micronaut-http-server-3.9.3-sources.jar,verify passed : build/repo/micronaut-http-server/3.9.3/micronaut-http-server-3.9.3.jar,verify passed : build/repo/micronaut-http-server/3.9.3/micronaut-http-server-3.9.3.module,verify passed : build/repo/micronaut-http-server/3.9.3/micronaut-http-server-3.9.3.pom,verify passed : build/repo/micronaut-http-validation/3.9.3/micronaut-http-validation-3.9.3-all.jar,verify passed : build/repo/micronaut-http-validation/3.9.3/micronaut-http-validation-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-http-validation/3.9.3/micronaut-http-validation-3.9.3-sources.jar,verify passed : build/repo/micronaut-http-validation/3.9.3/micronaut-http-validation-3.9.3.jar,verify passed : build/repo/micronaut-http-validation/3.9.3/micronaut-http-validation-3.9.3.module,verify passed : build/repo/micronaut-http-validation/3.9.3/micronaut-http-validation-3.9.3.pom,verify passed : build/repo/micronaut-http/3.9.3/micronaut-http-3.9.3-all.jar,verify passed : build/repo/micronaut-http/3.9.3/micronaut-http-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-http/3.9.3/micronaut-http-3.9.3-sources.jar,verify passed : build/repo/micronaut-http/3.9.3/micronaut-http-3.9.3.jar,verify passed : build/repo/micronaut-http/3.9.3/micronaut-http-3.9.3.module,verify passed : build/repo/micronaut-http/3.9.3/micronaut-http-3.9.3.pom,verify passed : build/repo/micronaut-inject-groovy-test/3.9.3/micronaut-inject-groovy-test-3.9.3-all.jar,verify passed : build/repo/micronaut-inject-groovy-test/3.9.3/micronaut-inject-groovy-test-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-inject-groovy-test/3.9.3/micronaut-inject-groovy-test-3.9.3-sources.jar,verify passed : build/repo/micronaut-inject-groovy-test/3.9.3/micronaut-inject-groovy-test-3.9.3.jar,verify passed : build/repo/micronaut-inject-groovy-test/3.9.3/micronaut-inject-groovy-test-3.9.3.module,verify passed : build/repo/micronaut-inject-groovy-test/3.9.3/micronaut-inject-groovy-test-3.9.3.pom,verify passed : build/repo/micronaut-inject-groovy/3.9.3/micronaut-inject-groovy-3.9.3-all.jar,verify passed : build/repo/micronaut-inject-groovy/3.9.3/micronaut-inject-groovy-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-inject-groovy/3.9.3/micronaut-inject-groovy-3.9.3-sources.jar,verify passed : build/repo/micronaut-inject-groovy/3.9.3/micronaut-inject-groovy-3.9.3.jar,verify passed : build/repo/micronaut-inject-groovy/3.9.3/micronaut-inject-groovy-3.9.3.module,verify passed : build/repo/micronaut-inject-groovy/3.9.3/micronaut-inject-groovy-3.9.3.pom,verify passed : build/repo/micronaut-inject-java-test/3.9.3/micronaut-inject-java-test-3.9.3-all.jar,verify passed : build/repo/micronaut-inject-java-test/3.9.3/micronaut-inject-java-test-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-inject-java-test/3.9.3/micronaut-inject-java-test-3.9.3-sources.jar,verify passed : build/repo/micronaut-inject-java-test/3.9.3/micronaut-inject-java-test-3.9.3.jar,verify passed : build/repo/micronaut-inject-java-test/3.9.3/micronaut-inject-java-test-3.9.3.module,verify passed : build/repo/micronaut-inject-java-test/3.9.3/micronaut-inject-java-test-3.9.3.pom,verify passed : build/repo/micronaut-inject-java/3.9.3/micronaut-inject-java-3.9.3-all.jar,verify passed : build/repo/micronaut-inject-java/3.9.3/micronaut-inject-java-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-inject-java/3.9.3/micronaut-inject-java-3.9.3-sources.jar,verify passed : build/repo/micronaut-inject-java/3.9.3/micronaut-inject-java-3.9.3.jar,verify passed : build/repo/micronaut-inject-java/3.9.3/micronaut-inject-java-3.9.3.module,verify passed : build/repo/micronaut-inject-java/3.9.3/micronaut-inject-java-3.9.3.pom,verify passed : build/repo/micronaut-inject-kotlin-test/3.9.3/micronaut-inject-kotlin-test-3.9.3-all.jar,verify passed : build/repo/micronaut-inject-kotlin-test/3.9.3/micronaut-inject-kotlin-test-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-inject-kotlin-test/3.9.3/micronaut-inject-kotlin-test-3.9.3-sources.jar,verify passed : build/repo/micronaut-inject-kotlin-test/3.9.3/micronaut-inject-kotlin-test-3.9.3.jar,verify passed : build/repo/micronaut-inject-kotlin-test/3.9.3/micronaut-inject-kotlin-test-3.9.3.module,verify passed : build/repo/micronaut-inject-kotlin-test/3.9.3/micronaut-inject-kotlin-test-3.9.3.pom,verify passed : build/repo/micronaut-inject/3.9.3/micronaut-inject-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-inject/3.9.3/micronaut-inject-3.9.3-sources.jar,verify passed : build/repo/micronaut-inject/3.9.3/micronaut-inject-3.9.3.jar,verify passed : build/repo/micronaut-inject/3.9.3/micronaut-inject-3.9.3.pom,verify passed : build/repo/micronaut-jackson-core/3.9.3/micronaut-jackson-core-3.9.3-all.jar,verify passed : build/repo/micronaut-jackson-core/3.9.3/micronaut-jackson-core-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-jackson-core/3.9.3/micronaut-jackson-core-3.9.3-sources.jar,verify passed : build/repo/micronaut-jackson-core/3.9.3/micronaut-jackson-core-3.9.3.jar,verify passed : build/repo/micronaut-jackson-core/3.9.3/micronaut-jackson-core-3.9.3.module,verify passed : build/repo/micronaut-jackson-core/3.9.3/micronaut-jackson-core-3.9.3.pom,verify passed : build/repo/micronaut-jackson-databind/3.9.3/micronaut-jackson-databind-3.9.3-all.jar,verify passed : build/repo/micronaut-jackson-databind/3.9.3/micronaut-jackson-databind-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-jackson-databind/3.9.3/micronaut-jackson-databind-3.9.3-sources.jar,verify passed : build/repo/micronaut-jackson-databind/3.9.3/micronaut-jackson-databind-3.9.3.jar,verify passed : build/repo/micronaut-jackson-databind/3.9.3/micronaut-jackson-databind-3.9.3.module,verify passed : build/repo/micronaut-jackson-databind/3.9.3/micronaut-jackson-databind-3.9.3.pom,verify passed : build/repo/micronaut-json-core/3.9.3/micronaut-json-core-3.9.3-all.jar,verify passed : build/repo/micronaut-json-core/3.9.3/micronaut-json-core-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-json-core/3.9.3/micronaut-json-core-3.9.3-sources.jar,verify passed : build/repo/micronaut-json-core/3.9.3/micronaut-json-core-3.9.3.jar,verify passed : build/repo/micronaut-json-core/3.9.3/micronaut-json-core-3.9.3.module,verify passed : build/repo/micronaut-json-core/3.9.3/micronaut-json-core-3.9.3.pom,verify passed : build/repo/micronaut-management/3.9.3/micronaut-management-3.9.3-all.jar,verify passed : build/repo/micronaut-management/3.9.3/micronaut-management-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-management/3.9.3/micronaut-management-3.9.3-sources.jar,verify passed : build/repo/micronaut-management/3.9.3/micronaut-management-3.9.3.jar,verify passed : build/repo/micronaut-management/3.9.3/micronaut-management-3.9.3.module,verify passed : build/repo/micronaut-management/3.9.3/micronaut-management-3.9.3.pom,verify passed : build/repo/micronaut-messaging/3.9.3/micronaut-messaging-3.9.3-all.jar,verify passed : build/repo/micronaut-messaging/3.9.3/micronaut-messaging-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-messaging/3.9.3/micronaut-messaging-3.9.3-sources.jar,verify passed : build/repo/micronaut-messaging/3.9.3/micronaut-messaging-3.9.3.jar,verify passed : build/repo/micronaut-messaging/3.9.3/micronaut-messaging-3.9.3.module,verify passed : build/repo/micronaut-messaging/3.9.3/micronaut-messaging-3.9.3.pom,verify passed : build/repo/micronaut-parent/3.9.3/micronaut-parent-3.9.3.pom,verify passed : build/repo/micronaut-router/3.9.3/micronaut-router-3.9.3-all.jar,verify passed : build/repo/micronaut-router/3.9.3/micronaut-router-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-router/3.9.3/micronaut-router-3.9.3-sources.jar,verify passed : build/repo/micronaut-router/3.9.3/micronaut-router-3.9.3.jar,verify passed : build/repo/micronaut-router/3.9.3/micronaut-router-3.9.3.module,verify passed : build/repo/micronaut-router/3.9.3/micronaut-router-3.9.3.pom,verify passed : build/repo/micronaut-runtime-osx/3.9.3/micronaut-runtime-osx-3.9.3-all.jar,verify passed : build/repo/micronaut-runtime-osx/3.9.3/micronaut-runtime-osx-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-runtime-osx/3.9.3/micronaut-runtime-osx-3.9.3-sources.jar,verify passed : build/repo/micronaut-runtime-osx/3.9.3/micronaut-runtime-osx-3.9.3.jar,verify passed : build/repo/micronaut-runtime-osx/3.9.3/micronaut-runtime-osx-3.9.3.module,verify passed : build/repo/micronaut-runtime-osx/3.9.3/micronaut-runtime-osx-3.9.3.pom,verify passed : build/repo/micronaut-runtime/3.9.3/micronaut-runtime-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-runtime/3.9.3/micronaut-runtime-3.9.3-sources.jar,verify passed : build/repo/micronaut-runtime/3.9.3/micronaut-runtime-3.9.3.jar,verify passed : build/repo/micronaut-runtime/3.9.3/micronaut-runtime-3.9.3.pom,verify passed : build/repo/micronaut-session/3.9.3/micronaut-session-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-session/3.9.3/micronaut-session-3.9.3-sources.jar,verify passed : build/repo/micronaut-session/3.9.3/micronaut-session-3.9.3.jar,verify passed : build/repo/micronaut-session/3.9.3/micronaut-session-3.9.3.pom,verify passed : build/repo/micronaut-validation/3.9.3/micronaut-validation-3.9.3-all.jar,verify passed : build/repo/micronaut-validation/3.9.3/micronaut-validation-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-validation/3.9.3/micronaut-validation-3.9.3-sources.jar,verify passed : build/repo/micronaut-validation/3.9.3/micronaut-validation-3.9.3.jar,verify passed : build/repo/micronaut-validation/3.9.3/micronaut-validation-3.9.3.module,verify passed : build/repo/micronaut-validation/3.9.3/micronaut-validation-3.9.3.pom,verify passed : build/repo/micronaut-websocket/3.9.3/micronaut-websocket-3.9.3-all.jar,verify passed : build/repo/micronaut-websocket/3.9.3/micronaut-websocket-3.9.3-javadoc.jar,verify passed : build/repo/micronaut-websocket/3.9.3/micronaut-websocket-3.9.3-sources.jar,verify passed : build/repo/micronaut-websocket/3.9.3/micronaut-websocket-3.9.3.jar,verify passed : build/repo/micronaut-websocket/3.9.3/micronaut-websocket-3.9.3.module,verify passed : build/repo/micronaut-websocket/3.9.3/micronaut-websocket-3.9.3.pom"
+                        "verify passed: build/repo/micronaut-aop/4.0.0-RC5/micronaut-aop-4.0.0-RC5.jar,verify passed: build/repo/micronaut-aop/4.0.0-RC5/micronaut-aop-4.0.0-RC5.pom,verify passed: build/repo/micronaut-buffer-netty/4.0.0-RC5/micronaut-buffer-netty-4.0.0-RC5.jar,verify passed: build/repo/micronaut-buffer-netty/4.0.0-RC5/micronaut-buffer-netty-4.0.0-RC5.pom,verify passed: build/repo/micronaut-context-propagation/4.0.0-RC5/micronaut-context-propagation-4.0.0-RC5.jar,verify passed: build/repo/micronaut-context-propagation/4.0.0-RC5/micronaut-context-propagation-4.0.0-RC5.pom,verify passed: build/repo/micronaut-context/4.0.0-RC5/micronaut-context-4.0.0-RC5.jar,verify passed: build/repo/micronaut-context/4.0.0-RC5/micronaut-context-4.0.0-RC5.pom,verify passed: build/repo/micronaut-core-bom/4.0.0-RC5/micronaut-core-bom-4.0.0-RC5.pom,verify passed: build/repo/micronaut-core-processor/4.0.0-RC5/micronaut-core-processor-4.0.0-RC5.jar,verify passed: build/repo/micronaut-core-processor/4.0.0-RC5/micronaut-core-processor-4.0.0-RC5.pom,verify passed: build/repo/micronaut-core-reactive/4.0.0-RC5/micronaut-core-reactive-4.0.0-RC5.jar,verify passed: build/repo/micronaut-core-reactive/4.0.0-RC5/micronaut-core-reactive-4.0.0-RC5.pom,verify passed: build/repo/micronaut-core/4.0.0-RC5/micronaut-core-4.0.0-RC5.jar,verify passed: build/repo/micronaut-core/4.0.0-RC5/micronaut-core-4.0.0-RC5.pom,verify passed: build/repo/micronaut-discovery-core/4.0.0-RC5/micronaut-discovery-core-4.0.0-RC5.jar,verify passed: build/repo/micronaut-discovery-core/4.0.0-RC5/micronaut-discovery-core-4.0.0-RC5.pom,verify passed: build/repo/micronaut-function-client/4.0.0-RC5/micronaut-function-client-4.0.0-RC5.jar,verify passed: build/repo/micronaut-function-client/4.0.0-RC5/micronaut-function-client-4.0.0-RC5.pom,verify passed: build/repo/micronaut-function-web/4.0.0-RC5/micronaut-function-web-4.0.0-RC5.jar,verify passed: build/repo/micronaut-function-web/4.0.0-RC5/micronaut-function-web-4.0.0-RC5.pom,verify passed: build/repo/micronaut-function/4.0.0-RC5/micronaut-function-4.0.0-RC5.jar,verify passed: build/repo/micronaut-function/4.0.0-RC5/micronaut-function-4.0.0-RC5.pom,verify passed: build/repo/micronaut-graal/4.0.0-RC5/micronaut-graal-4.0.0-RC5.jar,verify passed: build/repo/micronaut-graal/4.0.0-RC5/micronaut-graal-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-client-core/4.0.0-RC5/micronaut-http-client-core-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-client-core/4.0.0-RC5/micronaut-http-client-core-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-client-jdk/4.0.0-RC5/micronaut-http-client-jdk-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-client-jdk/4.0.0-RC5/micronaut-http-client-jdk-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-client-tck/4.0.0-RC5/micronaut-http-client-tck-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-client-tck/4.0.0-RC5/micronaut-http-client-tck-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-client/4.0.0-RC5/micronaut-http-client-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-client/4.0.0-RC5/micronaut-http-client-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-netty/4.0.0-RC5/micronaut-http-netty-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-netty/4.0.0-RC5/micronaut-http-netty-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-server-netty/4.0.0-RC5/micronaut-http-server-netty-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-server-netty/4.0.0-RC5/micronaut-http-server-netty-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-server-tck/4.0.0-RC5/micronaut-http-server-tck-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-server-tck/4.0.0-RC5/micronaut-http-server-tck-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-server/4.0.0-RC5/micronaut-http-server-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-server/4.0.0-RC5/micronaut-http-server-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-tck/4.0.0-RC5/micronaut-http-tck-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-tck/4.0.0-RC5/micronaut-http-tck-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-validation/4.0.0-RC5/micronaut-http-validation-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-validation/4.0.0-RC5/micronaut-http-validation-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http/4.0.0-RC5/micronaut-http-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http/4.0.0-RC5/micronaut-http-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject-groovy-test/4.0.0-RC5/micronaut-inject-groovy-test-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject-groovy-test/4.0.0-RC5/micronaut-inject-groovy-test-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject-groovy/4.0.0-RC5/micronaut-inject-groovy-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject-groovy/4.0.0-RC5/micronaut-inject-groovy-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject-java-test/4.0.0-RC5/micronaut-inject-java-test-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject-java-test/4.0.0-RC5/micronaut-inject-java-test-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject-java/4.0.0-RC5/micronaut-inject-java-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject-java/4.0.0-RC5/micronaut-inject-java-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject-kotlin-test/4.0.0-RC5/micronaut-inject-kotlin-test-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject-kotlin-test/4.0.0-RC5/micronaut-inject-kotlin-test-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject-kotlin/4.0.0-RC5/micronaut-inject-kotlin-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject-kotlin/4.0.0-RC5/micronaut-inject-kotlin-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject/4.0.0-RC5/micronaut-inject-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject/4.0.0-RC5/micronaut-inject-4.0.0-RC5.pom,verify passed: build/repo/micronaut-jackson-core/4.0.0-RC5/micronaut-jackson-core-4.0.0-RC5.jar,verify passed: build/repo/micronaut-jackson-core/4.0.0-RC5/micronaut-jackson-core-4.0.0-RC5.pom,verify passed: build/repo/micronaut-jackson-databind/4.0.0-RC5/micronaut-jackson-databind-4.0.0-RC5.jar,verify passed: build/repo/micronaut-jackson-databind/4.0.0-RC5/micronaut-jackson-databind-4.0.0-RC5.pom,verify passed: build/repo/micronaut-json-core/4.0.0-RC5/micronaut-json-core-4.0.0-RC5.jar,verify passed: build/repo/micronaut-json-core/4.0.0-RC5/micronaut-json-core-4.0.0-RC5.pom,verify passed: build/repo/micronaut-management/4.0.0-RC5/micronaut-management-4.0.0-RC5.jar,verify passed: build/repo/micronaut-management/4.0.0-RC5/micronaut-management-4.0.0-RC5.pom,verify passed: build/repo/micronaut-messaging/4.0.0-RC5/micronaut-messaging-4.0.0-RC5.jar,verify passed: build/repo/micronaut-messaging/4.0.0-RC5/micronaut-messaging-4.0.0-RC5.pom,verify passed: build/repo/micronaut-retry/4.0.0-RC5/micronaut-retry-4.0.0-RC5.jar,verify passed: build/repo/micronaut-retry/4.0.0-RC5/micronaut-retry-4.0.0-RC5.pom,verify passed: build/repo/micronaut-router/4.0.0-RC5/micronaut-router-4.0.0-RC5.jar,verify passed: build/repo/micronaut-router/4.0.0-RC5/micronaut-router-4.0.0-RC5.pom,verify passed: build/repo/micronaut-runtime-osx/4.0.0-RC5/micronaut-runtime-osx-4.0.0-RC5.jar,verify passed: build/repo/micronaut-runtime-osx/4.0.0-RC5/micronaut-runtime-osx-4.0.0-RC5.pom,verify passed: build/repo/micronaut-runtime/4.0.0-RC5/micronaut-runtime-4.0.0-RC5.jar,verify passed: build/repo/micronaut-runtime/4.0.0-RC5/micronaut-runtime-4.0.0-RC5.pom,verify passed: build/repo/micronaut-websocket/4.0.0-RC5/micronaut-websocket-4.0.0-RC5.jar,verify passed: build/repo/micronaut-websocket/4.0.0-RC5/micronaut-websocket-4.0.0-RC5.pom"
                     ],
                     "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_provenance_witness_level_one_1",
+                    "check_description": "Check whether the target has a level-1 witness provenance.",
+                    "slsa_requirements": [
+                        "Provenance - Available - SLSA Level 1",
+                        "Provenance content - Identifies build instructions - SLSA Level 1",
+                        "Provenance content - Identifies artifacts - SLSA Level 1",
+                        "Provenance content - Identifies builder - SLSA Level 1"
+                    ],
+                    "justification": [
+                        "Failed to discover any witness provenance."
+                    ],
+                    "result_type": "FAILED"
                 },
                 {
                     "check_id": "mcn_version_control_system_1",
@@ -1587,6 +911,10 @@
             },
             {
                 "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {

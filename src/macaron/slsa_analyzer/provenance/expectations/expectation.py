@@ -9,7 +9,7 @@ from typing import Any, Self
 from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.errors import ExpectationRuntimeError
-from macaron.util import JsonType
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 
 ExpectationFn = Callable[[Any], bool]
 
@@ -61,7 +61,7 @@ class Expectation:
     def __str__(self) -> str:
         return f"Expectation(description='{self.description}', path='{self.path}', target='{self.target}')"
 
-    def validate(self, prov: JsonType) -> bool:
+    def validate(self, prov: InTotoPayload) -> bool:
         """Validate the provenance against this expectation.
 
         Parameters
@@ -81,4 +81,4 @@ class Expectation:
         if not self._validator:
             raise ExpectationRuntimeError(f"Cannot find the validator for expectation {self.path}")
 
-        return self._validator(prov)  # pylint: disable=not-callable
+        return self._validator(prov.statement)  # pylint: disable=not-callable
