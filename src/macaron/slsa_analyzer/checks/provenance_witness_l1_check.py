@@ -169,9 +169,8 @@ class ProvenanceWitnessL1Check(BaseCheck):
 
                         verified_artifact_assets.extend(artifact_assets)
 
-        # If Macaron cannot discover any witness provenance, we "fail" the check.
-        # Here, there status ``FAILED`` means: Macaron fails to discover any witness provenance.
-        # This is consistent with how Souffle works: facts in Souffle usually represent things that exist.
+        # When this check passes, it means: "the project produces verifiable witness provenances".
+        # Therefore, If Macaron cannot discover any witness provenance, we "fail" the check.
         if len(verified_artifact_assets) > 0:
             check_result["justification"].append("Successfully verified the following artifacts:")
             for asset in verified_artifact_assets:
