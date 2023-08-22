@@ -74,6 +74,10 @@ class InTotoV1Payload(InTotoPayload[v1.InTotoStatement]):
 def validate_intoto_payload(payload: dict[str, JsonType]) -> InTotoPayload:
     """Validate the schema of an in-toto provenance payload.
 
+    TODO: Consider using the in-toto-attestation package (https://github.com/in-toto/attestation/tree/main/python),
+    which contains Python bindings for in-toto attestation.
+    See issue: https://github.com/oracle/macaron/issues/426.
+
     Parameters
     ----------
     payload : dict[str, JsonType]

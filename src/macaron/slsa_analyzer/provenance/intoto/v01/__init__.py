@@ -39,6 +39,10 @@ def validate_intoto_statement(payload: dict[str, JsonType]) -> TypeGuard[InTotoS
 
     Specification: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement.
 
+    TODO: Consider using the in-toto-attestation package (https://github.com/in-toto/attestation/tree/main/python),
+    which contains Python bindings for in-toto attestation.
+    See issue: https://github.com/oracle/macaron/issues/426.
+
     Parameters
     ----------
     payload : dict[str, JsonType]
@@ -102,6 +106,10 @@ def validate_intoto_subject(subject: JsonType) -> TypeGuard[InTotoSubject]:
     """Validate a single subject in the in-toto statement.
 
     See specification: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement.
+
+    TODO: Consider using the in-toto-attestation package (https://github.com/in-toto/attestation/tree/main/python),
+    which contains Python bindings for in-toto attestation.
+    See issue: https://github.com/oracle/macaron/issues/426.
 
     Parameters
     ----------
