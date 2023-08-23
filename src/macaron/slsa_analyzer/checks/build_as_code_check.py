@@ -366,19 +366,22 @@ class BuildAsCodeCheck(BaseCheck):
         ci_services = ctx.dynamic_data["ci_services"]
 
         # Check if "build as code" holds for each build tool.
+        overall_res = CheckResultType.FAILED
+
         for tool in build_tools:
             res = self._check_build_tool(tool, ctx, ci_services, check_result)
 
             if res == CheckResultType.PASSED:
-                # Since the check passing is contingent on at least one passing,
-                # short-circuit if we do get a pass
+                # The check passing is contingent on at least one passing, if
+                # one passes treat whole check as passing. We do still need to
+                # run the others for justifications though to report multiple
+                # build tool usage.
                 # TODO: When more sophisticated build tool detection is
                 # implemented, consider whether this should be one fail = whole
                 # check fails instead
-                return CheckResultType.PASSED
+                overall_res = CheckResultType.PASSED
 
-        # No passes, so overall fail
-        return CheckResultType.FAILED
+        return overall_res
 
 
 registry.register(BuildAsCodeCheck())

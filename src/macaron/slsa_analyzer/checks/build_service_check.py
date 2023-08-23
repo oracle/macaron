@@ -277,9 +277,10 @@ class BuildServiceCheck(BaseCheck):
             res = self._check_build_tool(tool, ctx, check_result, ci_services)
 
             if res == CheckResultType.PASSED:
-                # Pass at some point so treat as entire check pass; short-circuit
+                # Pass at some point so treat as entire check pass; we don't
+                # short-circuit for the sake of full justification reporting
+                # though.
                 all_passing = True
-                break
 
         if not all_passing or not build_tools:
             fail_msg = "The target repository does not have a build service for at least one build tool."
