@@ -94,16 +94,15 @@ To analyze a repository on a self-hosted GitLab instance, you need to do the fol
 Providing a PURL string instead of a repository path
 ''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-Instead of providing the repository path for the analysis software component, a `PURL <https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst>`_. string
-for the target git repository could be used.
+Instead of providing the repository path to analyze a software component, you can use a `PURL <https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst>`_. string for the target git repository.
 
-To begin with, we follow the same steps for the configuration if needed (especially for self-hosted GitLab instances). The PURL string for a git repository could be created using the following format:
+To simplify the examples, we use the same configurations as above if needed (e.g., for the self-hosted GitLab instances). The PURL string for a git repository should have the following format:
 
 .. code-block::
 
   pkg:<git_service_domain>/<organization>/<name>
 
-The list bellow shows examples for the corresponding PURL string for different git repositories:
+The list bellow shows examples for the corresponding PURL strings for different git repositories:
 
 .. list-table:: Example of PURL strings for git repositories.
    :widths: 50 50
@@ -120,7 +119,7 @@ The list bellow shows examples for the corresponding PURL string for different g
    * - ``https://gitlab.com/gitlab-org/gitlab``
      - ``pkg:gitlab.com/gitlab-org/gitlab``
 
-After the PURL string has been obtained, the analysis can be run with:
+Run the analysis using the PURL string as follows:
 
 .. code-block:: shell
 
@@ -262,13 +261,11 @@ Running the policy engine
 Macaron's policy engine accepts policies specified in `Datalog <https://en.wikipedia.org/wiki/Datalog>`_. An example policy
 can verify if a project and all its dependencies pass certain checks. We use `Soufflé <https://souffle-lang.github.io/index.html>`_
 as the Datalog engine in Macaron. Once you run the checks on a target project as described :ref:`here <analyze-action>`,
-the check results will be stored in ``macaron.db`` in the output directory. Because the check results of different software components can be stored in the database at ``macaron.db``, we must specify the target software component in the Datalog policy file to be enforced by the policy engine. There are two ways that we can
-specify the target software component in the Datalog policy file:
+the check results will be stored in ``macaron.db`` in the output directory. We pass the check results to the policy engine by providing the path to ``macaron.db`` together with a Datalog policy file to be validated by the policy engine.
+In the Datalog policy file, we must specify the identifier for the target software component that we are interested in to validate the policy against. These are two ways to specify the target software component in the Datalog policy file:
 
 #. Using the complete name of the target component (e.g. ``github.com/oracle-quickstart/oci-micronaut``)
 #. Using the PURL string of the target component (e.g. ``pkg:github.com/oracle-quickstart/oci-micronaut@<commit_sha>``).
-
-However, the two methods would mostly share the same policy definition in the Datalog files.
 
 We use `Micronaut MuShop <https://github.com/oracle-quickstart/oci-micronaut>`_ project as a case study to show how to run the policy engine.
 Micronaut MuShop is a cloud-native microservices example for Oracle Cloud Infrastructure. When we run Macaron on the Micronaut MuShop GitHub
@@ -298,7 +295,7 @@ The differences between the two policy files can be observed below:
 
     apply_policy_to("oci_micronaut_dependencies", component_id) :- is_component(component_id, "<target_software_component_purl>").
 
-The PURL string for the target software component can be obtained when the :ref:`analyze command <analyze-action>` has finished. For example:
+The PURL string for the target software component is printed to the console by the :ref:`analyze command <analyze-action>`. For example:
 
 .. code:: shell
 
