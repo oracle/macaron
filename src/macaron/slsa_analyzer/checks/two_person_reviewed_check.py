@@ -10,7 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
 from macaron.database.database_manager import ORMBase
-from macaron.database.table_definitions import CheckFactsTable
+from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
@@ -21,7 +21,7 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class TwoPersonReviewedTable(CheckFactsTable, ORMBase):
+class TwoPersonReviewedTable(CheckFacts, ORMBase):
     """Check result table for two-person_reviewed."""
 
     __tablename__ = "_two_person_reviewed_check"
@@ -74,11 +74,11 @@ class TwoPersonReviewedCheck(BaseCheck):
             }
         )
 
-        pr_ids_list = api_client.list_pull_requests(ctx.repo_full_name)
+        pr_ids_list = api_client.list_pull_requests(ctx.component.repository.full_name)
         pr_ids_len = len(pr_ids_list)
         pass_num = 0  # If the pull request has been reviewed by 2 person, then add the number.
         for pr_id in pr_ids_list:
-            review_data = api_client.get_a_review(ctx.repo_full_name, str(pr_id))
+            review_data = api_client.get_a_review(ctx.component.repository.full_name, str(pr_id))
             reviewers = set()  # Use a set to avoid duplicates
             for review in review_data:
                 if review["state"] == "APPROVED" or review["state"] == "CHANGES_REQUESTED":
