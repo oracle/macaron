@@ -6,9 +6,10 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Sequence
 from enum import Enum
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.asset import AssetLocator
