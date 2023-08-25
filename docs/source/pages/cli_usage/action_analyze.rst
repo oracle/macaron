@@ -38,7 +38,9 @@ Options
 
 .. option:: -purl PACKAGE_URL, --package-url PACKAGE_URL
 
-    The PURL string as the unique identifier of the analysis target.
+    The PURL string used to uniquely identify the target software component for analysis. Note: this PURL string can be
+    consequently used in the policies passed
+    to the policy engine for the same target.
 
 .. option:: -rp REPO_PATH, --repo-path REPO_PATH
 

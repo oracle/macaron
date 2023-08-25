@@ -297,11 +297,12 @@ The differences between the two policy files can be observed below:
 
 The PURL string for the target software component is printed to the console by the :ref:`analyze command <analyze-action>`. For example:
 
-.. code:: shell
+.. code::
 
   > ./run_macaron.sh analyze -rp https://github.com/oracle-quickstart/oci-micronaut
   > ...
-  > 2023-08-15 14:36:56,672 [INFO] PURL of the main target software component is 'pkg:github.com/oracle-quickstart/oci-micronaut@3ebe0c9520a25feeae983eac6eb956de7da29ead'.
+  > 2023-08-15 14:36:56,672 [INFO] The PURL string for the main target software component in this analysis is
+  'pkg:github.com/oracle-quickstart/oci-micronaut@3ebe0c9520a25feeae983eac6eb956de7da29ead'.
   > 2023-08-15 14:36:56,672 [INFO] Analysis Completed!
 
 This example policy can verify if the Micronaut MuShop project and all its dependencies pass the ``build_service`` check
