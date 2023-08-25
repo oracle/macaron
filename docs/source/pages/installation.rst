@@ -67,3 +67,11 @@ Ideally, the GitHub token must have **read** permissions for the repositories th
 After generating a GitHub personal-access token, please store its value in an environment variable called ``GITHUB_TOKEN``. This environment variable will be read by Macaron for its **analyze** command.
 
 Now that you have successfully downloaded and installed Macaron, please refer to :ref:`Using Macaron <using-macaron>` for the instructions on how to use Macaron.
+
+.. _proxy_configuration:
+
+-------------------
+Proxy Configuration
+-------------------
+
+TODO

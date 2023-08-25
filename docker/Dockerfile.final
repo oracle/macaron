@@ -44,6 +44,11 @@ RUN : \
 
 COPY --chown=macaron:macaron docker/user.sh $HOME/user.sh
 
+# Prepare the container for Maven and Gradle builds.
+RUN : \
+    && mkdir -p $HOME/.m2 \
+    && mkdir -p $HOME/.gradle
+
 # We enable the root user here so that the user.sh script can modify the
 # GID and UID of user macaron at startup to match the GID and UID
 # of the current user in the host machine.

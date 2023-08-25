@@ -367,6 +367,16 @@ if [[ -n "${datalog_policy_file}" ]]; then
     mounts+=("-v" "${datalog_policy_file}:${MACARON_WORKSPACE}/policy/${file_name}:ro")
 fi
 
+# Determine that ~/.gradle/gradle.properties exists to be mounted into ${MACARON_WORKSPACE}/gradle.properties
+if [[ -f "$HOME/.gradle/gradle.properties" ]]; then
+    mounts+=("-v" "$HOME/.gradle/gradle.properties":"${MACARON_WORKSPACE}/gradle.properties:ro")
+fi
+
+# Determine that ~/.m2/settings.xml exists to be mounted into ${MACARON_WORKSPACE}/settings.xml
+if [[ -f "$HOME/.m2/settings.xml" ]]; then
+    mounts+=("-v" "$HOME/.m2/settings.xml":"${MACARON_WORKSPACE}/settings.xml:ro")
+fi
+
 # Set up proxy.
 # We respect the host machine's proxy environment variables.
 proxy_var_names=(
@@ -378,6 +388,7 @@ proxy_var_names=(
     "HTTPS_PROXY"
     "FTP_PROXY"
     "NO_PROXY"
+    "MAVEN_OPTS"
 )
 
 for v in "${proxy_var_names[@]}"; do
