@@ -219,7 +219,10 @@ class Analyzer:
 
                 db_session.add(analysis)
 
-                logger.info("PURL of the main target software component is '%s'.", main_record.context.component.purl)
+                logger.info(
+                    "The PURL string for the main target software component in this analysis is '%s'.",
+                    main_record.context.component.purl,
+                )
                 logger.info("Analysis Completed!")
                 return os.EX_OK
         except sqlalchemy.exc.SQLAlchemyError as error:
@@ -380,7 +383,7 @@ class Analyzer:
                 status=SCMStatus.ANALYSIS_FAILED,
             )
         except DuplicateCmpError as error:
-            logger.info(error)
+            logger.debug(error)
             return Record(
                 record_id=repo_id,
                 description=str(error),
@@ -502,7 +505,7 @@ class Analyzer:
         This method is used to handle the cases where the purl type value is not the git domain but a pre-defined
         repo-based type in https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst.
 
-        Note that this method will be updated when there are new pre-defined type as per the PURL specification.
+        Note that this method will be updated when there are new pre-defined types as per the PURL specification.
 
         Parameters
         ----------
@@ -608,6 +611,7 @@ class Analyzer:
         DuplicateCmpError
             The component is already analyzed in the same session.
         """
+        # Note: the component created in this function will be added to the database.
         available_domains = [git_service.domain for git_service in GIT_SERVICES if git_service.domain]
         try:
             analysis_target = Analyzer.to_analysis_target(config, available_domains)

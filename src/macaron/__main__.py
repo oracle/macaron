@@ -30,13 +30,17 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     if not (analyzer_single_args.repo_path or analyzer_single_args.package_url or analyzer_single_args.config_path):
         # We don't mention --config-path as a possible option in this log message as it going to be move soon.
         # See: https://github.com/oracle/macaron/issues/417
-        logger.error("Analysis target missing. Please provide package url and/or repo path.")
+        logger.error(
+            "Analysis target missing. Please provide a package url (PURL) and/or repo path. "
+            + "Examples of a PURL can be seen at https://github.com/package-url/purl-spec: "
+            + "pkg:github/micronaut-projects/micronaut-core."
+        )
         sys.exit(os.EX_USAGE)
 
     if analyzer_single_args.config_path and (analyzer_single_args.package_url or analyzer_single_args.repo_path):
         # TODO: revisit when the config-path option is moved.
         # See: https://github.com/oracle/macaron/issues/417
-        logger.error("Cannot provide both config path and (package url and/or repo path).")
+        logger.error("Cannot provide both config path and (package url (PURL) and/or repo path).")
         sys.exit(os.EX_USAGE)
 
     # Set provenance expectation path.
@@ -76,6 +80,11 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         # Get user config from yaml file
         run_config = YamlLoader.load(analyzer_single_args.config_path)
         if run_config is None:
+            # The error mypy raises here is "Statement is unreachable" for the log statement.
+            # This is because the return type of `YamlLoader.load` is Any (which is not correct).
+            # TODO: revisit this issue together with the ``Configuration`` class issue mentioned in
+            # https://github.com/oracle/macaron/pull/401#discussion_r1303695425.
+            logger.error("The input yaml config at %s is invalid.", analyzer_single_args.config_path)  # type: ignore
             sys.exit(os.EX_DATAERR)
     else:
         repo_path = analyzer_single_args.repo_path
@@ -87,7 +96,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
             # To provide the purl together with the repository path, the user must specify the branch and commit
             # digest.
             logger.error(
-                "Please provide branch and commit digest for the repo at %s because a PURL %s is also provided",
+                "Please provide the branch and commit digest for the repo at %s that matches to the PURL string %s.",
                 repo_path,
                 purl,
             )
@@ -99,8 +108,8 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         # Therefore, it could be cases where the ``purl`` field is initialized as an empty string in the constructor
         # of the Configuration class, but if `` analyzer_single_args.package_url`` is None, the ``purl`` field is set
         # to None in the Configuration instance.
-        # This in-consistence could cause potential issues when Macaron handle those inputs.
-        # TODO: improve the implementation of Configuation to remove such non-deterministic behaviors.
+        # This inconsistency could cause potential issues when Macaron handles those inputs.
+        # TODO: improve the implementation of ``Configuation`` class to avoid such inconsistencies.
         run_config = {
             "target": {
                 "id": purl or repo_path or "",
@@ -239,11 +248,11 @@ def main(argv: list[str] | None = None) -> None:
     # Use Macaron to analyze one single repository.
     single_analyze_parser = sub_parser.add_parser(name="analyze")
 
-    # We set this group, which makes the usage of --config-path and --repo-path to be mutual exclusive, to optional
-    # so that the user could provide the --package-url by itself while persisting the current behavior of Macaron.
-    # Note that if the user provide both --purl and --config-path, we will still raise error, which is handled within
-    # the ``analyze_slsa_levels_single`` method.
-    # When we remove the --config-path option is moved, we can remove this group and instead adding all relevant
+    # We make the mutually exclusive usage of --config-path and --repo-path optional
+    # so that the user can provide the --package-url separately while keeping the current behavior of Macaron.
+    # Note that if the user provides both --package-url and --config-path, we will still raise an error,
+    # which is handled within the ``analyze_slsa_levels_single`` method.
+    # When we remove the --config-path option, we can remove this group and instead add all relevant
     # options in the analyze command through ``single_analyze_parser``.
     # See: https://github.com/oracle/macaron/issues/417
     group = single_analyze_parser.add_mutually_exclusive_group(required=False)
@@ -270,7 +279,11 @@ def main(argv: list[str] | None = None) -> None:
         "--package-url",
         required=False,
         type=str,
-        help=("The PURL string as the unique identifier of the analysis target."),
+        help=(
+            "The PURL string used to uniquely identify the target software component for analysis. "
+            + "Note: this PURL string can be consequently used in the policies passed to the policy "
+            + "engine for the same target."
+        ),
     )
 
     single_analyze_parser.add_argument(
