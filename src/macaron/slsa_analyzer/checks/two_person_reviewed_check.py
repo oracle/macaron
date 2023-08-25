@@ -6,6 +6,7 @@
 import logging
 import os
 
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
@@ -25,9 +26,15 @@ class TwoPersonReviewedTable(CheckFacts, ORMBase):
     """Check result table for two-person_reviewed."""
 
     __tablename__ = "_two_person_reviewed_check"
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+
     failed_pr_id: Mapped[str] = mapped_column(String, nullable=False)
     # repo_name: Mapped[str] = mapped_column(String, nullable=False)
     # reviewer_name: Mapped[str] = mapped_column(String, nullable=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "_two_person_reviewed_check",
+    }
 
 
 class TwoPersonReviewedCheck(BaseCheck):
