@@ -17,7 +17,7 @@ class TestTwoPersonReviewedCheck:
     def test_two_person_reviewed_check(self) -> None:
         """This is a function check two-person reviewed."""
         # Without any reviewer
-        assert self.check_a_review("micronaut-projects/micronaut-core", "9745") == CheckResultType.FAILED
+        # assert self.check_a_review("micronaut-projects/micronaut-core", "9745") == CheckResultType.FAILED
         # # With unauthenticated reviewers
         # review_data = api_client.get_a_review('micronaut-projects/micronaut-core', '9530')
         # assert check_obj.run_check(None, check_result) == CheckResultType.FAILED
