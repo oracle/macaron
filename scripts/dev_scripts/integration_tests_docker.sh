@@ -86,6 +86,15 @@ $RUN_MACARON_SCRIPT analyze -rp https://github.com/apache/maven -b master -d 676
 $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: Analyzing with PURL and repository path without dependency resolution."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.json
+JSON_RESULT=$WORKSPACE/output/reports/maven/apache/maven/maven.json
+$RUN_MACARON_SCRIPT analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
+
+$COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
 echo "The CUE expectation file is provided as a single file path."
 echo -e "----------------------------------------------------------------------------------\n"
@@ -141,6 +150,28 @@ then
     log_fail
 fi
 GITHUB_TOKEN="$temp"
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: test analyzing with invalid PURL"
+echo -e "----------------------------------------------------------------------------------\n"
+$RUN_MACARON_SCRIPT analyze -purl invalid-purl -rp https://github.com/apache/maven --skip-deps
+
+if [ $? -eq 0 ];
+then
+    echo -e "Expect non-zero status code but got $?."
+    log_fail
+fi
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: test analyzing with both PURL and repository path but no branch and digest are provided."
+echo -e "----------------------------------------------------------------------------------\n"
+$RUN_MACARON_SCRIPT analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven --skip-deps
+
+if [ $? -eq 0 ];
+then
+    echo -e "Expect non-zero status code but got $?."
+    log_fail
+fi
 
 if [ $RESULT_CODE -ne 0 ];
 then
