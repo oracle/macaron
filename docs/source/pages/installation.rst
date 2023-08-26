@@ -74,4 +74,7 @@ Now that you have successfully downloaded and installed Macaron, please refer to
 Proxy Configuration
 -------------------
 
-TODO
+set MAVEN_OPTS
+use ~/.m2/settings.xml
+use ~/.gradle/gradle.properties
+GRADLE_OPTS or JAVA_OPTS: https://riptutorial.com/gradle/example/17338/using-the-gradle-wrapper-behind-a-proxy
