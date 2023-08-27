@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-13 10:04:00"
+        "timestamps": "2023-09-06 22:38:46"
     },
     "target": {
         "info": {
@@ -508,7 +508,7 @@
                         ],
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.9.0"
+                                "id": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/release.yml"
                             },
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
                             "invocation": {
@@ -517,7 +517,7 @@
                                     "digest": {
                                         "sha1": "3c6605283d2f6290321b581afa8c56a34659e324"
                                     },
-                                    "entryPoint": ".github/workflows/release.yml"
+                                    "entryPoint": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/release.yml"
                                 },
                                 "parameters": {},
                                 "environment": {
@@ -753,8 +753,8 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 3,
-                "PASSED": 6,
+                "FAILED": 6,
+                "PASSED": 4,
                 "SKIPPED": 0,
                 "UNKNOWN": 1
             },
@@ -778,10 +778,10 @@
                     ],
                     "justification": [
                         {
-                            "The target repository uses build tool gradle to deploy": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/gradle.yml",
-                            "The build is triggered by": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/gradle.yml"
+                            "The target repository uses build tool gradle to deploy": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/release.yml",
+                            "The build is triggered by": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/release.yml"
                         },
-                        "Deploy command: ['./gradlew', 'publishToSonatype', 'docs', '--no-daemon']",
+                        "Deploy command: ['./gradlew', 'publishAllPublicationsToBuildRepository', 'publishToSonatype', 'closeAndReleaseSonatypeStagingRepository']",
                         "However, could not find a passing workflow run."
                     ],
                     "result_type": "PASSED"
@@ -889,6 +889,18 @@
                         "Could not find a trusted level 3 builder as a GitHub Actions workflow."
                     ],
                     "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_two_person_reviewed_1",
+                    "check_description": "Check whether the submitted code has been reviewd by two people.",
+                    "slsa_requirements": [
+                        "Two-person reviewed - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "90 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 90 / 159"
+                    ],
+                    "result_type": "FAILED"
                 }
             ]
         }
@@ -898,15 +910,23 @@
         "unique_dep_repos": 2,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 2
+            },
+            {
+                "check_id": "mcn_two_person_reviewed_1",
+                "num_deps_pass": 2
+            },
+            {
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             },
             {
@@ -918,6 +938,10 @@
                 "num_deps_pass": 1
             },
             {
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 2
+            },
+            {
                 "check_id": "mcn_version_control_system_1",
                 "num_deps_pass": 2
             },
@@ -926,16 +950,8 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_script_1",
-                "num_deps_pass": 2
-            },
-            {
-                "check_id": "mcn_provenance_level_three_1",
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
-                "num_deps_pass": 2
             }
         ],
         "dep_status": [

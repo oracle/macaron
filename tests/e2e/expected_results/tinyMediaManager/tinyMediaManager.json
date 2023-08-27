@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-12 17:07:11"
+        "timestamps": "2023-08-29 21:59:37"
     },
     "target": {
         "info": {
@@ -65,8 +65,8 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 8,
-                "PASSED": 2,
+                "FAILED": 7,
+                "PASSED": 3,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
@@ -80,6 +80,17 @@
                     "justification": [
                         "The target repository uses build tool maven.",
                         "The target repository uses build tool docker."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_two_person_reviewed_1",
+                    "check_description": "Check whether the submitted code has been reviewd by two people.",
+                    "slsa_requirements": [
+                        "Two-person reviewed - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "0 pull requests have been reviewed by at least two person.The pass rate is 0 / 0"
                     ],
                     "result_type": "PASSED"
                 },
@@ -207,11 +218,19 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
+                "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_witness_level_one_1",
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_two_person_reviewed_1",
                 "num_deps_pass": 0
             },
             {
@@ -235,7 +254,23 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_script_1",
+                "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
             {

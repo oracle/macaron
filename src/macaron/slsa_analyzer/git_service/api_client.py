@@ -622,7 +622,7 @@ class GhAPIClient(BaseAPIClient):
 
         return True
 
-    def list_pull_requests(self, full_name: str) -> list:
+    def list_pull_requests(self, full_name: str, branch_name: str) -> list:
         """Query the GitHub API PR IDs within the target repository.
 
         The url would be in the following form:
@@ -644,9 +644,9 @@ class GhAPIClient(BaseAPIClient):
         ``https://api.github.com/repos/owner/repo/pulls``
 
         """
-        url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/pulls"  # fetch PRs
+        url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/pulls?state=closed&base={branch_name}"  # fetch PRs
         params: dict = {"state": "all"}
-        pull_request_ids: list = []
+        pull_request_objects: list = []
         while True:
             # GitHub paginates responses to avoid overwhelming the client with a large amount of
             # data in a single response.
@@ -658,7 +658,8 @@ class GhAPIClient(BaseAPIClient):
                 return []
 
             response_data_json = response_data.json()
-            pull_request_ids.extend([pr["number"] for pr in response_data_json])
+            pull_request_objects.extend(list(response_data_json))
+
             link_header = response_data.headers.get("Link")
 
             if link_header is not None and "next" in link_header:
@@ -670,9 +671,10 @@ class GhAPIClient(BaseAPIClient):
             else:
                 break
 
-        return pull_request_ids
+        # return pull_request_ids
+        return pull_request_objects
 
-    def get_a_review(self, full_name: str, pr_id: str) -> Any:
+    def get_a_review(self, full_name: str, pr_number: str) -> Any:
         """Query the GitHub API for the reviews of a PR.
 
         The url would be in the following form:
@@ -696,10 +698,8 @@ class GhAPIClient(BaseAPIClient):
         ``https://api.github.com/repos/owner/repo/pulls/9684/reviews``
 
         """
-        logger.debug("Get the reviews for %s with PR id %s.", full_name, pr_id)
-        url = (
-            f"{GhAPIClient._REPO_END_POINT}/{full_name}/pulls/{pr_id}/reviews"  # fetch reviews only cocntain reviewers
-        )
+        logger.debug("Get the reviews for %s with PR id %s.", full_name, pr_number)
+        url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/pulls/{pr_number}/reviews"  # fetch reviews only cocntain reviewers
         params: dict = {"state": "all"}
 
         response_data = send_get_http_raw(url, self.headers, params)

@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-12 17:28:04"
+        "timestamps": "2023-09-07 00:27:28"
     },
     "target": {
         "info": {
@@ -199,6 +199,18 @@
                         "Could not find a trusted level 3 builder as a GitHub Actions workflow."
                     ],
                     "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_two_person_reviewed_1",
+                    "check_description": "Check whether the submitted code has been reviewd by two people.",
+                    "slsa_requirements": [
+                        "Two-person reviewed - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "134 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 134 / 406"
+                    ],
+                    "result_type": "FAILED"
                 }
             ]
         }
@@ -208,23 +220,31 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_provenance_level_three_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_infer_artifact_pipeline_1",
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_two_person_reviewed_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             },
             {
                 "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_service_1",
                 "num_deps_pass": 0
             },
             {
@@ -236,15 +256,7 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_script_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             }
         ],
