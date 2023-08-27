@@ -627,7 +627,7 @@ class JFrogMavenRegistry(PackageRegistry):
 
         Returns
         -------
-        JFrogMavenAsset | None
+        JFrogMavenAssetMetadata | None
             The asset's metadata, or ``None`` if the metadata cannot be retrieved.
         """
         file_path = self.construct_maven_repository_path(
@@ -677,6 +677,15 @@ class JFrogMavenRegistry(PackageRegistry):
 
         Documentation: https://jfrog.com/help/r/jfrog-rest-apis/file-info.
 
+        Parameters
+        ----------
+        file_info_payload : str
+            The File Info request payload used to extract the metadata of an asset.
+
+        Returns
+        -------
+        JFrogMavenAssetMetadata | None
+            The asset's metadata, or ``None`` if the metadata cannot be retrieved.
         """
         try:
             json_payload: JsonType = json.loads(file_info_payload)
@@ -714,7 +723,7 @@ class JFrogMavenRegistry(PackageRegistry):
 
         download_uri = json_payload.get("downloadUri")
         if not download_uri or not isinstance(download_uri, str):
-            logger.debug("Could not extract the value of the 'ownload_uri' field from the File Info payload.")
+            logger.debug("Could not extract the value of the 'download_uri' field from the File Info payload.")
             return None
 
         return JFrogMavenAssetMetadata(
