@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-12 22:55:15"
+        "timestamps": "2023-09-06 22:38:46"
     },
     "target": {
         "info": {
@@ -21,7 +21,7 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/ben-manes/caffeine/blob/05a040c2478341bab8a58a02b3dc1fe14d626d72/.github/workflows/build.yml"
+                                "id": "https://github.com/ben-manes/caffeine/blob/05a040c2478341bab8a58a02b3dc1fe14d626d72/.github/workflows/release.yml"
                             },
                             "buildType": "Custom github_actions",
                             "invocation": {
@@ -30,7 +30,7 @@
                                     "digest": {
                                         "sha1": "05a040c2478341bab8a58a02b3dc1fe14d626d72"
                                     },
-                                    "entryPoint": "https://github.com/ben-manes/caffeine/blob/05a040c2478341bab8a58a02b3dc1fe14d626d72/.github/workflows/build.yml"
+                                    "entryPoint": "https://github.com/ben-manes/caffeine/blob/05a040c2478341bab8a58a02b3dc1fe14d626d72/.github/workflows/release.yml"
                                 },
                                 "parameters": {},
                                 "environment": {}
@@ -110,8 +110,8 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 6,
-                "PASSED": 4,
+                "FAILED": 5,
+                "PASSED": 5,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
@@ -124,10 +124,10 @@
                     ],
                     "justification": [
                         {
-                            "The target repository uses build tool gradle to deploy": "https://github.com/ben-manes/caffeine/blob/05a040c2478341bab8a58a02b3dc1fe14d626d72/.github/workflows/build.yml",
-                            "The build is triggered by": "https://github.com/ben-manes/caffeine/blob/05a040c2478341bab8a58a02b3dc1fe14d626d72/.github/workflows/build.yml"
+                            "The target repository uses build tool gradle to deploy": "https://github.com/ben-manes/caffeine/blob/05a040c2478341bab8a58a02b3dc1fe14d626d72/.github/workflows/release.yml",
+                            "The build is triggered by": "https://github.com/ben-manes/caffeine/blob/05a040c2478341bab8a58a02b3dc1fe14d626d72/.github/workflows/release.yml"
                         },
-                        "Deploy command: ['./gradlew', 'publishToSonatype']",
+                        "Deploy command: ['./gradlew', 'publishToSonatype', 'closeAndReleaseSonatypeStagingRepository', '-Prelease']",
                         "However, could not find a passing workflow run.",
                         "The target repository does not use maven to deploy."
                     ],
@@ -152,6 +152,18 @@
                     ],
                     "justification": [
                         "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_two_person_reviewed_1",
+                    "check_description": "Check whether the submitted code has been reviewd by two people.",
+                    "slsa_requirements": [
+                        "Two-person reviewed - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "0 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 0 / 0"
                     ],
                     "result_type": "PASSED"
                 },
@@ -254,23 +266,31 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_provenance_level_three_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_infer_artifact_pipeline_1",
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_two_person_reviewed_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             },
             {
                 "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_service_1",
                 "num_deps_pass": 0
             },
             {
@@ -282,15 +302,7 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_script_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             }
         ],

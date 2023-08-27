@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-12 17:24:16"
+        "timestamps": "2023-08-29 23:54:52"
     },
     "target": {
         "info": {
@@ -244,6 +244,17 @@
                         "Could not find a trusted level 3 builder as a GitHub Actions workflow."
                     ],
                     "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_two_person_reviewed_1",
+                    "check_description": "Check whether the submitted code has been reviewd by two people.",
+                    "slsa_requirements": [
+                        "Two-person reviewed - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "21 pull requests have been reviewed by at least two person.The pass rate is 21 / 62"
+                    ],
+                    "result_type": "FAILED"
                 }
             ]
         }
@@ -253,7 +264,19 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
+                "check_id": "mcn_provenance_witness_level_one_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_two_person_reviewed_1",
                 "num_deps_pass": 0
             },
             {
@@ -261,7 +284,19 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_provenance_witness_level_one_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_two_person_reviewed_1",
                 "num_deps_pass": 0
             },
             {
@@ -273,6 +308,10 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_version_control_system_1",
                 "num_deps_pass": 0
             },
@@ -281,15 +320,7 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_script_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             }
         ],
