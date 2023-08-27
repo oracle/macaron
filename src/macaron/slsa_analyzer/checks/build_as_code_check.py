@@ -127,6 +127,21 @@ class BuildAsCodeCheck(BaseCheck):
                         return str(com)
         return ""
 
+    def _add_to_result_table(self, facts: BuildAsCodeFacts, check_result: CheckResult) -> None:
+        """Add to the check result result tables, creating the list if it doesn't yet exist.
+
+        Parameters
+        ----------
+        facts : BuildAsCodeFacts
+            Facts to add to the result tables.
+        check_result : CheckResult
+            The object containing result data of a check.
+        """
+        if "result_tables" in check_result.keys():
+            check_result["result_tables"].append(facts)
+        else:
+            check_result["result_tables"] = [facts]
+
     def _check_build_tool(
         self, build_tool: BaseBuildTool, ctx: AnalyzeContext, ci_services: list[CIInfo], check_result: CheckResult
     ) -> CheckResultType | None:
@@ -221,15 +236,16 @@ class BuildAsCodeCheck(BaseCheck):
                                 ] = ctx.component.repository.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                                 predicate["metadata"]["buildInvocationId"] = html_url
-                            check_result["result_tables"] = [
+                            self._add_to_result_table(
                                 BuildAsCodeFacts(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
                                     build_trigger=trigger_link,
                                     deploy_command=workflow_name,
                                     build_status_url=html_url,
-                                )
-                            ]
+                                ),
+                                check_result,
+                            )
                             return CheckResultType.PASSED
 
                 for bash_cmd in ci_info["bash_commands"]:
@@ -284,15 +300,16 @@ class BuildAsCodeCheck(BaseCheck):
                             ] = ctx.component.repository.commit_sha
                             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                             predicate["metadata"]["buildInvocationId"] = html_url
-                        check_result["result_tables"] = [
+                        self._add_to_result_table(
                             BuildAsCodeFacts(
                                 build_tool_name=build_tool.name,
                                 ci_service_name=ci_service.name,
                                 build_trigger=trigger_link,
                                 deploy_command=deploy_cmd,
                                 build_status_url=html_url,
-                            )
-                        ]
+                            ),
+                            check_result,
+                        )
 
                         return CheckResultType.PASSED
 
@@ -327,13 +344,14 @@ class BuildAsCodeCheck(BaseCheck):
                                     "sha1"
                                 ] = ctx.component.repository.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = config_name
-                            check_result["result_tables"] = [
+                            self._add_to_result_table(
                                 BuildAsCodeFacts(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
                                     deploy_command=deploy_kw,
-                                )
-                            ]
+                                ),
+                                check_result,
+                            )
                             return CheckResultType.PASSED
 
         pass_msg = f"The target repository does not use {build_tool.name} to deploy."

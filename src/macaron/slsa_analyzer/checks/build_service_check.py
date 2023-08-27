@@ -117,6 +117,21 @@ class BuildServiceCheck(BaseCheck):
                         return str(com)
         return ""
 
+    def _add_to_result_table(self, facts: BuildServiceFacts, check_result: CheckResult) -> None:
+        """Add to the check result result tables, creating the list if it doesn't yet exist.
+
+        Parameters
+        ----------
+        facts : BuildServiceFacts
+            Facts to add to the result tables.
+        check_result : CheckResult
+            The object containing result data of a check.
+        """
+        if "result_tables" in check_result.keys():
+            check_result["result_tables"].append(facts)
+        else:
+            check_result["result_tables"] = [facts]
+
     def _check_build_tool(
         self, build_tool: BaseBuildTool, ctx: AnalyzeContext, check_result: CheckResult, ci_services: list[CIInfo]
     ) -> CheckResultType | None:
@@ -177,13 +192,14 @@ class BuildServiceCheck(BaseCheck):
                         else "However, could not find a passing workflow run.",
                     ]
                     check_result["justification"].extend(justification)
-                    check_result["result_tables"] = [
+                    self._add_to_result_table(
                         BuildServiceFacts(
                             build_tool_name=build_tool.name,
                             build_trigger=trigger_link,
                             ci_service_name=ci_service.name,
-                        )
-                    ]
+                        ),
+                        check_result,
+                    )
 
                     if (
                         ctx.dynamic_data["is_inferred_prov"]
@@ -218,12 +234,13 @@ class BuildServiceCheck(BaseCheck):
                             f"build tool {build_tool.name} in {ci_service.name} to "
                             f"build."
                         )
-                        check_result["result_tables"] = [
+                        self._add_to_result_table(
                             BuildServiceFacts(
                                 build_tool_name=build_tool.name,
                                 ci_service_name=ci_service.name,
-                            )
-                        ]
+                            ),
+                            check_result,
+                        )
 
                         if (
                             ctx.dynamic_data["is_inferred_prov"]
