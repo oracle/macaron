@@ -107,21 +107,6 @@ class JFrogMavenRegistry(PackageRegistry):
 
     For more details on JFrog Artifactory repository, see:
     https://jfrog.com/help/r/jfrog-artifactory-documentation/repository-management
-
-    Attributes
-    ----------
-    hostname : str
-        The hostname of the JFrog instance.
-    repo : str
-        The Artifactory repository with Maven layout on the JFrog instance.
-    request_timeout : int
-        The timeout (in seconds) for regular requests made to the package registry.
-    download_timeout : int
-        The timeout (in seconds) for downloading files from the package registry.
-    enabled : bool
-        Whether the package registry should be active in the analysis or not.
-        "Not active" means no target repo/software component can be matched against
-        this package registry.
     """
 
     def __init__(
@@ -132,6 +117,24 @@ class JFrogMavenRegistry(PackageRegistry):
         download_timeout: int | None = None,
         enabled: bool | None = None,
     ) -> None:
+        """
+        Instantiate a JFrogMavenRegistry object.
+
+        Parameters
+        ----------
+        hostname : str
+            The hostname of the JFrog instance.
+        repo : str
+            The Artifactory repository with Maven layout on the JFrog instance.
+        request_timeout : int
+            The timeout (in seconds) for regular requests made to the package registry.
+        download_timeout : int
+            The timeout (in seconds) for downloading files from the package registry.
+        enabled : bool
+            Whether the package registry should be active in the analysis or not.
+            "Not active" means no target repo/software component can be matched against
+            this package registry.
+        """
         self.hostname = hostname or ""
         self.repo = repo or ""
         self.request_timeout = request_timeout or 10
