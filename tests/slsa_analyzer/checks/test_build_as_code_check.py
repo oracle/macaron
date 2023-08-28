@@ -280,7 +280,7 @@ def test_travis_ci_deploy(
         latest_release={},
         provenances=[],
     )
-    check_result = CheckResult(justification=[])  # type: ignore
+    check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
     gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     gradle_deploy.component.repository.fs_path = str(repo_path.absolute())
     gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool]
@@ -289,28 +289,13 @@ def test_travis_ci_deploy(
     assert check.run_check(gradle_deploy, check_result) == expect_result
 
 
-@pytest.mark.parametrize(
-    "check_result",
-    [
-        (CheckResult(justification=[])),  # type: ignore
-        (CheckResult(justification=[], result_tables=[])),  # type: ignore
-    ],
-)
 def test_multibuild_facts_saved(
     macaron_path: Path,
     gradle_tool: Gradle,
     maven_tool: Maven,
     github_actions_service: GitHubActions,
-    check_result: CheckResult,
-):
-    """Test that facts for all build tools are saved in the results tables in multi-build tool scenarios.
-
-    Parameters
-    ----------
-    check_result : CheckResult
-        Dictionary for check results; parameterised for cases where result_tables
-        is and isn't initialised.
-    """
+) -> None:
+    """Test that facts for all build tools are saved in the results tables in multi-build tool scenarios."""
     check = BuildAsCodeCheck()
     bash_commands = BashCommands(
         caller_path="source_file",
@@ -318,6 +303,7 @@ def test_multibuild_facts_saved(
         CI_type="github_actions",
         commands=[["./gradlew", "publishToSonatype"], ["mvn", "deploy"]],
     )
+    check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
     ci_info = CIInfo(
         service=github_actions_service,
         bash_commands=[bash_commands],
@@ -333,6 +319,6 @@ def test_multibuild_facts_saved(
     assert check.run_check(multi_deploy, check_result) == CheckResultType.PASSED
 
     # Check facts exist for both gradle and maven
-    existing_facts = [f.build_tool_name for f in check_result["result_tables"]]  # type: ignore
+    existing_facts = [f.build_tool_name for f in check_result["result_tables"]]
     assert gradle_tool.name in existing_facts
     assert maven_tool.name in existing_facts

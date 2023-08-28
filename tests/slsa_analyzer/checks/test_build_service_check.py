@@ -254,23 +254,12 @@ class TestBuildServiceCheck(MacaronTestCase):
             provenances=[],
         )
 
-        gradle_deploy = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
-        gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle, maven]
-        gradle_deploy.dynamic_data["ci_services"] = [ci_info]
-
-        # With check_result missing result_tables
-        check_result = CheckResult(justification=[])  # type: ignore
-
-        assert check.run_check(gradle_deploy, check_result) == CheckResultType.PASSED
-        # Check facts exist for both gradle and maven
-        existing_facts = [f.build_tool_name for f in check_result["result_tables"]]
-        assert gradle.name in existing_facts
-        assert maven.name in existing_facts
-
-        # With pre-defined result_tables in check_result
+        multi_deploy = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
+        multi_deploy.dynamic_data["build_spec"]["tools"] = [gradle, maven]
+        multi_deploy.dynamic_data["ci_services"] = [ci_info]
         check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
 
-        assert check.run_check(gradle_deploy, check_result) == CheckResultType.PASSED
+        assert check.run_check(multi_deploy, check_result) == CheckResultType.PASSED
         # Check facts exist for both gradle and maven
         existing_facts = [f.build_tool_name for f in check_result["result_tables"]]
         assert gradle.name in existing_facts
