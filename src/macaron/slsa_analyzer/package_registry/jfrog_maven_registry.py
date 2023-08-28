@@ -124,13 +124,13 @@ class JFrogMavenRegistry(PackageRegistry):
         ----------
         hostname : str
             The hostname of the JFrog instance.
-        repo : str
+        repo : str | None
             The Artifactory repository with Maven layout on the JFrog instance.
-        request_timeout : int
+        request_timeout : int | None
             The timeout (in seconds) for regular requests made to the package registry.
-        download_timeout : int
+        download_timeout : int | None
             The timeout (in seconds) for downloading files from the package registry.
-        enabled : bool
+        enabled : bool | None
             Whether the package registry should be active in the analysis or not.
             "Not active" means no target repo/software component can be matched against
             this package registry.
