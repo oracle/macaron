@@ -43,7 +43,7 @@ To verify your setup, go to the directory containing the downloaded ``run_macaro
 
 .. note:: In the first execution, this script will download the Macaron Docker image from ``ghcr.io/oracle/macaron`` which can take some time. However, the next time you run it, the docker image available on your local host will be used.
 
-.. note:: By default, ``latest`` is used as the tag for the downloaded image. You can choose a specific tag by assigning the environment variable ``MACARON_IMAGE_TAG``. For example to run Macaron v0.1.0 run: ``MACARON_IMAGE_TAG=v0.1.0 && ./run_macaron.sh --help``
+.. note:: By default, ``latest`` is used as the tag for the downloaded image. You can choose a specific tag by assigning the environment variable ``MACARON_IMAGE_TAG``. For example to run Macaron v0.1.0 run: ``MACARON_IMAGE_TAG=v0.1.0 ./run_macaron.sh --help``
 
 .. _prepare-github-token:
 
