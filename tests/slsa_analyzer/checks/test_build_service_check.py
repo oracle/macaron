@@ -3,7 +3,6 @@
 
 """This module contains the tests for the Build Service Check."""
 
-
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.parsers.bashparser import BashCommands
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
@@ -179,24 +178,24 @@ class TestBuildServiceCheck(MacaronTestCase):
         assert check.run_check(no_pip_interpreter_build_ci, check_result) == CheckResultType.FAILED
 
         # Maven and Gradle are both used in CI to build the artifact
-        gradle_build_ci = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
-        gradle_build_ci.dynamic_data["build_spec"]["tools"] = [gradle, maven]
+        multi_build_ci = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
+        multi_build_ci.dynamic_data["build_spec"]["tools"] = [gradle, maven]
         bash_commands["commands"] = [["./gradlew", "build"], ["mvn", "package"]]
-        gradle_build_ci.dynamic_data["ci_services"] = [ci_info]
-        assert check.run_check(gradle_build_ci, check_result) == CheckResultType.PASSED
+        multi_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(multi_build_ci, check_result) == CheckResultType.PASSED
 
         # Maven is used in CI to build the artifact, Gradle is not
-        gradle_build_ci = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
-        gradle_build_ci.dynamic_data["build_spec"]["tools"] = [gradle, maven]
+        maven_build_ci = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
+        maven_build_ci.dynamic_data["build_spec"]["tools"] = [gradle, maven]
         bash_commands["commands"] = [["mvn", "package"]]
-        gradle_build_ci.dynamic_data["ci_services"] = [ci_info]
-        assert check.run_check(gradle_build_ci, check_result) == CheckResultType.PASSED
+        maven_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(maven_build_ci, check_result) == CheckResultType.PASSED
 
         # No build tools used
-        gradle_build_ci = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
-        gradle_build_ci.dynamic_data["build_spec"]["tools"] = []
-        gradle_build_ci.dynamic_data["ci_services"] = [ci_info]
-        assert check.run_check(gradle_build_ci, check_result) == CheckResultType.FAILED
+        none_build_ci = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
+        none_build_ci.dynamic_data["build_spec"]["tools"] = []
+        none_build_ci.dynamic_data["ci_services"] = [ci_info]
+        assert check.run_check(none_build_ci, check_result) == CheckResultType.FAILED
 
         # Test Jenkins.
         maven_build_ci = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
@@ -229,3 +228,39 @@ class TestBuildServiceCheck(MacaronTestCase):
         ci_info["service"] = gitlab_ci
         maven_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(maven_build_ci, check_result) == CheckResultType.FAILED
+
+    def test_multibuild_facts_saved(self) -> None:
+        """Test that facts for all build tools are saved in the results tables in multi-build tool scenarios."""
+        check = BuildServiceCheck()
+        maven = Maven()
+        maven.load_defaults()
+        gradle = Gradle()
+        gradle.load_defaults()
+        github_actions = MockGitHubActions()
+        github_actions.load_defaults()
+
+        bash_commands = BashCommands(
+            caller_path="source_file",
+            CI_path="ci_file",
+            CI_type="github_actions",
+            commands=[["./gradlew", "build"], ["mvn", "package"]],
+        )
+        ci_info = CIInfo(
+            service=github_actions,
+            bash_commands=[bash_commands],
+            callgraph=CallGraph(BaseNode(), ""),
+            provenance_assets=[],
+            latest_release={},
+            provenances=[],
+        )
+
+        multi_deploy = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
+        multi_deploy.dynamic_data["build_spec"]["tools"] = [gradle, maven]
+        multi_deploy.dynamic_data["ci_services"] = [ci_info]
+        check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
+
+        assert check.run_check(multi_deploy, check_result) == CheckResultType.PASSED
+        # Check facts exist for both gradle and maven
+        existing_facts = [f.build_tool_name for f in check_result["result_tables"]]
+        assert gradle.name in existing_facts
+        assert maven.name in existing_facts

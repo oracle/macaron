@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-07-08 03:15:03"
+        "timestamps": "2023-08-23 18:31:55"
     },
     "target": {
         "info": {
@@ -81,7 +81,8 @@
                         "Deploy command: ['gradle', 'publish']",
                         {
                             "The status of the build can be seen at": "https://github.com/timyarkov/multibuild_test/actions/runs/5097947450"
-                        }
+                        },
+                        "The target repository does not use maven to deploy."
                     ],
                     "result_type": "PASSED"
                 },
@@ -211,6 +212,10 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_provenance_witness_level_one_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
@@ -220,10 +225,6 @@
             },
             {
                 "check_id": "mcn_provenance_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {
