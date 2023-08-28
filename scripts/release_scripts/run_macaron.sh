@@ -389,6 +389,7 @@ proxy_var_names=(
     "FTP_PROXY"
     "NO_PROXY"
     "MAVEN_OPTS"
+    "GRADLE_OPTS"
 )
 
 for v in "${proxy_var_names[@]}"; do
