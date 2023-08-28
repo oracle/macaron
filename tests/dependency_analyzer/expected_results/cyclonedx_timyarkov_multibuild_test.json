@@ -1,6 +1,7 @@
 [
     {
         "id": "org.springframework.boot:spring-boot-starter-thymeleaf",
+        "purl": "",
         "path": "https://github.com/spring-projects/spring-boot",
         "branch": "",
         "digest": "",
@@ -9,6 +10,7 @@
     },
     {
         "id": "org.springframework.boot:spring-boot-starter-web",
+        "purl": "",
         "path": "https://github.com/spring-projects/spring-boot",
         "branch": "",
         "digest": "",
@@ -17,6 +19,7 @@
     },
     {
         "id": "com.google.code.gson:gson",
+        "purl": "",
         "path": "https://github.com/google/gson",
         "branch": "",
         "digest": "",

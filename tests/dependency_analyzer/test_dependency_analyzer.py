@@ -45,6 +45,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
         expected_result_no_deps = [
             {
                 "id": "com.fasterxml.jackson.core:jackson-annotations",
+                "purl": "",
                 "path": "https://github.com/FasterXML/jackson-annotations",
                 "branch": "",
                 "digest": "",
@@ -53,6 +54,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "com.fasterxml.jackson.core:jackson-core",
+                "purl": "",
                 "path": "https://github.com/FasterXML/jackson-core",
                 "branch": "",
                 "digest": "",
@@ -64,6 +66,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
         expected_result_with_deps = [
             {
                 "id": "id",
+                "purl": "",
                 "path": "https://github.com/owner/name.git",
                 "branch": "master",
                 "digest": "aac3b3bcb608e1e8451d4beedd38ecbe6306e7e7",
@@ -72,6 +75,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "id",
+                "purl": "",
                 "path": "https://github.com/owner/name_2.git",
                 "branch": "master",
                 "digest": "aac3b3bcb608e1e8451d4beedd38ecbe6306e7e7",
@@ -80,6 +84,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "com.fasterxml.jackson.core:jackson-annotations",
+                "purl": "",
                 "path": "https://github.com/FasterXML/jackson-annotations",
                 "branch": "",
                 "digest": "",
@@ -88,6 +93,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "com.fasterxml.jackson.core:jackson-core",
+                "purl": "",
                 "path": "https://github.com/FasterXML/jackson-core",
                 "branch": "",
                 "digest": "",
