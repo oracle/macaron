@@ -29,7 +29,7 @@ class Configuration:
         data : dict | None
             The dictionary contains the data to analyze a repository.
         """
-        self.options = {"id": "", "path": "", "branch": "", "digest": "", "note": "", "available": ""}
+        self.options = {"id": "", "purl": "", "path": "", "branch": "", "digest": "", "note": "", "available": ""}
 
         if data:
             for key, value in data.items():

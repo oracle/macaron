@@ -44,5 +44,9 @@ class PURLNotFoundError(MacaronError):
     """Happens if the PURL identifier for a software component is not found."""
 
 
+class InvalidPURLError(MacaronError):
+    """Happens when the input PURL string is invalid."""
+
+
 class DuplicateError(MacaronError):
     """The class for errors for duplicated data."""

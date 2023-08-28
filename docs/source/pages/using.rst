@@ -90,6 +90,49 @@ To analyze a repository on a self-hosted GitLab instance, you need to do the fol
 
 - Obtain a GitLab access token having at least the ``read_repository`` permission and store it into the ``MCN_SELF_HOSTED_GITLAB_TOKEN`` environment variable. For more detailed instructions, see `GitLab documentation <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token>`_.
 
+''''''''''''''''''''''''''''''''''''''''''''''''''''
+Providing a PURL string instead of a repository path
+''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Instead of providing the repository path to analyze a software component, you can use a `PURL <https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst>`_. string for the target git repository.
+
+To simplify the examples, we use the same configurations as above if needed (e.g., for the self-hosted GitLab instances). The PURL string for a git repository should have the following format:
+
+.. code-block::
+
+  pkg:<git_service_domain>/<organization>/<name>
+
+The list bellow shows examples for the corresponding PURL strings for different git repositories:
+
+.. list-table:: Example of PURL strings for git repositories.
+   :widths: 50 50
+   :header-rows: 1
+
+   * - Repository path
+     - PURL string
+   * - ``https://github.com/micronaut-projects/micronaut-core``
+     - Both ``pkg:github/micronaut-projects/micronaut-core`` and ``pkg:github.com/micronaut-projects/micronaut-core`` are applicable as ``github`` is a pre-defined type as mentioned `here <https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst>`_.
+   * - ``https://bitbucket.org/snakeyaml/snakeyaml``
+     - Both ``pkg:github/micronaut-projects/micronaut-core`` and ``pkg:github.com/micronaut-projects/micronaut-core`` are applicable as ``bitbucket`` is a pre-defined type as mentioned `here <https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst>`_.
+   * - ``https://internal.gitlab.com/foo/bar``
+     - ``pkg:internal.gitlab.com/foo/bar``
+   * - ``https://gitlab.com/gitlab-org/gitlab``
+     - ``pkg:gitlab.com/gitlab-org/gitlab``
+
+Run the analysis using the PURL string as follows:
+
+.. code-block:: shell
+
+  ./run_macaron.sh analyze -purl <purl_string>
+
+You can also provide the PURL string together with the repository path. In this case, the PURL string will be used as the unique identifier for the analysis target:
+
+.. code-block:: shell
+
+  ./run_macaron.sh analyze -purl <purl_string> -rp <repo_path> -b <branch> -d <digest>
+
+.. note:: When providing the PURL and the repository path, both the branch name and commit digest must be provided as well.
+
 -------------------------------------------------
 Verifying provenance expectations in CUE language
 -------------------------------------------------
@@ -218,8 +261,11 @@ Running the policy engine
 Macaron's policy engine accepts policies specified in `Datalog <https://en.wikipedia.org/wiki/Datalog>`_. An example policy
 can verify if a project and all its dependencies pass certain checks. We use `Soufflé <https://souffle-lang.github.io/index.html>`_
 as the Datalog engine in Macaron. Once you run the checks on a target project as described :ref:`here <analyze-action>`,
-the check results will be stored in ``macaron.db`` in the output directory. We can pass the check results to the policy
-engine and provide a Datalog policy file to be enforced by the policy engine.
+the check results will be stored in ``macaron.db`` in the output directory. We pass the check results to the policy engine by providing the path to ``macaron.db`` together with a Datalog policy file to be validated by the policy engine.
+In the Datalog policy file, we must specify the identifier for the target software component that we are interested in to validate the policy against. These are two ways to specify the target software component in the Datalog policy file:
+
+#. Using the complete name of the target component (e.g. ``github.com/oracle-quickstart/oci-micronaut``)
+#. Using the PURL string of the target component (e.g. ``pkg:github.com/oracle-quickstart/oci-micronaut@<commit_sha>``).
 
 We use `Micronaut MuShop <https://github.com/oracle-quickstart/oci-micronaut>`_ project as a case study to show how to run the policy engine.
 Micronaut MuShop is a cloud-native microservices example for Oracle Cloud Infrastructure. When we run Macaron on the Micronaut MuShop GitHub
@@ -233,13 +279,36 @@ Now we can run the policy engine over these results and enforce a policy:
 
 .. code-block:: shell
 
-  ./run_macaron.sh verify-policy -o outputs -d outputs/macaron.db --file oci-micronaut.dl
+  ./run_macaron.sh verify-policy -o outputs -d outputs/macaron.db --file <policy_file>
 
-In this example, the Datalog policy file is provided in `oci-micronaut.dl <../_static/examples/oracle-quickstart/oci-micronaut/policies/oci-micronaut.dl>`__.
+In this example, the Datalog policy files for both ways (as mentioned previously) are provided in `oci-micronaut-repo.dl <../_static/examples/oracle-quickstart/oci-micronaut/policies/oci-micronaut-repo.dl>`__ and `oci-micronaut-purl.dl <../_static/examples/oracle-quickstart/oci-micronaut/policies/oci-micronaut-purl.dl>`__.
+
+The differences between the two policy files can be observed below:
+
+.. tabs::
+
+  .. code-tab:: prolog Using repository complete name
+
+    apply_policy_to("oci_micronaut_dependencies", repo_id) :- is_repo(repo_id, "github.com/oracle-quickstart/oci-micronaut", _).
+
+  .. code-tab:: prolog Using PURL string
+
+    apply_policy_to("oci_micronaut_dependencies", component_id) :- is_component(component_id, "<target_software_component_purl>").
+
+The PURL string for the target software component is printed to the console by the :ref:`analyze command <analyze-action>`. For example:
+
+.. code::
+
+  > ./run_macaron.sh analyze -rp https://github.com/oracle-quickstart/oci-micronaut
+  > ...
+  > 2023-08-15 14:36:56,672 [INFO] The PURL string for the main target software component in this analysis is
+  'pkg:github.com/oracle-quickstart/oci-micronaut@3ebe0c9520a25feeae983eac6eb956de7da29ead'.
+  > 2023-08-15 14:36:56,672 [INFO] Analysis Completed!
+
 This example policy can verify if the Micronaut MuShop project and all its dependencies pass the ``build_service`` check
 and the Micronaut provenance documents meets the expectation provided as a `CUE file <../_static/examples/micronaut-projects/micronaut-core/policies/micronaut-core.cue>`__.
 
-Thanks to Datalog’s expressive language model, it’s easy to add exception rules if certain dependencies do not meet a
+Thanks to Datalog's expressive language model, it's easy to add exception rules if certain dependencies do not meet a
 requirement. For example, `the Mysql Connector/J <https://slsa.dev/spec/v0.1/requirements#build-service>`_ dependency in
 the Micronaut MuShop project does not pass the ``build_service`` check, but can be manually investigated and exempted if trusted. Overall, policies expressed in Datalog can be
 enforced by Macaron as part of your CI/CD pipeline to detect regressions or unexpected behavior.

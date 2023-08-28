@@ -5,6 +5,11 @@
 
 from pathlib import Path
 
+import pytest
+from packageurl import PackageURL
+
+from macaron.config.target_config import Configuration
+from macaron.errors import InvalidPURLError
 from macaron.slsa_analyzer.analyzer import Analyzer
 
 from ..macaron_testcase import MacaronTestCase
@@ -35,3 +40,120 @@ class TestAnalyzer(MacaronTestCase):
         # Test resolve successfully
         assert Analyzer._resolve_local_path(self.PARENT_DIR, "./") == self.PARENT_DIR
         assert Analyzer._resolve_local_path(self.PARENT_DIR, "././././") == self.PARENT_DIR
+
+
+@pytest.mark.parametrize(
+    argnames=("purl", "available_domains", "expect"),
+    argvalues=[
+        # A repo-based PURL cannot have its namespace empty.
+        (
+            PackageURL(type="github", namespace="", name="maven"),
+            [],
+            None,
+        ),
+        # github and bitbucket are pre-defined types in the PURL specs.
+        (
+            PackageURL(type="github", namespace="apache", name="maven"),
+            ["github"],
+            "https://github.com/apache/maven",
+        ),
+        (
+            PackageURL(type="bitbucket", namespace="snakeyaml", name="snakeyaml"),
+            ["github"],
+            "https://bitbucket.org/snakeyaml/snakeyaml",
+        ),
+        # Test cases for PURL with git service domain URL as the type.
+        (
+            PackageURL(type="github.com", namespace="apache", name="maven"),
+            ["github.com", "gitlab.com", "bitbucket.org"],
+            "https://github.com/apache/maven",
+        ),
+        (
+            PackageURL(type="bitbucket.org", namespace="snakeyaml", name="snakeyaml"),
+            ["github.com", "gitlab.com", "bitbucket.org"],
+            "https://bitbucket.org/snakeyaml/snakeyaml",
+        ),
+        (
+            PackageURL(type="non-existing", namespace="apache", name="maven"),
+            ["github.com", "gitlab.com", "bitbucket.org"],
+            None,
+        ),
+    ],
+)
+def test_to_repo_path(purl: PackageURL, available_domains: list[str], expect: str | None) -> None:
+    """Test the to repo path method."""
+    assert Analyzer.to_repo_path(purl=purl, available_domains=available_domains) == expect
+
+
+@pytest.mark.parametrize(
+    ("config", "available_domains", "expect"),
+    [
+        (
+            Configuration({"purl": ""}),
+            ["github.com", "gitlab.com", "bitbucket.org"],
+            Analyzer.AnalysisTarget(parsed_purl=None, repo_path="", branch="", digest=""),
+        ),
+        (
+            Configuration({"purl": "pkg:github.com/apache/maven"}),
+            ["github.com", "gitlab.com", "bitbucket.org"],
+            Analyzer.AnalysisTarget(
+                parsed_purl=PackageURL.from_string("pkg:github.com/apache/maven"),
+                repo_path="https://github.com/apache/maven",
+                branch="",
+                digest="",
+            ),
+        ),
+        (
+            Configuration({"purl": "", "path": "https://github.com/apache/maven"}),
+            ["github.com", "gitlab.com", "bitbucket.org"],
+            Analyzer.AnalysisTarget(
+                parsed_purl=None, repo_path="https://github.com/apache/maven", branch="", digest=""
+            ),
+        ),
+        (
+            Configuration({"purl": "pkg:maven/apache/maven", "path": "https://github.com/apache/maven"}),
+            ["github.com", "gitlab.com", "bitbucket.org"],
+            Analyzer.AnalysisTarget(
+                parsed_purl=PackageURL.from_string("pkg:maven/apache/maven"),
+                repo_path="https://github.com/apache/maven",
+                branch="",
+                digest="",
+            ),
+        ),
+        (
+            Configuration(
+                {
+                    "purl": "pkg:maven/apache/maven",
+                    "path": "https://github.com/apache/maven",
+                    "branch": "master",
+                    "digest": "abcxyz",
+                }
+            ),
+            ["github.com", "gitlab.com", "bitbucket.org"],
+            Analyzer.AnalysisTarget(
+                parsed_purl=PackageURL.from_string("pkg:maven/apache/maven"),
+                repo_path="https://github.com/apache/maven",
+                branch="master",
+                digest="abcxyz",
+            ),
+        ),
+    ],
+)
+def test_resolve_analysis_target(
+    config: Configuration, available_domains: list[str], expect: Analyzer.AnalysisTarget
+) -> None:
+    """Test the resolve analysis target method with valid inputs."""
+    assert Analyzer.to_analysis_target(config, available_domains) == expect
+
+
+@pytest.mark.parametrize(
+    ("config"),
+    [
+        (Configuration({"purl": "invalid-purl"})),
+        (Configuration({"purl": "invalid-purl", "path": "https://github.com/apache/maven"})),
+    ],
+)
+def test_resolve_analysis_target_invalid_purl(config: Configuration) -> None:
+    """Test the resolve analysis target method with invalid inputs."""
+    with pytest.raises(InvalidPURLError):
+        Analyzer.to_analysis_target(config, [])

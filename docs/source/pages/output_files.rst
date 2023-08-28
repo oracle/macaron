@@ -41,17 +41,35 @@ The report files of Macaron (from using the :ref:`analyze action <analyze-action
 Unique result path
 ''''''''''''''''''
 
-For each target repository, Macaron creates a directory under ``reports`` to store the report files. This directory
-path is formed from the git host name (e.g ``github.com``), the owner and the name of that
-repository. The final path is created using the following template:
+For each target software component, Macaron creates a directory under ``reports`` to store the report files. This directory
+path is formed from the PURL string of that component. The final path is created using the following template:
 
 .. code-block::
 
-    <path_to_output>/reports/<git_service_name>/<owner>/<repo_name>
+    <path_to_output>/reports/<purl_type>/<purl_namespace>/<purl_name>
 
-.. note:: The git host name has all occurrence of ``.`` in the URL replaced by ``_``.
+For more information on the three fields ``type``, ``namespace`` and ``name`` of a PURL string, please see
+`PURL Specification <https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst>`_.
 
-For example, the reports for `<https://github.com/micronaut-projects/micronaut-core>`_ repository will be stored under
+Typically, when a repository path is provided as the main software component of the :ref:`analyze action <analyze-action-cli>`,
+a PURL is generated from the repository path, which is then later used in generating the unique report path.
+
+For example, when running this command:
+
+.. code-block::
+
+  ./run_macaron.sh analyze -rp https://github.com/micronaut-projects/micronaut-core
+
+The report files will be stored into:
+
+.. code-block::
+
+  <path_to_ouput>/reports/github_com/micronaut-projects/micronaut-core
+
+.. note:: In the unique path, only ASCII letters, digits and ``-`` are allowed. Prohibited characters are changed into
+  ``_``. No changes to the letter case are made.
+
+For example, the reports for `<https://github.com/micronaut-projects/micronaut-core>`_ will be stored under
 ``<path_to_output>/reports/github_com/micronaut-projects/micronaut-core``.
 
 ''''''''''''

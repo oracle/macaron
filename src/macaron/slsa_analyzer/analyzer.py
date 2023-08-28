@@ -10,6 +10,8 @@ import sys
 from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import NamedTuple
+from urllib.parse import ParseResult, urlunparse
 
 import sqlalchemy.exc
 from git import InvalidGitRepositoryError
@@ -30,7 +32,7 @@ from macaron.dependency_analyzer import (
     NoneDependencyAnalyzer,
 )
 from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
-from macaron.errors import CloneError, DuplicateError, PURLNotFoundError, RepoCheckOutError, RepoNotFoundError
+from macaron.errors import CloneError, DuplicateError, InvalidPURLError, PURLNotFoundError, RepoCheckOutError
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.slsa_analyzer import git_url
@@ -216,6 +218,11 @@ class Analyzer:
                 logger.info(str(report))
 
                 db_session.add(analysis)
+
+                logger.info(
+                    "The PURL string for the main target software component in this analysis is '%s'.",
+                    main_record.context.component.purl,
+                )
                 logger.info("Analysis Completed!")
                 return os.EX_OK
         except sqlalchemy.exc.SQLAlchemyError as error:
@@ -367,7 +374,8 @@ class Analyzer:
         component = None
         try:
             component = self.add_component(config, analysis, existing_records)
-        except (RepoNotFoundError, PURLNotFoundError) as error:
+        except PURLNotFoundError as error:
+            logger.error(error)
             return Record(
                 record_id=repo_id,
                 description=str(error),
@@ -375,6 +383,7 @@ class Analyzer:
                 status=SCMStatus.ANALYSIS_FAILED,
             )
         except DuplicateCmpError as error:
+            logger.debug(error)
             return Record(
                 record_id=repo_id,
                 description=str(error),
@@ -489,6 +498,102 @@ class Analyzer:
 
         return repository
 
+    @staticmethod
+    def to_domain_from_known_purl_types(purl_type: str) -> str | None:
+        """Return the git service domain from a known purl type.
+
+        This method is used to handle the cases where the purl type value is not the git domain but a pre-defined
+        repo-based type in https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst.
+
+        Note that this method will be updated when there are new pre-defined types as per the PURL specification.
+
+        Parameters
+        ----------
+        purl_type : str
+            The type field of the PURL.
+
+        Returns
+        -------
+        str | None
+            The git service domain corresponding to the purl type or None if the purl type is unknown.
+        """
+        known_types = {"github": "github.com", "bitbucket": "bitbucket.org"}
+        return known_types.get(purl_type, None)
+
+    @staticmethod
+    def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
+        """Return the repository path from the PURL string.
+
+        This method only supports converting a PURL with the following format:
+
+            pkg:<type>/<namespace>/<name>[...]
+
+        Where ``type`` could be either:
+        - The pre-defined repository-based PURL type as defined in
+        https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst
+
+        - The supprted git service domains (e.g. ``github.com``) defined in ``available_domains``.
+
+        The repository path will be generated with the following format ``https://<type>/<namespace>/<name>``.
+
+        Parameters
+        ----------
+        purl : PackageURL
+            The parsed PURL to convert to the repository path.
+        available_domains: list[str]
+            The list of available domains
+
+        Returns
+        -------
+        str | None
+            The URL to the repository which the PURL is referring to or None if we cannot convert it.
+        """
+        # TODO: move this method to the repo finder in https://github.com/oracle/macaron/pull/388.
+        domain = Analyzer.to_domain_from_known_purl_types(purl.type) or (
+            purl.type if purl.type in available_domains else None
+        )
+        if not domain:
+            logger.error("The PURL type of %s is not valid as a repository type.", purl.to_string())
+            return None
+
+        if not purl.namespace:
+            logger.error("Expecting a non-empty namespace from %s.", purl.to_string())
+            return None
+
+        # TODO: Handle the version tag and commit digest if they are given in the PURL.
+        return urlunparse(
+            ParseResult(
+                scheme="https",
+                netloc=domain,
+                path=os.path.join(purl.namespace, purl.name),
+                params="",
+                query="",
+                fragment="",
+            )
+        )
+
+    class AnalysisTarget(NamedTuple):
+        """Contains the resolved details of a software component to be analyzed.
+
+        For repo_path, branch and digest, an empty string is used to indicated that they are not available. This is
+        only for now because the current limitation of the Configuration class.
+        """
+
+        #: The parsed PackageURL object from the PackageURL string of the software component.
+        #: This field will be None if no PackageURL string is provided for this component.
+        parsed_purl: PackageURL | None
+
+        #: The repository path of the software component.
+        #: If the value repository path is not provided, it will be resolved from the PackageURL or empty if no
+        #: repository is found.
+        repo_path: str
+
+        #: The branch of the repository to analyze.
+        branch: str
+
+        #: The digest of the commit to analyze.
+        digest: str
+
     def add_component(
         self, config: Configuration, analysis: Analysis, existing_records: dict[str, Record] | None = None
     ) -> Component:
@@ -513,58 +618,145 @@ class Analyzer:
 
         Raises
         ------
-        RepoNotFoundError
-            No corresponding repository was found.
         PURLNotFoundError
             No PURL is found for the component.
         DuplicateCmpError
             The component is already analyzed in the same session.
         """
         # Note: the component created in this function will be added to the database.
-        repo_path = config.get_value("path")
-        req_branch = config.get_value("branch")
-        req_digest = config.get_value("digest")
+        available_domains = [git_service.domain for git_service in GIT_SERVICES if git_service.domain]
+        try:
+            analysis_target = Analyzer.to_analysis_target(config, available_domains)
+        except InvalidPURLError as error:
+            raise PURLNotFoundError("Invalid input PURL.") from error
 
-        # TODO: read PURL from config, CLI argument or via SBOM.
-        purl = None
+        if not analysis_target.parsed_purl and not analysis_target.repo_path:
+            raise PURLNotFoundError("Cannot determine the analysis as PURL and/or repository path is not provided.")
 
         repository = None
-        if repo_path:
+        if analysis_target.repo_path:
             git_obj = self._prepare_repo(
                 os.path.join(self.output_path, self.GIT_REPOS_DIR),
-                repo_path,
-                req_branch,
-                req_digest,
+                analysis_target.repo_path,
+                analysis_target.branch,
+                analysis_target.digest,
             )
-            if not git_obj:
-                raise RepoNotFoundError("Failed to prepare the corresponding repository for analysis.")
+            if git_obj:
+                # TODO: use both the repo URL and the commit hash to check.
+                if (
+                    existing_records
+                    and (existing_record := existing_records.get(git_url.get_remote_origin_of_local_repo(git_obj)))
+                    is not None
+                ):
+                    raise DuplicateCmpError(
+                        f"{analysis_target.repo_path} is already analyzed.", context=existing_record.context
+                    )
 
-            # TODO: use both the repo URL and the commit hash to check.
-            if (
-                existing_records
-                and (existing_record := existing_records.get(git_url.get_remote_origin_of_local_repo(git_obj)))
-                is not None
-            ):
-                raise DuplicateCmpError(f"{repo_path} is already analyzed.", context=existing_record.context)
+                repository = self.add_repository(analysis_target.branch, git_obj)
+            else:
+                # We cannot prepare the repository even though we have successfully resolved the repository path for the
+                # software component. If this happens, we don't raise error and treat the software component as if it
+                # does not have any ``Repository`` attached to it.
+                repository = None
 
-            repository = self.add_repository(req_branch, git_obj)
-
-            if repository:
-                purl = PackageURL(
-                    type=repository.type,
-                    namespace=repository.owner,
-                    name=repository.name,
-                    version=repository.commit_sha,
+        if not analysis_target.parsed_purl:
+            # If the PURL is not available. This will only mean that the user don't provide PURL but only provide the
+            # repository path for the software component. Therefore, the ``Repository`` instance is used to create a
+            # unique PURL for it.
+            if not repository:
+                raise PURLNotFoundError(
+                    f"The repository {analysis_target.repo_path} is not available and no PURL is provided from the user."
                 )
 
-        # If PURL is not found, raise an exception.
-        if not purl:
-            logger.debug(
-                "Failed to locate PURL for repo: %s at branch %s and commit %s", repo_path, req_branch, req_digest
+            repo_snapshot_purl = PackageURL(
+                type=repository.type,
+                namespace=repository.owner,
+                name=repository.name,
+                version=repository.commit_sha,
             )
-            raise PURLNotFoundError("Failed to locate a PURL identifier for the component.")
+            return Component(purl=repo_snapshot_purl.to_string(), analysis=analysis, repository=repository)
 
-        return Component(purl=purl.to_string(), analysis=analysis, repository=repository)
+        # If the PURL is available, we always create the software component with it whether the repository is
+        # available or not.
+        return Component(purl=analysis_target.parsed_purl.to_string(), analysis=analysis, repository=repository)
+
+    @staticmethod
+    def to_analysis_target(config: Configuration, available_domains: list[str]) -> AnalysisTarget:
+        """Resolve the details of a software component from user input.
+
+        Parameters
+        ----------
+        config : Configuration
+            The target configuration that stores the user input values for the software component.
+        available_domains : list[str]
+            The list of supported git service host domain. This is used to convert repo-based PURL to a repository path
+            of the corresponding software component.
+
+        Returns
+        -------
+        AnalysisTarget
+            The NamedTuple that contains the resolved details for the software component.
+
+        Raises
+        ------
+        InvalidPURLError
+            If the PURL provided from the user is invalid.
+        """
+        # Due to the current design of Configuration class. purl, repo_path, branch and digest are initialized
+        # as empty strings and we assumed that they are always set with input values as non-empty strings.
+        # Therefore, their true types are ``str``, and an empty string indicates that the input value is not provided.
+        purl_input_str: str = config.get_value("purl")
+        repo_path_input: str = config.get_value("path")
+        input_branch: str = config.get_value("branch")
+        input_digest: str = config.get_value("digest")
+
+        match (purl_input_str, repo_path_input):
+            case ("", ""):
+                return Analyzer.AnalysisTarget(parsed_purl=None, repo_path="", branch="", digest="")
+
+            case ("", _):
+                # If only the repository path is provided, we will use the user-provided repository path to created the
+                # ``Repository`` instance. Note that if this case happen, the software component will be initialized
+                # with the PURL generated from the ``Repository`` instance (i.e. as a PURL pointing to a git repository
+                # at a specific commit). For example: ``pkg:github.com/org/name@<commit_digest>``.
+                return Analyzer.AnalysisTarget(
+                    parsed_purl=None, repo_path=repo_path_input, branch=input_branch, digest=input_digest
+                )
+
+            case (_, ""):
+                # If a PURL but no repository path are provided, we try to extract the repository path from the PURL.
+                # Note that we can't always extract the repository path from any provided PURL.
+                try:
+                    parsed_purl = PackageURL.from_string(purl_input_str)
+                except ValueError as error:
+                    raise InvalidPURLError(f"The package url {purl_input_str} is not valid.") from error
+
+                converted_repo_path = Analyzer.to_repo_path(parsed_purl, available_domains)
+                # TODO: If ``converted_repo_path`` is None, this means that the PURL given by the user if not pointing
+                # to a git repository (e.g ``pkg:maven/apache/maven@1.0.0``). Resolving the repository
+                # path from such PURl string will be handled in https://github.com/oracle/macaron/pull/388.
+                return Analyzer.AnalysisTarget(
+                    parsed_purl=parsed_purl,
+                    repo_path=converted_repo_path or "",
+                    branch=input_branch,
+                    digest=input_digest,
+                )
+
+            case (_, _):
+                # If both the PURL and the repository are provided, we will use the user-provided repository path to
+                # created the ``Repository`` instance later on. This ``Repository`` instance is attached to the
+                # software component initialized from the user-provided PURL.
+                try:
+                    parsed_purl = PackageURL.from_string(purl_input_str)
+                except ValueError as error:
+                    raise InvalidPURLError(f"The package url {purl_input_str} is not valid.") from error
+
+                return Analyzer.AnalysisTarget(
+                    parsed_purl=parsed_purl, repo_path=repo_path_input, branch=input_branch, digest=input_digest
+                )
+
+            case _:
+                return Analyzer.AnalysisTarget(parsed_purl=None, repo_path="", branch="", digest="")
 
     def get_analyze_ctx(self, component: Component) -> AnalyzeContext:
         """Return the analyze context for a target component.
