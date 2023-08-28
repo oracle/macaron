@@ -299,6 +299,12 @@ dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt:
 docs: docs-clean
 	$(MAKE) -C docs/ html
 
+.PHONY: docs-api
+docs-api:
+	sphinx-apidoc --no-toc --module-first --force --maxdepth 1 --output-dir docs/source/pages/apidoc/ src/
+
+.PHONY: docs-full
+docs-full: docs-api docs
 
 # Build the Docker image. The image name and tag are read from IMAGE_NAME and RELEASE_TAG
 # environment variables, respectively. By default "test" is used as the image tag.
