@@ -107,21 +107,6 @@ class JFrogMavenRegistry(PackageRegistry):
 
     For more details on JFrog Artifactory repository, see:
     https://jfrog.com/help/r/jfrog-artifactory-documentation/repository-management
-
-    Attributes
-    ----------
-    hostname : str
-        The hostname of the JFrog instance.
-    repo : str
-        The Artifactory repository with Maven layout on the JFrog instance.
-    request_timeout : int
-        The timeout (in seconds) for regular requests made to the package registry.
-    download_timeout : int
-        The timeout (in seconds) for downloading files from the package registry.
-    enabled : bool
-        Whether the package registry should be active in the analysis or not.
-        "Not active" means no target repo/software component can be matched against
-        this package registry.
     """
 
     def __init__(
@@ -132,6 +117,24 @@ class JFrogMavenRegistry(PackageRegistry):
         download_timeout: int | None = None,
         enabled: bool | None = None,
     ) -> None:
+        """
+        Instantiate a JFrogMavenRegistry object.
+
+        Parameters
+        ----------
+        hostname : str
+            The hostname of the JFrog instance.
+        repo : str | None
+            The Artifactory repository with Maven layout on the JFrog instance.
+        request_timeout : int | None
+            The timeout (in seconds) for regular requests made to the package registry.
+        download_timeout : int | None
+            The timeout (in seconds) for downloading files from the package registry.
+        enabled : bool | None
+            Whether the package registry should be active in the analysis or not.
+            "Not active" means no target repo/software component can be matched against
+            this package registry.
+        """
         self.hostname = hostname or ""
         self.repo = repo or ""
         self.request_timeout = request_timeout or 10
@@ -627,7 +630,7 @@ class JFrogMavenRegistry(PackageRegistry):
 
         Returns
         -------
-        JFrogMavenAsset | None
+        JFrogMavenAssetMetadata | None
             The asset's metadata, or ``None`` if the metadata cannot be retrieved.
         """
         file_path = self.construct_maven_repository_path(
@@ -677,6 +680,15 @@ class JFrogMavenRegistry(PackageRegistry):
 
         Documentation: https://jfrog.com/help/r/jfrog-rest-apis/file-info.
 
+        Parameters
+        ----------
+        file_info_payload : str
+            The File Info request payload used to extract the metadata of an asset.
+
+        Returns
+        -------
+        JFrogMavenAssetMetadata | None
+            The asset's metadata, or ``None`` if the metadata cannot be retrieved.
         """
         try:
             json_payload: JsonType = json.loads(file_info_payload)
@@ -714,7 +726,7 @@ class JFrogMavenRegistry(PackageRegistry):
 
         download_uri = json_payload.get("downloadUri")
         if not download_uri or not isinstance(download_uri, str):
-            logger.debug("Could not extract the value of the 'ownload_uri' field from the File Info payload.")
+            logger.debug("Could not extract the value of the 'download_uri' field from the File Info payload.")
             return None
 
         return JFrogMavenAssetMetadata(
