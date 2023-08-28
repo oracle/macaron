@@ -573,13 +573,25 @@ class Analyzer:
         )
 
     class AnalysisTarget(NamedTuple):
-        """Contains the resolved details of a software component to be analyzed."""
+        """Contains the resolved details of a software component to be analyzed.
 
+        For repo_path, branch and digest, an empty string is used to indicated that they are not available. This is
+        only for now because the current limitation of the Configuration class.
+        """
+
+        #: The parsed PackageURL object from the PackageURL string of the software component.
+        #: This field will be None if no PackageURL string is provided for this component.
         parsed_purl: PackageURL | None
-        # For repo_path, branch and digest, an empty string is used to indicated that they are not available. This is
-        # only for now because the current limitation of the Configuration class.
+
+        #: The repository path of the software component.
+        #: If the value repository path is not provided, it will be resolved from the PackageURL or empty if no
+        #: repository is found.
         repo_path: str
+
+        #: The branch of the repository to analyze.
         branch: str
+
+        #: The digest of the commit to analyze.
         digest: str
 
     def add_component(
