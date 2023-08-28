@@ -174,31 +174,31 @@ def test_build_as_code_check(
     assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
 
     # Using both gradle and maven with valid commands to deploy
-    gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
-    gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
+    multi_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
+    multi_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
     bash_commands["commands"] = [["./gradlew", "publishToSonatype"], ["mvn", "deploy"]]
-    gradle_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(gradle_deploy, check_result) == CheckResultType.PASSED
+    multi_deploy.dynamic_data["ci_services"] = [ci_info]
+    assert check.run_check(multi_deploy, check_result) == CheckResultType.PASSED
 
     # Using both gradle and maven, but maven incorrect (singular failure in a list)
-    gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
-    gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
+    multi_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
+    multi_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
     bash_commands["commands"] = [["./gradlew", "publishToSonatype"], ["mvn", "verify"]]
-    gradle_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(gradle_deploy, check_result) == CheckResultType.PASSED
+    multi_deploy.dynamic_data["ci_services"] = [ci_info]
+    assert check.run_check(multi_deploy, check_result) == CheckResultType.PASSED
 
     # Using both gradle and maven, both incorrect
-    gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
-    gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
+    multi_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
+    multi_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
     bash_commands["commands"] = [["./gradlew", "build"], ["mvn", "verify"]]
-    gradle_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(gradle_deploy, check_result) == CheckResultType.FAILED
+    multi_deploy.dynamic_data["ci_services"] = [ci_info]
+    assert check.run_check(multi_deploy, check_result) == CheckResultType.FAILED
 
     # No build tools present
-    gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
-    gradle_deploy.dynamic_data["build_spec"]["tools"] = []
-    gradle_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(gradle_deploy, check_result) == CheckResultType.FAILED
+    none_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
+    none_deploy.dynamic_data["build_spec"]["tools"] = []
+    none_deploy.dynamic_data["ci_services"] = [ci_info]
+    assert check.run_check(none_deploy, check_result) == CheckResultType.FAILED
 
 
 def test_gha_workflow_deployment(
@@ -280,10 +280,45 @@ def test_travis_ci_deploy(
         latest_release={},
         provenances=[],
     )
-    check_result = CheckResult(justification=[])  # type: ignore
+    check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
     gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     gradle_deploy.component.repository.fs_path = str(repo_path.absolute())
     gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool]
     gradle_deploy.dynamic_data["ci_services"] = [ci_info]
 
     assert check.run_check(gradle_deploy, check_result) == expect_result
+
+
+def test_multibuild_facts_saved(
+    macaron_path: Path,
+    gradle_tool: Gradle,
+    maven_tool: Maven,
+    github_actions_service: GitHubActions,
+) -> None:
+    """Test that facts for all build tools are saved in the results tables in multi-build tool scenarios."""
+    check = BuildAsCodeCheck()
+    bash_commands = BashCommands(
+        caller_path="source_file",
+        CI_path="ci_file",
+        CI_type="github_actions",
+        commands=[["./gradlew", "publishToSonatype"], ["mvn", "deploy"]],
+    )
+    check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
+    ci_info = CIInfo(
+        service=github_actions_service,
+        bash_commands=[bash_commands],
+        callgraph=CallGraph(BaseNode(), ""),
+        provenance_assets=[],
+        latest_release={},
+        provenances=[],
+    )
+
+    multi_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
+    multi_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
+    multi_deploy.dynamic_data["ci_services"] = [ci_info]
+    assert check.run_check(multi_deploy, check_result) == CheckResultType.PASSED
+
+    # Check facts exist for both gradle and maven
+    existing_facts = [f.build_tool_name for f in check_result["result_tables"]]
+    assert gradle_tool.name in existing_facts
+    assert maven_tool.name in existing_facts

@@ -221,7 +221,7 @@ class BuildAsCodeCheck(BaseCheck):
                                 ] = ctx.component.repository.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                                 predicate["metadata"]["buildInvocationId"] = html_url
-                            check_result["result_tables"] = [
+                            check_result["result_tables"].append(
                                 BuildAsCodeFacts(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
@@ -229,7 +229,7 @@ class BuildAsCodeCheck(BaseCheck):
                                     deploy_command=workflow_name,
                                     build_status_url=html_url,
                                 )
-                            ]
+                            )
                             return CheckResultType.PASSED
 
                 for bash_cmd in ci_info["bash_commands"]:
@@ -284,7 +284,7 @@ class BuildAsCodeCheck(BaseCheck):
                             ] = ctx.component.repository.commit_sha
                             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                             predicate["metadata"]["buildInvocationId"] = html_url
-                        check_result["result_tables"] = [
+                        check_result["result_tables"].append(
                             BuildAsCodeFacts(
                                 build_tool_name=build_tool.name,
                                 ci_service_name=ci_service.name,
@@ -292,7 +292,7 @@ class BuildAsCodeCheck(BaseCheck):
                                 deploy_command=deploy_cmd,
                                 build_status_url=html_url,
                             )
-                        ]
+                        )
 
                         return CheckResultType.PASSED
 
@@ -327,13 +327,13 @@ class BuildAsCodeCheck(BaseCheck):
                                     "sha1"
                                 ] = ctx.component.repository.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = config_name
-                            check_result["result_tables"] = [
+                            check_result["result_tables"].append(
                                 BuildAsCodeFacts(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
                                     deploy_command=deploy_kw,
                                 )
-                            ]
+                            )
                             return CheckResultType.PASSED
 
         pass_msg = f"The target repository does not use {build_tool.name} to deploy."
@@ -366,19 +366,22 @@ class BuildAsCodeCheck(BaseCheck):
         ci_services = ctx.dynamic_data["ci_services"]
 
         # Check if "build as code" holds for each build tool.
+        overall_res = CheckResultType.FAILED
+
         for tool in build_tools:
             res = self._check_build_tool(tool, ctx, ci_services, check_result)
 
             if res == CheckResultType.PASSED:
-                # Since the check passing is contingent on at least one passing,
-                # short-circuit if we do get a pass
+                # The check passing is contingent on at least one passing, if
+                # one passes treat whole check as passing. We do still need to
+                # run the others for justifications though to report multiple
+                # build tool usage.
                 # TODO: When more sophisticated build tool detection is
                 # implemented, consider whether this should be one fail = whole
                 # check fails instead
-                return CheckResultType.PASSED
+                overall_res = CheckResultType.PASSED
 
-        # No passes, so overall fail
-        return CheckResultType.FAILED
+        return overall_res
 
 
 registry.register(BuildAsCodeCheck())

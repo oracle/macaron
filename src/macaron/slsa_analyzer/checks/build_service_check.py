@@ -177,13 +177,13 @@ class BuildServiceCheck(BaseCheck):
                         else "However, could not find a passing workflow run.",
                     ]
                     check_result["justification"].extend(justification)
-                    check_result["result_tables"] = [
+                    check_result["result_tables"].append(
                         BuildServiceFacts(
                             build_tool_name=build_tool.name,
                             build_trigger=trigger_link,
                             ci_service_name=ci_service.name,
                         )
-                    ]
+                    )
 
                     if (
                         ctx.dynamic_data["is_inferred_prov"]
@@ -218,12 +218,12 @@ class BuildServiceCheck(BaseCheck):
                             f"build tool {build_tool.name} in {ci_service.name} to "
                             f"build."
                         )
-                        check_result["result_tables"] = [
+                        check_result["result_tables"].append(
                             BuildServiceFacts(
                                 build_tool_name=build_tool.name,
                                 ci_service_name=ci_service.name,
                             )
-                        ]
+                        )
 
                         if (
                             ctx.dynamic_data["is_inferred_prov"]
@@ -277,9 +277,10 @@ class BuildServiceCheck(BaseCheck):
             res = self._check_build_tool(tool, ctx, check_result, ci_services)
 
             if res == CheckResultType.PASSED:
-                # Pass at some point so treat as entire check pass; short-circuit
+                # Pass at some point so treat as entire check pass; we don't
+                # short-circuit for the sake of full justification reporting
+                # though.
                 all_passing = True
-                break
 
         if not all_passing or not build_tools:
             fail_msg = "The target repository does not have a build service for at least one build tool."
