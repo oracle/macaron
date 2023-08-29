@@ -12,7 +12,7 @@ class Provenance:
 
     def __init__(self) -> None:
         """Initialize instance."""
-        self.payload: v01.InTotoStatement = {
+        self.payload: v01.InTotoV01Statement = {
             "_type": "https://in-toto.io/Statement/v0.1",
             "subject": [],
             "predicateType": "https://slsa.dev/provenance/v0.2",

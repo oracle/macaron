@@ -41,7 +41,7 @@ class InTotoPayload(Generic[StatementT]):
     statement: StatementT
 
 
-class InTotoV01Payload(InTotoPayload[v01.InTotoStatement]):
+class InTotoV01Payload(InTotoPayload[v01.InTotoV01Statement]):
     """The provenance payload following in-toto v0.1 schema.
 
     The payload is a field within a DSSE envelope, having the type "Statement".
@@ -56,7 +56,7 @@ class InTotoV01Payload(InTotoPayload[v01.InTotoStatement]):
     """
 
 
-class InTotoV1Payload(InTotoPayload[v1.InTotoStatement]):
+class InTotoV1Payload(InTotoPayload[v1.InTotoV1Statement]):
     """The provenance payload following in-toto v1 schema.
 
     The payload is a field within a DSSE envelope, having the type "Statement".

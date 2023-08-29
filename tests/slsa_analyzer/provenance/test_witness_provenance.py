@@ -91,7 +91,7 @@ def test_load_witness_predicate_types(
     ],
 )
 def test_is_witness_provenance_payload(
-    payload_json: v01.InTotoStatement,
+    payload_json: v01.InTotoV01Statement,
     predicate_types: set[str],
     expected_result: bool,
 ) -> None:
@@ -172,7 +172,7 @@ def test_is_witness_provenance_payload(
     ],
 )
 def test_extract_witness_provenances_subjects(
-    payload_json: v01.InTotoStatement,
+    payload_json: v01.InTotoV01Statement,
     expected_subjects: set[WitnessProvenanceSubject],
 ) -> None:
     """Test the ``extract_witness_provenance_subjects`` function."""

@@ -11,7 +11,7 @@ from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayload
 from macaron.util import JsonType
 
 
-class InTotoStatement(TypedDict):
+class InTotoV01Statement(TypedDict):
     """An in-toto version 0.1 statement.
 
     This is the type of the payload in an in-toto version 0.1 attestation.
@@ -19,12 +19,12 @@ class InTotoStatement(TypedDict):
     """
 
     _type: str
-    subject: list[InTotoSubject]
+    subject: list[InTotoV01Subject]
     predicateType: str  # noqa: N815
     predicate: dict[str, JsonType] | None
 
 
-class InTotoSubject(TypedDict):
+class InTotoV01Subject(TypedDict):
     """An in-toto subject.
 
     Specification: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement.
@@ -34,7 +34,7 @@ class InTotoSubject(TypedDict):
     digest: dict[str, str]
 
 
-def validate_intoto_statement(payload: dict[str, JsonType]) -> TypeGuard[InTotoStatement]:
+def validate_intoto_statement(payload: dict[str, JsonType]) -> TypeGuard[InTotoV01Statement]:
     """Validate the statement of an in-toto attestation.
 
     Specification: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement.
@@ -102,7 +102,7 @@ def validate_intoto_statement(payload: dict[str, JsonType]) -> TypeGuard[InTotoS
     return True
 
 
-def validate_intoto_subject(subject: JsonType) -> TypeGuard[InTotoSubject]:
+def validate_intoto_subject(subject: JsonType) -> TypeGuard[InTotoV01Subject]:
     """Validate a single subject in the in-toto statement.
 
     See specification: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement.
