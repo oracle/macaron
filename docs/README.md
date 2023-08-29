@@ -16,13 +16,26 @@ This command will build and generate the documentation into `docs/_build/html`. 
 python3 -m http.server -d docs/_build/html
 ```
 
-## Extend the API reference.
+## Extend the API reference
 
-If you add a new module, make sure that it is added to the API reference. The API reference is generated using the [sphinx-apidoc](https://www.sphinx-doc.org/en/master/man/sphinx-apidoc.html) tool.
+We use the [sphinx-apidoc](https://www.sphinx-doc.org/en/master/man/sphinx-apidoc.html) tool to generate API reference automatically from Python docstrings. See the [Docstring section in the Macaron Style Guide](https://oracle.github.io/pages/developers_guide/style_guide.html#docstrings) for how to write docstrings in Macaron.
 
-From within the root directory of Macaron, run (with the dev environment activated):
+If you make a code change, make sure to regenerate the API reference by running (with the dev environment activated):
+
 ```
-sphinx-apidoc --no-toc --module-first --force --maxdepth 1 --output-dir docs/source/pages/apidoc/ src/
+make docs-api
 ```
 
-This command will  generate the API reference RST files into `docs/source/pages/apidoc/`. Make sure to check in the changed source files to the repository.
+This command uses [sphinx-apidoc](https://www.sphinx-doc.org/en/master/man/sphinx-apidoc.html) to generate the API reference RST files into `docs/source/pages/apidoc/`. Make sure to check in these API reference RST files to the repository.
+
+You can then rebuild the whole Macaron HTML documentation with:
+
+```
+make docs
+```
+
+In addition, instead of running `make docs-api` and `make docs` separately, you can combine the two commands by running:
+
+```
+make docs-full
+```

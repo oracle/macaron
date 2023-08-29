@@ -30,17 +30,20 @@ author = "Macaron"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    "sphinx.ext.napoleon",
-    "sphinx.ext.autodoc",
-    "sphinx.ext.autosectionlabel",
-    "sphinx_autodoc_typehints",
-    "numpydoc",
-    "sphinx_tabs.tabs",
+    "sphinx.ext.napoleon",  # Support parsing numpydoc style docstrings
+    "sphinx.ext.autodoc",  # Support generating API reference from docstrings
+    "sphinx.ext.autosectionlabel",  # Support referencing sections using their titles
+    "sphinx.ext.intersphinx",  # Support referencing external APIs
+    "sphinx_autodoc_typehints",  # Resolve type annotations in docstrings
+    "numpydoc",  # Support numpydoc style docstrings
+    "sphinx_tabs.tabs",  # Support tabbed views in documentation
 ]
 autosectionlabel_prefix_document = True
 autosectionlabel_maxdepth = 2
 autodoc_member_order = "bysource"
 numpydoc_show_class_members = False
+
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ".venv"]
