@@ -13,11 +13,9 @@ from macaron.slsa_analyzer.provenance.intoto import v01, v1
 from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
 from macaron.util import JsonType
 
+# Type of an in-toto statement.
+# This is currently either a v0.1 statement or v1 statement.
 StatementT = TypeVar("StatementT", bound=Mapping)
-"""Type of an in-toto statement.
-
-This is currently either a v0.1 statement or v1 statement.
-"""
 
 
 @dataclass(frozen=True)  # objects of this class are immutable and hashable
