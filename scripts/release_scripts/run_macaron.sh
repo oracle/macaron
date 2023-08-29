@@ -420,9 +420,19 @@ then
     entrypoint=("macaron")
 fi
 
+if [[ -n "${DOCKER_PULL}" ]]; then
+    if [[ "${DOCKER_PULL}" != @(always|missing|never) ]]; then
+        echo "DOCKER_PULL must be one of: always, missing, never (default: always)"
+        exit 1
+    fi
+else
+    DOCKER_PULL="always"
+fi
+
 echo "Running ${IMAGE}:${MACARON_IMAGE_TAG}"
 
 docker run \
+    --pull ${DOCKER_PULL} \
     --network=host \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" \
