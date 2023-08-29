@@ -67,3 +67,69 @@ Ideally, the GitHub token must have **read** permissions for the repositories th
 After generating a GitHub personal-access token, please store its value in an environment variable called ``GITHUB_TOKEN``. This environment variable will be read by Macaron for its **analyze** command.
 
 Now that you have successfully downloaded and installed Macaron, please refer to :ref:`Using Macaron <using-macaron>` for the instructions on how to use Macaron.
+
+.. _proxy_configuration:
+
+-------------------
+Proxy Configuration
+-------------------
+
+Make sure your system proxy is correctly set. These environment variables are read from the host machine and set in the Macaron container automatically.
+
+.. code-block:: shell
+
+   $ export {http,https,ftp}_proxy=http://www-example-proxy:80
+   $ export no_proxy=localhost,127.0.0.1
+
+In order to connect to the registry on behalf of the Docker client, the Docker daemon service needs the proxies in order to download images:
+
+.. code-block:: shell
+   :caption:    /etc/systemd/system/docker.service.d/http-proxy.conf
+   :name: docker-proxy-conf-proxies
+
+   [Service]
+   Environment="HTTP_PROXY=http://wwww-example-proxy:80/"
+   Environment="http_proxy=http://www-example-proxy:80/"
+   Environment="HTTPS_PROXY=http://www-example-proxy:80/"
+   Environment="https_proxy=http://www-example-proxy:80/"
+
+The line below shows an example to exclude the proxy intercept:
+
+.. code-block:: shell
+   :caption:    /etc/systemd/system/docker.service.d/http-proxy.conf
+   :name: docker-proxy-conf-no-proxy
+
+   Environment="NO_PROXY=localhost,127.0.0.1"
+
+.. note:: If you update ``/etc/systemd/system/docker.service.d/http-proxy.conf``, you need to reload the daemon and restart the docker service to apply changes.
+
+.. code-block:: shell
+
+  sudo systemctl daemon-reload
+  sudo systemctl restart docker.service
+
+You can run the following command to make sure the proxy settings are updated:
+
+.. code-block:: shell
+
+  sudo systemctl show --property=Environment docker
+
+'''''''''''''''''''''''''''''''
+Maven and Gradle proxy settings
+'''''''''''''''''''''''''''''''
+
+Maven and Gradle do not use the system proxy settings. If the target software component (repository)
+is using either of these build tools, make sure to set up the following environment variables:
+
+.. code-block:: shell
+
+  export MAVEN_OPTS="-Dhttp.proxyHost=wwww-example-proxy -Dhttp.proxyPort=80 -Dhttps.proxyHost=wwww-example-proxy -Dhttps.proxyPort=80"
+  export GRADLE_OPTS="-Dhttp.proxyHost=wwww-example-proxy -Dhttp.proxyPort=80 -Dhttps.proxyHost=wwww-example-proxy -Dhttps.proxyPort=80"
+
+In addition, Macaron uses the global settings files for Maven and Gradle if present on the host machine and copies them to
+the Docker container. You can set up your proxy settings in the following files:
+
+* ``~/.m2/settings.xml``
+* ``~/.gradle/gradle.properties``
+
+See the `Maven <https://maven.apache.org/settings.html#proxies>`_ and `Gradle <https://docs.gradle.org/current/userguide/build_environment.html#sec:accessing_the_web_via_a_proxy>`_ documentations for more information on setting up proxies.

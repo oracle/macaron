@@ -367,8 +367,21 @@ if [[ -n "${datalog_policy_file}" ]]; then
     mounts+=("-v" "${datalog_policy_file}:${MACARON_WORKSPACE}/policy/${file_name}:ro")
 fi
 
+# Determine that ~/.gradle/gradle.properties exists to be mounted into ${MACARON_WORKSPACE}/gradle.properties
+if [[ -f "$HOME/.gradle/gradle.properties" ]]; then
+    mounts+=("-v" "$HOME/.gradle/gradle.properties":"${MACARON_WORKSPACE}/gradle.properties:ro")
+fi
+
+# Determine that ~/.m2/settings.xml exists to be mounted into ${MACARON_WORKSPACE}/settings.xml
+if [[ -f "$HOME/.m2/settings.xml" ]]; then
+    mounts+=("-v" "$HOME/.m2/settings.xml":"${MACARON_WORKSPACE}/settings.xml:ro")
+fi
+
 # Set up proxy.
 # We respect the host machine's proxy environment variables.
+# For Maven and Gradle projects that Macaron needs to analyzes, the proxy configuration
+# for Maven wrapper `mvnw` and Gradle wrapper `gradlew` are set using `MAVEN_OPTS` and
+# `GRADLE_OPTS` environment variables.
 proxy_var_names=(
     "http_proxy"
     "https_proxy"
@@ -378,6 +391,8 @@ proxy_var_names=(
     "HTTPS_PROXY"
     "FTP_PROXY"
     "NO_PROXY"
+    "MAVEN_OPTS"
+    "GRADLE_OPTS"
 )
 
 for v in "${proxy_var_names[@]}"; do

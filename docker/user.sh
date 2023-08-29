@@ -29,6 +29,22 @@ then
     cp "$PACKAGE_PATH"/resources/settings.xml "$HOME"/.m2/
 fi
 
+# Overwrite $HOME/.m2/settings.xml if the global settings.xml file is mounted from the host machine.
+if [[ -f "$HOME/settings.xml" ]];
+then
+    cp "$HOME/settings.xml" "$HOME/.m2/settings.xml"
+fi
+
+# Create $HOME/.gradle/gradle.properties if the global gradle.properties file is mounted from the host machine.
+if [[ ! -d "$HOME/.gradle" ]];
+then
+    mkdir --parents "$HOME"/.gradle
+fi
+if [[ -f "$HOME/gradle.properties" ]];
+then
+    cp "$HOME"/gradle.properties "$HOME/.gradle/gradle.properties"
+fi
+
 # Prepare the output directory. The output directory will be already existed
 # if we mount from the host machine.
 if [[ ! -d "$HOME/output" ]];
@@ -39,10 +55,10 @@ fi
 # The directory that could be mounted to the host machine file systems should
 # have the owner as the current user in the host machine.
 chown --recursive macaron:macaron "$HOME"/.m2
+chown --recursive macaron:macaron "$HOME"/.gradle
 chown --recursive macaron:macaron "$HOME"/output
 
 # Run the provided Macaron command with the user macaron.
-# TODO: add macaron entrypoint back in when we merge policy_engine with macaron entrypoint.
 MACARON_PARAMS=( "$@" )
 COMMAND="cd /home/macaron && . .venv/bin/activate && ${MACARON_PARAMS[*]}"
 su macaron --preserve-environment --command "$COMMAND"
