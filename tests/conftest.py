@@ -13,6 +13,7 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.docker import Docker
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
+from macaron.slsa_analyzer.build_tool.npm import NPM
 from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -166,6 +167,24 @@ def docker_tool(setup_test) -> Docker:  # type: ignore # pylint: disable=unused-
     docker = Docker()
     docker.load_defaults()
     return docker
+    
+    
+def npm_tool(setup_test) -> NPM:  # type: ignore # pylint: disable=unused-argument
+    """Create a NPM tool instance.
+
+    Parameters
+    ----------
+    setup_test
+        Depends on setup_test fixture.
+
+    Returns
+    -------
+    NPM
+        The NPM instance.
+    """
+    npm = NPM()
+    npm.load_defaults()
+    return npm
 
 
 class MockGitHubActions(GitHubActions):
