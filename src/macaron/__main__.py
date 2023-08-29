@@ -32,9 +32,9 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         # We don't mention --config-path as a possible option in this log message as it going to be move soon.
         # See: https://github.com/oracle/macaron/issues/417
         logger.error(
-            "Analysis target missing. Please provide a package url (PURL) and/or repo path. "
-            + "Examples of a PURL can be seen at https://github.com/package-url/purl-spec: "
-            + "pkg:github/micronaut-projects/micronaut-core."
+            """Analysis target missing. Please provide a package url (PURL) and/or repo path.
+            Examples of a PURL can be seen at https://github.com/package-url/purl-spec:
+            pkg:github/micronaut-projects/micronaut-core."""
         )
         sys.exit(os.EX_USAGE)
 
@@ -376,8 +376,8 @@ def main(argv: list[str] | None = None) -> None:
     vp_parser = sub_parser.add_parser(name="verify-policy")
     vp_group = vp_parser.add_mutually_exclusive_group(required=True)
 
-    # Verify the Repo Finder
-    sub_parser.add_parser(name="verify-repo-finder")
+    # Test the Repo Finder
+    sub_parser.add_parser(name="test-repo-finder")
 
     vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
     vp_group.add_argument("-f", "--file", type=str, help="Path to the Datalog policy.")

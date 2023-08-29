@@ -75,7 +75,7 @@ class JavaRepoFinder(BaseRepoFinder):
             urls = self.read_metadata(pom)
 
             if urls:
-                logger.debug("Found %s urls.", len(urls))
+                logger.debug("Found %s urls: %s", len(urls), urls)
                 yield from iter(urls)
 
             if defaults.getboolean("repofinder.java", "find_parents") and self.pom_element is not None:
