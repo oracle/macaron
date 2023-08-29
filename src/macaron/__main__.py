@@ -159,14 +159,14 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
     return os.EX_USAGE
 
 
-def verify_repo_finder() -> int:
-    """Verify the functionality of the remote API calls used by the repo finder.
+def test_repo_finder() -> int:
+    """Test the functionality of the remote API calls used by the repo finder.
 
     Functionality relating to Java artifacts is not verified for two reasons:
     - It is extremely unlikely that Maven central will change its API or cease operation in the near future.
     - Other similar repositories to Maven central (internal Artifactory, etc.) can be provided by the user instead.
     """
-    # Verify deps.dev for a Python package
+    # Test deps.dev API for a Python package
     repo_finder = RepoFinderDepsDev("pypi")
     urls = []
     # Without version
@@ -174,14 +174,14 @@ def verify_repo_finder() -> int:
     # With version
     urls.append(repo_finder.create_urls("", "packageurl-python", "0.11.1"))
     for url in urls:
-        logger.debug("Verifying: %s", url[0])
+        logger.debug("Testing: %s", url[0])
         metadata = repo_finder.retrieve_metadata(url[0])
         if not metadata:
-            return 1
+            return os.EX_UNAVAILABLE
         links = repo_finder.read_metadata(metadata)
         if not links:
-            return 1
-    return 0
+            return os.EX_UNAVAILABLE
+    return os.EX_OK
 
 
 def perform_action(action_args: argparse.Namespace) -> None:
@@ -195,8 +195,8 @@ def perform_action(action_args: argparse.Namespace) -> None:
         case "verify-policy":
             sys.exit(verify_policy(action_args))
 
-        case "verify-repo-finder":
-            sys.exit(verify_repo_finder())
+        case "test-repo-finder":
+            sys.exit(test_repo_finder())
 
         case "analyze":
             # Check that the GitHub token is enabled.

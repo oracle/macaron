@@ -538,6 +538,7 @@ def get_remote_vcs_url(url: str, clean_up: bool = True) -> str:
     """
     parsed_result = parse_remote_url(url)
     if not parsed_result:
+        logger.debug("REJECT: %s", url)
         return ""
 
     url_as_str = urllib.parse.urlunparse(parsed_result)

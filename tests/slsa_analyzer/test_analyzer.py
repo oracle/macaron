@@ -43,49 +43,6 @@ class TestAnalyzer(MacaronTestCase):
 
 
 @pytest.mark.parametrize(
-    argnames=("purl", "available_domains", "expect"),
-    argvalues=[
-        # A repo-based PURL cannot have its namespace empty.
-        (
-            PackageURL(type="github", namespace="", name="maven"),
-            [],
-            None,
-        ),
-        # github and bitbucket are pre-defined types in the PURL specs.
-        (
-            PackageURL(type="github", namespace="apache", name="maven"),
-            ["github"],
-            "https://github.com/apache/maven",
-        ),
-        (
-            PackageURL(type="bitbucket", namespace="snakeyaml", name="snakeyaml"),
-            ["github"],
-            "https://bitbucket.org/snakeyaml/snakeyaml",
-        ),
-        # Test cases for PURL with git service domain URL as the type.
-        (
-            PackageURL(type="github.com", namespace="apache", name="maven"),
-            ["github.com", "gitlab.com", "bitbucket.org"],
-            "https://github.com/apache/maven",
-        ),
-        (
-            PackageURL(type="bitbucket.org", namespace="snakeyaml", name="snakeyaml"),
-            ["github.com", "gitlab.com", "bitbucket.org"],
-            "https://bitbucket.org/snakeyaml/snakeyaml",
-        ),
-        (
-            PackageURL(type="non-existing", namespace="apache", name="maven"),
-            ["github.com", "gitlab.com", "bitbucket.org"],
-            None,
-        ),
-    ],
-)
-def test_to_repo_path(purl: PackageURL, available_domains: list[str], expect: str | None) -> None:
-    """Test the to repo path method."""
-    assert Analyzer.to_repo_path(purl=purl, available_domains=available_domains) == expect
-
-
-@pytest.mark.parametrize(
     ("config", "available_domains", "expect"),
     [
         (

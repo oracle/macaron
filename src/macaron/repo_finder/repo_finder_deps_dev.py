@@ -7,6 +7,8 @@ import logging
 from collections.abc import Iterator
 from urllib.parse import quote as encode
 
+from requests.exceptions import ReadTimeout
+
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.util import send_get_http_raw
 
@@ -15,9 +17,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 class RepoFinderDepsDev(BaseRepoFinder):
     """This class is used to find repositories using Google's Open Source Insights A.K.A. deps.dev (DD)."""
-
-    # The label used by deps.dev to denote repository urls (Based on observation ONLY)
-    repo_url_label = "SOURCE_REPO"
 
     def __init__(self, purl_type: str) -> None:
         """Initialise the deps.dev repository finder instance.
@@ -86,11 +85,19 @@ class RepoFinderDepsDev(BaseRepoFinder):
         """
         base_url = self.create_type_specific_url(group, artifact)
 
+        if not base_url:
+            return []
+
         if version:
             return [f"{base_url}/versions/{version}"]
 
         # Find the latest version.
-        response = send_get_http_raw(base_url, {})
+        try:
+            response = send_get_http_raw(base_url, {})
+        except ReadTimeout:
+            logger.debug("Failed to retrieve version (timeout): %s:%s", group, artifact)
+            return []
+
         if not response:
             return []
 
@@ -99,6 +106,7 @@ class RepoFinderDepsDev(BaseRepoFinder):
         latest_version = versions[len(version) - 1]["versionKey"]["version"]
 
         if latest_version:
+            logger.debug("Found latest version: %s", latest_version)
             return [f"{base_url}/versions/{latest_version}"]
 
         return []
@@ -117,7 +125,12 @@ class RepoFinderDepsDev(BaseRepoFinder):
         str :
             The retrieved file data or an empty string.
         """
-        response = send_get_http_raw(url, {})
+        try:
+            response = send_get_http_raw(url, {})
+        except ReadTimeout:
+            logger.debug("Failed to retrieve metadata (timeout): %s", url)
+            return ""
+
         if not response:
             return ""
 
@@ -143,11 +156,7 @@ class RepoFinderDepsDev(BaseRepoFinder):
             logger.debug("Metadata had no URLs: %s", parsed["versionKey"])
             return []
 
-        for link in parsed["links"]:
-            if link["label"] == self.repo_url_label:
-                return list(link["url"])
-
-        return []
+        return list(parsed["links"])
 
     def create_type_specific_url(self, namespace: str, name: str) -> str:
         """Create a url for the deps.dev API based on the package type.
@@ -177,6 +186,8 @@ class RepoFinderDepsDev(BaseRepoFinder):
                     package_name = name
             case "nuget" | "cargo":
                 package_name = name
+            case "maven":
+                package_name = f"{namespace}%3A{name}"
 
             case _:
                 logger.debug("PURL type not yet supported: %s", self.type)

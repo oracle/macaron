@@ -25,21 +25,29 @@ class TestDependencyAnalyzer(MacaronTestCase):
         auto_deps = {
             "com.fasterxml.jackson.core:jackson-annotations": DependencyInfo(
                 version="2.14.0-SNAPSHOT",
-                group="com.fasterxml.jackson.core",
+                namespace="com.fasterxml.jackson.core",
                 name="jackson-annotations",
                 purl="pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.14.0-SNAPSHOT?type=bundle",
                 url="https://github.com/FasterXML/jackson-annotations",
                 note="",
                 available=SCMStatus.AVAILABLE,
+                type_="maven",
+                scheme="pkg",
+                qualifiers="",
+                subpath="",
             ),
             "com.fasterxml.jackson.core:jackson-core": DependencyInfo(
                 version="2.14.0-SNAPSHOT",
-                group="com.fasterxml.jackson.core",
+                namespace="com.fasterxml.jackson.core",
                 name="jackson-core",
                 purl="pkg:maven/com.fasterxml.jackson.core/jackson-core@2.14.0-SNAPSHOT?type=bundle",
                 url="https://github.com/FasterXML/jackson-core",
                 note="",
                 available=SCMStatus.AVAILABLE,
+                type_="maven",
+                scheme="pkg",
+                qualifiers="",
+                subpath="",
             ),
         }
 

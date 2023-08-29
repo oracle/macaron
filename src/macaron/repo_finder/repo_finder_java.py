@@ -4,12 +4,12 @@
 """This module contains the JavaRepoFinder class to be used for finding Java repositories."""
 import logging
 import re
-import typing
 from collections.abc import Iterator
 from xml.etree.ElementTree import Element  # nosec
 
 import defusedxml.ElementTree
 from defusedxml.ElementTree import fromstring
+from requests.exceptions import ReadTimeout
 
 from macaron.config.defaults import defaults
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
@@ -129,7 +129,12 @@ class JavaRepoFinder(BaseRepoFinder):
         str :
             The retrieved file data or an empty string.
         """
-        response = send_get_http_raw(url, {})
+        try:
+            response = send_get_http_raw(url, {})
+        except ReadTimeout:
+            logger.debug("Failed to retrieve metadata (timeout): %s", url)
+            return ""
+
         if not response:
             return ""
 
@@ -207,7 +212,7 @@ class JavaRepoFinder(BaseRepoFinder):
 
         # Try to match each tag with the contents of the POM.
         for tag in tags:
-            element: typing.Optional[Element] = pom
+            element: Element | None = pom
 
             if tag.startswith("properties."):
                 # Tags under properties are often "." separated
@@ -262,7 +267,7 @@ class JavaRepoFinder(BaseRepoFinder):
             return group.text.strip(), artifact.text.strip(), version.text.strip()
         return "", "", ""
 
-    def _find_element(self, parent: typing.Optional[Element], target: str) -> typing.Optional[Element]:
+    def _find_element(self, parent: Element | None, target: str) -> Element | None:
         if not parent:
             return None
 

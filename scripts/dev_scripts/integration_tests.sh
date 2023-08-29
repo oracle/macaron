@@ -535,9 +535,9 @@ fi
 
 # Testing the Repo Finder's remote calls.
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Verify Repo Finder functionality."
+echo "Testing Repo Finder functionality."
 echo -e "----------------------------------------------------------------------------------\n"
-macaron -v verify-repo-finder
+macaron -v test-repo-finder
 if [ $? -ne 0 ];
 then
     echo -e "Expect zero status code but got $?."

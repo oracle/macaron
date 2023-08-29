@@ -30,7 +30,7 @@ class DependencyInfo(TypedDict):
     """The information of a resolved dependency."""
 
     version: str
-    group: str
+    namespace: str
     name: str
     purl: str
     url: str

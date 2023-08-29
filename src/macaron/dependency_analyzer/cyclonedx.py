@@ -172,7 +172,7 @@ def convert_components_to_artifacts(
             # See https://peps.python.org/pep-0589/#totality
             item = DependencyInfo(
                 version=component.get("version") or "",
-                group=component.get("group") or "",
+                namespace=component.get("group") or "",
                 name=component.get("name") or "",
                 purl=component.get("purl") or "",
                 url="",
@@ -190,7 +190,7 @@ def convert_components_to_artifacts(
                     "snapshot"
                     in (item.get("version") or "").lower()  # or "" is not necessary but mypy produces a FP otherwise.
                     and root_component
-                    and item.get("group") == root_component.get("group")
+                    and item.get("namespace") == root_component.get("group")
                 ):
                     continue
                 logger.debug(
