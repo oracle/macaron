@@ -36,7 +36,7 @@ argv_main=()
 
 # These are the sub-commands for a specific action.
 # macaron
-#   analzye:
+#   analyze:
 #       -g/--template-path TEMPLATE_PATH: The path to the Jinja2 html template (please make sure to use .html or .j2 extensions).
 #       -c/--config-path CONFIG_PATH: The path to the user configuration.
 #       -pe/--provenance-expectation POLICY: The path to provenance expectation file or directory.
