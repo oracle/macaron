@@ -74,7 +74,7 @@ Now that you have successfully downloaded and installed Macaron, please refer to
 Proxy Configuration
 -------------------
 
-Make sure your system proxy is correctly set:
+Make sure your system proxy is correctly set. These environment variables are read from the host machine and set in the Macaron container automatically.
 
 .. code-block:: shell
 
@@ -131,3 +131,5 @@ the Docker container. You can set up your proxy settings in the following files:
 
 * ``~/.m2/settings.xml``
 * ``~/.gradle/gradle.properties``
+
+See the `Maven <https://maven.apache.org/settings.html#proxies>`_ and `Gradle <https://docs.gradle.org/current/userguide/build_environment.html#sec:accessing_the_web_via_a_proxy>`_ documentations for more information on setting up proxies.
