@@ -3,13 +3,7 @@
 
 """This module defines the package registries."""
 
-from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAsset, JFrogMavenRegistry
+from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenRegistry
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
-
-__all__ = [
-    "JFrogMavenAsset",
-    "JFrogMavenRegistry",
-    "PackageRegistry",
-]
 
 PACKAGE_REGISTRIES: list[PackageRegistry] = [JFrogMavenRegistry()]

@@ -13,7 +13,8 @@ from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
-from macaron.slsa_analyzer.package_registry import JFrogMavenAsset, JFrogMavenRegistry
+from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
+from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAsset
 from macaron.slsa_analyzer.provenance.witness import (
     WitnessProvenanceSubject,
     extract_witness_provenance_subjects,
