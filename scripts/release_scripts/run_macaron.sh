@@ -379,6 +379,9 @@ fi
 
 # Set up proxy.
 # We respect the host machine's proxy environment variables.
+# For Maven and Gradle projects that Macaron needs to analyzes, the proxy configuration
+# for Maven wrapper `mvnw` and Gradle wrapper `gradlew` are set using `MAVEN_OPTS` and
+# `GRADLE_OPTS` environment variables.
 proxy_var_names=(
     "http_proxy"
     "https_proxy"
