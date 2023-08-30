@@ -105,8 +105,18 @@ echo "uiv-lib/uiv: Analysing the repo path, the branch name and the commit diges
 echo "skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/uiv-lib/urllib3/urllib3.json
 $RUN_MACARON analyze -rp https://github.com/uiv-lib/uiv -b dev -d 057b25b4db0913edab4cf728c306085e6fc20d49 --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "sagikazarmark/modern-go-application: Analysing the repo path, the branch name and the"
+echo "commit digest for a Go project, skipping dependency resolution."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/modern-go-application.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/sagikazarmark/modern-go-application/modern-go-application.json
+$RUN_MACARON analyze -rp https://github.com/sagikazarmark/modern-go-application -b main -d 468a20bc42f96ffebae693a51b006b263b4a497e --skip-deps || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 

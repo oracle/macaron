@@ -11,6 +11,7 @@ from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.docker import Docker
+from macaron.slsa_analyzer.build_tool.go import Go
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.build_tool.npm import NPM
@@ -185,6 +186,25 @@ def npm_tool(setup_test) -> NPM:  # type: ignore # pylint: disable=unused-argume
     npm = NPM()
     npm.load_defaults()
     return npm
+
+
+@pytest.fixture(autouse=True)
+def go_tool(setup_test) -> Go:  # type: ignore # pylint: disable=unused-argument
+    """Create a Go tool instance.
+
+    Parameters
+    ----------
+    setup_test
+        Depends on setup_test fixture.
+
+    Returns
+    -------
+    Go
+        The Go instance.
+    """
+    go = Go()  # pylint: disable=invalid-name
+    go.load_defaults()
+    return go
 
 
 class MockGitHubActions(GitHubActions):

@@ -35,7 +35,7 @@ def test_get_build_dirs(snapshot: list, npm_tool: NPM, mock_repo: Path) -> None:
     ],
 )
 def test_npm_build_tool(npm_tool: NPM, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
-    """Test the Maven build tool."""
+    """Test the NPM build tool."""
     base_dir = Path(__file__).parent
     ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
     assert npm_tool.is_detected(ctx.component.repository.fs_path) == expected_value
