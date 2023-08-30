@@ -37,7 +37,7 @@ def test_get_build_dirs(snapshot: list, docker_tool: Docker, mock_repo: Path) ->
     ],
 )
 def test_docker_build_tool(docker_tool: Docker, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
-    """Test the Gradle build tool."""
+    """Test the Docker build tool."""
     base_dir = Path(__file__).parent
     ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
     assert docker_tool.is_detected(ctx.component.repository.fs_path) == expected_value
