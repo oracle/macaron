@@ -997,8 +997,7 @@ class Analyzer:
             if item["version"] != "unspecified":
                 purl_string = purl_string + "@" + item["version"]
 
-            urls = find_repo(PackageURL.from_string(purl_string))
-            item["url"] = DependencyAnalyzer.find_valid_url(urls)
+            item["url"] = find_repo(PackageURL.from_string(purl_string))
             if item["url"] == "":
                 logger.debug("Failed to find url for purl: %s", purl_string)
             else:
