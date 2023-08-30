@@ -114,7 +114,7 @@ echo -e "\n---------------------------------------------------------------------
 echo "sagikazarmark/modern-go-application: Analysing the repo path, the branch name and the"
 echo "commit digest for a Go project, skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/modern-go-application.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/modern-go-application/modern-go-application.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/sagikazarmark/modern-go-application/modern-go-application.json
 $RUN_MACARON analyze -rp https://github.com/sagikazarmark/modern-go-application -b main -d 468a20bc42f96ffebae693a51b006b263b4a497e --skip-deps || log_fail
 
