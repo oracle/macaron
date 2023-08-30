@@ -58,5 +58,6 @@ jobs:
       env:
         # This environment variable will be picked up by run_macaron.sh.
         MACARON_IMAGE_TAG: test
+        DOCKER_PULL: never
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: make integration-test-docker
