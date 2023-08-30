@@ -1,7 +1,36 @@
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module contains the logic for using/calling the different repo finders."""
+"""
+This module contains the logic for using/calling the different repo finders.
+
+Input
+-----
+The entry point of the repo finder depends on the type of PURL being analyzed.
+- If passing a PURL representing an artifact, the ``find_repo`` function in this file should be called.
+- If passing a PURL representing a repository, the ``to_repo_path`` function in this file should be called.
+
+Artifact PURLs
+--------------
+For artifact PURLs, the PURL type determines how the repositories are searched for.
+Currently, for Maven PURLs, SCM meta data is retrieved from the matching POM retrieved from Maven Central (or
+other configured location).
+
+For Python, .NET, Rust, and NodeJS type PURLs, Google's Open Source Insights API is used to find the meta data.
+
+In either case, any repository links are extracted from the meta data, then checked for validity via
+``DependencyAnalyzer::find_valid_url`` which accepts URLs that point to a Github repository or similar.
+
+Repository PURLs
+----------------
+For repository PURLs, the type is checked against the configured valid domains, and accepted or rejected based
+on that data.
+
+Result
+------
+If all goes well, a repository URL that matches the initial artifact or repository PURL will be returned for
+analysis.
+"""
 
 import logging
 import os
