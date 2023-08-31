@@ -28,7 +28,7 @@ make docs-api
 
 This command uses [sphinx-apidoc](https://www.sphinx-doc.org/en/master/man/sphinx-apidoc.html) to generate the API reference RST files into `docs/source/pages/developers_guide/apidoc/`. Make sure to check in these API reference RST files to the repository.
 
-You can then rebuild the whole Macaron HTML documentation with:
+You can then rebuild the whole HTML documentation with:
 
 ```
 make docs
