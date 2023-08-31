@@ -294,7 +294,7 @@ dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip: docs
 dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt:
 	echo $(SOURCE_DATE_EPOCH) > dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt
 
-# Build the HTML documentation from RST files under `docs/source`.
+# Build the HTML documentation from the package's source.
 .PHONY: docs
 docs: docs-clean
 	$(MAKE) -C docs/ html
