@@ -294,15 +294,18 @@ dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip: docs
 dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt:
 	echo $(SOURCE_DATE_EPOCH) > dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt
 
-# Build the HTML documentation from the package's source.
+# Build the HTML documentation from RST files under `docs/source`.
 .PHONY: docs
 docs: docs-clean
 	$(MAKE) -C docs/ html
 
+# Generate API reference pages in the documentation using `sphinx-apidoc`.
 .PHONY: docs-api
 docs-api:
 	sphinx-apidoc --no-toc --module-first --force --maxdepth 1 --output-dir docs/source/pages/apidoc/ src/
 
+# Combine the two targets `docs-api` and `docs`:
+# First generate API reference pages, then build the HTML documentation.
 .PHONY: docs-full
 docs-full: docs-api docs
 
