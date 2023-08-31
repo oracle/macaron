@@ -47,14 +47,14 @@ class Gradle(BaseBuildTool):
 
         if "builder.gradle.runtime" in defaults:
             try:
-                self.runtime_config.build_timeout = defaults.getfloat(
-                    "builder.gradle.runtime", "build_timeout", fallback=self.runtime_config.build_timeout
+                self.runtime_options.build_timeout = defaults.getfloat(
+                    "builder.gradle.runtime", "build_timeout", fallback=self.runtime_options.build_timeout
                 )
             except ValueError as error:
                 logger.error(
                     "Failed to validate builder.gradle.runtime.build_timeout in defaults.ini. "
                     "Falling back to the default build timeout %s seconds: %s",
-                    self.runtime_config.build_timeout,
+                    self.runtime_options.build_timeout,
                     error,
                 )
 
@@ -230,7 +230,7 @@ class Gradle(BaseBuildTool):
             The group id of the project, if exists.
         """
         try:
-            logger.debug(
+            logger.info(
                 "Identifying the group ID for the artifact. This can take a while if Gradle needs to be downloaded."
             )
             result = subprocess.run(  # nosec B603
@@ -238,7 +238,7 @@ class Gradle(BaseBuildTool):
                 capture_output=True,
                 cwd=project_path,
                 check=False,
-                timeout=self.runtime_config.build_timeout,
+                timeout=self.runtime_options.build_timeout,
             )
         except (subprocess.CalledProcessError, OSError, subprocess.TimeoutExpired) as error:
             logger.debug("Could not capture the group id of the Gradle project at %s", project_path)

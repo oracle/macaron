@@ -89,10 +89,7 @@ def test_get_group_ids_separate_projects(tmp_path: Path, gradle_tool: Gradle) ->
     }
 
 
-@pytest.mark.parametrize(
-    ("timeout", "expected"),
-    [("0", set()), ("invalid", {"io.micronaut"})],
-)
+@pytest.mark.parametrize(("timeout", "expected"), [("0", set()), ("invalid", {"io.micronaut"})])
 def test_get_group_ids_timeout(tmp_path: Path, gradle_tool: Gradle, timeout: str, expected: set) -> None:
     """Test the timeout configuration on ``get_group_ids`` method."""
     repo_dir = tmp_path.joinpath("repo")
