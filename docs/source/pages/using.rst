@@ -78,7 +78,7 @@ Analyzing a repository on a self-hosted GitLab instance
 
 To analyze a repository on a self-hosted GitLab instance, you need to do the following:
 
-- Add the following ``[git_service.gitlab.self_hosted]`` section into your ``.ini`` config. In the default .ini configuration (generated using ``macaron dump-default`` -- :ref:`see instructions <action_dump_defaults>`), there is already this section commented out. You can start by un-commenting this section and modifying the ``domain`` value with the domain of your self-hosted GitLab instance.
+- Add the following ``[git_service.gitlab.self_hosted]`` section into your ``.ini`` config. In the default .ini configuration (generated using ``macaron dump-default`` -- :ref:`see instructions <action_dump_defaults>`), there is already this section commented out. You can start by un-commenting this section and modifying the ``hostname`` value with the hostname of your self-hosted GitLab instance.
 
 .. code-block:: ini
 
@@ -86,7 +86,7 @@ To analyze a repository on a self-hosted GitLab instance, you need to do the fol
     # If this section is enabled, an access token must be provided through the ``MCN_SELF_HOSTED_GITLAB_TOKEN`` environment variable.
     # The `read_repository` permission is required for this token.
     [git_service.gitlab.self_hosted]
-    domain = internal.gitlab.org
+    hostname = internal.gitlab.org
 
 - Obtain a GitLab access token having at least the ``read_repository`` permission and store it into the ``MCN_SELF_HOSTED_GITLAB_TOKEN`` environment variable. For more detailed instructions, see `GitLab documentation <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token>`_.
 
@@ -100,7 +100,7 @@ To simplify the examples, we use the same configurations as above if needed (e.g
 
 .. code-block::
 
-  pkg:<git_service_domain>/<organization>/<name>
+  pkg:<git_service_hostname>/<organization>/<name>
 
 The list bellow shows examples for the corresponding PURL strings for different git repositories:
 

@@ -485,11 +485,11 @@ def get_remote_origin_of_local_repo(git_obj: Git) -> str:
             logger.error("Error occurs while processing the remote URL of repo %s.", git_obj.project_name)
             return ""
 
-        _, _, domain = url_parse_result.netloc.rpartition("@")
+        _, _, hostname = url_parse_result.netloc.rpartition("@")
 
         new_url_parse_result = urllib.parse.ParseResult(
             scheme=url_parse_result.scheme,
-            netloc=domain,
+            netloc=hostname,
             path=url_parse_result.path,
             params=url_parse_result.params,
             query=url_parse_result.query,
@@ -548,7 +548,9 @@ def get_remote_vcs_url(url: str, clean_up: bool = True) -> str:
     return url_as_str
 
 
-def parse_remote_url(url: str, allowed_git_service_domains: list[str] | None = None) -> urllib.parse.ParseResult | None:
+def parse_remote_url(
+    url: str, allowed_git_service_hostnames: list[str] | None = None
+) -> urllib.parse.ParseResult | None:
     """Verify if the given repository path is a valid vcs.
 
     This method converts the url to a ``https://`` url and return a
@@ -559,8 +561,8 @@ def parse_remote_url(url: str, allowed_git_service_domains: list[str] | None = N
     ----------
     url: str
         The path of the repository to check.
-    allowed_git_service_domains: list[str] | None
-        The list of allowed git service domains.
+    allowed_git_service_hostnames: list[str] | None
+        The list of allowed git service hostnames.
         If this is ``None``, fall back to the  ``.ini`` configuration.
         (Default: None).
 
@@ -574,8 +576,8 @@ def parse_remote_url(url: str, allowed_git_service_domains: list[str] | None = N
     >>> parse_remote_url("ssh://git@github.com:7999/owner/org.git")
     ParseResult(scheme='https', netloc='github.com', path='owner/org.git', params='', query='', fragment='')
     """
-    if allowed_git_service_domains is None:
-        allowed_git_service_domains = get_allowed_git_service_domains(defaults)
+    if allowed_git_service_hostnames is None:
+        allowed_git_service_hostnames = get_allowed_git_service_hostnames(defaults)
 
     try:
         # Remove prefixes, such as "scm:" and "git:".
@@ -596,7 +598,7 @@ def parse_remote_url(url: str, allowed_git_service_domains: list[str] | None = N
 
     # e.g., https://github.com/owner/project.git
     if parsed_url.scheme in ("http", "https", "ftp", "ftps", "git+https"):
-        if parsed_url.netloc not in allowed_git_service_domains:
+        if parsed_url.netloc not in allowed_git_service_hostnames:
             return None
         path_params = parsed_url.path.strip("/").split("/")
         if len(path_params) < 2:
@@ -613,7 +615,7 @@ def parse_remote_url(url: str, allowed_git_service_domains: list[str] | None = N
         user_host, _, port = parsed_url.netloc.partition(":")
         user, _, host = user_host.rpartition("@")
 
-        if not user or host not in allowed_git_service_domains:
+        if not user or host not in allowed_git_service_hostnames:
             return None
 
         path = ""
@@ -641,7 +643,7 @@ def parse_remote_url(url: str, allowed_git_service_domains: list[str] | None = N
         if not user_host or not port_path:
             return None
         user, _, host = user_host.rpartition("@")
-        if not user or host not in allowed_git_service_domains:
+        if not user or host not in allowed_git_service_hostnames:
             return None
 
         path = ""
@@ -677,8 +679,8 @@ def parse_remote_url(url: str, allowed_git_service_domains: list[str] | None = N
         return None
 
 
-def get_allowed_git_service_domains(config: ConfigParser) -> list[str]:
-    """Load allowed git service domains from ini configuration.
+def get_allowed_git_service_hostnames(config: ConfigParser) -> list[str]:
+    """Load allowed git service hostnames from ini configuration.
 
     Some notes for future improvements:
 
@@ -686,7 +688,7 @@ def get_allowed_git_service_domains(config: ConfigParser) -> list[str]:
 
     Q: Why do we need this method here in this ``git_url`` module in the first place?
     A: A number of functions in this module also do "URL validation" as part of their logic.
-    This requires loading in the allowed git service domains from the ini config.
+    This requires loading in the allowed git service hostnames from the ini config.
 
     Q: Why don't we use the ``GIT_SERVICES`` list from the ``macaron.slsa_analyzer.git_service``
     instead of having this second place of loading git service configuration?
@@ -697,18 +699,18 @@ def get_allowed_git_service_domains(config: ConfigParser) -> list[str]:
         section_name for section_name in config.sections() if section_name.startswith("git_service")
     ]
 
-    allowed_git_service_domains = []
+    allowed_git_service_hostnames = []
 
     for section_name in git_service_section_names:
         git_service_section = config[section_name]
 
-        domain = git_service_section.get("domain")
-        if not domain:
+        hostname = git_service_section.get("hostname")
+        if not hostname:
             continue
 
-        allowed_git_service_domains.append(domain)
+        allowed_git_service_hostnames.append(hostname)
 
-    return allowed_git_service_domains
+    return allowed_git_service_hostnames
 
 
 def get_repo_dir_name(url: str, sanitize: bool = True) -> str:

@@ -24,20 +24,20 @@ class BaseGitService:
             The name of the git service.
         """
         self.name = name
-        self.domain: str | None = None
+        self.hostname: str | None = None
 
     @abstractmethod
     def load_defaults(self) -> None:
         """Load the values for this git service from the ini configuration."""
 
-    def load_domain(self, section_name: str) -> str | None:
-        """Load the domain of the git service from the ini configuration section ``section_name``.
+    def load_hostname(self, section_name: str) -> str | None:
+        """Load the hostname of the git service from the ini configuration section ``section_name``.
 
         The section may or may not be available in the configuration. In both cases,
         the method should not raise ``ConfigurationError``.
 
         Meanwhile, if the section is present but there is a schema violation (e.g. a key such as
-        ``domain`` is missing), this method will raise a ``ConfigurationError``.
+        ``hostname`` is missing), this method will raise a ``ConfigurationError``.
 
         Parameters
         ----------
@@ -47,7 +47,7 @@ class BaseGitService:
         Returns
         -------
         str | None
-            The domain. This can be ``None`` if the git service section is not found in
+            The hostname. This can be ``None`` if the git service section is not found in
             the ini configuration file, meaning the user does not enable the
             corresponding git service.
 
@@ -61,17 +61,17 @@ class BaseGitService:
             # to have all available git services in the ini config.
             return None
         section = defaults[section_name]
-        domain = section.get("domain")
-        if not domain:
+        hostname = section.get("hostname")
+        if not hostname:
             raise ConfigurationError(
-                f'The "domain" key is missing in section [{section_name}] of the .ini configuration file.'
+                f'The "hostname" key is missing in section [{section_name}] of the .ini configuration file.'
             )
-        return domain
+        return hostname
 
     def is_detected(self, url: str) -> bool:
         """Check if the remote repo at the given ``url`` is hosted on this git service.
 
-        This check is done by checking the URL of the repo against the domain of this
+        This check is done by checking the URL of the repo against the hostname of this
         git service.
 
         Parameters
@@ -84,12 +84,12 @@ class BaseGitService:
         bool
             True if the repo is indeed hosted on this git service.
         """
-        if self.domain is None:
+        if self.hostname is None:
             return False
         return (
             git_url.parse_remote_url(
                 url,
-                allowed_git_service_domains=[self.domain],
+                allowed_git_service_hostnames=[self.hostname],
             )
             is not None
         )
