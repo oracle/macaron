@@ -9,9 +9,10 @@ To get started with contributing to Macaron, see our `CONTRIBUTING <https://gith
 
 To follow our code style, see our :doc:`Macaron Style Guide </pages/developers_guide/style_guide>` page.
 
-For API reference, see the :doc:`API Reference </pages/apidoc/index>` page.
+For API reference, see the :doc:`API Reference </pages/developers_guide/apidoc/index>` page.
 
 .. toctree::
    :maxdepth: 1
 
    style_guide
+   apidoc/index

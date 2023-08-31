@@ -107,4 +107,3 @@ intermediate representations as abstractions. Using such abstractions, Macaron i
    pages/cli_usage/index
    pages/supported_technologies/index
    pages/developers_guide/index
-   pages/apidoc/index

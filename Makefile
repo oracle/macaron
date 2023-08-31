@@ -302,7 +302,7 @@ docs: docs-clean
 # Generate API reference pages in the documentation using `sphinx-apidoc`.
 .PHONY: docs-api
 docs-api:
-	sphinx-apidoc --no-toc --module-first --force --maxdepth 1 --output-dir docs/source/pages/apidoc/ src/
+	sphinx-apidoc --no-toc --module-first --force --maxdepth 1 --output-dir docs/source/pages/developers_guide/apidoc/ src/
 
 # Combine the two targets `docs-api` and `docs`:
 # First generate API reference pages, then build the HTML documentation.

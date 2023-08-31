@@ -27,7 +27,7 @@ We avoid using the same name for two or more classes in all cases (including cas
 Docstrings
 ----------
 
-We use `sphinx-apidoc`_ to generate :doc:`API Reference </pages/apidoc/index>` automatically from `Python docstrings <https://www.python.org/dev/peps/pep-0257/>`_ written in the code.
+We use `sphinx-apidoc`_ to generate :doc:`API Reference </pages/developers_guide/apidoc/index>` automatically from `Python docstrings <https://www.python.org/dev/peps/pep-0257/>`_ written in the code.
 
 We follow the `numpydoc style <https://numpydoc.readthedocs.io/en/latest/format.html>`_ for Python docstrings (see `example <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html>`_) with some exceptions.
 
