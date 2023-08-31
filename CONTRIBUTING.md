@@ -177,7 +177,19 @@ Note that integration tests can take a long time to complete. Also the repositor
 
 ## Generating documentation
 
-See instructions [here](docs/README.md).
+As mentioned above, all package code should make use of [Python docstrings](https://www.python.org/dev/peps/pep-0257/) in [reStructured text format](https://www.python.org/dev/peps/pep-0287/) following [numpydoc style](https://numpydoc.readthedocs.io/en/latest/format.html) (with some exceptions - see our [style guide](https://oracle.github.io/pages/developers_guide/style_guide.html#docstrings)). Using these docstrings and the documentation template in the `docs/source/` folder, you can then generate proper documentation in different formats using the [Sphinx](https://github.com/sphinx-doc/sphinx/) tool:
+
+```bash
+make docs
+```
+
+This example generates documentation in HTML, which can then be found here:
+
+```bash
+open docs/_build/html/index.html
+```
+
+For more information see the instructions [here](docs/README.md).
 
 ## Code of conduct
 
