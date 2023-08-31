@@ -59,7 +59,7 @@ def test_construct_clone_url_with_token(repo_url: str, clone_url: str) -> None:
         pytest.param(
             """
             [git_service.gitlab.self_hosted]
-            domain = internal.gitlab.org
+            hostname = internal.gitlab.org
             """,
             "https://internal.gitlab.org/owner/repo.git",
             "https://oauth2:abcxyz@internal.gitlab.org/owner/repo.git",
@@ -68,7 +68,7 @@ def test_construct_clone_url_with_token(repo_url: str, clone_url: str) -> None:
         pytest.param(
             """
             [git_service.gitlab.self_hosted]
-            domain = internal.gitlab.org
+            hostname = internal.gitlab.org
             """,
             "https://internal.gitlab.org/owner/repo",
             "https://oauth2:abcxyz@internal.gitlab.org/owner/repo",
@@ -98,7 +98,7 @@ def test_self_hosted_gitlab_without_env_set(tmp_path: Path) -> None:
     """Test if the ``load_defaults`` method raises error if the required env variable is not set."""
     user_config_input = """
     [git_service.gitlab.self_hosted]
-    domain = internal.gitlab.org
+    hostname = internal.gitlab.org
     """
     user_config_path = os.path.join(tmp_path, "config.ini")
     with open(user_config_path, "w", encoding="utf-8") as user_config_file:
@@ -178,7 +178,7 @@ def test_origin_remote_url_masking(self_hosted_gitlab: Git, expected_origin_url:
     """
     user_config_input = """
     [git_service.gitlab.self_hosted]
-    domain = internal.gitlab.org
+    hostname = internal.gitlab.org
     """
     user_config_path = os.path.join(tmp_path, "config.ini")
     with open(user_config_path, "w", encoding="utf-8") as user_config_file:

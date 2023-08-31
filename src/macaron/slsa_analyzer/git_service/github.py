@@ -29,7 +29,7 @@ class GitHub(BaseGitService):
             If there is an error loading the configuration.
         """
         try:
-            self.domain = self.load_domain(section_name="git_service.github")
+            self.hostname = self.load_hostname(section_name="git_service.github")
         except ConfigurationError as error:
             raise error
 
