@@ -65,14 +65,14 @@ class GitLab(BaseGitService):
         CloneError
             If there is an error parsing the URL.
         """
-        if not self.domain:
+        if not self.hostname:
             # This should not happen.
-            logger.debug("Cannot clone with a Git service having no domain.")
+            logger.debug("Cannot clone with a Git service having no hostname.")
             raise CloneError(f"Cannot clone the repo '{url}' due to an internal error.")
 
         url_parse_result = git_url.parse_remote_url(
             url,
-            allowed_git_service_domains=[self.domain],
+            allowed_git_service_hostnames=[self.hostname],
         )
         if not url_parse_result:
             raise CloneError(
@@ -83,9 +83,9 @@ class GitLab(BaseGitService):
         # https://docs.gitlab.com/ee/gitlab-basics/start-using-git.html#clone-using-a-token
         access_token = os.environ.get(self.access_token_env_name)
         if access_token:
-            clone_url_netloc = f"oauth2:{access_token}@{self.domain}"
+            clone_url_netloc = f"oauth2:{access_token}@{self.hostname}"
         else:
-            clone_url_netloc = self.domain
+            clone_url_netloc = self.hostname
 
         clone_url = urlunparse(
             ParseResult(
@@ -241,17 +241,17 @@ class SelfHostedGitLab(GitLab):
             If there is an error loading the configuration.
         """
         try:
-            self.domain = self.load_domain(section_name="git_service.gitlab.self_hosted")
+            self.hostname = self.load_hostname(section_name="git_service.gitlab.self_hosted")
         except ConfigurationError as error:
             raise error
 
-        if not self.domain:
+        if not self.hostname:
             return
 
         if not os.environ.get(self.access_token_env_name):
             raise ConfigurationError(
                 f"Environment variable '{self.access_token_env_name}' is not set "
-                + f"for private GitLab service '{self.domain}'."
+                + f"for private GitLab service '{self.hostname}'."
             )
 
 
@@ -274,6 +274,6 @@ class PubliclyHostedGitLab(GitLab):
             If there is an error loading the configuration.
         """
         try:
-            self.domain = self.load_domain(section_name="git_service.gitlab.publicly_hosted")
+            self.hostname = self.load_hostname(section_name="git_service.gitlab.publicly_hosted")
         except ConfigurationError as error:
             raise error

@@ -624,7 +624,7 @@ class Analyzer:
             The component is already analyzed in the same session.
         """
         # Note: the component created in this function will be added to the database.
-        available_domains = [git_service.domain for git_service in GIT_SERVICES if git_service.domain]
+        available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
         try:
             analysis_target = Analyzer.to_analysis_target(config, available_domains)
         except InvalidPURLError as error:

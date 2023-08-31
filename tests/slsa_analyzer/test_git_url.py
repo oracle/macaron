@@ -143,33 +143,33 @@ def test_get_remote_vcs_url() -> None:
         (
             """
             [git_service.github]
-            domain = github.com
+            hostname = github.com
 
             [git_service.gitlab.public]
-            domain = gitlab.com
+            hostname = gitlab.com
             """,
             {"github.com", "gitlab.com"},
         ),
         (
             """
             [git_service.gitlab.publicly_hosted]
-            domain = gitlab.com
+            hostname = gitlab.com
 
             [git_service.gitlab.self_hosted]
-            domain = internal.gitlab.org
+            hostname = internal.gitlab.org
             """,
             {"gitlab.com", "internal.gitlab.org"},
         ),
     ],
 )
-def test_get_allowed_git_service_domains(
+def test_get_allowed_git_service_hostnames(
     config_input: str,
     expected_allowed_domain_set: set[str],
 ) -> None:
-    """Test the get allowed git service domains function."""
+    """Test the get allowed git service hostnames function."""
     config = configparser.ConfigParser()
     config.read_string(config_input)
-    assert set(git_url.get_allowed_git_service_domains(config)) == expected_allowed_domain_set
+    assert set(git_url.get_allowed_git_service_hostnames(config)) == expected_allowed_domain_set
 
 
 @pytest.mark.parametrize(
@@ -180,25 +180,25 @@ def test_get_allowed_git_service_domains(
             # User config cannot disable either of the two.
             """
             [git_service.github]
-            domain = github.com
+            hostname = github.com
             """,
             {"github.com", "gitlab.com"},
         ),
         (
             """
             [git_service.gitlab.self_hosted]
-            domain = internal.gitlab.org
+            hostname = internal.gitlab.org
             """,
             {"github.com", "gitlab.com", "internal.gitlab.org"},
         ),
     ],
 )
-def test_get_allowed_git_service_domains_with_override(
+def test_get_allowed_git_service_hostnames_with_override(
     user_config_input: str,
     expected_allowed_domain_set: set[str],
     tmp_path: Path,
 ) -> None:
-    """Test the get allowed git service domains function, in multi-config files scenario."""
+    """Test the get allowed git service hostnames function, in multi-config files scenario."""
     user_config_path = os.path.join(tmp_path, "config.ini")
     with open(user_config_path, "w", encoding="utf-8") as user_config_file:
         user_config_file.write(user_config_input)
@@ -207,11 +207,11 @@ def test_get_allowed_git_service_domains_with_override(
     # ``setup_test`` fixture.
     load_defaults(user_config_path)
 
-    assert set(git_url.get_allowed_git_service_domains(defaults)) == expected_allowed_domain_set
+    assert set(git_url.get_allowed_git_service_hostnames(defaults)) == expected_allowed_domain_set
 
 
-def test_get_remote_vcs_url_with_user_defined_allowed_domains(tmp_path: Path) -> None:
-    """Test the vcs URL validator method with user-defined allowed domains."""
+def test_get_remote_vcs_url_with_user_defined_allowed_hostnames(tmp_path: Path) -> None:
+    """Test the vcs URL validator method with user-defined allowed hostnames."""
     url = "https://internal.gitlab.org/org/name"
     assert git_url.get_remote_vcs_url(url) == ""
 
@@ -220,7 +220,7 @@ def test_get_remote_vcs_url_with_user_defined_allowed_domains(tmp_path: Path) ->
         user_config_file.write(
             """
             [git_service.gitlab.self_hosted]
-            domain = internal.gitlab.org
+            hostname = internal.gitlab.org
             """
         )
     # We don't have to worry about modifying the ``defaults`` object causing test
