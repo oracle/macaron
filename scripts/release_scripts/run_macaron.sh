@@ -36,7 +36,7 @@ argv_main=()
 
 # These are the sub-commands for a specific action.
 # macaron
-#   analzye:
+#   analyze:
 #       -g/--template-path TEMPLATE_PATH: The path to the Jinja2 html template (please make sure to use .html or .j2 extensions).
 #       -c/--config-path CONFIG_PATH: The path to the user configuration.
 #       -pe/--provenance-expectation POLICY: The path to provenance expectation file or directory.
@@ -420,9 +420,19 @@ then
     entrypoint=("macaron")
 fi
 
+if [[ -n "${DOCKER_PULL}" ]]; then
+    if [[ "${DOCKER_PULL}" != @(always|missing|never) ]]; then
+        echo "DOCKER_PULL must be one of: always, missing, never (default: always)"
+        exit 1
+    fi
+else
+    DOCKER_PULL="always"
+fi
+
 echo "Running ${IMAGE}:${MACARON_IMAGE_TAG}"
 
 docker run \
+    --pull ${DOCKER_PULL} \
     --network=host \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" \

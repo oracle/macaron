@@ -45,6 +45,8 @@ To verify your setup, go to the directory containing the downloaded ``run_macaro
 
 .. note:: By default, ``latest`` is used as the tag for the downloaded image. You can choose a specific tag by assigning the environment variable ``MACARON_IMAGE_TAG``. For example to run Macaron v0.1.0 run: ``MACARON_IMAGE_TAG=v0.1.0 ./run_macaron.sh --help``
 
+.. note:: By default, the script will always check the docker registry to ensure the docker image is up-to-date. This can be overridden if necessary (e.g. if running offline with a pre-installed image) by assigning the environment variable ``DOCKER_PULL``. For example: ``DOCKER_PULL=never ./run_macaron.sh --help``
+
 .. _prepare-github-token:
 
 ---------------------------
