@@ -5,9 +5,9 @@
 Macaron Developer's Guide
 =========================
 
-To get started with contributing to Macaron, see our `CONTRIBUTING <https://github.com/oracle/macaron/blob/main/CONTRIBUTING.md>`_ page.
+To get started with contributing to Macaron, see the `CONTRIBUTING <https://github.com/oracle/macaron/blob/main/CONTRIBUTING.md>`_ page.
 
-To follow our code style, see our :doc:`Macaron Style Guide </pages/developers_guide/style_guide>` page.
+To follow the project's code style, see the :doc:`Macaron Style Guide </pages/developers_guide/style_guide>` page.
 
 For API reference, see the :doc:`API Reference </pages/developers_guide/apidoc/index>` page.
 

@@ -36,9 +36,9 @@ concrete rules that can be checked automatically. Macaron has a customizable che
 Getting started
 ---------------
 
-To start with Macaron, see our :doc:`Installation </pages/installation>` and :doc:`Using </pages/using>` pages.
+To start with Macaron, see the :doc:`Installation </pages/installation>` and :doc:`Using </pages/using>` pages.
 
-For all services and technologies that Macaron supports, see our :doc:`Supported Technologies </pages/supported_technologies/index>` page.
+For all services and technologies that Macaron supports, see the :doc:`Supported Technologies </pages/supported_technologies/index>` page.
 
 -------------------------
 Current checks in Macaron

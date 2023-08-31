@@ -8,7 +8,7 @@
 Macaron Style Guide
 ===================
 
-Macaron makes use of different linters. These linters are managed using `pre-commit <https://pre-commit.com/>`_ hooks (see our `.pre-commit-config.yaml <https://github.com/oracle/macaron/blob/main/.pre-commit-config.yaml>`_ file). Most styling issues should be caught by pre-commit hooks. However, there are some additional styling rules that we follow.
+Macaron makes use of different linters. These linters are managed using `pre-commit <https://pre-commit.com/>`_ hooks (see the `.pre-commit-config.yaml <https://github.com/oracle/macaron/blob/main/.pre-commit-config.yaml>`_ file). Most styling issues should be caught by pre-commit hooks. However, there are some additional styling rules that we follow.
 
 --------------
 Python Modules
