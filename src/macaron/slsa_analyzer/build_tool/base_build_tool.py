@@ -8,6 +8,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
 
 from macaron.dependency_analyzer import DependencyAnalyzer
@@ -39,6 +40,17 @@ def file_exists(path: str, file_name: str) -> bool:
         return True
     except StopIteration:
         return False
+
+
+@dataclass
+class RuntimeOptions:
+    """The class for build tool runtime configurations read from `defaults.ini`.
+
+    Note that Macaron uses the options in this class to "run" a build tool.
+    """
+
+    #: The timeout used for running the build tool commands.
+    build_timeout: float = 600
 
 
 class BaseBuildTool(ABC):
@@ -79,6 +91,7 @@ class BaseBuildTool(ABC):
         }
         self.build_log: list[str] = []
         self.wrapper_files: list[str] = []
+        self.runtime_options = RuntimeOptions()
 
     def __str__(self) -> str:
         return self.name
