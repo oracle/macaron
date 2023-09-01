@@ -38,7 +38,6 @@ argv_main=()
 # macaron
 #   analyze:
 #       -g/--template-path TEMPLATE_PATH: The path to the Jinja2 html template (please make sure to use .html or .j2 extensions).
-#       -c/--config-path CONFIG_PATH: The path to the user configuration.
 #       -pe/--provenance-expectation POLICY: The path to provenance expectation file or directory.
 #   dump-defaults:
 #   verify-policy:
@@ -155,10 +154,6 @@ while [[ $# -gt 0 ]]; do
         # Action argv for macaron entrypoint.
         -g|--template-path)
             arg_template_path="$2"
-            shift
-            ;;
-        -c|--config-path)
-            arg_config_path="$2"
             shift
             ;;
         -pe|--provenance-expectation)
@@ -283,22 +278,6 @@ fi
 if [[ -n "${template_path}" ]]; then
     template_path="$(ensure_absolute_path "${template_path}")"
     mounts+=("-v" "${template_path}:${MACARON_WORKSPACE}/template/${file_name}:ro")
-fi
-
-# Determine the config path to be mounted into ${MACARON_WORKSPACE}/config/${file_name}
-if [[ -n "${arg_config_path}" ]]; then
-    config_path="${arg_config_path}"
-    err=$(check_file_exists "${config_path}" "-c/--config-path")
-    if [[ -n "${err}" ]]; then
-        echo "${err}"
-        exit 1
-    fi
-    file_name="$(basename "${config_path}")"
-    argv_action+=("--config-path" "${MACARON_WORKSPACE}/config/${file_name}")
-fi
-if [[ -n "${config_path}" ]]; then
-    config_path="$(ensure_absolute_path "${config_path}")"
-    mounts+=("-v" "${config_path}:${MACARON_WORKSPACE}/config/${file_name}:ro")
 fi
 
 # Determine the sbom path to be mounted into ${MACARON_WORKSPACE}/sbom/${file_name}
