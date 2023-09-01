@@ -1,3 +1,21 @@
+## v0.4.0 (2023-09-01)
+
+### Feat
+
+- support trusted SLSA L3 builders for Maven, Gradle, Node.js, and containers (#445)
+- add purl as a CLI option (#401)
+
+### Fix
+
+- add timeout to Gradle Group ID detection (#446)
+- rename `domain` to `hostname` in Git service configuration (#453)
+- always pull latest docker image in run_macaron.sh (#448)
+- by default, always pull latest version of docker image, but allow this behaviour to be overidden by setting the DOCKER_PULL env var
+
+Signed-off-by: Nicholas Allen <nicholas.allen@oracle.com>
+- **proxy**: use the host proxy settings for Maven and Gradle (#434)
+- update justifications to be complete for multi build tool projects (#432)
+
 ## v0.3.0 (2023-08-22)
 
 ### Feat
