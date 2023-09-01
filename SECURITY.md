@@ -29,7 +29,7 @@ page.
 
 We will provide security related information such as a threat model, considerations
 for secure use, or any known security issues in our documentation. Please note
-that Macaron is intended to demonstrate a concept and may not be
+that labs and sample code are intended to demonstrate a concept and may not be
 sufficiently hardened for production use.
 
 [1]: mailto:secalert_us@oracle.com
