@@ -49,9 +49,9 @@ Common Options
 
 	The directory where Macaron looks for already cloned repositories.
 
------------
+------------------
 Common Environment
------------
+------------------
 
 ``MACARON_IMAGE_TAG`` – The tag to use for the Macaron docker image
 ``DOCKER_PULL`` – Whether to pull docker image from registry, must be one of: always, missing, never (default: always)
