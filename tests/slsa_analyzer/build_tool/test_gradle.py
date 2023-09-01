@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from macaron.config.defaults import load_defaults
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 
@@ -86,3 +87,29 @@ def test_get_group_ids_separate_projects(tmp_path: Path, gradle_tool: Gradle) ->
         "io.micronaut.foo",
         "io.micronaut.bar",
     }
+
+
+@pytest.mark.parametrize(("timeout", "expected"), [("0", set()), ("invalid", {"io.micronaut"})])
+def test_get_group_ids_timeout(tmp_path: Path, gradle_tool: Gradle, timeout: str, expected: set) -> None:
+    """Test the timeout configuration on ``get_group_ids`` method."""
+    repo_dir = tmp_path.joinpath("repo")
+    repo_dir.mkdir()
+
+    with open(repo_dir.joinpath("build.gradle"), "w", encoding="utf-8") as file:
+        file.write('group = "io.micronaut"')
+
+    user_config_path = str(tmp_path.joinpath("config.ini"))
+    user_config_input = f"""
+        [builder.gradle.runtime]
+        build_timeout = {timeout}
+    """
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(user_config_input)
+
+    # We don't have to worry about modifying the ``defaults`` object causing test
+    # pollution here, since we reload the ``defaults`` object before every test with the
+    # ``setup_test`` fixture.
+    load_defaults(user_config_path)
+    gradle_tool.load_defaults()
+
+    assert set(gradle_tool.get_group_ids(str(repo_dir))) == expected
