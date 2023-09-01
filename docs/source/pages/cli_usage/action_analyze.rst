@@ -21,7 +21,7 @@ Usage
 
     usage: ./run_macaron.sh analyze
         [-h] [-sbom SBOM_PATH] [-purl PURL] [-rp REPO_PATH] [-b BRANCH]
-        [-d DIGEST] [-pe PROVENANCE_EXPECTATION] [-c CONFIG_PATH]
+        [-d DIGEST] [-pe PROVENANCE_EXPECTATION]
         [--skip-deps] [-g TEMPLATE_PATH]
 
 -------
@@ -57,10 +57,6 @@ Options
 .. option:: -pe PROVENANCE_EXPECTATION, --provenance-expectation PROVENANCE_EXPECTATION
 
     The path to provenance expectation file or directory.
-
-.. option:: -c CONFIG_PATH, --config-path CONFIG_PATH
-
-    The path to the user configuration.
 
 .. option:: --skip-deps
 
