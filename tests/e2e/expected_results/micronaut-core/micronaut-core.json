@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-07-08 03:33:32"
+        "timestamps": "2023-09-01 13:27:44"
     },
     "target": {
         "info": {
@@ -12,736 +12,45 @@
             "commit_date": "2023-01-28T08:54:51+00:00"
         },
         "provenances": {
-            "is_inferred": false,
+            "is_inferred": true,
             "content": {
                 "github_actions": [
                     {
                         "_type": "https://in-toto.io/Statement/v0.1",
+                        "subject": [],
                         "predicateType": "https://slsa.dev/provenance/v0.2",
-                        "subject": [
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-aop/4.0.0-RC5/micronaut-aop-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "fe81c7b4e6c95178604b96ef73f039fdc11c5f1d9975283b80a41a7b33c3e0c9"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-aop/4.0.0-RC5/micronaut-aop-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "2011e5d598945d4b57ff26be6095fd1112d5f2b6b05ac582da31d4c48cb85796"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/4.0.0-RC5/micronaut-buffer-netty-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "23d6730c4151324238b7feae3ef96ea3e6a9519b14f70e10e65282232d426f58"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-buffer-netty/4.0.0-RC5/micronaut-buffer-netty-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "4de36c140199d1b8d1a62a15b8a05d3448da6ee34064ce5bf3a71c8f92a90224"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-context-propagation/4.0.0-RC5/micronaut-context-propagation-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "6386eaae3efb5dd4c083ddc6180453a6d4069d28aa508cb9866e56b1dfa98b61"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-context-propagation/4.0.0-RC5/micronaut-context-propagation-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "35581cc3c527aa476e915f7dde7fed08ab3850e08f4cd09b24cb0328cf192309"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-context/4.0.0-RC5/micronaut-context-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "8ca6348c7b338894b15f0719acd8d390c793c161b32369f9e14d8889f083ae06"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-context/4.0.0-RC5/micronaut-context-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "2c070f5aeeeb34399945401c362b53a180bafffe9bf3fe3afce300d21a7c4e0f"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-core-bom/4.0.0-RC5/micronaut-core-bom-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "2a58cb4bfb5fd8b2f55aa7fc3996e6893aa0152000a86922762d1afa6bcf978d"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-core-processor/4.0.0-RC5/micronaut-core-processor-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "643d8da5bdbda12c132354c9e8b397f14df44e44099e3073067e1f9e38164f93"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-core-processor/4.0.0-RC5/micronaut-core-processor-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "790a9ce4bf5478d8eb5892891c004065b0f60b3c4cb2c1de0193d49c072a9be0"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/4.0.0-RC5/micronaut-core-reactive-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "238a704fa9421ba79b4980e5da260a1039fc32b52fad7fa454bbbc28152f800f"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-core-reactive/4.0.0-RC5/micronaut-core-reactive-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "339b93388c10169184a01ffffa4898a0bb2eca22673506b1b381517bc140db3c"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-core/4.0.0-RC5/micronaut-core-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "af51369feaf2b5d3764c4c920786dd3791371c846b569f9bea71b5d98fb09945"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-core/4.0.0-RC5/micronaut-core-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "fa4f43ed7a75ad5062276d1eac5dd910bc6fea98d460bb40b4eb47e3fe288c21"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-discovery-core/4.0.0-RC5/micronaut-discovery-core-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "e34a8810c4ba56dc2022be1bd7c48d55df4f310dffcb241f0a7c03c44900b850"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-discovery-core/4.0.0-RC5/micronaut-discovery-core-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "fbc3751a2c68b94c60f4899812c20c6b468aabedb784e64c086336f0656609f5"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/4.0.0-RC5/micronaut-function-client-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "e6aa43764625cd9cdfd15d8edf59e67a344990bf1181ca6c985d78b372bc332e"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-function-client/4.0.0-RC5/micronaut-function-client-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "964a899f372855a19fce4dce81ee27d0370208fa1c4bd8beafd8df6fbceaee30"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/4.0.0-RC5/micronaut-function-web-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "cfcf4066f68b5bc0e458a8e2b50666814a18f1ab8867f576b6d031963ced80cf"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-function-web/4.0.0-RC5/micronaut-function-web-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "ec3d58f851336bbcf37b288678f11679df75ab12a95aeaa6d966e953310d6b74"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-function/4.0.0-RC5/micronaut-function-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "22a2dbce5eee597be0e248736f8235e5846527a7e2f05e23fd48093a8dec3e04"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-function/4.0.0-RC5/micronaut-function-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "b6802d87c77fdf83da7a6974c98e9fe22883599ed3d61b803fdf563cecfd7aef"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-graal/4.0.0-RC5/micronaut-graal-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "91936348d741f625d7ae1c588a81dd7ce2862a0b00454d99c79aa1847cce8902"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-graal/4.0.0-RC5/micronaut-graal-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "e9ae61efd427f823a0f3d257292c6fc1dfb3af35202ffd354f34b08b840ecaa9"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/4.0.0-RC5/micronaut-http-client-core-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "c923a05bbf55d1c2284d17c4090981dc3d3fa60d2e322cf1d2fb6f1765bbff90"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-core/4.0.0-RC5/micronaut-http-client-core-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "28e22585b3b9949f00a626ff8f9ff7c1e94ae3a975d94a7a8c1e1a6ff15275bd"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-jdk/4.0.0-RC5/micronaut-http-client-jdk-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "f23dfe8e3ca296baca472b7c3b08cb7eeb2d401720ae3f6512859a65d1a87293"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-jdk/4.0.0-RC5/micronaut-http-client-jdk-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "bbaf41d0bf849fd3c86f1a2dceb6e700080ae18771721c5b66f0af6235eea992"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-tck/4.0.0-RC5/micronaut-http-client-tck-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "565acd56712ca41bc735e32a35dc8dc699df9a940a29ddb3a4a74070c272d35f"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-client-tck/4.0.0-RC5/micronaut-http-client-tck-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "91e6315305d6e25f093ca542efc6932cbaf597d4af754ef0195a69c0c2a21ae4"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/4.0.0-RC5/micronaut-http-client-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "8d2c671bb8e3376dade2fe3dd2a17a07dde001b33d9af5f822e8152d528ff39b"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-client/4.0.0-RC5/micronaut-http-client-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "4d98f855295f211949adb0474bc58d62da6ad21ff1209cd9299ddf82fa954011"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/4.0.0-RC5/micronaut-http-netty-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "5833edc1d02d0d1835865a0c7a555db7d9a27bd91cc0c8f21de66e1526fa95e4"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-netty/4.0.0-RC5/micronaut-http-netty-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "970e4f4a09664da90a5bdd5d1d16dc45c970260a4d87267a6704ba8c78e9740e"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/4.0.0-RC5/micronaut-http-server-netty-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "70c17686fd31b7e706089efaa06a1524685548469c9ff0f71af94bae86b3bfc9"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-netty/4.0.0-RC5/micronaut-http-server-netty-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "90df32f7abb9b9aab9cf6be77d959e16fb3c80ffaf32c9b2ee5131da88526c2d"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/4.0.0-RC5/micronaut-http-server-tck-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "1ce5f3e23038c79e8c17e07640f681db4333fd695639bda3b1f0e438a2ddec35"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-server-tck/4.0.0-RC5/micronaut-http-server-tck-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "1ae3712dc4f225dc9d9a7df589b772025316c842b3941fa9b5c5518ea6587b10"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/4.0.0-RC5/micronaut-http-server-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "00e15f6ac19a5611229e9871304af48b7c504bd5920284d402b033e7e6c55395"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-server/4.0.0-RC5/micronaut-http-server-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "a4659a29ee319bad9b6a988f2ecd77f5e9e5857eddb43527c38fecfd47a816d4"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-tck/4.0.0-RC5/micronaut-http-tck-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "fde78743e5aa56dee7743e0e43f6ef5a4c350fb7d3b72be2757fa05183b912a8"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-tck/4.0.0-RC5/micronaut-http-tck-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "07d3594834b5dd6ff911ac501d5e61c1439a99d28fd16856cb6315bf33337c56"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/4.0.0-RC5/micronaut-http-validation-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "a93dd3c02f30abec9689c7efb309178effeec18017b389b92dc1cf8707d37691"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http-validation/4.0.0-RC5/micronaut-http-validation-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "7aaa3042954d30107db2c5a05449d895fbeb35f21bed20a8d939ae3acaec954d"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http/4.0.0-RC5/micronaut-http-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "0aa185755c5fb07b480ee67b0c159e2c485e86f0cb3ce3f17dd6c8bd667d763c"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-http/4.0.0-RC5/micronaut-http-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "3341efa6b3dde441c9eca29c639cb5faf65b010f552e31b8d0565cd95110e66d"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/4.0.0-RC5/micronaut-inject-groovy-test-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "fa3c62dd11de5df4acdbc1f33a2065936791b10b720cde45481b7cdea5c6a88b"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy-test/4.0.0-RC5/micronaut-inject-groovy-test-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "ab4e2ab48d01aaaa4635731da9d88675f33fa52e2509c9aed82c90445e27ced2"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/4.0.0-RC5/micronaut-inject-groovy-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "7721f712b997b38aef10360674a432023acfe5e840dd2d0cd788e9d14b868a14"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-groovy/4.0.0-RC5/micronaut-inject-groovy-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "fcafb0aab4242f74010aca94f7e6cb0ed4438d3e793b80f11898af8d844548e2"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/4.0.0-RC5/micronaut-inject-java-test-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "9d416cc35858064d97ddc8235ae92d1c3f4acd0db753655660bcd18d7cd92389"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java-test/4.0.0-RC5/micronaut-inject-java-test-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "7b2a8ba8a352955b6f6b67ac428404f99d6c4b4b3c6e5b7c45e42a27685a050c"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/4.0.0-RC5/micronaut-inject-java-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "d2e19535dc4c0d16692ba7770e485f38668beb21cefcb1ef938658a897763908"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-java/4.0.0-RC5/micronaut-inject-java-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "a4f0c4ac912cf21ac4f5cc8a7a1d716ec1af000d12a7189860bc89b00592f846"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/4.0.0-RC5/micronaut-inject-kotlin-test-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "74e57557e71d24c58757d1b721b34c89ae03ee78b66045e805de29a0491896b7"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin-test/4.0.0-RC5/micronaut-inject-kotlin-test-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "d5e50842e13761b3a2ef6883c232b49d8626227852a7b2a5cdc8f18cd3afd6a0"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin/4.0.0-RC5/micronaut-inject-kotlin-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "ce7c444748f4784e57ddc00fb35058e0e46a58965c188bea2f51a3f37a1c4be4"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject-kotlin/4.0.0-RC5/micronaut-inject-kotlin-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "1c49d799df91bf1741e8bd26d5f8bfc38d59ffdbad167e92986008b627dbd670"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject/4.0.0-RC5/micronaut-inject-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "634032462b55dc462949a53e90fa2d137d6246960f35d49fa6ab6ef194e09dc1"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-inject/4.0.0-RC5/micronaut-inject-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "8d0b0e651e375113b23aa437d9b9203d6b866ced981c58c7261c37a7cefdbfb6"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/4.0.0-RC5/micronaut-jackson-core-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "04b936cce487200ec5b7d92db25e922c5c44f8b54851999376455c25b69ae924"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-core/4.0.0-RC5/micronaut-jackson-core-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "8bf7dbd70c5fb09c0a54a56cc4cf480d3720eefa609f749d0efb9f4c447fb5e5"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/4.0.0-RC5/micronaut-jackson-databind-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "7bf1e9a2d996633cbfc0a630378d58c7c0b3d49b859cb8c1e0b888d85b8738e4"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-jackson-databind/4.0.0-RC5/micronaut-jackson-databind-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "6d0efd68476e5b268439a17124ac575c5f7480f0990cbd5ebc6a03f6a83c9c8f"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/4.0.0-RC5/micronaut-json-core-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "e652e41aa28b5bbd75b703ec7e076ced217cbbb5ff25a3abf6732028814f0460"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-json-core/4.0.0-RC5/micronaut-json-core-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "8dbfb5ae7b4fc603fb7477fa844c8c5a46ec8180f0812f474cc97761ed0c76c0"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-management/4.0.0-RC5/micronaut-management-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "bcb95d4f1de068897435599204e97a065373982822a9077610eedb9e46d22c25"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-management/4.0.0-RC5/micronaut-management-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "726bbf8b88651e614a897dc8130c58afcaefebda1742629c4117cfc903adf78a"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/4.0.0-RC5/micronaut-messaging-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "4fe01ddba472754bf19190e2ce98ef83c5a0cbc8490da14cf1430969b2f6b916"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-messaging/4.0.0-RC5/micronaut-messaging-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "758cc5c219c39956f261f667758c4b4fbd9d23628bf3b679e670ee11d4199bdd"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-retry/4.0.0-RC5/micronaut-retry-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "3c38f47fe976b5177baa7d2416957cb0e240e68dfa0e9b5388621b1dc62e36f1"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-retry/4.0.0-RC5/micronaut-retry-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "17d5b16b66af914aa456e8323fe69ce329704275f3bfa7cca59aa3c74d4dd300"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-router/4.0.0-RC5/micronaut-router-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "53c2ac2a841a0d71b94b700b6dc0125c56f07a75552820324b2f8db5ca3c7004"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-router/4.0.0-RC5/micronaut-router-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "e4b841fe554a880506aeaf249b161193f10604a1cb946b18cbd7acf8bc88d851"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/4.0.0-RC5/micronaut-runtime-osx-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "d107c6b971a9409115a3380a87ed0d0f4f59744a2e8bfd9e724475668f0d598c"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime-osx/4.0.0-RC5/micronaut-runtime-osx-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "810a954ebd4efbd10b841a6991ee7ad8cdc033315aa62e600c34fd46cb4d4539"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime/4.0.0-RC5/micronaut-runtime-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "621ea91b4a532276b8b0419bebacb76599a2240c385f48e7f315387b8c64e173"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-runtime/4.0.0-RC5/micronaut-runtime-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "e96b9174af2110956ba9a580c13e9ad6596d9c64b2066a1a233d721ccbc431ae"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/4.0.0-RC5/micronaut-websocket-4.0.0-RC5.jar",
-                                "digest": {
-                                    "sha256": "d48b8f5b92fe411d51f39edb7af908064b21c8cc8e02ce3ee9bce8fc9077717f"
-                                }
-                            },
-                            {
-                                "name": "build/repo/io/micronaut/micronaut-websocket/4.0.0-RC5/micronaut-websocket-4.0.0-RC5.pom",
-                                "digest": {
-                                    "sha256": "bfd407165ce21778c8ab390879e44c171a64e6fff022508f968e29ddd2fe7415"
-                                }
-                            }
-                        ],
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.7.0"
+                                "id": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/gradle.yml"
                             },
-                            "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
+                            "buildType": "Custom github_actions",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/micronaut-projects/micronaut-core@refs/tags/v4.0.0-RC5",
+                                    "uri": "https://github.com/micronaut-projects/micronaut-core@refs/heads/3.8.x",
                                     "digest": {
-                                        "sha1": "7d4ee93144d12094b0e4f7dad46cae4f67ff0e48"
+                                        "sha1": "68f9bb0a78fa930865d37fca39252b9ec66e4a43"
                                     },
-                                    "entryPoint": ".github/workflows/release.yml"
+                                    "entryPoint": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/gradle.yml"
                                 },
                                 "parameters": {},
-                                "environment": {
-                                    "github_actor": "sdelamo",
-                                    "github_actor_id": "864788",
-                                    "github_base_ref": "",
-                                    "github_event_name": "release",
-                                    "github_event_payload": {
-                                        "action": "published",
-                                        "organization": {
-                                            "avatar_url": "https://avatars.githubusercontent.com/u/36880643?v=4",
-                                            "description": "",
-                                            "events_url": "https://api.github.com/orgs/micronaut-projects/events",
-                                            "hooks_url": "https://api.github.com/orgs/micronaut-projects/hooks",
-                                            "id": 36880643,
-                                            "issues_url": "https://api.github.com/orgs/micronaut-projects/issues",
-                                            "login": "micronaut-projects",
-                                            "members_url": "https://api.github.com/orgs/micronaut-projects/members{/member}",
-                                            "node_id": "MDEyOk9yZ2FuaXphdGlvbjM2ODgwNjQz",
-                                            "public_members_url": "https://api.github.com/orgs/micronaut-projects/public_members{/member}",
-                                            "repos_url": "https://api.github.com/orgs/micronaut-projects/repos",
-                                            "url": "https://api.github.com/orgs/micronaut-projects"
-                                        },
-                                        "release": {
-                                            "assets": [],
-                                            "assets_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases/111202087/assets",
-                                            "author": {
-                                                "avatar_url": "https://avatars.githubusercontent.com/u/864788?v=4",
-                                                "events_url": "https://api.github.com/users/sdelamo/events{/privacy}",
-                                                "followers_url": "https://api.github.com/users/sdelamo/followers",
-                                                "following_url": "https://api.github.com/users/sdelamo/following{/other_user}",
-                                                "gists_url": "https://api.github.com/users/sdelamo/gists{/gist_id}",
-                                                "gravatar_id": "",
-                                                "html_url": "https://github.com/sdelamo",
-                                                "id": 864788,
-                                                "login": "sdelamo",
-                                                "node_id": "MDQ6VXNlcjg2NDc4OA==",
-                                                "organizations_url": "https://api.github.com/users/sdelamo/orgs",
-                                                "received_events_url": "https://api.github.com/users/sdelamo/received_events",
-                                                "repos_url": "https://api.github.com/users/sdelamo/repos",
-                                                "site_admin": false,
-                                                "starred_url": "https://api.github.com/users/sdelamo/starred{/owner}{/repo}",
-                                                "subscriptions_url": "https://api.github.com/users/sdelamo/subscriptions",
-                                                "type": "User",
-                                                "url": "https://api.github.com/users/sdelamo"
-                                            },
-                                            "body": "<!-- Release notes generated using configuration in .github/release.yml at 4.0.x -->\r\n\r\n## What's Changed\r\n### Breaking Changes \ud83d\udee0\r\n* Change annotation-based CORS to match configuration-based defaults by @wetted in https://github.com/micronaut-projects/micronaut-core/pull/9509\r\n### Bug Fixes \ud83d\udc1e\r\n* KSP: Properly map suspended function class by @dstepanov in https://github.com/micronaut-projects/micronaut-core/pull/9520\r\n* use binary name to store annotation names in metadata for KSP by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/9536\r\n* Fixed incorrect ability to disable slf4j by @altro3 in https://github.com/micronaut-projects/micronaut-core/pull/9532\r\n* Fix KSP nullability handling by @graemerocher in https://github.com/micronaut-projects/micronaut-core/pull/9538\r\n* fix: txt/plain possible for BigDecimal by @sdelamo in https://github.com/micronaut-projects/micronaut-core/pull/9535\r\n\r\n### Dependency updates \ud83d\ude80\r\n* Update dependency io.micronaut.build.internal:micronaut-gradle-plugins to v6.5.1 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/9521\r\n* Update dependency io.micronaut.rxjava2:micronaut-rxjava2-bom to v2.0.0-M6 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/9488\r\n* Update dependency io.micronaut.groovy:micronaut-runtime-groovy to v4.0.0-M4 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/9475\r\n* chore(deps): update dependency io.micronaut.build.internal:micronaut-gradle-plugins to v6.5.3 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/9540\r\n* fix(deps): update dependency com.github.javaparser:javaparser-symbol-solver-core to v3.25.4 by @renovate in https://github.com/micronaut-projects/micronaut-core/pull/9533\r\n\r\n### Build \ud83d\udc18\r\n* core: enable binary compatability check by @wetted in https://github.com/micronaut-projects/micronaut-core/pull/9505\r\n* Manual sync of graalvm workflows by @msupic in https://github.com/micronaut-projects/micronaut-core/pull/9539\r\n\r\n\r\n**Full Changelog**: https://github.com/micronaut-projects/micronaut-core/compare/v4.0.0-RC4...v4.0.0-RC5",
-                                            "created_at": "2023-07-06T03:49:56Z",
-                                            "draft": false,
-                                            "html_url": "https://github.com/micronaut-projects/micronaut-core/releases/tag/v4.0.0-RC5",
-                                            "id": 111202087,
-                                            "mentions_count": 7,
-                                            "name": "Micronaut Core 4.0.0-RC5",
-                                            "node_id": "RE_kwDOB2eaPM4GoM8n",
-                                            "prerelease": true,
-                                            "published_at": "2023-07-06T05:04:16Z",
-                                            "tag_name": "v4.0.0-RC5",
-                                            "tarball_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/tarball/v4.0.0-RC5",
-                                            "target_commitish": "4.0.x",
-                                            "upload_url": "https://uploads.github.com/repos/micronaut-projects/micronaut-core/releases/111202087/assets{?name,label}",
-                                            "url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases/111202087",
-                                            "zipball_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/zipball/v4.0.0-RC5"
-                                        },
-                                        "repository": {
-                                            "allow_forking": true,
-                                            "archive_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/{archive_format}{/ref}",
-                                            "archived": false,
-                                            "assignees_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/assignees{/user}",
-                                            "blobs_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/blobs{/sha}",
-                                            "branches_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/branches{/branch}",
-                                            "clone_url": "https://github.com/micronaut-projects/micronaut-core.git",
-                                            "collaborators_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/collaborators{/collaborator}",
-                                            "comments_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/comments{/number}",
-                                            "commits_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/commits{/sha}",
-                                            "compare_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/compare/{base}...{head}",
-                                            "contents_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/contents/{+path}",
-                                            "contributors_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/contributors",
-                                            "created_at": "2018-03-07T12:05:08Z",
-                                            "default_branch": "4.0.x",
-                                            "deployments_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/deployments",
-                                            "description": "Micronaut Application Framework",
-                                            "disabled": false,
-                                            "downloads_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/downloads",
-                                            "events_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/events",
-                                            "fork": false,
-                                            "forks": 984,
-                                            "forks_count": 984,
-                                            "forks_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/forks",
-                                            "full_name": "micronaut-projects/micronaut-core",
-                                            "git_commits_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/commits{/sha}",
-                                            "git_refs_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/refs{/sha}",
-                                            "git_tags_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/tags{/sha}",
-                                            "git_url": "git://github.com/micronaut-projects/micronaut-core.git",
-                                            "has_discussions": true,
-                                            "has_downloads": true,
-                                            "has_issues": true,
-                                            "has_pages": true,
-                                            "has_projects": true,
-                                            "has_wiki": true,
-                                            "homepage": "http://micronaut.io",
-                                            "hooks_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/hooks",
-                                            "html_url": "https://github.com/micronaut-projects/micronaut-core",
-                                            "id": 124230204,
-                                            "is_template": false,
-                                            "issue_comment_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/issues/comments{/number}",
-                                            "issue_events_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/issues/events{/number}",
-                                            "issues_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/issues{/number}",
-                                            "keys_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/keys{/key_id}",
-                                            "labels_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/labels{/name}",
-                                            "language": "Java",
-                                            "languages_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/languages",
-                                            "license": {
-                                                "key": "apache-2.0",
-                                                "name": "Apache License 2.0",
-                                                "node_id": "MDc6TGljZW5zZTI=",
-                                                "spdx_id": "Apache-2.0",
-                                                "url": "https://api.github.com/licenses/apache-2.0"
-                                            },
-                                            "merges_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/merges",
-                                            "milestones_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/milestones{/number}",
-                                            "mirror_url": null,
-                                            "name": "micronaut-core",
-                                            "node_id": "MDEwOlJlcG9zaXRvcnkxMjQyMzAyMDQ=",
-                                            "notifications_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/notifications{?since,all,participating}",
-                                            "open_issues": 596,
-                                            "open_issues_count": 596,
-                                            "owner": {
-                                                "avatar_url": "https://avatars.githubusercontent.com/u/36880643?v=4",
-                                                "events_url": "https://api.github.com/users/micronaut-projects/events{/privacy}",
-                                                "followers_url": "https://api.github.com/users/micronaut-projects/followers",
-                                                "following_url": "https://api.github.com/users/micronaut-projects/following{/other_user}",
-                                                "gists_url": "https://api.github.com/users/micronaut-projects/gists{/gist_id}",
-                                                "gravatar_id": "",
-                                                "html_url": "https://github.com/micronaut-projects",
-                                                "id": 36880643,
-                                                "login": "micronaut-projects",
-                                                "node_id": "MDEyOk9yZ2FuaXphdGlvbjM2ODgwNjQz",
-                                                "organizations_url": "https://api.github.com/users/micronaut-projects/orgs",
-                                                "received_events_url": "https://api.github.com/users/micronaut-projects/received_events",
-                                                "repos_url": "https://api.github.com/users/micronaut-projects/repos",
-                                                "site_admin": false,
-                                                "starred_url": "https://api.github.com/users/micronaut-projects/starred{/owner}{/repo}",
-                                                "subscriptions_url": "https://api.github.com/users/micronaut-projects/subscriptions",
-                                                "type": "Organization",
-                                                "url": "https://api.github.com/users/micronaut-projects"
-                                            },
-                                            "private": false,
-                                            "pulls_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/pulls{/number}",
-                                            "pushed_at": "2023-07-06T05:04:16Z",
-                                            "releases_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/releases{/id}",
-                                            "size": 98079,
-                                            "ssh_url": "git@github.com:micronaut-projects/micronaut-core.git",
-                                            "stargazers_count": 5744,
-                                            "stargazers_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/stargazers",
-                                            "statuses_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/statuses/{sha}",
-                                            "subscribers_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/subscribers",
-                                            "subscription_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/subscription",
-                                            "svn_url": "https://github.com/micronaut-projects/micronaut-core",
-                                            "tags_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/tags",
-                                            "teams_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/teams",
-                                            "topics": [
-                                                "cloudnative",
-                                                "groovy",
-                                                "java",
-                                                "kotlin",
-                                                "microservices",
-                                                "serverless"
-                                            ],
-                                            "trees_url": "https://api.github.com/repos/micronaut-projects/micronaut-core/git/trees{/sha}",
-                                            "updated_at": "2023-07-05T23:14:03Z",
-                                            "url": "https://api.github.com/repos/micronaut-projects/micronaut-core",
-                                            "visibility": "public",
-                                            "watchers": 5744,
-                                            "watchers_count": 5744,
-                                            "web_commit_signoff_required": false
-                                        },
-                                        "sender": {
-                                            "avatar_url": "https://avatars.githubusercontent.com/u/864788?v=4",
-                                            "events_url": "https://api.github.com/users/sdelamo/events{/privacy}",
-                                            "followers_url": "https://api.github.com/users/sdelamo/followers",
-                                            "following_url": "https://api.github.com/users/sdelamo/following{/other_user}",
-                                            "gists_url": "https://api.github.com/users/sdelamo/gists{/gist_id}",
-                                            "gravatar_id": "",
-                                            "html_url": "https://github.com/sdelamo",
-                                            "id": 864788,
-                                            "login": "sdelamo",
-                                            "node_id": "MDQ6VXNlcjg2NDc4OA==",
-                                            "organizations_url": "https://api.github.com/users/sdelamo/orgs",
-                                            "received_events_url": "https://api.github.com/users/sdelamo/received_events",
-                                            "repos_url": "https://api.github.com/users/sdelamo/repos",
-                                            "site_admin": false,
-                                            "starred_url": "https://api.github.com/users/sdelamo/starred{/owner}{/repo}",
-                                            "subscriptions_url": "https://api.github.com/users/sdelamo/subscriptions",
-                                            "type": "User",
-                                            "url": "https://api.github.com/users/sdelamo"
-                                        }
-                                    },
-                                    "github_head_ref": "",
-                                    "github_ref": "refs/tags/v4.0.0-RC5",
-                                    "github_ref_type": "tag",
-                                    "github_repository_id": "124230204",
-                                    "github_repository_owner": "micronaut-projects",
-                                    "github_repository_owner_id": "36880643",
-                                    "github_run_attempt": "1",
-                                    "github_run_id": "5471746976",
-                                    "github_run_number": "144",
-                                    "github_sha1": "7d4ee93144d12094b0e4f7dad46cae4f67ff0e48"
-                                }
+                                "environment": {}
                             },
+                            "buildConfig": {},
                             "metadata": {
-                                "buildInvocationID": "5471746976-1",
+                                "buildInvocationId": "",
+                                "buildStartedOn": "<TIMESTAMP>",
+                                "buildFinishedOn": "<TIMESTAMP>",
                                 "completeness": {
-                                    "parameters": true,
-                                    "environment": false,
-                                    "materials": false
+                                    "parameters": "false",
+                                    "environment": "false",
+                                    "materials": "false"
                                 },
-                                "reproducible": false
+                                "reproducible": "false"
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/micronaut-projects/micronaut-core@refs/tags/v4.0.0-RC5",
-                                    "digest": {
-                                        "sha1": "7d4ee93144d12094b0e4f7dad46cae4f67ff0e48"
-                                    }
+                                    "uri": "<URI>",
+                                    "digest": {}
                                 }
                             ]
                         }
@@ -752,23 +61,12 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 2,
-                "PASSED": 6,
+                "FAILED": 5,
+                "PASSED": 4,
                 "SKIPPED": 0,
-                "UNKNOWN": 1
+                "UNKNOWN": 0
             },
             "results": [
-                {
-                    "check_id": "mcn_provenance_expectation_1",
-                    "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the expected value.",
-                    "slsa_requirements": [
-                        "Provenance conforms with expectations - SLSA Level 3"
-                    ],
-                    "justification": [
-                        "No expectation defined for this repository."
-                    ],
-                    "result_type": "UNKNOWN"
-                },
                 {
                     "check_id": "mcn_build_as_code_1",
                     "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
@@ -777,10 +75,10 @@
                     ],
                     "justification": [
                         {
-                            "The target repository uses build tool gradle to deploy": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/central-sync.yml",
-                            "The build is triggered by": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/central-sync.yml"
+                            "The target repository uses build tool gradle to deploy": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/gradle.yml",
+                            "The build is triggered by": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/gradle.yml"
                         },
-                        "Deploy command: ['./gradlew', 'publishToSonatype', 'closeAndReleaseSonatypeStagingRepository']",
+                        "Deploy command: ['./gradlew', 'publishToSonatype', 'docs', '--no-daemon']",
                         "However, could not find a passing workflow run."
                     ],
                     "result_type": "PASSED"
@@ -808,50 +106,6 @@
                     "result_type": "PASSED"
                 },
                 {
-                    "check_id": "mcn_provenance_available_1",
-                    "check_description": "Check whether the target has intoto provenance.",
-                    "slsa_requirements": [
-                        "Provenance - Available - SLSA Level 1",
-                        "Provenance content - Identifies build instructions - SLSA Level 1",
-                        "Provenance content - Identifies artifacts - SLSA Level 1",
-                        "Provenance content - Identifies builder - SLSA Level 1"
-                    ],
-                    "justification": [
-                        "Found provenance in release assets:",
-                        "multiple.intoto.jsonl"
-                    ],
-                    "result_type": "PASSED"
-                },
-                {
-                    "check_id": "mcn_provenance_level_three_1",
-                    "check_description": "Check whether the target has SLSA provenance level 3.",
-                    "slsa_requirements": [
-                        "Provenance - Non falsifiable - SLSA Level 3",
-                        "Provenance content - Includes all build parameters - SLSA Level 3",
-                        "Provenance content - Identifies entry point - SLSA Level 3",
-                        "Provenance content - Identifies source code - SLSA Level 2"
-                    ],
-                    "justification": [
-                        "Successfully verified level 3: ",
-                        "verify passed: build/repo/micronaut-aop/4.0.0-RC5/micronaut-aop-4.0.0-RC5.jar,verify passed: build/repo/micronaut-aop/4.0.0-RC5/micronaut-aop-4.0.0-RC5.pom,verify passed: build/repo/micronaut-buffer-netty/4.0.0-RC5/micronaut-buffer-netty-4.0.0-RC5.jar,verify passed: build/repo/micronaut-buffer-netty/4.0.0-RC5/micronaut-buffer-netty-4.0.0-RC5.pom,verify passed: build/repo/micronaut-context-propagation/4.0.0-RC5/micronaut-context-propagation-4.0.0-RC5.jar,verify passed: build/repo/micronaut-context-propagation/4.0.0-RC5/micronaut-context-propagation-4.0.0-RC5.pom,verify passed: build/repo/micronaut-context/4.0.0-RC5/micronaut-context-4.0.0-RC5.jar,verify passed: build/repo/micronaut-context/4.0.0-RC5/micronaut-context-4.0.0-RC5.pom,verify passed: build/repo/micronaut-core-bom/4.0.0-RC5/micronaut-core-bom-4.0.0-RC5.pom,verify passed: build/repo/micronaut-core-processor/4.0.0-RC5/micronaut-core-processor-4.0.0-RC5.jar,verify passed: build/repo/micronaut-core-processor/4.0.0-RC5/micronaut-core-processor-4.0.0-RC5.pom,verify passed: build/repo/micronaut-core-reactive/4.0.0-RC5/micronaut-core-reactive-4.0.0-RC5.jar,verify passed: build/repo/micronaut-core-reactive/4.0.0-RC5/micronaut-core-reactive-4.0.0-RC5.pom,verify passed: build/repo/micronaut-core/4.0.0-RC5/micronaut-core-4.0.0-RC5.jar,verify passed: build/repo/micronaut-core/4.0.0-RC5/micronaut-core-4.0.0-RC5.pom,verify passed: build/repo/micronaut-discovery-core/4.0.0-RC5/micronaut-discovery-core-4.0.0-RC5.jar,verify passed: build/repo/micronaut-discovery-core/4.0.0-RC5/micronaut-discovery-core-4.0.0-RC5.pom,verify passed: build/repo/micronaut-function-client/4.0.0-RC5/micronaut-function-client-4.0.0-RC5.jar,verify passed: build/repo/micronaut-function-client/4.0.0-RC5/micronaut-function-client-4.0.0-RC5.pom,verify passed: build/repo/micronaut-function-web/4.0.0-RC5/micronaut-function-web-4.0.0-RC5.jar,verify passed: build/repo/micronaut-function-web/4.0.0-RC5/micronaut-function-web-4.0.0-RC5.pom,verify passed: build/repo/micronaut-function/4.0.0-RC5/micronaut-function-4.0.0-RC5.jar,verify passed: build/repo/micronaut-function/4.0.0-RC5/micronaut-function-4.0.0-RC5.pom,verify passed: build/repo/micronaut-graal/4.0.0-RC5/micronaut-graal-4.0.0-RC5.jar,verify passed: build/repo/micronaut-graal/4.0.0-RC5/micronaut-graal-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-client-core/4.0.0-RC5/micronaut-http-client-core-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-client-core/4.0.0-RC5/micronaut-http-client-core-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-client-jdk/4.0.0-RC5/micronaut-http-client-jdk-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-client-jdk/4.0.0-RC5/micronaut-http-client-jdk-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-client-tck/4.0.0-RC5/micronaut-http-client-tck-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-client-tck/4.0.0-RC5/micronaut-http-client-tck-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-client/4.0.0-RC5/micronaut-http-client-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-client/4.0.0-RC5/micronaut-http-client-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-netty/4.0.0-RC5/micronaut-http-netty-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-netty/4.0.0-RC5/micronaut-http-netty-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-server-netty/4.0.0-RC5/micronaut-http-server-netty-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-server-netty/4.0.0-RC5/micronaut-http-server-netty-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-server-tck/4.0.0-RC5/micronaut-http-server-tck-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-server-tck/4.0.0-RC5/micronaut-http-server-tck-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-server/4.0.0-RC5/micronaut-http-server-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-server/4.0.0-RC5/micronaut-http-server-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-tck/4.0.0-RC5/micronaut-http-tck-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-tck/4.0.0-RC5/micronaut-http-tck-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http-validation/4.0.0-RC5/micronaut-http-validation-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http-validation/4.0.0-RC5/micronaut-http-validation-4.0.0-RC5.pom,verify passed: build/repo/micronaut-http/4.0.0-RC5/micronaut-http-4.0.0-RC5.jar,verify passed: build/repo/micronaut-http/4.0.0-RC5/micronaut-http-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject-groovy-test/4.0.0-RC5/micronaut-inject-groovy-test-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject-groovy-test/4.0.0-RC5/micronaut-inject-groovy-test-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject-groovy/4.0.0-RC5/micronaut-inject-groovy-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject-groovy/4.0.0-RC5/micronaut-inject-groovy-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject-java-test/4.0.0-RC5/micronaut-inject-java-test-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject-java-test/4.0.0-RC5/micronaut-inject-java-test-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject-java/4.0.0-RC5/micronaut-inject-java-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject-java/4.0.0-RC5/micronaut-inject-java-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject-kotlin-test/4.0.0-RC5/micronaut-inject-kotlin-test-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject-kotlin-test/4.0.0-RC5/micronaut-inject-kotlin-test-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject-kotlin/4.0.0-RC5/micronaut-inject-kotlin-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject-kotlin/4.0.0-RC5/micronaut-inject-kotlin-4.0.0-RC5.pom,verify passed: build/repo/micronaut-inject/4.0.0-RC5/micronaut-inject-4.0.0-RC5.jar,verify passed: build/repo/micronaut-inject/4.0.0-RC5/micronaut-inject-4.0.0-RC5.pom,verify passed: build/repo/micronaut-jackson-core/4.0.0-RC5/micronaut-jackson-core-4.0.0-RC5.jar,verify passed: build/repo/micronaut-jackson-core/4.0.0-RC5/micronaut-jackson-core-4.0.0-RC5.pom,verify passed: build/repo/micronaut-jackson-databind/4.0.0-RC5/micronaut-jackson-databind-4.0.0-RC5.jar,verify passed: build/repo/micronaut-jackson-databind/4.0.0-RC5/micronaut-jackson-databind-4.0.0-RC5.pom,verify passed: build/repo/micronaut-json-core/4.0.0-RC5/micronaut-json-core-4.0.0-RC5.jar,verify passed: build/repo/micronaut-json-core/4.0.0-RC5/micronaut-json-core-4.0.0-RC5.pom,verify passed: build/repo/micronaut-management/4.0.0-RC5/micronaut-management-4.0.0-RC5.jar,verify passed: build/repo/micronaut-management/4.0.0-RC5/micronaut-management-4.0.0-RC5.pom,verify passed: build/repo/micronaut-messaging/4.0.0-RC5/micronaut-messaging-4.0.0-RC5.jar,verify passed: build/repo/micronaut-messaging/4.0.0-RC5/micronaut-messaging-4.0.0-RC5.pom,verify passed: build/repo/micronaut-retry/4.0.0-RC5/micronaut-retry-4.0.0-RC5.jar,verify passed: build/repo/micronaut-retry/4.0.0-RC5/micronaut-retry-4.0.0-RC5.pom,verify passed: build/repo/micronaut-router/4.0.0-RC5/micronaut-router-4.0.0-RC5.jar,verify passed: build/repo/micronaut-router/4.0.0-RC5/micronaut-router-4.0.0-RC5.pom,verify passed: build/repo/micronaut-runtime-osx/4.0.0-RC5/micronaut-runtime-osx-4.0.0-RC5.jar,verify passed: build/repo/micronaut-runtime-osx/4.0.0-RC5/micronaut-runtime-osx-4.0.0-RC5.pom,verify passed: build/repo/micronaut-runtime/4.0.0-RC5/micronaut-runtime-4.0.0-RC5.jar,verify passed: build/repo/micronaut-runtime/4.0.0-RC5/micronaut-runtime-4.0.0-RC5.pom,verify passed: build/repo/micronaut-websocket/4.0.0-RC5/micronaut-websocket-4.0.0-RC5.jar,verify passed: build/repo/micronaut-websocket/4.0.0-RC5/micronaut-websocket-4.0.0-RC5.pom"
-                    ],
-                    "result_type": "PASSED"
-                },
-                {
-                    "check_id": "mcn_provenance_witness_level_one_1",
-                    "check_description": "Check whether the target has a level-1 witness provenance.",
-                    "slsa_requirements": [
-                        "Provenance - Available - SLSA Level 1",
-                        "Provenance content - Identifies build instructions - SLSA Level 1",
-                        "Provenance content - Identifies artifacts - SLSA Level 1",
-                        "Provenance content - Identifies builder - SLSA Level 1"
-                    ],
-                    "justification": [
-                        "Failed to discover any witness provenance."
-                    ],
-                    "result_type": "FAILED"
-                },
-                {
                     "check_id": "mcn_version_control_system_1",
                     "check_description": "Check whether the target repo uses a version control system.",
                     "slsa_requirements": [
@@ -863,6 +117,59 @@
                         }
                     ],
                     "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_provenance_available_1",
+                    "check_description": "Check whether the target has intoto provenance.",
+                    "slsa_requirements": [
+                        "Provenance - Available - SLSA Level 1",
+                        "Provenance content - Identifies build instructions - SLSA Level 1",
+                        "Provenance content - Identifies artifacts - SLSA Level 1",
+                        "Provenance content - Identifies builder - SLSA Level 1"
+                    ],
+                    "justification": [
+                        "Could not find any SLSA provenances."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_expectation_1",
+                    "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the expected value.",
+                    "slsa_requirements": [
+                        "Provenance conforms with expectations - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Check mcn_provenance_expectation_1 is set to FAILED because mcn_provenance_available_1 FAILED."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_level_three_1",
+                    "check_description": "Check whether the target has SLSA provenance level 3.",
+                    "slsa_requirements": [
+                        "Provenance - Non falsifiable - SLSA Level 3",
+                        "Provenance content - Includes all build parameters - SLSA Level 3",
+                        "Provenance content - Identifies entry point - SLSA Level 3",
+                        "Provenance content - Identifies source code - SLSA Level 2"
+                    ],
+                    "justification": [
+                        "Check mcn_provenance_level_three_1 is set to FAILED because mcn_provenance_available_1 FAILED."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_witness_level_one_1",
+                    "check_description": "Check whether the target has a level-1 witness provenance.",
+                    "slsa_requirements": [
+                        "Provenance - Available - SLSA Level 1",
+                        "Provenance content - Identifies build instructions - SLSA Level 1",
+                        "Provenance content - Identifies artifacts - SLSA Level 1",
+                        "Provenance content - Identifies builder - SLSA Level 1"
+                    ],
+                    "justification": [
+                        "Check mcn_provenance_witness_level_one_1 is set to FAILED because mcn_provenance_available_1 FAILED."
+                    ],
+                    "result_type": "FAILED"
                 },
                 {
                     "check_id": "mcn_trusted_builder_level_three_1",
@@ -890,6 +197,10 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_provenance_witness_level_one_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
@@ -911,10 +222,6 @@
             },
             {
                 "check_id": "mcn_provenance_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {
