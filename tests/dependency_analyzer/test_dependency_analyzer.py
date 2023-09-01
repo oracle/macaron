@@ -5,19 +5,14 @@
 This module tests the DependencyAnalyzer.
 """
 
-from pathlib import Path
-
-from macaron.config.target_config import TARGET_CONFIG_SCHEMA, Configuration
+from macaron.config.target_config import Configuration
 from macaron.dependency_analyzer import DependencyAnalyzer, DependencyInfo
 from macaron.output_reporter.scm import SCMStatus
-from macaron.parsers.yaml.loader import YamlLoader
 from tests.macaron_testcase import MacaronTestCase
 
 
 class TestDependencyAnalyzer(MacaronTestCase):
     """Test the dependency analyzer functions."""
-
-    CONFIG_DIR = Path(__file__).parent.joinpath("configurations")
 
     def test_merge_config(self) -> None:
         """Test merging the manual and automatically resolved configurations."""
@@ -103,17 +98,30 @@ class TestDependencyAnalyzer(MacaronTestCase):
         ]
 
         # Get the mock config file with dependencies.
-        path = TestDependencyAnalyzer.CONFIG_DIR.joinpath("valid_has_deps.yaml")
-        user_config = YamlLoader.load(path, TARGET_CONFIG_SCHEMA)
-        user_dep_config = [Configuration(dep) for dep in user_config.get("dependencies", [])]
+        user_dep_config = [
+            Configuration(
+                {
+                    "id": "id",
+                    "path": "https://github.com/owner/name.git",
+                    "branch": "master",
+                    "digest": "aac3b3bcb608e1e8451d4beedd38ecbe6306e7e7",
+                }
+            ),
+            Configuration(
+                {
+                    "id": "id",
+                    "path": "https://github.com/owner/name_2.git",
+                    "branch": "master",
+                    "digest": "aac3b3bcb608e1e8451d4beedd38ecbe6306e7e7",
+                }
+            ),
+        ]
         merged_configs = DependencyAnalyzer.merge_configs(user_dep_config, auto_deps)
 
         assert [dep.options for dep in merged_configs] == expected_result_with_deps
 
         # Get the mock config file without dependencies.
-        path = TestDependencyAnalyzer.CONFIG_DIR.joinpath("valid_no_deps.yaml")
-        user_config = YamlLoader.load(path, TARGET_CONFIG_SCHEMA)
-        merged_configs = DependencyAnalyzer.merge_configs(user_config.get("dependencies"), auto_deps)
+        merged_configs = DependencyAnalyzer.merge_configs([], auto_deps)
 
         assert [dep.options for dep in merged_configs] == expected_result_no_deps
 
