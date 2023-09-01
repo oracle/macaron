@@ -225,7 +225,7 @@ class ProvenanceL3Check(BaseCheck):
 
     def _find_asset(
         self,
-        subject: v01.InTotoSubject,
+        subject: v01.InTotoV01Subject,
         all_assets: list[dict[str, str]],
         temp_path: str,
         ci_service: BaseCIService,

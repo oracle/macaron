@@ -13,11 +13,9 @@ from macaron.slsa_analyzer.provenance.intoto import v01, v1
 from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
 from macaron.util import JsonType
 
+# Type of an in-toto statement.
+# This is currently either a v0.1 statement or v1 statement.
 StatementT = TypeVar("StatementT", bound=Mapping)
-"""Type of an in-toto statement.
-
-This is currently either a v0.1 statement or v1 statement.
-"""
 
 
 @dataclass(frozen=True)  # objects of this class are immutable and hashable
@@ -41,7 +39,7 @@ class InTotoPayload(Generic[StatementT]):
     statement: StatementT
 
 
-class InTotoV01Payload(InTotoPayload[v01.InTotoStatement]):
+class InTotoV01Payload(InTotoPayload[v01.InTotoV01Statement]):
     """The provenance payload following in-toto v0.1 schema.
 
     The payload is a field within a DSSE envelope, having the type "Statement".
@@ -56,7 +54,7 @@ class InTotoV01Payload(InTotoPayload[v01.InTotoStatement]):
     """
 
 
-class InTotoV1Payload(InTotoPayload[v1.InTotoStatement]):
+class InTotoV1Payload(InTotoPayload[v1.InTotoV1Statement]):
     """The provenance payload following in-toto v1 schema.
 
     The payload is a field within a DSSE envelope, having the type "Statement".

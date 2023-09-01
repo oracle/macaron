@@ -6,7 +6,7 @@
 from typing import TypedDict
 
 
-class InTotoStatement(TypedDict):
+class InTotoV1Statement(TypedDict):
     """An in-toto version 1 statement.
 
     This is the type of the payload in a version 1 in-toto attestation.

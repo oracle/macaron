@@ -24,29 +24,20 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class JFrogMavenAsset(NamedTuple):
-    """An asset hosted on a JFrog Artifactory repository with Maven layout.
+    """An asset hosted on a JFrog Artifactory repository with Maven layout."""
 
-    Attributes
-    ----------
-    name : str
-        The name of the Maven asset.
-    group_id : str
-        The group id.
-    artifact_id : str
-        The artifact id.
-    version : str
-        The version of the Maven asset.
-    metadata : JFrogMavenAssetMetadata
-        The metadata of the JFrog Maven asset.
-    jfrog_maven_registry : JFrogMavenRegistry
-        The metadata of the JFrog Maven asset.
-    """
-
+    #: The name of the Maven asset.
     name: str
+    #: The group id.
     group_id: str
+    #: The artifact id.
     artifact_id: str
+    #: The version of the Maven asset.
     version: str
+    #: The metadata of the JFrog Maven asset.
     metadata: JFrogMavenAssetMetadata
+    #: The JFrog repo that acts as a package registry following the
+    #: `Maven layout <https://maven.apache.org/repository/layout.html>`_.
     jfrog_maven_registry: JFrogMavenRegistry
 
     @property
@@ -85,20 +76,13 @@ class JFrogMavenAsset(NamedTuple):
 
 
 class JFrogMavenAssetMetadata(NamedTuple):
-    """Metadata of an asset on a JFrog Maven registry.
+    """Metadata of an asset on a JFrog Maven registry."""
 
-    Attributes
-    ----------
-    size_in_bytes : int
-        The size of the asset (in bytes).
-    sha256_digest : str
-        The SHA256 digest of the asset.
-    download_uri : str
-        The download URI of the asset.
-    """
-
+    #: The size of the asset (in bytes).
     size_in_bytes: int
+    #: The SHA256 digest of the asset.
     sha256_digest: str
+    #: The download URI of the asset.
     download_uri: str
 
 

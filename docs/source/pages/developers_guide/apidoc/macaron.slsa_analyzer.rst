@@ -12,10 +12,12 @@ Subpackages
 .. toctree::
    :maxdepth: 1
 
+   macaron.slsa_analyzer.asset
    macaron.slsa_analyzer.build_tool
    macaron.slsa_analyzer.checks
    macaron.slsa_analyzer.ci_service
    macaron.slsa_analyzer.git_service
+   macaron.slsa_analyzer.package_registry
    macaron.slsa_analyzer.provenance
    macaron.slsa_analyzer.specs
 

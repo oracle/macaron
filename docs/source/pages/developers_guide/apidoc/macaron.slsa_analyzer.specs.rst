@@ -32,3 +32,11 @@ macaron.slsa\_analyzer.specs.inferred\_provenance module
    :members:
    :undoc-members:
    :show-inheritance:
+
+macaron.slsa\_analyzer.specs.package\_registry\_spec module
+-----------------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.specs.package_registry_spec
+   :members:
+   :undoc-members:
+   :show-inheritance:

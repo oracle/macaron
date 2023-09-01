@@ -304,6 +304,15 @@ dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt:
 docs: docs-clean
 	$(MAKE) -C docs/ html
 
+# Generate API reference pages in the documentation using `sphinx-apidoc`.
+.PHONY: docs-api
+docs-api:
+	sphinx-apidoc --no-toc --module-first --force --maxdepth 1 --output-dir docs/source/pages/developers_guide/apidoc/ src/
+
+# Combine the two targets `docs-api` and `docs`:
+# First generate API reference pages, then build the HTML documentation.
+.PHONY: docs-full
+docs-full: docs-api docs
 
 # Build the Docker image. The image name and tag are read from IMAGE_NAME and RELEASE_TAG
 # environment variables, respectively. By default "test" is used as the image tag.

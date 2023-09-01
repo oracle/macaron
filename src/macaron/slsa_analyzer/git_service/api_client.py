@@ -18,23 +18,15 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class GitHubReleaseAsset(NamedTuple):
-    """An asset published from a GitHub Release.
+    """An asset published from a GitHub Release."""
 
-    Attributes
-    ----------
-    name : str
-        The asset name.
-    url : str
-        The URL to the asset.
-    size_in_bytes : int
-        The size of the asset, in bytes.
-    api_client : GhAPIClient
-        The GitHub API client.
-    """
-
+    #: The asset name.
     name: str
+    #: The URL to the asset.
     url: str
+    #: The size of the asset, in bytes.
     size_in_bytes: int
+    #: The GitHub API client.
     api_client: GhAPIClient
 
     def download(self, dest: str) -> bool:

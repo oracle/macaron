@@ -15,34 +15,21 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class WitnessProvenanceData(NamedTuple):
-    """Data of a downloaded witness provenance.
+    """Data of a downloaded witness provenance."""
 
-    Attributes
-    ----------
-    asset : AssetLocator
-        The provenance asset.
-    payload : InTotoPayload
-        The provenance payload.
-    """
-
+    #: The provenance asset.
     asset: AssetLocator
+    #: The provenance payload.
     payload: InTotoPayload
 
 
 class WitnessVerifierConfig(NamedTuple):
-    """Configuration for verifying witness provenances.
+    """Configuration for verifying witness provenances."""
 
-    Attributes
-    ----------
-    predicate_types : set[str]
-        A provenance payload is recognized by Macaron to be a witness provenance if its
-        ``predicateType`` value is present within this set.
-    artifact_extensions : set[str]
-        A set of artifact extensions to verify. Artifacts having an extension outside this list
-        are not verified.
-    """
-
+    #: A provenance payload is recognized by Macaron to be a witness provenance if
+    #: its ``predicateType`` value is present within this set.
     predicate_types: set[str]
+    #: A set of artifact extensions to verify. Artifacts having an extension outside this list are not verified.
     artifact_extensions: set[str]
 
 
@@ -95,17 +82,11 @@ def is_witness_provenance_payload(
 
 
 class WitnessProvenanceSubject(NamedTuple):
-    """A helper class to store elements of the ``subject`` list in the provenances.
+    """A helper class to store elements of the ``subject`` list in the provenances."""
 
-    Attributes
-    ----------
-    subject_name : str
-        The ``"name"`` field of each ``subject``.
-    sha256 : str
-        The SHA256 digest of the corresponding asset to the subject.
-    """
-
+    #: The ``"name"`` field of each ``subject``.
     subject_name: str
+    #: The SHA256 digest of the corresponding asset to the subject.
     sha256_digest: str
 
     @property

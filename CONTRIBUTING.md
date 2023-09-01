@@ -27,6 +27,9 @@ git commit --signoff
 
 Finally, make sure to sign your commits using a GPG key. See the instructions [here](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key) for more information. A green `verified` label will appear next to your commit on GitHub if it is successfully signed.
 
+### Style Guide
+
+See our [Macaron Style Guide](./docs/source/pages/developers_guide/style_guide.rst).
 
 ### Pull request process
 
@@ -135,9 +138,9 @@ Ideally, the GitHub token must have **read** permissions for the repositories th
 
 After generating a GitHub personal-access token, please store its value in an environment variable called ``GITHUB_TOKEN``. This environment variable will be read by Macaron for its **analyze** command.
 
-### Running checks and tests locally
+## Running checks and tests locally
 
-#### Git hooks
+### Git hooks
 
 Using the pre-commit tool and its `.pre-commit-config.yaml` configuration, a number of [pre-commit hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#_committing_workflow_hooks) ensure that your code is formatted correctly.
 
@@ -156,7 +159,7 @@ make check
 runs _all_ installed git hooks over your code. For more control over the code checks, the Makefile also implements the `check-bandit`, `check-flake8`, `check-lint`, `check-mypy`, and `check-actionlint` goals.
 
 
-#### Testing
+### Testing
 
 This repository is set up to test either standalone or as a pre-push git hook. Tests are stored in the `tests/` folder, and you can run them manually like so:
 ```bash
@@ -172,9 +175,9 @@ make integration-test
 Note that integration tests can take a long time to complete. Also the repositories that we clone for these tests will be stored under `output/` directory. If you do not remove/move this directory and run the pre-commit tool you might get errors.
 
 
-#### Generating documentation
+## Generating documentation
 
-As mentioned above, all package code should make use of [Python docstrings](https://www.python.org/dev/peps/pep-0257/) in [reStructured text format](https://www.python.org/dev/peps/pep-0287/). Using these docstrings and the documentation template in the `docs/source/` folder, you can then generate proper documentation in different formats using the [Sphinx](https://github.com/sphinx-doc/sphinx/) tool:
+As mentioned above, all package code should make use of [Python docstrings](https://www.python.org/dev/peps/pep-0257/) in [reStructured text format](https://www.python.org/dev/peps/pep-0287/) following [numpydoc style](https://numpydoc.readthedocs.io/en/latest/format.html) (with some exceptions - see our [style guide](https://oracle.github.io/pages/developers_guide/style_guide.html#docstrings)). Using these docstrings and the documentation template in the `docs/source/` folder, you can then generate proper documentation in different formats using the [Sphinx](https://github.com/sphinx-doc/sphinx/) tool:
 
 ```bash
 make docs
