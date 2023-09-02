@@ -225,9 +225,6 @@ requirements.txt: pyproject.toml
 # editable mode (like the one in development here) because they may not have
 # a PyPI entry; also print out CVE description and potential fixes if audit
 # found an issue.
-# TODO: do not ignore CVE-2023-40590 once the patch is out.
-# This CVE does not affect Macaron because we do not support Windows systems.
-# See: https://github.com/gitpython-developers/GitPython/security/advisories/GHSA-wfm5-v35h-vwf4
 # TODO: do not ignore CVE-2023-41040 once the patch is out.
 # Macaron is not affected by this CVE because it does not call the problematic functions like `commit`
 # and sanitizes arguments before calling GitPython APIs.
@@ -237,7 +234,7 @@ audit:
 	if ! $$(python -c "import pip_audit" &> /dev/null); then \
 	  echo "No package pip_audit installed, upgrade your environment!" && exit 1; \
 	fi;
-	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln CVE-2023-40590 --ignore-vuln CVE-2023-41040
+	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln CVE-2023-41040
 
 # Run some or all checks over the package code base.
 .PHONY: check check-code check-bandit check-flake8 check-lint check-mypy check-go check-actionlint
