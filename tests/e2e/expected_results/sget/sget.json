@@ -1,15 +1,15 @@
 {
     "metadata": {
-        "timestamps": "2023-08-30 17:11:39"
+        "timestamps": "2023-09-03 21:19:19"
     },
     "target": {
         "info": {
-            "full_name": "pkg:github.com/sagikazarmark/modern-go-application@468a20bc42f96ffebae693a51b006b263b4a497e",
-            "local_cloned_path": "git_repos/github_com/sagikazarmark/modern-go-application",
-            "remote_path": "https://github.com/sagikazarmark/modern-go-application",
+            "full_name": "pkg:github.com/sigstore/sget@99e7b91204d391ccc76507f7079b6d2a7957489e",
+            "local_cloned_path": "git_repos/github_com/sigstore/sget",
+            "remote_path": "https://github.com/sigstore/sget",
             "branch": "main",
-            "commit_hash": "468a20bc42f96ffebae693a51b006b263b4a497e",
-            "commit_date": "2023-04-06T10:17:28+02:00"
+            "commit_hash": "99e7b91204d391ccc76507f7079b6d2a7957489e",
+            "commit_date": "2023-03-13T16:27:11+01:00"
         },
         "provenances": {
             "is_inferred": true,
@@ -21,23 +21,23 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "predicate": {
                             "builder": {
-                                "id": "<URI>"
+                                "id": "https://github.com/sigstore/sget/blob/99e7b91204d391ccc76507f7079b6d2a7957489e/.github/workflows/build.yaml"
                             },
-                            "buildType": "<URI>",
+                            "buildType": "Custom github_actions",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "<URI>",
+                                    "uri": "https://github.com/sigstore/sget@refs/heads/main",
                                     "digest": {
-                                        "sha1": "<STING>"
+                                        "sha1": "99e7b91204d391ccc76507f7079b6d2a7957489e"
                                     },
-                                    "entryPoint": "<STRING>"
+                                    "entryPoint": "https://github.com/sigstore/sget/blob/99e7b91204d391ccc76507f7079b6d2a7957489e/.github/workflows/build.yaml"
                                 },
                                 "parameters": {},
                                 "environment": {}
                             },
                             "buildConfig": {},
                             "metadata": {
-                                "buildInvocationId": "<STRING>",
+                                "buildInvocationId": "",
                                 "buildStartedOn": "<TIMESTAMP>",
                                 "buildFinishedOn": "<TIMESTAMP>",
                                 "completeness": {
@@ -61,8 +61,8 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 7,
-                "PASSED": 2,
+                "FAILED": 6,
+                "PASSED": 3,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
@@ -74,7 +74,23 @@
                         "Scripted Build - SLSA Level 1"
                     ],
                     "justification": [
-                        "The target repository uses build tool go."
+                        "Check mcn_build_script_1 is set to PASSED because mcn_build_service_1 PASSED."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_build_service_1",
+                    "check_description": "Check if the target repo has a valid build service.",
+                    "slsa_requirements": [
+                        "Build service - SLSA Level 2"
+                    ],
+                    "justification": [
+                        {
+                            "The target repository uses build tool go to deploy": "https://github.com/sigstore/sget/blob/99e7b91204d391ccc76507f7079b6d2a7957489e/.github/workflows/build.yaml",
+                            "The build is triggered by": "https://github.com/sigstore/sget/blob/99e7b91204d391ccc76507f7079b6d2a7957489e/.github/workflows/build.yaml"
+                        },
+                        "Build command: ['go', 'build', './...']",
+                        "However, could not find a passing workflow run."
                     ],
                     "result_type": "PASSED"
                 },
@@ -86,7 +102,7 @@
                     ],
                     "justification": [
                         {
-                            "This is a Git repository": "https://github.com/sagikazarmark/modern-go-application"
+                            "This is a Git repository": "https://github.com/sigstore/sget"
                         }
                     ],
                     "result_type": "PASSED"
@@ -99,18 +115,6 @@
                     ],
                     "justification": [
                         "The target repository does not use go to deploy."
-                    ],
-                    "result_type": "FAILED"
-                },
-                {
-                    "check_id": "mcn_build_service_1",
-                    "check_description": "Check if the target repo has a valid build service.",
-                    "slsa_requirements": [
-                        "Build service - SLSA Level 2"
-                    ],
-                    "justification": [
-                        "The target repository does not have a build service for go.",
-                        "The target repository does not have a build service for at least one build tool."
                     ],
                     "result_type": "FAILED"
                 },

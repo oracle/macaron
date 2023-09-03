@@ -3,7 +3,8 @@
 
 """This module contains the NPM class which inherits BaseBuildTool.
 
-This module is used to work with repositories that use NPM as its build tool.
+This module is used to work with repositories that use NPM or Yarn as its
+build tool.
 """
 
 from macaron.config.defaults import defaults
