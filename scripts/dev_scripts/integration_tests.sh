@@ -104,8 +104,8 @@ echo -e "\n---------------------------------------------------------------------
 echo "uiv-lib/uiv: Analysing the repo path, the branch name and the commit digest for an NPM project,"
 echo "skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/uiv-lib/urllib3/urllib3.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/uiv/uiv.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/uiv-lib/uiv/uiv.json
 $RUN_MACARON analyze -rp https://github.com/uiv-lib/uiv -b dev -d 057b25b4db0913edab4cf728c306085e6fc20d49 --skip-deps || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
