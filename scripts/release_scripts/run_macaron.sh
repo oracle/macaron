@@ -19,36 +19,20 @@ MACARON_WORKSPACE="/home/macaron"
 # We use an array here to preserve the arguments as provided by the user.
 entrypoint=()
 
-# The action to run for each entrypoint.
-# For example: `macaron analyze` or `macaron dump-defaults`
-action=()
+# The `macaron` action to execute (e.g. `analyze`, or `verify-policy`)
+action=""
 
-# `argv_main` and `argv_action` are the collections of arguments whose values changed by this script
-# before being passed to the Docker image.
-
-# These are arguments for macaron entrypoint.
-#   -dp/--defaults-path DEFAULTS_PATH: The path to the defaults configuration file.
-#   -h/--help:  Show the help message and exit.
-#   -lr/--local-repos-path LOCAL_REPOS_PATH: The directory where Macaron looks for already cloned repositories.
-#   -v/--verbose: Run Macaron with more debug logs.
-
+# `argv_main` and `argv_action` are arguments whose values changed by this script.
+# `argv_main` are arguments of the `macaron` command.
+# `argv_action` are arguments of the actions in `macaron` (e.g. `analyze`, or `verify-policy`).
 argv_main=()
-
-# These are the sub-commands for a specific action.
-# macaron
-#   analyze:
-#       -g/--template-path TEMPLATE_PATH: The path to the Jinja2 html template (please make sure to use .html or .j2 extensions).
-#       -c/--config-path CONFIG_PATH: The path to the user configuration.
-#       -pe/--provenance-expectation POLICY: The path to provenance expectation file or directory.
-#   dump-defaults:
-#   verify-policy:
-#       -f/--file FILE: Replace policy file.
-#       -d/--database DATABASE: Database path.
-
 argv_action=()
 
-# The rest of the arguments whose values are not changed by this script.
-rest=()
+# `rest_main` and `rest_action` are arguments whose values are not changed by this script.
+# `rest_main` are arguments of the `macaron` command.
+# `rest_action` are arguments of the actions in `macaron` (e.g. `analyze`, or `verify-policy`).
+rest_main=()
+rest_action=()
 
 # The mounted directories/files from the host machine to the runtime Macaron container.
 mounts=()
@@ -115,8 +99,7 @@ function check_path_exists() {
     fi
 }
 
-
-# Parse arguments.
+# Parse main arguments.
 while [[ $# -gt 0 ]]; do
     case $1 in
         # Parsing entry points.
@@ -124,22 +107,12 @@ while [[ $# -gt 0 ]]; do
             entrypoint+=("macaron")
             ;;
         # Parsing actions for macaron entrypoint.
-        analyze)
-            action+=("analyze")
-            ;;
-        dump-defaults)
-            action+=("dump-defaults")
-            ;;
-        verify-policy)
-            action+=("verify-policy")
+        analyze|dump-defaults|verify-policy)
+            action=$1
+            shift
+            break
             ;;
         # Main argv for main in macaron entrypoint.
-        -v|--verbose)
-            argv_main+=("-v")
-            ;;
-        -h|--help)
-            argv_main+=("-h")
-            ;;
         -dp|--defaults-path)
             arg_defaults_path="$2"
             shift
@@ -152,50 +125,57 @@ while [[ $# -gt 0 ]]; do
             arg_local_repos_path="$2"
             shift
             ;;
-        # Action argv for macaron entrypoint.
-        -g|--template-path)
-            arg_template_path="$2"
-            shift
-            ;;
-        -c|--config-path)
-            arg_config_path="$2"
-            shift
-            ;;
-        -pe|--provenance-expectation)
-            arg_prov_exp="$2"
-            shift
-            ;;
-        -sbom|--sbom-path)
-            arg_sbom_path="$2"
-            shift
-            ;;
-        # This flag is duplicated for digest and database.
-        -d)
-            if [[ "${action[0]}" = "verify-policy" ]];
-            then
-                arg_database="$2"
-                shift
-            else
-                rest+=("$1" "$2")
-                shift
-            fi
-            ;;
-
-        # Main Argv for verify-policy action.
-        --database)
-            arg_database="$2"
-            shift
-            ;;
-        -f|--file)
-            arg_datalog_policy_file="$2"
-            shift
-            ;;
         *) # Pass the rest to Macaron.
-            rest+=("$1")
+            rest_main+=("$1")
             ;;
     esac
     shift
 done
+
+# Parse action-specific arguments.
+if [[ $action == "analyze" ]]; then
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -sbom|--sbom-path)
+                arg_sbom_path="$2"
+                shift
+                ;;
+            -pe|--provenance-expectation)
+                arg_prov_exp="$2"
+                shift
+                ;;
+            -c|--config-path)
+                arg_config_path="$2"
+                shift
+                ;;
+            -g|--template-path)
+                arg_template_path="$2"
+                shift
+                ;;
+            *)
+                rest_action+=("$1")
+                ;;
+        esac
+        shift
+    done
+elif [[ $action == "verify-policy" ]]; then
+     while [[ $# -gt 0 ]]; do
+        case $1 in
+            -d|--database)
+                arg_database="$2"
+                shift
+                ;;
+            -f|--file)
+                arg_datalog_policy_file="$2"
+                shift
+                ;;
+            *)
+                rest_action+=("$1")
+                ;;
+        esac
+        shift
+    done
+fi
 
 # MACARON entrypoint - Main argvs
 # Determine the output path to be mounted into ${MACARON_WORKSPACE}/output/
@@ -431,6 +411,23 @@ fi
 
 echo "Running ${IMAGE}:${MACARON_IMAGE_TAG}"
 
+macaron_args=(
+    "${argv_main[@]}"
+    "${rest_main[@]}"
+    "${action}"
+    "${argv_action[@]}"
+    "${rest_action[@]}"
+)
+
+# For the purpose of testing the arguments passed to macaron, we can set the
+# env var `MCN_DEBUG_ARGS=1`.
+# In this case, the script will just print the arguments to stderr without
+# running the Macaron container.
+if [[ -n ${MCN_DEBUG_ARGS} ]]; then
+    >&2 echo "${macaron_args[@]}"
+    exit 0
+fi
+
 docker run \
     --pull ${DOCKER_PULL} \
     --network=host \
@@ -445,7 +442,4 @@ docker run \
     "${mounts[@]}" \
     "${IMAGE}:${MACARON_IMAGE_TAG}" \
     "${entrypoint[@]}" \
-    "${argv_main[@]}" \
-    "${action[@]}" \
-    "${argv_action[@]}" \
-    "${rest[@]}"
+    "${macaron_args[@]}"
