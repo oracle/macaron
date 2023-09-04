@@ -38,12 +38,12 @@ $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
+echo "apache/maven: Check the resolved dependency output for cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 
-$RUN_MACARON_SCRIPT analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || log_fail
+$RUN_MACARON_SCRIPT analyze -rp https://github.com/apache/maven.git -b master -d 6767f2500f1d005924ccff27f04350c253858a84 || log_fail
 $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -56,23 +56,14 @@ $RUN_MACARON_SCRIPT -lr $WORKSPACE/output/git_repos/github_com analyze -r apache
 $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the e2e output JSON file with config and no dependency analyzing."
+echo "apache/maven: Check the e2e output JSON file with no dependency analyzing."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/apache/maven
-JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
+JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
 
-declare -a COMPARE_FILES=(
-    "maven.json"
-    "guava.json"
-    "mockito.json"
-)
+$RUN_MACARON_SCRIPT analyze -rp https://github.com/apache/maven.git -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
 
-$RUN_MACARON_SCRIPT analyze -c $WORKSPACE/tests/e2e/configurations/maven_config.yaml --skip-deps || log_fail
-
-for i in "${COMPARE_FILES[@]}"
-do
-    $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
-done
+$COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using a CycloneDx SBOM."

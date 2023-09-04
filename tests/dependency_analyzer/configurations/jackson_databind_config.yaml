@@ -1,8 +1,0 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
-# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
-
-target:
-  id: jackson-databind
-  branch: '2.14'
-  digest: f0af53d085eb2aa9f7f6199846cc526068e09977
-  path: https://github.com/FasterXML/jackson-databind

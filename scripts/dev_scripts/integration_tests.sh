@@ -26,11 +26,6 @@ then
     cp $RESOURCES/settings.xml $HOMEDIR/.m2/
 fi
 
-# Running Macaron without config files
-echo -e "\n=================================================================================="
-echo "Run integration tests without configurations"
-echo -e "==================================================================================\n"
-
 echo -e "\n----------------------------------------------------------------------------------"
 echo "micronaut-projects/micronaut-core: Analyzing the repo path and the branch name when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
@@ -123,108 +118,44 @@ $RUN_MACARON analyze -rp https://github.com/apache/maven -b master -d 6767f2500f
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-# Analyze micronaut-projects/micronaut-core.
-echo -e "\n=================================================================================="
-echo "Run integration tests with configurations for micronaut-projects/micronaut-core..."
-echo -e "==================================================================================\n"
-DEP_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-core/dependencies.json
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "micronaut-projects/micronaut-core: Check the resolved dependency output when automatic dependency resolution is skipped."
-echo -e "----------------------------------------------------------------------------------\n"
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/skipdep_micronaut-projects_micronaut-core.json
-$RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_core_config.yaml --skip-deps || log_fail
-
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
 # echo -e "\n----------------------------------------------------------------------------------"
-# echo "micronaut-projects/micronaut-core: Check the resolved dependency output with config for cyclonedx gradle plugin (default)."
+# echo "micronaut-projects/micronaut-core: Check the resolved dependency output for cyclonedx gradle plugin (default)."
 # echo -e "----------------------------------------------------------------------------------\n"
+DEP_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-core/dependencies.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-core.json
-$RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_core_config.yaml || log_fail
+$RUN_MACARON analyze -rp https://github.com/micronaut-projects/micronaut-core -b 3.8.x -d 68f9bb0a78fa930865d37fca39252b9ec66e4a43 || log_fail
 
 # TODO: uncomment the test below after resolving https://github.com/oracle/macaron/issues/60.
 # python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "micronaut-projects/micronaut-core: Check the e2e output JSON file with config and no dependency analyzing."
+echo "micronaut-projects/micronaut-core: Check the e2e output JSON file with no dependency analyzing."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-core/
-JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/micronaut-core
+JSON_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-core/micronaut-core.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/micronaut-core/micronaut-core.json
 
-declare -a COMPARE_FILES=(
-    "micronaut-core.json"
-    "caffeine.json"
-    "slf4j.json"
-)
+$RUN_MACARON analyze -rp https://github.com/micronaut-projects/micronaut-core -b 3.8.x -d 68f9bb0a78fa930865d37fca39252b9ec66e4a43 --skip-deps || log_fail
 
-$RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/micronaut_core_config.yaml --skip-deps || log_fail
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
-for i in "${COMPARE_FILES[@]}"
-do
-    python $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
-done
+echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: Check the e2e output JSON file with no dependency analyzing."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
 
-# Analyze apache/maven.
-echo -e "\n=================================================================================="
-echo "Run integration tests with configurations for apache/maven..."
-echo -e "==================================================================================\n"
+$RUN_MACARON analyze -rp https://github.com/apache/maven.git -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: Check the resolved dependency output with cyclonedx maven plugin."
+echo -e "----------------------------------------------------------------------------------\n"
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the resolved dependency output when automatic dependency resolution is skipped."
-echo -e "----------------------------------------------------------------------------------\n"
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/skipdep_apache_maven.json
-$RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml --skip-deps || log_fail
-
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the e2e output JSON file with config and no dependency analyzing."
-echo -e "----------------------------------------------------------------------------------\n"
-JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/apache/maven
-JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
-
-declare -a COMPARE_FILES=(
-    "maven.json"
-    "guava.json"
-    "mockito.json"
-)
-
-$RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/maven_config.yaml --skip-deps || log_fail
-
-for i in "${COMPARE_FILES[@]}"
-do
-    python $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
-done
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the resolved dependency output with config for cyclonedx maven plugin."
-echo -e "----------------------------------------------------------------------------------\n"
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
-$RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || log_fail
+$RUN_MACARON analyze -rp https://github.com/apache/maven.git -b master -d 6767f2500f1d005924ccff27f04350c253858a84 || log_fail
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check: Check the e2e status code of running with invalid branch or digest defined in the yaml configuration."
-echo -e "----------------------------------------------------------------------------------\n"
-declare -a INVALID_BRANCH_DIGEST=(
-    "maven_digest_no_branch.yaml"
-    "maven_invalid_branch.yaml"
-    "maven_invalid_digest.yaml"
-)
-
-for i in "${INVALID_BRANCH_DIGEST[@]}"
-do
-    echo -e "Running with $WORKSPACE/tests/e2e/configurations/$i"
-    $RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/$i
-    if [ $? -eq 0 ];
-    then
-        echo -e "Expect non-zero status code for $WORKSPACE/test/e2e/configurations/$i but got $?."
-        log_fail
-    fi
-done
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test using the default template file."
@@ -235,33 +166,23 @@ $RUN_MACARON analyze -rp https://github.com/apache/maven --skip-deps -b master -
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
-# Analyze FasterXML/jackson-databind.
-echo -e "\n=================================================================================="
-echo "Run integration tests with configurations for FasterXML/jackson-databind..."
-echo -e "==================================================================================\n"
-JSON_RESULT=$WORKSPACE/output/reports/github_com/FasterXML/jackson-databind/jackson-databind.json
-
 echo -e "\n----------------------------------------------------------------------------------"
-echo "FasterXML/jackson-databind: Check the e2e output JSON file with config and no dependency analyzing."
+echo "FasterXML/jackson-databind: Check the e2e output JSON file with no dependency analyzing."
 echo -e "----------------------------------------------------------------------------------\n"
+JSON_RESULT=$WORKSPACE/output/reports/github_com/FasterXML/jackson-databind/jackson-databind.json
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/jackson-databind/jackson-databind.json
-$RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/jackson_databind_config.yaml --skip-deps || log_fail
+$RUN_MACARON analyze -rp https://github.com/FasterXML/jackson-databind -b 2.14 -d f0af53d085eb2aa9f7f6199846cc526068e09977 --skip-deps || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 # echo -e "\n----------------------------------------------------------------------------------"
-# echo "FasterXML/jackson-databind: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
+# echo "FasterXML/jackson-databind: Check the resolved dependency output for cyclonedx maven plugin (default)."
 # echo -e "----------------------------------------------------------------------------------\n"
 # DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_FasterXML_jackson-databind.json
 # DEP_RESULT=$WORKSPACE/output/reports/github_com/FasterXML/jackson-databind/dependencies.json
-# $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/jackson_databind_config.yaml || log_fail
+# $RUN_MACARON analyze -rp https://github.com/FasterXML/jackson-databind -b 2.14 -d f0af53d085eb2aa9f7f6199846cc526068e09977 || log_fail
 
 # python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
-# Running Macaron using local paths.
-echo -e "\n=================================================================================="
-echo "Run integration tests with local paths for apache/maven..."
-echo -e "==================================================================================\n"
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with the branch name, the commit digest and dependency resolution using cyclonedx maven plugin (default)."
@@ -276,41 +197,14 @@ python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing with local paths in configuration and without dependency resolution."
-echo -e "----------------------------------------------------------------------------------\n"
-JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/apache/maven
-JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
-
-declare -a COMPARE_FILES=(
-    "maven.json"
-    "guava.json"
-    "mockito.json"
-)
-
-$RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com analyze -c $WORKSPACE/tests/e2e/configurations/maven_local_path.yaml --skip-deps || log_fail
-for i in "${COMPARE_FILES[@]}"
-do
-    python $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
-done
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with local paths using local_repos_dir without dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
-# The report files are still stored in the same location.
-JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/apache/maven
-JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
-
-declare -a COMPARE_FILES=(
-    "maven.json"
-    "guava.json"
-    "mockito.json"
-)
+JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
 
 $RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com/ analyze -rp apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
-for i in "${COMPARE_FILES[@]}"
-do
-    python $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
-done
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED  || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing a repository that was cloned from another local repo."
