@@ -8,7 +8,10 @@
 import logging
 import os
 
-from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
+from packageurl import PackageURL
+
+from macaron.config.defaults import defaults
+from macaron.repo_finder.repo_finder import find_repo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -23,21 +26,31 @@ def test_repo_finder() -> int:
     - It is extremely unlikely that Maven central will change its API or cease operation in the near future.
     - Other similar repositories to Maven central (internal Artifactory, etc.) can be provided by the user instead.
     """
-    # Test deps.dev API for a Python package
-    repo_finder = DepsDevRepoFinder("pypi")
-    urls = []
-    # Without version
-    urls.append(repo_finder.create_urls("", "packageurl-python", ""))
-    # With version
-    urls.append(repo_finder.create_urls("", "packageurl-python", "0.11.1"))
-    for url in urls:
-        logger.debug("Testing: %s", url[0])
-        metadata = repo_finder.retrieve_metadata(url[0])
-        if not metadata:
-            return os.EX_UNAVAILABLE
-        links = repo_finder.read_metadata(metadata)
-        if not links:
-            return os.EX_UNAVAILABLE
+    defaults.add_section("repofinder")
+    defaults.set("repofinder", "use_open_source_insights", "True")
+
+    defaults.add_section("git_service.github")
+    defaults.set("git_service.github", "domain", "github.com")
+
+    defaults.add_section("git_service.gitlab")
+    defaults.set("git_service.gitlab", "domain", "gitlab.com")
+
+    # Test deps.dev API for a Python package.
+    if not find_repo(PackageURL.from_string("pkg:pypi/packageurl-python@0.11.1")):
+        return os.EX_UNAVAILABLE
+
+    # Test deps.dev API for a Nuget package.
+    if not find_repo(PackageURL.from_string("pkg:nuget/azure.core")):
+        return os.EX_UNAVAILABLE
+
+    # Test deps.dev API for an NPM package.
+    if not find_repo(PackageURL.from_string("pkg:npm/@colors/colors")):
+        return os.EX_UNAVAILABLE
+
+    # Test deps.dev API for Cargo package.
+    if not find_repo(PackageURL.from_string("pkg:cargo/rand_core")):
+        return os.EX_UNAVAILABLE
+
     return os.EX_OK
 
 

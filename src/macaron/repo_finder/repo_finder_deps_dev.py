@@ -156,7 +156,11 @@ class DepsDevRepoFinder(BaseRepoFinder):
             logger.debug("Metadata had no URLs: %s", parsed["versionKey"])
             return []
 
-        return list(parsed["links"])
+        result = []
+        for item in parsed["links"]:
+            result.append(item.get("url"))
+
+        return result
 
     def create_type_specific_url(self, namespace: str, name: str) -> str:
         """Create a URL for the deps.dev API based on the package type.
@@ -182,7 +186,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
                 package_name = name.lower().replace("_", "-")
             case "npm":
                 if namespace:
-                    package_name = f"%40{namespace}%2F{name}"
+                    package_name = f"{namespace}%2F{name}"
                 else:
                     package_name = name
             case "nuget" | "cargo":

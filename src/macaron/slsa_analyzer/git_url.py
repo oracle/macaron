@@ -536,14 +536,9 @@ def get_remote_vcs_url(url: str, clean_up: bool = True) -> str:
     str
         The remote url to the repo or empty if the url is invalid.
     """
-    if len(url) == 1:
-        return ""
-
     parsed_result = parse_remote_url(url)
     if not parsed_result:
-        logger.debug("REJECT: %s", url)
         return ""
-    logger.debug("ACCEPT: %s", url)
 
     url_as_str = urllib.parse.urlunparse(parsed_result)
 
