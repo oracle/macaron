@@ -9,6 +9,8 @@ import os
 from collections.abc import Iterable
 from pathlib import Path
 
+from packageurl import PackageURL
+
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, DependencyInfo
@@ -168,7 +170,13 @@ def convert_components_to_artifacts(
     url_to_artifact: dict[str, set] = {}  # Used to detect artifacts that have similar repos.
     for component in components:
         try:
+            # TODO make this function language agnostic when CycloneDX SBOM processing also is.
+            # See https://github.com/oracle/macaron/issues/464
             key = f"{component.get('group')}:{component.get('name')}"
+            # The component's purl is optional, but we must make an attempt to retrieve the purl type.
+            component_type = ""
+            if component.get("purl"):
+                component_type = PackageURL.from_string(str(component.get("purl"))).type
             # According to PEP-0589 all keys must be present in a TypedDict.
             # See https://peps.python.org/pep-0589/#totality
             item = DependencyInfo(
@@ -229,7 +237,7 @@ def get_deps_from_sbom(sbom_path: str | Path) -> dict[str, DependencyInfo]:
 
     Returns
     -------
-        A dictionary where dependency artifacts are grouped based on "artifactId:groupId".
+        A dictionary where dependency artifacts are grouped based on "groupId:artifactId".
     """
     return convert_components_to_artifacts(
         get_dep_components(
