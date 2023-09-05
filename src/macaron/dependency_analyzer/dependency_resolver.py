@@ -20,7 +20,7 @@ from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.errors import MacaronError
 from macaron.output_reporter.scm import SCMStatus
-from macaron.repo_finder.repo_finder import find_repo, find_valid_url
+from macaron.repo_finder.repo_finder import find_repo
 from macaron.slsa_analyzer.git_url import get_repo_full_name_from_url
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -36,10 +36,7 @@ class DependencyTools(str, Enum):
 class DependencyInfo(TypedDict):
     """The information of a resolved dependency."""
 
-    version: str
-    namespace: str
-    name: str
-    purl: str
+    purl: PackageURL
     url: str
     note: str
     available: SCMStatus
@@ -167,8 +164,8 @@ class DependencyAnalyzer(ABC):
         else:
             try:
                 if (
-                    (latest_version := latest_value.get("version"))
-                    and (item_version := item.get("version"))
+                    (latest_version := latest_value.get("purl").version)  # type: ignore
+                    and (item_version := item.get("purl").version)  # type: ignore
                     and version.Version(latest_version) < version.Version(item_version)
                 ):
                     latest_deps[key] = item
@@ -372,24 +369,9 @@ class DependencyAnalyzer(ABC):
             if item.get("available") != SCMStatus.MISSING_SCM:
                 continue
 
-            name = item.get("name") or ""
-            purl_type = item.get("type_")
-            if purl_type == "maven":
-                purl_string = f"pkg:{purl_type}/{item.get('namespace')}/{name}"
-            elif purl_type == "pypi":
-                purl_string = f"pkg:{purl_type}/{name.lower().replace('_', '-')}"
-            else:
-                # A type that is not yet supported here
-                logger.debug("Unsupported PURL type: %s", purl_type)
-                continue
-
-            if item["version"] != "unspecified":
-                purl_string = purl_string + "@" + item["version"]
-
-            urls = find_repo(PackageURL.from_string(purl_string))
-            item["url"] = find_valid_url(urls)
+            item["url"] = find_repo(item.get("purl"))  # type: ignore
             if item["url"] == "":
-                logger.debug("Failed to find url for purl: %s", purl_string)
+                logger.debug("Failed to find url for purl: %s", item.get("purl"))
             else:
                 # TODO decide how to handle possible duplicates here
                 item["available"] = SCMStatus.AVAILABLE

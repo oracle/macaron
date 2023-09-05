@@ -173,17 +173,20 @@ def convert_components_to_artifacts(
             # TODO make this function language agnostic when CycloneDX SBOM processing also is.
             # See https://github.com/oracle/macaron/issues/464
             key = f"{component.get('group')}:{component.get('name')}"
-            # The component's purl is optional, but we must make an attempt to retrieve the purl type.
-            component_type = ""
             if component.get("purl"):
-                component_type = PackageURL.from_string(str(component.get("purl"))).type
+                purl = PackageURL.from_string(str(component.get("purl")))
+            else:
+                # TODO remove maven assumption when existence of the component's purl is handled
+                # See https://github.com/oracle/macaron/issues/464
+                purl_string = f"pkg:maven/{component.get('group')}/{component.get('name')}"
+                if component.get("version"):
+                    purl_string = f"{purl_string}@{component.get('version')}"
+                purl = PackageURL.from_string(purl_string)
+
             # According to PEP-0589 all keys must be present in a TypedDict.
             # See https://peps.python.org/pep-0589/#totality
             item = DependencyInfo(
-                version=component.get("version") or "",
-                namespace=component.get("group") or "",
-                name=component.get("name") or "",
-                purl=component.get("purl") or "",
+                purl=purl,
                 url="",
                 note="",
                 available=SCMStatus.AVAILABLE,
@@ -196,10 +199,10 @@ def convert_components_to_artifacts(
                 # IN case of a build error, we use this as a heuristic to avoid analyzing
                 # submodules that produce development artifacts in the same repo.
                 if (
-                    "snapshot"
-                    in (item.get("version") or "").lower()  # or "" is not necessary but mypy produces a FP otherwise.
+                    "snapshot" in (purl.version or "").lower()
+                    # or "" is not necessary but mypy produces a FP otherwise.
                     and root_component
-                    and item.get("namespace") == root_component.get("group")
+                    and purl.namespace == root_component.get("group")
                 ):
                     continue
                 logger.debug(
