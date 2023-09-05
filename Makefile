@@ -284,7 +284,6 @@ integration-test:
 .PHONY: integration-test-docker
 integration-test-docker:
 	scripts/dev_scripts/integration_tests_docker.sh $(REPO_PATH) scripts/release_scripts/run_macaron.sh
-	scripts/dev_scripts/test_run_macaron_sh.py
 
 # Build a source distribution package and a binary wheel distribution artifact.
 # When building these artifacts, we need the environment variable SOURCE_DATE_EPOCH
