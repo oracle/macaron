@@ -4,12 +4,12 @@
 """
 This module tests the python dd repo finder.
 """
-from macaron.repo_finder.repo_finder_deps_dev import RepoFinderDepsDev
+from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 
 
-def test_repo_finder_dd() -> None:
+def test_repo_finder_deps_dev() -> None:
     """Test the functions of the repo finder."""
-    repo_finder = RepoFinderDepsDev("pypi")
+    repo_finder = DepsDevRepoFinder("pypi")
     assert (
         repo_finder.create_type_specific_url("", "packageurl-python")
         == "https://api.deps.dev/v3alpha/systems/pypi/packages/packageurl-python"

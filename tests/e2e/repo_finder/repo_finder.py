@@ -8,7 +8,7 @@
 import logging
 import os
 
-from macaron.repo_finder.repo_finder_deps_dev import RepoFinderDepsDev
+from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ def test_repo_finder() -> int:
     - Other similar repositories to Maven central (internal Artifactory, etc.) can be provided by the user instead.
     """
     # Test deps.dev API for a Python package
-    repo_finder = RepoFinderDepsDev("pypi")
+    repo_finder = DepsDevRepoFinder("pypi")
     urls = []
     # Without version
     urls.append(repo_finder.create_urls("", "packageurl-python", ""))

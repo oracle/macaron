@@ -15,8 +15,8 @@ from macaron.util import send_get_http_raw
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class RepoFinderDepsDev(BaseRepoFinder):
-    """This class is used to find repositories using Google's Open Source Insights A.K.A. deps.dev (DD)."""
+class DepsDevRepoFinder(BaseRepoFinder):
+    """This class is used to find repositories using Google's Open Source Insights A.K.A. deps.dev."""
 
     def __init__(self, purl_type: str) -> None:
         """Initialise the deps.dev repository finder instance.

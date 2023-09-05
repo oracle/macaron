@@ -41,7 +41,7 @@ from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
-from macaron.repo_finder.repo_finder_deps_dev import RepoFinderDepsDev
+from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
 from macaron.slsa_analyzer.git_url import get_remote_vcs_url
 
@@ -70,7 +70,7 @@ def find_repo(purl: PackageURL) -> str:
         "cargo",
         "npm",
     ]:
-        repo_finder = RepoFinderDepsDev(purl.type)
+        repo_finder = DepsDevRepoFinder(purl.type)
     else:
         logger.debug("No Repo Finder found for package type: %s of %s", purl.type, purl.to_string())
         return ""
