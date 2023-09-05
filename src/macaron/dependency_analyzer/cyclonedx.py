@@ -14,6 +14,7 @@ from macaron.config.global_config import global_config
 from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, DependencyInfo
 from macaron.errors import MacaronError
 from macaron.output_reporter.scm import SCMStatus
+from macaron.repo_finder.repo_finder import find_valid_url
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -160,7 +161,7 @@ def convert_components_to_artifacts(
     Returns
     -------
     dict
-        A dictionary where dependency artifacts are grouped based on "artifactId:groupId".
+        A dictionary where dependency artifacts are grouped based on "groupId:artifactId".
     """
     all_versions: dict[str, list[DependencyInfo]] = {}  # Stores all the versions of dependencies for debugging.
     latest_deps: dict[str, DependencyInfo] = {}  # Stores the latest version of dependencies.
@@ -199,7 +200,7 @@ def convert_components_to_artifacts(
                 )
             else:
                 # Find a valid URL.
-                item["url"] = DependencyAnalyzer.find_valid_url(
+                item["url"] = find_valid_url(
                     link.get("url") for link in component.get("externalReferences")  # type: ignore
                 )
 

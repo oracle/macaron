@@ -34,15 +34,16 @@ analysis.
 
 import logging
 import os
+from collections.abc import Iterable
 from urllib.parse import ParseResult, urlunparse
 
 from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
-from macaron.dependency_analyzer import DependencyAnalyzer
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import RepoFinderDepsDev
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
+from macaron.slsa_analyzer.git_url import get_remote_vcs_url
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -76,8 +77,8 @@ def find_repo(purl: PackageURL) -> str:
 
     # Call Repo Finder and return first valid URL
     logger.debug("Analyzing %s with Repo Finder: %s", purl.to_string(), repo_finder.__class__)
-    found_urls = repo_finder.find_repo(purl.namespace or "", purl.name, purl.version or "")
-    return DependencyAnalyzer.find_valid_url(found_urls)
+    urls = repo_finder.find_repo(purl.namespace or "", purl.name, purl.version or "")
+    return find_valid_url(urls)
 
 
 def to_domain_from_known_purl_types(purl_type: str) -> str | None:
@@ -150,3 +151,28 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
             fragment="",
         )
     )
+
+
+def find_valid_url(urls: Iterable[str]) -> str:
+    """Find a valid URL from the provided URLs.
+
+    Parameters
+    ----------
+    urls : Iterable[str]
+        An Iterable object containing urls.
+
+    Returns
+    -------
+    str
+        A valid URL or empty if it can't find any valid URL.
+    """
+    vcs_set = {get_remote_vcs_url(value) for value in urls if get_remote_vcs_url(value) != ""}
+
+    # To avoid non-deterministic results we sort the URLs.
+    vcs_list = sorted(vcs_set)
+
+    if len(vcs_list) < 1:
+        return ""
+
+    # Report the first valid URL.
+    return vcs_list.pop()

@@ -159,7 +159,7 @@ class RepoFinderDepsDev(BaseRepoFinder):
         return list(parsed["links"])
 
     def create_type_specific_url(self, namespace: str, name: str) -> str:
-        """Create a url for the deps.dev API based on the package type.
+        """Create a URL for the deps.dev API based on the package type.
 
         Parameters
         ----------
@@ -176,6 +176,7 @@ class RepoFinderDepsDev(BaseRepoFinder):
         namespace = encode(namespace)
         name = encode(name)
 
+        # See https://docs.deps.dev/api/v3alpha/
         match self.type:
             case "pypi":
                 package_name = name.lower().replace("_", "-")

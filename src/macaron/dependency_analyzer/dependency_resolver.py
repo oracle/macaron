@@ -4,17 +4,24 @@
 """This module processes and collects the dependencies to be processed by Macaron."""
 
 import logging
+import os
+import subprocess  # nosec B404
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from enum import Enum
-from typing import TypedDict
+from pathlib import Path
+from typing import Any, TypedDict
 
+from packageurl import PackageURL
 from packaging import version
 
+from macaron.config.defaults import defaults
+from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.errors import MacaronError
 from macaron.output_reporter.scm import SCMStatus
-from macaron.slsa_analyzer.git_url import get_remote_vcs_url, get_repo_full_name_from_url
+from macaron.repo_finder.repo_finder import find_repo, find_valid_url
+from macaron.slsa_analyzer.git_url import get_repo_full_name_from_url
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -169,31 +176,6 @@ class DependencyAnalyzer(ABC):
                 logger.error("Could not parse dependency version number: %s", error)
 
     @staticmethod
-    def find_valid_url(urls: Iterable[str]) -> str:
-        """Find a valid URL from the provided URLs.
-
-        Parameters
-        ----------
-        urls : Iterable[str]
-            An Iterable object containing urls.
-
-        Returns
-        -------
-        str
-            A valid URL or empty if it can't find any valid URL.
-        """
-        vcs_set = {get_remote_vcs_url(value) for value in urls if get_remote_vcs_url(value) != ""}
-
-        # To avoid non-deterministic results we sort the URLs.
-        vcs_list = sorted(vcs_set)
-
-        if len(vcs_list) < 1:
-            return ""
-
-        # Report the first valid URL.
-        return vcs_list.pop()
-
-    @staticmethod
     def merge_configs(
         config_deps: list[Configuration], resolved_deps: dict[str, DependencyInfo]
     ) -> list[Configuration]:
@@ -282,6 +264,136 @@ class DependencyAnalyzer(ABC):
             logger.error("Dependency analyzer: %s.", error)
             return False
         return True
+
+    @staticmethod
+    def resolve_dependencies(main_ctx: Any, sbom_path: str) -> dict[str, DependencyInfo]:
+        """Resolve the dependencies of the main target repo.
+
+        Parameters
+        ----------
+        main_ctx : Any (AnalyzeContext)
+            The context of object of the target repository.
+        sbom_path: str
+            The path to the SBOM.
+
+        Returns
+        -------
+        dict[str, DependencyInfo]
+            A dictionary where artifacts are grouped based on ``artifactId:groupId``.
+        """
+        if sbom_path:
+            logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
+            # Import here to avoid circular dependency
+            # pylint: disable=import-outside-toplevel, cyclic-import
+            from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
+
+            return get_deps_from_sbom(sbom_path)
+
+        deps_resolved: dict[str, DependencyInfo] = {}
+
+        build_tools = main_ctx.dynamic_data["build_spec"]["tools"]
+        if not build_tools:
+            logger.info("Unable to find any valid build tools.")
+            return {}
+
+        # Grab dependencies for each build tool, collate all into the deps_resolved
+        for build_tool in build_tools:
+            try:
+                dep_analyzer = build_tool.get_dep_analyzer(main_ctx.component.repository.fs_path)
+            except DependencyAnalyzerError as error:
+                logger.error("Unable to find a dependency analyzer for %s: %s", build_tool.name, error)
+                return {}
+
+            if isinstance(dep_analyzer, NoneDependencyAnalyzer):
+                logger.info(
+                    "Dependency analyzer is not available for %s",
+                    build_tool.name,
+                )
+                return {}
+
+            # Start resolving dependencies.
+            logger.info(
+                "Running %s version %s dependency analyzer on %s",
+                dep_analyzer.tool_name,
+                dep_analyzer.tool_version,
+                main_ctx.component.repository.fs_path,
+            )
+
+            log_path = os.path.join(
+                global_config.build_log_path,
+                f"{main_ctx.component.report_file_name}.{dep_analyzer.tool_name}.log",
+            )
+
+            # Clean up existing SBOM files.
+            dep_analyzer.remove_sboms(main_ctx.component.repository.fs_path)
+
+            commands = dep_analyzer.get_cmd()
+            working_dirs: Iterable[Path] = build_tool.get_build_dirs(main_ctx.component.repository.fs_path)
+            for working_dir in working_dirs:
+                # Get the absolute path to use as the working dir in the subprocess.
+                working_dir = Path(main_ctx.component.repository.fs_path).joinpath(working_dir)
+
+                try:
+                    # Suppressing Bandit's B603 report because the repo paths are validated.
+                    analyzer_output = subprocess.run(  # nosec B603
+                        commands,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        check=True,
+                        cwd=str(working_dir),
+                        timeout=defaults.getint("dependency.resolver", "timeout", fallback=1200),
+                    )
+                    with open(log_path, mode="a", encoding="utf-8") as log_file:
+                        log_file.write(analyzer_output.stdout.decode("utf-8"))
+
+                except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+                    logger.error(error)
+                    with open(log_path, mode="a", encoding="utf-8") as log_file:
+                        log_file.write(error.output.decode("utf-8"))
+                except FileNotFoundError as error:
+                    logger.error(error)
+
+                # We collect the generated SBOM as a best effort, even if the build exits with errors.
+                # TODO: add improvements to help the SBOM build succeed as much as possible.
+                deps_resolved |= dep_analyzer.collect_dependencies(str(working_dir))
+
+            logger.info("Stored dependency resolver log for %s to %s.", dep_analyzer.tool_name, log_path)
+
+        # Use repo finder to find more repositories to analyze.
+        if defaults.getboolean("repofinder", "find_repos"):
+            DependencyAnalyzer._resolve_more_dependencies(deps_resolved)
+
+        return deps_resolved
+
+    @staticmethod
+    def _resolve_more_dependencies(dependencies: dict[str, DependencyInfo]) -> None:
+        """Utilise the Repo Finder to resolve the repositories of more dependencies."""
+        for item in dependencies.values():
+            if item.get("available") != SCMStatus.MISSING_SCM:
+                continue
+
+            name = item.get("name") or ""
+            purl_type = item.get("type_")
+            if purl_type == "maven":
+                purl_string = f"pkg:{purl_type}/{item.get('namespace')}/{name}"
+            elif purl_type == "pypi":
+                purl_string = f"pkg:{purl_type}/{name.lower().replace('_', '-')}"
+            else:
+                # A type that is not yet supported here
+                logger.debug("Unsupported PURL type: %s", purl_type)
+                continue
+
+            if item["version"] != "unspecified":
+                purl_string = purl_string + "@" + item["version"]
+
+            urls = find_repo(PackageURL.from_string(purl_string))
+            item["url"] = find_valid_url(urls)
+            if item["url"] == "":
+                logger.debug("Failed to find url for purl: %s", purl_string)
+            else:
+                # TODO decide how to handle possible duplicates here
+                item["available"] = SCMStatus.AVAILABLE
+                item["note"] = ""
 
 
 class NoneDependencyAnalyzer(DependencyAnalyzer):
