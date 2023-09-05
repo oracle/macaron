@@ -18,7 +18,6 @@ from macaron.errors import ConfigurationError
 from macaron.output_reporter.reporter import HTMLReporter, JSONReporter, PolicyReporter
 from macaron.parsers.yaml.loader import YamlLoader
 from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
-from macaron.repo_finder.repo_finder_deps_dev import RepoFinderDepsDev
 from macaron.slsa_analyzer.analyzer import Analyzer
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
@@ -159,31 +158,6 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
     return os.EX_USAGE
 
 
-def test_repo_finder() -> int:
-    """Test the functionality of the remote API calls used by the repo finder.
-
-    Functionality relating to Java artifacts is not verified for two reasons:
-    - It is extremely unlikely that Maven central will change its API or cease operation in the near future.
-    - Other similar repositories to Maven central (internal Artifactory, etc.) can be provided by the user instead.
-    """
-    # Test deps.dev API for a Python package
-    repo_finder = RepoFinderDepsDev("pypi")
-    urls = []
-    # Without version
-    urls.append(repo_finder.create_urls("", "packageurl-python", ""))
-    # With version
-    urls.append(repo_finder.create_urls("", "packageurl-python", "0.11.1"))
-    for url in urls:
-        logger.debug("Testing: %s", url[0])
-        metadata = repo_finder.retrieve_metadata(url[0])
-        if not metadata:
-            return os.EX_UNAVAILABLE
-        links = repo_finder.read_metadata(metadata)
-        if not links:
-            return os.EX_UNAVAILABLE
-    return os.EX_OK
-
-
 def perform_action(action_args: argparse.Namespace) -> None:
     """Perform the indicated action of Macaron."""
     match action_args.action:
@@ -194,9 +168,6 @@ def perform_action(action_args: argparse.Namespace) -> None:
 
         case "verify-policy":
             sys.exit(verify_policy(action_args))
-
-        case "test-repo-finder":
-            sys.exit(test_repo_finder())
 
         case "analyze":
             # Check that the GitHub token is enabled.
@@ -375,9 +346,6 @@ def main(argv: list[str] | None = None) -> None:
     # Verify the Datalog policy.
     vp_parser = sub_parser.add_parser(name="verify-policy")
     vp_group = vp_parser.add_mutually_exclusive_group(required=True)
-
-    # Test the Repo Finder
-    sub_parser.add_parser(name="test-repo-finder")
 
     vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
     vp_group.add_argument("-f", "--file", type=str, help="Path to the Datalog policy.")

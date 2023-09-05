@@ -149,7 +149,7 @@ python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test Repo Finder functionality."
 echo -e "----------------------------------------------------------------------------------\n"
-$RUN_MACARON_SCRIPT -v test-repo-finder
+python $COMPARE_JSON_OUT || log_fail
 if [ $? -ne 0 ];
 then
     echo -e "Expect zero status code but got $?."

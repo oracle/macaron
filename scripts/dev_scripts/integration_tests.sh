@@ -9,6 +9,7 @@ HOMEDIR=$2
 RESOURCES=$WORKSPACE/src/macaron/resources
 COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
+TEST_REPO_FINDER=$WORKSPACE/tests/e2e/repo_finder/repo_finder.py
 RUN_MACARON="python -m macaron -o $WORKSPACE/output"
 RESULT_CODE=0
 
@@ -537,7 +538,7 @@ fi
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Testing Repo Finder functionality."
 echo -e "----------------------------------------------------------------------------------\n"
-macaron -v test-repo-finder
+python $COMPARE_JSON_OUT || log_fail
 if [ $? -ne 0 ];
 then
     echo -e "Expect zero status code but got $?."
