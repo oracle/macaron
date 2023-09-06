@@ -77,8 +77,12 @@ def find_repo(purl: PackageURL) -> str:
 
     # Call Repo Finder and return first valid URL
     logger.debug("Analyzing %s with Repo Finder: %s", purl.to_string(), repo_finder.__class__)
-    urls = repo_finder.find_repo(purl)
-    return find_valid_url(urls)
+    for urls in repo_finder.find_repo(purl):
+        url = find_valid_url(urls)
+        if url:
+            return url
+
+    return ""
 
 
 def to_domain_from_known_purl_types(purl_type: str) -> str | None:

@@ -19,9 +19,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 class DepsDevRepoFinder(BaseRepoFinder):
     """This class is used to find repositories using Google's Open Source Insights A.K.A. deps.dev."""
 
-    def find_repo(self, purl: PackageURL) -> Iterator[str]:
+    def find_repo(self, purl: PackageURL) -> Iterator[Iterator[str]]:
         """
-        Attempt to retrieve a repository URL that matches the passed artifact.
+        Return iterator from _find_repo that attempts to retrieve a repository URL that matches the passed artifact.
 
         Parameters
         ----------
@@ -31,8 +31,12 @@ class DepsDevRepoFinder(BaseRepoFinder):
         Yields
         ------
         Iterator[str] :
-            The URLs found for the passed GAV.
+            The URLs found for the passed artifact.
         """
+        yield from iter(self._find_repo(purl))  # type: ignore[misc]
+
+    def _find_repo(self, purl: PackageURL) -> Iterator[str]:
+        """Attempt to retrieve a repository URL that matches the passed artifact."""
         request_urls = self._create_urls(purl.namespace or "", purl.name, purl.version or "", purl.type)
         if not request_urls:
             logger.debug("No urls found for: %s", purl)
@@ -48,7 +52,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
             logger.debug("Failed to extract repository URLs from json data: %s", purl)
             return
 
-        yield from iter(urls)
+        yield iter(urls)  # type: ignore[misc]
 
     def _create_urls(self, namespace: str, name: str, version: str, type_: str) -> list[str]:
         """

@@ -13,9 +13,9 @@ class BaseRepoFinder(ABC):
     """This abstract class is used to represent Repository Finders."""
 
     @abstractmethod
-    def find_repo(self, purl: PackageURL) -> Iterator[str]:
+    def find_repo(self, purl: PackageURL) -> Iterator:
         """
-        Attempt to retrieve a repository URL that matches the passed artifact.
+        Generate iterator from _find_repo that attempts to retrieve a repository URL that matches the passed artifact.
 
         Parameters
         ----------
@@ -24,6 +24,6 @@ class BaseRepoFinder(ABC):
 
         Yields
         ------
-        Iterator[str] :
-            The URLs found for the passed artifact.
+        Iterator :
+            An iterator that produces the found URLs.
         """

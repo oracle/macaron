@@ -43,7 +43,7 @@ def test_repo_finder() -> int:
         return os.EX_UNAVAILABLE
 
     # Test Java package with SCM metadata in artifact's parent POM.
-    if not find_repo(PackageURL.from_string("pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2")):
+    if not find_repo(PackageURL.from_string("pkg:maven/commons-cli/commons-cli@1.5.0")):
         return os.EX_UNAVAILABLE
 
     # Test deps.dev API for a Python package.

@@ -26,9 +26,9 @@ class JavaRepoFinder(BaseRepoFinder):
         """Initialise the Java repository finder instance."""
         self.pom_element: Element | None = None
 
-    def find_repo(self, purl: PackageURL) -> Iterator[str]:
+    def find_repo(self, purl: PackageURL) -> Iterator[Iterator[str]]:
         """
-        Attempt to retrieve a repository URL that matches the passed artifact.
+        Generate iterator from _find_repo that attempts to retrieve a repository URL that matches the passed artifact.
 
         Parameters
         ----------
@@ -37,9 +37,13 @@ class JavaRepoFinder(BaseRepoFinder):
 
         Yields
         ------
-        Iterator[str] :
-            The URLs found for the passed GAV.
+        Iterator[Iterator[str]] :
+            The URLs found for the passed artifact.
         """
+        yield from iter(self._find_repo(purl))  # type: ignore[misc]
+
+    def _find_repo(self, purl: PackageURL) -> Iterator[str]:
+        """Attempt to retrieve a repository URL that matches the passed artifact."""
         # Perform the following in a loop:
         # - Create URLs for the current artifact POM
         # - Parse the POM
@@ -81,8 +85,7 @@ class JavaRepoFinder(BaseRepoFinder):
 
             if urls:
                 logger.debug("Found %s urls: %s", len(urls), urls)
-                yield from iter(urls)
-                break
+                yield iter(urls)  # type: ignore[misc]
 
             if defaults.getboolean("repofinder.java", "find_parents") and self.pom_element is not None:
                 # Attempt to extract parent information from POM
