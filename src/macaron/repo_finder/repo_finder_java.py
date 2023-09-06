@@ -50,7 +50,7 @@ class JavaRepoFinder(BaseRepoFinder):
         # - Try to extract SCM metadata and return URLs
         # - Try to extract parent information and change current artifact to it
         # - Repeat
-        group = (purl.namespace or "").replace(".", "/")
+        group = purl.namespace or ""
         artifact = purl.name
         version = purl.version or ""
         limit = defaults.getint("repofinder.java", "parent_limit", fallback=10)
