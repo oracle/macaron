@@ -145,17 +145,6 @@ POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/policy_report.js
 $RUN_MACARON_SCRIPT verify-policy -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 
-# Testing the Repo Finder's remote calls.
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Test Repo Finder functionality."
-echo -e "----------------------------------------------------------------------------------\n"
-python $TEST_REPO_FINDER || log_fail
-if [ $? -ne 0 ];
-then
-    echo -e "Expect zero status code but got $?."
-    log_fail
-fi
-
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test running the analysis without setting the GITHUB_TOKEN environment variables."
 echo -e "----------------------------------------------------------------------------------\n"

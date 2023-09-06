@@ -535,6 +535,7 @@ then
 fi
 
 # Testing the Repo Finder's remote calls.
+# This requires the 'packageurl' Python module
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Testing Repo Finder functionality."
 echo -e "----------------------------------------------------------------------------------\n"
