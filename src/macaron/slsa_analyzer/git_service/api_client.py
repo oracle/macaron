@@ -607,7 +607,6 @@ class GhAPIClient(BaseAPIClient):
                 "Accept": "application/octet-stream",
                 "Authorization": self.headers["Authorization"],
             },
-            None,
         )
         if not response:
             logger.error("Could not download the asset.")
@@ -645,14 +644,13 @@ class GhAPIClient(BaseAPIClient):
 
         """
         url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/pulls?state=closed&base={branch_name}"  # fetch PRs
-        params: dict = {"state": "all"}
         pull_request_objects: list = []
         while True:
             # GitHub paginates responses to avoid overwhelming the client with a large amount of
             # data in a single response.
             # We need to handle pagination by making multiple requests and fetching all the pages.
 
-            response_data = send_get_http_raw(url, self.headers, params)
+            response_data = send_get_http_raw(url, self.headers)
             if not response_data:
                 logger.error("Could not find the PR IDs.")
                 return []
@@ -700,9 +698,8 @@ class GhAPIClient(BaseAPIClient):
         """
         logger.debug("Get the reviews for %s with PR id %s.", full_name, pr_number)
         url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/pulls/{pr_number}/reviews"  # fetch reviews only cocntain reviewers
-        params: dict = {"state": "all"}
 
-        response_data = send_get_http_raw(url, self.headers, params)
+        response_data = send_get_http_raw(url, self.headers)
         if not response_data:
             logger.error("Could not fetch the review.")
             return {}
