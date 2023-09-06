@@ -9,6 +9,7 @@ from xml.etree.ElementTree import Element  # nosec
 
 import defusedxml.ElementTree
 from defusedxml.ElementTree import fromstring
+from packageurl import PackageURL
 from requests.exceptions import ReadTimeout
 
 from macaron.config.defaults import defaults
@@ -25,18 +26,14 @@ class JavaRepoFinder(BaseRepoFinder):
         """Initialise the Java repository finder instance."""
         self.pom_element: Element | None = None
 
-    def find_repo(self, group: str, artifact: str, version: str) -> Iterator[str]:
+    def find_repo(self, purl: PackageURL) -> Iterator[str]:
         """
         Attempt to retrieve a repository URL that matches the passed artifact.
 
         Parameters
         ----------
-        group : str
-            The group identifier of an artifact.
-        artifact : str
-            The artifact name of an artifact.
-        version : str
-            The version number of an artifact.
+        purl : PackageURL
+            The PURL of an artifact.
 
         Yields
         ------
@@ -49,12 +46,20 @@ class JavaRepoFinder(BaseRepoFinder):
         # - Try to extract SCM metadata and return URLs
         # - Try to extract parent information and change current artifact to it
         # - Repeat
-        group = group.replace(".", "/")
+        group = (purl.namespace or "").replace(".", "/")
+        artifact = purl.name
+        version = purl.version or ""
         limit = defaults.getint("repofinder.java", "parent_limit", fallback=10)
+
+        if not version:
+            logger.debug("Version missing for maven artifact: %s:%s", group, artifact)
+            # TODO add support for Java artifacts without a version
+            return
+
         while group and artifact and version and limit > 0:
             # Create the URLs for retrieving the artifact's POM
             group = group.replace(".", "/")
-            request_urls = self.create_urls(group, artifact, version)
+            request_urls = self._create_urls(group, artifact, version)
             if not request_urls:
                 # Abort if no URLs were created
                 logger.debug("Failed to create request URLs for %s:%s:%s", group, artifact, version)
@@ -63,7 +68,7 @@ class JavaRepoFinder(BaseRepoFinder):
             # Try each POM URL in order, terminating early if a match is found
             pom = ""
             for request_url in request_urls:
-                pom = self.retrieve_metadata(request_url)
+                pom = self._retrieve_pom(request_url)
                 if pom != "":
                     break
 
@@ -72,15 +77,16 @@ class JavaRepoFinder(BaseRepoFinder):
                 logger.debug("No POM found for %s:%s:%s", group, artifact, version)
                 return
 
-            urls = self.read_metadata(pom)
+            urls = self._read_pom(pom)
 
             if urls:
                 logger.debug("Found %s urls: %s", len(urls), urls)
                 yield from iter(urls)
+                break
 
             if defaults.getboolean("repofinder.java", "find_parents") and self.pom_element is not None:
                 # Attempt to extract parent information from POM
-                group, artifact, version = self.find_parent(self.pom_element)
+                group, artifact, version = self._find_parent(self.pom_element)
             else:
                 break
 
@@ -89,9 +95,9 @@ class JavaRepoFinder(BaseRepoFinder):
         # Nothing found
         return
 
-    def create_urls(self, group: str, artifact: str, version: str) -> list[str]:
+    def _create_urls(self, group: str, artifact: str, version: str) -> list[str]:
         """
-        Create the urls to search for the metadata relating to the passed artifact.
+        Create the urls to search for the pom relating to the passed artifact.
 
         Parameters
         ----------
@@ -115,7 +121,7 @@ class JavaRepoFinder(BaseRepoFinder):
             urls.append(f"{repo}/{group}/{artifact}/{version}/{artifact}-{version}.pom")
         return urls
 
-    def retrieve_metadata(self, url: str) -> str:
+    def _retrieve_pom(self, url: str) -> str:
         """
         Attempt to retrieve the file located at the passed URL.
 
@@ -132,7 +138,7 @@ class JavaRepoFinder(BaseRepoFinder):
         try:
             response = send_get_http_raw(url, {})
         except ReadTimeout:
-            logger.debug("Failed to retrieve metadata (timeout): %s", url)
+            logger.debug("Failed to retrieve pom (timeout): %s", url)
             return ""
 
         if not response:
@@ -141,14 +147,14 @@ class JavaRepoFinder(BaseRepoFinder):
         logger.debug("Found artifact POM at: %s", url)
         return response.text
 
-    def read_metadata(self, metadata: str) -> list[str]:
+    def _read_pom(self, pom: str) -> list[str]:
         """
         Parse the passed pom and extract the relevant tags.
 
         Parameters
         ----------
-        metadata : str
-            The metadata as a string.
+        pom : str
+            The pom as a string.
 
         Returns
         -------
@@ -162,14 +168,14 @@ class JavaRepoFinder(BaseRepoFinder):
             return []
 
         # Parse POM using defusedxml
-        pom_element = self.parse_pom(metadata)
+        pom_element = self._parse_pom(pom)
         if pom_element is None:
             return []
 
         # Attempt to extract SCM data and return URL
-        return self.find_scm(pom_element, tags)
+        return self._find_scm(pom_element, tags)
 
-    def parse_pom(self, pom: str) -> Element | None:
+    def _parse_pom(self, pom: str) -> Element | None:
         """
         Parse the passed POM using defusedxml.
 
@@ -190,7 +196,7 @@ class JavaRepoFinder(BaseRepoFinder):
             logger.debug("Failed to parse XML: %s", error)
             return None
 
-    def find_scm(self, pom: Element, tags: list[str], resolve_properties: bool = True) -> list[str]:
+    def _find_scm(self, pom: Element, tags: list[str], resolve_properties: bool = True) -> list[str]:
         """
         Parse the passed pom and extract the passed tags.
 
@@ -236,7 +242,7 @@ class JavaRepoFinder(BaseRepoFinder):
 
         return results
 
-    def find_parent(self, pom: Element) -> tuple[str, str, str]:
+    def _find_parent(self, pom: Element) -> tuple[str, str, str]:
         """
         Extract parent information from passed POM.
 
@@ -298,7 +304,7 @@ class JavaRepoFinder(BaseRepoFinder):
                 else:
                     text = f"properties.{text}"
                 # Call find_scm with property resolution flag set to False to prevent the possibility of endless looping
-                result = self.find_scm(pom, [text], False)
+                result = self._find_scm(pom, [text], False)
                 if not result:
                     break
                 replacements.append([match.start(), result[0], match.end()])

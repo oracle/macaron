@@ -70,14 +70,14 @@ def find_repo(purl: PackageURL) -> str:
         "cargo",
         "npm",
     ]:
-        repo_finder = DepsDevRepoFinder(purl.type)
+        repo_finder = DepsDevRepoFinder()
     else:
         logger.debug("No Repo Finder found for package type: %s of %s", purl.type, purl.to_string())
         return ""
 
     # Call Repo Finder and return first valid URL
     logger.debug("Analyzing %s with Repo Finder: %s", purl.to_string(), repo_finder.__class__)
-    urls = repo_finder.find_repo(purl.namespace or "", purl.name, purl.version or "")
+    urls = repo_finder.find_repo(purl)
     return find_valid_url(urls)
 
 

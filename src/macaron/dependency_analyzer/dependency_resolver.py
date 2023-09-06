@@ -164,8 +164,8 @@ class DependencyAnalyzer(ABC):
         else:
             try:
                 if (
-                    (latest_version := latest_value.get("purl").version)  # type: ignore
-                    and (item_version := item.get("purl").version)  # type: ignore
+                    (latest_version := latest_value.get("purl").version)  # type: ignore[union-attr]
+                    and (item_version := item.get("purl").version)  # type: ignore[union-attr]
                     and version.Version(latest_version) < version.Version(item_version)
                 ):
                     latest_deps[key] = item

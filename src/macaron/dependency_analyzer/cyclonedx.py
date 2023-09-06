@@ -176,7 +176,7 @@ def convert_components_to_artifacts(
             if component.get("purl"):
                 purl = PackageURL.from_string(str(component.get("purl")))
             else:
-                # TODO remove maven assumption when existence of the component's purl is handled
+                # TODO remove maven assumption when optional non-existence of the component's purl is handled
                 # See https://github.com/oracle/macaron/issues/464
                 purl_string = f"pkg:maven/{component.get('group')}/{component.get('name')}"
                 if component.get("version"):

@@ -7,6 +7,7 @@ import logging
 from collections.abc import Iterator
 from urllib.parse import quote as encode
 
+from packageurl import PackageURL
 from requests.exceptions import ReadTimeout
 
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
@@ -18,52 +19,38 @@ logger: logging.Logger = logging.getLogger(__name__)
 class DepsDevRepoFinder(BaseRepoFinder):
     """This class is used to find repositories using Google's Open Source Insights A.K.A. deps.dev."""
 
-    def __init__(self, purl_type: str) -> None:
-        """Initialise the deps.dev repository finder instance.
-
-        Parameters
-        ----------
-        purl_type : str
-            The PURL type this instance is intended for use with.
-        """
-        self.type = purl_type
-
-    def find_repo(self, group: str, artifact: str, version: str) -> Iterator[str]:
+    def find_repo(self, purl: PackageURL) -> Iterator[str]:
         """
         Attempt to retrieve a repository URL that matches the passed artifact.
 
         Parameters
         ----------
-        group : str
-            The group identifier of an artifact.
-        artifact : str
-            The artifact name of an artifact.
-        version : str
-            The version number of an artifact.
+        purl : PackageURL
+            The PURL of an artifact.
 
         Yields
         ------
         Iterator[str] :
             The URLs found for the passed GAV.
         """
-        request_urls = self.create_urls(group, artifact, version)
+        request_urls = self._create_urls(purl.namespace or "", purl.name, purl.version or "", purl.type)
         if not request_urls:
-            logger.debug("No urls found for: %s", artifact)
+            logger.debug("No urls found for: %s", purl)
             return
 
-        metadata = self.retrieve_metadata(request_urls[0])
-        if not metadata:
-            logger.debug("Failed to retrieve metadata for: %s", artifact)
+        json_data = self._retrieve_json(request_urls[0])
+        if not json_data:
+            logger.debug("Failed to retrieve json data for: %s", purl)
             return
 
-        urls = self.read_metadata(metadata)
+        urls = self._read_json(json_data)
         if not urls:
-            logger.debug("Failed to extract repository URLs from metadata: %s", artifact)
+            logger.debug("Failed to extract repository URLs from json data: %s", purl)
             return
 
         yield from iter(urls)
 
-    def create_urls(self, group: str, artifact: str, version: str) -> list[str]:
+    def _create_urls(self, namespace: str, name: str, version: str, type_: str) -> list[str]:
         """
         Create the urls to search for the metadata relating to the passed artifact.
 
@@ -71,19 +58,21 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         Parameters
         ----------
-        group : str
-            The group ID.
-        artifact: str
-            The artifact ID.
+        namespace : str
+            The PURL namespace.
+        name: str
+            The PURL name.
         version: str
-            The version of the artifact.
+            The PURL version.
+        type : str
+            The PURL type.
 
         Returns
         -------
         list[str]
             The list of created URLs.
         """
-        base_url = self.create_type_specific_url(group, artifact)
+        base_url = self._create_type_specific_url(namespace, name, type_)
 
         if not base_url:
             return []
@@ -95,7 +84,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
         try:
             response = send_get_http_raw(base_url, {})
         except ReadTimeout:
-            logger.debug("Failed to retrieve version (timeout): %s:%s", group, artifact)
+            logger.debug("Failed to retrieve version (timeout): %s:%s", namespace, name)
             return []
 
         if not response:
@@ -111,9 +100,9 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         return []
 
-    def retrieve_metadata(self, url: str) -> str:
+    def _retrieve_json(self, url: str) -> str:
         """
-        Attempt to retrieve the file located at the passed URL.
+        Attempt to retrieve the json file located at the passed URL.
 
         Parameters
         ----------
@@ -136,21 +125,21 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         return response.text
 
-    def read_metadata(self, metadata: str) -> list[str]:
+    def _read_json(self, json_data: str) -> list[str]:
         """
-        Parse the deps.dev metadata and extract the repository links.
+        Parse the deps.dev json file and extract the repository links.
 
         Parameters
         ----------
-        metadata : str
-            The metadata as a string.
+        json_data : str
+            The json metadata as a string.
 
         Returns
         -------
         list[str] :
             The extracted contents as a list of strings.
         """
-        parsed = json.loads(metadata)
+        parsed = json.loads(json_data)
 
         if not parsed["links"]:
             logger.debug("Metadata had no URLs: %s", parsed["versionKey"])
@@ -162,7 +151,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         return result
 
-    def create_type_specific_url(self, namespace: str, name: str) -> str:
+    def _create_type_specific_url(self, namespace: str, name: str, type_: str) -> str:
         """Create a URL for the deps.dev API based on the package type.
 
         Parameters
@@ -171,6 +160,8 @@ class DepsDevRepoFinder(BaseRepoFinder):
             The PURL namespace element.
         name : str
             The PURL name element.
+        type : str
+            The PURL type.
 
         Returns
         -------
@@ -181,7 +172,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
         name = encode(name)
 
         # See https://docs.deps.dev/api/v3alpha/
-        match self.type:
+        match type_:
             case "pypi":
                 package_name = name.lower().replace("_", "-")
             case "npm":
@@ -195,7 +186,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
                 package_name = f"{namespace}%3A{name}"
 
             case _:
-                logger.debug("PURL type not yet supported: %s", self.type)
+                logger.debug("PURL type not yet supported: %s", type_)
                 return ""
 
-        return f"https://api.deps.dev/v3alpha/systems/{self.type}/packages/{package_name}"
+        return f"https://api.deps.dev/v3alpha/systems/{type_}/packages/{package_name}"

@@ -20,20 +20,31 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_repo_finder() -> int:
-    """Test the functionality of the remote API calls used by the repo finder.
+    """Test the functionality of the remote API calls used by the repo finder."""
+    if not defaults.has_section("repofinder.java"):
+        defaults.add_section("repofinder.java")
+    defaults.set("repofinder.java", "find_parents", "True")
+    defaults.set("repofinder.java", "repo_pom_paths", "scm.url")
 
-    Functionality relating to Java artifacts is not verified for two reasons:
-    - It is extremely unlikely that Maven central will change its API or cease operation in the near future.
-    - Other similar repositories to Maven central (internal Artifactory, etc.) can be provided by the user instead.
-    """
-    defaults.add_section("repofinder")
+    if not defaults.has_section("repofinder"):
+        defaults.add_section("repofinder")
     defaults.set("repofinder", "use_open_source_insights", "True")
 
-    defaults.add_section("git_service.github")
+    if not defaults.has_section("git_service.github"):
+        defaults.add_section("git_service.github")
     defaults.set("git_service.github", "domain", "github.com")
 
-    defaults.add_section("git_service.gitlab")
+    if not defaults.has_section("git_service.gitlab"):
+        defaults.add_section("git_service.gitlab")
     defaults.set("git_service.gitlab", "domain", "gitlab.com")
+
+    # Test Java package with SCM metadata in artifact POM.
+    if not find_repo(PackageURL.from_string("pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2")):
+        return os.EX_UNAVAILABLE
+
+    # Test Java package with SCM metadata in artifact's parent POM.
+    if not find_repo(PackageURL.from_string("pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2")):
+        return os.EX_UNAVAILABLE
 
     # Test deps.dev API for a Python package.
     if not find_repo(PackageURL.from_string("pkg:pypi/packageurl-python@0.11.1")):
