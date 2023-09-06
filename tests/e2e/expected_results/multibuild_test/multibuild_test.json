@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-08-29 22:13:15"
+        "timestamps": "2023-09-06 10:26:27"
     },
     "target": {
         "info": {
@@ -83,7 +83,8 @@
                             "The build is triggered by": "https://github.com/timyarkov/multibuild_test/blob/a8b0efe24298bc81f63217aaa84776c3d48976c5/.github/workflows/github-actions-basic.yml"
                         },
                         "Deploy command: ['gradle', 'publish']",
-                        "However, could not find a passing workflow run."
+                        "However, could not find a passing workflow run.",
+                        "The target repository does not use maven to deploy."
                     ],
                     "result_type": "PASSED"
                 },
@@ -116,7 +117,8 @@
                         "Two-person reviewed - SLSA Level 4"
                     ],
                     "justification": [
-                        "0 pull requests have been reviewed by at least two person.The pass rate is 0 / 0"
+                        "0 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 0 / 0"
                     ],
                     "result_type": "PASSED"
                 },
@@ -252,10 +254,6 @@
             },
             {
                 "check_id": "mcn_trusted_builder_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {
