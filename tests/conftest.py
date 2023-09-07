@@ -17,6 +17,7 @@ from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.build_tool.npm import NPM
 from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.build_tool.poetry import Poetry
+from macaron.slsa_analyzer.build_tool.yarn import Yarn
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
@@ -186,6 +187,25 @@ def npm_tool(setup_test) -> NPM:  # type: ignore # pylint: disable=unused-argume
     npm = NPM()
     npm.load_defaults()
     return npm
+
+
+@pytest.fixture(autouse=True)
+def yarn_tool(setup_test) -> Yarn:  # type: ignore # pylint: disable=unused-argument
+    """Create a Yarn tool instance.
+
+    Parameters
+    ----------
+    setup_test
+        Depends on setup_test fixture.
+
+    Returns
+    -------
+    Yarn
+        The Yarn instance.
+    """
+    yarn = Yarn()
+    yarn.load_defaults()
+    return yarn
 
 
 @pytest.fixture(autouse=True)
