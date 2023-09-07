@@ -4,14 +4,13 @@
 """This module contains the PythonRepoFinderDD class to be used for finding repositories using deps.dev."""
 import json
 import logging
-from collections.abc import Iterator
 from urllib.parse import quote as encode
 
 from packageurl import PackageURL
 from requests.exceptions import ReadTimeout
 
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
-from macaron.util import send_get_http_raw
+from macaron.util import find_valid_url, send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -19,40 +18,42 @@ logger: logging.Logger = logging.getLogger(__name__)
 class DepsDevRepoFinder(BaseRepoFinder):
     """This class is used to find repositories using Google's Open Source Insights A.K.A. deps.dev."""
 
-    def find_repo(self, purl: PackageURL) -> Iterator[Iterator[str]]:
+    def find_repo(self, purl: PackageURL) -> str:
         """
-        Return iterator from _find_repo that attempts to retrieve a repository URL that matches the passed artifact.
+        Attempt to retrieve a repository URL that matches the passed artifact.
 
         Parameters
         ----------
         purl : PackageURL
             The PURL of an artifact.
 
-        Yields
-        ------
-        Iterator[str] :
-            The URLs found for the passed artifact.
+        Returns
+        -------
+        str :
+            The URL of the found repository.
         """
-        yield from iter(self._find_repo(purl))  # type: ignore[misc]
-
-    def _find_repo(self, purl: PackageURL) -> Iterator[str]:
-        """Attempt to retrieve a repository URL that matches the passed artifact."""
         request_urls = self._create_urls(purl.namespace or "", purl.name, purl.version or "", purl.type)
         if not request_urls:
             logger.debug("No urls found for: %s", purl)
-            return
+            return ""
 
         json_data = self._retrieve_json(request_urls[0])
         if not json_data:
             logger.debug("Failed to retrieve json data for: %s", purl)
-            return
+            return ""
 
         urls = self._read_json(json_data)
         if not urls:
             logger.debug("Failed to extract repository URLs from json data: %s", purl)
-            return
+            return ""
 
-        yield iter(urls)  # type: ignore[misc]
+        logger.debug("Found %s urls: %s", len(urls), urls)
+        url = find_valid_url(urls)
+        if url:
+            logger.debug("Found valid url: %s", url)
+            return url
+
+        return ""
 
     def _create_urls(self, namespace: str, name: str, version: str, type_: str) -> list[str]:
         """

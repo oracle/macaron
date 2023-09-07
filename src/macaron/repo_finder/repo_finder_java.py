@@ -4,7 +4,6 @@
 """This module contains the JavaRepoFinder class to be used for finding Java repositories."""
 import logging
 import re
-from collections.abc import Iterator
 from xml.etree.ElementTree import Element  # nosec
 
 import defusedxml.ElementTree
@@ -14,7 +13,7 @@ from requests.exceptions import ReadTimeout
 
 from macaron.config.defaults import defaults
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
-from macaron.util import send_get_http_raw
+from macaron.util import find_valid_url, send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -26,9 +25,9 @@ class JavaRepoFinder(BaseRepoFinder):
         """Initialise the Java repository finder instance."""
         self.pom_element: Element | None = None
 
-    def find_repo(self, purl: PackageURL) -> Iterator[Iterator[str]]:
+    def find_repo(self, purl: PackageURL) -> str:
         """
-        Generate iterator from _find_repo that attempts to retrieve a repository URL that matches the passed artifact.
+        Attempt to retrieve a repository URL that matches the passed artifact.
 
         Parameters
         ----------
@@ -37,13 +36,9 @@ class JavaRepoFinder(BaseRepoFinder):
 
         Yields
         ------
-        Iterator[Iterator[str]] :
-            The URLs found for the passed artifact.
+        str :
+            The URL of the found repository.
         """
-        yield from iter(self._find_repo(purl))  # type: ignore[misc]
-
-    def _find_repo(self, purl: PackageURL) -> Iterator[str]:
-        """Attempt to retrieve a repository URL that matches the passed artifact."""
         # Perform the following in a loop:
         # - Create URLs for the current artifact POM
         # - Parse the POM
@@ -58,7 +53,7 @@ class JavaRepoFinder(BaseRepoFinder):
         if not version:
             logger.debug("Version missing for maven artifact: %s:%s", group, artifact)
             # TODO add support for Java artifacts without a version
-            return
+            return ""
 
         while group and artifact and version and limit > 0:
             # Create the URLs for retrieving the artifact's POM
@@ -67,7 +62,7 @@ class JavaRepoFinder(BaseRepoFinder):
             if not request_urls:
                 # Abort if no URLs were created
                 logger.debug("Failed to create request URLs for %s:%s:%s", group, artifact, version)
-                return
+                return ""
 
             # Try each POM URL in order, terminating early if a match is found
             pom = ""
@@ -79,13 +74,17 @@ class JavaRepoFinder(BaseRepoFinder):
             if pom == "":
                 # Abort if no POM was found
                 logger.debug("No POM found for %s:%s:%s", group, artifact, version)
-                return
+                return ""
 
             urls = self._read_pom(pom)
 
             if urls:
+                # If the found URLs fail to validate, finding can continue on to the next parent POM
                 logger.debug("Found %s urls: %s", len(urls), urls)
-                yield iter(urls)  # type: ignore[misc]
+                url = find_valid_url(urls)
+                if url:
+                    logger.debug("Found valid url: %s", url)
+                    return url
 
             if defaults.getboolean("repofinder.java", "find_parents") and self.pom_element is not None:
                 # Attempt to extract parent information from POM
@@ -96,7 +95,7 @@ class JavaRepoFinder(BaseRepoFinder):
             limit = limit - 1
 
         # Nothing found
-        return
+        return ""
 
     def _create_urls(self, group: str, artifact: str, version: str) -> list[str]:
         """

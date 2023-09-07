@@ -16,7 +16,7 @@ from macaron.config.global_config import global_config
 from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, DependencyInfo
 from macaron.errors import MacaronError
 from macaron.output_reporter.scm import SCMStatus
-from macaron.repo_finder.repo_finder import find_valid_url
+from macaron.util import find_valid_url
 
 logger: logging.Logger = logging.getLogger(__name__)
 
