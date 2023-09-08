@@ -169,8 +169,9 @@ def docker_tool(setup_test) -> Docker:  # type: ignore # pylint: disable=unused-
     docker = Docker()
     docker.load_defaults()
     return docker
-    
-    
+
+
+@pytest.fixture(autouse=True)
 def npm_tool(setup_test) -> NPM:  # type: ignore # pylint: disable=unused-argument
     """Create a NPM tool instance.
 
