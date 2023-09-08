@@ -15,6 +15,7 @@ RUN_MACARON_SCRIPT=$2
 # The scripts to compare the results of the integration tests.
 COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
+UNIT_TEST_SCRIPT=$WORKSPACE/scripts/dev_scripts/test_run_macaron_sh.py
 
 RESULT_CODE=0
 
@@ -22,6 +23,11 @@ function log_fail() {
     printf "Error: FAILED integration test (line ${BASH_LINENO}) %s\n" $@
     RESULT_CODE=1
 }
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Run unit tests for the run_macaron.sh script"
+$UNIT_TEST_SCRIPT || log_fail
+echo -e "\n----------------------------------------------------------------------------------"
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "timyarkov/multibuild_test: Analyzing the repo path, the branch name and the commit digest"
