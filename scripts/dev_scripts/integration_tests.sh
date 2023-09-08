@@ -111,7 +111,7 @@ $RUN_MACARON analyze -rp https://github.com/uiv-lib/uiv -b dev -d 057b25b4db0913
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "facebook/yoga: Analysing the repo path, the branch name and the commit digest for an NPM project,"
+echo "facebook/yoga: Analysing the repo path, the branch name and the commit digest for a Yarn project,"
 echo "skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/yoga/yoga.json
