@@ -10,6 +10,7 @@ import pytest
 from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
+from macaron.slsa_analyzer.build_tool.docker import Docker
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.build_tool.pip import Pip
@@ -146,6 +147,25 @@ def pip_tool(setup_test) -> Pip:  # type: ignore # pylint: disable=unused-argume
     pip = Pip()
     pip.load_defaults()
     return pip
+
+
+@pytest.fixture(autouse=True)
+def docker_tool(setup_test) -> Docker:  # type: ignore # pylint: disable=unused-argument
+    """Create a Docker tool instance.
+
+    Parameters
+    ----------
+    setup_test
+        Depends on setup_test fixture.
+
+    Returns
+    -------
+    Docker
+        The Docker instance.
+    """
+    docker = Docker()
+    docker.load_defaults()
+    return docker
 
 
 class MockGitHubActions(GitHubActions):

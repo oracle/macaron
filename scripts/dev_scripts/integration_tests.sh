@@ -90,6 +90,15 @@ python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
+echo "timyarkov/docker_test: Analyzing the repo path, the branch name and the commit digest"
+echo "when automatic dependency resolution is skipped, for a project using docker as a build tool."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/docker_test/docker_test.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/docker_test/docker_test.json
+$RUN_MACARON analyze -rp https://github.com/timyarkov/docker_test -b main -d 404a51a2f38c4470af6b32e4e00b5318c2d7c0cc --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with PURL and repository path without dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
