@@ -16,7 +16,7 @@ from macaron.config.global_config import global_config
 from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, DependencyInfo
 from macaron.errors import MacaronError
 from macaron.output_reporter.scm import SCMStatus
-from macaron.util import find_valid_url
+from macaron.repo_finder.repo_validator import find_valid_repository_url
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -211,7 +211,7 @@ def convert_components_to_artifacts(
                 )
             else:
                 # Find a valid URL.
-                item["url"] = find_valid_url(
+                item["url"] = find_valid_repository_url(
                     link.get("url") for link in component.get("externalReferences")  # type: ignore
                 )
 

@@ -13,7 +13,8 @@ from requests.exceptions import ReadTimeout
 
 from macaron.config.defaults import defaults
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
-from macaron.util import find_valid_url, send_get_http_raw
+from macaron.repo_finder.repo_validator import find_valid_repository_url
+from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ class JavaRepoFinder(BaseRepoFinder):
             if urls:
                 # If the found URLs fail to validate, finding can continue on to the next parent POM
                 logger.debug("Found %s urls: %s", len(urls), urls)
-                url = find_valid_url(urls)
+                url = find_valid_repository_url(urls)
                 if url:
                     logger.debug("Found valid url: %s", url)
                     return url

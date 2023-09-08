@@ -8,14 +8,12 @@ import os
 import shutil
 import time
 import urllib.parse
-from collections.abc import Iterable
 from datetime import datetime
 
 import requests
 from requests.models import Response
 
 from macaron.config.defaults import defaults
-from macaron.slsa_analyzer.git_url import get_remote_vcs_url
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -262,28 +260,3 @@ def get_if_exists(doc: JsonType, path: list[str | int]) -> JsonType | None:
         else:
             return None
     return doc
-
-
-def find_valid_url(urls: Iterable[str]) -> str:
-    """Find a valid URL from the provided URLs.
-
-    Parameters
-    ----------
-    urls : Iterable[str]
-        An Iterable object containing urls.
-
-    Returns
-    -------
-    str
-        A valid URL or empty if it can't find any valid URL.
-    """
-    vcs_set = {get_remote_vcs_url(value) for value in urls if get_remote_vcs_url(value) != ""}
-
-    # To avoid non-deterministic results we sort the URLs.
-    vcs_list = sorted(vcs_set)
-
-    if len(vcs_list) < 1:
-        return ""
-
-    # Report the first valid URL.
-    return vcs_list.pop()
