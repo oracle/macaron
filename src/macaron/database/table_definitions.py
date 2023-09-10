@@ -24,7 +24,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from macaron.database.database_manager import ORMBase
 from macaron.database.rfc3339_datetime import RFC3339DateTime
-from macaron.errors import CUEExpectationError, CUERuntimeError
+from macaron.errors import CUEExpectationError, CUERuntimeError, InvalidPURLError
 from macaron.slsa_analyzer.provenance.expectations.cue import cue_validator
 from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
 from macaron.slsa_analyzer.slsa_req import ReqName
@@ -172,9 +172,21 @@ class Component(PackageURLMixin, ORMBase):
             The corresponding analysis.
         repository: Repository | None
             The corresponding repository.
+
+        Raises
+        ------
+        InvalidPURLError
+            If the PURL provided from the user is invalid.
         """
-        purl_parts = PackageURL.from_string(purl)
-        purl_kwargs = purl_parts.to_dict()
+        try:
+            purl_parts = PackageURL.from_string(purl)
+        except ValueError as error:
+            raise InvalidPURLError(f"The package url {purl} is not valid.") from error
+
+        # We set ``encode=True`` to encode qualifiers as a normalized string because SQLite doesn't support ``dict`` type.
+        # TODO: Explore the ``dbm`` or ``shelve`` packages to support dict type, which are part of the Python standard library.
+        purl_kwargs = purl_parts.to_dict(encode=True)
+
         super().__init__(purl=purl, analysis=analysis, repository=repository, **purl_kwargs)
 
     @property
