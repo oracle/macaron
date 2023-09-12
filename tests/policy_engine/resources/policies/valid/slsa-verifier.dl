@@ -5,4 +5,4 @@
 #include "prelude.dl"
 
 Policy("auth-provenance", repositoryid, "") :- check_passed(repositoryid, "mcn_provenance_level_three_1").
-apply_policy_to("auth-provenance", repo_id) :- is_repo(repo_id, "github.com/slsa-framework/slsa-verifier", _).
+apply_policy_to("auth-provenance", repo_id) :- is_component(repo_id, "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac").
