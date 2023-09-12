@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-07-08 12:28:33"
+        "timestamps": "2023-09-12 17:07:11"
     },
     "target": {
         "info": {
@@ -35,7 +35,10 @@
                                 "parameters": {},
                                 "environment": {}
                             },
-                            "buildConfig": {},
+                            "buildConfig": {
+                                "jobID": "<STRING>",
+                                "stepID": "<STRING>"
+                            },
                             "metadata": {
                                 "buildInvocationId": "<STRING>",
                                 "buildStartedOn": "<TIMESTAMP>",
@@ -55,13 +58,14 @@
                             ]
                         }
                     }
-                ]
+                ],
+                "Maven Central Registry": []
             }
         },
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 7,
+                "FAILED": 8,
                 "PASSED": 2,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -74,7 +78,8 @@
                         "Scripted Build - SLSA Level 1"
                     ],
                     "justification": [
-                        "The target repository uses build tool maven."
+                        "The target repository uses build tool maven.",
+                        "The target repository uses build tool docker."
                     ],
                     "result_type": "PASSED"
                 },
@@ -98,7 +103,8 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "The target repository does not use maven to deploy."
+                        "The target repository does not use maven to deploy.",
+                        "The target repository does not use docker to deploy."
                     ],
                     "result_type": "FAILED"
                 },
@@ -110,7 +116,19 @@
                     ],
                     "justification": [
                         "The target repository does not have a build service for maven.",
+                        "The target repository does not have a build service for docker.",
                         "The target repository does not have a build service for at least one build tool."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_infer_artifact_pipeline_1",
+                    "check_description": "Detects potential pipelines from which an artifact is published.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Check mcn_infer_artifact_pipeline_1 is set to FAILED because mcn_build_as_code_1 FAILED."
                     ],
                     "result_type": "FAILED"
                 },
@@ -189,27 +207,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_trusted_builder_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_as_code_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             },
             {
@@ -217,11 +215,35 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_expectation_1",
+                "check_id": "mcn_provenance_available_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
                 "num_deps_pass": 0
             },
             {
                 "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_service_1",
                 "num_deps_pass": 0
             }
         ],

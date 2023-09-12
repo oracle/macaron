@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-07-08 03:35:08"
+        "timestamps": "2023-09-12 17:24:16"
     },
     "target": {
         "info": {
@@ -35,7 +35,10 @@
                                 "parameters": {},
                                 "environment": {}
                             },
-                            "buildConfig": {},
+                            "buildConfig": {
+                                "jobID": "build",
+                                "stepID": "Deploy snapshot"
+                            },
                             "metadata": {
                                 "buildInvocationId": "",
                                 "buildStartedOn": "<TIMESTAMP>",
@@ -77,7 +80,10 @@
                                 "parameters": {},
                                 "environment": {}
                             },
-                            "buildConfig": {},
+                            "buildConfig": {
+                                "jobID": "<STRING>",
+                                "stepID": "<STRING>"
+                            },
                             "metadata": {
                                 "buildInvocationId": "<STRING>",
                                 "buildStartedOn": "<TIMESTAMP>",
@@ -97,13 +103,14 @@
                             ]
                         }
                     }
-                ]
+                ],
+                "Maven Central Registry": []
             }
         },
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 5,
+                "FAILED": 6,
                 "PASSED": 4,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -159,6 +166,17 @@
                         }
                     ],
                     "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_infer_artifact_pipeline_1",
+                    "check_description": "Detects potential pipelines from which an artifact is published.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Unable to find a publishing timestamp for the artifact."
+                    ],
+                    "result_type": "FAILED"
                 },
                 {
                     "check_id": "mcn_provenance_available_1",
@@ -239,7 +257,15 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_provenance_witness_level_one_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_provenance_available_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
                 "num_deps_pass": 0
             },
             {
@@ -264,10 +290,6 @@
             },
             {
                 "check_id": "mcn_build_service_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             }
         ],

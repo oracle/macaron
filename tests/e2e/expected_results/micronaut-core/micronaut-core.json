@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-13 08:44:28"
+        "timestamps": "2023-09-13 10:04:00"
     },
     "target": {
         "info": {
@@ -746,13 +746,14 @@
                             ]
                         }
                     }
-                ]
+                ],
+                "Maven Central Registry": []
             }
         },
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 2,
+                "FAILED": 3,
                 "PASSED": 6,
                 "SKIPPED": 0,
                 "UNKNOWN": 1
@@ -851,6 +852,17 @@
                     "result_type": "PASSED"
                 },
                 {
+                    "check_id": "mcn_infer_artifact_pipeline_1",
+                    "check_description": "Detects potential pipelines from which an artifact is published.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Unable to find a publishing timestamp for the artifact."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
                     "check_id": "mcn_provenance_witness_level_one_1",
                     "check_description": "Check whether the target has a level-1 witness provenance.",
                     "slsa_requirements": [
@@ -895,6 +907,10 @@
             },
             {
                 "check_id": "mcn_provenance_available_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
                 "num_deps_pass": 0
             },
             {

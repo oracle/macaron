@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-08-23 18:31:55"
+        "timestamps": "2023-09-12 17:09:38"
     },
     "target": {
         "info": {
@@ -35,9 +35,12 @@
                                 "parameters": {},
                                 "environment": {}
                             },
-                            "buildConfig": {},
+                            "buildConfig": {
+                                "jobID": "Pretend-to-do-stuff",
+                                "stepID": "Publish Gradle Project"
+                            },
                             "metadata": {
-                                "buildInvocationId": "https://github.com/timyarkov/multibuild_test/actions/runs/5097947450",
+                                "buildInvocationId": "",
                                 "buildStartedOn": "<TIMESTAMP>",
                                 "buildFinishedOn": "<TIMESTAMP>",
                                 "completeness": {
@@ -55,13 +58,14 @@
                             ]
                         }
                     }
-                ]
+                ],
+                "Maven Central Registry": []
             }
         },
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 5,
+                "FAILED": 6,
                 "PASSED": 4,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -79,9 +83,7 @@
                             "The build is triggered by": "https://github.com/timyarkov/multibuild_test/blob/a8b0efe24298bc81f63217aaa84776c3d48976c5/.github/workflows/github-actions-basic.yml"
                         },
                         "Deploy command: ['gradle', 'publish']",
-                        {
-                            "The status of the build can be seen at": "https://github.com/timyarkov/multibuild_test/actions/runs/5097947450"
-                        },
+                        "However, could not find a passing workflow run.",
                         "The target repository does not use maven to deploy."
                     ],
                     "result_type": "PASSED"
@@ -120,6 +122,17 @@
                         }
                     ],
                     "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_infer_artifact_pipeline_1",
+                    "check_description": "Detects potential pipelines from which an artifact is published.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Unable to find a publishing timestamp for the artifact."
+                    ],
+                    "result_type": "FAILED"
                 },
                 {
                     "check_id": "mcn_provenance_available_1",
@@ -196,19 +209,7 @@
         "unique_dep_repos": 2,
         "checks_summary": [
             {
-                "check_id": "mcn_build_script_1",
-                "num_deps_pass": 2
-            },
-            {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 2
-            },
-            {
-                "check_id": "mcn_build_service_1",
-                "num_deps_pass": 2
-            },
-            {
-                "check_id": "mcn_trusted_builder_level_three_1",
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             },
             {
@@ -220,23 +221,39 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 2
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 2
             },
             {
                 "check_id": "mcn_provenance_level_three_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_expectation_1",
-                "num_deps_pass": 0
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 2
             }
         ],
         "dep_status": [
             {
                 "id": "org.springframework.boot:spring-boot-starter-thymeleaf",
                 "description": "Analysis Completed.",
-                "report": "spring-boot.html",
+                "report": "spring-boot-starter-thymeleaf.html",
                 "status": "AVAILABLE"
             },
             {
