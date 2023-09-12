@@ -4,7 +4,12 @@
 """This modules contains tests for the provenance available check."""
 
 
+from pathlib import Path
+
+import pytest
+
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from macaron.database.table_definitions import Repository
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.checks.provenance_available_check import ProvenanceAvailableCheck
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -15,8 +20,6 @@ from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from tests.conftest import MockAnalyzeContext
-
-from ...macaron_testcase import MacaronTestCase
 
 
 class MockGitHubActions(GitHubActions):
@@ -47,58 +50,86 @@ class MockGhAPIClient(GhAPIClient):
         return False
 
 
-class TestProvAvailableCheck(MacaronTestCase):
-    """Test the provenance available check."""
+@pytest.mark.parametrize(
+    ("repository", "expected"),
+    [
+        (None, CheckResultType.FAILED),
+        (Repository(complete_name="github.com/package-url/purl-spec", fs_path=""), CheckResultType.PASSED),
+    ],
+)
+def test_provenance_available_check_with_repos(macaron_path: Path, repository: Repository, expected: str) -> None:
+    """Test the provenance available check on different types of repositories."""
+    check = ProvenanceAvailableCheck()
+    check_result = CheckResult(justification=[])  # type: ignore
+    github_actions = MockGitHubActions()
+    api_client = MockGhAPIClient({"headers": {}, "query": []})
+    github_actions.api_client = api_client
+    github_actions.load_defaults()
 
-    def test_provenance_available_check(self) -> None:
-        """Test the provenance available check."""
-        check = ProvenanceAvailableCheck()
-        check_result = CheckResult(justification=[])  # type: ignore
-        github_actions = MockGitHubActions()
-        api_client = MockGhAPIClient({"headers": {}, "query": []})
-        github_actions.api_client = api_client
-        github_actions.load_defaults()
-        jenkins = Jenkins()
-        jenkins.load_defaults()
-        travis = Travis()
-        travis.load_defaults()
-        circle_ci = CircleCI()
-        circle_ci.load_defaults()
-        gitlab_ci = GitLabCI()
-        gitlab_ci.load_defaults()
+    ci_info = CIInfo(
+        service=github_actions,
+        bash_commands=[],
+        callgraph=CallGraph(BaseNode(), ""),
+        provenance_assets=[],
+        latest_release={},
+        provenances=[],
+    )
 
-        ci_info = CIInfo(
-            service=github_actions,
-            bash_commands=[],
-            callgraph=CallGraph(BaseNode(), ""),
-            provenance_assets=[],
-            latest_release={},
-            provenances=[],
-        )
+    # Set up the context object with provenances.
+    ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
+    ctx.component.repository = repository
+    ctx.dynamic_data["ci_services"] = [ci_info]
+    assert check.run_check(ctx, check_result) == expected
 
-        # Repo has provenances.
-        ctx = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
-        ctx.dynamic_data["ci_services"] = [ci_info]
-        assert check.run_check(ctx, check_result) == CheckResultType.PASSED
 
-        # Repo doesn't have a provenance.
-        api_client.release = {"assets": [{"name": "attestation.intoto", "url": "URL", "size": 10}]}
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+def test_provenance_available_check_on_ci(macaron_path: Path) -> None:
+    """Test the provenance available check on different types of CI services."""
+    check = ProvenanceAvailableCheck()
+    check_result = CheckResult(justification=[])  # type: ignore
+    github_actions = MockGitHubActions()
+    api_client = MockGhAPIClient({"headers": {}, "query": []})
+    github_actions.api_client = api_client
+    github_actions.load_defaults()
+    jenkins = Jenkins()
+    jenkins.load_defaults()
+    travis = Travis()
+    travis.load_defaults()
+    circle_ci = CircleCI()
+    circle_ci.load_defaults()
+    gitlab_ci = GitLabCI()
+    gitlab_ci.load_defaults()
 
-        api_client.release = {"assets": [{"name": "attestation.intoto.jsonl", "url": "URL", "size": 10}]}
+    ci_info = CIInfo(
+        service=github_actions,
+        bash_commands=[],
+        callgraph=CallGraph(BaseNode(), ""),
+        provenance_assets=[],
+        latest_release={},
+        provenances=[],
+    )
 
-        # Test Jenkins.
-        ci_info["service"] = jenkins
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+    # Set up the context object with provenances.
+    ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
+    ctx.dynamic_data["ci_services"] = [ci_info]
 
-        # Test Travis.
-        ci_info["service"] = travis
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+    # Repo doesn't have a provenance.
+    api_client.release = {"assets": [{"name": "attestation.intoto", "url": "URL", "size": 10}]}
+    assert check.run_check(ctx, check_result) == CheckResultType.FAILED
 
-        # Test Circle CI.
-        ci_info["service"] = circle_ci
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+    api_client.release = {"assets": [{"name": "attestation.intoto.jsonl", "url": "URL", "size": 10}]}
 
-        # Test GitLab CI.
-        ci_info["service"] = gitlab_ci
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+    # Test Jenkins.
+    ci_info["service"] = jenkins
+    assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+
+    # Test Travis.
+    ci_info["service"] = travis
+    assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+
+    # Test Circle CI.
+    ci_info["service"] = circle_ci
+    assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+
+    # Test GitLab CI.
+    ci_info["service"] = gitlab_ci
+    assert check.run_check(ctx, check_result) == CheckResultType.FAILED

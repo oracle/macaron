@@ -450,6 +450,14 @@ class ProvenanceAvailableCheck(BaseCheck):
 
         # We look for the provenances in the package registries first, then CI services.
         # (Note the short-circuit evaluation with OR.)
+        # The current provenance discovery mechanism for package registries requires a
+        # repository to be available. Moreover, the repository path in Witness provenance
+        # contents are checked to match the target repository path.
+        # TODO: handle cases where a PURL string is provided for a software component but
+        # no repository is available.
+        if not ctx.component.repository:
+            check_result["justification"] = ["Unable to find provenances because no repository is available."]
+            return CheckResultType.FAILED
         try:
             provenance_assets = self.find_provenance_assets_on_package_registries(
                 repo_fs_path=ctx.component.repository.fs_path,
