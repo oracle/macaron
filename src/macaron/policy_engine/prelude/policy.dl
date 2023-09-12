@@ -23,15 +23,16 @@ apply_to_analysis(analysis_id) :-
  *   A policy that specifies a set of rules about repositories.
  *
  *      policy_id: The unique identifier for this policy.
- *      repo: the id field of a repository relation.
+ *      component_id: the id of a software component.
+ *      message: The policy description.
  */
-.decl Policy(policy_id: symbol, repo_id: number, message: symbol)
+.decl Policy(policy_id: symbol, component_id: number, message: symbol)
 
 /**
- *  Specifies that a repository repo must satisfy the policy policy_id: that the fact Policy(policy_id, repo)
+ *  Specifies that a software component must satisfy the policy policy_id: that the fact Policy(policy_id, component_id, message)
  *  must exist.
  */
-.decl apply_policy_to(policy_id: symbol, repo_id: number)
+.decl apply_policy_to(policy_id: symbol, component_id: number)
 
 /*
  * Check policy constraints IFF it is applied to the component AND the component is part of the analysis being checked.
