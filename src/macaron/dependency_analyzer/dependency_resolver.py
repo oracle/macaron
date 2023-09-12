@@ -34,6 +34,7 @@ class DependencyInfo(TypedDict):
     version: str
     group: str
     name: str
+    purl: str
     url: str
     note: str
     available: SCMStatus
@@ -262,6 +263,7 @@ class DependencyAnalyzer(ABC):
                 Configuration(
                     {
                         "id": key,
+                        "purl": value.get("purl"),
                         "path": value.get("url"),
                         "branch": "",
                         "digest": "",

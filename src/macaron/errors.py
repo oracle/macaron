@@ -50,3 +50,7 @@ class InvalidPURLError(MacaronError):
 
 class DuplicateError(MacaronError):
     """The class for errors for duplicated data."""
+
+
+class InvalidHTTPResponseError(MacaronError):
+    """Happens when the HTTP response is invalid or unexpected."""
