@@ -110,12 +110,16 @@ class MavenCentralRegistry(PackageRegistry):
 
         If version is not provided, the timestamp of the latest version will be returned.
 
+        To see the search API syntax see: https://central.sonatype.org/search/rest-api-guide/
+
         Parameters
         ----------
         group_id : str
             The group id of the artifact.
         artifact_id: str
             The artifact id of the artifact.
+        version: str | None
+            The version of the artifact.
 
         Returns
         -------
@@ -130,15 +134,19 @@ class MavenCentralRegistry(PackageRegistry):
         query_params = [f"q=g:{group_id}", f"a:{artifact_id}"]
         if version:
             query_params.append(f"v:{version}")
-        url = urlunsplit(
-            SplitResult(
-                scheme="https",
-                netloc=self.hostname,
-                path=f"/{self.search_endpoint}",
-                query="&".join(["+AND+".join(query_params), "core=gav", "rows=1", "wt=json"]),
-                fragment="",
+
+        try:
+            url = urlunsplit(
+                SplitResult(
+                    scheme="https",
+                    netloc=self.hostname,
+                    path=f"/{self.search_endpoint}",
+                    query="&".join(["+AND+".join(query_params), "core=gav", "rows=1", "wt=json"]),
+                    fragment="",
+                )
             )
-        )
+        except ValueError as error:
+            raise InvalidHTTPResponseError("Failed to construct the search URL for Maven Central.") from error
 
         response = send_get_http_raw(url, headers=None, timeout=self.request_timeout)
         if response and response.status_code == 200:
@@ -164,6 +172,7 @@ class MavenCentralRegistry(PackageRegistry):
             logger.debug("Found timestamp: %s.", timestamp)
 
             # The timestamp published in Maven Central is in milliseconds and needs to be divided by 1000.
+            # Unfortunately, this is not documented in the API docs.
             try:
                 return datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
             except (OverflowError, OSError) as error:

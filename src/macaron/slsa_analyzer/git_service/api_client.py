@@ -304,7 +304,7 @@ class GhAPIClient(BaseAPIClient):
         """Query the GitHub REST API for the workflow run within a datetime range.
 
         The url would be in the following form:
-        ``https://api.github/com/repos/{full_name}/actions/runs?create=datetime-range``
+        ``https://api.github.com/repos/{full_name}/actions/runs?create=datetime-range``
 
         Parameters
         ----------
@@ -323,9 +323,9 @@ class GhAPIClient(BaseAPIClient):
         The following call to this method will perform a query to
         ``https://api.github/com/repos/owner/repo/actions/runs?created=2022-11-05T20:38:40..2022-11-05T20:38:58``
 
-        >>> gh_client.get_workflow_run_for_date_time_range(
+        >>> e.g., gh_client.get_workflow_run_for_date_time_range(
             full_name="owner/repo",
-            created=datetime-range
+            created=2022-11-05T20:38:40..2022-11-05T20:38:58
         )
         """
         logger.debug("Query GitHub to get run details for %s at %s", full_name, datetime_range)
