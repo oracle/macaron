@@ -33,6 +33,10 @@ class BashCommands(TypedDict):
     """CI service type."""
     commands: list[list[str]]
     """Parsed bash commands."""
+    job_name: str
+    """The name of the job where commands were called."""
+    step_name: str
+    """The name of the step where commands were called."""
 
 
 def parse_file(file_path: str, macaron_path: str = "") -> dict:
@@ -119,6 +123,8 @@ def extract_bash_from_ci(
     recursive: bool = False,
     repo_path: str = "",
     working_dir: str = "",
+    job_name: str = "",
+    step_name: str = "",
 ) -> Iterable[BashCommands]:
     """Parse the bash scripts triggered from CI.
 
@@ -140,6 +146,10 @@ def extract_bash_from_ci(
     working_dir : str
         The working directory from which the bash script has run.
         Empty value is considered as the root of the repo.
+    job_name: str
+        The name of the job where commands were called.
+    step_name: str
+        The name of the step where commands were called.
 
     Yields
     ------
@@ -152,7 +162,14 @@ def extract_bash_from_ci(
     parsed_parent = parse(bash_content)
     caller_commands = parsed_parent.get("commands", [])
     if caller_commands:
-        yield BashCommands(caller_path=ci_file, CI_path=ci_file, CI_type=ci_type, commands=caller_commands)
+        yield BashCommands(
+            caller_path=ci_file,
+            CI_path=ci_file,
+            CI_type=ci_type,
+            commands=caller_commands,
+            job_name=job_name,
+            step_name=step_name,
+        )
 
     # Parse the bash script files called from the current script.
     if recursive and repo_path:
@@ -170,4 +187,6 @@ def extract_bash_from_ci(
                     CI_path=ci_file,
                     CI_type=ci_type,
                     commands=callee_commands,
+                    job_name=job_name,
+                    step_name=step_name,
                 )

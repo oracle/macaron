@@ -8,7 +8,11 @@ from macaron.slsa_analyzer.provenance.intoto import v01
 
 
 class Provenance:
-    """This class implements the inferred SLSA provenance."""
+    """This class implements the inferred SLSA provenance.
+
+    This inferred provenance implementation follows the SLSA v0.2 provenance schema.
+    See https://slsa.dev/spec/v0.2/provenance
+    """
 
     def __init__(self) -> None:
         """Initialize instance."""
@@ -24,7 +28,13 @@ class Provenance:
                     "parameters": {},
                     "environment": {},
                 },
-                "buildConfig": {},
+                "buildConfig": {
+                    # This is an arbitrary JSON object with a schema defined by buildType.
+                    # We set these fields for GitHubActionsWorkflow buildType.
+                    # Note that some checks might consume these values.
+                    "jobID": "<STRING>",
+                    "stepID": "<STRING>",
+                },
                 "metadata": {
                     "buildInvocationId": "<STRING>",
                     "buildStartedOn": "<TIMESTAMP>",

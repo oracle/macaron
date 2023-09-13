@@ -7,7 +7,7 @@ import glob
 import logging
 import os
 from collections.abc import Iterable
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
@@ -289,6 +289,8 @@ class GitHubActions(BaseCIService):
                                 recursive=True,
                                 repo_path=callgraph.repo_path,
                                 working_dir=step["Exec"]["WorkingDirectory"] or "",
+                                job_name=job.get("ID")["Value"] if job.get("ID") else "",
+                                step_name=step.get("Name")["Value"] if step.get("Name") else "",
                             )
 
     def has_latest_run_passed(
@@ -409,6 +411,117 @@ class GitHubActions(BaseCIService):
             )
 
         return ""
+
+    def workflow_run_in_date_time_range(
+        self,
+        repo_full_name: str,
+        workflow: str,
+        date_time: datetime,
+        step_name: str,
+        time_range: int = 0,
+    ) -> set[str]:
+        """Check if the repository has a workflow run started before the date_time timestamp within the time_range.
+
+        - This method queries the list of workflow runs using the GitHub API for the provided repository full name.
+        - It will filter out the runs that are not triggered by the given workflow.
+        - It will only accept the runs that from `date_time - time_range` to `date_time`.
+        - If a `step_name` is provided, checks that it has started before the `date_time` and has succeeded.
+
+        Parameters
+        ----------
+        repo_full_name : str
+            The target repo's full name.
+        workflow : str
+            The workflow URL.
+        date_time: datetime
+            The datetime object to query.
+        step_name: str
+            The step in the GitHub Action workflow that needs to be checked.
+        time_range: int
+            The date-time range in seconds. The default value is 0.
+            For example a 30 seconds range for 2022-11-05T20:30 is 2022-11-05T20:15..2022-11-05T20:45.
+
+        Returns
+        -------
+        set[str]
+            The set of URLs found for the workflow within the time range.
+        """
+        logger.debug(
+            "Getting the latest workflow run of %s at %s within time range %s",
+            workflow,
+            str(date_time),
+            str(time_range),
+        )
+
+        html_urls: set[str] = set()
+        try:
+            datetime_from = date_time - timedelta(seconds=time_range)
+        except (OverflowError, OSError, TypeError) as error:
+            logger.debug(error)
+            return html_urls
+
+        # Perform the search.
+        logger.debug("Search for the workflow runs within the range.")
+        try:
+            run_data = self.api_client.get_workflow_run_for_date_time_range(
+                repo_full_name, f"{datetime_from.isoformat()}..{date_time.isoformat()}"
+            )
+        except ValueError as error:
+            logger.debug(error)
+            return html_urls
+
+        if not run_data:
+            logger.debug("Unable to find any run data for the workflow %s", workflow)
+            return html_urls
+
+        logger.debug("Checking workflow run of %s.", workflow)
+        try:
+            # iterate through the responses in reversed order to add the run
+            # closest to the `date_time - time_range` timestamp first.
+            for item in reversed(run_data["workflow_runs"]):
+                # The workflow parameter contains the URL to the workflow.
+                # So we need to check that item["path"] is a substring of it.
+                if item["path"] in workflow:
+                    run_jobs = self.api_client.get_workflow_run_jobs(repo_full_name, item["id"])
+                    if not run_jobs:
+                        continue
+
+                    # Find the matching step and check its `conclusion` and `started_at` attributes.
+                    for job in run_jobs["jobs"]:
+                        for step in job["steps"]:
+                            if step["name"] != step_name or step["conclusion"] != "success":
+                                continue
+                            try:
+                                if datetime.fromisoformat(step["started_at"]) < date_time:
+                                    run_id: str = item["id"]
+                                    html_url: str = item["html_url"]
+                                    logger.info(
+                                        "The workflow run status of %s (id = %s, url = %s, step = %s) is %s.",
+                                        workflow,
+                                        run_id,
+                                        html_url,
+                                        step["name"],
+                                        step["conclusion"],
+                                    )
+                                    html_urls.add(html_url)
+                                else:
+                                    logger.debug(
+                                        "The workflow start run %s happened after %s with status %s.",
+                                        datetime.fromisoformat(step["started_at"]),
+                                        date_time,
+                                        step["conclusion"],
+                                    )
+                            # Handle errors for calls to `fromisoformat()` and the time comparison.
+                            except (ValueError, OverflowError, OSError, TypeError) as error:
+                                logger.debug(error)
+        except KeyError as key_error:
+            logger.debug(
+                "Unable to read data of %s from the GitHub API result. Error: %s",
+                workflow,
+                str(key_error),
+            )
+
+        return html_urls
 
     def search_for_workflow_run(
         self,

@@ -267,6 +267,16 @@ python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 # python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
+echo -e "\n----------------------------------------------------------------------------------"
+echo "google/guava: Analyzing with PURL and repository path without dependency resolution."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/com_google_guava/guava/guava.json
+JSON_RESULT=$WORKSPACE/output/reports/maven/com_google_guava/guava/guava.json
+$RUN_MACARON analyze -purl pkg:maven/com.google.guava/guava@32.1.2-jre?type=jar -rp https://github.com/google/guava -b master -d d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4 --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+
 # Running Macaron using local paths.
 echo -e "\n=================================================================================="
 echo "Run integration tests with local paths for apache/maven..."

@@ -1,11 +1,11 @@
 {
     "metadata": {
-        "timestamps": "2023-08-23 14:52:50"
+        "timestamps": "2023-09-12 17:10:37"
     },
     "target": {
         "info": {
             "full_name": "pkg:maven/apache/maven",
-            "local_cloned_path": "../../../../output/git_repos/github_com/apache/maven",
+            "local_cloned_path": "git_repos/github_com/apache/maven",
             "remote_path": "https://github.com/apache/maven",
             "branch": "master",
             "commit_hash": "6767f2500f1d005924ccff27f04350c253858a84",
@@ -35,7 +35,10 @@
                                 "parameters": {},
                                 "environment": {}
                             },
-                            "buildConfig": {},
+                            "buildConfig": {
+                                "jobID": "<STRING>",
+                                "stepID": "<STRING>"
+                            },
                             "metadata": {
                                 "buildInvocationId": "<STRING>",
                                 "buildStartedOn": "<TIMESTAMP>",
@@ -77,7 +80,10 @@
                                 "parameters": {},
                                 "environment": {}
                             },
-                            "buildConfig": {},
+                            "buildConfig": {
+                                "jobID": "<STRING>",
+                                "stepID": "<STRING>"
+                            },
                             "metadata": {
                                 "buildInvocationId": "<STRING>",
                                 "buildStartedOn": "<TIMESTAMP>",
@@ -97,13 +103,14 @@
                             ]
                         }
                     }
-                ]
+                ],
+                "Maven Central Registry": []
             }
         },
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 5,
+                "FAILED": 6,
                 "PASSED": 4,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -154,6 +161,17 @@
                         }
                     ],
                     "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_infer_artifact_pipeline_1",
+                    "check_description": "Detects potential pipelines from which an artifact is published.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Unable to find a publishing timestamp for the artifact."
+                    ],
+                    "result_type": "FAILED"
                 },
                 {
                     "check_id": "mcn_provenance_available_1",
@@ -230,7 +248,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_version_control_system_1",
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             },
             {
@@ -238,7 +256,19 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_provenance_available_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
                 "num_deps_pass": 0
             },
             {
@@ -246,19 +276,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_build_script_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_expectation_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_provenance_level_three_1",
                 "num_deps_pass": 0
             },
             {

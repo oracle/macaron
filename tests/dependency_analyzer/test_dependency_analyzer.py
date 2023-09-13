@@ -27,6 +27,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
                 version="2.14.0-SNAPSHOT",
                 group="com.fasterxml.jackson.core",
                 name="jackson-annotations",
+                purl="pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.14.0-SNAPSHOT?type=bundle",
                 url="https://github.com/FasterXML/jackson-annotations",
                 note="",
                 available=SCMStatus.AVAILABLE,
@@ -35,6 +36,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
                 version="2.14.0-SNAPSHOT",
                 group="com.fasterxml.jackson.core",
                 name="jackson-core",
+                purl="pkg:maven/com.fasterxml.jackson.core/jackson-core@2.14.0-SNAPSHOT?type=bundle",
                 url="https://github.com/FasterXML/jackson-core",
                 note="",
                 available=SCMStatus.AVAILABLE,
@@ -45,7 +47,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
         expected_result_no_deps = [
             {
                 "id": "com.fasterxml.jackson.core:jackson-annotations",
-                "purl": "",
+                "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.14.0-SNAPSHOT?type=bundle",
                 "path": "https://github.com/FasterXML/jackson-annotations",
                 "branch": "",
                 "digest": "",
@@ -54,7 +56,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "com.fasterxml.jackson.core:jackson-core",
-                "purl": "",
+                "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.14.0-SNAPSHOT?type=bundle",
                 "path": "https://github.com/FasterXML/jackson-core",
                 "branch": "",
                 "digest": "",
@@ -84,7 +86,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "com.fasterxml.jackson.core:jackson-annotations",
-                "purl": "",
+                "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.14.0-SNAPSHOT?type=bundle",
                 "path": "https://github.com/FasterXML/jackson-annotations",
                 "branch": "",
                 "digest": "",
@@ -93,7 +95,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "com.fasterxml.jackson.core:jackson-core",
-                "purl": "",
+                "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.14.0-SNAPSHOT?type=bundle",
                 "path": "https://github.com/FasterXML/jackson-core",
                 "branch": "",
                 "digest": "",

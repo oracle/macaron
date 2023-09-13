@@ -7,6 +7,7 @@ import logging
 import os
 from abc import abstractmethod
 from collections.abc import Iterable
+from datetime import datetime
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.parsers.bashparser import BashCommands
@@ -194,6 +195,43 @@ class BaseCIService:
             The feed back of the check, or empty if no passing workflow is found.
         """
         raise NotImplementedError
+
+    # pylint: disable=unused-argument
+    def workflow_run_in_date_time_range(
+        self,
+        repo_full_name: str,
+        workflow: str,
+        date_time: datetime,
+        step_name: str,
+        time_range: int = 0,
+    ) -> set[str]:
+        """Check if the repository has a workflow run started before the date_time timestamp within the time_range.
+
+        - This method queries the list of workflow runs using the GitHub API for the provided repository full name.
+        - It will filter out the runs that are not triggered by the given workflow.
+        - It will only accept the runs that from `date_time - time_range` to `date_time`.
+        - If a `step_name` is provided, checks that it has started before the `date_time` and has succeeded.
+
+        Parameters
+        ----------
+        repo_full_name : str
+            The target repo's full name.
+        workflow : str
+            The workflow URL.
+        date_time: datetime
+            The datetime object to query.
+        step_name: str
+            The step in the GitHub Action workflow that needs to be checked.
+        time_range: int
+            The date-time range in seconds. The default value is 0.
+            For example a 30 seconds range for 2022-11-05T20:30 is 2022-11-05T20:15..2022-11-05T20:45.
+
+        Returns
+        -------
+        set[str]
+            The set of URLs found for the workflow within the time range.
+        """
+        return set()
 
 
 class NoneCIService(BaseCIService):

@@ -58,7 +58,12 @@ class TestBuildServiceCheck(MacaronTestCase):
         gitlab_ci.load_defaults()
 
         bash_commands = BashCommands(
-            caller_path="source_file", CI_path="ci_file", CI_type="github_actions", commands=[[]]
+            caller_path="source_file",
+            CI_path="ci_file",
+            CI_type="github_actions",
+            commands=[[]],
+            job_name="job",
+            step_name="step",
         )
         ci_info = CIInfo(
             service=github_actions,
@@ -244,6 +249,8 @@ class TestBuildServiceCheck(MacaronTestCase):
             CI_path="ci_file",
             CI_type="github_actions",
             commands=[["./gradlew", "build"], ["mvn", "package"]],
+            job_name="job",
+            step_name="step",
         )
         ci_info = CIInfo(
             service=github_actions,

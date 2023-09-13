@@ -188,7 +188,7 @@ class BuildAsCodeCheck(BaseCheck):
                                 ctx.component.repository.branch_name,
                                 ctx.component.repository.commit_sha,
                                 ctx.component.repository.commit_date,
-                                os.path.basename(callee.caller_path),
+                                callee.caller_path,
                             )
 
                             # TODO: include in the justification multiple cases of external action usage
@@ -253,7 +253,7 @@ class BuildAsCodeCheck(BaseCheck):
                             ctx.component.repository.branch_name,
                             ctx.component.repository.commit_sha,
                             ctx.component.repository.commit_date,
-                            os.path.basename(bash_cmd["CI_path"]),
+                            bash_cmd["CI_path"],
                         )
 
                         justification_cmd: list[str | dict[str, str]] = [
@@ -283,6 +283,8 @@ class BuildAsCodeCheck(BaseCheck):
                                 "sha1"
                             ] = ctx.component.repository.commit_sha
                             predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
+                            predicate["buildConfig"]["jobID"] = bash_cmd["job_name"]
+                            predicate["buildConfig"]["stepID"] = bash_cmd["step_name"]
                             predicate["metadata"]["buildInvocationId"] = html_url
                         check_result["result_tables"].append(
                             BuildAsCodeFacts(

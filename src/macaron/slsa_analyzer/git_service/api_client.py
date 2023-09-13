@@ -264,6 +264,79 @@ class GhAPIClient(BaseAPIClient):
 
         return response_data
 
+    def get_workflow_run_jobs(self, full_name: str, run_id: str) -> dict:
+        """Query the GitHub REST API for the workflow run jobs.
+
+        The url would be in the following form:
+        ``https://api.github/com/repos/{full_name}/actions/runs/<run_id>/jobs``
+
+        Parameters
+        ----------
+        full_name : str
+            The full name of the target repo in the form ``owner/repo``.
+        run_id : str
+            The target workflow run ID.
+
+        Returns
+        -------
+        dict
+            The json query result or an empty dict if failed.
+
+        Examples
+        --------
+        The following call to this method will perform a query to
+        ``https://api.github/com/repos/{full_name}/
+        actions/runs/<run_id>/jobs``
+
+        >>> gh_client.get_workflow_run_jobs(
+            full_name="owner/repo",
+            run_id=<run_id>
+        )
+        """
+        logger.debug("Query GitHub to get run jobs for %s with run ID %s", full_name, run_id)
+
+        url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/actions/runs/{run_id}/jobs"
+        response_data = send_get_http(url, self.headers)
+
+        return response_data
+
+    def get_workflow_run_for_date_time_range(self, full_name: str, datetime_range: str) -> dict:
+        """Query the GitHub REST API for the workflow run within a datetime range.
+
+        The url would be in the following form:
+        ``https://api.github.com/repos/{full_name}/actions/runs?create=datetime-range``
+
+        Parameters
+        ----------
+        full_name : str
+            The full name of the target repo in the form ``owner/repo``.
+        datetime_range : str
+            The datetime range to query.
+
+        Returns
+        -------
+        dict
+            The json query result or an empty dict if failed.
+
+        Examples
+        --------
+        The following call to this method will perform a query to
+        ``https://api.github/com/repos/owner/repo/actions/runs?created=2022-11-05T20:38:40..2022-11-05T20:38:58``
+
+        >>> e.g., gh_client.get_workflow_run_for_date_time_range(
+            full_name="owner/repo",
+            created=2022-11-05T20:38:40..2022-11-05T20:38:58
+        )
+        """
+        logger.debug("Query GitHub to get run details for %s at %s", full_name, datetime_range)
+        query_params = {"created": datetime_range}
+
+        encoded_params = construct_query(query_params)
+        url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/actions/runs?" + encoded_params
+        response_data = send_get_http(url, self.headers)
+
+        return response_data
+
     def get_commit_data_from_hash(self, full_name: str, commit_hash: str) -> dict:
         """Query the GitHub API for the data of a commit using the hash for that commit.
 

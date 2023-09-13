@@ -174,6 +174,7 @@ def convert_components_to_artifacts(
                 version=component.get("version") or "",
                 group=component.get("group") or "",
                 name=component.get("name") or "",
+                purl=component.get("purl") or "",
                 url="",
                 note="",
                 available=SCMStatus.AVAILABLE,
