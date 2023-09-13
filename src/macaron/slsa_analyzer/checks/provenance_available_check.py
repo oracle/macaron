@@ -490,7 +490,7 @@ class ProvenanceAvailableCheck(BaseCheck):
             ]
             return CheckResultType.PASSED
 
-        check_result["justification"].append("Could not find any SLSA provenances.")
+        check_result["justification"].append("Could not find any SLSA or Witness provenances.")
         return CheckResultType.FAILED
 
 
