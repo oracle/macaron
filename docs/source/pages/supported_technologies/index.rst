@@ -41,6 +41,9 @@ Package Registries
    * - `JFrog Artifactory <https://jfrog.com/artifactory>`_
      - Only projects built with Gradle and publishing to a JFrog Artifactory repo following `Maven layout <https://maven.apache.org/repository/layout.html>`_
      - :doc:`page </pages/supported_technologies/jfrog>`
+   * - `Maven Central Artifactory <https://central.sonatype.com>`_
+     - This registry is searched for artifacts built with Gradle or Maven.
+     - :doc:`page </pages/supported_technologies/maven_central>`
 
 -----------
 Provenances
@@ -70,3 +73,4 @@ See also
 
    jfrog
    witness
+   maven_central

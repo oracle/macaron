@@ -49,6 +49,14 @@ macaron.slsa\_analyzer.checks.check\_result module
    :undoc-members:
    :show-inheritance:
 
+macaron.slsa\_analyzer.checks.infer\_artifact\_pipeline\_check module
+---------------------------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.checks.infer_artifact_pipeline_check
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.slsa\_analyzer.checks.provenance\_available\_check module
 -----------------------------------------------------------------
 

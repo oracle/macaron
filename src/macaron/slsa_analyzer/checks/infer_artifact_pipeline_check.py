@@ -1,7 +1,7 @@
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module contains the ArtifactMatchPipeline class to check if artifacts are published from a pipeline."""
+"""This module contains the InferArtifactPipelineCheck class to check if an artifact is published from a pipeline automatically."""
 
 import logging
 

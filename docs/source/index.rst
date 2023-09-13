@@ -75,6 +75,9 @@ the requirements that are currently supported by Macaron.
      - **Build as code** - If a trusted builder is not present, this requirement determines that the build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.
      - Identify and validate the CI service(s) used to build and deploy/publish an artifact.
    * - 3
+     - **Infer artifact publish pipeline** - When a provenance is not available, checks whether a CI workflow run has automatically published the artifact.
+     - Identify a workflow run that has triggered the deploy step determined by the ``Build as code`` check.
+   * - 3
      - **Provenance Level three** - Check whether the target has SLSA provenance level 3.
      - Use the `slsa-verifier <https://github.com/slsa-framework/slsa-verifier>`_ to attest to the subjects in the SLSA provenance that accompanies an artifact.
    * - 3
