@@ -1,7 +1,7 @@
 [
     {
         "id": "org.junit.jupiter:junit-jupiter-engine",
-        "purl": "",
+        "purl": "pkg:maven/org.junit.jupiter/junit-jupiter-engine@5.8.1?type=jar",
         "path": "https://github.com/junit-team/junit5",
         "branch": "",
         "digest": "",
@@ -10,7 +10,7 @@
     },
     {
         "id": "org.hamcrest:hamcrest-core",
-        "purl": "",
+        "purl": "pkg:maven/org.hamcrest/hamcrest-core@2.2?type=jar",
         "path": "https://github.com/hamcrest/JavaHamcrest",
         "branch": "",
         "digest": "",
@@ -19,7 +19,7 @@
     },
     {
         "id": "org.eclipse.sisu:org.eclipse.sisu.plexus",
-        "purl": "",
+        "purl": "pkg:maven/org.eclipse.sisu/org.eclipse.sisu.plexus@0.3.5?type=jar",
         "path": "",
         "branch": "",
         "digest": "",
@@ -28,7 +28,7 @@
     },
     {
         "id": "org.codehaus.plexus:plexus-utils",
-        "purl": "",
+        "purl": "pkg:maven/org.codehaus.plexus/plexus-utils@3.3.0?type=jar",
         "path": "https://github.com/codehaus-plexus/plexus-utils",
         "branch": "",
         "digest": "",
@@ -37,7 +37,7 @@
     },
     {
         "id": "org.codehaus.plexus:plexus-classworlds",
-        "purl": "",
+        "purl": "pkg:maven/org.codehaus.plexus/plexus-classworlds@2.6.0?type=jar",
         "path": "https://github.com/codehaus-plexus/plexus-classworlds",
         "branch": "",
         "digest": "",
@@ -46,7 +46,7 @@
     },
     {
         "id": "org.slf4j:slf4j-api",
-        "purl": "",
+        "purl": "pkg:maven/org.slf4j/slf4j-api@1.7.32?type=jar",
         "path": "https://github.com/qos-ch/slf4j",
         "branch": "",
         "digest": "",
@@ -55,7 +55,7 @@
     },
     {
         "id": "org.apache.maven.shared:maven-shared-utils",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.maven.shared/maven-shared-utils@3.3.4?type=jar",
         "path": "https://github.com/apache/maven-shared-utils",
         "branch": "",
         "digest": "",
@@ -64,7 +64,7 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-api",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.maven.resolver/maven-resolver-api@1.8.0?type=jar",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
@@ -73,16 +73,16 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-util",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.maven.resolver/maven-resolver-util@1.8.0?type=jar",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "",
-        "available": "AVAILABLE"
+        "note": "https://github.com/apache/maven-resolver is already analyzed.",
+        "available": "DUPLICATED REPO URL"
     },
     {
         "id": "com.google.inject:guice",
-        "purl": "",
+        "purl": "pkg:maven/com.google.inject/guice@4.2.3?classifier=no_aop&type=jar",
         "path": "https://github.com/google/guice",
         "branch": "",
         "digest": "",
@@ -91,7 +91,7 @@
     },
     {
         "id": "com.google.guava:guava",
-        "purl": "",
+        "purl": "pkg:maven/com.google.guava/guava@30.1-jre?type=jar",
         "path": "https://github.com/google/guava",
         "branch": "",
         "digest": "",
@@ -100,7 +100,7 @@
     },
     {
         "id": "com.google.guava:failureaccess",
-        "purl": "",
+        "purl": "pkg:maven/com.google.guava/failureaccess@1.0.1?type=jar",
         "path": "https://github.com/google/guava",
         "branch": "",
         "digest": "",
@@ -109,7 +109,7 @@
     },
     {
         "id": "javax.inject:javax.inject",
-        "purl": "",
+        "purl": "pkg:maven/javax.inject/javax.inject@1?type=jar",
         "path": "",
         "branch": "",
         "digest": "",
@@ -118,7 +118,7 @@
     },
     {
         "id": "javax.annotation:javax.annotation-api",
-        "purl": "",
+        "purl": "pkg:maven/javax.annotation/javax.annotation-api@1.3.2?type=jar",
         "path": "https://github.com/javaee/javax.annotation",
         "branch": "",
         "digest": "",
@@ -127,7 +127,7 @@
     },
     {
         "id": "org.codehaus.plexus:plexus-sec-dispatcher",
-        "purl": "",
+        "purl": "pkg:maven/org.codehaus.plexus/plexus-sec-dispatcher@2.0?type=jar",
         "path": "https://github.com/codehaus-plexus/plexus-sec-dispatcher",
         "branch": "",
         "digest": "",
@@ -136,7 +136,7 @@
     },
     {
         "id": "org.codehaus.plexus:plexus-cipher",
-        "purl": "",
+        "purl": "pkg:maven/org.codehaus.plexus/plexus-cipher@2.0?type=jar",
         "path": "https://github.com/codehaus-plexus/plexus-cipher",
         "branch": "",
         "digest": "",
@@ -145,7 +145,7 @@
     },
     {
         "id": "org.slf4j:slf4j-simple",
-        "purl": "",
+        "purl": "pkg:maven/org.slf4j/slf4j-simple@1.7.32?type=jar",
         "path": "https://github.com/qos-ch/slf4j",
         "branch": "",
         "digest": "",
@@ -154,7 +154,7 @@
     },
     {
         "id": "ch.qos.logback:logback-classic",
-        "purl": "",
+        "purl": "pkg:maven/ch.qos.logback/logback-classic@1.2.11?type=jar",
         "path": "https://github.com/ceki/logback",
         "branch": "",
         "digest": "",
@@ -163,7 +163,7 @@
     },
     {
         "id": "commons-cli:commons-cli",
-        "purl": "",
+        "purl": "pkg:maven/commons-cli/commons-cli@1.5.0?type=jar",
         "path": "https://github.com/apache/maven-apache-parent",
         "branch": "",
         "digest": "",
@@ -172,16 +172,16 @@
     },
     {
         "id": "org.apache.commons:commons-lang3",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.commons/commons-lang3@3.12.0?type=jar",
         "path": "https://github.com/apache/maven-apache-parent",
         "branch": "",
         "digest": "",
-        "note": "",
-        "available": "AVAILABLE"
+        "note": "https://github.com/apache/maven-apache-parent is already analyzed.",
+        "available": "DUPLICATED REPO URL"
     },
     {
         "id": "org.mockito:mockito-core",
-        "purl": "",
+        "purl": "pkg:maven/org.mockito/mockito-core@3.2.0?type=jar",
         "path": "https://github.com/mockito/mockito",
         "branch": "",
         "digest": "",
@@ -190,7 +190,7 @@
     },
     {
         "id": "org.fusesource.jansi:jansi",
-        "purl": "",
+        "purl": "pkg:maven/org.fusesource.jansi/jansi@2.4.0?type=jar",
         "path": "https://github.com/fusesource/jansi",
         "branch": "",
         "digest": "",
@@ -199,7 +199,7 @@
     },
     {
         "id": "org.apache.maven.wagon:wagon-http",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.maven.wagon/wagon-http@3.5.1?type=jar",
         "path": "https://github.com/apache/maven-wagon",
         "branch": "",
         "digest": "",
@@ -208,16 +208,16 @@
     },
     {
         "id": "org.apache.maven.wagon:wagon-file",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.maven.wagon/wagon-file@3.5.1?type=jar",
         "path": "https://github.com/apache/maven-wagon",
         "branch": "",
         "digest": "",
-        "note": "",
-        "available": "AVAILABLE"
+        "note": "https://github.com/apache/maven-wagon is already analyzed.",
+        "available": "DUPLICATED REPO URL"
     },
     {
         "id": "org.slf4j:jcl-over-slf4j",
-        "purl": "",
+        "purl": "pkg:maven/org.slf4j/jcl-over-slf4j@1.7.32?type=jar",
         "path": "https://github.com/qos-ch/slf4j",
         "branch": "",
         "digest": "",
@@ -226,43 +226,43 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-connector-basic",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.maven.resolver/maven-resolver-connector-basic@1.8.0?type=jar",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "",
-        "available": "AVAILABLE"
+        "note": "https://github.com/apache/maven-resolver is already analyzed.",
+        "available": "DUPLICATED REPO URL"
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-transport-file",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.maven.resolver/maven-resolver-transport-file@1.8.0?type=jar",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "",
-        "available": "AVAILABLE"
+        "note": "https://github.com/apache/maven-resolver is already analyzed.",
+        "available": "DUPLICATED REPO URL"
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-transport-http",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.maven.resolver/maven-resolver-transport-http@1.8.0?type=jar",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "",
-        "available": "AVAILABLE"
+        "note": "https://github.com/apache/maven-resolver is already analyzed.",
+        "available": "DUPLICATED REPO URL"
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-transport-wagon",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.maven.resolver/maven-resolver-transport-wagon@1.8.0?type=jar",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "",
-        "available": "AVAILABLE"
+        "note": "https://github.com/apache/maven-resolver is already analyzed.",
+        "available": "DUPLICATED REPO URL"
     },
     {
         "id": "org.codehaus.plexus:plexus-interpolation",
-        "purl": "",
+        "purl": "pkg:maven/org.codehaus.plexus/plexus-interpolation@1.26?type=jar",
         "path": "https://github.com/codehaus-plexus/plexus-interpolation",
         "branch": "",
         "digest": "",
@@ -271,16 +271,16 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-impl",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.maven.resolver/maven-resolver-impl@1.8.0?type=jar",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "",
-        "available": "AVAILABLE"
+        "note": "https://github.com/apache/maven-resolver is already analyzed.",
+        "available": "DUPLICATED REPO URL"
     },
     {
         "id": "org.codehaus.plexus:plexus-component-annotations",
-        "purl": "",
+        "purl": "pkg:maven/org.codehaus.plexus/plexus-component-annotations@2.1.0?type=jar",
         "path": "https://github.com/codehaus-plexus/plexus-containers",
         "branch": "",
         "digest": "",
@@ -289,16 +289,16 @@
     },
     {
         "id": "org.apache.maven.wagon:wagon-provider-api",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.maven.wagon/wagon-provider-api@3.5.1?type=jar",
         "path": "https://github.com/apache/maven-wagon",
         "branch": "",
         "digest": "",
-        "note": "",
-        "available": "AVAILABLE"
+        "note": "https://github.com/apache/maven-wagon is already analyzed.",
+        "available": "DUPLICATED REPO URL"
     },
     {
         "id": "org.codehaus.plexus:plexus-testing",
-        "purl": "",
+        "purl": "pkg:maven/org.codehaus.plexus/plexus-testing@1.0.0?type=jar",
         "path": "https://github.com/codehaus-plexus/plexus-testing",
         "branch": "",
         "digest": "",
@@ -307,7 +307,7 @@
     },
     {
         "id": "org.junit.jupiter:junit-jupiter-params",
-        "purl": "",
+        "purl": "pkg:maven/org.junit.jupiter/junit-jupiter-params@5.8.1?type=jar",
         "path": "https://github.com/junit-team/junit5",
         "branch": "",
         "digest": "",
@@ -316,7 +316,7 @@
     },
     {
         "id": "org.xmlunit:xmlunit-assertj",
-        "purl": "",
+        "purl": "pkg:maven/org.xmlunit/xmlunit-assertj@2.6.4?type=jar",
         "path": "https://github.com/xmlunit/xmlunit",
         "branch": "",
         "digest": "",
@@ -325,7 +325,7 @@
     },
     {
         "id": "org.hamcrest:hamcrest-library",
-        "purl": "",
+        "purl": "pkg:maven/org.hamcrest/hamcrest-library@2.2?type=jar",
         "path": "https://github.com/hamcrest/JavaHamcrest",
         "branch": "",
         "digest": "",
@@ -334,7 +334,7 @@
     },
     {
         "id": "org.eclipse.sisu:org.eclipse.sisu.inject",
-        "purl": "",
+        "purl": "pkg:maven/org.eclipse.sisu/org.eclipse.sisu.inject@0.3.5?type=jar",
         "path": "",
         "branch": "",
         "digest": "",
@@ -343,7 +343,7 @@
     },
     {
         "id": "org.xmlunit:xmlunit-core",
-        "purl": "",
+        "purl": "pkg:maven/org.xmlunit/xmlunit-core@2.6.4?type=jar",
         "path": "https://github.com/xmlunit/xmlunit",
         "branch": "",
         "digest": "",
@@ -352,7 +352,7 @@
     },
     {
         "id": "org.xmlunit:xmlunit-matchers",
-        "purl": "",
+        "purl": "pkg:maven/org.xmlunit/xmlunit-matchers@2.6.4?type=jar",
         "path": "https://github.com/xmlunit/xmlunit",
         "branch": "",
         "digest": "",
@@ -361,16 +361,16 @@
     },
     {
         "id": "org.apache.maven.resolver:maven-resolver-spi",
-        "purl": "",
+        "purl": "pkg:maven/org.apache.maven.resolver/maven-resolver-spi@1.8.0?type=jar",
         "path": "https://github.com/apache/maven-resolver",
         "branch": "",
         "digest": "",
-        "note": "",
-        "available": "AVAILABLE"
+        "note": "https://github.com/apache/maven-resolver is already analyzed.",
+        "available": "DUPLICATED REPO URL"
     },
     {
         "id": "commons-jxpath:commons-jxpath",
-        "purl": "",
+        "purl": "pkg:maven/commons-jxpath/commons-jxpath@1.3?type=jar",
         "path": "",
         "branch": "",
         "digest": "",

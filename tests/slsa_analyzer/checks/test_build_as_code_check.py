@@ -42,7 +42,14 @@ def test_build_as_code_check(
     """Test the Build As Code Check."""
     check = BuildAsCodeCheck()
     check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
-    bash_commands = BashCommands(caller_path="source_file", CI_path="ci_file", CI_type="github_actions", commands=[[]])
+    bash_commands = BashCommands(
+        caller_path="source_file",
+        CI_path="ci_file",
+        CI_type="github_actions",
+        commands=[[]],
+        job_name="job",
+        step_name="step",
+    )
     ci_info = CIInfo(
         service=github_actions_service,
         bash_commands=[bash_commands],
@@ -302,6 +309,8 @@ def test_multibuild_facts_saved(
         CI_path="ci_file",
         CI_type="github_actions",
         commands=[["./gradlew", "publishToSonatype"], ["mvn", "deploy"]],
+        job_name="job",
+        step_name="step",
     )
     check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
     ci_info = CIInfo(

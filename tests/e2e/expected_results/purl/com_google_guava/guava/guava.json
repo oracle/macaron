@@ -1,46 +1,46 @@
 {
     "metadata": {
-        "timestamps": "2023-09-12 22:55:15"
+        "timestamps": "2023-09-12 16:52:10"
     },
     "target": {
         "info": {
-            "full_name": "pkg:github.com/qos-ch/slf4j@e9ee55cca93c2bf26f14482a9bdf961c750d2a56",
-            "local_cloned_path": "git_repos/github_com/qos-ch/slf4j",
-            "remote_path": "https://github.com/qos-ch/slf4j",
-            "branch": "v_1.7.36",
-            "commit_hash": "e9ee55cca93c2bf26f14482a9bdf961c750d2a56",
-            "commit_date": "2022-02-08T14:32:21+01:00"
+            "full_name": "pkg:maven/com.google.guava/guava@32.1.2-jre?type=jar",
+            "local_cloned_path": "git_repos/github_com/google/guava",
+            "remote_path": "https://github.com/google/guava",
+            "branch": "master",
+            "commit_hash": "d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4",
+            "commit_date": "2022-06-16T01:55:17-07:00"
         },
         "provenances": {
             "is_inferred": true,
             "content": {
-                "travis_ci": [
+                "github_actions": [
                     {
                         "_type": "https://in-toto.io/Statement/v0.1",
                         "subject": [],
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "predicate": {
                             "builder": {
-                                "id": ".travis.yml"
+                                "id": "https://github.com/google/guava/blob/d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4/./util/deploy_snapshot.sh"
                             },
-                            "buildType": "Custom travis_ci",
+                            "buildType": "Custom github_actions",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "https://github.com/qos-ch/slf4j@refs/heads/v_1.7.36",
+                                    "uri": "https://github.com/google/guava@refs/heads/master",
                                     "digest": {
-                                        "sha1": "e9ee55cca93c2bf26f14482a9bdf961c750d2a56"
+                                        "sha1": "d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4"
                                     },
-                                    "entryPoint": ".travis.yml"
+                                    "entryPoint": "https://github.com/google/guava/blob/d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4/.github/workflows/ci.yml"
                                 },
                                 "parameters": {},
                                 "environment": {}
                             },
                             "buildConfig": {
-                                "jobID": "<STRING>",
-                                "stepID": "<STRING>"
+                                "jobID": "publish_snapshot",
+                                "stepID": "Publish"
                             },
                             "metadata": {
-                                "buildInvocationId": "<STRING>",
+                                "buildInvocationId": "",
                                 "buildStartedOn": "<TIMESTAMP>",
                                 "buildFinishedOn": "<TIMESTAMP>",
                                 "completeness": {
@@ -65,12 +65,28 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 7,
-                "PASSED": 3,
+                "FAILED": 5,
+                "PASSED": 5,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
             "results": [
+                {
+                    "check_id": "mcn_build_as_code_1",
+                    "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        {
+                            "The target repository uses build tool maven to deploy": "https://github.com/google/guava/blob/d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4/./util/deploy_snapshot.sh",
+                            "The build is triggered by": "https://github.com/google/guava/blob/d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4/.github/workflows/ci.yml"
+                        },
+                        "Deploy command: ['mvn', 'clean', 'source:jar', 'javadoc:jar', 'deploy', '-DskipTests=true', '\"$@\"']",
+                        "However, could not find a passing workflow run."
+                    ],
+                    "result_type": "PASSED"
+                },
                 {
                     "check_id": "mcn_build_script_1",
                     "check_description": "Check if the target repo has a valid build script.",
@@ -89,7 +105,20 @@
                         "Build service - SLSA Level 2"
                     ],
                     "justification": [
-                        "The target repository uses build tool maven in travis_ci to build."
+                        "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_infer_artifact_pipeline_1",
+                    "check_description": "Detects potential pipelines from which an artifact is published.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        {
+                            "The artifact is potentially published by workflow job 'publish_snapshot' at step 'Publish' triggered by": "https://github.com/google/guava/actions/runs/5719444145"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -101,32 +130,10 @@
                     ],
                     "justification": [
                         {
-                            "This is a Git repository": "https://github.com/qos-ch/slf4j"
+                            "This is a Git repository": "https://github.com/google/guava"
                         }
                     ],
                     "result_type": "PASSED"
-                },
-                {
-                    "check_id": "mcn_build_as_code_1",
-                    "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
-                    "slsa_requirements": [
-                        "Build as code - SLSA Level 3"
-                    ],
-                    "justification": [
-                        "The target repository does not use maven to deploy."
-                    ],
-                    "result_type": "FAILED"
-                },
-                {
-                    "check_id": "mcn_infer_artifact_pipeline_1",
-                    "check_description": "Detects potential pipelines from which an artifact is published.",
-                    "slsa_requirements": [
-                        "Build as code - SLSA Level 3"
-                    ],
-                    "justification": [
-                        "Check mcn_infer_artifact_pipeline_1 is set to FAILED because mcn_build_as_code_1 FAILED."
-                    ],
-                    "result_type": "FAILED"
                 },
                 {
                     "check_id": "mcn_provenance_available_1",
