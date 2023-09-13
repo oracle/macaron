@@ -476,7 +476,8 @@ class GitHubActions(BaseCIService):
 
         logger.debug("Checking workflow run of %s.", workflow)
         try:
-            # iterate through the responses in reversed order to add the run closest to the date_time timestamp first.
+            # iterate through the responses in reversed order to add the run
+            # closest to the `date_time - time_range` timestamp first.
             for item in reversed(run_data["workflow_runs"]):
                 # The workflow parameter contains the URL to the workflow.
                 # So we need to check that item["path"] is a substring of it.
