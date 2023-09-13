@@ -35,10 +35,24 @@ def test_eval_policy(database_setup) -> None:  # type: ignore # pylint: disable=
     res = run_souffle(os.path.join(POLICY_FILE, DATABASE_FILE), POLICY_FILE)
     assert res == {
         "passed_policies": [["trusted_builder"]],
-        "component_satisfies_policy": [["1", "github.com/slsa-framework/slsa-verifier", "trusted_builder"]],
+        "component_satisfies_policy": [
+            [
+                "1",
+                "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac",
+                "trusted_builder",
+            ]
+        ],
         "failed_policies": [["aggregate_l4"], ["aggregate_l2"]],
         "component_violates_policy": [
-            ["1", "github.com/slsa-framework/slsa-verifier", "aggregate_l4"],
-            ["1", "github.com/slsa-framework/slsa-verifier", "aggregate_l2"],
+            [
+                "1",
+                "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac",
+                "aggregate_l4",
+            ],
+            [
+                "1",
+                "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac",
+                "aggregate_l2",
+            ],
         ],
     }

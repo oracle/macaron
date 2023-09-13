@@ -23,56 +23,57 @@ apply_to_analysis(analysis_id) :-
  *   A policy that specifies a set of rules about repositories.
  *
  *      policy_id: The unique identifier for this policy.
- *      repo: the id field of a repository relation.
+ *      component_id: the id of a software component.
+ *      message: The policy description.
  */
-.decl Policy(policy_id: symbol, repo_id: number, message: symbol)
+.decl Policy(policy_id: symbol, component_id: number, message: symbol)
 
 /**
- *  Specifies that a repository repo must satisfy the policy policy_id: that the fact Policy(policy_id, repo)
+ *  Specifies that a software component must satisfy the policy policy_id: that the fact Policy(policy_id, component_id, message)
  *  must exist.
  */
-.decl apply_policy_to(policy_id: symbol, repo_id: number)
+.decl apply_policy_to(policy_id: symbol, component_id: number)
 
 /*
- * Check policy constraints IFF it is applied to the repo AND the repo is part of the analysis being checked.
+ * Check policy constraints IFF it is applied to the component AND the component is part of the analysis being checked.
  */
-.decl policy_applies_to(policy_id: symbol, repo_id: number)
-policy_applies_to(policy_id, repo_id) :-
-    apply_policy_to(policy_id, repo_id),
+.decl policy_applies_to(policy_id: symbol, component_id: number)
+policy_applies_to(policy_id, component_id) :-
+    apply_policy_to(policy_id, component_id),
     apply_to_analysis(analysis_id),
-    repository_analysis(analysis_id, _, repo_id, _).
+    repository_analysis(analysis_id, component_id, _, _).
 
 /**
- *  Policies that are applied to a repository and the requirements are not met.
+ *  Policies that are applied to a component and the requirements are not met.
  */
 .decl failed_policies(policy_id:symbol)
 failed_policies(policy_id) :-
-    // policy applies to the repo and failed
-    policy_applies_to(policy_id, repo),
-    !Policy(policy_id, repo, _).
+    // policy applies to the component and failed
+    policy_applies_to(policy_id, component_id),
+    !Policy(policy_id, component_id, _).
 
 /**
- *  Policies that are applied to a repository and all requirements are met.
+ *  Policies that are applied to a component and all requirements are met.
  */
 .decl passed_policies(policy_id: symbol)
 passed_policies(policy_id) :-
-    Policy(policy_id, repo_id, _),
-    policy_applies_to(policy_id, repo_id),
-    // policy passes on all repos it applies to
+    Policy(policy_id, component_id, _),
+    policy_applies_to(policy_id, component_id),
+    // policy passes on all components it applies to
     !failed_policies(policy_id).
 
-.decl component_satisfies_policy(repo_id: number, repo_full_name: symbol, policy_id: symbol)
-.decl component_violates_policy(repo_id: number, repo_full_name: symbol, policy_id: symbol)
+.decl component_satisfies_policy(component_id: number, purl: symbol, policy_id: symbol)
+.decl component_violates_policy(component_id: number, purl: symbol, policy_id: symbol)
 
-component_satisfies_policy(repo_id, repo_full_name, policy_id) :-
-    policy_applies_to(policy_id, repo_id),
-    Policy(policy_id, repo_id, _),
-    is_repo(repo_id, repo_full_name, _).
+component_satisfies_policy(component_id, purl, policy_id) :-
+    policy_applies_to(policy_id, component_id),
+    Policy(policy_id, component_id, _),
+    is_component(component_id, purl).
 
-component_violates_policy(repo_id, repo_full_name, policy_id) :-
-    policy_applies_to(policy_id, repo_id),
-    is_repo(repo_id, repo_full_name, _),
-    !Policy(policy_id, repo_id, _).
+component_violates_policy(component_id, purl, policy_id) :-
+    policy_applies_to(policy_id, component_id),
+    is_component(component_id, purl),
+    !Policy(policy_id, component_id, _).
 
 .output passed_policies
 .output failed_policies
