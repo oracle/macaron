@@ -64,7 +64,7 @@ the requirements that are currently supported by Macaron.
      - Identify and validate build script(s).
    * - 1
      - **Provenance available** - Provenances are available.
-     - Check for existence of provenances, which can be `SLSA`_` or `Witness`_ provenances. If there is no provenance, the repo can still be compliant to level 1 given the build script is available.
+     - Check for existence of provenances, which can be `SLSA`_ or `Witness`_ provenances. If there is no provenance, the repo can still be compliant to level 1 given the build script is available.
    * - 1
      - **Witness provenance** - One or more `Witness`_ provenances are discovered.
      - Check for existence of `Witness`_ provenances, and whether artifact digests match those in the provenances.

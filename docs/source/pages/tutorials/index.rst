@@ -87,6 +87,8 @@ First, we need to run the ``analyze`` command of Macaron to run a number of :ref
 
 .. note:: By default, Macaron clones the repositories and creates output files under the ``output`` directory. To understand the structure of this directory please see :ref:`Output Files Guide <output_files_guide>`.
 
+By default, this command analyzes the the latest commit of the default branch of the repository. You can also analyze the repository
+at a specific commit by providing the branch and commit digest. See the :ref:`CLI options<analyze-action-cli>` of the ``analyze`` command for more information.
 After running the ``analyze`` command, we can view the data that Macaron has gathered about the ``example-maven-app`` repository in an HTML report.
 
 .. code-block:: shell
@@ -146,7 +148,7 @@ and could potentially be malicious.
 
 |
 
-After running the ```analyze``` command, all the check results are stored in ``output/macaron.db``.
+After running the ``analyze`` command, all the check results are stored in ``output/macaron.db``.
 Next, we show how to use the policy engine to detect if the dependencies of ``example-maven-app``
 are not published from a publicly available CI workflow run.
 
@@ -186,7 +188,7 @@ we are interested in the ``mcn_infer_artifact_pipeline_1`` and ``mcn_provenance_
 
 
 This policy requires that all the dependencies
-of repository ```github.com/behnazh-w/example-maven-app``` at each commit either pass the ``mcn_provenance_level_three_1`` (have non-forgeable
+of repository ``github.com/behnazh-w/example-maven-app`` either pass the ``mcn_provenance_level_three_1`` (have non-forgeable
 `SLSA`_ provenances) or ``mcn_infer_artifact_pipeline_1`` check. Note that if an artifact already has a non-forgeable provenance, it means it is produced
 by a hosted build platform, such as GitHub Actions CI workflows. So, the ``mcn_infer_artifact_pipeline_1`` needs to pass
 only if ``mcn_provenance_level_three_1`` fails.
@@ -244,7 +246,9 @@ Here we declare a relation called ``violating_dependencies`` and populate it if 
       is_repo(_, "github.com/behnazh-w/example-maven-app", component_id).
 
 Finally, the ``apply_policy_to`` rule applies the policy ``detect-malicious-upload`` on the
-repository ``github.com/behnazh-w/example-maven-app`` on any commits available in the database.
+repository ``github.com/behnazh-w/example-maven-app``. Note that each run of Macaron analyzes a repository at a specific
+commit. So, the database can include more than one result for a repository and this policy will be
+validated on all commits available in the database.
 
 Let's name this policy ``example-maven-app.dl``. To verify this policy run:
 
@@ -252,7 +256,8 @@ Let's name this policy ``example-maven-app.dl``. To verify this policy run:
 
   ./run_macaron.sh verify-policy --database ./output/macaron.db --file ./example-maven-app.dl
 
-You can see the policy result both in the console and ``output/policy_report.json``
+You can see the policy result both in the console and ``output/policy_report.json``. The results
+printed to the console will look like the following:
 
 .. code-block:: javascript
 
