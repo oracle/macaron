@@ -1,3 +1,17 @@
+## v0.5.0 (2023-09-14)
+
+### Feat
+
+- add a new check to map artifacts to pipelines (#471)
+- add docker build detection (#409)
+
+### Fix
+
+- **policy-engine**: use component_id instead of repo_id in policy to find the check result (#473)
+- check if repository is available in provenance available check (#467)
+- encode PURL qualifiers as a normalized string (#466)
+- fix `run_macaron.sh` script to handle action arguments correctly (#461)
+
 ## v0.4.0 (2023-09-01)
 
 ### Feat
