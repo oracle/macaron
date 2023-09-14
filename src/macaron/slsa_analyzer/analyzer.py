@@ -527,20 +527,31 @@ class Analyzer:
         InvalidPURLError
             If the PURL provided from the user is invalid.
         """
-        # Due to the current design of Configuration class. purl, repo_path, branch and digest are initialized
-        # as empty strings and we assumed that they are always set with input values as non-empty strings.
+        # Due to the current design of Configuration class, repo_path, branch and digest are initialized
+        # as empty strings, and we assumed that they are always set with input values as non-empty strings.
         # Therefore, their true types are ``str``, and an empty string indicates that the input value is not provided.
-        purl_input_str: str = config.get_value("purl")
+        # The purl might be a PackageURL type, or a string, and therefore requires extra care.
+        parsed_purl: PackageURL | None
+        if config.get_value("purl") is None or config.get_value("purl") == "":
+            parsed_purl = None
+        elif isinstance(config.get_value("purl"), str):
+            try:
+                parsed_purl = PackageURL.from_string(config.get_value("purl"))
+            except InvalidPURLError as error:
+                raise PURLNotFoundError("Invalid input PURL.") from error
+        else:
+            parsed_purl = config.get_value("purl")
+
         repo_path_input: str = config.get_value("path")
         input_branch: str = config.get_value("branch")
         input_digest: str = config.get_value("digest")
 
-        match (purl_input_str, repo_path_input):
-            case ("", ""):
+        match (parsed_purl, repo_path_input):
+            case (None, ""):
                 return Analyzer.AnalysisTarget(parsed_purl=None, repo_path="", branch="", digest="")
 
-            case ("", _):
-                # If only the repository path is provided, we will use the user-provided repository path to created the
+            case (None, _):
+                # If only the repository path is provided, we will use the user-provided repository path to create the
                 # ``Repository`` instance. Note that if this case happen, the software component will be initialized
                 # with the PURL generated from the ``Repository`` instance (i.e. as a PURL pointing to a git repository
                 # at a specific commit). For example: ``pkg:github.com/org/name@<commit_digest>``.
@@ -549,33 +560,24 @@ class Analyzer:
                 )
 
             case (_, ""):
-                # If a PURL but no repository path are provided, we try to extract the repository path from the PURL.
+                # If a PURL but no repository path is provided, we try to extract the repository path from the PURL.
                 # Note that we can't always extract the repository path from any provided PURL.
-                try:
-                    parsed_purl = PackageURL.from_string(purl_input_str)
-                except ValueError as error:
-                    raise InvalidPURLError(f"The package url {purl_input_str} is not valid.") from error
-
-                converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)
-                # TODO: If ``converted_repo_path`` is None, this means that the PURL given by the user if not pointing
-                # to a git repository (e.g ``pkg:maven/apache/maven@1.0.0``). Resolving the repository
-                # path from such PURl string will be handled in https://github.com/oracle/macaron/pull/388.
+                repo = ""
+                converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)  # type: ignore[arg-type]
+                if converted_repo_path is None:
+                    # Try to find repo from PURL
+                    repo = repo_finder.find_repo(parsed_purl)  # type: ignore[arg-type]
                 return Analyzer.AnalysisTarget(
                     parsed_purl=parsed_purl,
-                    repo_path=converted_repo_path or "",
+                    repo_path=converted_repo_path or repo,
                     branch=input_branch,
                     digest=input_digest,
                 )
 
             case (_, _):
                 # If both the PURL and the repository are provided, we will use the user-provided repository path to
-                # created the ``Repository`` instance later on. This ``Repository`` instance is attached to the
+                # create the ``Repository`` instance later on. This ``Repository`` instance is attached to the
                 # software component initialized from the user-provided PURL.
-                try:
-                    parsed_purl = PackageURL.from_string(purl_input_str)
-                except ValueError as error:
-                    raise InvalidPURLError(f"The package url {purl_input_str} is not valid.") from error
-
                 return Analyzer.AnalysisTarget(
                     parsed_purl=parsed_purl, repo_path=repo_path_input, branch=input_branch, digest=input_digest
                 )

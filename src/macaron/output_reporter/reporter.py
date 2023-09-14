@@ -120,6 +120,9 @@ class JSONReporter(FileReporter):
         try:
             dep_file_name = os.path.join(target_dir, "dependencies.json")
             serialized_configs = list(report.get_serialized_configs())
+            for report_dict in serialized_configs:
+                # Serialize PackageURL objects as strings
+                report_dict["purl"] = str(report_dict.get("purl"))
             self.write_file(dep_file_name, json.dumps(serialized_configs, indent=self.indent))
 
             for record in report.get_records():
