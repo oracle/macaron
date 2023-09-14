@@ -23,12 +23,12 @@ not_self_hosted_git(repo_id, message) :- repository(repo_id, _, _, _, _, _, _, r
     match("^.*(github.com|gitlab.com).*$", remote), message=remote.
 
 /**
- *  This fact exists iff a repository with id dependency is a dependency of repository with id repo.
+ *  This fact exists iff a component with id dependency is a dependency of component with id parent.
  */
-.decl transitive_dependency(repo_id: number, dependency: number)
-transitive_dependency(repo_id, dependency) :- dependency(repo_id, dependency).
-transitive_dependency(repo_id, dependency) :-
-    transitive_dependency(repo_id, a), transitive_dependency(a, dependency).
+.decl transitive_dependency(parent: number, dependency: number)
+transitive_dependency(parent, dependency) :- dependency(parent, dependency).
+transitive_dependency(parent, dependency) :-
+    transitive_dependency(parent, a), transitive_dependency(a, dependency).
 
 /**
  *  Extract the id and PURL from the component relation.

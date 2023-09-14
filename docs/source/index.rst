@@ -9,6 +9,7 @@
 
 .. References/links
 .. _Witness: https://github.com/testifysec/witness
+.. _SLSA: https://slsa.dev
 
 =====================
 Macaron documentation
@@ -40,6 +41,8 @@ To start with Macaron, see the :doc:`Installation </pages/installation>` and :do
 
 For all services and technologies that Macaron supports, see the :doc:`Supported Technologies </pages/supported_technologies/index>` page.
 
+.. _checks:
+
 -------------------------
 Current checks in Macaron
 -------------------------
@@ -61,7 +64,7 @@ the requirements that are currently supported by Macaron.
      - Identify and validate build script(s).
    * - 1
      - **Provenance available** - Provenances are available.
-     - Check for existence of provenances, which can be SLSA or `Witness`_ provenances. If there is no provenance, the repo can still be compliant to level 1 given the build script is available.
+     - Check for existence of provenances, which can be `SLSA`_ or `Witness`_ provenances. If there is no provenance, the repo can still be compliant to level 1 given the build script is available.
    * - 1
      - **Witness provenance** - One or more `Witness`_ provenances are discovered.
      - Check for existence of `Witness`_ provenances, and whether artifact digests match those in the provenances.
@@ -106,7 +109,8 @@ intermediate representations as abstractions. Using such abstractions, Macaron i
 
    pages/installation
    pages/using
-   pages/output_files
    pages/cli_usage/index
+   pages/tutorials/index
+   pages/output_files
    pages/supported_technologies/index
    pages/developers_guide/index
