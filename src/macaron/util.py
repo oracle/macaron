@@ -72,13 +72,17 @@ def send_get_http_raw(url: str, headers: dict | None = None, timeout: int | None
 
     Returns
     -------
-    Response
+    Response | None
         The response object or None if there is an error.
     """
     logger.debug("GET - %s", url)
-    response = requests.get(
-        url=url, headers=headers, timeout=timeout or defaults.getint("requests", "timeout", fallback=10)
-    )  # nosec B113:request_without_timeout
+    try:
+        response = requests.get(
+            url=url, headers=headers, timeout=timeout or defaults.getint("requests", "timeout", fallback=10)
+        )  # nosec B113:request_without_timeout
+    except requests.exceptions.RequestException as error:
+        logger.debug(error)
+        return None
     while response.status_code != 200:
         logger.error(
             "Receiving error code %s from server. Message: %s.",
