@@ -2,11 +2,14 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for the TwoPersonReviewed Check."""
-
+import logging
 import os
 
-from macaron.slsa_analyzer.checks.check_result import CheckResultType
-from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
+import requests
+
+from macaron.config.defaults import defaults
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class TestTwoPersonReviewedCheck:
@@ -16,40 +19,61 @@ class TestTwoPersonReviewedCheck:
 
     def test_two_person_reviewed_check(self) -> None:
         """This is a function check two-person reviewed."""
-        # Without any reviewer
-        # assert self.check_a_review("micronaut-projects/micronaut-core", "9745") == CheckResultType.FAILED
-        # # With unauthenticated reviewers
-        # review_data = api_client.get_a_review('micronaut-projects/micronaut-core', '9530')
-        # assert check_obj.run_check(None, check_result) == CheckResultType.FAILED
-        # With authenticated reviewers
-        assert self.check_a_review("micronaut-projects/micronaut-core", "9530") == CheckResultType.PASSED
+        # Change request merged pull request
+        assert self.check_a_review("micronaut-projects", "micronaut-core", 593) == "CHANGES_REQUESTED"
+        # Approved merged pull request
+        assert self.check_a_review("micronaut-projects", "micronaut-core", 9875) == "APPROVED"
 
-    def check_a_review(self, repo_full_name: str, pr_id: str) -> CheckResultType:
+    def check_a_review(self, owner: str, name: str, pr_number: int) -> str:
         """
         Implement the function to fetch a review and checks for two-person review completion.
 
         Parameters
         ----------
-        repo_full_name (String): The full name of the repo.
-        pr_id (String): Identify which pull request.
+        owner (String): The name of the owner.
+        name (String): The name of the repo.
+        pr_number (String): Identify which pull request.
 
         Returns
         -------
         CheckResultType: Result of the test.
         """
-        api_client = GhAPIClient(
-            {
-                "headers": {
-                    "Accept": "application/vnd.github.v3+json",
-                    "Authorization": f"Bearer {os.environ.get('GITHUB_TOKEN')}",
-                    "X-GitHub-Api-Version": "2022-11-28",
-                },
-                "query": [],
+        # Your GitHub personal access token (replace with your own token)
+        token = os.getenv("GITHUB_TOKEN")
+        # GitHub GraphQL API endpoint
+        url = "https://api.github.com/graphql"
+        # Define the GraphQL query
+        query = """
+            query ($owner: String!, $name: String!, $number: Int!) {
+                repository(owner: $owner, name: $name) {
+                    pullRequest(number: $number) {
+                        reviewDecision
+                    }
+                }
             }
-        )
+        """
+        # Set up the HTTP headers with your token
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        # Send the GraphQL query to GitHub API.
+        variables = {
+            "owner": owner,
+            "name": name,
+            "number": pr_number,
+        }
+        response = requests.post(
+            url,
+            timeout=defaults.getint("requests", "timeout", fallback=10),
+            json={"query": query, "variables": variables},
+            headers=headers,
+        )  # nosec B113:request_without_timeout
+        review_decision = ""
+        if response.status_code == 200:
+            data = response.json()
+            review_decision = data["data"]["repository"]["pullRequest"]["reviewDecision"]
+        else:
+            logger.error("%s, %s", response.status_code, response.text)
 
-        review_data = api_client.get_a_review(repo_full_name, str(pr_id))
-        for review in review_data:
-            if review["state"] == "APPROVED" or review["state"] == "CHANGES_REQUESTED":
-                return CheckResultType.PASSED
-        return CheckResultType.FAILED
+        return review_decision

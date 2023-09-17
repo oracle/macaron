@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-06 12:46:41"
+        "timestamps": "2023-09-18 11:05:09"
     },
     "target": {
         "info": {
@@ -12,45 +12,255 @@
             "commit_date": "2022-10-04T07:59:23-05:00"
         },
         "provenances": {
-            "is_inferred": true,
+            "is_inferred": false,
             "content": {
                 "github_actions": [
                     {
                         "_type": "https://in-toto.io/Statement/v0.1",
-                        "subject": [],
                         "predicateType": "https://slsa.dev/provenance/v0.2",
+                        "subject": [
+                            {
+                                "name": "urllib3-2.0.4-py3-none-any.whl",
+                                "digest": {
+                                    "sha256": "de7df1803967d2c2a98e4b11bb7d6bd9210474c46e8a0401514e3a42a75ebde4"
+                                }
+                            },
+                            {
+                                "name": "urllib3-2.0.4.tar.gz",
+                                "digest": {
+                                    "sha256": "8d22f86aae8ef5e410d4f539fde9ce6b2113a001bb4d189e0aed70642d602b11"
+                                }
+                            }
+                        ],
                         "predicate": {
                             "builder": {
-                                "id": "<URI>"
+                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.7.0"
                             },
-                            "buildType": "<URI>",
+                            "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "<URI>",
+                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/2.0.4",
                                     "digest": {
-                                        "sha1": "<STING>"
+                                        "sha1": "c9fa144545eedb5dc4a2cc3f255e95602a1d7db0"
                                     },
-                                    "entryPoint": "<STRING>"
+                                    "entryPoint": ".github/workflows/publish.yml"
                                 },
                                 "parameters": {},
-                                "environment": {}
+                                "environment": {
+                                    "github_actor": "illia-v",
+                                    "github_actor_id": "17710133",
+                                    "github_base_ref": "",
+                                    "github_event_name": "push",
+                                    "github_event_payload": {
+                                        "after": "d267c99f7e890ff22e136c34d29be802d9c2e773",
+                                        "base_ref": null,
+                                        "before": "0000000000000000000000000000000000000000",
+                                        "commits": [],
+                                        "compare": "https://github.com/urllib3/urllib3/compare/2.0.4",
+                                        "created": true,
+                                        "deleted": false,
+                                        "forced": false,
+                                        "head_commit": {
+                                            "author": {
+                                                "email": "64815328+Eutropios@users.noreply.github.com",
+                                                "name": "Noah Jenner",
+                                                "username": "Eutropios"
+                                            },
+                                            "committer": {
+                                                "email": "noreply@github.com",
+                                                "name": "GitHub",
+                                                "username": "web-flow"
+                                            },
+                                            "distinct": true,
+                                            "id": "c9fa144545eedb5dc4a2cc3f255e95602a1d7db0",
+                                            "message": "Release version 2.0.4 (#3084)\n\nCo-authored-by: Illia Volochii <illia.volochii@gmail.com>",
+                                            "timestamp": "2023-07-19T17:46:02+03:00",
+                                            "tree_id": "e61f50347e7bb803a0c8942ba63fe917c8424f77",
+                                            "url": "https://github.com/urllib3/urllib3/commit/c9fa144545eedb5dc4a2cc3f255e95602a1d7db0"
+                                        },
+                                        "organization": {
+                                            "avatar_url": "https://avatars.githubusercontent.com/u/26825299?v=4",
+                                            "description": "",
+                                            "events_url": "https://api.github.com/orgs/urllib3/events",
+                                            "hooks_url": "https://api.github.com/orgs/urllib3/hooks",
+                                            "id": 26825299,
+                                            "issues_url": "https://api.github.com/orgs/urllib3/issues",
+                                            "login": "urllib3",
+                                            "members_url": "https://api.github.com/orgs/urllib3/members{/member}",
+                                            "node_id": "MDEyOk9yZ2FuaXphdGlvbjI2ODI1Mjk5",
+                                            "public_members_url": "https://api.github.com/orgs/urllib3/public_members{/member}",
+                                            "repos_url": "https://api.github.com/orgs/urllib3/repos",
+                                            "url": "https://api.github.com/orgs/urllib3"
+                                        },
+                                        "pusher": {
+                                            "email": "illia.volochii@gmail.com",
+                                            "name": "illia-v"
+                                        },
+                                        "ref": "refs/tags/2.0.4",
+                                        "repository": {
+                                            "allow_forking": true,
+                                            "archive_url": "https://api.github.com/repos/urllib3/urllib3/{archive_format}{/ref}",
+                                            "archived": false,
+                                            "assignees_url": "https://api.github.com/repos/urllib3/urllib3/assignees{/user}",
+                                            "blobs_url": "https://api.github.com/repos/urllib3/urllib3/git/blobs{/sha}",
+                                            "branches_url": "https://api.github.com/repos/urllib3/urllib3/branches{/branch}",
+                                            "clone_url": "https://github.com/urllib3/urllib3.git",
+                                            "collaborators_url": "https://api.github.com/repos/urllib3/urllib3/collaborators{/collaborator}",
+                                            "comments_url": "https://api.github.com/repos/urllib3/urllib3/comments{/number}",
+                                            "commits_url": "https://api.github.com/repos/urllib3/urllib3/commits{/sha}",
+                                            "compare_url": "https://api.github.com/repos/urllib3/urllib3/compare/{base}...{head}",
+                                            "contents_url": "https://api.github.com/repos/urllib3/urllib3/contents/{+path}",
+                                            "contributors_url": "https://api.github.com/repos/urllib3/urllib3/contributors",
+                                            "created_at": 1316369308,
+                                            "default_branch": "main",
+                                            "deployments_url": "https://api.github.com/repos/urllib3/urllib3/deployments",
+                                            "description": "urllib3 is a user-friendly HTTP client library for Python",
+                                            "disabled": false,
+                                            "downloads_url": "https://api.github.com/repos/urllib3/urllib3/downloads",
+                                            "events_url": "https://api.github.com/repos/urllib3/urllib3/events",
+                                            "fork": false,
+                                            "forks": 1078,
+                                            "forks_count": 1078,
+                                            "forks_url": "https://api.github.com/repos/urllib3/urllib3/forks",
+                                            "full_name": "urllib3/urllib3",
+                                            "git_commits_url": "https://api.github.com/repos/urllib3/urllib3/git/commits{/sha}",
+                                            "git_refs_url": "https://api.github.com/repos/urllib3/urllib3/git/refs{/sha}",
+                                            "git_tags_url": "https://api.github.com/repos/urllib3/urllib3/git/tags{/sha}",
+                                            "git_url": "git://github.com/urllib3/urllib3.git",
+                                            "has_discussions": false,
+                                            "has_downloads": true,
+                                            "has_issues": true,
+                                            "has_pages": false,
+                                            "has_projects": true,
+                                            "has_wiki": false,
+                                            "homepage": "https://urllib3.readthedocs.io",
+                                            "hooks_url": "https://api.github.com/repos/urllib3/urllib3/hooks",
+                                            "html_url": "https://github.com/urllib3/urllib3",
+                                            "id": 2410676,
+                                            "is_template": false,
+                                            "issue_comment_url": "https://api.github.com/repos/urllib3/urllib3/issues/comments{/number}",
+                                            "issue_events_url": "https://api.github.com/repos/urllib3/urllib3/issues/events{/number}",
+                                            "issues_url": "https://api.github.com/repos/urllib3/urllib3/issues{/number}",
+                                            "keys_url": "https://api.github.com/repos/urllib3/urllib3/keys{/key_id}",
+                                            "labels_url": "https://api.github.com/repos/urllib3/urllib3/labels{/name}",
+                                            "language": "Python",
+                                            "languages_url": "https://api.github.com/repos/urllib3/urllib3/languages",
+                                            "license": {
+                                                "key": "mit",
+                                                "name": "MIT License",
+                                                "node_id": "MDc6TGljZW5zZTEz",
+                                                "spdx_id": "MIT",
+                                                "url": "https://api.github.com/licenses/mit"
+                                            },
+                                            "master_branch": "main",
+                                            "merges_url": "https://api.github.com/repos/urllib3/urllib3/merges",
+                                            "milestones_url": "https://api.github.com/repos/urllib3/urllib3/milestones{/number}",
+                                            "mirror_url": null,
+                                            "name": "urllib3",
+                                            "node_id": "MDEwOlJlcG9zaXRvcnkyNDEwNjc2",
+                                            "notifications_url": "https://api.github.com/repos/urllib3/urllib3/notifications{?since,all,participating}",
+                                            "open_issues": 125,
+                                            "open_issues_count": 125,
+                                            "organization": "urllib3",
+                                            "owner": {
+                                                "avatar_url": "https://avatars.githubusercontent.com/u/26825299?v=4",
+                                                "email": null,
+                                                "events_url": "https://api.github.com/users/urllib3/events{/privacy}",
+                                                "followers_url": "https://api.github.com/users/urllib3/followers",
+                                                "following_url": "https://api.github.com/users/urllib3/following{/other_user}",
+                                                "gists_url": "https://api.github.com/users/urllib3/gists{/gist_id}",
+                                                "gravatar_id": "",
+                                                "html_url": "https://github.com/urllib3",
+                                                "id": 26825299,
+                                                "login": "urllib3",
+                                                "name": "urllib3",
+                                                "node_id": "MDEyOk9yZ2FuaXphdGlvbjI2ODI1Mjk5",
+                                                "organizations_url": "https://api.github.com/users/urllib3/orgs",
+                                                "received_events_url": "https://api.github.com/users/urllib3/received_events",
+                                                "repos_url": "https://api.github.com/users/urllib3/repos",
+                                                "site_admin": false,
+                                                "starred_url": "https://api.github.com/users/urllib3/starred{/owner}{/repo}",
+                                                "subscriptions_url": "https://api.github.com/users/urllib3/subscriptions",
+                                                "type": "Organization",
+                                                "url": "https://api.github.com/users/urllib3"
+                                            },
+                                            "private": false,
+                                            "pulls_url": "https://api.github.com/repos/urllib3/urllib3/pulls{/number}",
+                                            "pushed_at": 1689779927,
+                                            "releases_url": "https://api.github.com/repos/urllib3/urllib3/releases{/id}",
+                                            "size": 7242,
+                                            "ssh_url": "git@github.com:urllib3/urllib3.git",
+                                            "stargazers": 3452,
+                                            "stargazers_count": 3452,
+                                            "stargazers_url": "https://api.github.com/repos/urllib3/urllib3/stargazers",
+                                            "statuses_url": "https://api.github.com/repos/urllib3/urllib3/statuses/{sha}",
+                                            "subscribers_url": "https://api.github.com/repos/urllib3/urllib3/subscribers",
+                                            "subscription_url": "https://api.github.com/repos/urllib3/urllib3/subscription",
+                                            "svn_url": "https://github.com/urllib3/urllib3",
+                                            "tags_url": "https://api.github.com/repos/urllib3/urllib3/tags",
+                                            "teams_url": "https://api.github.com/repos/urllib3/urllib3/teams",
+                                            "topics": [
+                                                "http",
+                                                "http-client",
+                                                "python",
+                                                "urllib3"
+                                            ],
+                                            "trees_url": "https://api.github.com/repos/urllib3/urllib3/git/trees{/sha}",
+                                            "updated_at": "2023-07-19T02:19:14Z",
+                                            "url": "https://github.com/urllib3/urllib3",
+                                            "visibility": "public",
+                                            "watchers": 3452,
+                                            "watchers_count": 3452,
+                                            "web_commit_signoff_required": false
+                                        },
+                                        "sender": {
+                                            "avatar_url": "https://avatars.githubusercontent.com/u/17710133?v=4",
+                                            "events_url": "https://api.github.com/users/illia-v/events{/privacy}",
+                                            "followers_url": "https://api.github.com/users/illia-v/followers",
+                                            "following_url": "https://api.github.com/users/illia-v/following{/other_user}",
+                                            "gists_url": "https://api.github.com/users/illia-v/gists{/gist_id}",
+                                            "gravatar_id": "",
+                                            "html_url": "https://github.com/illia-v",
+                                            "id": 17710133,
+                                            "login": "illia-v",
+                                            "node_id": "MDQ6VXNlcjE3NzEwMTMz",
+                                            "organizations_url": "https://api.github.com/users/illia-v/orgs",
+                                            "received_events_url": "https://api.github.com/users/illia-v/received_events",
+                                            "repos_url": "https://api.github.com/users/illia-v/repos",
+                                            "site_admin": false,
+                                            "starred_url": "https://api.github.com/users/illia-v/starred{/owner}{/repo}",
+                                            "subscriptions_url": "https://api.github.com/users/illia-v/subscriptions",
+                                            "type": "User",
+                                            "url": "https://api.github.com/users/illia-v"
+                                        }
+                                    },
+                                    "github_head_ref": "",
+                                    "github_ref": "refs/tags/2.0.4",
+                                    "github_ref_type": "tag",
+                                    "github_repository_id": "2410676",
+                                    "github_repository_owner": "urllib3",
+                                    "github_repository_owner_id": "26825299",
+                                    "github_run_attempt": "1",
+                                    "github_run_id": "5600993171",
+                                    "github_run_number": "21",
+                                    "github_sha1": "c9fa144545eedb5dc4a2cc3f255e95602a1d7db0"
+                                }
                             },
-                            "buildConfig": {},
                             "metadata": {
-                                "buildInvocationId": "<STRING>",
-                                "buildStartedOn": "<TIMESTAMP>",
-                                "buildFinishedOn": "<TIMESTAMP>",
+                                "buildInvocationID": "5600993171-1",
                                 "completeness": {
-                                    "parameters": "false",
-                                    "environment": "false",
-                                    "materials": "false"
+                                    "parameters": true,
+                                    "environment": false,
+                                    "materials": false
                                 },
-                                "reproducible": "false"
+                                "reproducible": false
                             },
                             "materials": [
                                 {
-                                    "uri": "<URI>",
-                                    "digest": {}
+                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/2.0.4",
+                                    "digest": {
+                                        "sha1": "c9fa144545eedb5dc4a2cc3f255e95602a1d7db0"
+                                    }
                                 }
                             ]
                         }
@@ -61,12 +271,156 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 0,
-                "PASSED": 0,
+                "FAILED": 4,
+                "PASSED": 7,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
-            "results": []
+            "results": [
+                {
+                    "check_id": "mcn_build_as_code_1",
+                    "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        {
+                            "The target repository uses build tool pip to deploy": "https://github.com/urllib3/urllib3/blob/87a0ecee6e691fe5ff93cd000c0158deebef763b/.github/workflows/publish.yml",
+                            "The build is triggered by": "https://github.com/urllib3/urllib3/blob/87a0ecee6e691fe5ff93cd000c0158deebef763b/.github/workflows/publish.yml"
+                        },
+                        "Deploy action: pypa/gh-action-pypi-publish",
+                        "However, could not find a passing workflow run."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_build_script_1",
+                    "check_description": "Check if the target repo has a valid build script.",
+                    "slsa_requirements": [
+                        "Scripted Build - SLSA Level 1"
+                    ],
+                    "justification": [
+                        "Check mcn_build_script_1 is set to PASSED because mcn_build_service_1 PASSED."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_build_service_1",
+                    "check_description": "Check if the target repo has a valid build service.",
+                    "slsa_requirements": [
+                        "Build service - SLSA Level 2"
+                    ],
+                    "justification": [
+                        "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_provenance_available_1",
+                    "check_description": "Check whether the target has intoto provenance.",
+                    "slsa_requirements": [
+                        "Provenance - Available - SLSA Level 1",
+                        "Provenance content - Identifies build instructions - SLSA Level 1",
+                        "Provenance content - Identifies artifacts - SLSA Level 1",
+                        "Provenance content - Identifies builder - SLSA Level 1"
+                    ],
+                    "justification": [
+                        "Found provenance in release assets:",
+                        "multiple.intoto.jsonl"
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_provenance_expectation_1",
+                    "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the expected value.",
+                    "slsa_requirements": [
+                        "Provenance conforms with expectations - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Successfully verified the expectation against provenance."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_provenance_level_three_1",
+                    "check_description": "Check whether the target has SLSA provenance level 3.",
+                    "slsa_requirements": [
+                        "Provenance - Non falsifiable - SLSA Level 3",
+                        "Provenance content - Includes all build parameters - SLSA Level 3",
+                        "Provenance content - Identifies entry point - SLSA Level 3",
+                        "Provenance content - Identifies source code - SLSA Level 2"
+                    ],
+                    "justification": [
+                        "Successfully verified level 3: ",
+                        "verify passed : urllib3-2.0.4-py3-none-any.whl,verify passed : urllib3-2.0.4.tar.gz"
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_version_control_system_1",
+                    "check_description": "Check whether the target repo uses a version control system.",
+                    "slsa_requirements": [
+                        "Version controlled - SLSA Level 2"
+                    ],
+                    "justification": [
+                        {
+                            "This is a Git repository": "https://github.com/urllib3/urllib3"
+                        }
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_infer_artifact_pipeline_1",
+                    "check_description": "Detects potential pipelines from which an artifact is published.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Unable to find a publishing timestamp for the artifact."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_witness_level_one_1",
+                    "check_description": "Check whether the target has a level-1 witness provenance.",
+                    "slsa_requirements": [
+                        "Provenance - Available - SLSA Level 1",
+                        "Provenance content - Identifies build instructions - SLSA Level 1",
+                        "Provenance content - Identifies artifacts - SLSA Level 1",
+                        "Provenance content - Identifies builder - SLSA Level 1"
+                    ],
+                    "justification": [
+                        "Failed to discover any witness provenance."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_trusted_builder_level_three_1",
+                    "check_description": "Check whether the target uses a trusted SLSA level 3 builder.",
+                    "slsa_requirements": [
+                        "Hermetic - SLSA Level 4",
+                        "Isolated - SLSA Level 3",
+                        "Parameterless - SLSA Level 4",
+                        "Ephemeral environment - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Could not find a trusted level 3 builder as a GitHub Actions workflow."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_two_person_reviewed_1",
+                    "check_description": "Check whether the merged pull requests has been reviewd and approved by at least one reviewer.",
+                    "slsa_requirements": [
+                        "Two-person reviewed - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "422 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 422 / 472"
+                    ],
+                    "result_type": "FAILED"
+                }
+            ]
         }
     },
     "dependencies": {
@@ -103,6 +457,10 @@
             },
             {
                 "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
                 "num_deps_pass": 0
             },
             {
