@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-06 11:05:38"
+        "timestamps": "2023-09-18 10:53:52"
     },
     "target": {
         "info": {
@@ -36,8 +36,8 @@
                                 "environment": {}
                             },
                             "buildConfig": {
-                                "jobID": "build",
-                                "stepID": "Publish Snapshot"
+                                "jobID": "release",
+                                "stepID": "Releasing"
                             },
                             "metadata": {
                                 "buildInvocationId": "",
@@ -110,7 +110,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 5,
+                "FAILED": 6,
                 "PASSED": 5,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -157,7 +157,7 @@
                 },
                 {
                     "check_id": "mcn_two_person_reviewed_1",
-                    "check_description": "Check whether the submitted code has been reviewd by two people.",
+                    "check_description": "Check whether the merged pull requests has been reviewd and approved by at least one reviewer.",
                     "slsa_requirements": [
                         "Two-person reviewed - SLSA Level 4"
                     ],
@@ -201,7 +201,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Could not find any SLSA provenances."
+                        "Could not find any SLSA or Witness provenances."
                     ],
                     "result_type": "FAILED"
                 },
@@ -295,6 +295,10 @@
             },
             {
                 "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
                 "num_deps_pass": 0
             },
             {

@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-06 11:05:38"
+        "timestamps": "2023-09-18 10:53:52"
     },
     "target": {
         "info": {
@@ -508,7 +508,7 @@
                         ],
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/release.yml"
+                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.9.0"
                             },
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
                             "invocation": {
@@ -517,7 +517,7 @@
                                     "digest": {
                                         "sha1": "3c6605283d2f6290321b581afa8c56a34659e324"
                                     },
-                                    "entryPoint": "https://github.com/micronaut-projects/micronaut-core/blob/68f9bb0a78fa930865d37fca39252b9ec66e4a43/.github/workflows/release.yml"
+                                    "entryPoint": ".github/workflows/release.yml"
                                 },
                                 "parameters": {},
                                 "environment": {
@@ -753,8 +753,8 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 6,
-                "PASSED": 4,
+                "FAILED": 4,
+                "PASSED": 6,
                 "SKIPPED": 0,
                 "UNKNOWN": 1
             },
@@ -892,13 +892,13 @@
                 },
                 {
                     "check_id": "mcn_two_person_reviewed_1",
-                    "check_description": "Check whether the submitted code has been reviewd by two people.",
+                    "check_description": "Check whether the merged pull requests has been reviewd and approved by at least one reviewer.",
                     "slsa_requirements": [
                         "Two-person reviewed - SLSA Level 4"
                     ],
                     "justification": [
-                        "90 pull requests have been reviewed by at least two person.",
-                        "The pass rate is 90 / 159"
+                        "88 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 88 / 159"
                     ],
                     "result_type": "FAILED"
                 }
@@ -930,10 +930,6 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_infer_artifact_pipeline_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 1
             },
@@ -944,6 +940,10 @@
             {
                 "check_id": "mcn_version_control_system_1",
                 "num_deps_pass": 2
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
             },
             {
                 "check_id": "mcn_trusted_builder_level_three_1",
