@@ -9,6 +9,7 @@ import pytest
 from packageurl import PackageURL
 
 from macaron.config.target_config import Configuration
+from macaron.errors import InvalidPURLError
 from macaron.slsa_analyzer.analyzer import Analyzer
 
 from ..macaron_testcase import MacaronTestCase
@@ -111,5 +112,5 @@ def test_resolve_analysis_target(
 )
 def test_resolve_analysis_target_invalid_purl(config: Configuration) -> None:
     """Test the resolve analysis target method with invalid inputs."""
-    with pytest.raises(ValueError):  # noqa: PT011
+    with pytest.raises(InvalidPURLError):
         Analyzer.to_analysis_target(config, [])

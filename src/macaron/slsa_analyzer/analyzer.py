@@ -530,17 +530,18 @@ class Analyzer:
         # Due to the current design of Configuration class, repo_path, branch and digest are initialized
         # as empty strings, and we assumed that they are always set with input values as non-empty strings.
         # Therefore, their true types are ``str``, and an empty string indicates that the input value is not provided.
-        # The purl might be a PackageURL type, or a string, and therefore requires extra care.
+        # The purl might be a PackageURL type, a string, or None, which should be reduced down to an optional
+        # PackageURL type.
         parsed_purl: PackageURL | None
         if config.get_value("purl") is None or config.get_value("purl") == "":
             parsed_purl = None
-        elif isinstance(config.get_value("purl"), str):
+        elif isinstance(config.get_value("purl"), PackageURL):
+            parsed_purl = config.get_value("purl")
+        else:
             try:
                 parsed_purl = PackageURL.from_string(config.get_value("purl"))
-            except InvalidPURLError as error:
-                raise PURLNotFoundError("Invalid input PURL.") from error
-        else:
-            parsed_purl = config.get_value("purl")
+            except ValueError as error:
+                raise InvalidPURLError(f"Invalid input PURL: {config.get_value('purl')}") from error
 
         repo_path_input: str = config.get_value("path")
         input_branch: str = config.get_value("branch")
