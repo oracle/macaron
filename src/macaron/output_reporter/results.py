@@ -116,9 +116,17 @@ class Record(Generic[RecordNode]):
         dict
             The dictionary representation of this record.
         """
+        has_passing_check = False
+        if self.context:
+            for res in self.context.check_results.values():
+                if res["result_type"] == CheckResultType.PASSED:
+                    has_passing_check = True
+                    break
+
         result = {
             "metadata": {
                 "timestamps": datetime.now().isoformat(sep=" ", timespec="seconds"),
+                "has_passing_check": has_passing_check,
             },
             "target": self.context.get_dict() if self.context else {},
             "dependencies": self.get_dep_summary(),

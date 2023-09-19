@@ -215,8 +215,29 @@
 
     <div class='space_divider'></div>
 
-    <div class="table_caption">Reports for Macaron checks</div>
-    {{ render_checks_report(target.checks.results) | indent(4) }}
+    {#
+        When there is no passing check for this software component, we hide the check report table when the viewer
+        first open the HTML file. However, the viewer could click the `toggler` to expand the table if they want to see it. To achieve this, there are two component we need to handle:
+        - The toggler, which is the symbol that indicate the Extended or Collapsed state of the check report table:
+        The class ``toggler-extend`` will apply the CSS rule to rotate the toggler symbol indicating the "Extend" state.
+        If ``toggler-extend`` is not set, the toggler will be in the Collapsed state.
+        - The ``check_report_content`` div, which contains the check report table: The HTML class ``hidden`` will set ``display: none`` to this div and hide the check report table.
+    #}
+    {% if metadata.has_passing_check %}
+    {#
+        Set the default state to Extend if there is a passing check.
+    #}
+    <div class="table_caption toggler toggler-extend" id="check_report_title">Reports for Macaron checks</div>
+    <div id="check_report_content">
+    {% else %}
+    {#
+        Set the default state to Collapsed if there is no passing check.
+    #}
+    <div class="table_caption toggler" id="check_report_title">Reports for Macaron checks</div>
+    <div id="check_report_content" class="hidden">
+    {% endif %}
+        {{ render_checks_report(target.checks.results) | indent(8) }}
+    </div>
 
     <div class='space_divider'></div>
 

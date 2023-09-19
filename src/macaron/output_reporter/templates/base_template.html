@@ -255,13 +255,17 @@
             padding-left: 2em
         }
 
-        .caret {
+        /*
+            The reason why we need to create a separate .togler class is because all .caret calss are set binded
+            to the listener for extending/collapsing the provenance fields.
+        */
+        .caret, .toggler {
             cursor: pointer;
             user-select: none;
         }
 
         /* Create the caret using a unicode symbol, and style it. */
-        .caret::before {
+        .caret::before, .toggler::before {
             content: "\25B8";
             color: black;
             display: inline-block;
@@ -269,12 +273,12 @@
         }
 
         /* Rotate the caret icon when clicked on. */
-        .caret-down::before {
+        .caret-down::before, .toggler-extend::before {
             transform: rotate(90deg);
         }
 
         /* Hide the nested list. */
-        .nested-ul {
+        .nested-ul, .hidden {
             display: none;
         }
 
@@ -671,6 +675,13 @@
                     this.classList.toggle("caret-down");
                 });
             }
+
+            // Add a listener to the caret for extending/collapsing the check status table.
+            let check_status_toggler = document.getElementById("check_report_title");
+            check_status_toggler.addEventListener("click", function() {
+                this.classList.toggle("toggler-extend");
+                document.getElementById("check_report_content").classList.toggle("hidden");
+            });
 
             // When loaded, expand all CI services.<n> elements
             setExpandState(document.querySelectorAll(".tree-view-nested-list > * > .caret"), true);
