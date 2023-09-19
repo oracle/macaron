@@ -17,11 +17,13 @@ from pydriller.git import Git
 from sqlalchemy.orm import Session
 
 from macaron import __version__
+from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.dependency_analyzer import DependencyAnalyzer, DependencyInfo
+from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
 from macaron.errors import CloneError, DuplicateError, InvalidPURLError, PURLNotFoundError, RepoCheckOutError
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
@@ -155,8 +157,15 @@ class Analyzer:
                 # Run the chosen dependency analyzer plugin.
                 if skip_deps:
                     logger.info("Skipping automatic dependency analysis...")
+                elif sbom_path:
+                    logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
+                    deps_resolved = get_deps_from_sbom(sbom_path)
                 else:
-                    deps_resolved = DependencyAnalyzer.resolve_dependencies(main_record.context, sbom_path)
+                    deps_resolved = DependencyAnalyzer.resolve_dependencies(main_record.context)
+
+                # Use repo finder to find more repositories to analyze.
+                if defaults.getboolean("repofinder", "find_repos"):
+                    DependencyAnalyzer._resolve_more_dependencies(deps_resolved)
 
                 # Merge the automatically resolved dependencies with the manual configuration.
                 deps_config = DependencyAnalyzer.merge_configs(deps_config, deps_resolved)
