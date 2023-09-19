@@ -206,7 +206,7 @@
 
     <button class="fancy-button" onclick="expandAll()">Expand All</button>
     <button class="fancy-button" onclick="collapseAll()">Collapse All</button>
-    {{ macaron_macros.render_tree_view_nested_list(target.provenances.content) | indent(4) }}
+    {{ render_tree_view_nested_list(target.provenances.content) | indent(4) }}
 
     <div class='space_divider'></div>
 

@@ -164,8 +164,11 @@ class Analyzer:
                 # Run the chosen dependency analyzer plugin.
                 if skip_deps:
                     logger.info("Skipping automatic dependency analysis...")
+                elif sbom_path:
+                    logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
+                    deps_resolved = get_deps_from_sbom(sbom_path)
                 else:
-                    deps_resolved = self.resolve_dependencies(main_record.context, sbom_path)
+                    deps_resolved = self.resolve_dependencies(main_record.context) if main_record.context else {}
 
                 # Merge the automatically resolved dependencies with the manual configuration.
                 deps_config = DependencyAnalyzer.merge_configs(deps_config, deps_resolved)
@@ -253,25 +256,19 @@ class Analyzer:
         for reporter in self.reporters:
             reporter.generate(output_target_path, report)
 
-    def resolve_dependencies(self, main_ctx: AnalyzeContext, sbom_path: str) -> dict[str, DependencyInfo]:
+    def resolve_dependencies(self, main_ctx: AnalyzeContext) -> dict[str, DependencyInfo]:
         """Resolve the dependencies of the main target repo.
 
         Parameters
         ----------
         main_ctx : AnalyzeContext
             The context of object of the target repository.
-        sbom_path: str
-            The path to the SBOM.
 
         Returns
         -------
         dict[str, DependencyInfo]
             A dictionary where artifacts are grouped based on ``artifactId:groupId``.
         """
-        if sbom_path:
-            logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
-            return get_deps_from_sbom(sbom_path)
-
         deps_resolved: dict[str, DependencyInfo] = {}
 
         build_tools = main_ctx.dynamic_data["build_spec"]["tools"]
