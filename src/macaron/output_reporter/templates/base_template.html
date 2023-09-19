@@ -1,4 +1,4 @@
-<!-- Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved. -->
+<!-- Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. -->
 <!-- Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. -->
 
 <!DOCTYPE html>
@@ -609,31 +609,7 @@
         </div>
     </header>
 
-    <div class="table_caption">Target information</div>
-    {% block target_info%}
-    {% endblock %}
-
-    <div class='space_divider'></div>
-
-    <div class="table_caption">Provenance summary</div>
-    {% block prov_justification %}
-    {% endblock %}
-
-    <button class="fancy-button" onclick="expandAll()">Expand All</button>
-    <button class="fancy-button" onclick="collapseAll()">Collapse All</button>
-
-    {% block prov_summary %}
-    {% endblock %}
-
-    <div class='space_divider'></div>
-
-    <div class="table_caption">Reports for Macaron checks</div>
-    {% block checks_report %}
-    {% endblock%}
-
-    <div class='space_divider'></div>
-
-    {% block deps_result_section %}
+    {% block content %}
     {% endblock %}
 
     <footer class='footer'>
