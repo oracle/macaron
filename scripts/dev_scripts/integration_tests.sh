@@ -123,13 +123,25 @@ python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using a CycloneDx SBOM."
+echo "apache/maven: Analyzing using a CycloneDx SBOM with target repo path"
 echo -e "----------------------------------------------------------------------------------\n"
 SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/apache_maven_root_sbom.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/apache_maven_with_sbom_provided.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 
 $RUN_MACARON analyze -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 -sbom "$SBOM_FILE" || log_fail
+
+python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: Analyzing using a CycloneDx SBOM with PURL."
+echo -e "----------------------------------------------------------------------------------\n"
+SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/apache_maven_root_sbom_minimal.json
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/apache_maven_with_sbom_minimal.json
+DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
+
+$RUN_MACARON analyze -purl pkg:maven/org.apache.maven/maven -sbom "$SBOM_FILE" || log_fail
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
