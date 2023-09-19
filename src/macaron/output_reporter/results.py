@@ -303,8 +303,4 @@ class Report:
             for mesg in mesg_list:
                 output = "".join([output, f"- {mesg}\n"])
 
-        for record in self.get_records():
-            if not record.context:
-                continue
-
         return output
