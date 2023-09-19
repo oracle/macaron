@@ -168,8 +168,16 @@
 
 {#
     This section is where we fill in the blocks defined in base_template.html.
-    Note that the input context dictionary will have the format:
-        {data = <data_from_html_reporter}
+    The data for this template is passed in as a Python dictionary by the HTMLReporter. We can access those data by
+    specifying the keys to the required value field.
+    For example, if the data from HTMLReporter is:
+    {
+        "metadata": {
+            "boo": 1,
+            "foo": 2
+        }
+    }
+    Within the Jinja2 template, ``{{ metadata.boo }}`` will be rendered as ``1``
 #}
 
 {% block timestamps %}
@@ -215,6 +223,12 @@
 
     <div class='space_divider'></div>
 
+    {#
+        Display the dependencies data if it's available:
+            - The total number of dependencies and unique repositories include in the analysis
+            - Dependency results (The number of dependencies pass each check)
+            - The status for each dependency
+    #}
     {% if dependencies.analyzed_deps != 0 %}
     <div class="table_caption" id="deps_result_title">Dependency results</div>
     <div class="table_sub_caption">
