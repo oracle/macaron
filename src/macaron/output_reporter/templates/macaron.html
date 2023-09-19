@@ -186,11 +186,16 @@
 
 {% block content %}
     <div class="table_caption">Target information</div>
-    {% if target.info.remote_path %}
+    {% if not target.info.remote_path %}
     {#
         Display the related section only the remote path is available. The remote path for a target software component
         is not available when Macaron cannot resolve it from the user provided PURL.
     #}
+    <div id= "prov_justification">
+        Manual configuration required. Could not find SCM URL.
+    </div>
+    {% endif %}
+
     {{ render_target_info_table(target.info) | indent(4) }}
 
     <div class='space_divider'></div>
@@ -213,14 +218,6 @@
     <div class="table_caption">Reports for Macaron checks</div>
     {{ render_checks_report(target.checks.results) | indent(4) }}
 
-    {% else %}
-
-    <div id= "prov_justification">
-        The results for the main target component is not available.
-    </div>
-
-    {% endif %}
-
     <div class='space_divider'></div>
 
     {#
@@ -232,7 +229,7 @@
     {% if dependencies.analyzed_deps != 0 %}
     <div class="table_caption" id="deps_result_title">Dependency results</div>
     <div class="table_sub_caption">
-    {{ dependencies.analyzed_deps }} dependencies that map to {{ dependencies.unique_dep_repos }} unique repositories have been successfully analyzed.
+    {{ dependencies.analyzed_deps }} dependencies have been found.
     </div>
     {{ render_dep_summary(dependencies.checks_summary) | indent(4) }}
     <div class="space_divider"></div>
