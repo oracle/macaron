@@ -178,6 +178,11 @@
 
 {% block content %}
     <div class="table_caption">Target information</div>
+    {% if target.info.remote_path %}
+    {#
+        Display the related section only the remote path is available. The remote path for a target software component
+        is not available when Macaron cannot resolve it from the user provided PURL.
+    #}
     {{ render_target_info_table(target.info) | indent(4) }}
 
     <div class='space_divider'></div>
@@ -200,14 +205,13 @@
     <div class="table_caption">Reports for Macaron checks</div>
     {{ render_checks_report(target.checks.results) | indent(4) }}
 
-{% block prov_summary %}
-{{ render_tree_view_nested_list(target.provenances.content) | indent(4, first=true) }}
-{% endblock %}
+    {% else %}
 
+    <div id= "prov_justification">
+        The results for the main target component is not available.
+    </div>
 
-{% block checks_report %}
-{{ render_checks_report(target.checks.results) | indent(4, first=true) }}
-{% endblock %}
+    {% endif %}
 
     <div class='space_divider'></div>
 
