@@ -182,7 +182,7 @@ class Analyzer:
                     logger.info("Start analyzing the dependencies.")
                     for config in deps_config:
                         dep_status: SCMStatus = config.get_value("available")
-                        if dep_status != SCMStatus.AVAILABLE:
+                        if dep_status == SCMStatus.DUPLICATED_SCM:
                             dep_record: Record = Record(
                                 record_id=config.get_value("id"),
                                 description=config.get_value("note"),
@@ -190,9 +190,7 @@ class Analyzer:
                                 status=config.get_value("available"),
                             )
                             report.add_dep_record(dep_record)
-                            if dep_status == SCMStatus.DUPLICATED_SCM:
-                                duplicated_scm_records.append(dep_record)
-
+                            duplicated_scm_records.append(dep_record)
                             continue
                         dep_record = self.run_single(config, analysis, report.record_mapping)
                         report.add_dep_record(dep_record)
