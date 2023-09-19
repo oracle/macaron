@@ -174,15 +174,15 @@
 
 {% block timestamps %}
 {{ metadata.timestamps | indent(12, first=true) }}
-{% endblock%}
-
-
-{% block target_info %}
-{{ render_target_info_table(target.info) | indent(4, first=true) }}
 {% endblock %}
 
+{% block content %}
+    <div class="table_caption">Target information</div>
+    {{ render_target_info_table(target.info) | indent(4) }}
 
-{% block prov_justification %}
+    <div class='space_divider'></div>
+
+    <div class="table_caption">Provenance summary</div>
     <div id= "prov_justification">
         {% if target.provenances.is_inferred == true %}
         Could not find a provenance for this repository. Below is what Macaron has inferred.
@@ -190,8 +190,15 @@
         This is the provenance found for this repository.
         {% endif %}
     </div>
-{% endblock %}
 
+    <button class="fancy-button" onclick="expandAll()">Expand All</button>
+    <button class="fancy-button" onclick="collapseAll()">Collapse All</button>
+    {{ macaron_macros.render_tree_view_nested_list(target.provenances.content) | indent(4) }}
+
+    <div class='space_divider'></div>
+
+    <div class="table_caption">Reports for Macaron checks</div>
+    {{ render_checks_report(target.checks.results) | indent(4) }}
 
 {% block prov_summary %}
 {{ render_tree_view_nested_list(target.provenances.content) | indent(4, first=true) }}
@@ -202,9 +209,9 @@
 {{ render_checks_report(target.checks.results) | indent(4, first=true) }}
 {% endblock %}
 
+    <div class='space_divider'></div>
 
-{% block deps_result_section %}
-{% if dependencies.analyzed_deps != 0 %}
+    {% if dependencies.analyzed_deps != 0 %}
     <div class="table_caption" id="deps_result_title">Dependency results</div>
     <div class="table_sub_caption">
     {{ dependencies.analyzed_deps }} dependencies that map to {{ dependencies.unique_dep_repos }} unique repositories have been successfully analyzed.
@@ -212,5 +219,5 @@
     {{ render_dep_summary(dependencies.checks_summary) | indent(4) }}
     <div class="space_divider"></div>
     {{ render_dep_status(dependencies.dep_status) | indent(4) }}
-{% endif %}
+    {% endif %}
 {% endblock %}
