@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-08-29 18:47:50"
+        "timestamps": "2023-09-21 07:27:24"
     },
     "target": {
         "info": {
@@ -35,7 +35,10 @@
                                 "parameters": {},
                                 "environment": {}
                             },
-                            "buildConfig": {},
+                            "buildConfig": {
+                                "jobID": "deploy_npm",
+                                "stepID": "Publish NPM"
+                            },
                             "metadata": {
                                 "buildInvocationId": "",
                                 "buildStartedOn": "<TIMESTAMP>",
@@ -61,7 +64,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 5,
+                "FAILED": 6,
                 "PASSED": 4,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -79,7 +82,8 @@
                             "The build is triggered by": "https://github.com/uiv-lib/uiv/blob/057b25b4db0913edab4cf728c306085e6fc20d49/.github/workflows/publish_npm.yaml"
                         },
                         "Deploy command: ['npm', 'publish']",
-                        "However, could not find a passing workflow run."
+                        "However, could not find a passing workflow run.",
+                        "The target repository does not use yarn to deploy."
                     ],
                     "result_type": "PASSED"
                 },
@@ -119,6 +123,17 @@
                     "result_type": "PASSED"
                 },
                 {
+                    "check_id": "mcn_infer_artifact_pipeline_1",
+                    "check_description": "Detects potential pipelines from which an artifact is published.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Unable to find a publishing timestamp for the artifact."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
                     "check_id": "mcn_provenance_available_1",
                     "check_description": "Check whether the target has intoto provenance.",
                     "slsa_requirements": [
@@ -128,7 +143,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Could not find any SLSA provenances."
+                        "Could not find any SLSA or Witness provenances."
                     ],
                     "result_type": "FAILED"
                 },
@@ -192,6 +207,10 @@
         "analyzed_deps": 0,
         "unique_dep_repos": 0,
         "checks_summary": [
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
             {
                 "check_id": "mcn_build_script_1",
                 "num_deps_pass": 0
