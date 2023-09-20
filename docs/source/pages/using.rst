@@ -191,6 +191,23 @@ With the example above, the generated output reports can be seen here:
 - `micronaut-core.html <../_static/examples/micronaut-projects/micronaut-core/analyze_with_sbom/micronaut-core.html>`__
 - `micronaut-core.json <../_static/examples/micronaut-projects/micronaut-core/analyze_with_sbom/micronaut-core.json>`__
 
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Analyzing dependencies in the SBOM without the main software component
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+In the case where the repository URL of the main software component is not available (e.g. the repository is in a private domain where Macaron cannot access),
+Macaron can still run the analysis on the dependencies listed in the SBOM.
+To do that, you must first create a PURL to present the main software component. This is so that this software component could be referenced later in the :ref:`verify-policy <verify-policy-action-cli>` command.
+For example: ``pkg:private_domain.com/org/name``.
+
+Then the analysis can be run with:
+
+.. code-block:: shell
+
+  ./run_macaron.sh analyze -purl pkg:private_domain.com/org/name -sbom <path_to_sbom>
+
+With ``path_to_sbom`` is the path to the SBOM you want to use.
+
 '''''''''''''''''''''''''''
 Analyzing more dependencies
 '''''''''''''''''''''''''''
