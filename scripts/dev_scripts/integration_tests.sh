@@ -111,12 +111,22 @@ $RUN_MACARON analyze -rp https://github.com/uiv-lib/uiv -b dev -d 057b25b4db0913
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "facebook/yoga: Analysing the repo path, the branch name and the commit digest for a Yarn project,"
-echo "skipping dependency resolution."
+echo "facebook/yoga: Analysing the repo path, the branch name and the commit digest for a Yarn classic"
+echo "project, skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/yoga/yoga.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/facebook/yoga/yoga.json
 $RUN_MACARON analyze -rp https://github.com/facebook/yoga -b main -d f8e2bc0875c145c429d0e865c9b83a40f65b3070 --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "wojtekmaj/react-pdf: Analysing the repo path, the branch name and the commit digest for a Yarn modern"
+echo "project, skipping dependency resolution."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/react-pdf/react-pdf.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/wojtekmaj/react-pdf/react-pdf.json
+$RUN_MACARON analyze -rp https://github.com/wojtekmaj/react-pdf -b main -d be18436b7be827eb993b2e1e4bd9230dd835a9a3 --skip-deps || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 

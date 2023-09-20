@@ -3,7 +3,7 @@
 
 """This module contains the Go class which inherits BaseBuildTool.
 
-This module is used to work with repositories that use Go as its build tool.
+This module is used to work with repositories that have Go.
 """
 
 from macaron.config.defaults import defaults
