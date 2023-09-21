@@ -104,7 +104,7 @@ To simplify the examples, we use the same configurations as above if needed (e.g
 
 The list bellow shows examples for the corresponding PURL strings for different git repositories:
 
-.. list-table:: Example of PURL strings for git repositories.
+.. list-table:: Examples of PURL strings for git repositories.
    :widths: 50 50
    :header-rows: 1
 
@@ -132,6 +132,39 @@ You can also provide the PURL string together with the repository path. In this 
   ./run_macaron.sh analyze -purl <purl_string> -rp <repo_path> -b <branch> -d <digest>
 
 .. note:: When providing the PURL and the repository path, both the branch name and commit digest must be provided as well.
+
+''''''''''''''''''''''''''''''''''''''
+Providing an artifact as a PURL string
+''''''''''''''''''''''''''''''''''''''
+
+The PURL format supports artifacts as well as repositories, and Macaron supports (some of) these too.
+
+.. code-block::
+
+  pkg:<package_type>/<artifact_details>
+
+Where ``artifact_details`` varies based on the provided ``package_type``. Examples for those currently supported by Macaron are as follows:
+
+.. list-table:: Examples of PURL strings for artifacts.
+   :widths: 50 50
+   :header-rows: 1
+
+   * - Package Type
+     - PURL String
+   * - Maven (Java)
+     - ``pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1``
+   * - PyPi (Python)
+     - ``pkg:pypi/django@1.11.1``
+   * - Cargo (Rust)
+     - ``pkg:cargo/rand@0.7.2``
+   * - NuGet (.Net)
+     - ``pkg:nuget/EnterpriseLibrary.Common@6.0.1304``
+   * - NPM (NodeJS)
+     - ``pkg:npm/%40angular/animation@12.3.1``
+
+For more detailed information on converting a given artifact into a PURL, see `PURL Specification <https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst>`_ and `PURL Types <https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst>`_
+
+.. note:: If a repository is not also provided, Macaron will try to discover it based on the artifact purl. For this to work, ``find_repos`` in the configuration file **must be enabled**\. See `Analyzing more dependencies <#more-deps>`_ for more information about the configuration options of the Repository Finding feature.
 
 -------------------------------------------------
 Verifying provenance expectations in CUE language
@@ -191,6 +224,8 @@ With the example above, the generated output reports can be seen here:
 - `micronaut-core.html <../_static/examples/micronaut-projects/micronaut-core/analyze_with_sbom/micronaut-core.html>`__
 - `micronaut-core.json <../_static/examples/micronaut-projects/micronaut-core/analyze_with_sbom/micronaut-core.json>`__
 
+.. _more-deps:
+
 '''''''''''''''''''''''''''
 Analyzing more dependencies
 '''''''''''''''''''''''''''
@@ -203,30 +238,38 @@ This feature is enabled by default. To disable, or configure its behaviour in ot
 
 See :ref:`dump-defaults <action_dump_defaults>`, the CLI command to dump the default configurations in ``defaults.ini``. After making changes, see :ref:`analyze <analyze-action-cli>` CLI command for the option to pass the modified ``defaults.ini`` file.
 
-Within the configuration file under the ``repofinder.java`` header, five options exist: ``find_repos``, ``artifact_repositories``, ``repo_pom_paths``, ``find_parents``, ``artifact_ignore_list``. These options behave as follows:
+Within the configuration file under the ``repofinder.java`` header, three options exist: ``artifact_repositories``, ``repo_pom_paths``, ``find_parents``. These options behave as follows:
 
-- ``find_repos`` (Values: True or False) - Enables or disables the Repository Finding feature.
 - ``artifact_repositories`` (Values: List of URLs) - Determines the remote artifact repositories to attempt to retrieve dependency information from.
 - ``repo_pom_paths`` (Values: List of POM tags) - Determines where to search for repository information in the POM files. E.g. scm.url.
 - ``find_parents`` (Values: True or False) - When enabled, the Repository Finding feature will also search for repository URLs in parents POM files of the current dependency.
-- ``artifact_ignore_list`` (Values: List of GAs) - The Repository Finding feature will skip any artifact in this list. Format is "GroupId":"ArtifactId". E.g. org.apache.maven:maven
+
+Under the related header ``repofinder``, two more options exist: ``find_repos``, and ``use_open_source_insights``:
+
+- ``find_repos`` (Values: True or False) - Enables or disables the Repository Finding feature.
+- ``use_open_source_insights`` (Values: True or False) - Enables or disables use of Google's Open Source Insights API.
 
 .. note:: Finding repositories requires at least one remote call, adding some additional overhead to an analysis run.
+
+.. note:: Google's Open Source Insights API is currently used to find repositories for: Python, Rust, .Net, NodeJS
 
 An example configuration file for utilising this feature:
 
 .. code-block:: ini
 
-    [repofinder.java]
+    [repofinder]
     find_repos = True
+    use_open_source_insights = True
+
+    [repofinder.java]
     artifact_repositories = https://repo.maven.apache.org/maven2
     repo_pom_paths =
         scm.url
         scm.connection
         scm.developerConnection
     find_parents = True
-    artifact_ignore_list =
-        org.apache.maven:maven
+
+
 
 -------------------------------------
 Analyzing a locally cloned repository

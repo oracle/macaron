@@ -40,11 +40,3 @@ macaron.dependency\_analyzer.dependency\_resolver module
    :members:
    :undoc-members:
    :show-inheritance:
-
-macaron.dependency\_analyzer.java\_repo\_finder module
-------------------------------------------------------
-
-.. automodule:: macaron.dependency_analyzer.java_repo_finder
-   :members:
-   :undoc-members:
-   :show-inheritance:

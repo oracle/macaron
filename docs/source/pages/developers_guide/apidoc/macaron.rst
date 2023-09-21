@@ -19,6 +19,7 @@ Subpackages
    macaron.output_reporter
    macaron.parsers
    macaron.policy_engine
+   macaron.repo_finder
    macaron.slsa_analyzer
 
 Submodules
