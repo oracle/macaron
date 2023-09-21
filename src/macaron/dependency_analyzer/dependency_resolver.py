@@ -283,15 +283,21 @@ class DependencyAnalyzer(ABC):
         dict[str, DependencyInfo]
             A dictionary where artifacts are grouped based on ``artifactId:groupId``.
         """
+        deps_resolved: dict[str, DependencyInfo] = {}
+
         if sbom_path:
             logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
             # Import here to avoid circular dependency
             # pylint: disable=import-outside-toplevel, cyclic-import
             from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
 
-            return get_deps_from_sbom(sbom_path)
+            deps_resolved = get_deps_from_sbom(sbom_path)
 
-        deps_resolved: dict[str, DependencyInfo] = {}
+            # Use repo finder to find more repositories to analyze.
+            if defaults.getboolean("repofinder", "find_repos"):
+                DependencyAnalyzer._resolve_more_dependencies(deps_resolved)
+
+            return deps_resolved
 
         build_tools = main_ctx.dynamic_data["build_spec"]["tools"]
         if not build_tools:
