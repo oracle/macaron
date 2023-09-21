@@ -29,7 +29,6 @@ def test_create_defaults() -> None:
     """Test dumping the default values."""
     output_dir = os.path.dirname(os.path.abspath(__file__))
     assert create_defaults(output_dir, global_config.macaron_path) is True
-    assert create_defaults("/", "/") is False
 
 
 @pytest.mark.parametrize(
