@@ -33,34 +33,10 @@ macaron.dependency\_analyzer.cyclonedx\_mvn module
    :undoc-members:
    :show-inheritance:
 
-macaron.dependency\_analyzer.cyclonedx\_pip module
---------------------------------------------------
-
-.. automodule:: macaron.dependency_analyzer.cyclonedx_pip
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-macaron.dependency\_analyzer.cyclonedx\_poetry module
------------------------------------------------------
-
-.. automodule:: macaron.dependency_analyzer.cyclonedx_poetry
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 macaron.dependency\_analyzer.dependency\_resolver module
 --------------------------------------------------------
 
 .. automodule:: macaron.dependency_analyzer.dependency_resolver
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-macaron.dependency\_analyzer.pip\_resolver module
--------------------------------------------------
-
-.. automodule:: macaron.dependency_analyzer.pip_resolver
    :members:
    :undoc-members:
    :show-inheritance:

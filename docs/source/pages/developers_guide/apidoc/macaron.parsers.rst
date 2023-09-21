@@ -32,11 +32,3 @@ macaron.parsers.bashparser module
    :members:
    :undoc-members:
    :show-inheritance:
-
-macaron.parsers.limited\_xmlparser module
------------------------------------------
-
-.. automodule:: macaron.parsers.limited_xmlparser
-   :members:
-   :undoc-members:
-   :show-inheritance:
