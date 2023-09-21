@@ -564,10 +564,14 @@ class Analyzer:
                 # If a PURL but no repository path is provided, we try to extract the repository path from the PURL.
                 # Note that we can't always extract the repository path from any provided PURL.
                 repo = ""
-                converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)  # type: ignore[arg-type]
-                if converted_repo_path is None:
-                    # Try to find repo from PURL
-                    repo = repo_finder.find_repo(parsed_purl)  # type: ignore[arg-type]
+                converted_repo_path = None
+                # parsed_purl cannot be None here, but mypy cannot detect that without some extra help.
+                if parsed_purl is not None:
+                    converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)
+                    if converted_repo_path is None:
+                        # Try to find repo from PURL
+                        repo = repo_finder.find_repo(parsed_purl)
+
                 return Analyzer.AnalysisTarget(
                     parsed_purl=parsed_purl,
                     repo_path=converted_repo_path or repo,

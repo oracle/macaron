@@ -24,17 +24,19 @@ class TestDependencyAnalyzer(MacaronTestCase):
     def test_merge_config(self) -> None:
         """Test merging the manual and automatically resolved configurations."""
         # Mock automatically resolved dependencies.
-        purl_string_1 = "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.14.0-SNAPSHOT?type=bundle"
-        purl_string_2 = "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.14.0-SNAPSHOT?type=bundle"
+        jackson_annotations_purl = (
+            "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.14.0-SNAPSHOT?type=bundle"
+        )
+        jackson_core_purl = "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.14.0-SNAPSHOT?type=bundle"
         auto_deps = {
             "com.fasterxml.jackson.core:jackson-annotations": DependencyInfo(
-                purl=PackageURL.from_string(purl_string_1),
+                purl=PackageURL.from_string(jackson_annotations_purl),
                 url="https://github.com/FasterXML/jackson-annotations",
                 note="",
                 available=SCMStatus.AVAILABLE,
             ),
             "com.fasterxml.jackson.core:jackson-core": DependencyInfo(
-                purl=PackageURL.from_string(purl_string_2),
+                purl=PackageURL.from_string(jackson_core_purl),
                 url="https://github.com/FasterXML/jackson-core",
                 note="",
                 available=SCMStatus.AVAILABLE,
@@ -45,14 +47,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
         expected_result_no_deps = [
             {
                 "id": "com.fasterxml.jackson.core:jackson-annotations",
-                "purl": PackageURL(
-                    type="maven",
-                    namespace="com.fasterxml.jackson.core",
-                    name="jackson-annotations",
-                    version="2.14.0-SNAPSHOT",
-                    qualifiers={"type": "bundle"},
-                    subpath=None,
-                ),
+                "purl": jackson_annotations_purl,
                 "path": "https://github.com/FasterXML/jackson-annotations",
                 "branch": "",
                 "digest": "",
@@ -61,14 +56,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "com.fasterxml.jackson.core:jackson-core",
-                "purl": PackageURL(
-                    type="maven",
-                    namespace="com.fasterxml.jackson.core",
-                    name="jackson-core",
-                    version="2.14.0-SNAPSHOT",
-                    qualifiers={"type": "bundle"},
-                    subpath=None,
-                ),
+                "purl": jackson_core_purl,
                 "path": "https://github.com/FasterXML/jackson-core",
                 "branch": "",
                 "digest": "",
@@ -98,14 +86,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "com.fasterxml.jackson.core:jackson-annotations",
-                "purl": PackageURL(
-                    type="maven",
-                    namespace="com.fasterxml.jackson.core",
-                    name="jackson-annotations",
-                    version="2.14.0-SNAPSHOT",
-                    qualifiers={"type": "bundle"},
-                    subpath=None,
-                ),
+                "purl": jackson_annotations_purl,
                 "path": "https://github.com/FasterXML/jackson-annotations",
                 "branch": "",
                 "digest": "",
@@ -114,14 +95,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "com.fasterxml.jackson.core:jackson-core",
-                "purl": PackageURL(
-                    type="maven",
-                    namespace="com.fasterxml.jackson.core",
-                    name="jackson-core",
-                    version="2.14.0-SNAPSHOT",
-                    qualifiers={"type": "bundle"},
-                    subpath=None,
-                ),
+                "purl": jackson_core_purl,
                 "path": "https://github.com/FasterXML/jackson-core",
                 "branch": "",
                 "digest": "",

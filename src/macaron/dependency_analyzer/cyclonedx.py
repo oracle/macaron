@@ -178,10 +178,12 @@ def convert_components_to_artifacts(
             else:
                 # TODO remove maven assumption when optional non-existence of the component's purl is handled
                 # See https://github.com/oracle/macaron/issues/464
-                purl_string = f"pkg:maven/{component.get('group')}/{component.get('name')}"
-                if component.get("version"):
-                    purl_string = f"{purl_string}@{component.get('version')}"
-                purl = PackageURL.from_string(purl_string)
+                purl = PackageURL(
+                    type="maven",
+                    namespace=component.get("group"),
+                    name=component.get("name"),
+                    version=component.get("version") or None,
+                )
 
             # According to PEP-0589 all keys must be present in a TypedDict.
             # See https://peps.python.org/pep-0589/#totality

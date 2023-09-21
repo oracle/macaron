@@ -163,9 +163,14 @@ class DependencyAnalyzer(ABC):
             latest_deps[key] = item
         else:
             try:
+                # These are stored as variables so mypy does not complain about None values (union-attr)
+                latest_value_purl = latest_value.get("purl")
+                item_purl = item.get("purl")
                 if (
-                    (latest_version := latest_value.get("purl").version)  # type: ignore[union-attr]
-                    and (item_version := item.get("purl").version)  # type: ignore[union-attr]
+                    latest_value_purl is not None
+                    and item_purl is not None
+                    and (latest_version := latest_value_purl.version)
+                    and (item_version := item_purl.version)
                     and version.Version(latest_version) < version.Version(item_version)
                 ):
                     latest_deps[key] = item
@@ -216,7 +221,7 @@ class DependencyAnalyzer(ABC):
                 Configuration(
                     {
                         "id": key,
-                        "purl": value.get("purl"),
+                        "purl": str(value.get("purl")),
                         "path": value.get("url"),
                         "branch": "",
                         "digest": "",
