@@ -7,7 +7,6 @@ import logging
 from urllib.parse import quote as encode
 
 from packageurl import PackageURL
-from requests.exceptions import ReadTimeout
 
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_validator import find_valid_repository_url
@@ -87,11 +86,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
             return [f"{base_url}/versions/{version}"]
 
         # Find the latest version.
-        try:
-            response = send_get_http_raw(base_url, {})
-        except ReadTimeout:
-            logger.debug("Failed to retrieve version (timeout): %s:%s", namespace, name)
-            return []
+        response = send_get_http_raw(base_url, {})
 
         if not response:
             return []
@@ -120,11 +115,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
         str :
             The retrieved file data or an empty string.
         """
-        try:
-            response = send_get_http_raw(url, {})
-        except ReadTimeout:
-            logger.debug("Failed to retrieve metadata (timeout): %s", url)
-            return ""
+        response = send_get_http_raw(url, {})
 
         if not response:
             return ""

@@ -9,7 +9,6 @@ from xml.etree.ElementTree import Element  # nosec
 import defusedxml.ElementTree
 from defusedxml.ElementTree import fromstring
 from packageurl import PackageURL
-from requests.exceptions import ReadTimeout
 
 from macaron.config.defaults import defaults
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
@@ -138,11 +137,7 @@ class JavaRepoFinder(BaseRepoFinder):
         str :
             The retrieved file data or an empty string.
         """
-        try:
-            response = send_get_http_raw(url, {})
-        except ReadTimeout:
-            logger.debug("Failed to retrieve pom (timeout): %s", url)
-            return ""
+        response = send_get_http_raw(url, {})
 
         if not response:
             return ""
