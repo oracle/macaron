@@ -9,6 +9,7 @@ HOMEDIR=$2
 RESOURCES=$WORKSPACE/src/macaron/resources
 COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
+TEST_REPO_FINDER=$WORKSPACE/tests/e2e/repo_finder/repo_finder.py
 RUN_MACARON="python -m macaron -o $WORKSPACE/output"
 RESULT_CODE=0
 
@@ -531,4 +532,16 @@ if [ $RESULT_CODE -ne 0 ];
 then
     echo -e "Expected zero status code but got $RESULT_CODE."
     exit 1
+fi
+
+# Testing the Repo Finder's remote calls.
+# This requires the 'packageurl' Python module
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Testing Repo Finder functionality."
+echo -e "----------------------------------------------------------------------------------\n"
+python $TEST_REPO_FINDER || log_fail
+if [ $? -ne 0 ];
+then
+    echo -e "Expect zero status code but got $?."
+    log_fail
 fi

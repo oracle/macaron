@@ -17,6 +17,14 @@ macaron.slsa\_analyzer.build\_tool.base\_build\_tool module
    :undoc-members:
    :show-inheritance:
 
+macaron.slsa\_analyzer.build\_tool.docker module
+------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.build_tool.docker
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.slsa\_analyzer.build\_tool.gradle module
 ------------------------------------------------
 

@@ -9,11 +9,14 @@ import os
 from collections.abc import Iterable
 from pathlib import Path
 
+from packageurl import PackageURL
+
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, DependencyInfo
 from macaron.errors import MacaronError
 from macaron.output_reporter.scm import SCMStatus
+from macaron.repo_finder.repo_validator import find_valid_repository_url
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -160,21 +163,32 @@ def convert_components_to_artifacts(
     Returns
     -------
     dict
-        A dictionary where dependency artifacts are grouped based on "artifactId:groupId".
+        A dictionary where dependency artifacts are grouped based on "groupId:artifactId".
     """
     all_versions: dict[str, list[DependencyInfo]] = {}  # Stores all the versions of dependencies for debugging.
     latest_deps: dict[str, DependencyInfo] = {}  # Stores the latest version of dependencies.
     url_to_artifact: dict[str, set] = {}  # Used to detect artifacts that have similar repos.
     for component in components:
         try:
+            # TODO make this function language agnostic when CycloneDX SBOM processing also is.
+            # See https://github.com/oracle/macaron/issues/464
             key = f"{component.get('group')}:{component.get('name')}"
+            if component.get("purl"):
+                purl = PackageURL.from_string(str(component.get("purl")))
+            else:
+                # TODO remove maven assumption when optional non-existence of the component's purl is handled
+                # See https://github.com/oracle/macaron/issues/464
+                purl = PackageURL(
+                    type="maven",
+                    namespace=component.get("group"),
+                    name=component.get("name"),
+                    version=component.get("version") or None,
+                )
+
             # According to PEP-0589 all keys must be present in a TypedDict.
             # See https://peps.python.org/pep-0589/#totality
             item = DependencyInfo(
-                version=component.get("version") or "",
-                group=component.get("group") or "",
-                name=component.get("name") or "",
-                purl=component.get("purl") or "",
+                purl=purl,
                 url="",
                 note="",
                 available=SCMStatus.AVAILABLE,
@@ -187,10 +201,10 @@ def convert_components_to_artifacts(
                 # IN case of a build error, we use this as a heuristic to avoid analyzing
                 # submodules that produce development artifacts in the same repo.
                 if (
-                    "snapshot"
-                    in (item.get("version") or "").lower()  # or "" is not necessary but mypy produces a FP otherwise.
+                    "snapshot" in (purl.version or "").lower()
+                    # or "" is not necessary but mypy produces a FP otherwise.
                     and root_component
-                    and item.get("group") == root_component.get("group")
+                    and purl.namespace == root_component.get("group")
                 ):
                     continue
                 logger.debug(
@@ -199,7 +213,7 @@ def convert_components_to_artifacts(
                 )
             else:
                 # Find a valid URL.
-                item["url"] = DependencyAnalyzer.find_valid_url(
+                item["url"] = find_valid_repository_url(
                     link.get("url") for link in component.get("externalReferences")  # type: ignore
                 )
 
@@ -228,7 +242,7 @@ def get_deps_from_sbom(sbom_path: str | Path) -> dict[str, DependencyInfo]:
 
     Returns
     -------
-        A dictionary where dependency artifacts are grouped based on "artifactId:groupId".
+        A dictionary where dependency artifacts are grouped based on "groupId:artifactId".
     """
     return convert_components_to_artifacts(
         get_dep_components(

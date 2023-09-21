@@ -5,13 +5,10 @@
 
 import logging
 import os
-import subprocess  # nosec B404
 import sys
-from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import NamedTuple
-from urllib.parse import ParseResult, urlunparse
 
 import sqlalchemy.exc
 from git import InvalidGitRepositoryError
@@ -20,21 +17,15 @@ from pydriller.git import Git
 from sqlalchemy.orm import Session
 
 from macaron import __version__
-from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
 from macaron.database.table_definitions import Analysis, Component, Repository
-from macaron.dependency_analyzer import (
-    DependencyAnalyzer,
-    DependencyAnalyzerError,
-    DependencyInfo,
-    NoneDependencyAnalyzer,
-)
-from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
+from macaron.dependency_analyzer import DependencyAnalyzer, DependencyInfo
 from macaron.errors import CloneError, DuplicateError, InvalidPURLError, PURLNotFoundError, RepoCheckOutError
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
+from macaron.repo_finder import repo_finder
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
@@ -165,7 +156,7 @@ class Analyzer:
                 if skip_deps:
                     logger.info("Skipping automatic dependency analysis...")
                 else:
-                    deps_resolved = self.resolve_dependencies(main_record.context, sbom_path)
+                    deps_resolved = DependencyAnalyzer.resolve_dependencies(main_record.context, sbom_path)
 
                 # Merge the automatically resolved dependencies with the manual configuration.
                 deps_config = DependencyAnalyzer.merge_configs(deps_config, deps_resolved)
@@ -252,98 +243,6 @@ class Analyzer:
 
         for reporter in self.reporters:
             reporter.generate(output_target_path, report)
-
-    def resolve_dependencies(self, main_ctx: AnalyzeContext, sbom_path: str) -> dict[str, DependencyInfo]:
-        """Resolve the dependencies of the main target repo.
-
-        Parameters
-        ----------
-        main_ctx : AnalyzeContext
-            The context of object of the target repository.
-        sbom_path: str
-            The path to the SBOM.
-
-        Returns
-        -------
-        dict[str, DependencyInfo]
-            A dictionary where artifacts are grouped based on ``artifactId:groupId``.
-        """
-        if sbom_path:
-            logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
-            return get_deps_from_sbom(sbom_path)
-
-        deps_resolved: dict[str, DependencyInfo] = {}
-
-        build_tools = main_ctx.dynamic_data["build_spec"]["tools"]
-        if not build_tools:
-            logger.info("Unable to find any valid build tools.")
-            return {}
-
-        # Grab dependencies for each build tool, collate all into the deps_resolved
-        for build_tool in build_tools:
-            try:
-                dep_analyzer = build_tool.get_dep_analyzer(main_ctx.component.repository.fs_path)
-            except DependencyAnalyzerError as error:
-                logger.error("Unable to find a dependency analyzer for %s: %s", build_tool.name, error)
-                return {}
-
-            if isinstance(dep_analyzer, NoneDependencyAnalyzer):
-                logger.info(
-                    "Dependency analyzer is not available for %s",
-                    build_tool.name,
-                )
-                return {}
-
-            # Start resolving dependencies.
-            logger.info(
-                "Running %s version %s dependency analyzer on %s",
-                dep_analyzer.tool_name,
-                dep_analyzer.tool_version,
-                main_ctx.component.repository.fs_path,
-            )
-
-            log_path = os.path.join(
-                global_config.build_log_path,
-                f"{main_ctx.component.report_file_name}.{dep_analyzer.tool_name}.log",
-            )
-
-            # Clean up existing SBOM files.
-            dep_analyzer.remove_sboms(main_ctx.component.repository.fs_path)
-
-            commands = dep_analyzer.get_cmd()
-            working_dirs: Iterable[Path] = build_tool.get_build_dirs(main_ctx.component.repository.fs_path)
-            for working_dir in working_dirs:
-                # Get the absolute path to use as the working dir in the subprocess.
-                working_dir = Path(main_ctx.component.repository.fs_path).joinpath(working_dir)
-
-                try:
-                    # Suppressing Bandit's B603 report because the repo paths are validated.
-                    analyzer_output = subprocess.run(  # nosec B603
-                        commands,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT,
-                        check=True,
-                        cwd=str(working_dir),
-                        timeout=defaults.getint("dependency.resolver", "timeout", fallback=1200),
-                    )
-                    with open(log_path, mode="a", encoding="utf-8") as log_file:
-                        log_file.write(analyzer_output.stdout.decode("utf-8"))
-
-                except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
-                    logger.error(error)
-                    with open(log_path, mode="a", encoding="utf-8") as log_file:
-                        log_file.write(error.output.decode("utf-8"))
-                except FileNotFoundError as error:
-                    logger.error(error)
-
-                # We collect the generated SBOM as a best effort, even if the build exits with errors.
-                # TODO: add improvements to help the SBOM build succeed as much as possible.
-                # Update deps_resolved with new dependencies.
-                deps_resolved |= dep_analyzer.collect_dependencies(str(working_dir))
-
-            logger.info("Stored dependency resolver log for %s to %s.", dep_analyzer.tool_name, log_path)
-
-        return deps_resolved
 
     def run_single(
         self,
@@ -498,80 +397,6 @@ class Analyzer:
 
         return repository
 
-    @staticmethod
-    def to_domain_from_known_purl_types(purl_type: str) -> str | None:
-        """Return the git service domain from a known purl type.
-
-        This method is used to handle the cases where the purl type value is not the git domain but a pre-defined
-        repo-based type in https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst.
-
-        Note that this method will be updated when there are new pre-defined types as per the PURL specification.
-
-        Parameters
-        ----------
-        purl_type : str
-            The type field of the PURL.
-
-        Returns
-        -------
-        str | None
-            The git service domain corresponding to the purl type or None if the purl type is unknown.
-        """
-        known_types = {"github": "github.com", "bitbucket": "bitbucket.org"}
-        return known_types.get(purl_type, None)
-
-    @staticmethod
-    def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
-        """Return the repository path from the PURL string.
-
-        This method only supports converting a PURL with the following format:
-
-            pkg:<type>/<namespace>/<name>[...]
-
-        Where ``type`` could be either:
-        - The pre-defined repository-based PURL type as defined in
-        https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst
-
-        - The supprted git service domains (e.g. ``github.com``) defined in ``available_domains``.
-
-        The repository path will be generated with the following format ``https://<type>/<namespace>/<name>``.
-
-        Parameters
-        ----------
-        purl : PackageURL
-            The parsed PURL to convert to the repository path.
-        available_domains: list[str]
-            The list of available domains
-
-        Returns
-        -------
-        str | None
-            The URL to the repository which the PURL is referring to or None if we cannot convert it.
-        """
-        # TODO: move this method to the repo finder in https://github.com/oracle/macaron/pull/388.
-        domain = Analyzer.to_domain_from_known_purl_types(purl.type) or (
-            purl.type if purl.type in available_domains else None
-        )
-        if not domain:
-            logger.error("The PURL type of %s is not valid as a repository type.", purl.to_string())
-            return None
-
-        if not purl.namespace:
-            logger.error("Expecting a non-empty namespace from %s.", purl.to_string())
-            return None
-
-        # TODO: Handle the version tag and commit digest if they are given in the PURL.
-        return urlunparse(
-            ParseResult(
-                scheme="https",
-                netloc=domain,
-                path=os.path.join(purl.namespace, purl.name),
-                params="",
-                query="",
-                fragment="",
-            )
-        )
-
     class AnalysisTarget(NamedTuple):
         """Contains the resolved details of a software component to be analyzed.
 
@@ -702,20 +527,32 @@ class Analyzer:
         InvalidPURLError
             If the PURL provided from the user is invalid.
         """
-        # Due to the current design of Configuration class. purl, repo_path, branch and digest are initialized
-        # as empty strings and we assumed that they are always set with input values as non-empty strings.
+        # Due to the current design of Configuration class, repo_path, branch and digest are initialized
+        # as empty strings, and we assumed that they are always set with input values as non-empty strings.
         # Therefore, their true types are ``str``, and an empty string indicates that the input value is not provided.
-        purl_input_str: str = config.get_value("purl")
+        # The purl might be a PackageURL type, a string, or None, which should be reduced down to an optional
+        # PackageURL type.
+        parsed_purl: PackageURL | None
+        if config.get_value("purl") is None or config.get_value("purl") == "":
+            parsed_purl = None
+        elif isinstance(config.get_value("purl"), PackageURL):
+            parsed_purl = config.get_value("purl")
+        else:
+            try:
+                parsed_purl = PackageURL.from_string(config.get_value("purl"))
+            except ValueError as error:
+                raise InvalidPURLError(f"Invalid input PURL: {config.get_value('purl')}") from error
+
         repo_path_input: str = config.get_value("path")
         input_branch: str = config.get_value("branch")
         input_digest: str = config.get_value("digest")
 
-        match (purl_input_str, repo_path_input):
-            case ("", ""):
+        match (parsed_purl, repo_path_input):
+            case (None, ""):
                 return Analyzer.AnalysisTarget(parsed_purl=None, repo_path="", branch="", digest="")
 
-            case ("", _):
-                # If only the repository path is provided, we will use the user-provided repository path to created the
+            case (None, _):
+                # If only the repository path is provided, we will use the user-provided repository path to create the
                 # ``Repository`` instance. Note that if this case happen, the software component will be initialized
                 # with the PURL generated from the ``Repository`` instance (i.e. as a PURL pointing to a git repository
                 # at a specific commit). For example: ``pkg:github.com/org/name@<commit_digest>``.
@@ -724,33 +561,28 @@ class Analyzer:
                 )
 
             case (_, ""):
-                # If a PURL but no repository path are provided, we try to extract the repository path from the PURL.
+                # If a PURL but no repository path is provided, we try to extract the repository path from the PURL.
                 # Note that we can't always extract the repository path from any provided PURL.
-                try:
-                    parsed_purl = PackageURL.from_string(purl_input_str)
-                except ValueError as error:
-                    raise InvalidPURLError(f"The package url {purl_input_str} is not valid.") from error
+                repo = ""
+                converted_repo_path = None
+                # parsed_purl cannot be None here, but mypy cannot detect that without some extra help.
+                if parsed_purl is not None:
+                    converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)
+                    if converted_repo_path is None:
+                        # Try to find repo from PURL
+                        repo = repo_finder.find_repo(parsed_purl)
 
-                converted_repo_path = Analyzer.to_repo_path(parsed_purl, available_domains)
-                # TODO: If ``converted_repo_path`` is None, this means that the PURL given by the user if not pointing
-                # to a git repository (e.g ``pkg:maven/apache/maven@1.0.0``). Resolving the repository
-                # path from such PURl string will be handled in https://github.com/oracle/macaron/pull/388.
                 return Analyzer.AnalysisTarget(
                     parsed_purl=parsed_purl,
-                    repo_path=converted_repo_path or "",
+                    repo_path=converted_repo_path or repo,
                     branch=input_branch,
                     digest=input_digest,
                 )
 
             case (_, _):
                 # If both the PURL and the repository are provided, we will use the user-provided repository path to
-                # created the ``Repository`` instance later on. This ``Repository`` instance is attached to the
+                # create the ``Repository`` instance later on. This ``Repository`` instance is attached to the
                 # software component initialized from the user-provided PURL.
-                try:
-                    parsed_purl = PackageURL.from_string(purl_input_str)
-                except ValueError as error:
-                    raise InvalidPURLError(f"The package url {purl_input_str} is not valid.") from error
-
                 return Analyzer.AnalysisTarget(
                     parsed_purl=parsed_purl, repo_path=repo_path_input, branch=input_branch, digest=input_digest
                 )

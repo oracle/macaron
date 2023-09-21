@@ -7,6 +7,8 @@ This module tests the DependencyAnalyzer.
 
 from pathlib import Path
 
+from packageurl import PackageURL
+
 from macaron.config.target_config import TARGET_CONFIG_SCHEMA, Configuration
 from macaron.dependency_analyzer import DependencyAnalyzer, DependencyInfo
 from macaron.output_reporter.scm import SCMStatus
@@ -22,21 +24,19 @@ class TestDependencyAnalyzer(MacaronTestCase):
     def test_merge_config(self) -> None:
         """Test merging the manual and automatically resolved configurations."""
         # Mock automatically resolved dependencies.
+        jackson_annotations_purl = (
+            "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.14.0-SNAPSHOT?type=bundle"
+        )
+        jackson_core_purl = "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.14.0-SNAPSHOT?type=bundle"
         auto_deps = {
             "com.fasterxml.jackson.core:jackson-annotations": DependencyInfo(
-                version="2.14.0-SNAPSHOT",
-                group="com.fasterxml.jackson.core",
-                name="jackson-annotations",
-                purl="pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.14.0-SNAPSHOT?type=bundle",
+                purl=PackageURL.from_string(jackson_annotations_purl),
                 url="https://github.com/FasterXML/jackson-annotations",
                 note="",
                 available=SCMStatus.AVAILABLE,
             ),
             "com.fasterxml.jackson.core:jackson-core": DependencyInfo(
-                version="2.14.0-SNAPSHOT",
-                group="com.fasterxml.jackson.core",
-                name="jackson-core",
-                purl="pkg:maven/com.fasterxml.jackson.core/jackson-core@2.14.0-SNAPSHOT?type=bundle",
+                purl=PackageURL.from_string(jackson_core_purl),
                 url="https://github.com/FasterXML/jackson-core",
                 note="",
                 available=SCMStatus.AVAILABLE,
@@ -47,7 +47,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
         expected_result_no_deps = [
             {
                 "id": "com.fasterxml.jackson.core:jackson-annotations",
-                "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.14.0-SNAPSHOT?type=bundle",
+                "purl": jackson_annotations_purl,
                 "path": "https://github.com/FasterXML/jackson-annotations",
                 "branch": "",
                 "digest": "",
@@ -56,7 +56,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "com.fasterxml.jackson.core:jackson-core",
-                "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.14.0-SNAPSHOT?type=bundle",
+                "purl": jackson_core_purl,
                 "path": "https://github.com/FasterXML/jackson-core",
                 "branch": "",
                 "digest": "",
@@ -86,7 +86,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "com.fasterxml.jackson.core:jackson-annotations",
-                "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.14.0-SNAPSHOT?type=bundle",
+                "purl": jackson_annotations_purl,
                 "path": "https://github.com/FasterXML/jackson-annotations",
                 "branch": "",
                 "digest": "",
@@ -95,7 +95,7 @@ class TestDependencyAnalyzer(MacaronTestCase):
             },
             {
                 "id": "com.fasterxml.jackson.core:jackson-core",
-                "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.14.0-SNAPSHOT?type=bundle",
+                "purl": jackson_core_purl,
                 "path": "https://github.com/FasterXML/jackson-core",
                 "branch": "",
                 "digest": "",
