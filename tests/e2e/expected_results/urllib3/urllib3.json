@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-22 13:49:11"
+        "timestamps": "2023-09-22 16:05:00"
     },
     "target": {
         "info": {
@@ -271,8 +271,8 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 5,
-                "PASSED": 6,
+                "FAILED": 4,
+                "PASSED": 7,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
@@ -331,6 +331,17 @@
                     "result_type": "PASSED"
                 },
                 {
+                    "check_id": "mcn_provenance_expectation_1",
+                    "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the expected value.",
+                    "slsa_requirements": [
+                        "Provenance conforms with expectations - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Successfully verified the expectation against provenance."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
                     "check_id": "mcn_provenance_level_three_1",
                     "check_description": "Check whether the target has SLSA provenance level 3.",
                     "slsa_requirements": [
@@ -366,17 +377,6 @@
                     ],
                     "justification": [
                         "Unable to find a publishing timestamp for the artifact."
-                    ],
-                    "result_type": "FAILED"
-                },
-                {
-                    "check_id": "mcn_provenance_expectation_1",
-                    "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the expected value.",
-                    "slsa_requirements": [
-                        "Provenance conforms with expectations - SLSA Level 3"
-                    ],
-                    "justification": [
-                        "Failed to successfully verify expectation against any provenance files."
                     ],
                     "result_type": "FAILED"
                 },

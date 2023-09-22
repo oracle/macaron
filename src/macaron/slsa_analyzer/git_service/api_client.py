@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import logging
-import threading
 from collections.abc import Sequence
 from enum import Enum
 from typing import NamedTuple
@@ -16,7 +15,6 @@ from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.util import construct_query, download_github_build_log, send_get_http, send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
-thread_local = threading.local()
 
 
 class GitHubReleaseAsset(NamedTuple):
