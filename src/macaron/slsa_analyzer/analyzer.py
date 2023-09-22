@@ -533,11 +533,15 @@ class Analyzer:
         # The purl might be a PackageURL type, a string, or None, which should be reduced down to an optional
         # PackageURL type.
         parsed_purl: PackageURL | None
+        logger.info(type(config.get_value("purl")))
         if config.get_value("purl") is None or config.get_value("purl") == "":
+            logger.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
             parsed_purl = None
         elif isinstance(config.get_value("purl"), PackageURL):
+            logger.info("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
             parsed_purl = config.get_value("purl")
         else:
+            logger.info("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
             try:
                 parsed_purl = PackageURL.from_string(config.get_value("purl"))
             except ValueError as error:
