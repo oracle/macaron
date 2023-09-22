@@ -1,16 +1,16 @@
 {
+    "component_satisfies_policy": [
+        [
+            "101",
+            "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac",
+            "auth-provenance"
+        ]
+    ],
     "passed_policies": [
         [
             "auth-provenance"
         ]
     ],
-    "failed_policies": [],
     "component_violates_policy": [],
-    "component_satisfies_policy": [
-        [
-            "121",
-            "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac",
-            "auth-provenance"
-        ]
-    ]
+    "failed_policies": []
 }
