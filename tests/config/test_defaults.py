@@ -31,6 +31,15 @@ def test_create_defaults() -> None:
     assert create_defaults(output_dir, global_config.macaron_path) is True
 
 
+@pytest.mark.xfail(
+    os.geteuid() == 0,
+    reason="Only effective for non-root users",
+)
+def test_create_defaults_without_permission() -> None:
+    """Test dumping default config in cases where the user does not have write permission to the output location."""
+    assert create_defaults(output_path="/", cwd_path="/") is False
+
+
 @pytest.mark.parametrize(
     ("section", "item", "delimiter", "strip", "duplicated_ok", "expect"),
     [
