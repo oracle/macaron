@@ -42,8 +42,10 @@ def test_go_build_tool(
     """Test the Go build tool."""
     base_dir = Path(__file__).parent
 
-    # Since there's issues having 2 go.mod files in the same project, we make
-    # it on the fly for this test
+    # Making directories with a go.mod but no actual Go project seems to cause issues
+    # for the pre-commit hooks (errors like go: warning: "./..." matched no packages);
+    # as such it is easiest for this test to just create/delete the go.mod files
+    # macaron looks for on the fly instead of managing a proper project within the mock repos.
     proj_dir = tmp_path.joinpath(folder)
     proj_dir.mkdir(parents=True)
 

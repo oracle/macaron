@@ -101,7 +101,7 @@ $RUN_MACARON analyze -rp https://github.com/timyarkov/docker_test -b main -d 404
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "uiv-lib/uiv: Analysing the repo path, the branch name and the commit digest for an NPM project,"
+echo "uiv-lib/uiv: Analysing the repo path, the branch name and the commit digest for an npm project,"
 echo "skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/uiv/uiv.json
