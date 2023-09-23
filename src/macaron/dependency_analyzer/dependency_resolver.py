@@ -268,13 +268,15 @@ class DependencyAnalyzer(ABC):
         return True
 
     @staticmethod
-    def resolve_dependencies(main_ctx: Any) -> dict[str, DependencyInfo]:
+    def resolve_dependencies(main_ctx: Any, sbom_path: str) -> dict[str, DependencyInfo]:
         """Resolve the dependencies of the main target repo.
 
         Parameters
         ----------
         main_ctx : Any (AnalyzeContext)
             The context of object of the target repository.
+        sbom_path: str
+            The path to the SBOM.
 
         Returns
         -------
@@ -282,6 +284,20 @@ class DependencyAnalyzer(ABC):
             A dictionary where artifacts are grouped based on ``artifactId:groupId``.
         """
         deps_resolved: dict[str, DependencyInfo] = {}
+
+        if sbom_path:
+            logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
+            # Import here to avoid circular dependency
+            # pylint: disable=import-outside-toplevel, cyclic-import
+            from macaron.dependency_analyzer.cyclonedx import get_deps_from_sbom
+
+            deps_resolved = get_deps_from_sbom(sbom_path)
+
+            # Use repo finder to find more repositories to analyze.
+            if defaults.getboolean("repofinder", "find_repos"):
+                DependencyAnalyzer._resolve_more_dependencies(deps_resolved)
+
+            return deps_resolved
 
         build_tools = main_ctx.dynamic_data["build_spec"]["tools"]
         if not build_tools:
@@ -350,6 +366,10 @@ class DependencyAnalyzer(ABC):
                 deps_resolved |= dep_analyzer.collect_dependencies(str(working_dir))
 
             logger.info("Stored dependency resolver log for %s to %s.", dep_analyzer.tool_name, log_path)
+
+        # Use repo finder to find more repositories to analyze.
+        if defaults.getboolean("repofinder", "find_repos"):
+            DependencyAnalyzer._resolve_more_dependencies(deps_resolved)
 
         return deps_resolved
 
