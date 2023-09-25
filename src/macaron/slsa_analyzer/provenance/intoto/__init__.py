@@ -6,8 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import NamedTuple, TypeVar
 
 from macaron.slsa_analyzer.provenance.intoto import v01, v1
 from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
@@ -18,28 +17,7 @@ from macaron.util import JsonType
 StatementT = TypeVar("StatementT", bound=Mapping)
 
 
-@dataclass(frozen=True)  # objects of this class are immutable and hashable
-class InTotoPayload(Generic[StatementT]):
-    """The payload of an in-toto provenance.
-
-    The payload is a field within a DSSE envelope, having the type "Statement".
-
-    For more details, see the following pages in in-toto spec:
-    - In-toto attestation layers: https://github.com/in-toto/attestation/tree/main/spec
-    v0.1: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#attestation-spec
-    v1  : https://github.com/in-toto/attestation/tree/main/spec/v1#specification-for-in-toto-attestation-layers
-    - Envelope layer:
-    v0.1: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#envelope
-    v1  : https://github.com/in-toto/attestation/blob/main/spec/v1/envelope.md
-    - Statement layer:
-    v0.1: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement
-    v1: https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md
-    """
-
-    statement: StatementT
-
-
-class InTotoV01Payload(InTotoPayload[v01.InTotoV01Statement]):
+class InTotoV01Payload(NamedTuple):
     """The provenance payload following in-toto v0.1 schema.
 
     The payload is a field within a DSSE envelope, having the type "Statement".
@@ -53,8 +31,10 @@ class InTotoV01Payload(InTotoPayload[v01.InTotoV01Statement]):
     https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement
     """
 
+    statement: v01.InTotoV01Statement
 
-class InTotoV1Payload(InTotoPayload[v1.InTotoV1Statement]):
+
+class InTotoV1Payload(NamedTuple):
     """The provenance payload following in-toto v1 schema.
 
     The payload is a field within a DSSE envelope, having the type "Statement".
@@ -67,6 +47,23 @@ class InTotoV1Payload(InTotoPayload[v1.InTotoV1Statement]):
     - Statement layer:
     https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md
     """
+
+    statement: v1.InTotoV1Statement
+
+
+# The payload is a field within a DSSE envelope, having the type "Statement".
+#
+# For more details, see the following pages in in-toto spec:
+# - In-toto attestation layers: https://github.com/in-toto/attestation/tree/main/spec
+# v0.1: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#attestation-spec
+# v1  : https://github.com/in-toto/attestation/tree/main/spec/v1#specification-for-in-toto-attestation-layers
+# - Envelope layer:
+# v0.1: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#envelope
+# v1  : https://github.com/in-toto/attestation/blob/main/spec/v1/envelope.md
+# - Statement layer:
+# v0.1: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement
+# v1: https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md
+InTotoPayload = InTotoV01Payload | InTotoV1Payload
 
 
 def validate_intoto_payload(payload: dict[str, JsonType]) -> InTotoPayload:
