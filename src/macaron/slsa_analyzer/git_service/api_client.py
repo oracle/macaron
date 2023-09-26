@@ -12,7 +12,7 @@ from typing import NamedTuple
 
 from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.asset import AssetLocator
-from macaron.util import construct_query, download_github_build_log, send_get_http, send_get_http_raw
+from macaron.util import construct_query, download_github_build_log, send_get_http, send_get_http_raw, send_post_graphql
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -619,6 +619,80 @@ class GhAPIClient(BaseAPIClient):
             return False
 
         return True
+
+    def graphql_fetch_pull_requests(self, url: str, variables: dict) -> dict:
+        """Fetch the pull requests from the specified branch (if specified).
+
+        Parameters
+        ----------
+        url : str
+            The graphql URL.
+        variables : dict
+            The variables that are passed to the graphql query.
+
+        Returns
+        -------
+        dict
+            The results for one page of the pull requests' data.
+        """
+
+        def filter_response(dependabot_num: int, approved_pr_num: int) -> tuple:
+            """Filter the merges that are trigger by the dependent bot, and only remain the approved pull requests.
+
+            Parameters
+            ----------
+            dependabot_num : int
+                The number of the pull requests are merged by the dependent bot
+            approved_pr_num : int
+                The number of the pull requests are merged and approved by the reviewers.
+
+            Returns
+            -------
+            tuple
+                The dependabot_num and approved_pr_num cumulative results.
+            """
+            filter_author_list = ["dependabot"]
+            for edge in response_json.get("data", {}).get("repository", {}).get("pullRequests", {}).get("edges"):
+                review_decision = edge.get("node", {}).get("reviewDecision")
+                if review_decision == "APPROVED":
+                    login = edge.get("node", {}).get("author", {}).get("login")
+                    merged_by = edge.get("node", {}).get("mergedBy", {}).get("login")
+                    # Filter the "dependent bot"
+                    if login in filter_author_list or merged_by in filter_author_list:
+                        dependabot_num += 1
+                    else:
+                        approved_pr_num += 1
+            return (dependabot_num, approved_pr_num)
+
+        response = send_post_graphql(
+            url=url, query=self.query_list, timeout=None, headers=self.headers, variables=variables
+        )
+
+        if response is None:
+            return {}
+
+        response_json = response.json()
+        dependabot_num = 0
+        approved_pr_num = 0
+        filtered_response = filter_response(dependabot_num, approved_pr_num)
+        return {
+            "merged_pr_num": response_json.get("data", {})
+            .get("repository", {})
+            .get("pullRequests", {})
+            .get("totalCount"),
+            "has_next_page": response_json.get("data", {})
+            .get("repository", {})
+            .get("pullRequests", {})
+            .get("pageInfo", {})
+            .get("hasNextPage"),
+            "end_cursor": response_json.get("data", {})
+            .get("repository", {})
+            .get("pullRequests", {})
+            .get("pageInfo", {})
+            .get("endCursor"),
+            "approved_pr_num": filtered_response[1],
+            "dependabot_num": filtered_response[0],
+        }
 
 
 def get_default_gh_client(access_token: str) -> GhAPIClient:

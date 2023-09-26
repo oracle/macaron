@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-21 07:28:37"
+        "timestamps": "2023-10-03 16:49:28"
     },
     "target": {
         "info": {
@@ -65,7 +65,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 6,
+                "FAILED": 7,
                 "PASSED": 4,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -79,10 +79,10 @@
                     ],
                     "justification": [
                         {
-                            "The target repository uses build tool gradle to deploy": "https://github.com/facebook/yoga/blob/f8e2bc0875c145c429d0e865c9b83a40f65b3070/.github/workflows/publish-android-snashot.yml",
-                            "The build is triggered by": "https://github.com/facebook/yoga/blob/f8e2bc0875c145c429d0e865c9b83a40f65b3070/.github/workflows/publish-android-snashot.yml"
+                            "The target repository uses build tool gradle to deploy": "https://github.com/facebook/yoga/blob/f8e2bc0875c145c429d0e865c9b83a40f65b3070/.github/workflows/publish-android-release.yml",
+                            "The build is triggered by": "https://github.com/facebook/yoga/blob/f8e2bc0875c145c429d0e865c9b83a40f65b3070/.github/workflows/publish-android-release.yml"
                         },
-                        "Deploy command: ['./gradlew', 'publishToSonatype']",
+                        "Deploy command: ['./gradlew', 'publishToSonatype', 'closeAndReleaseSonatypeStagingRepository']",
                         "However, could not find a passing workflow run.",
                         "The target repository does not use npm to deploy.",
                         {
@@ -206,6 +206,18 @@
                         "Could not find a trusted level 3 builder as a GitHub Actions workflow."
                     ],
                     "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_two_person_reviewed_1",
+                    "check_description": "Check whether the merged pull requests has been reviewd and approved by at least one reviewer.",
+                    "slsa_requirements": [
+                        "Two-person reviewed - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "1 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 1 / 2"
+                    ],
+                    "result_type": "FAILED"
                 }
             ]
         }
@@ -215,35 +227,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_infer_artifact_pipeline_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_script_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_trusted_builder_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_provenance_witness_level_one_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_available_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 0
             },
             {
@@ -251,7 +235,39 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_two_person_reviewed_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             }
         ],

@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-18 10:49:07"
+        "timestamps": "2023-10-03 16:49:15"
     },
     "target": {
         "info": {
@@ -82,7 +82,9 @@
                             "The build is triggered by": "https://github.com/timyarkov/docker_test/blob/404a51a2f38c4470af6b32e4e00b5318c2d7c0cc/.github/workflows/github-actions-basic.yml"
                         },
                         "Deploy command: ['docker', 'push', 'mock_proj']",
-                        "However, could not find a passing workflow run."
+                        "However, could not find a passing workflow run.",
+                        "The target repository does not use npm to deploy.",
+                        "The target repository does not use yarn to deploy."
                     ],
                     "result_type": "PASSED"
                 },

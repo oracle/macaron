@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-18 10:59:04"
+        "timestamps": "2023-10-03 17:01:13"
     },
     "target": {
         "info": {
@@ -20,28 +20,28 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "subject": [
                             {
-                                "name": "urllib3-2.0.4-py3-none-any.whl",
+                                "name": "urllib3-2.0.6-py3-none-any.whl",
                                 "digest": {
-                                    "sha256": "de7df1803967d2c2a98e4b11bb7d6bd9210474c46e8a0401514e3a42a75ebde4"
+                                    "sha256": "7a7c7003b000adf9e7ca2a377c9688bbc54ed41b985789ed576570342a375cd2"
                                 }
                             },
                             {
-                                "name": "urllib3-2.0.4.tar.gz",
+                                "name": "urllib3-2.0.6.tar.gz",
                                 "digest": {
-                                    "sha256": "8d22f86aae8ef5e410d4f539fde9ce6b2113a001bb4d189e0aed70642d602b11"
+                                    "sha256": "b19e1a85d206b56d7df1d5e683df4a7725252a964e3993648dd0fb5a1c157564"
                                 }
                             }
                         ],
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.7.0"
+                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.9.0"
                             },
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/2.0.4",
+                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/2.0.6",
                                     "digest": {
-                                        "sha1": "c9fa144545eedb5dc4a2cc3f255e95602a1d7db0"
+                                        "sha1": "262e3e332209ee93ff70e2b13502c8f20c105ac8"
                                     },
                                     "entryPoint": ".github/workflows/publish.yml"
                                 },
@@ -52,19 +52,19 @@
                                     "github_base_ref": "",
                                     "github_event_name": "push",
                                     "github_event_payload": {
-                                        "after": "d267c99f7e890ff22e136c34d29be802d9c2e773",
+                                        "after": "3b5b1fea8680cc667af65dd0b66d9770696d7173",
                                         "base_ref": null,
                                         "before": "0000000000000000000000000000000000000000",
                                         "commits": [],
-                                        "compare": "https://github.com/urllib3/urllib3/compare/2.0.4",
+                                        "compare": "https://github.com/urllib3/urllib3/compare/2.0.6",
                                         "created": true,
                                         "deleted": false,
                                         "forced": false,
                                         "head_commit": {
                                             "author": {
-                                                "email": "64815328+Eutropios@users.noreply.github.com",
-                                                "name": "Noah Jenner",
-                                                "username": "Eutropios"
+                                                "email": "illia.volochii@gmail.com",
+                                                "name": "Illia Volochii",
+                                                "username": "illia-v"
                                             },
                                             "committer": {
                                                 "email": "noreply@github.com",
@@ -72,11 +72,11 @@
                                                 "username": "web-flow"
                                             },
                                             "distinct": true,
-                                            "id": "c9fa144545eedb5dc4a2cc3f255e95602a1d7db0",
-                                            "message": "Release version 2.0.4 (#3084)\n\nCo-authored-by: Illia Volochii <illia.volochii@gmail.com>",
-                                            "timestamp": "2023-07-19T17:46:02+03:00",
-                                            "tree_id": "e61f50347e7bb803a0c8942ba63fe917c8424f77",
-                                            "url": "https://github.com/urllib3/urllib3/commit/c9fa144545eedb5dc4a2cc3f255e95602a1d7db0"
+                                            "id": "262e3e332209ee93ff70e2b13502c8f20c105ac8",
+                                            "message": "Release 2.0.6",
+                                            "timestamp": "2023-10-02T20:07:11+03:00",
+                                            "tree_id": "327904150327c2fd790b5153ad3202225e7be6c2",
+                                            "url": "https://github.com/urllib3/urllib3/commit/262e3e332209ee93ff70e2b13502c8f20c105ac8"
                                         },
                                         "organization": {
                                             "avatar_url": "https://avatars.githubusercontent.com/u/26825299?v=4",
@@ -96,7 +96,7 @@
                                             "email": "illia.volochii@gmail.com",
                                             "name": "illia-v"
                                         },
-                                        "ref": "refs/tags/2.0.4",
+                                        "ref": "refs/tags/2.0.6",
                                         "repository": {
                                             "allow_forking": true,
                                             "archive_url": "https://api.github.com/repos/urllib3/urllib3/{archive_format}{/ref}",
@@ -119,8 +119,8 @@
                                             "downloads_url": "https://api.github.com/repos/urllib3/urllib3/downloads",
                                             "events_url": "https://api.github.com/repos/urllib3/urllib3/events",
                                             "fork": false,
-                                            "forks": 1078,
-                                            "forks_count": 1078,
+                                            "forks": 1090,
+                                            "forks_count": 1090,
                                             "forks_url": "https://api.github.com/repos/urllib3/urllib3/forks",
                                             "full_name": "urllib3/urllib3",
                                             "git_commits_url": "https://api.github.com/repos/urllib3/urllib3/git/commits{/sha}",
@@ -159,8 +159,8 @@
                                             "name": "urllib3",
                                             "node_id": "MDEwOlJlcG9zaXRvcnkyNDEwNjc2",
                                             "notifications_url": "https://api.github.com/repos/urllib3/urllib3/notifications{?since,all,participating}",
-                                            "open_issues": 125,
-                                            "open_issues_count": 125,
+                                            "open_issues": 133,
+                                            "open_issues_count": 133,
                                             "organization": "urllib3",
                                             "owner": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/26825299?v=4",
@@ -186,12 +186,12 @@
                                             },
                                             "private": false,
                                             "pulls_url": "https://api.github.com/repos/urllib3/urllib3/pulls{/number}",
-                                            "pushed_at": 1689779927,
+                                            "pushed_at": 1696266520,
                                             "releases_url": "https://api.github.com/repos/urllib3/urllib3/releases{/id}",
-                                            "size": 7242,
+                                            "size": 6864,
                                             "ssh_url": "git@github.com:urllib3/urllib3.git",
-                                            "stargazers": 3452,
-                                            "stargazers_count": 3452,
+                                            "stargazers": 3490,
+                                            "stargazers_count": 3490,
                                             "stargazers_url": "https://api.github.com/repos/urllib3/urllib3/stargazers",
                                             "statuses_url": "https://api.github.com/repos/urllib3/urllib3/statuses/{sha}",
                                             "subscribers_url": "https://api.github.com/repos/urllib3/urllib3/subscribers",
@@ -206,11 +206,11 @@
                                                 "urllib3"
                                             ],
                                             "trees_url": "https://api.github.com/repos/urllib3/urllib3/git/trees{/sha}",
-                                            "updated_at": "2023-07-19T02:19:14Z",
+                                            "updated_at": "2023-10-02T15:25:48Z",
                                             "url": "https://github.com/urllib3/urllib3",
                                             "visibility": "public",
-                                            "watchers": 3452,
-                                            "watchers_count": 3452,
+                                            "watchers": 3490,
+                                            "watchers_count": 3490,
                                             "web_commit_signoff_required": false
                                         },
                                         "sender": {
@@ -235,19 +235,19 @@
                                         }
                                     },
                                     "github_head_ref": "",
-                                    "github_ref": "refs/tags/2.0.4",
+                                    "github_ref": "refs/tags/2.0.6",
                                     "github_ref_type": "tag",
                                     "github_repository_id": "2410676",
                                     "github_repository_owner": "urllib3",
                                     "github_repository_owner_id": "26825299",
                                     "github_run_attempt": "1",
-                                    "github_run_id": "5600993171",
-                                    "github_run_number": "21",
-                                    "github_sha1": "c9fa144545eedb5dc4a2cc3f255e95602a1d7db0"
+                                    "github_run_id": "6383242672",
+                                    "github_run_number": "23",
+                                    "github_sha1": "262e3e332209ee93ff70e2b13502c8f20c105ac8"
                                 }
                             },
                             "metadata": {
-                                "buildInvocationID": "5600993171-1",
+                                "buildInvocationID": "6383242672-1",
                                 "completeness": {
                                     "parameters": true,
                                     "environment": false,
@@ -257,9 +257,9 @@
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/2.0.4",
+                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/2.0.6",
                                     "digest": {
-                                        "sha1": "c9fa144545eedb5dc4a2cc3f255e95602a1d7db0"
+                                        "sha1": "262e3e332209ee93ff70e2b13502c8f20c105ac8"
                                     }
                                 }
                             ]
@@ -352,7 +352,7 @@
                     ],
                     "justification": [
                         "Successfully verified level 3: ",
-                        "verify passed : urllib3-2.0.4-py3-none-any.whl,verify passed : urllib3-2.0.4.tar.gz"
+                        "verify passed : urllib3-2.0.6-py3-none-any.whl,verify passed : urllib3-2.0.6.tar.gz"
                     ],
                     "result_type": "PASSED"
                 },
@@ -415,8 +415,8 @@
                         "Two-person reviewed - SLSA Level 4"
                     ],
                     "justification": [
-                        "422 pull requests have been reviewed by at least two person.",
-                        "The pass rate is 422 / 472"
+                        "366 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 366 / 478"
                     ],
                     "result_type": "FAILED"
                 }

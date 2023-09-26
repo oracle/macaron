@@ -6,7 +6,6 @@
 import logging
 import os
 
-import requests
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -16,6 +15,7 @@ from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 
@@ -68,40 +68,48 @@ class TwoPersonReviewedCheck(BaseCheck):
         check_result["result_tables"] = [TwoPersonReviewedTable()]
         required_reviewers = defaults.get_list("check.two_person", "required_reviewers", fallback=[])
         logger.info("Reviewers number required: %s", {required_reviewers[0]})
-        # Your GitHub personal access token (replace with your own token)
         token = os.getenv("GITHUB_TOKEN")
-        # GitHub GraphQL API endpoint
-        url = "https://api.github.com/graphql"
-        # Define the GraphQL query
-        query = """
-            query ($owner: String!, $name: String!, $cursor: String, $branch_name: String) {
-                repository(owner: $owner, name: $name) {
-                    pullRequests(first: 100, states: MERGED, after: $cursor, baseRefName: $branch_name) {
-                        totalCount
-                        pageInfo {
-                            hasNextPage
-                            endCursor
-                        }
-                        edges {
-                            node {
-                                reviewDecision
+        gh_api_client = GhAPIClient(
+            {
+                "headers": {
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json",
+                },
+                "query": """
+                query ($owner: String!, $name: String!, $cursor: String, $branch_name: String) {
+                    repository(owner: $owner, name: $name) {
+                        pullRequests(first: 100, states: MERGED, after: $cursor, baseRefName: $branch_name) {
+                            totalCount
+                            pageInfo {
+                                hasNextPage
+                                endCursor
+                            }
+                            edges {
+                                node {
+                                    reviewDecision
+                                    author {
+                                        login
+                                    }
+                                    mergedBy {
+                                        login
+                                    }
+                                }
                             }
                         }
                     }
                 }
+            """,
             }
-        """
-        # Set up the HTTP headers with your token
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        }
-        # Send the GraphQL query to GitHub API.
-        # 100 data per query.
+        )
+        # TODO filter mannequin from with merge-by
+        # GitHub GraphQL API endpoint
+        url = "https://api.github.com/graphql"
+
         approved_pr_num = 0
         merged_pr_num = 0
         has_next_page = True
         end_cursor = None
+        dependabot_num = 0
 
         while has_next_page:
             variables = {
@@ -110,29 +118,18 @@ class TwoPersonReviewedCheck(BaseCheck):
                 "cursor": end_cursor,
                 "branch_name": ctx.component.repository.branch_name,
             }
-            response = requests.post(
-                url,
-                timeout=defaults.getint("requests", "timeout", fallback=10),
-                json={"query": query, "variables": variables},
-                headers=headers,
-            )  # nosec B113:request_without_timeout
-            if response.status_code == 200:
-                data = response.json()
-                merged_pr_num = data["data"]["repository"]["pullRequests"]["totalCount"]
-                for edge in data["data"]["repository"]["pullRequests"]["edges"]:
-                    review_decision = edge["node"]["reviewDecision"]
-                    if review_decision == "APPROVED":
-                        approved_pr_num += 1
-                has_next_page = data["data"]["repository"]["pullRequests"]["pageInfo"]["hasNextPage"]
-                end_cursor = data["data"]["repository"]["pullRequests"]["pageInfo"]["endCursor"]
-            else:
-                logger.error("%s, %s", response.status_code, response.text)
+            pull_requests = gh_api_client.graphql_fetch_pull_requests(url=url, variables=variables)
+            merged_pr_num = pull_requests["merged_pr_num"]
+            has_next_page = pull_requests["has_next_page"]
+            end_cursor = pull_requests["end_cursor"]
+            approved_pr_num += pull_requests["approved_pr_num"]
+            dependabot_num += pull_requests["dependabot_num"]
 
         logger.info(
             "%d pull requests have been reviewed by at least two person, and the pass rate is %d / %d",
             approved_pr_num,
             approved_pr_num,
-            merged_pr_num,
+            merged_pr_num - dependabot_num,
         )
         check_result["justification"].extend(
             [
@@ -140,7 +137,6 @@ class TwoPersonReviewedCheck(BaseCheck):
                 f"The pass rate is {str(approved_pr_num)} / {str(merged_pr_num)}",
             ]
         )
-        # print(f"[*] Two-person Reviewed in {duration} seconds")
         if approved_pr_num == merged_pr_num:
             return CheckResultType.PASSED
         return CheckResultType.FAILED

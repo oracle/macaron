@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-18 10:49:14"
+        "timestamps": "2023-10-03 16:49:43"
     },
     "target": {
         "info": {
@@ -247,8 +247,8 @@
                         "Two-person reviewed - SLSA Level 4"
                     ],
                     "justification": [
-                        "283 pull requests have been reviewed by at least two person.",
-                        "The pass rate is 283 / 374"
+                        "302 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 302 / 393"
                     ],
                     "result_type": "FAILED"
                 }

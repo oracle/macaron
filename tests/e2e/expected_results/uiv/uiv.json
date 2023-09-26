@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-21 07:27:24"
+        "timestamps": "2023-10-03 16:49:22"
     },
     "target": {
         "info": {
@@ -21,7 +21,7 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/uiv-lib/uiv/blob/057b25b4db0913edab4cf728c306085e6fc20d49/.github/workflows/publish_npm.yaml"
+                                "id": "https://github.com/uiv-lib/uiv/blob/057b25b4db0913edab4cf728c306085e6fc20d49/.github/workflows/publish_github.yaml"
                             },
                             "buildType": "Custom github_actions",
                             "invocation": {
@@ -30,14 +30,14 @@
                                     "digest": {
                                         "sha1": "057b25b4db0913edab4cf728c306085e6fc20d49"
                                     },
-                                    "entryPoint": "https://github.com/uiv-lib/uiv/blob/057b25b4db0913edab4cf728c306085e6fc20d49/.github/workflows/publish_npm.yaml"
+                                    "entryPoint": "https://github.com/uiv-lib/uiv/blob/057b25b4db0913edab4cf728c306085e6fc20d49/.github/workflows/publish_github.yaml"
                                 },
                                 "parameters": {},
                                 "environment": {}
                             },
                             "buildConfig": {
-                                "jobID": "deploy_npm",
-                                "stepID": "Publish NPM"
+                                "jobID": "publish_github",
+                                "stepID": ""
                             },
                             "metadata": {
                                 "buildInvocationId": "",
@@ -64,7 +64,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 6,
+                "FAILED": 7,
                 "PASSED": 4,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -78,10 +78,10 @@
                     ],
                     "justification": [
                         {
-                            "The target repository uses build tool npm to deploy": "https://github.com/uiv-lib/uiv/blob/057b25b4db0913edab4cf728c306085e6fc20d49/.github/workflows/publish_npm.yaml",
-                            "The build is triggered by": "https://github.com/uiv-lib/uiv/blob/057b25b4db0913edab4cf728c306085e6fc20d49/.github/workflows/publish_npm.yaml"
+                            "The target repository uses build tool npm to deploy": "https://github.com/uiv-lib/uiv/blob/057b25b4db0913edab4cf728c306085e6fc20d49/.github/workflows/publish_github.yaml",
+                            "The build is triggered by": "https://github.com/uiv-lib/uiv/blob/057b25b4db0913edab4cf728c306085e6fc20d49/.github/workflows/publish_github.yaml"
                         },
-                        "Deploy command: ['npm', 'publish']",
+                        "Deploy command: ['npm', 'publish', '--registry=https://npm.pkg.github.com']",
                         "However, could not find a passing workflow run.",
                         "The target repository does not use yarn to deploy."
                     ],
@@ -199,6 +199,18 @@
                         "Could not find a trusted level 3 builder as a GitHub Actions workflow."
                     ],
                     "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_two_person_reviewed_1",
+                    "check_description": "Check whether the merged pull requests has been reviewd and approved by at least one reviewer.",
+                    "slsa_requirements": [
+                        "Two-person reviewed - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "245 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 245 / 476"
+                    ],
+                    "result_type": "FAILED"
                 }
             ]
         }
@@ -208,35 +220,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_infer_artifact_pipeline_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_script_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_trusted_builder_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_provenance_witness_level_one_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_available_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 0
             },
             {
@@ -244,7 +228,39 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_two_person_reviewed_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             }
         ],
