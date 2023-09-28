@@ -13,7 +13,6 @@ from configparser import ConfigParser
 
 from git import GitCommandError
 from git.objects import Commit
-from git.remote import Remote
 from git.repo import Repo
 from pydriller.git import Git
 
@@ -74,10 +73,12 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
     If ``digest`` is provided, this method will checkout that specific commit. If ``digest``
     cannot be found in the current branch, this method will pull (fast-forward only) from remote.
 
-    This method supports repositories which are cloned (full or shallow) from existing remote repositories.
+    This method supports repositories which are cloned from existing remote repositories.
     Other scenarios are not covered (e.g. a newly initiated repository).
 
-    If ``offline_mode`` is set, this method will not pull from remote while checking out the branch or commit.
+    This method will not try to un-shallow an existing shallow-clone repository.
+
+    If ``offline_mode`` is set, this method will not pull/fetch from remote while checking out the branch or commit.
 
     Parameters
     ----------
@@ -106,76 +107,59 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
             logger.info("Consider providing the specific branch to be analyzed or fully cloning the repo instead.")
             return False
 
-    # Checkout the resolved branch from remote origin.
-    # The name of each remote ref will be in the form <prefix>/<name> (e.g. origin/master).
-    # We only work with origin remote in Macaron.
-    try:
-        org_remote: Remote = git_obj.repo.remote("origin")
-    except ValueError as error:
-        logger.error("Cannot get origin remote from the repository.")
-        logger.error(error)
-        return False
-
-    if not org_remote or not hasattr(org_remote, "refs"):
-        logger.critical("The origin remote does not exist or does not have the references attribute.")
-        return False
-
-    if res_branch in [os.path.basename(ref.name) for ref in org_remote.refs]:
-        logger.info(
-            "Find branch %s in the remote's refs of the local repository. The branch is checked out directly.",
-            res_branch,
-        )
-        git_obj.repo.git.checkout(res_branch)
-    else:
-        # This might happen because the git repository is a shallow clone.
-        logger.info("Cannot find branch %s. Try to fetch the branch from remote.", res_branch)
+    if not offline_mode:
+        # Fetch from remote by running ``git fetch`` inside the target repository.
+        # We don't specify any remote name (e.g. origin) is because we want git to resolve the default fetching
+        # target by itself.
+        # For example, the user runs Macaron on a local repository where the remote is set to have name "foo_origin"
+        # instead.
+        # References: https://git-scm.com/docs/git-fetch
         try:
-            # Trying to get this branch by fetching from remote and checkout the branch again.
-            # If we can't checkout, we consider that this branch does not exist.
-            # https://stackoverflow.com/questions/23708231/git-shallow-clone-clone-depth-misses-remote-branches.
-            git_obj.repo.git.remote("set-branches", "--add", "origin", res_branch)
-            org_remote.fetch(res_branch)
-            git_obj.repo.git.checkout(res_branch)
+            git_obj.repo.git.fetch()
         except GitCommandError as error:
-            logger.error("Error while getting branch %s. Error: %s", res_branch, error)
+            logger.error("Cannot perform fetching on this repository. Error: %s", error)
             return False
 
-    logger.info("Successfully checked out branch %s.", res_branch)
+    try:
+        # Switch to the target branch by running ``git checkout <branch_name>`` in the target repository.
+        git_obj.repo.git.checkout(res_branch)
+    except GitCommandError as error:
+        logger.error("Cannot checkout branch %s. Error: %s", res_branch, error)
+        return False
 
-    # We only pull the latest changes if we are not running in offline mode and:
-    #   - no digest is provided.
-    #   - or a commit digest is provided but it does not exist in the current local branch.
-    if not offline_mode and (not digest or not commit_exists(git_obj, digest)):
-        logger.info("Pulling the latest changes of branch %s fast-forward only.", res_branch)
-        if not pull_latest_changes(git_obj):
-            logger.error(
-                "Cannot pull the latest changes for branch %s.",
-                res_branch,
-            )
-            return False
+    logger.info("Successfully checkout branch %s.", res_branch)
+
+    if not offline_mode:
+        # We only pull the latest changes if one of these scenarios happens:
+        #   - no digest is provided: we need to pull and analyze the latest commit.
+        #   - a commit digest is provided but it does not exist locally: we need to
+        #     pull the latest changes to check if that commit is available.
+        # We want to check if the commit already exist locally first because we want to avoid pulling unecessary
+        # if it does.
+        # We do this by checking if the commit we want to analyze is an ancestor of the commit being referenced by HEAD
+        # (which point to the tip of the branch).
+        # If the commit we want to analyze is same as HEAD, that commit is still considered as the ancestor of HEAD.
+        # The ``is_ancestor`` method runs ``git merge-base`` behind the scence.
+        # For more information on computing the ancestor status of two commits: https://git-scm.com/docs/git-merge-base.
+        if not digest or not git_obj.repo.is_ancestor(digest, "HEAD"):
+            logger.info("Pulling the latest changes of branch %s fast-forward only.", res_branch)
+            try:
+                # Pull the latest changes on the current branch fast-forward only.
+                git_obj.repo.git.pull("--ff-only")
+            except GitCommandError as error:
+                logger.error(error)
+                return False
 
     if digest:
-        current_head: Commit = git_obj.repo.head.commit
-        # We don't return False if current_head is None here to try checking out the
-        # specific commit by the user.
-        if current_head and current_head.hexsha == digest:
-            logger.info("HEAD of the repo is already at %s.", digest)
-            return True
-
-        # Check if the commit exist in the history after we have pulled the latest changes.
-        if commit_exists(git_obj, digest):
-            # The digest was found in the history of the branch.
-            try:
-                git_obj.checkout(digest)
-            except GitCommandError as error:
-                logger.error(
-                    "Commit %s cannot be checked out. Error: %s",
-                    digest,
-                    error,
-                )
-                return False
-        else:
-            logger.info("Cannot find commit %s on branch %s. Please check the configuration.", digest, res_branch)
+        # Checkout the specific commit that the user want by running ``git checkout <commit>`` in the target repository.
+        try:
+            git_obj.repo.git.checkout(digest)
+        except GitCommandError as error:
+            logger.error(
+                "Commit %s cannot be checked out. Error: %s",
+                digest,
+                error,
+            )
             return False
 
     final_head_commit: Commit = git_obj.repo.head.commit
@@ -191,67 +175,16 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
     return True
 
 
-def commit_exists(git_obj: Git, digest: str) -> bool:
-    """Return True if the commit exists in the history of the current branch.
-
-    Parameters
-    ----------
-    git_obj : Git
-        The pydriller.Git wrapper object of the target repository.
-    digest : str
-        The hash of the commit that we want to check.
-
-    Returns
-    -------
-    bool
-    """
-    try:
-        return bool(git_obj.repo.is_ancestor(digest, "HEAD"))
-    except GitCommandError as error:
-        # The exception could be raised because the digest does not exist in the history of the branch
-        # or the digest is not a valid digest.
-        logger.debug(error)
-        return False
-
-
-def pull_latest_changes(git_obj: Git) -> bool:
-    """Pull the latest changes from remote.
-
-    This will perform git pull --ff-only on the current active branch of ``git_obj``. This will
-    leave HEAD pointing to the latest commit of the current branch.
-
-    If the repo is a shallow clone, this method will unshallow it before pulling the
-    latest changes.
-
-    Parameters
-    ----------
-    git_obj : Git
-        The pydriller.Git wrapper object of the target repository.
-
-    Returns
-    -------
-    bool
-        True if successful, else False.
-    """
-    try:
-        # Handle the case when the repository is a shallow cloned.
-        # https://git-scm.com/docs/git-rev-parse#Documentation/git-rev-parse.txt---is-shallow-repository
-        if str(git_obj.repo.git.rev_parse("--is-shallow-repository")).strip() == "true":
-            logger.info("The repository is a shallow clone. Trying to unshallow it.")
-            git_obj.repo.git.fetch("--unshallow")
-
-        # Pull the latest changes on the current branch fast-forward only.
-        git_obj.repo.git.pull("-f", "--ff-only")
-        return True
-    except GitCommandError as error:
-        logger.error(error)
-        return False
-
-
 def get_default_branch(git_obj: Git) -> str:
-    """Return the default branch of the target repository.
+    """Return the default branch name of the target repository.
 
-    This function does not perform any online operation.
+    This function does not perform any online operation. It depends on the existence of the remote
+    reference ``origin/HEAD`` in the git repository. This remote reference will point to the default
+    branch of the remote repository and it's usually set when the repository is first cloned with
+    ``git clone <url>``.
+    Therefore, this method will fail to obtain the default branch name if ``origin/HEAD`` is not
+    available. An example of this case is when a repository is shallow-cloned with a non-default the branch
+    (e.g. ``git clone --depth=1 <url> -b some_branch``).
 
     Parameters
     ----------
