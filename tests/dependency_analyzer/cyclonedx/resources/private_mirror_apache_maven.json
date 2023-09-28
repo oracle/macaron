@@ -59,35 +59,15 @@
                     }
                 }
             ],
-            "purl": "pkg:maven/org.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom",
+            "purl": "pkg:private_domain.com/apache/maven@4.0.0-alpha-1-SNAPSHOT?type=pom",
             "externalReferences": [
                 {
-                    "type": "website",
-                    "url": "https://www.apache.org/"
-                },
-                {
-                    "type": "build-system",
-                    "url": "https://ci-maven.apache.org/job/Maven/job/maven-box/job/maven/"
-                },
-                {
-                    "type": "distribution",
-                    "url": "https://maven.apache.org/download.html"
-                },
-                {
-                    "type": "issue-tracker",
-                    "url": "https://issues.apache.org/jira/browse/MNG"
-                },
-                {
-                    "type": "mailing-list",
-                    "url": "https://lists.apache.org/list.html?users@maven.apache.org"
-                },
-                {
                     "type": "vcs",
-                    "url": "https://github.com/apache/maven/tree/master"
+                    "url": "https://private_domain.com/apache/maven/tree/master"
                 }
             ],
             "type": "library",
-            "bom-ref": "pkg:maven/org.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom"
+            "bom-ref": "pkg:private_domain.com/apache/maven@4.0.0-alpha-1-SNAPSHOT?type=pom"
         }
     },
     "components": [
@@ -228,7 +208,7 @@
     ],
     "dependencies": [
         {
-            "ref": "pkg:maven/org.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom",
+            "ref": "pkg:private_domain.com/apache/maven@4.0.0-alpha-1-SNAPSHOT?type=pom",
             "dependsOn": [
                 "pkg:maven/com.google.guava/guava@30.1-jre?type=jar",
                 "pkg:maven/org.mockito/mockito-core@3.2.0?type=jar"

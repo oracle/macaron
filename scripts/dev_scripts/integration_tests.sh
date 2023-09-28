@@ -135,13 +135,13 @@ python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing using a CycloneDx SBOM with PURL."
+echo "apache/maven: Analyzing using a CycloneDx SBOM file of a software component whose repository is not available."
 echo -e "----------------------------------------------------------------------------------\n"
-SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/apache_maven_root_sbom_minimal.json
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/apache_maven_with_sbom_minimal.json
-DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
+SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/private_mirror_apache_maven.json
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/private_mirror_apache_maven.json
+DEP_RESULT=$WORKSPACE/output/reports/private_domain_com/apache/maven/dependencies.json
 
-$RUN_MACARON analyze -purl pkg:maven/org.apache.maven/maven -sbom "$SBOM_FILE" || log_fail
+$RUN_MACARON analyze -purl pkg:private_domain.com/apache/maven -sbom "$SBOM_FILE" || log_fail
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
