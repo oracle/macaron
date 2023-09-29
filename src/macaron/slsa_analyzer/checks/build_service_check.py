@@ -110,11 +110,27 @@ class BuildServiceCheck(BaseCheck):
                 if not build_tool.build_arg:
                     logger.info("No build arguments required. Accept %s as build command.", str(com))
                     return str(com)
-                for word in com[(prog_name_index + 1) :]:
-                    # TODO: allow plugin versions in arguments, e.g., maven-plugin:1.6.8:package.
+
+                for i, word in enumerate(com[(prog_name_index + 1) :]):
+                    # TODO: allow plugin versions in arguments, e.g., maven-plugin:1.6.8:deploy.
                     if word in build_tool.build_arg:
-                        logger.info("Found build command %s.", str(com))
+                        logger.info("Found deploy command %s.", str(com))
                         return str(com)
+
+                    # Check all required deploy arguments match
+                    for arg in build_tool.build_arg:
+                        match = True
+
+                        for build_sub, com_sub in zip(com[i + 1 :], arg.split(" ")):
+                            if build_sub != com_sub:
+                                match = False
+                                break
+
+                        if match:
+                            logger.info("Found deploy command %s.", str(com))
+                            return str(com)
+
+                return ""
         return ""
 
     def _check_build_tool(
