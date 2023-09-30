@@ -16,7 +16,6 @@ from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.build_tool.poetry import Poetry
-from macaron.slsa_analyzer.build_tool.yarn import Yarn
 from macaron.slsa_analyzer.checks.build_as_code_check import BuildAsCodeCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -34,7 +33,6 @@ def test_build_as_code_check(
     gradle_tool: Gradle,
     poetry_tool: Poetry,
     pip_tool: Pip,
-    yarn_tool: Yarn,
     github_actions_service: GitHubActions,
     jenkins_service: Jenkins,
     travis_service: Travis,
@@ -186,13 +184,6 @@ def test_build_as_code_check(
     multi_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     multi_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
     bash_commands["commands"] = [["./gradlew", "publishToSonatype"], ["mvn", "deploy"]]
-    multi_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(multi_deploy, check_result) == CheckResultType.PASSED
-
-    # Using Yarn with multi-word deploy command
-    multi_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
-    multi_deploy.dynamic_data["build_spec"]["tools"] = [yarn_tool]
-    bash_commands["commands"] = [["yarn", "npm", "publish"]]
     multi_deploy.dynamic_data["ci_services"] = [ci_info]
     assert check.run_check(multi_deploy, check_result) == CheckResultType.PASSED
 

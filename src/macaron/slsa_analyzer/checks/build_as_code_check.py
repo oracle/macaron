@@ -116,31 +116,16 @@ class BuildAsCodeCheck(BaseCheck):
             if check_build_commands or check_module_build_commands:
                 # Check the arguments in the bash command for the deploy goals.
                 # If there are no deploy args for this build tool, accept as deploy command.
+                # TODO: Support multi-argument build keywords, issue #493.
                 if not build_tool.deploy_arg:
                     logger.info("No deploy arguments required. Accept %s as deploy command.", str(com))
                     return str(com)
 
-                for i, word in enumerate(com[(prog_name_index + 1) :]):
+                for word in com[(prog_name_index + 1) :]:
                     # TODO: allow plugin versions in arguments, e.g., maven-plugin:1.6.8:deploy.
                     if word in build_tool.deploy_arg:
                         logger.info("Found deploy command %s.", str(com))
                         return str(com)
-
-                    # Check all required deploy arguments match
-                    for arg in build_tool.deploy_arg:
-                        match = True
-
-                        for deploy_sub, com_sub in zip(com[i + 1 :], arg.split(" ")):
-                            if deploy_sub != com_sub:
-                                match = False
-                                break
-
-                        if match:
-                            logger.info("Found deploy command %s.", str(com))
-                            return str(com)
-
-                return ""
-
         return ""
 
     def _check_build_tool(
