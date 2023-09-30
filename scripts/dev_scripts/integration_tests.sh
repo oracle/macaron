@@ -111,6 +111,16 @@ $RUN_MACARON analyze -rp https://github.com/uiv-lib/uiv -b dev -d 057b25b4db0913
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
+echo "onu-ui/onu-ui: Analysing the repo path, the branch name and the commit digest for a pnpm project,"
+echo "skipping dependency resolution."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/onu-ui/onu-ui.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/onu-ui/onu-ui/onu-ui.json
+$RUN_MACARON analyze -rp https://github.com/onu-ui/onu-ui -b main -d e3f2825c3940002a920d65476116a64684b3d95e --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
 echo "facebook/yoga: Analysing the repo path, the branch name and the commit digest for a Yarn classic"
 echo "project, skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"

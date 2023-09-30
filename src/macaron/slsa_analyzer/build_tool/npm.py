@@ -3,7 +3,7 @@
 
 """This module contains the NPM class which inherits BaseBuildTool.
 
-This module is used to work with repositories that use NPM as its
+This module is used to work with repositories that use npm/pnpm as its
 build tool.
 """
 
@@ -13,7 +13,7 @@ from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file
 
 
 class NPM(BaseBuildTool):
-    """This class contains the information of the NPM build tool."""
+    """This class contains the information of the npm/pnpm build tool."""
 
     def __init__(self) -> None:
         super().__init__(name="npm")
@@ -56,7 +56,7 @@ class NPM(BaseBuildTool):
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
         """Prepare the necessary wrapper files for running the build.
 
-        NPM doesn't require preparation, so return true.
+        npm/pnpm doesn't require preparation, so return true.
 
         Parameters
         ----------
