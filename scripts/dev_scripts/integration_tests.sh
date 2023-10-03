@@ -101,6 +101,56 @@ $RUN_MACARON analyze -rp https://github.com/timyarkov/docker_test -b main -d 404
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
+echo "uiv-lib/uiv: Analysing the repo path, the branch name and the commit digest for an npm project,"
+echo "skipping dependency resolution."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/uiv/uiv.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/uiv-lib/uiv/uiv.json
+$RUN_MACARON analyze -rp https://github.com/uiv-lib/uiv -b dev -d 057b25b4db0913edab4cf728c306085e6fc20d49 --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "onu-ui/onu-ui: Analysing the repo path, the branch name and the commit digest for a pnpm project,"
+echo "skipping dependency resolution."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/onu-ui/onu-ui.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/onu-ui/onu-ui/onu-ui.json
+$RUN_MACARON analyze -rp https://github.com/onu-ui/onu-ui -b main -d e3f2825c3940002a920d65476116a64684b3d95e --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "facebook/yoga: Analysing the repo path, the branch name and the commit digest for a Yarn classic"
+echo "project, skipping dependency resolution."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/yoga/yoga.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/facebook/yoga/yoga.json
+$RUN_MACARON analyze -rp https://github.com/facebook/yoga -b main -d f8e2bc0875c145c429d0e865c9b83a40f65b3070 --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "wojtekmaj/react-pdf: Analysing the repo path, the branch name and the commit digest for a Yarn modern"
+echo "project, skipping dependency resolution."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/react-pdf/react-pdf.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/wojtekmaj/react-pdf/react-pdf.json
+$RUN_MACARON analyze -rp https://github.com/wojtekmaj/react-pdf -b main -d be18436b7be827eb993b2e1e4bd9230dd835a9a3 --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "sigstore/sget: Analysing the repo path, the branch name and the"
+echo "commit digest for a Go project, skipping dependency resolution."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/sget/sget.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/sigstore/sget/sget.json
+$RUN_MACARON analyze -rp https://github.com/sigstore/sget -b main -d 99e7b91204d391ccc76507f7079b6d2a7957489e --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with PURL and repository path without dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.json

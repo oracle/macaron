@@ -11,10 +11,13 @@ from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.docker import Docker
+from macaron.slsa_analyzer.build_tool.go import Go
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
+from macaron.slsa_analyzer.build_tool.npm import NPM
 from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.build_tool.poetry import Poetry
+from macaron.slsa_analyzer.build_tool.yarn import Yarn
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
@@ -166,6 +169,63 @@ def docker_tool(setup_test) -> Docker:  # type: ignore # pylint: disable=unused-
     docker = Docker()
     docker.load_defaults()
     return docker
+
+
+@pytest.fixture(autouse=True)
+def npm_tool(setup_test) -> NPM:  # type: ignore # pylint: disable=unused-argument
+    """Create a NPM tool instance.
+
+    Parameters
+    ----------
+    setup_test
+        Depends on setup_test fixture.
+
+    Returns
+    -------
+    NPM
+        The NPM instance.
+    """
+    npm = NPM()
+    npm.load_defaults()
+    return npm
+
+
+@pytest.fixture(autouse=True)
+def yarn_tool(setup_test) -> Yarn:  # type: ignore # pylint: disable=unused-argument
+    """Create a Yarn tool instance.
+
+    Parameters
+    ----------
+    setup_test
+        Depends on setup_test fixture.
+
+    Returns
+    -------
+    Yarn
+        The Yarn instance.
+    """
+    yarn = Yarn()
+    yarn.load_defaults()
+    return yarn
+
+
+@pytest.fixture(autouse=True)
+def go_tool(setup_test) -> Go:  # type: ignore # pylint: disable=unused-argument
+    """Create a Go tool instance.
+
+    Parameters
+    ----------
+    setup_test
+        Depends on setup_test fixture.
+
+    Returns
+    -------
+    Go
+        The Go instance.
+    """
+    go = Go()  # pylint: disable=invalid-name
+    go.load_defaults()
+    return go
 
 
 class MockGitHubActions(GitHubActions):

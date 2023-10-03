@@ -107,6 +107,7 @@ class BuildServiceCheck(BaseCheck):
             if check_build_commands or check_module_build_commands:
                 # Check the arguments in the bash command for the build goals.
                 # If there are no build args for this build tool, accept as build command.
+                # TODO: Support multi-argument build keywords, issue #493.
                 if not build_tool.build_arg:
                     logger.info("No build arguments required. Accept %s as build command.", str(com))
                     return str(com)
