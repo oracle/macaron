@@ -1,0 +1,10 @@
+# serializer version: 1
+# name: test_get_build_dirs[root_go_mod-go.mod]
+  list([
+    PosixPath('.'),
+  ])
+# ---
+# name: test_get_build_dirs[no_go_mod-dummyfile.txt]
+  list([
+  ])
+# ---

@@ -116,6 +116,7 @@ class BuildAsCodeCheck(BaseCheck):
             if check_build_commands or check_module_build_commands:
                 # Check the arguments in the bash command for the deploy goals.
                 # If there are no deploy args for this build tool, accept as deploy command.
+                # TODO: Support multi-argument build keywords, issue #493.
                 if not build_tool.deploy_arg:
                     logger.info("No deploy arguments required. Accept %s as deploy command.", str(com))
                     return str(com)
