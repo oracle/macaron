@@ -84,10 +84,9 @@ def send_get_http_raw(url: str, headers: dict | None = None, timeout: int | None
         logger.debug(error)
         return None
     while response.status_code != 200:
-        logger.error(
-            "Receiving error code %s from server. Message: %s.",
+        logger.debug(
+            "Receiving error code %s from server.",
             response.status_code,
-            response.text,
         )
         if response.status_code == 403:
             check_rate_limit(response)
