@@ -1,0 +1,218 @@
+{
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.4",
+    "serialNumber": "urn:uuid:152fe56d-7c2a-496e-9ee6-0a6c9c7ea639",
+    "version": 1,
+    "metadata": {
+        "timestamp": "2023-03-22T06:01:31Z",
+        "tools": [
+            {
+                "vendor": "OWASP Foundation",
+                "name": "CycloneDX Maven plugin",
+                "version": "2.6.2",
+                "hashes": [
+                    {
+                        "alg": "MD5",
+                        "content": "ff29fc50797fce0b33058a6b2b283f64"
+                    },
+                    {
+                        "alg": "SHA-1",
+                        "content": "597e59ebf21c3b8bfb1faeb622569df324eca956"
+                    },
+                    {
+                        "alg": "SHA-256",
+                        "content": "3cf9130fcac45a7beb6df2ae9c3fc9c062d1fddd0731d6a302968586f0aa586e"
+                    },
+                    {
+                        "alg": "SHA-384",
+                        "content": "8111a6788c959305af23daecbc79defd4478c1e274cba65bfe860e09b30cd9fe29822d5d3d3eea608e4926a9418f92e3"
+                    },
+                    {
+                        "alg": "SHA-512",
+                        "content": "2bea87b7bcd70897bf46a28a806b6064a6708d0a45e884e1ceddc25f97ca7bdf4ed190f30d9a28cc9416b6c66176d518c5876fd25bc06bdcb00d39367215e56e"
+                    },
+                    {
+                        "alg": "SHA3-256",
+                        "content": "f0f7b771749955e7898665c2fff8f4f2cd734d9cbe4d29883292db772f1be00e"
+                    },
+                    {
+                        "alg": "SHA3-384",
+                        "content": "a87d4c18bac4d48a46c0b8611ab92934e457fcd55bd4d39dbc9c4e5044d2736d3bda991c43d67b0987eddcf4c88510ff"
+                    },
+                    {
+                        "alg": "SHA3-512",
+                        "content": "90c38f168600787fc90b7e37e743b386b7296bceb10152190de6e30e0f251da3e01698d1b1e11ad84f207532b5a0743aac105f3c5006ff4607d21f30c9ea779f"
+                    }
+                ]
+            }
+        ],
+        "component": {
+            "publisher": "The Apache Software Foundation",
+            "group": "org.apache.maven",
+            "name": "maven",
+            "version": "4.0.0-alpha-1-SNAPSHOT",
+            "description": "Maven is a software build management and comprehension tool. Based on the concept of a project object model: builds, dependency management, documentation creation, site publication, and distribution publication are all controlled from the declarative file. Maven can be extended by plugins to utilise a number of other development tools for reporting or the build process.",
+            "licenses": [
+                {
+                    "license": {
+                        "id": "Apache-2.0"
+                    }
+                }
+            ],
+            "purl": "pkg:private_domain.com/apache/maven@4.0.0-alpha-1-SNAPSHOT?type=pom",
+            "externalReferences": [
+                {
+                    "type": "vcs",
+                    "url": "https://private_domain.com/apache/maven/tree/master"
+                }
+            ],
+            "type": "library",
+            "bom-ref": "pkg:private_domain.com/apache/maven@4.0.0-alpha-1-SNAPSHOT?type=pom"
+        }
+    },
+    "components": [
+        {
+            "group": "com.google.guava",
+            "name": "guava",
+            "version": "30.1-jre",
+            "description": "Guava is a suite of core and expanded libraries that include utility classes, Google's collections, I/O classes, and much more.",
+            "scope": "optional",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "2f8966f27f06101a08083bfa9f9277e7"
+                },
+                {
+                    "alg": "SHA-1",
+                    "content": "00d0c3ce2311c9e36e73228da25a6e99b2ab826f"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "e6dd072f9d3fe02a4600688380bd422bdac184caf6fe2418cfdd0934f09432aa"
+                },
+                {
+                    "alg": "SHA-384",
+                    "content": "12f54fff188f49a7d7284836768f198a6b002a1773ab80311c69449cec0544744938b8818b70cd1811cad830efb6a76d"
+                },
+                {
+                    "alg": "SHA-512",
+                    "content": "e7a8098c0af7746c8a97a8cc8245166c14ee9213f67943d9d1962c94699f58d789c1e103de9cd407c4f20cd4be4e89814643560e5dae0b3f629312f2b1a2a8e2"
+                },
+                {
+                    "alg": "SHA3-256",
+                    "content": "6e498cb0c02bd5e60cf8feb9523b81056422df54be0e1f8d1da65b7aa454c8d9"
+                },
+                {
+                    "alg": "SHA3-384",
+                    "content": "2671b086b98b63915f471cc76f8ec281c12e94e14129bc35e0695f73f28e2cc1292abfcb18626ee9ee8691e587c674d3"
+                },
+                {
+                    "alg": "SHA3-512",
+                    "content": "a9d4cf2ff036032a0beef6249fa471c5d7d6a26e25b99995825c37555eac3fc53ca78e5c6f207476b258fe178f9ca7bf0551442632b7565279ad6c20f099b82b"
+                }
+            ],
+            "licenses": [
+                {
+                    "license": {
+                        "id": "Apache-2.0"
+                    }
+                }
+            ],
+            "purl": "pkg:maven/com.google.guava/guava@30.1-jre?type=jar",
+            "externalReferences": [
+                {
+                    "type": "build-system",
+                    "url": "https://travis-ci.org/google/guava"
+                },
+                {
+                    "type": "distribution",
+                    "url": "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+                },
+                {
+                    "type": "issue-tracker",
+                    "url": "https://github.com/google/guava/issues"
+                },
+                {
+                    "type": "vcs",
+                    "url": "https://github.com/google/guava"
+                }
+            ],
+            "type": "library",
+            "bom-ref": "pkg:maven/com.google.guava/guava@30.1-jre?type=jar"
+        },
+        {
+            "group": "org.mockito",
+            "name": "mockito-core",
+            "version": "3.2.0",
+            "description": "Mockito mock objects library core API and implementation",
+            "scope": "optional",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "b5f238f4732000775022a332acdea838"
+                },
+                {
+                    "alg": "SHA-1",
+                    "content": "38157d5fab1b47814827773ca3dff01c60e31425"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "3ab21ace35374897fb760b8917fa70c255e665582e3d1583e83991d750873f2b"
+                },
+                {
+                    "alg": "SHA-384",
+                    "content": "bca547ed4c9adaaf1847f6cd6d268e043d7c06af45baef2dc25fecfce5db6ffc704b4b611112e07617f0f32bdefcfc27"
+                },
+                {
+                    "alg": "SHA-512",
+                    "content": "f8eb487572f9b9da0f727eabb2e35e2434ecc0bd7b8e360b2a59b97b3e16039165ed445de329d501929eabb320575b290128385c66165f7501803965c1955a03"
+                },
+                {
+                    "alg": "SHA3-256",
+                    "content": "bb2f26cd3e2cae6a748695934cf2e02b8d655f8e718ac7f03f9b9ec0bedb1baf"
+                },
+                {
+                    "alg": "SHA3-384",
+                    "content": "9b0015b6f7be63b5554c27843a2275012c26077a0d2bc8c2ff53011477ff7d97e5a3c2de652d9ce0793b0b6b780324b9"
+                },
+                {
+                    "alg": "SHA3-512",
+                    "content": "bb4e096ff372e96855bf8e087af0d01eec5f24b6f1e93225d86c8f4f6a29475619bd422140bbe2967e4d3578758a78edc88b79a61561ec76d87db41f0f53be40"
+                }
+            ],
+            "licenses": [
+                {
+                    "license": {
+                        "id": "MIT"
+                    }
+                }
+            ],
+            "purl": "pkg:maven/org.mockito/mockito-core@3.2.0?type=jar",
+            "externalReferences": [
+                {
+                    "type": "build-system",
+                    "url": "https://travis-ci.org/mockito/mockito"
+                },
+                {
+                    "type": "issue-tracker",
+                    "url": "https://github.com/mockito/mockito/issues"
+                },
+                {
+                    "type": "vcs",
+                    "url": "https://github.com/mockito/mockito.git"
+                }
+            ],
+            "type": "library",
+            "bom-ref": "pkg:maven/org.mockito/mockito-core@3.2.0?type=jar"
+        }
+    ],
+    "dependencies": [
+        {
+            "ref": "pkg:private_domain.com/apache/maven@4.0.0-alpha-1-SNAPSHOT?type=pom",
+            "dependsOn": [
+                "pkg:maven/com.google.guava/guava@30.1-jre?type=jar",
+                "pkg:maven/org.mockito/mockito-core@3.2.0?type=jar"
+            ]
+        }
+    ]
+}

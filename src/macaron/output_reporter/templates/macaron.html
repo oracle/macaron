@@ -168,21 +168,39 @@
 
 {#
     This section is where we fill in the blocks defined in base_template.html.
-    Note that the input context dictionary will have the format:
-        {data = <data_from_html_reporter}
+    The data for this template is passed in as a Python dictionary by the HTMLReporter. We can access those data by
+    specifying the keys to the required value field.
+    For example, if the data from HTMLReporter is:
+    {
+        "metadata": {
+            "boo": 1,
+            "foo": 2
+        }
+    }
+    Within the Jinja2 template, ``{{ metadata.boo }}`` will be rendered as ``1``
 #}
 
 {% block timestamps %}
 {{ metadata.timestamps | indent(12, first=true) }}
-{% endblock%}
-
-
-{% block target_info %}
-{{ render_target_info_table(target.info) | indent(4, first=true) }}
 {% endblock %}
 
+{% block content %}
+    <div class="table_caption">Target information</div>
+    {% if not target.info.remote_path %}
+    {#
+        Display the related section only the remote path is available. The remote path for a target software component
+        is not available when Macaron cannot resolve it from the user provided PURL.
+    #}
+    <div id= "prov_justification">
+        Manual configuration required. Could not find SCM URL.
+    </div>
+    {% endif %}
 
-{% block prov_justification %}
+    {{ render_target_info_table(target.info) | indent(4) }}
+
+    <div class='space_divider'></div>
+
+    <div class="table_caption">Provenance summary</div>
     <div id= "prov_justification">
         {% if target.provenances.is_inferred == true %}
         Could not find a provenance for this repository. Below is what Macaron has inferred.
@@ -190,27 +208,52 @@
         This is the provenance found for this repository.
         {% endif %}
     </div>
-{% endblock %}
 
+    <button class="fancy-button" onclick="expandAll()">Expand All</button>
+    <button class="fancy-button" onclick="collapseAll()">Collapse All</button>
+    {{ render_tree_view_nested_list(target.provenances.content) | indent(4) }}
 
-{% block prov_summary %}
-{{ render_tree_view_nested_list(target.provenances.content) | indent(4, first=true) }}
-{% endblock %}
+    <div class='space_divider'></div>
 
+    {#
+        When there is no passing check for this software component, we hide the check report table when the viewer
+        first open the HTML file. However, the viewer could click the `toggler` to expand the table if they want to see it. To achieve this, there are two component we need to handle:
+        - The toggler, which is the symbol that indicate the Extended or Collapsed state of the check report table:
+        The class ``toggler-extend`` will apply the CSS rule to rotate the toggler symbol indicating the "Extend" state.
+        If ``toggler-extend`` is not set, the toggler will be in the Collapsed state.
+        - The ``check_report_content`` div, which contains the check report table: The HTML class ``hidden`` will set ``display: none`` to this div and hide the check report table.
+    #}
+    {% if metadata.has_passing_check %}
+    {#
+        Set the default state to Extend if there is a passing check.
+    #}
+    <div class="table_caption toggler toggler-extend" id="check_report_title">Reports for Macaron checks</div>
+    <div id="check_report_content">
+    {% else %}
+    {#
+        Set the default state to Collapsed if there is no passing check.
+    #}
+    <div class="table_caption toggler" id="check_report_title">Reports for Macaron checks</div>
+    <div id="check_report_content" class="hidden">
+    {% endif %}
+        {{ render_checks_report(target.checks.results) | indent(8) }}
+    </div>
 
-{% block checks_report %}
-{{ render_checks_report(target.checks.results) | indent(4, first=true) }}
-{% endblock %}
+    <div class='space_divider'></div>
 
-
-{% block deps_result_section %}
-{% if dependencies.analyzed_deps != 0 %}
+    {#
+        Display the dependencies data if it's available:
+            - The total number of dependencies and unique repositories include in the analysis
+            - Dependency results (The number of dependencies pass each check)
+            - The status for each dependency
+    #}
+    {% if dependencies.analyzed_deps != 0 %}
     <div class="table_caption" id="deps_result_title">Dependency results</div>
     <div class="table_sub_caption">
-    {{ dependencies.analyzed_deps }} dependencies that map to {{ dependencies.unique_dep_repos }} unique repositories have been successfully analyzed.
+    {{ dependencies.analyzed_deps }} dependencies have been found.
     </div>
     {{ render_dep_summary(dependencies.checks_summary) | indent(4) }}
     <div class="space_divider"></div>
     {{ render_dep_status(dependencies.dep_status) | indent(4) }}
-{% endif %}
+    {% endif %}
 {% endblock %}
