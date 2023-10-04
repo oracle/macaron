@@ -1,4 +1,4 @@
-<!-- Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved. -->
+<!-- Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved. -->
 <!-- Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. -->
 
 <!DOCTYPE html>
@@ -255,13 +255,17 @@
             padding-left: 2em
         }
 
-        .caret {
+        /*
+            The reason why we need to create a separate .toggler class is because all .caret class are set binded
+            to the listener for extending/collapsing the provenance fields.
+        */
+        .caret, .toggler {
             cursor: pointer;
             user-select: none;
         }
 
         /* Create the caret using a unicode symbol, and style it. */
-        .caret::before {
+        .caret::before, .toggler::before {
             content: "\25B8";
             color: black;
             display: inline-block;
@@ -269,12 +273,12 @@
         }
 
         /* Rotate the caret icon when clicked on. */
-        .caret-down::before {
+        .caret-down::before, .toggler-extend::before {
             transform: rotate(90deg);
         }
 
         /* Hide the nested list. */
-        .nested-ul {
+        .nested-ul, .hidden {
             display: none;
         }
 
@@ -609,31 +613,7 @@
         </div>
     </header>
 
-    <div class="table_caption">Target information</div>
-    {% block target_info%}
-    {% endblock %}
-
-    <div class='space_divider'></div>
-
-    <div class="table_caption">Provenance summary</div>
-    {% block prov_justification %}
-    {% endblock %}
-
-    <button class="fancy-button" onclick="expandAll()">Expand All</button>
-    <button class="fancy-button" onclick="collapseAll()">Collapse All</button>
-
-    {% block prov_summary %}
-    {% endblock %}
-
-    <div class='space_divider'></div>
-
-    <div class="table_caption">Reports for Macaron checks</div>
-    {% block checks_report %}
-    {% endblock%}
-
-    <div class='space_divider'></div>
-
-    {% block deps_result_section %}
+    {% block content %}
     {% endblock %}
 
     <footer class='footer'>
@@ -695,6 +675,13 @@
                     this.classList.toggle("caret-down");
                 });
             }
+
+            // Add a listener to the caret for extending/collapsing the check status table.
+            let check_status_toggler = document.getElementById("check_report_title");
+            check_status_toggler.addEventListener("click", function() {
+                this.classList.toggle("toggler-extend");
+                document.getElementById("check_report_content").classList.toggle("hidden");
+            });
 
             // When loaded, expand all CI services.<n> elements
             setExpandState(document.querySelectorAll(".tree-view-nested-list > * > .caret"), true);
