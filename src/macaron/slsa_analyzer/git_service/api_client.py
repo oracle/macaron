@@ -620,7 +620,54 @@ class GhAPIClient(BaseAPIClient):
 
         return True
 
-    def graphql_fetch_pull_requests(self, url: str, variables: dict) -> dict:
+    def graphql_fetch_associated_prs(self, variables: dict) -> dict:
+        """Fetch the associated pull requests given the user provided digest.
+
+        Parameters
+        ----------
+        variables : dict
+            The variables that are passed to the graphql query.
+
+        Returns
+        -------
+        dict
+            The results for one page of the pull requests' data.
+        """
+        url = "https://api.github.com/graphql"
+
+        response = send_post_graphql(
+            url=url, query=self.query_list, timeout=None, headers=self.headers, variables=variables
+        )
+
+        if response is None:
+            return {}
+
+        response_json = response.json()
+
+        dependabot_num = 0
+        approved_pr_num = 0
+        merged_pr_num = 0
+        filter_author_list = ["dependabot"]
+        branch_name = variables["branch_name"]
+        # DEBUG logger.info(response_json)
+        edges = response_json.get("data").get("repository").get("object").get("associatedPullRequests").get("edges")
+        for edge in edges:
+            node = edge.get("node")
+            review_decision = node.get("reviewDecision")
+            state = node.get("state")
+            base_ref_name = node.get("baseRefName")  # branch name
+            author = node.get("author").get("login")
+            merge_by = node.get("mergedBy").get("login")
+            if base_ref_name == branch_name and state == "MERGED":
+                merged_pr_num += 1
+                if review_decision == "APPROVED":
+                    approved_pr_num += 1
+                if author in filter_author_list or merge_by in filter_author_list:
+                    dependabot_num += 1
+
+        return {"merged_pr_num": merged_pr_num, "approved_pr_num": approved_pr_num, "dependabot_num": dependabot_num}
+
+    def graphql_fetch_pull_requests(self, variables: dict) -> dict:
         """Fetch the pull requests from the specified branch (if specified).
 
         Parameters
@@ -654,16 +701,16 @@ class GhAPIClient(BaseAPIClient):
             filter_author_list = ["dependabot"]
             for edge in response_json.get("data", {}).get("repository", {}).get("pullRequests", {}).get("edges"):
                 review_decision = edge.get("node", {}).get("reviewDecision")
+                login = edge.get("node", {}).get("author", {}).get("login")
+                merged_by = edge.get("node", {}).get("mergedBy", {}).get("login")
+                # Filter the "dependent bot"
+                if login in filter_author_list or merged_by in filter_author_list:
+                    dependabot_num += 1
                 if review_decision == "APPROVED":
-                    login = edge.get("node", {}).get("author", {}).get("login")
-                    merged_by = edge.get("node", {}).get("mergedBy", {}).get("login")
-                    # Filter the "dependent bot"
-                    if login in filter_author_list or merged_by in filter_author_list:
-                        dependabot_num += 1
-                    else:
-                        approved_pr_num += 1
+                    approved_pr_num += 1
             return (dependabot_num, approved_pr_num)
 
+        url = "https://api.github.com/graphql"
         response = send_post_graphql(
             url=url, query=self.query_list, timeout=None, headers=self.headers, variables=variables
         )
@@ -672,9 +719,11 @@ class GhAPIClient(BaseAPIClient):
             return {}
 
         response_json = response.json()
+        # DEBUG logger.info(response_json)
         dependabot_num = 0
         approved_pr_num = 0
         filtered_response = filter_response(dependabot_num, approved_pr_num)
+
         return {
             "merged_pr_num": response_json.get("data", {})
             .get("repository", {})

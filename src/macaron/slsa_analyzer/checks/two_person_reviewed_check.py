@@ -50,32 +50,49 @@ class TwoPersonReviewedCheck(BaseCheck):
             # result_on_skip=CheckResultType.FAILED,
         )
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
-        """Implement the check in this method.
+    def _get_graphql_query(self, with_commit_sha: bool) -> str:
+        """Get the graphql query based on whether the commit sha is provided.
 
         Parameters
         ----------
-        ctx : AnalyzeContext
-            The object containing processed data for the target repo.
-        check_result : CheckResult
-            The object containing result data of a check.
+        with_commit_sha : bool
+            Whether providing commit sha.
+        commit_sha : str | None
+            The commit sha provided by user.
 
         Returns
         -------
-        CheckResultType
-            The result type of the check (e.g. PASSED).
+        str
+            The graphql query
         """
-        check_result["result_tables"] = [TwoPersonReviewedTable()]
-        required_reviewers = defaults.get_list("check.two_person", "required_reviewers", fallback=[])
-        logger.info("Reviewers number required: %s", {required_reviewers[0]})
-        token = os.getenv("GITHUB_TOKEN")
-        gh_api_client = GhAPIClient(
-            {
-                "headers": {
-                    "Authorization": f"Bearer {token}",
-                    "Content-Type": "application/json",
-                },
-                "query": """
+        if with_commit_sha:
+            return """
+                    query ($owner: String!, $name: String!, $commit_sha: String!) {
+                        repository(owner: $owner, name: $name) {
+                            object(expression: $commit_sha) {
+                                ... on Commit {
+                                    associatedPullRequests(first: 10) {
+                                        totalCount
+                                        edges {
+                                            node {
+                                                reviewDecision
+                                                state
+                                                baseRefName
+                                                author {
+                                                    login
+                                                }
+                                                mergedBy {
+                                                    login
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                """
+        return """
                 query ($owner: String!, $name: String!, $cursor: String, $branch_name: String) {
                     repository(owner: $owner, name: $name) {
                         pullRequests(first: 100, states: MERGED, after: $cursor, baseRefName: $branch_name) {
@@ -98,38 +115,106 @@ class TwoPersonReviewedCheck(BaseCheck):
                         }
                     }
                 }
-            """,
-            }
-        )
-        # TODO filter mannequin from with merge-by
-        # GitHub GraphQL API endpoint
-        url = "https://api.github.com/graphql"
+            """
 
+    def _extract_data(self, ctx: AnalyzeContext, client: GhAPIClient, commit_sha: str | None) -> dict:
+        """Implement the check in this method.
+
+        Parameters
+        ----------
+        ctx : AnalyzeContext
+            The object containing processed data for the target repo.
+        check_result : CheckResult
+            The object containing result data of a check.
+
+        Returns
+        -------
+        CheckResultType
+            The result type of the check (e.g. PASSED).
+        """
         approved_pr_num = 0
         merged_pr_num = 0
         has_next_page = True
         end_cursor = None
         dependabot_num = 0
+        variables = {
+            "owner": ctx.component.repository.owner,
+            "name": ctx.component.repository.name,
+            "cursor": end_cursor,
+            "branch_name": ctx.component.repository.branch_name,
+        }
 
-        while has_next_page:
-            variables = {
-                "owner": ctx.component.repository.owner,
-                "name": ctx.component.repository.name,
-                "cursor": end_cursor,
-                "branch_name": ctx.component.repository.branch_name,
+        # "commitSha": ctx.component.repository.commit_sha,
+        if commit_sha:
+            variables["commit_sha"] = commit_sha
+            result = client.graphql_fetch_associated_prs(variables=variables)
+            merged_pr_num = result["merged_pr_num"]
+            approved_pr_num = result["approved_pr_num"]
+            dependabot_num = result["dependabot_num"]
+        else:
+            while has_next_page:
+                variables["end_cursor"] = end_cursor
+                pull_requests = client.graphql_fetch_pull_requests(variables=variables)
+                merged_pr_num = pull_requests["merged_pr_num"]
+                has_next_page = pull_requests["has_next_page"]
+                end_cursor = pull_requests["end_cursor"]
+                approved_pr_num += pull_requests["approved_pr_num"]
+                dependabot_num += pull_requests["dependabot_num"]
+
+        merged_pr_num -= dependabot_num
+        approved_pr_num -= dependabot_num
+
+        return {"approved_pr_num": approved_pr_num, "merged_pr_num": merged_pr_num}
+
+    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+        """Implement the check in this method.
+
+        Parameters
+        ----------
+        ctx : AnalyzeContext
+            The object containing processed data for the target repo.
+        check_result : CheckResult
+            The object containing result data of a check.
+
+        Returns
+        -------
+        CheckResultType
+            The result type of the check (e.g. PASSED).
+        """
+        check_result["result_tables"] = [TwoPersonReviewedTable()]
+        required_reviewers = defaults.get_list("check.two_person", "required_reviewers", fallback=[])
+        logger.info("Reviewers number required: %s", {required_reviewers[0]})
+        commit_sha: str | None = ctx.component.repository.commit_sha
+        with_commit_sha: bool = bool(commit_sha)
+        query: str = self._get_graphql_query(with_commit_sha=with_commit_sha)
+        token = os.getenv("GITHUB_TOKEN")
+        headers: dict = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        client = GhAPIClient(
+            {
+                "headers": headers,
+                "query": query,
             }
-            pull_requests = gh_api_client.graphql_fetch_pull_requests(url=url, variables=variables)
-            merged_pr_num = pull_requests["merged_pr_num"]
-            has_next_page = pull_requests["has_next_page"]
-            end_cursor = pull_requests["end_cursor"]
-            approved_pr_num += pull_requests["approved_pr_num"]
-            dependabot_num += pull_requests["dependabot_num"]
+        )
+        # TODO filter mannequin from with merge-by
+        # GitHub GraphQL API endpoint
+
+        data = self._extract_data(
+            ctx=ctx,
+            client=client,
+            commit_sha=commit_sha,
+        )
+
+        approved_pr_num: int = data["approved_pr_num"]
+        merged_pr_num: int = data["merged_pr_num"]
 
         logger.info(
             "%d pull requests have been reviewed by at least two person, and the pass rate is %d / %d",
             approved_pr_num,
             approved_pr_num,
-            merged_pr_num - dependabot_num,
+            merged_pr_num,
         )
         check_result["justification"].extend(
             [
