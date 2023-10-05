@@ -133,3 +133,19 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
         # Test GitLab CI.
         ci_info["service"] = gitlab_ci
         assert check.run_check(ctx, check_result) == CheckResultType.PASSED
+
+        # Repo has a (gzipped) provenance and valid expectation, and expectation passes.
+        ci_info["service"] = github_actions
+        ci_info["provenances"] = [
+            load_provenance_payload(os.path.join(prov_dir, "slsa-verifier-linux-amd64.intoto.jsonl.gz")),
+        ]
+        ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
+            os.path.join(expectation_dir, "valid_expectations", "slsa_verifier_PASS.cue")
+        )
+        assert check.run_check(ctx, check_result) == CheckResultType.PASSED
+
+        # Repo has a (gzipped) provenance and valid expectation, but expectation fails.
+        ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
+            os.path.join(expectation_dir, "valid_expectations", "slsa_verifier_FAIL.cue")
+        )
+        assert check.run_check(ctx, check_result) == CheckResultType.FAILED

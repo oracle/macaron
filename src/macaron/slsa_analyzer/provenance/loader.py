@@ -4,6 +4,7 @@
 """This module contains the loaders for SLSA provenances."""
 
 import base64
+import gzip
 import json
 
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
@@ -16,6 +17,7 @@ def load_provenance_file(filepath: str) -> dict[str, JsonType]:
 
     Inside a provenance file is a DSSE envelope containing a base64-encoded
     provenance JSON payload. See: https://github.com/secure-systems-lab/dsse.
+    If the file is gzipped, it will be transparently decompressed.
 
     Parameters
     ----------
@@ -33,8 +35,12 @@ def load_provenance_file(filepath: str) -> dict[str, JsonType]:
         If there is an error loading the provenance JSON payload.
     """
     try:
-        with open(filepath, encoding="utf-8") as file:
-            provenance = json.load(file)
+        try:
+            with gzip.open(filepath, mode="rt", encoding="utf-8") as file:
+                provenance = json.load(file)
+        except gzip.BadGzipFile:
+            with open(filepath, encoding="utf-8") as file:
+                provenance = json.load(file)
     except (json.JSONDecodeError, TypeError) as error:
         raise LoadIntotoAttestationError(
             "Cannot deserialize the file content as JSON.",
