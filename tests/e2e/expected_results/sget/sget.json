@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-09-21 07:29:44"
+        "timestamps": "2023-10-05 10:57:32"
     },
     "target": {
         "info": {
@@ -21,7 +21,7 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/sigstore/sget/blob/99e7b91204d391ccc76507f7079b6d2a7957489e/.github/workflows/build.yaml"
+                                "id": "https://github.com/sigstore/sget/blob/99e7b91204d391ccc76507f7079b6d2a7957489e/.github/workflows/release.yml"
                             },
                             "buildType": "Custom github_actions",
                             "invocation": {
@@ -30,7 +30,7 @@
                                     "digest": {
                                         "sha1": "99e7b91204d391ccc76507f7079b6d2a7957489e"
                                     },
-                                    "entryPoint": "https://github.com/sigstore/sget/blob/99e7b91204d391ccc76507f7079b6d2a7957489e/.github/workflows/build.yaml"
+                                    "entryPoint": "https://github.com/sigstore/sget/blob/99e7b91204d391ccc76507f7079b6d2a7957489e/.github/workflows/release.yml"
                                 },
                                 "parameters": {},
                                 "environment": {}
@@ -64,12 +64,28 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 7,
-                "PASSED": 3,
+                "FAILED": 6,
+                "PASSED": 4,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
             "results": [
+                {
+                    "check_id": "mcn_build_as_code_1",
+                    "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        {
+                            "The target repository uses build tool go to deploy": "https://github.com/sigstore/sget/blob/99e7b91204d391ccc76507f7079b6d2a7957489e/.github/workflows/release.yml",
+                            "The build is triggered by": "https://github.com/sigstore/sget/blob/99e7b91204d391ccc76507f7079b6d2a7957489e/.github/workflows/release.yml"
+                        },
+                        "Deploy action: goreleaser/goreleaser-action",
+                        "However, could not find a passing workflow run."
+                    ],
+                    "result_type": "PASSED"
+                },
                 {
                     "check_id": "mcn_build_script_1",
                     "check_description": "Check if the target repo has a valid build script.",
@@ -88,12 +104,7 @@
                         "Build service - SLSA Level 2"
                     ],
                     "justification": [
-                        {
-                            "The target repository uses build tool go to deploy": "https://github.com/sigstore/sget/blob/99e7b91204d391ccc76507f7079b6d2a7957489e/.github/workflows/build.yaml",
-                            "The build is triggered by": "https://github.com/sigstore/sget/blob/99e7b91204d391ccc76507f7079b6d2a7957489e/.github/workflows/build.yaml"
-                        },
-                        "Build command: ['go', 'build', './...']",
-                        "However, could not find a passing workflow run."
+                        "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
                     ],
                     "result_type": "PASSED"
                 },
@@ -111,24 +122,13 @@
                     "result_type": "PASSED"
                 },
                 {
-                    "check_id": "mcn_build_as_code_1",
-                    "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
-                    "slsa_requirements": [
-                        "Build as code - SLSA Level 3"
-                    ],
-                    "justification": [
-                        "The target repository does not use go to deploy."
-                    ],
-                    "result_type": "FAILED"
-                },
-                {
                     "check_id": "mcn_infer_artifact_pipeline_1",
                     "check_description": "Detects potential pipelines from which an artifact is published.",
                     "slsa_requirements": [
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "Check mcn_infer_artifact_pipeline_1 is set to FAILED because mcn_build_as_code_1 FAILED."
+                        "Unable to find a publishing timestamp for the artifact."
                     ],
                     "result_type": "FAILED"
                 },
@@ -207,23 +207,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_infer_artifact_pipeline_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_script_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_trusted_builder_level_three_1",
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             },
             {
@@ -235,7 +219,23 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_script_1",
                 "num_deps_pass": 0
             },
             {
@@ -243,7 +243,7 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_expectation_1",
+                "check_id": "mcn_build_service_1",
                 "num_deps_pass": 0
             }
         ],
