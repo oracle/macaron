@@ -11,7 +11,6 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
-from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
@@ -156,7 +155,7 @@ class BuildAsCodeCheck(BaseCheck):
                 if isinstance(ci_service, NoneCIService):
                     continue
 
-                trusted_deploy_actions = defaults.get_list("builder.pip.ci.deploy", "github_actions", fallback=[])
+                trusted_deploy_actions = build_tool.ci_deploy_kws["github_actions"] or []
 
                 # Check for use of a trusted Github Actions workflow to publish/deploy.
                 # TODO: verify that deployment is legitimate and not a test

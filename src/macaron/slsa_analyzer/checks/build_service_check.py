@@ -169,7 +169,7 @@ class BuildServiceCheck(BaseCheck):
 
                     justification: list[str | dict[str, str]] = [
                         {
-                            f"The target repository uses build tool {build_tool.name} to deploy": bash_source_link,
+                            f"The target repository uses build tool {build_tool.name} to build": bash_source_link,
                             "The build is triggered by": trigger_link,
                         },
                         f"Build command: {build_cmd}",
