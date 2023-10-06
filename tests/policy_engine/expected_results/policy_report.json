@@ -1,7 +1,7 @@
 {
     "component_satisfies_policy": [
         [
-            "136",
+            "169",
             "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac",
             "auth-provenance"
         ]

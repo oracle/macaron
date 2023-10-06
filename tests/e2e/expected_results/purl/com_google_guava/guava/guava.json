@@ -1,6 +1,7 @@
 {
     "metadata": {
-        "timestamps": "2023-10-03 16:57:13"
+        "timestamps": "2023-10-06 15:28:07",
+        "has_passing_check": true
     },
     "target": {
         "info": {
@@ -65,8 +66,8 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 6,
-                "PASSED": 5,
+                "FAILED": 5,
+                "PASSED": 6,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
@@ -119,6 +120,18 @@
                         {
                             "The artifact is potentially published by workflow job 'publish_snapshot' at step 'Publish' triggered by": "https://github.com/google/guava/actions/runs/5719444145"
                         }
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_two_person_reviewed_1",
+                    "check_description": "Check whether the merged pull requests has been reviewd and approved by at least one reviewer.",
+                    "slsa_requirements": [
+                        "Two-person reviewed - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "0 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 0 / 0"
                     ],
                     "result_type": "PASSED"
                 },
@@ -199,18 +212,6 @@
                     ],
                     "justification": [
                         "Could not find a trusted level 3 builder as a GitHub Actions workflow."
-                    ],
-                    "result_type": "FAILED"
-                },
-                {
-                    "check_id": "mcn_two_person_reviewed_1",
-                    "check_description": "Check whether the merged pull requests has been reviewd and approved by at least one reviewer.",
-                    "slsa_requirements": [
-                        "Two-person reviewed - SLSA Level 4"
-                    ],
-                    "justification": [
-                        "0 pull requests have been reviewed by at least two person.",
-                        "The pass rate is 0 / 370"
                     ],
                     "result_type": "FAILED"
                 }

@@ -72,17 +72,16 @@ class TwoPersonReviewedCheck(BaseCheck):
                             object(expression: $commit_sha) {
                                 ... on Commit {
                                     associatedPullRequests(first: 10) {
-                                        totalCount
                                         edges {
                                             node {
                                                 reviewDecision
                                                 state
                                                 baseRefName
                                                 author {
-                                                    login
+                                                    __typename
                                                 }
                                                 mergedBy {
-                                                    login
+                                                    __typename
                                                 }
                                             }
                                         }
@@ -105,10 +104,10 @@ class TwoPersonReviewedCheck(BaseCheck):
                                 node {
                                     reviewDecision
                                     author {
-                                        login
+                                        __typename
                                     }
                                     mergedBy {
-                                        login
+                                        __typename
                                     }
                                 }
                             }
@@ -136,7 +135,6 @@ class TwoPersonReviewedCheck(BaseCheck):
         merged_pr_num = 0
         has_next_page = True
         end_cursor = None
-        dependabot_num = 0
         variables = {
             "owner": ctx.component.repository.owner,
             "name": ctx.component.repository.name,
@@ -150,7 +148,6 @@ class TwoPersonReviewedCheck(BaseCheck):
             result = client.graphql_fetch_associated_prs(variables=variables)
             merged_pr_num = result["merged_pr_num"]
             approved_pr_num = result["approved_pr_num"]
-            dependabot_num = result["dependabot_num"]
         else:
             while has_next_page:
                 variables["end_cursor"] = end_cursor
@@ -159,10 +156,7 @@ class TwoPersonReviewedCheck(BaseCheck):
                 has_next_page = pull_requests["has_next_page"]
                 end_cursor = pull_requests["end_cursor"]
                 approved_pr_num += pull_requests["approved_pr_num"]
-                dependabot_num += pull_requests["dependabot_num"]
-
-        merged_pr_num -= dependabot_num
-        approved_pr_num -= dependabot_num
+        # logger.info(f"[merge_pr]: {merged_pr_num}  /  [approved_pr]: {approved_pr_num}")
 
         return {"approved_pr_num": approved_pr_num, "merged_pr_num": merged_pr_num}
 

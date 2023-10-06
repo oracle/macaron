@@ -1,6 +1,7 @@
 {
     "metadata": {
-        "timestamps": "2023-10-03 17:00:45"
+        "timestamps": "2023-10-06 15:30:26",
+        "has_passing_check": true
     },
     "target": {
         "info": {
@@ -1683,8 +1684,8 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 3,
-                "PASSED": 8,
+                "FAILED": 2,
+                "PASSED": 9,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
@@ -1786,6 +1787,18 @@
                     "result_type": "PASSED"
                 },
                 {
+                    "check_id": "mcn_two_person_reviewed_1",
+                    "check_description": "Check whether the merged pull requests has been reviewd and approved by at least one reviewer.",
+                    "slsa_requirements": [
+                        "Two-person reviewed - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "1 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 1 / 1"
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
                     "check_id": "mcn_version_control_system_1",
                     "check_description": "Check whether the target repo uses a version control system.",
                     "slsa_requirements": [
@@ -1820,18 +1833,6 @@
                     ],
                     "justification": [
                         "Failed to discover any witness provenance."
-                    ],
-                    "result_type": "FAILED"
-                },
-                {
-                    "check_id": "mcn_two_person_reviewed_1",
-                    "check_description": "Check whether the merged pull requests has been reviewd and approved by at least one reviewer.",
-                    "slsa_requirements": [
-                        "Two-person reviewed - SLSA Level 4"
-                    ],
-                    "justification": [
-                        "347 pull requests have been reviewed by at least two person.",
-                        "The pass rate is 347 / 374"
                     ],
                     "result_type": "FAILED"
                 }

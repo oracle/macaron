@@ -1,6 +1,7 @@
 {
     "metadata": {
-        "timestamps": "2023-10-03 16:49:13"
+        "timestamps": "2023-10-06 15:22:03",
+        "has_passing_check": true
     },
     "target": {
         "info": {
@@ -234,7 +235,7 @@
             },
             {
                 "check_id": "mcn_two_person_reviewed_1",
-                "num_deps_pass": 1
+                "num_deps_pass": 2
             },
             {
                 "check_id": "mcn_provenance_expectation_1",

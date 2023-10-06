@@ -637,35 +637,32 @@ class GhAPIClient(BaseAPIClient):
 
         response = send_post_graphql(
             url=url, query=self.query_list, timeout=None, headers=self.headers, variables=variables
-        )
+        )  # nosec B113:request_without_timeout
 
         if response is None:
             return {}
 
         response_json = response.json()
 
-        dependabot_num = 0
         approved_pr_num = 0
         merged_pr_num = 0
-        filter_author_list = ["dependabot"]
+        ignore_analyse_list = ["Bot"]
         branch_name = variables["branch_name"]
-        # DEBUG logger.info(response_json)
         edges = response_json.get("data").get("repository").get("object").get("associatedPullRequests").get("edges")
         for edge in edges:
             node = edge.get("node")
             review_decision = node.get("reviewDecision")
             state = node.get("state")
             base_ref_name = node.get("baseRefName")  # branch name
-            author = node.get("author").get("login")
-            merge_by = node.get("mergedBy").get("login")
+            author = node.get("author").get("__typename")
+            merge_by = node.get("mergedBy").get("__typename")
+            if author in ignore_analyse_list or merge_by in ignore_analyse_list:
+                continue
             if base_ref_name == branch_name and state == "MERGED":
                 merged_pr_num += 1
                 if review_decision == "APPROVED":
                     approved_pr_num += 1
-                if author in filter_author_list or merge_by in filter_author_list:
-                    dependabot_num += 1
-
-        return {"merged_pr_num": merged_pr_num, "approved_pr_num": approved_pr_num, "dependabot_num": dependabot_num}
+        return {"merged_pr_num": merged_pr_num, "approved_pr_num": approved_pr_num}
 
     def graphql_fetch_pull_requests(self, variables: dict) -> dict:
         """Fetch the pull requests from the specified branch (if specified).
@@ -683,13 +680,11 @@ class GhAPIClient(BaseAPIClient):
             The results for one page of the pull requests' data.
         """
 
-        def filter_response(dependabot_num: int, approved_pr_num: int) -> tuple:
+        def filter_response(approved_pr_num: int) -> int:
             """Filter the merges that are trigger by the dependent bot, and only remain the approved pull requests.
 
             Parameters
             ----------
-            dependabot_num : int
-                The number of the pull requests are merged by the dependent bot
             approved_pr_num : int
                 The number of the pull requests are merged and approved by the reviewers.
 
@@ -698,49 +693,37 @@ class GhAPIClient(BaseAPIClient):
             tuple
                 The dependabot_num and approved_pr_num cumulative results.
             """
-            filter_author_list = ["dependabot"]
-            for edge in response_json.get("data", {}).get("repository", {}).get("pullRequests", {}).get("edges"):
-                review_decision = edge.get("node", {}).get("reviewDecision")
-                login = edge.get("node", {}).get("author", {}).get("login")
-                merged_by = edge.get("node", {}).get("mergedBy", {}).get("login")
-                # Filter the "dependent bot"
-                if login in filter_author_list or merged_by in filter_author_list:
-                    dependabot_num += 1
+            ignore_analyse_list = ["Bot"]
+            for edge in response_json.get("data").get("repository").get("pullRequests").get("edges"):
+                node = edge.get("node")
+                review_decision = node.get("reviewDecision")
+                author = node.get("author").get("__typename")
+                merge_by = node.get("mergedBy").get("__typename")
+                if author in ignore_analyse_list or merge_by in ignore_analyse_list:
+                    continue
                 if review_decision == "APPROVED":
                     approved_pr_num += 1
-            return (dependabot_num, approved_pr_num)
+            return approved_pr_num
 
         url = "https://api.github.com/graphql"
         response = send_post_graphql(
             url=url, query=self.query_list, timeout=None, headers=self.headers, variables=variables
-        )
+        )  # nosec B113:request_without_timeout
 
         if response is None:
             return {}
 
         response_json = response.json()
-        # DEBUG logger.info(response_json)
-        dependabot_num = 0
         approved_pr_num = 0
-        filtered_response = filter_response(dependabot_num, approved_pr_num)
+        filtered_response = filter_response(approved_pr_num)
+
+        pull_requests = response_json.get("data").get("repository").get("pullRequests")
 
         return {
-            "merged_pr_num": response_json.get("data", {})
-            .get("repository", {})
-            .get("pullRequests", {})
-            .get("totalCount"),
-            "has_next_page": response_json.get("data", {})
-            .get("repository", {})
-            .get("pullRequests", {})
-            .get("pageInfo", {})
-            .get("hasNextPage"),
-            "end_cursor": response_json.get("data", {})
-            .get("repository", {})
-            .get("pullRequests", {})
-            .get("pageInfo", {})
-            .get("endCursor"),
-            "approved_pr_num": filtered_response[1],
-            "dependabot_num": filtered_response[0],
+            "merged_pr_num": pull_requests.get("totalCount"),  # nosec B113:request_without_timeout
+            "has_next_page": pull_requests.get("pageInfo").get("hasNextPage"),  # nosec B113:request_without_timeout
+            "end_cursor": pull_requests.get("pageInfo").get("endCursor"),  # nosec B113:request_without_timeout,
+            "approved_pr_num": filtered_response,  # nosec B113:request_without_timeout,
         }
 
 
