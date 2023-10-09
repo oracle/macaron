@@ -6,6 +6,7 @@
 import base64
 import gzip
 import json
+import zlib
 
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
 from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError, ValidateInTotoPayloadError
@@ -38,10 +39,10 @@ def load_provenance_file(filepath: str) -> dict[str, JsonType]:
         try:
             with gzip.open(filepath, mode="rt", encoding="utf-8") as file:
                 provenance = json.load(file)
-        except gzip.BadGzipFile:
+        except (gzip.BadGzipFile, EOFError, zlib.error):
             with open(filepath, encoding="utf-8") as file:
                 provenance = json.load(file)
-    except (json.JSONDecodeError, TypeError) as error:
+    except (OSError, json.JSONDecodeError, TypeError) as error:
         raise LoadIntotoAttestationError(
             "Cannot deserialize the file content as JSON.",
         ) from error
