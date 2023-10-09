@@ -245,7 +245,7 @@ class GhAPIClient(BaseAPIClient):
         )
         """
         logger.debug("Query for runs data in repo %s", full_name)
-        query_params = {
+        query_params: dict = {
             "page": page,
             "per_page": defaults.getint("ci.github_actions", "max_items_num", fallback=100),
         }
@@ -253,10 +253,10 @@ class GhAPIClient(BaseAPIClient):
         # We assume that workflow run only happens after the commit date.
         # https://docs.github.com/en/rest/reference/actions#list-workflow-runs-for-a-repository
         if branch_name:
-            query_params["branch"] = branch_name  # type: ignore
+            query_params["branch"] = branch_name
 
         if created_after:
-            query_params["created"] = f">={created_after}"  # type: ignore
+            query_params["created"] = f">={created_after}"
 
         encoded_params = construct_query(query_params)
         url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/actions/runs?" + encoded_params

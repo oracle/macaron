@@ -78,14 +78,12 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
 
     if analyzer_single_args.config_path:
         # Get user config from yaml file
-        run_config = YamlLoader.load(analyzer_single_args.config_path)
-        if run_config is None:
-            # The error mypy raises here is "Statement is unreachable" for the log statement.
-            # This is because the return type of `YamlLoader.load` is Any (which is not correct).
-            # TODO: revisit this issue together with the ``Configuration`` class issue mentioned in
-            # https://github.com/oracle/macaron/pull/401#discussion_r1303695425.
-            logger.error("The input yaml config at %s is invalid.", analyzer_single_args.config_path)  # type: ignore
+        loaded_config = YamlLoader.load(analyzer_single_args.config_path)
+        if loaded_config is None:
+            logger.error("The input yaml config at %s is invalid.", analyzer_single_args.config_path)
             sys.exit(os.EX_DATAERR)
+        else:
+            run_config = loaded_config
     else:
         repo_path = analyzer_single_args.repo_path
         purl = analyzer_single_args.package_url
