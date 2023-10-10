@@ -1,23 +1,5 @@
 [
     {
-        "id": "org.springframework.boot:spring-boot-starter-thymeleaf",
-        "purl": "pkg:maven/org.springframework.boot/spring-boot-starter-thymeleaf@3.0.0?type=jar",
-        "path": "https://github.com/spring-projects/spring-boot",
-        "branch": "",
-        "digest": "",
-        "note": "",
-        "available": "AVAILABLE"
-    },
-    {
-        "id": "org.springframework.boot:spring-boot-starter-web",
-        "purl": "pkg:maven/org.springframework.boot/spring-boot-starter-web@3.0.0?type=jar",
-        "path": "https://github.com/spring-projects/spring-boot",
-        "branch": "",
-        "digest": "",
-        "note": "https://github.com/spring-projects/spring-boot is already analyzed.",
-        "available": "DUPLICATED REPO URL"
-    },
-    {
         "id": "com.google.code.gson:gson",
         "purl": "pkg:maven/com.google.code.gson/gson@2.10.1?type=jar",
         "path": "https://github.com/google/gson",

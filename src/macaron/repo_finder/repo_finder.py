@@ -34,9 +34,13 @@ analysis.
 
 import logging
 import os
+import re
+from re import Pattern
 from urllib.parse import ParseResult, urlunparse
 
 from packageurl import PackageURL
+from packaging import version
+from pydriller import Git
 
 from macaron.config.defaults import defaults
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
@@ -44,6 +48,17 @@ from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+# This regex is used to find matching version strings in repository tags.
+# (.+-)? - Optional prefix text before a hyphen.
+# r? -- Optional version prefix used by some tags, probably denoting Release.
+# (?P<version>{version.VERSION_PATTERN}) - A named group that uses the version regex from the packaging library.
+# (\\#.+)? - Optional suffix text after a hash symbol.
+# $ - perform match from the end of the string.
+# VERBOSE and IGNORECASE flags are required by the packaging library.
+tag_pattern: Pattern = re.compile(
+    f"(.*-)?r?(?P<version>{version.VERSION_PATTERN})(\\#.+)?$", flags=re.VERBOSE | re.IGNORECASE
+)
 
 
 def find_repo(purl: PackageURL) -> str:
@@ -150,3 +165,105 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
             fragment="",
         )
     )
+
+
+def get_commit_from_version_tag(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
+    """Try to find the matching commit in a repository of a given version via tags.
+
+    Parameters
+    ----------
+    git_obj: Git
+        The repository.
+    purl: PackageURL | None
+        The PURL of the artifact.
+
+    Returns
+    -------
+    tuple[str, str]
+        The branch name and digest as a tuple.
+    """
+    # Try to resolve the branch and digest from the version
+    logger.debug("Searching for commit of artifact version using tags: %s@%s", purl.name, purl.version)
+    matched_tags = []
+    # Iterate over tags, keeping any that match the regex version pattern, contain the purl.name, and/or match the
+    # specific version.
+    # If any tags contain the purl.name of the artifact and a valid version, tags that only contain the version
+    # will be ignored.
+    tag_count = 0
+    require_name_match = False
+    for tag in git_obj.repo.tags:
+        tag_count = tag_count + 1
+        if not tag.commit:
+            continue
+
+        tag_name = str(tag)
+        adjusted_tag_name = tag_name
+        contains_name = False
+        if purl.name.lower() in tag_name.lower():
+            adjusted_tag_name = re.sub(purl.name, "", adjusted_tag_name, re.IGNORECASE)
+            contains_name = True
+
+        match = tag_pattern.match(adjusted_tag_name)
+        logger.debug("Tag %s vs. Version %s -- Match: %s", tag_name, purl.version, match.group() if match else None)
+
+        if not require_name_match and match and match.group("version") and contains_name:
+            require_name_match = True
+
+        if not match:
+            continue
+
+        match_value = str(match.group("version"))
+        if (
+            match_value.startswith("v")
+            or match_value.startswith("r")
+            or match_value.startswith("V")
+            or match_value.startswith("R")
+        ):
+            # Remove version prefix
+            match_value = match_value[1:]
+
+        if match_value == purl.version:
+            if contains_name:
+                matched_tags.append(tag)
+            elif not require_name_match:
+                matched_tags.append(tag)
+
+    if tag_count == 0:
+        logger.debug("No tags found for %s", str(purl))
+    elif tag_count > 0:
+        logger.debug("Tags found for %s: %s", str(purl), tag_count)
+
+    for tag in matched_tags:
+        if len(matched_tags) > 1:
+            # TODO decide how to handle multiple matching tags, and if it is possible
+            logger.debug("Found multiple tags for %s: %s", str(purl), len(matched_tags))
+        tag_name = str(tag)
+        branches = git_obj.get_commit_from_tag(tag_name).branches
+
+        logger.debug("Branches: %s", branches)
+
+        if not branches:
+            continue
+
+        branch_name = ""
+        for branch in branches:
+            # Ensure the detached head branch is not picked up.
+            if "(HEAD detached at" not in branch:
+                branch_name = branch
+                break
+
+        if not branch_name:
+            continue
+
+        logger.debug(
+            "Found tag %s with commit %s of branch %s for artifact version %s@%s",
+            tag,
+            tag.commit.hexsha,
+            branch_name,
+            purl.name,
+            purl.version,
+        )
+        return branch_name, tag.commit.hexsha
+
+    logger.debug("Could not find tagged commit for artifact version: %s@%s", purl.name, purl.version)
+    return "", ""

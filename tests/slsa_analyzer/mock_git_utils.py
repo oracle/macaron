@@ -42,7 +42,7 @@ def initiate_repo(repo_path: str | os.PathLike) -> Git:
         return Git(repo_path)
 
 
-def commit_files(git_wrapper: Git, file_names: list) -> bool:
+def commit_files(git_wrapper: Git, file_names: list, message: str = "") -> bool:
     """Commit the files to the repository indicated by the git_wrapper.
 
     Parameters
@@ -51,6 +51,8 @@ def commit_files(git_wrapper: Git, file_names: list) -> bool:
         The git wrapper.
     file_names : list
         The list of file names in the repository to commit.
+    message : str
+        The commit message.
 
     Returns
     -------
@@ -61,7 +63,9 @@ def commit_files(git_wrapper: Git, file_names: list) -> bool:
         # Store the index object as recommended by the documentation
         current_index = git_wrapper.repo.index
         current_index.add(file_names)
-        current_index.commit(f"Add files: {str(file_names)}")
+        if not message:
+            message = f"Add files: {str(file_names)}"
+        current_index.commit(message)
         return True
     except GitError:
         return False
@@ -109,3 +113,18 @@ def prepare_repo_for_testing(
     analyze_ctx = AnalyzeContext(component=component, macaron_path=str(macaron_path), output_dir=str(output_dir))
 
     return analyze_ctx
+
+
+def add_tag_if_not_present(git_obj: Git, tag: str) -> None:
+    """Add passed tag to repository if not already present.
+
+    Parameters
+    ----------
+    git_obj: Git
+        The Git repository.
+    tag: str
+        The tag to possibly add.
+    """
+    if tag in git_obj.repo.tags:
+        return
+    git_obj.repo.create_tag(tag)
