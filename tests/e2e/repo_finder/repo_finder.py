@@ -23,6 +23,7 @@ def test_repo_finder() -> int:
         defaults.add_section("repofinder.java")
     defaults.set("repofinder.java", "find_parents", "True")
     defaults.set("repofinder.java", "repo_pom_paths", "scm.url")
+    defaults.set("repofinder.java", "artifact_repositories", "https://repo.maven.apache.org/maven2")
 
     if not defaults.has_section("repofinder"):
         defaults.add_section("repofinder")

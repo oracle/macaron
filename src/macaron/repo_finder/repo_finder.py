@@ -204,7 +204,6 @@ def get_commit_from_version_tag(git_obj: Git, purl: PackageURL) -> tuple[str, st
             contains_name = True
 
         match = tag_pattern.match(adjusted_tag_name)
-        logger.debug("Tag %s vs. Version %s -- Match: %s", tag_name, purl.version, match.group() if match else None)
 
         if not require_name_match and match and match.group("version") and contains_name:
             require_name_match = True
