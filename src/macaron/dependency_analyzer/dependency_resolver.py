@@ -377,12 +377,12 @@ class DependencyAnalyzer(ABC):
     def _resolve_more_dependencies(dependencies: dict[str, DependencyInfo]) -> None:
         """Utilise the Repo Finder to resolve the repositories of more dependencies."""
         for item in dependencies.values():
-            if item.get("available") != SCMStatus.MISSING_SCM:
+            if item["available"] != SCMStatus.MISSING_SCM:
                 continue
 
-            item["url"] = find_repo(item.get("purl"))  # type: ignore
+            item["url"] = find_repo(item["purl"])
             if item["url"] == "":
-                logger.debug("Failed to find url for purl: %s", item.get("purl"))
+                logger.debug("Failed to find url for purl: %s", item["purl"])
             else:
                 # TODO decide how to handle possible duplicates here
                 item["available"] = SCMStatus.AVAILABLE
