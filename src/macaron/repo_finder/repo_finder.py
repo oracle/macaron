@@ -50,14 +50,13 @@ from macaron.repo_finder.repo_finder_java import JavaRepoFinder
 logger: logging.Logger = logging.getLogger(__name__)
 
 # This regex is used to find matching version strings in repository tags.
-# (.+-)? - Optional prefix text before a hyphen.
+# (?:.*[-_/])? - Optional prefix text.
 # r? -- Optional version prefix used by some tags, probably denoting Release.
 # (?P<version>{version.VERSION_PATTERN}) - A named group that uses the version regex from the packaging library.
-# (\\#.+)? - Optional suffix text after a hash symbol.
-# $ - perform match from the end of the string.
+# (?:[-#+.].+)? - Optional suffix text that won't be picked up as part of the version.
 # VERBOSE and IGNORECASE flags are required by the packaging library.
 tag_pattern: Pattern = re.compile(
-    f"(.*-)?r?(?P<version>{version.VERSION_PATTERN})(\\#.+)?$", flags=re.VERBOSE | re.IGNORECASE
+    f"(?:.*[-_/])?r?(?P<version>{version.VERSION_PATTERN})(?:[-#+.].+)?", flags=re.VERBOSE | re.IGNORECASE
 )
 
 

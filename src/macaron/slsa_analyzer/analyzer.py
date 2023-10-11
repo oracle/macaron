@@ -16,6 +16,7 @@ from pydriller.git import Git
 from sqlalchemy.orm import Session
 
 from macaron import __version__
+from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
@@ -702,8 +703,7 @@ class Analyzer:
             return None
 
         # Find the digest and branch if a version has been specified
-        if not digest and purl and purl.version:
-            # Using tags
+        if defaults.getboolean("repofinder", "find_commits") and not digest and purl and purl.version:
             branch_name, digest = get_commit_from_version_tag(git_obj, purl)
 
         # Checking out the specific branch or commit. This operation varies depends on the git service that the
