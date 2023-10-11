@@ -256,7 +256,7 @@ def get_if_exists(doc: JsonType, path: list[str | int]) -> JsonType | None:
         this = path.pop(0)
         if isinstance(this, str) and isinstance(doc, dict) and this in doc:
             doc = doc[this]
-        elif isinstance(this, int) and isinstance(doc, list) and this in doc:
+        elif isinstance(this, int) and isinstance(doc, list) and 0 <= this < len(doc):
             doc = doc[this]
         else:
             return None
