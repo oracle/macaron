@@ -192,7 +192,11 @@ def get_commit_from_version_tag(git_obj: Git, purl: PackageURL) -> tuple[str, st
     require_name_match = False
     for tag in git_obj.repo.tags:
         tag_count = tag_count + 1
-        if not tag.commit:
+        try:
+            if not tag.commit:
+                raise ValueError
+        except ValueError:
+            logger.debug("No commit found for tag: %s", tag)
             continue
 
         tag_name = str(tag)
