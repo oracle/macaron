@@ -226,10 +226,11 @@ def get_commit_from_version_tag(git_obj: Git, purl: PackageURL) -> tuple[str, st
     elif tag_count > 0:
         logger.debug("Tags found for %s: %s", str(purl), tag_count)
 
+    if len(matched_tags) > 1:
+        # TODO decide how to handle multiple matching tags, and if it is possible
+        logger.debug("Found multiple tags for %s: %s", str(purl), len(matched_tags))
+
     for tag in matched_tags:
-        if len(matched_tags) > 1:
-            # TODO decide how to handle multiple matching tags, and if it is possible
-            logger.debug("Found multiple tags for %s: %s", str(purl), len(matched_tags))
         tag_name = str(tag)
         branches = git_obj.get_commit_from_tag(tag_name).branches
 
