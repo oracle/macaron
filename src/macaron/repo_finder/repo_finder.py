@@ -204,19 +204,14 @@ def get_commit_from_version_tag(git_obj: Git, purl: PackageURL) -> tuple[str, st
 
         match = tag_pattern.match(adjusted_tag_name)
 
-        if not require_name_match and match and match.group("version") and contains_name:
-            require_name_match = True
-
         if not match:
             continue
 
+        if not require_name_match and contains_name and match.group("version"):
+            require_name_match = True
+
         match_value = str(match.group("version"))
-        if (
-            match_value.startswith("v")
-            or match_value.startswith("r")
-            or match_value.startswith("V")
-            or match_value.startswith("R")
-        ):
+        if match_value[0:1] in ["v", "V", "r", "R"]:
             # Remove version prefix
             match_value = match_value[1:]
 
