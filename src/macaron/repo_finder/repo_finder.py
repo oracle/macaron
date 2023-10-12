@@ -181,13 +181,13 @@ def get_commit_from_version_tag(git_obj: Git, purl: PackageURL) -> tuple[str, st
     tuple[str, str]
         The branch name and digest as a tuple.
     """
-    # Try to resolve the branch and digest from the version
     logger.debug("Searching for commit of artifact version using tags: %s@%s", purl.name, purl.version)
     matched_tags = []
-    # Iterate over tags, keeping any that match the regex version pattern, contain the purl.name, and/or match the
-    # specific version.
-    # If any tags contain the purl.name of the artifact and a valid version, tags that only contain the version
-    # will be ignored.
+    # All of the repository's tags are examined.
+    # Any without a corresponding commit are discarded.
+    # If any of the tags contain both a valid version (one that matches the regex) and the purl.name, all tags that
+    # do not contain the purl.name will be discarded.
+    # If no tags contain a valid version and the purl.name, only tags without a valid version will be discarded.
     tag_count = 0
     require_name_match = False
     for tag in git_obj.repo.tags:
