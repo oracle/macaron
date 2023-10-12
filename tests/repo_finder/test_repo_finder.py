@@ -108,7 +108,7 @@ def test_get_commit_from_version_tag() -> None:
     purl_name = "test-name"
     for count, value in enumerate(versions):
         _test_tag(git_obj, PackageURL(type="maven", name=purl_name, version=value), str(count))
-        purl_name = purl_name + "-" + str(count)
+        purl_name = "test-name" + "-" + str(count + 1)
 
 
 def _test_tag(git_obj: Git, purl: PackageURL, commit_message: str) -> None:
