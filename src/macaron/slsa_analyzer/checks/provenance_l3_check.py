@@ -26,7 +26,7 @@ from macaron.database.table_definitions import CheckFacts, HashDigest, Provenanc
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
 from macaron.slsa_analyzer.git_url import get_repo_dir_name
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload, v01
@@ -249,7 +249,7 @@ class ProvenanceL3Check(BaseCheck):
                     if hashlib.sha256(file.read()).hexdigest() == subject["digest"]["sha256"]:
                         return {"name": str(Path(artifact_path).relative_to(temp_path))}
             except OSError as error:
-                logger.error("Error in check %s: %s", self.check_id, error)
+                logger.error("Error in check %s: %s", self.check_info.check_id, error)
                 continue
 
         for item in all_assets:
@@ -266,20 +266,18 @@ class ProvenanceL3Check(BaseCheck):
 
         return None
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+    def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
 
         Parameters
         ----------
         ctx : AnalyzeContext
             The object containing processed data for the target repo.
-        check_result : CheckResult
-            The object containing result data of a check.
 
         Returns
         -------
-        CheckResultType
-            The result type of the check (e.g. PASSED).
+        CheckResultData
+            The result of the check.
         """
         # TODO: During verification, we need to fetch the workflow and verify that it's not
         # using self-hosted runners, custom containers or services, etc.
@@ -293,7 +291,11 @@ class ProvenanceL3Check(BaseCheck):
 
         all_feedback: list[Feedback] = []
         ci_services = ctx.dynamic_data["ci_services"]
-        check_result["result_tables"] = [ProvenanceResultFacts()]
+
+        justification: Justification = []
+        result_tables: ResultTables = []
+
+        result_tables = [ProvenanceResultFacts()]
         for ci_info in ci_services:
             ci_service = ci_info["service"]
 
@@ -354,7 +356,7 @@ class ProvenanceL3Check(BaseCheck):
                         prov.release_tag = ci_info["latest_release"]["tag_name"]
                         prov.component = ctx.component
 
-                        check_result["result_tables"].append(prov)
+                        result_tables.append(prov)
 
                         # Iterate through the subjects and verify.
                         for subject in provenance_payload.statement["subject"]:
@@ -414,7 +416,7 @@ class ProvenanceL3Check(BaseCheck):
                                 artifact.name = subject["name"]
                                 artifact.slsa_verified = result.result == _VerifyArtifactResultType.PASSED
                                 artifact.provenance = prov  # pylint: disable=protected-access
-                                check_result["result_tables"].append(artifact)
+                                result_tables.append(artifact)
 
                                 for k, val in subject["digest"].items():
                                     digest = HashDigest()
@@ -422,12 +424,14 @@ class ProvenanceL3Check(BaseCheck):
                                     digest.digest = val
                                     # foreign key relations
                                     digest.artifact = artifact
-                                    check_result["result_tables"].append(digest)
+                                    result_tables.append(digest)
 
             except (OSError, InTotoAttestationError) as error:
-                logger.error(" %s: %s.", self.check_id, error)
-                check_result["justification"].append("Could not verify level 3 provenance.")
-                return CheckResultType.FAILED
+                logger.error(" %s: %s.", self.check_info.check_id, error)
+                justification.append("Could not verify level 3 provenance.")
+                return CheckResultData(
+                    justification=justification, result_tables=result_tables, result_type=CheckResultType.FAILED
+                )
 
         result_value = CheckResultType.FAILED
         if all_feedback:
@@ -447,17 +451,17 @@ class ProvenanceL3Check(BaseCheck):
             ]
 
             if failed or skipped:
-                check_result["justification"].append("Failed verification for level 3: ")
+                justification.append("Failed verification for level 3: ")
                 result_value = CheckResultType.FAILED
             else:
-                check_result["justification"].append("Successfully verified level 3: ")
+                justification.append("Successfully verified level 3: ")
                 result_value = CheckResultType.PASSED
 
-            check_result["justification"].append(",".join(map(str, all_results)))
-            return result_value
+            justification.append(",".join(map(str, all_results)))
+            return CheckResultData(justification=justification, result_tables=result_tables, result_type=result_value)
 
-        check_result["justification"].append("Could not verify level 3 provenance.")
-        return result_value
+        justification.append("Could not verify level 3 provenance.")
+        return CheckResultData(justification=justification, result_tables=result_tables, result_type=result_value)
 
 
 registry.register(ProvenanceL3Check())

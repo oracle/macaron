@@ -10,9 +10,8 @@ from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
-from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.provenance.intoto import validate_intoto_payload
-from macaron.slsa_analyzer.slsa_req import Category, ReqName, SLSAReq
+from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.util import JsonType
 from tests.conftest import MockAnalyzeContext
@@ -24,8 +23,8 @@ class TestAnalyzeContext(TestCase):
     """
 
     MOCK_CTX_DATA = {
-        ReqName.BUILD_SERVICE: SLSAReq("build", "build_desc", Category.BUILD, SLSALevels.LEVEL1),
-        ReqName.VCS: SLSAReq("vcs_name", "vcs_desc", Category.SOURCE, SLSALevels.LEVEL1),
+        ReqName.BUILD_SERVICE: SLSAReqStatus(),
+        ReqName.VCS: SLSAReqStatus(),
     }
 
     MOCK_GIT_OBJ = MagicMock()
@@ -52,12 +51,12 @@ class TestAnalyzeContext(TestCase):
         Test updating one requirement in the context
         """
         self.analyze_ctx.update_req_status(ReqName.BUILD_SERVICE, True, "sample_fb")
-        assert self.analyze_ctx.ctx_data[ReqName.BUILD_SERVICE].get_status() == (
+        assert self.analyze_ctx.ctx_data[ReqName.BUILD_SERVICE].get_tuple() == (
             True,
             True,
             "sample_fb",
         )
-        assert self.analyze_ctx.ctx_data[ReqName.VCS].get_status() != (
+        assert self.analyze_ctx.ctx_data[ReqName.VCS].get_tuple() != (
             True,
             True,
             "sample_fb",
@@ -67,12 +66,12 @@ class TestAnalyzeContext(TestCase):
         assert self.analyze_ctx.ctx_data == self.MOCK_CTX_DATA
 
         self.analyze_ctx.bulk_update_req_status([ReqName.BUILD_SERVICE, ReqName.VCS], False, "bulk_update")
-        assert self.analyze_ctx.ctx_data[ReqName.BUILD_SERVICE].get_status() == (
+        assert self.analyze_ctx.ctx_data[ReqName.BUILD_SERVICE].get_tuple() == (
             True,
             False,
             "bulk_update",
         )
-        assert self.analyze_ctx.ctx_data[ReqName.VCS].get_status() == (
+        assert self.analyze_ctx.ctx_data[ReqName.VCS].get_tuple() == (
             True,
             False,
             "bulk_update",

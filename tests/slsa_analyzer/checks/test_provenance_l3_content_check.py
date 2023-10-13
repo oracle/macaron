@@ -7,7 +7,7 @@ import os
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.database.table_definitions import CUEExpectation
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.provenance_l3_content_check import ProvenanceL3ContentCheck
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
@@ -56,7 +56,6 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
     def test_expectation_check(self) -> None:
         """Test the expectation check."""
         check = ProvenanceL3ContentCheck()
-        check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
         github_actions = MockGitHubActions()
         api_client = MockGhAPIClient({"headers": {}, "query": []})
         github_actions.api_client = api_client
@@ -90,7 +89,7 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
         # Repo has inferred provenance and no expectation.
         ctx.dynamic_data["is_inferred_prov"] = True
         ctx.dynamic_data["expectation"] = None
-        assert check.run_check(ctx, check_result) == CheckResultType.UNKNOWN
+        assert check.run_check(ctx).result_type == CheckResultType.UNKNOWN
 
         # Repo has a provenance, but no expectation.
         ci_info["provenances"] = [
@@ -98,41 +97,41 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
         ]
         ctx.dynamic_data["is_inferred_prov"] = False
         ctx.dynamic_data["expectation"] = None
-        assert check.run_check(ctx, check_result) == CheckResultType.UNKNOWN
+        assert check.run_check(ctx).result_type == CheckResultType.UNKNOWN
 
         # Repo has a provenance but invalid expectation.
         ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
             os.path.join(expectation_dir, "invalid_expectations", "invalid.cue")
         )
-        assert check.run_check(ctx, check_result) == CheckResultType.UNKNOWN
+        assert check.run_check(ctx).result_type == CheckResultType.UNKNOWN
 
         # Repo has a provenance and valid expectation, but expectation fails.
         ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
             os.path.join(expectation_dir, "valid_expectations", "slsa_verifier_FAIL.cue")
         )
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
         # Repo has a provenance and valid expectation, and expectation passes.
         ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
             os.path.join(expectation_dir, "valid_expectations", "slsa_verifier_PASS.cue")
         )
-        assert check.run_check(ctx, check_result) == CheckResultType.PASSED
+        assert check.run_check(ctx).result_type == CheckResultType.PASSED
 
         # Test Jenkins.
         ci_info["service"] = jenkins
-        assert check.run_check(ctx, check_result) == CheckResultType.PASSED
+        assert check.run_check(ctx).result_type == CheckResultType.PASSED
 
         # Test Travis.
         ci_info["service"] = travis
-        assert check.run_check(ctx, check_result) == CheckResultType.PASSED
+        assert check.run_check(ctx).result_type == CheckResultType.PASSED
 
         # Test Circle CI.
         ci_info["service"] = circle_ci
-        assert check.run_check(ctx, check_result) == CheckResultType.PASSED
+        assert check.run_check(ctx).result_type == CheckResultType.PASSED
 
         # Test GitLab CI.
         ci_info["service"] = gitlab_ci
-        assert check.run_check(ctx, check_result) == CheckResultType.PASSED
+        assert check.run_check(ctx).result_type == CheckResultType.PASSED
 
         # Repo has a (gzipped) provenance and valid expectation, and expectation passes.
         ci_info["service"] = github_actions
@@ -142,10 +141,10 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
         ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
             os.path.join(expectation_dir, "valid_expectations", "slsa_verifier_PASS.cue")
         )
-        assert check.run_check(ctx, check_result) == CheckResultType.PASSED
+        assert check.run_check(ctx).result_type == CheckResultType.PASSED
 
         # Repo has a (gzipped) provenance and valid expectation, but expectation fails.
         ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
             os.path.join(expectation_dir, "valid_expectations", "slsa_verifier_FAIL.cue")
         )
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx).result_type == CheckResultType.FAILED

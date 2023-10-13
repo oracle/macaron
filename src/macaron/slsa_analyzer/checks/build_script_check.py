@@ -12,7 +12,7 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 
@@ -42,7 +42,7 @@ class BuildScriptCheck(BaseCheck):
         """Initiate the BuildScriptCheck instance."""
         check_id = "mcn_build_script_1"
         description = "Check if the target repo has a valid build script."
-        depends_on = [("mcn_build_service_1", CheckResultType.FAILED)]
+        depends_on: list[tuple[str, CheckResultType]] = [("mcn_build_service_1", CheckResultType.FAILED)]
         eval_reqs = [ReqName.SCRIPTED_BUILD]
         super().__init__(
             check_id=check_id,
@@ -52,37 +52,38 @@ class BuildScriptCheck(BaseCheck):
             result_on_skip=CheckResultType.PASSED,
         )
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+    def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
 
         Parameters
         ----------
         ctx : AnalyzeContext
             The object containing processed data for the target repo.
-        check_result : CheckResult
-            The object containing result data of a check.
 
         Returns
         -------
-        CheckResultType
-            The result type of the check (e.g. PASSED).
+        CheckResultData
+            The result of the check.
         """
         build_tools = ctx.dynamic_data["build_spec"]["tools"]
 
         if not build_tools:
             failed_msg = "The target repository does not have any build tools."
-            check_result["justification"].append(failed_msg)
-            return CheckResultType.FAILED
+            return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
 
         # Check if any build tools are discovered for this repo.
         # TODO: look for build commands in the bash scripts. Currently
         #       we parse bash scripts that are reachable through CI only.
+        justification: Justification = []
+        result_tables: ResultTables = []
         for tool in build_tools:
             pass_msg = f"The target repository uses build tool {tool.name}."
-            check_result["justification"].append(pass_msg)
-            check_result["result_tables"].append(BuildScriptFacts(build_tool_name=tool.name))
+            justification.append(pass_msg)
+            result_tables.append(BuildScriptFacts(build_tool_name=tool.name))
 
-        return CheckResultType.PASSED
+        return CheckResultData(
+            justification=justification, result_tables=result_tables, result_type=CheckResultType.PASSED
+        )
 
 
 registry.register(BuildScriptCheck())

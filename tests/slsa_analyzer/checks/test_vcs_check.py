@@ -7,7 +7,7 @@ import os
 
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext, ChecksOutputs
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.vcs_check import VCSCheck
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.slsa_req import SLSALevels
@@ -49,7 +49,6 @@ class TestVCSCheck(MacaronTestCase):
         """Test the vcs check."""
         check = VCSCheck()
         initiate_repo(REPO_DIR)
-        check_result = CheckResult(justification=[])  # type: ignore
 
         component = Component(
             purl="pkg:github/package-url/purl-spec@244fd47e07d1004f0aed9c",
@@ -57,7 +56,7 @@ class TestVCSCheck(MacaronTestCase):
             repository=Repository(complete_name="github.com/package-url/purl-spec"),
         )
         use_git_repo = AnalyzeContext(component=component, macaron_path=REPO_DIR, output_dir="")
-        assert check.run_check(use_git_repo, check_result) == CheckResultType.PASSED
+        assert check.run_check(use_git_repo).result_type == CheckResultType.PASSED
 
         no_git_repo = MockAnalyzeContext()
-        assert check.run_check(no_git_repo, check_result) == CheckResultType.FAILED
+        assert check.run_check(no_git_repo).result_type == CheckResultType.FAILED

@@ -8,7 +8,7 @@ from graphlib import TopologicalSorter
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType
 from macaron.slsa_analyzer.registry import Registry
 
 from ...macaron_testcase import MacaronTestCase
@@ -39,8 +39,8 @@ class EmptyCheck(BaseCheck):
         super().__init__(check_id, "This is an empty check.", parent, [])
         self.should_return = should_return
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
-        return self.should_return
+    def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
+        return CheckResultData(justification=[], result_tables=[], result_type=self.should_return)
 
 
 class TestRunner(MacaronTestCase):
@@ -126,4 +126,4 @@ class TestRunner(MacaronTestCase):
         target = AnalyzeContext(component=component)
         results = registry.scan(target, [])
 
-        assert results["mcn_e_1"]["result_type"] == results["mcn_d_1"]["result_type"] == CheckResultType.SKIPPED
+        assert results["mcn_e_1"].result.result_type == results["mcn_d_1"].result.result_type == CheckResultType.SKIPPED

@@ -12,7 +12,7 @@ from macaron.database.database_manager import ORMBase
 from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
 from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAsset
 from macaron.slsa_analyzer.provenance.witness import (
@@ -122,24 +122,25 @@ class ProvenanceWitnessL1Check(BaseCheck):
             result_on_skip=CheckResultType.FAILED,
         )
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+    def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
 
         Parameters
         ----------
         ctx : AnalyzeContext
             The object containing processed data for the target repo.
-        check_result : CheckResult
-            The object containing result data of a check.
 
         Returns
         -------
-        CheckResultType
-            The result type of the check (e.g. PASSED).
+        CheckResultData
+            The result of the check.
         """
         witness_verifier_config = load_witness_verifier_config()
         verified_provenances = []
         verified_artifact_assets = []
+
+        justification: Justification = []
+        result_tables: ResultTables = []
 
         for package_registry_info_entry in ctx.dynamic_data["package_registries"]:
             match package_registry_info_entry:
@@ -166,8 +167,12 @@ class ProvenanceWitnessL1Check(BaseCheck):
                         failure_justification = verify_artifact_assets(artifact_assets, subjects)
 
                         if failure_justification:
-                            check_result["justification"].extend(failure_justification)
-                            return CheckResultType.FAILED
+                            justification.extend(failure_justification)
+                            return CheckResultData(
+                                justification=justification,
+                                result_tables=result_tables,
+                                result_type=CheckResultType.FAILED,
+                            )
 
                         verified_artifact_assets.extend(artifact_assets)
                         verified_provenances.append(provenance)
@@ -175,14 +180,18 @@ class ProvenanceWitnessL1Check(BaseCheck):
         # When this check passes, it means: "the project produces verifiable witness provenances".
         # Therefore, If Macaron cannot discover any witness provenance, we "fail" the check.
         if len(verified_provenances) > 0:
-            check_result["justification"].append("Successfully verified the following artifacts:")
+            justification.append("Successfully verified the following artifacts:")
             for asset in verified_artifact_assets:
-                check_result["justification"].append(f"* {asset.url}")
-            check_result["result_tables"].append(ProvenanceWitnessL1Table())
-            return CheckResultType.PASSED
+                justification.append(f"* {asset.url}")
+            result_tables.append(ProvenanceWitnessL1Table())
+            return CheckResultData(
+                justification=justification, result_tables=result_tables, result_type=CheckResultType.PASSED
+            )
 
-        check_result["justification"].append("Failed to discover any witness provenance.")
-        return CheckResultType.FAILED
+        justification.append("Failed to discover any witness provenance.")
+        return CheckResultData(
+            justification=justification, result_tables=result_tables, result_type=CheckResultType.FAILED
+        )
 
 
 registry.register(ProvenanceWitnessL1Check())

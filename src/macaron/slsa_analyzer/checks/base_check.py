@@ -7,17 +7,21 @@ import logging
 from abc import abstractmethod
 
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType, SkippedInfo, get_result_as_bool
-from macaron.slsa_analyzer.slsa_req import ReqName, get_requirements_dict
+from macaron.slsa_analyzer.checks.check_result import (
+    CheckInfo,
+    CheckResult,
+    CheckResultData,
+    CheckResultType,
+    SkippedInfo,
+    get_result_as_bool,
+)
+from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
 class BaseCheck:
     """This abstract class is used to implement Checks in Macaron."""
-
-    # The dictionary that contains the data of all SLSA requirements.
-    SLSA_REQ_DATA = get_requirements_dict()
 
     def __init__(
         self,
@@ -44,18 +48,14 @@ class BaseCheck:
         result_on_skip : CheckResultType
             The status for this check when it's skipped based on another check's result.
         """
-        self.check_id = check_id
-        self.description = description
+        self.check_info = CheckInfo(
+            check_id=check_id, check_description=description, eval_reqs=eval_reqs if eval_reqs else []
+        )
 
         if not depends_on:
             self.depends_on = []
         else:
             self.depends_on = depends_on
-
-        if not eval_reqs:
-            self.eval_reqs = []
-        else:
-            self.eval_reqs = eval_reqs
 
         self.result_on_skip = result_on_skip
 
@@ -75,66 +75,58 @@ class BaseCheck:
             The result of the check.
         """
         logger.info("----------------------------------")
-        logger.info("BEGIN CHECK: %s", self.check_id)
+        logger.info("BEGIN CHECK: %s", self.check_info.check_id)
         logger.info("----------------------------------")
 
-        check_result = CheckResult(
-            check_id=self.check_id,
-            check_description=self.description,
-            slsa_requirements=[str(self.SLSA_REQ_DATA.get(req)) for req in self.eval_reqs],
-            justification=[],
-            result_type=CheckResultType.SKIPPED,
-            result_tables=[],
-        )
+        check_result_data: CheckResultData
 
         if skipped_info:
-            check_result["result_type"] = self.result_on_skip
-            check_result["justification"].append(skipped_info["suppress_comment"])
+            check_result_data = CheckResultData(
+                justification=[skipped_info["suppress_comment"]], result_tables=[], result_type=self.result_on_skip
+            )
             logger.info(
                 "Check %s is skipped on target %s, comment: %s",
-                self.check_id,
+                self.check_info.check_id,
                 target.component.purl,
                 skipped_info["suppress_comment"],
             )
         else:
-            check_result["result_type"] = self.run_check(target, check_result)
+            check_result_data = self.run_check(target)
             logger.info(
                 "Check %s run %s on target %s, result: %s",
-                self.check_id,
-                check_result["result_type"].value,
+                self.check_info.check_id,
+                check_result_data.result_type.value,
                 target.component.purl,
-                check_result["justification"],
+                check_result_data.justification,
             )
 
         justification_str = ""
-        for ele in check_result["justification"]:
+        for ele in check_result_data.justification:
             if isinstance(ele, dict):
                 for key, val in ele.items():
                     justification_str += f"{key}: {val}. "
             justification_str += f"{str(ele)}. "
 
         target.bulk_update_req_status(
-            self.eval_reqs,
-            get_result_as_bool(check_result["result_type"]),
+            self.check_info.eval_reqs,
+            get_result_as_bool(check_result_data.result_type),
             justification_str,
         )
 
-        return check_result
+        return CheckResult(check=self.check_info, result=check_result_data)
 
     @abstractmethod
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+    def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
 
         Parameters
         ----------
         ctx : AnalyzeContext
             The object containing processed data for the target repo.
-        check_result : CheckResult
-            The object containing result data of a check.
 
         Returns
         -------
-        CheckResultType
-            The result type of the check (e.g. PASSED).
+        CheckResultData
+            The result of the check.
         """
         raise NotImplementedError

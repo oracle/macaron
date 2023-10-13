@@ -15,7 +15,7 @@ from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
@@ -64,7 +64,7 @@ class BuildServiceCheck(BaseCheck):
         """Initiate the BuildServiceCheck instance."""
         check_id = "mcn_build_service_1"
         description = "Check if the target repo has a valid build service."
-        depends_on = [("mcn_build_as_code_1", CheckResultType.FAILED)]
+        depends_on: list[tuple[str, CheckResultType]] = [("mcn_build_as_code_1", CheckResultType.FAILED)]
         eval_reqs = [ReqName.BUILD_SERVICE]
         super().__init__(
             check_id=check_id,
@@ -119,8 +119,13 @@ class BuildServiceCheck(BaseCheck):
         return ""
 
     def _check_build_tool(
-        self, build_tool: BaseBuildTool, ctx: AnalyzeContext, check_result: CheckResult, ci_services: list[CIInfo]
-    ) -> CheckResultType | None:
+        self,
+        build_tool: BaseBuildTool,
+        ctx: AnalyzeContext,
+        ci_services: list[CIInfo],
+        justification: Justification,
+        result_tables: ResultTables,
+    ) -> CheckResultType:
         """
         Check that a single build tool has a build service associated to it.
 
@@ -130,10 +135,12 @@ class BuildServiceCheck(BaseCheck):
             Build tool to analyse for
         ctx : AnalyzeContext
             The object containing processed data for the target repo.
-        check_result : CheckResult
-            The object containing result data of a check.
         ci_services: list[CIInfo]
             List of objects containing information on present CI services.
+        justification: Justification
+            List of justifications to add to.
+        result_tables: ResultTables
+            List of result tables to add to.
 
         Returns
         -------
@@ -167,7 +174,7 @@ class BuildServiceCheck(BaseCheck):
                         os.path.basename(bash_cmd["CI_path"]),
                     )
 
-                    justification: list[str | dict[str, str]] = [
+                    justification_cmd: Justification = [
                         {
                             f"The target repository uses build tool {build_tool.name} to build": bash_source_link,
                             "The build is triggered by": trigger_link,
@@ -177,8 +184,8 @@ class BuildServiceCheck(BaseCheck):
                         if html_url
                         else "However, could not find a passing workflow run.",
                     ]
-                    check_result["justification"].extend(justification)
-                    check_result["result_tables"].append(
+                    justification.extend(justification_cmd)
+                    result_tables.append(
                         BuildServiceFacts(
                             build_tool_name=build_tool.name,
                             build_trigger=trigger_link,
@@ -214,12 +221,12 @@ class BuildServiceCheck(BaseCheck):
                         if not config_name:
                             break
 
-                        check_result["justification"].append(
+                        justification.append(
                             f"The target repository uses "
                             f"build tool {build_tool.name} in {ci_service.name} to "
                             f"build."
                         )
-                        check_result["result_tables"].append(
+                        result_tables.append(
                             BuildServiceFacts(
                                 build_tool_name=build_tool.name,
                                 ci_service_name=ci_service.name,
@@ -246,23 +253,21 @@ class BuildServiceCheck(BaseCheck):
 
         # Nothing found; fail
         fail_msg = f"The target repository does not have a build service for {build_tool}."
-        check_result["justification"].append(fail_msg)
+        justification.append(fail_msg)
         return CheckResultType.FAILED
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+    def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
 
         Parameters
         ----------
         ctx : AnalyzeContext
             The object containing processed data for the target repo.
-        check_result : CheckResult
-            The object containing result data of a check.
 
         Returns
         -------
-        CheckResultType
-            The result type of the check (e.g. PASSED).
+        CheckResultData
+            The result of the check.
         """
         build_tools = ctx.dynamic_data["build_spec"]["tools"]
         ci_services = ctx.dynamic_data["ci_services"]
@@ -273,9 +278,11 @@ class BuildServiceCheck(BaseCheck):
         # implemented, consider whether this should be one fail = whole
         # check fails instead
         all_passing = False
+        justification: Justification = []
+        result_tables: ResultTables = []
 
         for tool in build_tools:
-            res = self._check_build_tool(tool, ctx, check_result, ci_services)
+            res = self._check_build_tool(tool, ctx, ci_services, justification, result_tables)
 
             if res == CheckResultType.PASSED:
                 # Pass at some point so treat as entire check pass; we don't
@@ -285,10 +292,14 @@ class BuildServiceCheck(BaseCheck):
 
         if not all_passing or not build_tools:
             fail_msg = "The target repository does not have a build service for at least one build tool."
-            check_result["justification"].append(fail_msg)
-            return CheckResultType.FAILED
+            justification.append(fail_msg)
+            return CheckResultData(
+                justification=justification, result_tables=result_tables, result_type=CheckResultType.FAILED
+            )
 
-        return CheckResultType.PASSED
+        return CheckResultData(
+            justification=justification, result_tables=result_tables, result_type=CheckResultType.PASSED
+        )
 
 
 registry.register(BuildServiceCheck())

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the class Runner for executing checks."""
@@ -54,17 +54,17 @@ class Runner:
         """
         # TODO: Handle exceptions and time out to
         # prevent the runner to keep running indefinitely.
-        logger.debug("Runner %s running check %s", self.runner_id, check.check_id)
+        logger.debug("Runner %s running check %s", self.runner_id, check.check_info.check_id)
 
         skip_info = None
         if skipped_checks:
-            if check.check_id in [skip["check_id"] for skip in skipped_checks]:
+            if check.check_info.check_id in [skip["check_id"] for skip in skipped_checks]:
                 # Get the skip info from the list.
-                skip_info = [skip for skip in skipped_checks if skip["check_id"] == check.check_id][0]
+                skip_info = [skip for skip in skipped_checks if skip["check_id"] == check.check_info.check_id][0]
 
         check_result = check.run(target, skip_info)
 
-        logger.debug("Runner %s finished check %s.", self.runner_id, check.check_id)
+        logger.debug("Runner %s finished check %s.", self.runner_id, check.check_info.check_id)
         self.registry.runner_queue.put(self)
 
         return check_result

@@ -19,7 +19,7 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
@@ -427,20 +427,18 @@ class ProvenanceAvailableCheck(BaseCheck):
             # Persist the provenance payloads into the CIInfo object.
             ci_info["provenances"] = downloaded_provs
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+    def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
 
         Parameters
         ----------
         ctx : AnalyzeContext
             The object containing processed data for the target repo.
-        check_result : CheckResult
-            The object containing result data of a check.
 
         Returns
         -------
-        CheckResultType
-            The result type of the check (e.g. PASSED).
+        CheckResultData
+            The result of the check.
         """
         provenance_extensions = defaults.get_list(
             "slsa.verifier",
@@ -456,8 +454,8 @@ class ProvenanceAvailableCheck(BaseCheck):
         # TODO: handle cases where a PURL string is provided for a software component but
         # no repository is available.
         if not ctx.component.repository:
-            check_result["justification"] = ["Unable to find provenances because no repository is available."]
-            return CheckResultType.FAILED
+            failed_msg = "Unable to find provenances because no repository is available."
+            return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
         try:
             provenance_assets = self.find_provenance_assets_on_package_registries(
                 repo_fs_path=ctx.component.repository.fs_path,
@@ -470,28 +468,32 @@ class ProvenanceAvailableCheck(BaseCheck):
                 provenance_extensions=provenance_extensions,
             )
         except ProvenanceAvailableException as error:
-            check_result["justification"] = [str(error)]
-            return CheckResultType.FAILED
+            failed_msg = str(error)
+            return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
 
         if provenance_assets:
             ctx.dynamic_data["is_inferred_prov"] = False
 
-            check_result["justification"].append("Found provenance in release assets:")
-            check_result["justification"].extend(
+            justification: Justification = []
+
+            justification.append("Found provenance in release assets:")
+            justification.extend(
                 [asset.name for asset in provenance_assets],
             )
             # We only write the result to the database when the check is PASSED.
-            check_result["result_tables"] = [
+            result_tables: ResultTables = [
                 ProvenanceAvailableFacts(
                     asset_name=asset.name,
                     asset_url=asset.url,
                 )
                 for asset in provenance_assets
             ]
-            return CheckResultType.PASSED
+            return CheckResultData(
+                justification=justification, result_tables=result_tables, result_type=CheckResultType.PASSED
+            )
 
-        check_result["justification"].append("Could not find any SLSA or Witness provenances.")
-        return CheckResultType.FAILED
+        failed_msg = "Could not find any SLSA or Witness provenances."
+        return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
 
 
 registry.register(ProvenanceAvailableCheck())
