@@ -109,7 +109,7 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
 
     if not offline_mode:
         # Fetch from remote by running ``git fetch`` inside the target repository.
-        # We don't specify any remote name (e.g. origin) is because we want git to resolve the default fetching
+        # We don't specify any remote name (e.g. origin) because we want git to resolve the default fetching
         # target by itself.
         # For example, the user runs Macaron on a local repository where the remote is set to have name "foo_origin"
         # instead.
@@ -117,7 +117,7 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
         try:
             git_obj.repo.git.fetch()
         except GitCommandError as error:
-            logger.error("Cannot perform fetching on this repository. Error: %s", error)
+            logger.error("Unable to fetch from the remote repository. Error: %s", error)
             return False
 
     try:
@@ -183,7 +183,7 @@ def get_default_branch(git_obj: Git) -> str:
     branch of the remote repository and it's usually set when the repository is first cloned with
     ``git clone <url>``.
     Therefore, this method will fail to obtain the default branch name if ``origin/HEAD`` is not
-    available. An example of this case is when a repository is shallow-cloned with a non-default the branch
+    available. An example of this case is when a repository is shallow-cloned from a non-default branch
     (e.g. ``git clone --depth=1 <url> -b some_branch``).
 
     Parameters
