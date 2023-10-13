@@ -16,7 +16,7 @@ import os
 import string
 from datetime import datetime
 from pathlib import Path
-from typing import Self
+from typing import Any, Self
 
 from packageurl import PackageURL
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Table, UniqueConstraint
@@ -287,7 +287,7 @@ class Repository(ORMBase):
     #: The path to the repo on the file system.
     fs_path: Mapped[str] = mapped_column(String, nullable=False)
 
-    def __init__(self, *args, files: list[str] | None = None, **kwargs):  # type: ignore[no-untyped-def]
+    def __init__(self, *args: Any, files: list[str] | None = None, **kwargs: Any):
         """Instantiate the repository and set files.
 
         Parameters

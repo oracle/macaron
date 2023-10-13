@@ -8,7 +8,7 @@ import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import sqlalchemy.exc
 from git import InvalidGitRepositoryError
@@ -881,7 +881,7 @@ class Analyzer:
 class DuplicateCmpError(DuplicateError):
     """This class is used for duplicated software component errors."""
 
-    def __init__(self, *args, context: AnalyzeContext | None = None, **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, *args: Any, context: AnalyzeContext | None = None, **kwargs: Any) -> None:
         """Create a DuplicateCmpError instance.
 
         Parameters
