@@ -78,7 +78,7 @@ class ProvenanceL3ContentCheck(BaseCheck):
                             )
 
                             if expectation.validate(provenance.payload):
-                                check_result["result_tables"].append(expectation)  # type: ignore[arg-type]
+                                check_result["result_tables"].append(expectation)
                                 check_result["justification"].append(
                                     f"Successfully verified the expectation against the provenance {provenance.asset.url}."
                                 )
@@ -108,7 +108,7 @@ class ProvenanceL3ContentCheck(BaseCheck):
                     if expectation.validate(payload):
                         # We need to use typing.Protocol for multiple inheritance, however, the Expectation
                         # class uses inlined functions, which is not supported by Protocol.
-                        check_result["result_tables"].append(expectation)  # type: ignore[arg-type]
+                        check_result["result_tables"].append(expectation)
                         check_result["justification"].append(
                             "Successfully verified the expectation against provenance."
                         )

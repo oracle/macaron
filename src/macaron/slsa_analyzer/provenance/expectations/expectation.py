@@ -36,8 +36,7 @@ class Expectation:
     #: The kind of expectation, e.g., CUE.
     expectation_type: Mapped[str] = mapped_column(nullable=False)
 
-    # mypy cannot resolve *args, **kwargs, unfortunately.
-    def __init__(self, *args, **kwargs) -> None:  # type: ignore
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Create an instance provenance expectation."""
         self._validator: ExpectationFn | None = None
         super().__init__(*args, **kwargs)

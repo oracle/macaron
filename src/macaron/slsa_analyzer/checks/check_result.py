@@ -5,8 +5,9 @@
 from enum import Enum
 from typing import TypedDict
 
-from sqlalchemy import Table
 from sqlalchemy.orm import DeclarativeBase
+
+from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
 
 
 class CheckResultType(str, Enum):
@@ -37,7 +38,7 @@ class CheckResult(TypedDict):
     justification: list[str | dict[str, str]]
     # human_readable_justification: str
     # result_values: dict[str, str | float | int] | list[dict[str, str | float | int]]
-    result_tables: list[DeclarativeBase | Table]
+    result_tables: list[DeclarativeBase | Expectation]
     # recommendation: str
     result_type: CheckResultType
 

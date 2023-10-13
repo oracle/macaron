@@ -9,16 +9,20 @@ SQLAlchemy View creation.
 https://github.com/sqlalchemy/sqlalchemy/wiki/Views
 """
 
+from typing import Any
+
 import sqlalchemy as sa
+import sqlalchemy.event
+from sqlalchemy import Connection
 from sqlalchemy.ext import compiler
-from sqlalchemy.schema import DDLElement
-from sqlalchemy.sql import TableClause, table
+from sqlalchemy.schema import BaseDDLElement, DDLElement, MetaData, SchemaItem, Table
+from sqlalchemy.sql import Select, TableClause, table
 
 
 class CreateView(DDLElement):
     """CreateView."""
 
-    def __init__(self, name, selectable):  # type: ignore
+    def __init__(self, name: str, selectable: Select[Any]):
         self.name = name
         self.selectable = selectable
 
@@ -26,7 +30,7 @@ class CreateView(DDLElement):
 class DropView(DDLElement):
     """DropView."""
 
-    def __init__(self, name):  # type: ignore
+    def __init__(self, name: str):
         self.name = name
 
 
@@ -40,25 +44,42 @@ def _drop_view(element, comp, **kw):
     return "DROP VIEW %s" % (element.name)
 
 
-def view_exists(ddl, target, connection, **kw):  # type: ignore
+def view_exists(
+    ddl: BaseDDLElement,
+    target: SchemaItem,
+    bind: Connection | None,
+    tables: list[Table] | None = None,
+    state: Any | None = None,
+    **kw: Any,
+) -> bool:
     """View exists."""
-    return ddl.name in sa.inspect(connection).get_view_names()
+    if isinstance(ddl, CreateView) or isinstance(ddl, DropView):
+        assert isinstance(bind, Connection)
+        return ddl.name in sa.inspect(bind).get_view_names()
+    return False
 
 
-def view_doesnt_exist(ddl, target, connection, **kw):  # type: ignore
+def view_doesnt_exist(
+    ddl: BaseDDLElement,
+    target: SchemaItem,
+    bind: Connection | None,
+    tables: list[Table] | None = None,
+    state: Any | None = None,
+    **kw: Any,
+) -> bool:
     """Not view exists."""
-    return not view_exists(ddl, target, connection, **kw)  # type: ignore
+    return not view_exists(ddl, target, bind, **kw)
 
 
-def create_view(name, metadata, selectable) -> TableClause:  # type: ignore
+def create_view(name: str, metadata: MetaData, selectable: Select[Any]) -> TableClause:
     """Create a view."""
     view = table(name)
     view._columns._populate_separate_keys(col._make_proxy(view) for col in selectable.selected_columns)
 
-    sa.event.listen(
+    sqlalchemy.event.listen(
         metadata,
         "after_create",
-        CreateView(name, selectable).execute_if(callable_=view_doesnt_exist),  # type: ignore
+        CreateView(name, selectable).execute_if(callable_=view_doesnt_exist),
     )
-    sa.event.listen(metadata, "before_drop", DropView(name).execute_if(callable_=view_exists))  # type: ignore
+    sqlalchemy.event.listen(metadata, "before_drop", DropView(name).execute_if(callable_=view_exists))
     return view

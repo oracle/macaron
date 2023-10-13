@@ -254,8 +254,10 @@ def get_if_exists(doc: JsonType, path: list[str | int]) -> JsonType | None:
     """Get a json dict value if it exists."""
     while len(path) > 0:
         this = path.pop(0)
-        if isinstance(doc, (dict, list)) and this in doc:
-            doc = doc[this]  # type: ignore
+        if isinstance(this, str) and isinstance(doc, dict) and this in doc:
+            doc = doc[this]
+        elif isinstance(this, int) and isinstance(doc, list) and 0 <= this < len(doc):
+            doc = doc[this]
         else:
             return None
     return doc
