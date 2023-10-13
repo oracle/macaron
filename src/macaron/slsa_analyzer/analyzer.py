@@ -26,7 +26,7 @@ from macaron.errors import CloneError, DuplicateError, InvalidPURLError, PURLNot
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
-from macaron.repo_finder.repo_finder import get_commit_from_version
+from macaron.repo_finder.commit_finder import get_commit_from_version
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS

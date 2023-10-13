@@ -10,7 +10,7 @@ from packageurl import PackageURL
 from pydriller import Git
 
 from macaron.config.target_config import Configuration
-from macaron.repo_finder import repo_finder
+from macaron.repo_finder import commit_finder
 from macaron.slsa_analyzer.analyzer import Analyzer
 from tests.slsa_analyzer.mock_git_utils import add_tag_if_not_present, commit_nothing, initiate_repo
 
@@ -86,9 +86,9 @@ def test_get_commit_from_version() -> None:
             "test-name-v1.0.1-A",
             "v1.0.1-B",
             "v1.0.3+test",
-            "1.0.5",
-            "50.0",
-            "78A",
+            "v_1.0.5",
+            "50_0_2",
+            "r78rv109",
         ]
         # Add a commit for each tag with a message that can be verified later.
         for count, value in enumerate(tags):
@@ -101,17 +101,17 @@ def test_get_commit_from_version() -> None:
         "1.0.1-B",
         "1.0.3+test",
         "1.0.5",
-        "50.0",
-        "78A",
+        "50.0.2",
+        "78.109",
     ]
     purl_name = "test-name"
     for count, value in enumerate(versions):
-        _test_tag(git_obj, PackageURL(type="maven", name=purl_name, version=value), str(count))
+        _test_version(git_obj, PackageURL(type="maven", name=purl_name, version=value), str(count))
         purl_name = "test-name" + "-" + str(count + 1)
 
 
-def _test_tag(git_obj: Git, purl: PackageURL, commit_message: str) -> None:
-    """Retrieve commit matching tag and check commit message is correct."""
-    branch, digest = repo_finder.get_commit_from_version(git_obj, purl)
+def _test_version(git_obj: Git, purl: PackageURL, commit_message: str) -> None:
+    """Retrieve commit matching version and check commit message is correct."""
+    branch, digest = commit_finder.get_commit_from_version(git_obj, purl)
     assert branch
     assert git_obj.get_commit(digest).msg == commit_message
