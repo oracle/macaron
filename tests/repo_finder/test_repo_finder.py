@@ -12,7 +12,7 @@ from pydriller import Git
 from macaron.config.target_config import Configuration
 from macaron.repo_finder import repo_finder
 from macaron.slsa_analyzer.analyzer import Analyzer
-from tests.slsa_analyzer.mock_git_utils import add_tag_if_not_present, commit_files, initiate_repo
+from tests.slsa_analyzer.mock_git_utils import add_tag_if_not_present, commit_nothing, initiate_repo
 
 
 @pytest.mark.parametrize(
@@ -76,7 +76,7 @@ def test_resolve_analysis_target(
     assert Analyzer.to_analysis_target(config, available_domains) == expect
 
 
-def test_get_commit_from_version_tag() -> None:
+def test_get_commit_from_version() -> None:
     """Test resolving commits from version tags."""
     path = Path(__file__).parent.joinpath("mock_repo")
     init_repo = not os.path.exists(path)
@@ -90,10 +90,9 @@ def test_get_commit_from_version_tag() -> None:
             "50.0",
             "78A",
         ]
-        files = [path.joinpath(".git", "description")]
         # Add a commit for each tag with a message that can be verified later.
         for count, value in enumerate(tags):
-            commit_files(git_obj, files, str(count))
+            commit_nothing(git_obj, str(count))
             add_tag_if_not_present(git_obj, value)
 
     # Perform tests
@@ -113,6 +112,6 @@ def test_get_commit_from_version_tag() -> None:
 
 def _test_tag(git_obj: Git, purl: PackageURL, commit_message: str) -> None:
     """Retrieve commit matching tag and check commit message is correct."""
-    branch, digest = repo_finder.get_commit_from_version_tag(git_obj, purl)
+    branch, digest = repo_finder.get_commit_from_version(git_obj, purl)
     assert branch
     assert git_obj.get_commit(digest).msg == commit_message

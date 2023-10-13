@@ -42,7 +42,7 @@ def initiate_repo(repo_path: str | os.PathLike) -> Git:
         return Git(repo_path)
 
 
-def commit_files(git_wrapper: Git, file_names: list, message: str = "") -> bool:
+def commit_files(git_wrapper: Git, file_names: list) -> bool:
     """Commit the files to the repository indicated by the git_wrapper.
 
     Parameters
@@ -51,6 +51,29 @@ def commit_files(git_wrapper: Git, file_names: list, message: str = "") -> bool:
         The git wrapper.
     file_names : list
         The list of file names in the repository to commit.
+
+    Returns
+    -------
+    bool
+        True if succeed else False.
+    """
+    try:
+        # Store the index object as recommended by the documentation
+        current_index = git_wrapper.repo.index
+        current_index.add(file_names)
+        current_index.commit(f"Add files: {str(file_names)}")
+        return True
+    except GitError:
+        return False
+
+
+def commit_nothing(git_wrapper: Git, message: str = "") -> bool:
+    """Create an empty commit in the repository indicated by the git_wrapper.
+
+    Parameters
+    ----------
+    git_wrapper : Git
+        The git wrapper.
     message : str
         The commit message.
 
@@ -62,9 +85,8 @@ def commit_files(git_wrapper: Git, file_names: list, message: str = "") -> bool:
     try:
         # Store the index object as recommended by the documentation
         current_index = git_wrapper.repo.index
-        current_index.add(file_names)
         if not message:
-            message = f"Add files: {str(file_names)}"
+            message = "Empty commit"
         current_index.commit(message)
         return True
     except GitError:

@@ -166,7 +166,7 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
     )
 
 
-def get_commit_from_version_tag(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
+def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
     """Try to find the matching commit in a repository of a given version via tags.
 
     Parameters
