@@ -1,12 +1,7 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""Tests for the ``run_macaron.sh`` script.
-
-Note: this script is compatible with python >=3.6.
-"""
+"""Tests for the ``run_macaron.sh`` script."""
 
 import subprocess
 import sys

@@ -26,7 +26,7 @@ function log_fail() {
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Run unit tests for the run_macaron.sh script"
-$UNIT_TEST_SCRIPT || log_fail
+python $UNIT_TEST_SCRIPT || log_fail
 echo -e "\n----------------------------------------------------------------------------------"
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -39,9 +39,9 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/multibuild_test/multi
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/multibuild_test/multibuild_test.json
 $RUN_MACARON_SCRIPT analyze -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
 
-$COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-$COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
@@ -50,7 +50,7 @@ DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 
 $RUN_MACARON_SCRIPT analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || log_fail
-$COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: e2e using the local repo path, the branch name and the commit digest without dependency resolution."
@@ -59,7 +59,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
 
 $RUN_MACARON_SCRIPT -lr $WORKSPACE/output/git_repos/github_com analyze -r apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
-$COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check the e2e output JSON file with config and no dependency analyzing."
@@ -77,7 +77,7 @@ $RUN_MACARON_SCRIPT analyze -c $WORKSPACE/tests/e2e/configurations/maven_config.
 
 for i in "${COMPARE_FILES[@]}"
 do
-    $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
+    python $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
 done
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -89,7 +89,7 @@ DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 
 $RUN_MACARON_SCRIPT analyze -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 -sbom $SBOM_FILE || log_fail
 
-$COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with PURL and repository path without dependency resolution."
@@ -98,7 +98,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.json
 JSON_RESULT=$WORKSPACE/output/reports/maven/apache/maven/maven.json
 $RUN_MACARON_SCRIPT analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
 
-$COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
@@ -109,7 +109,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/urllib3_PASS.cue
 $RUN_MACARON_SCRIPT analyze -pe $EXPECTATION_FILE -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
-$COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
@@ -120,7 +120,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
 EXPECTATION_DIR=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/
 $RUN_MACARON_SCRIPT analyze -pe $EXPECTATION_DIR -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
-$COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "slsa-framework/slsa-verifier: Analyzing the repo path when automatic dependency resolution is skipped"
@@ -131,7 +131,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/sl
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
 $RUN_MACARON_SCRIPT analyze -pe $EXPECTATION_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 
-$COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Run policy CLI with slsa-verifier results."
