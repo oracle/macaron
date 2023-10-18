@@ -5,8 +5,24 @@
 
 # This script runs the Macaron Docker image.
 
+# Strict bash options.
+#
+# -e:          exit immediately if a command fails (with non-zero return code),
+#              or if a function returns non-zero.
+#
+# -u:          treat unset variables and parameters as error when performing
+#              parameter expansion.
+#              In case a variable ${VAR} is unset but we still need to expand,
+#              use the syntax ${VAR:-} to expand it to an empty string.
+#
+# -o pipefail: set the return value of a pipeline to the value of the last
+#              (rightmost) command to exit with a non-zero status, or zero
+#              if all commands in the pipeline exit successfully.
+#
+# Reference: https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html.
+set -euo pipefail
 
-if [[ -z ${MACARON_IMAGE_TAG} ]]; then
+if [[ -z ${MACARON_IMAGE_TAG:-} ]]; then
     MACARON_IMAGE_TAG="latest"
 fi
 
@@ -180,7 +196,7 @@ fi
 
 # MACARON entrypoint - Main argvs
 # Determine the output path to be mounted into ${MACARON_WORKSPACE}/output/
-if [[ -n "${arg_output}" ]]; then
+if [[ -n "${arg_output:-}" ]]; then
     output="${arg_output}"
     err=$(check_dir_exists "${output}" "-o/--output")
     if [[ -n "${err}" ]]; then
@@ -202,7 +218,7 @@ mounts+=("-v" "${m2_dir}:${MACARON_WORKSPACE}/.m2:rw,Z")
 mounts+=("-v" "${gradle_dir}:${MACARON_WORKSPACE}/.gradle:rw,Z")
 
 # Determine the local repos path to be mounted into ${MACARON_WORKSPACE}/output/git_repos/local_repos/
-if [[ -n "${arg_local_repos_path}" ]]; then
+if [[ -n "${arg_local_repos_path:-}" ]]; then
     local_repos_path="${arg_local_repos_path}"
     err=$(check_dir_exists "${local_repos_path}" "-lr/--local-repos-path")
     if [[ -n "${err}" ]]; then
@@ -216,7 +232,7 @@ if [[ -n "${arg_local_repos_path}" ]]; then
 fi
 
 # Determine the defaults path to be mounted into ${MACARON_WORKSPACE}/defaults/${file_name}
-if [[ -n "${arg_defaults_path}" ]]; then
+if [[ -n "${arg_defaults_path:-}" ]]; then
     defaults_path="${arg_defaults_path}"
     err=$(check_file_exists "${defaults_path}" "-dp/--defaults-path")
     if [[ -n "${err}" ]]; then
@@ -231,7 +247,7 @@ if [[ -n "${arg_defaults_path}" ]]; then
 fi
 
 # Determine the policy path to be mounted into ${MACARON_WORKSPACE}/policy/${file_name}
-if [[ -n "${arg_policy}" ]]; then
+if [[ -n "${arg_policy:-}" ]]; then
     policy="${arg_policy}"
     err=$(check_file_exists "${policy}" "-po/--policy")
     if [[ -n "${err}" ]]; then
@@ -247,7 +263,7 @@ fi
 
 # MACARON entrypoint - Analyze command argvs
 # Determine the template path to be mounted into ${MACARON_WORKSPACE}/template/${file_name}
-if [[ -n "${arg_template_path}" ]]; then
+if [[ -n "${arg_template_path:-}" ]]; then
     template_path="${arg_template_path}"
     err=$(check_file_exists "${template_path}" "-g/--template-path")
     if [[ -n "${err}" ]]; then
@@ -262,7 +278,7 @@ if [[ -n "${arg_template_path}" ]]; then
 fi
 
 # Determine the config path to be mounted into ${MACARON_WORKSPACE}/config/${file_name}
-if [[ -n "${arg_config_path}" ]]; then
+if [[ -n "${arg_config_path:-}" ]]; then
     config_path="${arg_config_path}"
     err=$(check_file_exists "${config_path}" "-c/--config-path")
     if [[ -n "${err}" ]]; then
@@ -277,7 +293,7 @@ if [[ -n "${arg_config_path}" ]]; then
 fi
 
 # Determine the sbom path to be mounted into ${MACARON_WORKSPACE}/sbom/${file_name}
-if [[ -n "${arg_sbom_path}" ]]; then
+if [[ -n "${arg_sbom_path:-}" ]]; then
     sbom_path="${arg_sbom_path}"
     err=$(check_file_exists "${sbom_path}" "-sbom/--sbom-path")
     if [[ -n "${err}" ]]; then
@@ -292,7 +308,7 @@ if [[ -n "${arg_sbom_path}" ]]; then
 fi
 
 # Determine the provenance expectation path to be mounted into ${MACARON_WORKSPACE}/prov_expectations/${file_name}
-if [[ -n "${arg_prov_exp}" ]]; then
+if [[ -n "${arg_prov_exp:-}" ]]; then
     prov_exp="${arg_prov_exp}"
     err=$(check_path_exists "${prov_exp}" "-pe/--provenance-expectation")
     if [[ -n "${err}" ]]; then
@@ -309,7 +325,7 @@ fi
 # MACARON entrypoint - verify-policy command argvs
 # This is for macaron verify-policy command.
 # Determine the database path to be mounted into ${MACARON_WORKSPACE}/database/macaron.db
-if [[ -n "${arg_database}" ]]; then
+if [[ -n "${arg_database:-}" ]]; then
     database="${arg_database}"
     err=$(check_file_exists "${database}" "-d/--database")
     if [[ -n "${err}" ]]; then
@@ -324,7 +340,7 @@ if [[ -n "${arg_database}" ]]; then
 fi
 
 # Determine the Datalog policy to be verified by verify-policy command.
-if [[ -n "${arg_datalog_policy_file}" ]]; then
+if [[ -n "${arg_datalog_policy_file:-}" ]]; then
     datalog_policy_file="${arg_datalog_policy_file}"
     err=$(check_file_exists "${datalog_policy_file}" "-f/--file")
     if [[ -n "${err}" ]]; then
@@ -391,7 +407,7 @@ then
     entrypoint=("macaron")
 fi
 
-if [[ -n "${DOCKER_PULL}" ]]; then
+if [[ -n "${DOCKER_PULL:-}" ]]; then
     if [[ "${DOCKER_PULL}" != @(always|missing|never) ]]; then
         echo "DOCKER_PULL must be one of: always, missing, never (default: always)"
         exit 1
@@ -414,7 +430,7 @@ macaron_args=(
 # env var `MCN_DEBUG_ARGS=1`.
 # In this case, the script will just print the arguments to stderr without
 # running the Macaron container.
-if [[ -n ${MCN_DEBUG_ARGS} ]]; then
+if [[ -n ${MCN_DEBUG_ARGS:-} ]]; then
     >&2 echo "${macaron_args[@]}"
     exit 0
 fi

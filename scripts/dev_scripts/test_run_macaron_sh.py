@@ -3,6 +3,7 @@
 
 """Tests for the ``run_macaron.sh`` script."""
 
+import os
 import subprocess
 import sys
 from collections import namedtuple
@@ -32,9 +33,13 @@ def test_macaron_command() -> int:
     ]
 
     exit_code = 0
+    env = dict(os.environ)
+    env["MCN_DEBUG_ARGS"] = "1"
 
     for test_case in test_cases:
         name, script_args, expected_macaron_args = test_case
+        print(f"test_macaron_command[{name}]:", end=" ")
+
         result = subprocess.run(
             [
                 "scripts/release_scripts/run_macaron.sh",
@@ -42,12 +47,17 @@ def test_macaron_command() -> int:
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            env={"MCN_DEBUG_ARGS": "1"},
-            check=True,
+            env=env,
+            check=False,
         )
-        resulting_macaron_args = list(result.stderr.decode("utf-8").split())
+        if result.returncode != 0:
+            exit_code = 1
+            print(f"FAILED with exit code {exit_code}")
+            print("stderr:")
+            print(result.stderr.decode("utf-8"))
+            continue
 
-        print(f"test_macaron_command[{name}]:", end=" ")
+        resulting_macaron_args = list(result.stderr.decode("utf-8").split())
 
         if resulting_macaron_args != expected_macaron_args:
             print("FAILED")
