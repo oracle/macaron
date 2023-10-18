@@ -57,6 +57,11 @@ mounts=()
 # The proxy values obtained from the host environment.
 proxy_vars=()
 
+# Log error (to stderr).
+log_err() {
+    echo "[ERROR]: $*" >&2
+}
+
 # Convert a path to absolute path if it is a relative path.
 #
 # Arguments:
@@ -71,48 +76,51 @@ function ensure_absolute_path() {
     fi
 }
 
-# Ensure a directory exists.
+# Check if a directory exists.
 # This method is important since we want to ensure that all docker mounts works
 # properly. If we mount a non-existing host directory into the container, docker
 # creates an empty directory owned by root, which is not what we really want.
 #
 # Arguments:
 #   $1: The path to the directory.
-# Outputs:
-#   STDOUT: Error message if the directory does not exist; empty string string otherwise.
+#   $2: The macaron argument from which the directory is passed into this script.
+#
+# With the `set -e` option turned on, this function exits the script with
+# return code 1 if the directory does not exist.
 function check_dir_exists() {
     if [[ ! -d "$1" ]]; then
-        echo "[ERROR] Directory $1 of argument $2 does not exist."
-    else
-        echo ""
+        log_err "Directory $1 of argument $2 does not exist."
+        return 1
     fi
 }
 
-# Ensure a file exists.
+# Check if a file exists.
 #
 # Arguments:
 #   $1: The path to the file.
-# Outputs:
-#   STDOUT: Error message if the directory does not exist; empty string string otherwise.
+#   $2: The macaron argument from which the file is passed into this script.
+#
+# With the `set -e` option turned on, this function exits the script with
+# return code 1 if the file does not exist.
 function check_file_exists() {
     if [[ ! -f "$1" ]]; then
-        echo "[ERROR] File $1 of argument $2 does not exist."
-    else
-        echo ""
+        log_err "File $1 of argument $2 does not exist."
+        return 1
     fi
 }
 
-# Ensure a path exists.
+# Check if a path exists.
 #
 # Arguments:
 #   $1: The path to a file or directory.
-# Outputs:
-#   STDOUT: Error message if the file or directory does not exist; empty string string otherwise.
+#   $2: The macaron argument from which the path is passed into this script.
+#
+# With the `set -e` option turned on, this function exits the script with
+# return code 1 if the path does not exist.
 function check_path_exists() {
     if [[ ! -s "$1" ]]; then
-        echo "[ERROR] $1 of argument $2 is neither file nor directory."
-    else
-        echo ""
+        log_err "File $1 of argument $2 is neither file nor directory."
+        return 1
     fi
 }
 
@@ -198,11 +206,7 @@ fi
 # Determine the output path to be mounted into ${MACARON_WORKSPACE}/output/
 if [[ -n "${arg_output:-}" ]]; then
     output="${arg_output}"
-    err=$(check_dir_exists "${output}" "-o/--output")
-    if [[ -n "${err}" ]]; then
-        echo "${err}"
-        exit 1
-    fi
+    check_dir_exists "${output}" "-o/--output"
     argv_main+=("--output" "${MACARON_WORKSPACE}/output/")
 else
     output=$(pwd)/output
@@ -220,11 +224,7 @@ mounts+=("-v" "${gradle_dir}:${MACARON_WORKSPACE}/.gradle:rw,Z")
 # Determine the local repos path to be mounted into ${MACARON_WORKSPACE}/output/git_repos/local_repos/
 if [[ -n "${arg_local_repos_path:-}" ]]; then
     local_repos_path="${arg_local_repos_path}"
-    err=$(check_dir_exists "${local_repos_path}" "-lr/--local-repos-path")
-    if [[ -n "${err}" ]]; then
-        echo "${err}"
-        exit 1
-    fi
+    check_dir_exists "${local_repos_path}" "-lr/--local-repos-path"
     argv_main+=("--local-repos-path" "${MACARON_WORKSPACE}/output/git_repos/local_repos/")
 
     local_repos_path="$(ensure_absolute_path "${local_repos_path}")"
@@ -234,11 +234,7 @@ fi
 # Determine the defaults path to be mounted into ${MACARON_WORKSPACE}/defaults/${file_name}
 if [[ -n "${arg_defaults_path:-}" ]]; then
     defaults_path="${arg_defaults_path}"
-    err=$(check_file_exists "${defaults_path}" "-dp/--defaults-path")
-    if [[ -n "${err}" ]]; then
-        echo "${err}"
-        exit 1
-    fi
+    check_file_exists "${defaults_path}" "-dp/--defaults-path"
     file_name="$(basename "${defaults_path}")"
     argv_main+=("--defaults-path" "${MACARON_WORKSPACE}/defaults/${file_name}")
 
@@ -249,11 +245,7 @@ fi
 # Determine the policy path to be mounted into ${MACARON_WORKSPACE}/policy/${file_name}
 if [[ -n "${arg_policy:-}" ]]; then
     policy="${arg_policy}"
-    err=$(check_file_exists "${policy}" "-po/--policy")
-    if [[ -n "${err}" ]]; then
-        echo "${err}"
-        exit 1
-    fi
+    check_file_exists "${policy}" "-po/--policy"
     file_name="$(basename "${policy}")"
     argv_main+=("--policy" "${MACARON_WORKSPACE}/policy/${file_name}")
 
@@ -265,11 +257,7 @@ fi
 # Determine the template path to be mounted into ${MACARON_WORKSPACE}/template/${file_name}
 if [[ -n "${arg_template_path:-}" ]]; then
     template_path="${arg_template_path}"
-    err=$(check_file_exists "${template_path}" "-g/--template-path")
-    if [[ -n "${err}" ]]; then
-        echo "${err}"
-        exit 1
-    fi
+    check_file_exists "${template_path}" "-g/--template-path"
     file_name="$(basename "${template_path}")"
     argv_command+=("--template-path" "${MACARON_WORKSPACE}/template/${file_name}")
 
@@ -280,11 +268,7 @@ fi
 # Determine the config path to be mounted into ${MACARON_WORKSPACE}/config/${file_name}
 if [[ -n "${arg_config_path:-}" ]]; then
     config_path="${arg_config_path}"
-    err=$(check_file_exists "${config_path}" "-c/--config-path")
-    if [[ -n "${err}" ]]; then
-        echo "${err}"
-        exit 1
-    fi
+    check_file_exists "${config_path}" "-c/--config-path"
     file_name="$(basename "${config_path}")"
     argv_command+=("--config-path" "${MACARON_WORKSPACE}/config/${file_name}")
 
@@ -295,11 +279,7 @@ fi
 # Determine the sbom path to be mounted into ${MACARON_WORKSPACE}/sbom/${file_name}
 if [[ -n "${arg_sbom_path:-}" ]]; then
     sbom_path="${arg_sbom_path}"
-    err=$(check_file_exists "${sbom_path}" "-sbom/--sbom-path")
-    if [[ -n "${err}" ]]; then
-        echo "${err}"
-        exit 1
-    fi
+    check_file_exists "${sbom_path}" "-sbom/--sbom-path"
     file_name="$(basename "${sbom_path}")"
     argv_command+=("--sbom-path" "${MACARON_WORKSPACE}/sbom/${file_name}")
 
@@ -310,11 +290,7 @@ fi
 # Determine the provenance expectation path to be mounted into ${MACARON_WORKSPACE}/prov_expectations/${file_name}
 if [[ -n "${arg_prov_exp:-}" ]]; then
     prov_exp="${arg_prov_exp}"
-    err=$(check_path_exists "${prov_exp}" "-pe/--provenance-expectation")
-    if [[ -n "${err}" ]]; then
-        echo "${err}"
-        exit 1
-    fi
+    check_path_exists "${prov_exp}" "-pe/--provenance-expectation"
     pe_name="$(basename "${prov_exp}")"
     argv_command+=("--provenance-expectation" "${MACARON_WORKSPACE}/prov_expectations/${pe_name}")
 
@@ -327,11 +303,7 @@ fi
 # Determine the database path to be mounted into ${MACARON_WORKSPACE}/database/macaron.db
 if [[ -n "${arg_database:-}" ]]; then
     database="${arg_database}"
-    err=$(check_file_exists "${database}" "-d/--database")
-    if [[ -n "${err}" ]]; then
-        echo "${err}"
-        exit 1
-    fi
+    check_file_exists "${database}" "-d/--database"
     file_name="$(basename "${database}")"
     argv_command+=("--database" "${MACARON_WORKSPACE}/database/${file_name}")
 
@@ -342,11 +314,7 @@ fi
 # Determine the Datalog policy to be verified by verify-policy command.
 if [[ -n "${arg_datalog_policy_file:-}" ]]; then
     datalog_policy_file="${arg_datalog_policy_file}"
-    err=$(check_file_exists "${datalog_policy_file}" "-f/--file")
-    if [[ -n "${err}" ]]; then
-        echo "${err}"
-        exit 1
-    fi
+    check_file_exists "${datalog_policy_file}" "-f/--file"
     file_name="$(basename "${datalog_policy_file}")"
     argv_command+=("--file" "${MACARON_WORKSPACE}/policy/${file_name}")
 
