@@ -209,8 +209,7 @@ if [[ -n "${arg_local_repos_path}" ]]; then
         exit 1
     fi
     argv_main+=("--local-repos-path" "${MACARON_WORKSPACE}/output/git_repos/local_repos/")
-fi
-if [[ -n "${local_repos_path}" ]]; then
+
     local_repos_path="$(ensure_absolute_path "${local_repos_path}")"
     mounts+=("-v" "${local_repos_path}:${MACARON_WORKSPACE}/output/git_repos/local_repos/:rw,Z")
 fi
@@ -225,8 +224,7 @@ if [[ -n "${arg_defaults_path}" ]]; then
     fi
     file_name="$(basename "${defaults_path}")"
     argv_main+=("--defaults-path" "${MACARON_WORKSPACE}/defaults/${file_name}")
-fi
-if [[ -n "${defaults_path}" ]]; then
+
     defaults_path="$(ensure_absolute_path "${defaults_path}")"
     mounts+=("-v" "${defaults_path}:${MACARON_WORKSPACE}/defaults/${file_name}:ro")
 fi
@@ -241,8 +239,7 @@ if [[ -n "${arg_policy}" ]]; then
     fi
     file_name="$(basename "${policy}")"
     argv_main+=("--policy" "${MACARON_WORKSPACE}/policy/${file_name}")
-fi
-if [[ -n "${policy}" ]]; then
+
     policy="$(ensure_absolute_path "${policy}")"
     mounts+=("-v" "${policy}:${MACARON_WORKSPACE}/policy/${file_name}:ro")
 fi
@@ -258,8 +255,7 @@ if [[ -n "${arg_template_path}" ]]; then
     fi
     file_name="$(basename "${template_path}")"
     argv_action+=("--template-path" "${MACARON_WORKSPACE}/template/${file_name}")
-fi
-if [[ -n "${template_path}" ]]; then
+
     template_path="$(ensure_absolute_path "${template_path}")"
     mounts+=("-v" "${template_path}:${MACARON_WORKSPACE}/template/${file_name}:ro")
 fi
@@ -274,8 +270,7 @@ if [[ -n "${arg_config_path}" ]]; then
     fi
     file_name="$(basename "${config_path}")"
     argv_action+=("--config-path" "${MACARON_WORKSPACE}/config/${file_name}")
-fi
-if [[ -n "${config_path}" ]]; then
+
     config_path="$(ensure_absolute_path "${config_path}")"
     mounts+=("-v" "${config_path}:${MACARON_WORKSPACE}/config/${file_name}:ro")
 fi
@@ -290,8 +285,7 @@ if [[ -n "${arg_sbom_path}" ]]; then
     fi
     file_name="$(basename "${sbom_path}")"
     argv_action+=("--sbom-path" "${MACARON_WORKSPACE}/sbom/${file_name}")
-fi
-if [[ -n "${sbom_path}" ]]; then
+
     sbom_path="$(ensure_absolute_path "${sbom_path}")"
     mounts+=("-v" "${sbom_path}:${MACARON_WORKSPACE}/sbom/${file_name}:ro")
 fi
@@ -306,8 +300,7 @@ if [[ -n "${arg_prov_exp}" ]]; then
     fi
     pe_name="$(basename "${prov_exp}")"
     argv_action+=("--provenance-expectation" "${MACARON_WORKSPACE}/prov_expectations/${pe_name}")
-fi
-if [[ -n "${prov_exp}" ]]; then
+
     prov_exp="$(ensure_absolute_path "${prov_exp}")"
     mounts+=("-v" "${prov_exp}:${MACARON_WORKSPACE}/prov_expectations/${pe_name}:ro")
 fi
@@ -324,8 +317,7 @@ if [[ -n "${arg_database}" ]]; then
     fi
     file_name="$(basename "${database}")"
     argv_action+=("--database" "${MACARON_WORKSPACE}/database/${file_name}")
-fi
-if [[ -n "${database}" ]]; then
+
     database="$(ensure_absolute_path "${database}")"
     mounts+=("-v" "${database}:${MACARON_WORKSPACE}/database/${file_name}:rw,Z")
 fi
@@ -340,8 +332,7 @@ if [[ -n "${arg_datalog_policy_file}" ]]; then
     fi
     file_name="$(basename "${datalog_policy_file}")"
     argv_action+=("--file" "${MACARON_WORKSPACE}/policy/${file_name}")
-fi
-if [[ -n "${datalog_policy_file}" ]]; then
+
     datalog_policy_file="$(ensure_absolute_path "${datalog_policy_file}")"
     mounts+=("-v" "${datalog_policy_file}:${MACARON_WORKSPACE}/policy/${file_name}:ro")
 fi
