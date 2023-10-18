@@ -366,7 +366,7 @@ proxy_var_names=(
 )
 
 for v in "${proxy_var_names[@]}"; do
-    [[ -n ${!v} ]] && proxy_vars+=("-e" "${v}=${!v}")
+    proxy_vars+=("-e" "${v}")
 done
 
 prod_vars=(
@@ -424,9 +424,9 @@ docker run \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" \
     -e "USER_GID=${USER_GID}" \
-    -e "GITHUB_TOKEN=${GITHUB_TOKEN}" \
-    -e "MCN_GITLAB_TOKEN=${MCN_GITLAB_TOKEN}" \
-    -e "MCN_SELF_HOSTED_GITLAB_TOKEN=${MCN_SELF_HOSTED_GITLAB_TOKEN}" \
+    -e GITHUB_TOKEN \
+    -e MCN_GITLAB_TOKEN \
+    -e MCN_SELF_HOSTED_GITLAB_TOKEN \
     "${proxy_vars[@]}" \
     "${prod_vars[@]}" \
     "${mounts[@]}" \
