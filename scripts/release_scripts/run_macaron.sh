@@ -5,6 +5,7 @@
 
 # This script runs the Macaron Docker image.
 
+
 if [[ -z ${MACARON_IMAGE_TAG} ]]; then
     MACARON_IMAGE_TAG="latest"
 fi
@@ -19,20 +20,20 @@ MACARON_WORKSPACE="/home/macaron"
 # We use an array here to preserve the arguments as provided by the user.
 entrypoint=()
 
-# The `macaron` action to execute (e.g. `analyze`, or `verify-policy`)
-action=""
+# The `macaron` command to execute (e.g. `analyze`, or `verify-policy`)
+command=""
 
-# `argv_main` and `argv_action` are arguments whose values changed by this script.
+# `argv_main` and `argv_command` are arguments whose values changed by this script.
 # `argv_main` are arguments of the `macaron` command.
-# `argv_action` are arguments of the actions in `macaron` (e.g. `analyze`, or `verify-policy`).
+# `argv_command` are arguments of the commands in `macaron` (e.g. `analyze`, or `verify-policy`).
 argv_main=()
-argv_action=()
+argv_command=()
 
-# `rest_main` and `rest_action` are arguments whose values are not changed by this script.
+# `rest_main` and `rest_command` are arguments whose values are not changed by this script.
 # `rest_main` are arguments of the `macaron` command.
-# `rest_action` are arguments of the actions in `macaron` (e.g. `analyze`, or `verify-policy`).
+# `rest_command` are arguments of the commands in `macaron` (e.g. `analyze`, or `verify-policy`).
 rest_main=()
-rest_action=()
+rest_command=()
 
 # The mounted directories/files from the host machine to the runtime Macaron container.
 mounts=()
@@ -106,9 +107,9 @@ while [[ $# -gt 0 ]]; do
         macaron)
             entrypoint+=("macaron")
             ;;
-        # Parsing actions for macaron entrypoint.
+        # Parsing commands for macaron entrypoint.
         analyze|dump-defaults|verify-policy)
-            action=$1
+            command=$1
             shift
             break
             ;;
@@ -132,8 +133,8 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-# Parse action-specific arguments.
-if [[ $action == "analyze" ]]; then
+# Parse command-specific arguments.
+if [[ $command == "analyze" ]]; then
     while [[ $# -gt 0 ]]; do
         case $1 in
             -sbom|--sbom-path)
@@ -153,12 +154,12 @@ if [[ $action == "analyze" ]]; then
                 shift
                 ;;
             *)
-                rest_action+=("$1")
+                rest_command+=("$1")
                 ;;
         esac
         shift
     done
-elif [[ $action == "verify-policy" ]]; then
+elif [[ $command == "verify-policy" ]]; then
      while [[ $# -gt 0 ]]; do
         case $1 in
             -d|--database)
@@ -170,7 +171,7 @@ elif [[ $action == "verify-policy" ]]; then
                 shift
                 ;;
             *)
-                rest_action+=("$1")
+                rest_command+=("$1")
                 ;;
         esac
         shift
@@ -244,7 +245,7 @@ if [[ -n "${arg_policy}" ]]; then
     mounts+=("-v" "${policy}:${MACARON_WORKSPACE}/policy/${file_name}:ro")
 fi
 
-# MACARON entrypoint - Analyze action argvs
+# MACARON entrypoint - Analyze command argvs
 # Determine the template path to be mounted into ${MACARON_WORKSPACE}/template/${file_name}
 if [[ -n "${arg_template_path}" ]]; then
     template_path="${arg_template_path}"
@@ -254,7 +255,7 @@ if [[ -n "${arg_template_path}" ]]; then
         exit 1
     fi
     file_name="$(basename "${template_path}")"
-    argv_action+=("--template-path" "${MACARON_WORKSPACE}/template/${file_name}")
+    argv_command+=("--template-path" "${MACARON_WORKSPACE}/template/${file_name}")
 
     template_path="$(ensure_absolute_path "${template_path}")"
     mounts+=("-v" "${template_path}:${MACARON_WORKSPACE}/template/${file_name}:ro")
@@ -269,7 +270,7 @@ if [[ -n "${arg_config_path}" ]]; then
         exit 1
     fi
     file_name="$(basename "${config_path}")"
-    argv_action+=("--config-path" "${MACARON_WORKSPACE}/config/${file_name}")
+    argv_command+=("--config-path" "${MACARON_WORKSPACE}/config/${file_name}")
 
     config_path="$(ensure_absolute_path "${config_path}")"
     mounts+=("-v" "${config_path}:${MACARON_WORKSPACE}/config/${file_name}:ro")
@@ -284,7 +285,7 @@ if [[ -n "${arg_sbom_path}" ]]; then
         exit 1
     fi
     file_name="$(basename "${sbom_path}")"
-    argv_action+=("--sbom-path" "${MACARON_WORKSPACE}/sbom/${file_name}")
+    argv_command+=("--sbom-path" "${MACARON_WORKSPACE}/sbom/${file_name}")
 
     sbom_path="$(ensure_absolute_path "${sbom_path}")"
     mounts+=("-v" "${sbom_path}:${MACARON_WORKSPACE}/sbom/${file_name}:ro")
@@ -299,14 +300,14 @@ if [[ -n "${arg_prov_exp}" ]]; then
         exit 1
     fi
     pe_name="$(basename "${prov_exp}")"
-    argv_action+=("--provenance-expectation" "${MACARON_WORKSPACE}/prov_expectations/${pe_name}")
+    argv_command+=("--provenance-expectation" "${MACARON_WORKSPACE}/prov_expectations/${pe_name}")
 
     prov_exp="$(ensure_absolute_path "${prov_exp}")"
     mounts+=("-v" "${prov_exp}:${MACARON_WORKSPACE}/prov_expectations/${pe_name}:ro")
 fi
 
-# MACARON entrypoint - verify-policy action argvs
-# This is for macaron verify-policy action.
+# MACARON entrypoint - verify-policy command argvs
+# This is for macaron verify-policy command.
 # Determine the database path to be mounted into ${MACARON_WORKSPACE}/database/macaron.db
 if [[ -n "${arg_database}" ]]; then
     database="${arg_database}"
@@ -316,13 +317,13 @@ if [[ -n "${arg_database}" ]]; then
         exit 1
     fi
     file_name="$(basename "${database}")"
-    argv_action+=("--database" "${MACARON_WORKSPACE}/database/${file_name}")
+    argv_command+=("--database" "${MACARON_WORKSPACE}/database/${file_name}")
 
     database="$(ensure_absolute_path "${database}")"
     mounts+=("-v" "${database}:${MACARON_WORKSPACE}/database/${file_name}:rw,Z")
 fi
 
-# Determine the Datalog policy to be verified by verify-policy action.
+# Determine the Datalog policy to be verified by verify-policy command.
 if [[ -n "${arg_datalog_policy_file}" ]]; then
     datalog_policy_file="${arg_datalog_policy_file}"
     err=$(check_file_exists "${datalog_policy_file}" "-f/--file")
@@ -331,7 +332,7 @@ if [[ -n "${arg_datalog_policy_file}" ]]; then
         exit 1
     fi
     file_name="$(basename "${datalog_policy_file}")"
-    argv_action+=("--file" "${MACARON_WORKSPACE}/policy/${file_name}")
+    argv_command+=("--file" "${MACARON_WORKSPACE}/policy/${file_name}")
 
     datalog_policy_file="$(ensure_absolute_path "${datalog_policy_file}")"
     mounts+=("-v" "${datalog_policy_file}:${MACARON_WORKSPACE}/policy/${file_name}:ro")
@@ -404,9 +405,9 @@ echo "Running ${IMAGE}:${MACARON_IMAGE_TAG}"
 macaron_args=(
     "${argv_main[@]}"
     "${rest_main[@]}"
-    "${action}"
-    "${argv_action[@]}"
-    "${rest_action[@]}"
+    "${command}"
+    "${argv_command[@]}"
+    "${rest_command[@]}"
 )
 
 # For the purpose of testing the arguments passed to macaron, we can set the
