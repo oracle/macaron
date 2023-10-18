@@ -191,15 +191,14 @@ else
     output=$(pwd)/output
     echo "Setting default output directory to ${output}."
 fi
-if [[ -n "${output}" ]]; then
-    output="$(ensure_absolute_path "${output}")"
-    # Mounting the necessary .m2 and .gradle directories.
-    m2_dir="${output}/.m2"
-    gradle_dir="${output}/.gradle"
-    mounts+=("-v" "${output}:${MACARON_WORKSPACE}/output:rw,Z")
-    mounts+=("-v" "${m2_dir}:${MACARON_WORKSPACE}/.m2:rw,Z")
-    mounts+=("-v" "${gradle_dir}:${MACARON_WORKSPACE}/.gradle:rw,Z")
-fi
+
+output="$(ensure_absolute_path "${output}")"
+# Mounting the necessary .m2 and .gradle directories.
+m2_dir="${output}/.m2"
+gradle_dir="${output}/.gradle"
+mounts+=("-v" "${output}:${MACARON_WORKSPACE}/output:rw,Z")
+mounts+=("-v" "${m2_dir}:${MACARON_WORKSPACE}/.m2:rw,Z")
+mounts+=("-v" "${gradle_dir}:${MACARON_WORKSPACE}/.gradle:rw,Z")
 
 # Determine the local repos path to be mounted into ${MACARON_WORKSPACE}/output/git_repos/local_repos/
 if [[ -n "${arg_local_repos_path}" ]]; then
