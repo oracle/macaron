@@ -64,11 +64,20 @@ class CycloneDxMaven(DependencyAnalyzer):
         """
         # Load the top level file separately as it has different content.
         top_path = Path(os.path.join(dir_path, "target", self.file_name))
+        top_path_altered = False
+        if not os.path.exists(top_path):
+            # If the expected bom file does not exist, allow other named .json files instead.
+            possible_paths = glob.glob(os.path.join(dir_path, "target", "*.json"))
+            if possible_paths:
+                top_path = Path(possible_paths[0])
+                top_path_altered = True
 
         # Collect all the dependency files recursively.
         child_paths = [
             Path(path)
-            for path in glob.glob(os.path.join(dir_path, "**", "target", self.file_name), recursive=True)
+            for path in glob.glob(
+                os.path.join(dir_path, "**", "target", "*.json" if top_path_altered else self.file_name), recursive=True
+            )
             if Path(path) != top_path
         ]
 
