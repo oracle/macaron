@@ -68,7 +68,7 @@ log_err() {
 #   $1: The path.
 # Outputs:
 #   STDOUT: The absolute path.
-function ensure_absolute_path() {
+function to_absolute_path() {
     if [[ "$1" != /* ]]; then
         echo "$(pwd)/$1"
     else
@@ -76,7 +76,7 @@ function ensure_absolute_path() {
     fi
 }
 
-# Check if a directory exists.
+# Assert that a directory exists.
 # This method is important since we want to ensure that all docker mounts works
 # properly. If we mount a non-existing host directory into the container, docker
 # creates an empty directory owned by root, which is not what we really want.
@@ -87,14 +87,14 @@ function ensure_absolute_path() {
 #
 # With the `set -e` option turned on, this function exits the script with
 # return code 1 if the directory does not exist.
-function check_dir_exists() {
+function assert_dir_exists() {
     if [[ ! -d "$1" ]]; then
         log_err "Directory $1 of argument $2 does not exist."
         return 1
     fi
 }
 
-# Check if a file exists.
+# Assert that a file exists.
 #
 # Arguments:
 #   $1: The path to the file.
@@ -102,14 +102,14 @@ function check_dir_exists() {
 #
 # With the `set -e` option turned on, this function exits the script with
 # return code 1 if the file does not exist.
-function check_file_exists() {
+function assert_file_exists() {
     if [[ ! -f "$1" ]]; then
         log_err "File $1 of argument $2 does not exist."
         return 1
     fi
 }
 
-# Check if a path exists.
+# Assert that a path exists.
 #
 # Arguments:
 #   $1: The path to a file or directory.
@@ -117,7 +117,7 @@ function check_file_exists() {
 #
 # With the `set -e` option turned on, this function exits the script with
 # return code 1 if the path does not exist.
-function check_path_exists() {
+function assert_path_exists() {
     if [[ ! -s "$1" ]]; then
         log_err "File $1 of argument $2 is neither file nor directory."
         return 1
@@ -206,14 +206,14 @@ fi
 # Determine the output path to be mounted into ${MACARON_WORKSPACE}/output/
 if [[ -n "${arg_output:-}" ]]; then
     output="${arg_output}"
-    check_dir_exists "${output}" "-o/--output"
+    assert_dir_exists "${output}" "-o/--output"
     argv_main+=("--output" "${MACARON_WORKSPACE}/output/")
 else
     output=$(pwd)/output
     echo "Setting default output directory to ${output}."
 fi
 
-output="$(ensure_absolute_path "${output}")"
+output="$(to_absolute_path "${output}")"
 # Mounting the necessary .m2 and .gradle directories.
 m2_dir="${output}/.m2"
 gradle_dir="${output}/.gradle"
@@ -224,32 +224,32 @@ mounts+=("-v" "${gradle_dir}:${MACARON_WORKSPACE}/.gradle:rw,Z")
 # Determine the local repos path to be mounted into ${MACARON_WORKSPACE}/output/git_repos/local_repos/
 if [[ -n "${arg_local_repos_path:-}" ]]; then
     local_repos_path="${arg_local_repos_path}"
-    check_dir_exists "${local_repos_path}" "-lr/--local-repos-path"
+    assert_dir_exists "${local_repos_path}" "-lr/--local-repos-path"
     argv_main+=("--local-repos-path" "${MACARON_WORKSPACE}/output/git_repos/local_repos/")
 
-    local_repos_path="$(ensure_absolute_path "${local_repos_path}")"
+    local_repos_path="$(to_absolute_path "${local_repos_path}")"
     mounts+=("-v" "${local_repos_path}:${MACARON_WORKSPACE}/output/git_repos/local_repos/:rw,Z")
 fi
 
 # Determine the defaults path to be mounted into ${MACARON_WORKSPACE}/defaults/${file_name}
 if [[ -n "${arg_defaults_path:-}" ]]; then
     defaults_path="${arg_defaults_path}"
-    check_file_exists "${defaults_path}" "-dp/--defaults-path"
+    assert_file_exists "${defaults_path}" "-dp/--defaults-path"
     file_name="$(basename "${defaults_path}")"
     argv_main+=("--defaults-path" "${MACARON_WORKSPACE}/defaults/${file_name}")
 
-    defaults_path="$(ensure_absolute_path "${defaults_path}")"
+    defaults_path="$(to_absolute_path "${defaults_path}")"
     mounts+=("-v" "${defaults_path}:${MACARON_WORKSPACE}/defaults/${file_name}:ro")
 fi
 
 # Determine the policy path to be mounted into ${MACARON_WORKSPACE}/policy/${file_name}
 if [[ -n "${arg_policy:-}" ]]; then
     policy="${arg_policy}"
-    check_file_exists "${policy}" "-po/--policy"
+    assert_file_exists "${policy}" "-po/--policy"
     file_name="$(basename "${policy}")"
     argv_main+=("--policy" "${MACARON_WORKSPACE}/policy/${file_name}")
 
-    policy="$(ensure_absolute_path "${policy}")"
+    policy="$(to_absolute_path "${policy}")"
     mounts+=("-v" "${policy}:${MACARON_WORKSPACE}/policy/${file_name}:ro")
 fi
 
@@ -257,44 +257,44 @@ fi
 # Determine the template path to be mounted into ${MACARON_WORKSPACE}/template/${file_name}
 if [[ -n "${arg_template_path:-}" ]]; then
     template_path="${arg_template_path}"
-    check_file_exists "${template_path}" "-g/--template-path"
+    assert_file_exists "${template_path}" "-g/--template-path"
     file_name="$(basename "${template_path}")"
     argv_command+=("--template-path" "${MACARON_WORKSPACE}/template/${file_name}")
 
-    template_path="$(ensure_absolute_path "${template_path}")"
+    template_path="$(to_absolute_path "${template_path}")"
     mounts+=("-v" "${template_path}:${MACARON_WORKSPACE}/template/${file_name}:ro")
 fi
 
 # Determine the config path to be mounted into ${MACARON_WORKSPACE}/config/${file_name}
 if [[ -n "${arg_config_path:-}" ]]; then
     config_path="${arg_config_path}"
-    check_file_exists "${config_path}" "-c/--config-path"
+    assert_file_exists "${config_path}" "-c/--config-path"
     file_name="$(basename "${config_path}")"
     argv_command+=("--config-path" "${MACARON_WORKSPACE}/config/${file_name}")
 
-    config_path="$(ensure_absolute_path "${config_path}")"
+    config_path="$(to_absolute_path "${config_path}")"
     mounts+=("-v" "${config_path}:${MACARON_WORKSPACE}/config/${file_name}:ro")
 fi
 
 # Determine the sbom path to be mounted into ${MACARON_WORKSPACE}/sbom/${file_name}
 if [[ -n "${arg_sbom_path:-}" ]]; then
     sbom_path="${arg_sbom_path}"
-    check_file_exists "${sbom_path}" "-sbom/--sbom-path"
+    assert_file_exists "${sbom_path}" "-sbom/--sbom-path"
     file_name="$(basename "${sbom_path}")"
     argv_command+=("--sbom-path" "${MACARON_WORKSPACE}/sbom/${file_name}")
 
-    sbom_path="$(ensure_absolute_path "${sbom_path}")"
+    sbom_path="$(to_absolute_path "${sbom_path}")"
     mounts+=("-v" "${sbom_path}:${MACARON_WORKSPACE}/sbom/${file_name}:ro")
 fi
 
 # Determine the provenance expectation path to be mounted into ${MACARON_WORKSPACE}/prov_expectations/${file_name}
 if [[ -n "${arg_prov_exp:-}" ]]; then
     prov_exp="${arg_prov_exp}"
-    check_path_exists "${prov_exp}" "-pe/--provenance-expectation"
+    assert_path_exists "${prov_exp}" "-pe/--provenance-expectation"
     pe_name="$(basename "${prov_exp}")"
     argv_command+=("--provenance-expectation" "${MACARON_WORKSPACE}/prov_expectations/${pe_name}")
 
-    prov_exp="$(ensure_absolute_path "${prov_exp}")"
+    prov_exp="$(to_absolute_path "${prov_exp}")"
     mounts+=("-v" "${prov_exp}:${MACARON_WORKSPACE}/prov_expectations/${pe_name}:ro")
 fi
 
@@ -303,22 +303,22 @@ fi
 # Determine the database path to be mounted into ${MACARON_WORKSPACE}/database/macaron.db
 if [[ -n "${arg_database:-}" ]]; then
     database="${arg_database}"
-    check_file_exists "${database}" "-d/--database"
+    assert_file_exists "${database}" "-d/--database"
     file_name="$(basename "${database}")"
     argv_command+=("--database" "${MACARON_WORKSPACE}/database/${file_name}")
 
-    database="$(ensure_absolute_path "${database}")"
+    database="$(to_absolute_path "${database}")"
     mounts+=("-v" "${database}:${MACARON_WORKSPACE}/database/${file_name}:rw,Z")
 fi
 
 # Determine the Datalog policy to be verified by verify-policy command.
 if [[ -n "${arg_datalog_policy_file:-}" ]]; then
     datalog_policy_file="${arg_datalog_policy_file}"
-    check_file_exists "${datalog_policy_file}" "-f/--file"
+    assert_file_exists "${datalog_policy_file}" "-f/--file"
     file_name="$(basename "${datalog_policy_file}")"
     argv_command+=("--file" "${MACARON_WORKSPACE}/policy/${file_name}")
 
-    datalog_policy_file="$(ensure_absolute_path "${datalog_policy_file}")"
+    datalog_policy_file="$(to_absolute_path "${datalog_policy_file}")"
     mounts+=("-v" "${datalog_policy_file}:${MACARON_WORKSPACE}/policy/${file_name}:ro")
 fi
 
