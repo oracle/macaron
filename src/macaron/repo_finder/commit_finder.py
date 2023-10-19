@@ -14,8 +14,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 ALPHANUMERIC = "0-9a-z"
 PREFIX = "(?:.*)"
-INFIX = "[^0-9]*"
-split_pattern = re.compile(f"[^{ALPHANUMERIC}]", flags=re.IGNORECASE)
+INFIX = "[^0-9]{1,3}"  # 1 to 3 non-numeric characters
+split_pattern = re.compile(f"[^{ALPHANUMERIC}]+", flags=re.IGNORECASE)
 validation_pattern = re.compile(f"[{ALPHANUMERIC}]+", flags=re.IGNORECASE)
 
 
@@ -40,49 +40,27 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
         logger.debug("Missing version for artifact: %s", purl.name)
         return "", ""
     logger.debug("Searching for commit of artifact version using tags: %s@%s", purl.name, purl.version)
-    # Create version based regex from the PackageURL for matching against tags.
-    # The version is split on non-alphanumeric characters to separate the version parts from the non-version parts.
-    # e.g. 1.2.3-DEV -> [1, 2, 3, DEV]
-    split = split_pattern.split(purl.version)
-    logger.debug("Split version: %s", split)
-    if not split:
-        split = [purl.version]
-    this_version_pattern = ""
-    for part in split:
-        # Validate the split part by checking it is only comprised of alphanumeric characters.
-        valid = validation_pattern.match(part)
-        if not valid:
-            continue
-        if this_version_pattern:
-            # To maximise chances of matching tags, the regex between the version parts allows for zero or more
-            # non-numeric characters.
-            this_version_pattern = this_version_pattern + INFIX
-        this_version_pattern = this_version_pattern + str(part)
-    # Prepend the optional prefix, add a named capture group for the version, and enforce end of string analysis.
-    this_version_pattern = PREFIX + "(?P<version>" + this_version_pattern + ")" + "$"
-    logger.debug("Created pattern: %s", this_version_pattern)
-    target_version_pattern = re.compile(this_version_pattern, flags=re.IGNORECASE)
 
-    # A pattern for very weakly confirming the presence of a version.
-    has_version_pattern = re.compile(".*[0-9].*", flags=re.IGNORECASE)
+    target_version_pattern = _build_version_pattern(purl.version)
+    has_name_pattern = re.compile(f".*{purl.name}.*[0-9].*", flags=re.IGNORECASE)
 
     # Tags are examined as followed:
     # - Any without a corresponding commit are discarded.
     # - If any tag matches the has_name_pattern, only tags that match it will be examined.
     # - If no tag matches the has_name_pattern, all tags will be examined.
-    named_tags = []
-    other_tags = []
+    named_tags: list[TagReference] = []
+    other_tags: list[TagReference] = []
     for tag in git_obj.repo.tags:
         try:
             if not tag.commit:
-                raise ValueError
+                raise ValueError("The commit object is None")
         except ValueError:
             logger.debug("No commit found for tag: %s", tag)
             continue
 
         tag_name = str(tag)
 
-        if has_version_pattern.match(tag_name):
+        if has_name_pattern.match(tag_name):
             named_tags.append(tag)
         else:
             other_tags.append(tag)
@@ -134,6 +112,46 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
 
     logger.debug("Could not find tagged commit for artifact version: %s@%s", purl.name, purl.version)
     return "", ""
+
+
+def _build_version_pattern(version: str) -> Pattern:
+    """Build a version pattern to match the passed version string.
+
+    Parameters
+    ----------
+    version: str
+        The version string.
+
+    Returns
+    -------
+    Pattern
+        The regex pattern that will match the version.
+
+    """
+    # The version is split on non-alphanumeric characters to separate the version parts from the non-version parts.
+    # e.g. 1.2.3-DEV -> [1, 2, 3, DEV]
+    split = split_pattern.split(version)
+    logger.debug("Split version: %s", split)
+    if not split:
+        # If the version string contains no separators use it as is.
+        split = [version]
+
+    this_version_pattern = ""
+    for part in split:
+        # Validate the split part by checking it is only comprised of alphanumeric characters.
+        valid = validation_pattern.match(part)
+        if not valid:
+            continue
+        if this_version_pattern:
+            # Between one and three non-numeric characters are accepted between the version parts.
+            # This balances the tradeoff between maximal matching and minimal false positives.
+            this_version_pattern = this_version_pattern + INFIX
+        this_version_pattern = this_version_pattern + str(part)
+
+    # Prepend the optional prefix, add a named capture group for the version, and enforce end of string analysis.
+    this_version_pattern = PREFIX + "(?P<version>" + this_version_pattern + ")" + "$"
+    logger.debug("Created pattern: %s", this_version_pattern)
+    return re.compile(this_version_pattern, flags=re.IGNORECASE)
 
 
 def _match_tags(tag_list: list[TagReference], pattern: Pattern) -> list[TagReference]:
