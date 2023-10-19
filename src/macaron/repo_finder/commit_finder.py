@@ -42,7 +42,7 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
     logger.debug("Searching for commit of artifact version using tags: %s@%s", purl.name, purl.version)
 
     target_version_pattern = _build_version_pattern(purl.version)
-    has_name_pattern = re.compile(f".*{purl.name}.*[0-9].*", flags=re.IGNORECASE)
+    has_name_pattern = re.compile(f".*{re.escape(purl.name)}.*[0-9].*", flags=re.IGNORECASE)
 
     # Tags are examined as followed:
     # - Any without a corresponding commit are discarded.
