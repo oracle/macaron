@@ -25,6 +25,14 @@ macaron.slsa\_analyzer.build\_tool.docker module
    :undoc-members:
    :show-inheritance:
 
+macaron.slsa\_analyzer.build\_tool.go module
+--------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.build_tool.go
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.slsa\_analyzer.build\_tool.gradle module
 ------------------------------------------------
 
@@ -41,6 +49,14 @@ macaron.slsa\_analyzer.build\_tool.maven module
    :undoc-members:
    :show-inheritance:
 
+macaron.slsa\_analyzer.build\_tool.npm module
+---------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.build_tool.npm
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.slsa\_analyzer.build\_tool.pip module
 ---------------------------------------------
 
@@ -53,6 +69,14 @@ macaron.slsa\_analyzer.build\_tool.poetry module
 ------------------------------------------------
 
 .. automodule:: macaron.slsa_analyzer.build_tool.poetry
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+macaron.slsa\_analyzer.build\_tool.yarn module
+----------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.build_tool.yarn
    :members:
    :undoc-members:
    :show-inheritance:
