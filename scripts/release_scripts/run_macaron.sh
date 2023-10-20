@@ -333,11 +333,10 @@ if [[ -f "$HOME/.m2/settings.xml" ]]; then
 fi
 
 # Set up proxy.
-# - We respect the host machine's proxy environment variables.
-# - For Maven wrapper `mvnw`, proxy configuration can be set through
-# the `MAVEN_OPTS` environment variable.
-# - For Gradle wrapper `gradlew`, proxy configuration can be set through
-# the `GRADLE_OPTS` or `JAVA_OPTS` environment variables.
+# We respect the host machine's proxy environment variables.
+# For Maven and Gradle projects that Macaron needs to analyzes, the proxy configuration
+# for Maven wrapper `mvnw` and Gradle wrapper `gradlew` are set using `MAVEN_OPTS` and
+# `GRADLE_OPTS` environment variables.
 proxy_var_names=(
     "http_proxy"
     "https_proxy"
@@ -349,7 +348,6 @@ proxy_var_names=(
     "NO_PROXY"
     "MAVEN_OPTS"
     "GRADLE_OPTS"
-    "JAVA_OPTS"
 )
 
 for v in "${proxy_var_names[@]}"; do
