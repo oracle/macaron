@@ -112,6 +112,6 @@ def test_multiple_versions(snapshot: dict[str, DependencyInfo]) -> None:
 def test_custom_sbom_name_with_maven() -> None:
     """Test reading cyclonedx maven sbom that was created using a custom name."""
     cyclonedx: CycloneDxMaven = CycloneDxMaven(
-        "", "bom.json", "maven", defaults.get("dependency.resolver", "dep_tool_maven"), "localhost"
+        "", "bom.json", "", defaults.get("dependency.resolver", "dep_tool_maven"), ""
     )
     assert cyclonedx.collect_dependencies(str(RESOURCES_DIR))
