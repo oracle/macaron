@@ -29,7 +29,7 @@ Top level structure
 Reports
 -------
 
-The report files of Macaron (from using the :ref:`analyze action <analyze-action-cli>`) are generated into the ``reports`` directory.
+The report files of Macaron (from using the :ref:`analyze command <analyze-command-cli>`) are generated into the ``reports`` directory.
 
 .. code-block::
 
@@ -51,7 +51,7 @@ path is formed from the PURL string of that component. The final path is created
 For more information on the three fields ``type``, ``namespace`` and ``name`` of a PURL string, please see
 `PURL Specification <https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst>`_.
 
-Typically, when a repository path is provided as the main software component of the :ref:`analyze action <analyze-action-cli>`,
+Typically, when a repository path is provided as the main software component of the :ref:`analyze command <analyze-command-cli>`,
 a PURL is generated from the repository path, which is then later used in generating the unique report path.
 
 For example, when running this command:
@@ -118,7 +118,7 @@ For example, `<https://github.com/micronaut-projects/micronaut-core>`_ will be c
         └── micronaut-projects
             └── micronaut-core
 
-By default, if a local path is provided to the :ref:`analyze action <analyze-action-cli>`, this path will be treated as a relative path
+By default, if a local path is provided to the :ref:`analyze command <analyze-command-cli>`, this path will be treated as a relative path
 to the directory:
 
 .. code-block::
