@@ -15,6 +15,7 @@ from macaron.dependency_analyzer.cyclonedx import (
     get_dep_components,
     get_deps_from_sbom,
 )
+from macaron.dependency_analyzer.cyclonedx_mvn import CycloneDxMaven
 from macaron.dependency_analyzer.dependency_resolver import DependencyInfo
 
 RESOURCES_DIR = Path(__file__).parent.joinpath("resources")
@@ -106,3 +107,12 @@ def test_multiple_versions(snapshot: dict[str, DependencyInfo]) -> None:
     bom_path = Path(RESOURCES_DIR, "bom_multi_versions.json")
     result = get_deps_from_sbom(bom_path)
     assert snapshot == result
+
+
+def test_custom_sbom_name_with_maven() -> None:
+    """Test reading cyclonedx maven sbom that was created using a custom name."""
+    cyclonedx: CycloneDxMaven = CycloneDxMaven(
+        "", "bom.json", "maven", defaults.get("dependency.resolver", "dep_tool_maven"), "localhost"
+    )
+    deps_resolved = cyclonedx.collect_dependencies(str(RESOURCES_DIR))
+    assert deps_resolved

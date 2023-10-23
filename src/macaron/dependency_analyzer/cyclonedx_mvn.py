@@ -69,6 +69,9 @@ class CycloneDxMaven(DependencyAnalyzer):
             # If the expected bom file does not exist, allow other named .json files instead.
             possible_paths = glob.glob(os.path.join(dir_path, "target", "*.json"))
             if possible_paths:
+                if len(possible_paths) > 1:
+                    logger.error("Too many JSON SBOM files found. Expected: 1, Found: %s", len(possible_paths))
+                    return {}
                 top_path = Path(possible_paths[0])
                 top_path_altered = True
 
