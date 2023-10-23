@@ -114,5 +114,4 @@ def test_custom_sbom_name_with_maven() -> None:
     cyclonedx: CycloneDxMaven = CycloneDxMaven(
         "", "bom.json", "maven", defaults.get("dependency.resolver", "dep_tool_maven"), "localhost"
     )
-    deps_resolved = cyclonedx.collect_dependencies(str(RESOURCES_DIR))
-    assert deps_resolved
+    assert cyclonedx.collect_dependencies(str(RESOURCES_DIR))
