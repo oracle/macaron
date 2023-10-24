@@ -287,7 +287,7 @@ class Repository(ORMBase):
     #: The path to the repo on the file system.
     fs_path: Mapped[str] = mapped_column(String, nullable=False)
 
-    def __init__(self, *args: Any, files: list[str] | None = None, **kwargs: Any):
+    def __init__(self, files: list[str] | None = None, **kwargs: Any):
         """Instantiate the repository and set files.
 
         Parameters
@@ -295,7 +295,7 @@ class Repository(ORMBase):
         files: list[str] | None
             The files extracted for this repository.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
         # We populate the PURL type, namespace, and name columns using the complete_name.
         # Because locally cloned repositories may miss the namespace, we need to check the length.
