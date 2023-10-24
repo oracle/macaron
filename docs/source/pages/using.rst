@@ -9,7 +9,7 @@ Using Macaron
 
 .. note:: The instructions below assume that you have setup you environment correctly to run Macaron (if not, please refer to :ref:`Installation Guide <installation-guide>`).
 
-.. _analyze-action:
+.. _analyze-command:
 
 .. contents:: :local:
 
@@ -230,7 +230,7 @@ Analyzing dependencies in the SBOM without the main software component
 
 In the case where the repository URL of the main software component is not available (e.g. the repository is in a private domain where Macaron cannot access),
 Macaron can still run the analysis on the dependencies listed in the SBOM.
-To do that, you must first create a PURL to present the main software component. This is so that this software component could be referenced later in the :ref:`verify-policy <verify-policy-action-cli>` command.
+To do that, you must first create a PURL to present the main software component. This is so that this software component could be referenced later in the :ref:`verify-policy <verify-policy-command-cli>` command.
 For example: ``pkg:private_domain.com/org/name``.
 
 Then the analysis can be run with:
@@ -253,7 +253,7 @@ In some cases the dependencies that Macaron discovers lack a direct connection t
 
 This feature is enabled by default. To disable, or configure its behaviour in other ways, a custom ``defaults.ini`` should be passed to Macaron during execution.
 
-See :ref:`dump-defaults <action_dump_defaults>`, the CLI command to dump the default configurations in ``defaults.ini``. After making changes, see :ref:`analyze <analyze-action-cli>` CLI command for the option to pass the modified ``defaults.ini`` file.
+See :ref:`dump-defaults <action_dump_defaults>`, the CLI command to dump the default configurations in ``defaults.ini``. After making changes, see :ref:`analyze <analyze-command-cli>` CLI command for the option to pass the modified ``defaults.ini`` file.
 
 Within the configuration file under the ``repofinder.java`` header, three options exist: ``artifact_repositories``, ``repo_pom_paths``, ``find_parents``. These options behave as follows:
 
@@ -320,7 +320,7 @@ Running the policy engine
 
 Macaron's policy engine accepts policies specified in `Datalog <https://en.wikipedia.org/wiki/Datalog>`_. An example policy
 can verify if a project and all its dependencies pass certain checks. We use `Soufflé <https://souffle-lang.github.io/index.html>`_
-as the Datalog engine in Macaron. Once you run the checks on a target project as described :ref:`here <analyze-action>`,
+as the Datalog engine in Macaron. Once you run the checks on a target project as described :ref:`here <analyze-command>`,
 the check results will be stored in ``macaron.db`` in the output directory. We pass the check results to the policy engine by providing the path to ``macaron.db`` together with a Datalog policy file to be validated by the policy engine.
 In the Datalog policy file, we must specify the identifier for the target software component that we are interested in to validate the policy against. These are two ways to specify the target software component in the Datalog policy file:
 
@@ -355,7 +355,7 @@ The differences between the two policy files can be observed below:
 
     apply_policy_to("oci_micronaut_dependencies", component_id) :- is_component(component_id, "<target_software_component_purl>").
 
-The PURL string for the target software component is printed to the console by the :ref:`analyze command <analyze-action>`. For example:
+The PURL string for the target software component is printed to the console by the :ref:`analyze command <analyze-command>`. For example:
 
 .. code::
 

@@ -17,9 +17,9 @@ Usage
 
 	usage: ./run_macaron.sh [-h] [-V] [-v] [-o OUTPUT_DIR] [-dp DEFAULTS_PATH] [-lr LOCAL_REPOS_PATH] {analyze,dump-defaults,verify-policy} ...
 
-Macaron's CLI has multiple common flags (e.g ``-h``, ``-V``) and different action commands (e.g. ``analyze``), which have their own set of flags.
+Macaron's CLI has multiple common flags (e.g ``-h``, ``-V``) and different commands (e.g. ``analyze``), which have their own set of flags.
 
-.. note:: Running ``--help`` on the main entry ``macaron`` will only print out the help for common flags. To print the help messages for action-specific flags, please provide the name of the action you want to know about. For example: ``./run_macaron.sh analyze --help``. The documented flags for each action can be found at `Action Commands`_.
+.. note:: Running ``--help`` on the main entry ``macaron`` will only print out the help for common flags. To print the help messages for command-specific flags, please provide the name of the command you want to know about. For example: ``./run_macaron.sh analyze --help``. The documented flags for each command can be found at `Commands`_.
 
 --------------
 Common Options
@@ -58,11 +58,11 @@ Environment Variables
 * ``DOCKER_PULL``: Whether to pull the Docker image from the `GitHub Container registry <https://github.com/oracle/macaron/pkgs/container/macaron>`_; must be one of: ``always``, ``missing``, ``never`` (default: ``always``).
 
 ---------------
-Action Commands
+Commands
 ---------------
 
 .. toctree::
 	:glob:
 	:maxdepth: 1
 
-	action*
+	command*
