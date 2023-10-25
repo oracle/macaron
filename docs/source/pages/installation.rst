@@ -10,7 +10,10 @@ Installation Guide
 -------------
 Prerequisites
 -------------
-- Installations of ``wget`` or ``curl`` and ``bash`` must be available and on the path.
+- Installations of ``wget`` or ``curl`` and ``bash`` must be available on ``PATH``.
+
+  - Macaron has been tested with ``bash 5.1.16(1)-release``.
+
 - Docker (or docker equivalent for your host OS) must be installed, with a docker command line equivalent to Docker 17.06 (Oracle Container Runtime 19.03) and the user should be a member of the operating system group ``docker`` (to run Docker in `rootless mode <https://docs.docker.com/engine/security/rootless/>`_).
 
 .. _download-macaron:
