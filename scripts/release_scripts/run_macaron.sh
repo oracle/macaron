@@ -157,7 +157,7 @@ function create_dir_if_not_exists() {
     fi
 }
 
-# Add a directory to the list of volume mounts.
+# Add a directory to the list of volume mounts stored in the ``mounts`` global variable.
 #
 # Arguments:
 #   $1: The macaron argument from which the directory is passed into this script.
@@ -165,8 +165,6 @@ function create_dir_if_not_exists() {
 #   $3: The path to the directory inside the container.
 #   $4: Mount option. Note: this MUST be either `ro,Z` for readonly volume mounts,
 #       or `rw,Z` otherwise.
-# Globals:
-#   mounts: the volume mount is added to this array
 function mount_dir() {
     arg_name=$1
     dir_on_host=$2
@@ -188,7 +186,7 @@ function mount_dir() {
     mounts+=("-v" "${dir_on_host}:${dir_in_container}:${mount_option}")
 }
 
-# Add a file to the list of volume mounts.
+# Add a file to the list of volume mounts stored in the ``mounts`` global variable.
 #
 # Arguments:
 #   $1: The macaron argument from which the file is passed into this script.
@@ -196,8 +194,6 @@ function mount_dir() {
 #   $3: The path to the file inside the container.
 #   $4: Mount option. Note: this MUST be either `ro,Z` for readonly volumes,
 #       or `rw,Z` otherwise.
-# Globals:
-#   mounts: the volume mount is added to this array
 function mount_file() {
     arg_name=$1
     file_on_host=$2
