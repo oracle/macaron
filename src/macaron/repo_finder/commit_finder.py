@@ -14,7 +14,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 ALPHANUMERIC = "0-9a-z"
 PREFIX = "(?:.*)"
-INFIX = "[^0-9]{1,3}"  # 1 to 3 non-numeric characters
+# Version token separator: 1 to 3 alphabetic characters OR 1 to 3 non-alphanumeric characters.
+INFIX = "([a-z]{1,3}|[^0-9a-z]{1,3})"
 split_pattern = re.compile(f"[^{ALPHANUMERIC}]+", flags=re.IGNORECASE)
 validation_pattern = re.compile(f"[{ALPHANUMERIC}]+", flags=re.IGNORECASE)
 
