@@ -419,8 +419,15 @@ if [[ -n ${MCN_DEBUG_ARGS:-} ]]; then
     exit 0
 fi
 
-docker run \
-    --pull ${DOCKER_PULL} \
+# By default
+# - docker maps the host user $UID to a user with the same $UID in the container.
+# - podman maps the host user $UID to the root user in the container.
+# To make podman behave similarly to docker, we need to set the following env var.
+# Reference: https://docs.podman.io/en/v4.4/markdown/options/userns.container.html.
+export PODMAN_USERNS=keep-id
+
+${DOCKER_EXEC} run \
+    --pull "${DOCKER_PULL}" \
     --network=host \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" \
