@@ -606,6 +606,7 @@ class GhAPIClient(BaseAPIClient):
                 "Accept": "application/octet-stream",
                 "Authorization": self.headers["Authorization"],
             },
+            timeout=defaults.getint("downloads", "timeout", fallback=120),
         )
         if not response:
             logger.error("Could not download the asset.")
