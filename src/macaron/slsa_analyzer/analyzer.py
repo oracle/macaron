@@ -705,6 +705,9 @@ class Analyzer:
         # Find the digest and branch if a version has been specified
         if defaults.getboolean("repofinder", "find_commits") and not digest and purl and purl.version:
             branch_name, digest = get_commit_from_version(git_obj, purl)
+            if not (branch_name and digest):
+                logger.error("Could not map purl version to specific commit in repository.")
+                return None
 
         # Checking out the specific branch or commit. This operation varies depends on the git service that the
         # repository uses.
