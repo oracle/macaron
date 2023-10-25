@@ -22,6 +22,27 @@
 # Reference: https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html.
 set -euo pipefail
 
+# The `extglob` shopt option is required for the `@(...)` pattern matching syntax.
+# This option is not enabled by default for bash on some systems, most notably MacOS
+# where the default bash version is very old.
+# Reference: https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html
+shopt -s extglob
+
+# Log error (to stderr).
+log_err() {
+    echo "[ERROR]: $*" >&2
+}
+
+# Log warning (to stderr).
+log_warning() {
+    echo "[WARNING]: $*" >&2
+}
+
+if [[ "${BASH_VERSINFO[0]}" -lt "4" ]]; then
+    log_warning "Your bash version, '${BASH_VERSION}', is too old and is not actively supported by Macaron."
+    log_warning "Using bash version >=4 is recommended."
+fi
+
 if [[ -z ${MACARON_IMAGE_TAG:-} ]]; then
     MACARON_IMAGE_TAG="latest"
 fi
@@ -56,11 +77,6 @@ mounts=()
 
 # The proxy values obtained from the host environment.
 proxy_vars=()
-
-# Log error (to stderr).
-log_err() {
-    echo "[ERROR]: $*" >&2
-}
 
 # Convert a path to absolute path if it is a relative path.
 #
