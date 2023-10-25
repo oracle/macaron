@@ -22,6 +22,12 @@
 # Reference: https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html.
 set -euo pipefail
 
+# The `extglob` shopt option is required for the `@(...)` pattern matching syntax.
+# This option is not enabled by default for bash on some systems, most notably MacOS
+# where the default bash version is very old.
+# Reference: https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html
+shopt -s extglob
+
 if [[ -z ${MACARON_IMAGE_TAG:-} ]]; then
     MACARON_IMAGE_TAG="latest"
 fi
