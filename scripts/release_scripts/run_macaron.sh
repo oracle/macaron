@@ -43,6 +43,7 @@ if [[ "${BASH_VERSINFO[0]}" -lt "4" ]]; then
     log_warning "Using bash version >=4 is recommended."
 fi
 
+# Determine the Macaron image tag.
 if [[ -z ${MACARON_IMAGE_TAG:-} ]]; then
     MACARON_IMAGE_TAG="latest"
 fi
@@ -104,8 +105,14 @@ function to_absolute_path() {
 # With the `set -e` option turned on, this function exits the script with
 # return code 1 if the directory does not exist.
 function assert_dir_exists() {
-    if [[ ! -d "$1" ]]; then
-        log_err "Directory $1 of argument $2 does not exist."
+    path=$1
+    arg_name=$2
+    if [[ ! -d "$path" ]]; then
+        if [[ -z "${arg_name:-}" ]]; then
+            log_err "Directory $path does not exist."
+        else
+            log_err "Directory $path of argument $arg_name does not exist."
+        fi
         return 1
     fi
 }
@@ -138,6 +145,68 @@ function assert_path_exists() {
         log_err "File $1 of argument $2 is neither file nor directory."
         return 1
     fi
+}
+
+# Create a directory if it does not exist.
+# Arguments:
+#   $1: The directory to create.
+function create_dir_if_not_exists() {
+    dir=$1
+    if [ ! -d "$dir" ]; then
+        mkdir --parents "$dir"
+    fi
+}
+
+# Add a directory to the list of volume mounts.
+#
+# Arguments:
+#   $1: The macaron argument from which the directory is passed into this script.
+#   $2: The path to the directory on the host.
+#   $3: The path to the directory inside the container.
+#   $4: Mount option. Note: this MUST be either `ro,Z` for readonly volume mounts,
+#       or `rw,Z` otherwise.
+# Globals:
+#   mounts: the volume mount is added to this array
+function mount_dir() {
+    arg_name=$1
+    dir_on_host=$2
+    dir_in_container=$3
+    mount_option=$4
+
+    dir_on_host=$(to_absolute_path "$dir_on_host")
+
+    # If this is a read-only volume mount, error if the directory does not exist
+    # on host. Otherwise, create if it does not exist.
+    # This ensures compatibility with podman, as podman does not create the
+    # directory on host if it does not exist.
+    if [ "$mount_option" = "ro,Z" ]; then
+        assert_dir_exists "$dir_on_host" "$arg_name"
+    else
+        create_dir_if_not_exists "$dir_on_host"
+    fi
+
+    mounts+=("-v" "${dir_on_host}:${dir_in_container}:${mount_option}")
+}
+
+# Add a file to the list of volume mounts.
+#
+# Arguments:
+#   $1: The macaron argument from which the file is passed into this script.
+#   $2: The path to the file on the host.
+#   $3: The path to the file inside the container.
+#   $4: Mount option. Note: this MUST be either `ro,Z` for readonly volumes,
+#       or `rw,Z` otherwise.
+# Globals:
+#   mounts: the volume mount is added to this array
+function mount_file() {
+    arg_name=$1
+    file_on_host=$2
+    file_in_container=$3
+    mount_option=$4
+
+    assert_file_exists "$file_on_host" "$arg_name"
+    file_on_host=$(to_absolute_path "$file_on_host")
+    mounts+=("-v" "${file_on_host}:${file_in_container}:${mount_option}")
 }
 
 # Parse main arguments.
@@ -222,130 +291,124 @@ fi
 # Determine the output path to be mounted into ${MACARON_WORKSPACE}/output/
 if [[ -n "${arg_output:-}" ]]; then
     output="${arg_output}"
-    assert_dir_exists "${output}" "-o/--output"
     argv_main+=("--output" "${MACARON_WORKSPACE}/output/")
 else
     output=$(pwd)/output
     echo "Setting default output directory to ${output}."
 fi
 
-output="$(to_absolute_path "${output}")"
-# Mounting the necessary .m2 and .gradle directories.
+# Mount the necessary .m2 and .gradle directories.
 m2_dir="${output}/.m2"
 gradle_dir="${output}/.gradle"
-mounts+=("-v" "${output}:${MACARON_WORKSPACE}/output:rw,Z")
-mounts+=("-v" "${m2_dir}:${MACARON_WORKSPACE}/.m2:rw,Z")
-mounts+=("-v" "${gradle_dir}:${MACARON_WORKSPACE}/.gradle:rw,Z")
+
+mount_dir "" "$output" "${MACARON_WORKSPACE}/output" "rw,Z"
+mount_dir "" "$m2_dir" "${MACARON_WORKSPACE}/.m2" "rw,Z"
+mount_dir "" "$gradle_dir" "${MACARON_WORKSPACE}/.gradle" "rw,Z"
 
 # Determine the local repos path to be mounted into ${MACARON_WORKSPACE}/output/git_repos/local_repos/
 if [[ -n "${arg_local_repos_path:-}" ]]; then
-    local_repos_path="${arg_local_repos_path}"
-    assert_dir_exists "${local_repos_path}" "-lr/--local-repos-path"
-    argv_main+=("--local-repos-path" "${MACARON_WORKSPACE}/output/git_repos/local_repos/")
+    local_repo_path_in_container="${MACARON_WORKSPACE}/output/git_repos/local_repos"
 
-    local_repos_path="$(to_absolute_path "${local_repos_path}")"
-    mounts+=("-v" "${local_repos_path}:${MACARON_WORKSPACE}/output/git_repos/local_repos/:rw,Z")
+    argv_main+=("--local-repos-path" "$local_repo_path_in_container")
+    mount_dir "-lr/--local-repos-path" "$arg_local_repos_path" "$local_repo_path_in_container" "rw,Z"
 fi
 
 # Determine the defaults path to be mounted into ${MACARON_WORKSPACE}/defaults/${file_name}
 if [[ -n "${arg_defaults_path:-}" ]]; then
     defaults_path="${arg_defaults_path}"
-    assert_file_exists "${defaults_path}" "-dp/--defaults-path"
-    file_name="$(basename "${defaults_path}")"
-    argv_main+=("--defaults-path" "${MACARON_WORKSPACE}/defaults/${file_name}")
+    file_name="$(basename "${arg_defaults_path}")"
+    defaults_path_in_container="${MACARON_WORKSPACE}/defaults/${file_name}"
 
-    defaults_path="$(to_absolute_path "${defaults_path}")"
-    mounts+=("-v" "${defaults_path}:${MACARON_WORKSPACE}/defaults/${file_name}:ro")
+    argv_main+=("--defaults-path" "$defaults_path_in_container")
+    mount_file "-dp/--defaults-path" "$defaults_path" "$defaults_path_in_container" "ro,Z"
 fi
 
 # Determine the policy path to be mounted into ${MACARON_WORKSPACE}/policy/${file_name}
 if [[ -n "${arg_policy:-}" ]]; then
-    policy="${arg_policy}"
-    assert_file_exists "${policy}" "-po/--policy"
-    file_name="$(basename "${policy}")"
-    argv_main+=("--policy" "${MACARON_WORKSPACE}/policy/${file_name}")
+    policy_file="${arg_policy}"
+    file_name="$(basename "${policy_file}")"
+    policy_file_in_container="${MACARON_WORKSPACE}/policy/${file_name}"
 
-    policy="$(to_absolute_path "${policy}")"
-    mounts+=("-v" "${policy}:${MACARON_WORKSPACE}/policy/${file_name}:ro")
+    argv_main+=("--policy" "$policy_file_in_container")
+    mount_file "-po/--policy" "$policy_file" "$policy_file_in_container" "ro,Z"
 fi
 
 # MACARON entrypoint - Analyze command argvs
 # Determine the template path to be mounted into ${MACARON_WORKSPACE}/template/${file_name}
 if [[ -n "${arg_template_path:-}" ]]; then
     template_path="${arg_template_path}"
-    assert_file_exists "${template_path}" "-g/--template-path"
     file_name="$(basename "${template_path}")"
-    argv_command+=("--template-path" "${MACARON_WORKSPACE}/template/${file_name}")
+    template_path_in_container="${MACARON_WORKSPACE}/template/${file_name}"
 
-    template_path="$(to_absolute_path "${template_path}")"
-    mounts+=("-v" "${template_path}:${MACARON_WORKSPACE}/template/${file_name}:ro")
+    argv_command+=("--template-path" "$template_path_in_container")
+    mount_file "-g/--template-path" "$template_path" "$template_path_in_container" "ro,Z"
 fi
 
 # Determine the config path to be mounted into ${MACARON_WORKSPACE}/config/${file_name}
 if [[ -n "${arg_config_path:-}" ]]; then
     config_path="${arg_config_path}"
-    assert_file_exists "${config_path}" "-c/--config-path"
     file_name="$(basename "${config_path}")"
-    argv_command+=("--config-path" "${MACARON_WORKSPACE}/config/${file_name}")
+    config_path_in_container="${MACARON_WORKSPACE}/config/${file_name}"
 
-    config_path="$(to_absolute_path "${config_path}")"
-    mounts+=("-v" "${config_path}:${MACARON_WORKSPACE}/config/${file_name}:ro")
+    argv_command+=("--config-path" "$config_path_in_container")
+    mount_file "-c/--config-path" "$config_path" "$config_path_in_container" "ro,Z"
 fi
 
 # Determine the sbom path to be mounted into ${MACARON_WORKSPACE}/sbom/${file_name}
 if [[ -n "${arg_sbom_path:-}" ]]; then
     sbom_path="${arg_sbom_path}"
-    assert_file_exists "${sbom_path}" "-sbom/--sbom-path"
     file_name="$(basename "${sbom_path}")"
-    argv_command+=("--sbom-path" "${MACARON_WORKSPACE}/sbom/${file_name}")
+    sbom_path_in_container="${MACARON_WORKSPACE}/sbom/${file_name}"
 
-    sbom_path="$(to_absolute_path "${sbom_path}")"
-    mounts+=("-v" "${sbom_path}:${MACARON_WORKSPACE}/sbom/${file_name}:ro")
+    argv_command+=("--sbom-path" "$sbom_path_in_container")
+    mount_file "-sbom/--sbom-path" "$sbom_path" "$sbom_path_in_container" "ro,Z"
 fi
 
-# Determine the provenance expectation path to be mounted into ${MACARON_WORKSPACE}/prov_expectations/${file_name}
+# Determine the provenance expectation path to be mounted into ${MACARON_WORKSPACE}/prov_expectations/${pe_name} where pe_name can either be a directory or a file
 if [[ -n "${arg_prov_exp:-}" ]]; then
-    prov_exp="${arg_prov_exp}"
-    assert_path_exists "${prov_exp}" "-pe/--provenance-expectation"
-    pe_name="$(basename "${prov_exp}")"
-    argv_command+=("--provenance-expectation" "${MACARON_WORKSPACE}/prov_expectations/${pe_name}")
+    prov_exp_path="${arg_prov_exp}"
+    assert_path_exists "${prov_exp_path}" "-pe/--provenance-expectation"
+    prov_exp_name="$(basename "${prov_exp_path}")"
+    prov_exp_path_in_container=${MACARON_WORKSPACE}/prov_expectations/${prov_exp_name}
+    argv_command+=("--provenance-expectation" "$prov_exp_path_in_container")
 
-    prov_exp="$(to_absolute_path "${prov_exp}")"
-    mounts+=("-v" "${prov_exp}:${MACARON_WORKSPACE}/prov_expectations/${pe_name}:ro")
+    if [ -d "$prov_exp_path" ]; then
+        mount_dir "-pe/--provenance-expectation" "$prov_exp_path" "$prov_exp_path_in_container" "ro,Z"
+    elif [ -f "$prov_exp_path" ]; then
+        mount_file "-pe/--provenance-expectation" "$prov_exp_path" "$prov_exp_path_in_container" "ro,Z"
+    fi
 fi
 
 # MACARON entrypoint - verify-policy command argvs
 # This is for macaron verify-policy command.
 # Determine the database path to be mounted into ${MACARON_WORKSPACE}/database/macaron.db
 if [[ -n "${arg_database:-}" ]]; then
-    database="${arg_database}"
-    assert_file_exists "${database}" "-d/--database"
-    file_name="$(basename "${database}")"
-    argv_command+=("--database" "${MACARON_WORKSPACE}/database/${file_name}")
+    database_path="${arg_database}"
+    file_name="$(basename "${database_path}")"
+    database_path_in_container="${MACARON_WORKSPACE}/database/${file_name}"
 
-    database="$(to_absolute_path "${database}")"
-    mounts+=("-v" "${database}:${MACARON_WORKSPACE}/database/${file_name}:rw,Z")
+    argv_command+=("--database" "$database_path_in_container")
+    mount_file "-d/--database" "$database_path" "$database_path_in_container" "rw,Z"
 fi
 
 # Determine the Datalog policy to be verified by verify-policy command.
 if [[ -n "${arg_datalog_policy_file:-}" ]]; then
     datalog_policy_file="${arg_datalog_policy_file}"
-    assert_file_exists "${datalog_policy_file}" "-f/--file"
     file_name="$(basename "${datalog_policy_file}")"
-    argv_command+=("--file" "${MACARON_WORKSPACE}/policy/${file_name}")
+    datalog_policy_file_in_container="${MACARON_WORKSPACE}/policy/${file_name}"
 
-    datalog_policy_file="$(to_absolute_path "${datalog_policy_file}")"
-    mounts+=("-v" "${datalog_policy_file}:${MACARON_WORKSPACE}/policy/${file_name}:ro")
+    argv_command+=("--file" "$datalog_policy_file_in_container")
+    mount_file "-f/--file" "$datalog_policy_file" "$datalog_policy_file_in_container" "ro,Z"
 fi
 
 # Determine that ~/.gradle/gradle.properties exists to be mounted into ${MACARON_WORKSPACE}/gradle.properties
 if [[ -f "$HOME/.gradle/gradle.properties" ]]; then
-    mounts+=("-v" "$HOME/.gradle/gradle.properties":"${MACARON_WORKSPACE}/gradle.properties:ro")
+    mounts+=("-v" "$HOME/.gradle/gradle.properties":"${MACARON_WORKSPACE}/gradle.properties:ro,Z")
 fi
 
 # Determine that ~/.m2/settings.xml exists to be mounted into ${MACARON_WORKSPACE}/settings.xml
 if [[ -f "$HOME/.m2/settings.xml" ]]; then
-    mounts+=("-v" "$HOME/.m2/settings.xml":"${MACARON_WORKSPACE}/settings.xml:ro")
+    mounts+=("-v" "$HOME/.m2/settings.xml":"${MACARON_WORKSPACE}/settings.xml:ro,Z")
 fi
 
 # Set up proxy.
@@ -426,7 +489,7 @@ fi
 # Reference: https://docs.podman.io/en/v4.4/markdown/options/userns.container.html.
 export PODMAN_USERNS=keep-id
 
-${DOCKER_EXEC} run \
+docker run \
     --pull "${DOCKER_PULL}" \
     --network=host \
     --rm -i "${tty[@]}" \
