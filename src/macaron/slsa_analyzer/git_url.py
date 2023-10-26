@@ -76,8 +76,6 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
     This method supports repositories which are cloned from existing remote repositories.
     Other scenarios are not covered (e.g. a newly initiated repository).
 
-    This method will not try to un-shallow an existing shallow-clone repository.
-
     If ``offline_mode`` is set, this method will not pull/fetch from remote while checking out the branch or commit.
 
     Parameters
