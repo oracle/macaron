@@ -67,7 +67,7 @@ def commit_files(git_wrapper: Git, file_names: list) -> bool:
         return False
 
 
-def commit_nothing(git_wrapper: Git, message: str = "") -> bool:
+def commit_nothing(git_wrapper: Git, message: str = "") -> str:
     """Create an empty commit in the repository indicated by the git_wrapper.
 
     Parameters
@@ -79,18 +79,18 @@ def commit_nothing(git_wrapper: Git, message: str = "") -> bool:
 
     Returns
     -------
-    bool
-        True if succeed else False.
+    str
+        The commit sha or an empty string if unsuccessful.
     """
     try:
         # Store the index object as recommended by the documentation
         current_index = git_wrapper.repo.index
         if not message:
             message = "Empty commit"
-        current_index.commit(message)
-        return True
+        commit = current_index.commit(message)
+        return str(commit.hexsha)
     except GitError:
-        return False
+        return ""
 
 
 def prepare_repo_for_testing(
@@ -137,7 +137,7 @@ def prepare_repo_for_testing(
     return analyze_ctx
 
 
-def add_tag_if_not_present(git_obj: Git, tag: str) -> None:
+def add_new_commit_with_tag(git_obj: Git, tag: str) -> str:
     """Add passed tag to repository if not already present.
 
     Parameters
@@ -148,5 +148,7 @@ def add_tag_if_not_present(git_obj: Git, tag: str) -> None:
         The tag to possibly add.
     """
     if tag in git_obj.repo.tags:
-        return
+        return ""
+    sha = commit_nothing(git_obj)
     git_obj.repo.create_tag(tag)
+    return sha

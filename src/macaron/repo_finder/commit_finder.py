@@ -13,11 +13,13 @@ from pydriller import Git
 logger: logging.Logger = logging.getLogger(__name__)
 
 ALPHANUMERIC = "0-9a-z"
-PREFIX = "(?:.*)"
+# Any number of irrelevant prefix characters followed by 1 to 2 prefix-version separators (optional).
+PREFIX = "(?:.*[-_/vr]{1,2})?"
 # Version token separator: 1 to 3 alphabetic characters OR 1 to 3 non-alphanumeric characters.
 INFIX = "([a-z]{1,3}|[^0-9a-z]{1,3})"
 split_pattern = re.compile(f"[^{ALPHANUMERIC}]+", flags=re.IGNORECASE)
 validation_pattern = re.compile(f"[{ALPHANUMERIC}]+", flags=re.IGNORECASE)
+alphabetic_pattern = re.compile(".*[a-z].*", flags=re.IGNORECASE)
 
 
 def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
@@ -42,8 +44,15 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
         return "", ""
     logger.debug("Searching for commit of artifact version using tags: %s@%s", purl.name, purl.version)
 
-    target_version_pattern = _build_version_pattern(purl.version)
-    has_name_pattern = re.compile(f".*{re.escape(purl.name)}.*[0-9].*", flags=re.IGNORECASE)
+    target_version_pattern, parts = _build_version_pattern(purl.version)
+    # The has_name_pattern tries to determine whether a given tag contains the name of the current artifact as a prefix
+    # and at least one number that could belong to a version.
+    # .*             : Any number of irrelevant pre-prefix characters.
+    # purl.name      : The artifact name (escaped).
+    # [^a-z0-9]{1,3} : 1 to 3 non-numeric characters.
+    # [0-9]          : A single numeric character.
+    # .*             : The remainder of the version and possible suffixes.
+    has_name_pattern = re.compile(f".*{re.escape(purl.name)}[^{ALPHANUMERIC}]" + "{1,3}[0-9].*", flags=re.IGNORECASE)
 
     # Tags are examined as followed:
     # - Any without a corresponding commit are discarded.
@@ -68,9 +77,15 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
 
     # Match tags.
     if named_tags:
-        matched_tags = _match_tags(named_tags, target_version_pattern)
+        matched_tags = _match_tags(named_tags, target_version_pattern, parts)
+        if not matched_tags:
+            # See if there are any possible matches from non-named tags.
+            possible_matches = _match_tags(other_tags, target_version_pattern, parts)
+            if possible_matches:
+                # TODO Determine whether to accept a possible match.
+                logger.debug("Possible tag matches: %s", possible_matches)
     else:
-        matched_tags = _match_tags(other_tags, target_version_pattern)
+        matched_tags = _match_tags(other_tags, target_version_pattern, parts)
 
     # Report matched tags.
     if not matched_tags:
@@ -115,7 +130,7 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
     return "", ""
 
 
-def _build_version_pattern(version: str) -> Pattern:
+def _build_version_pattern(version: str) -> tuple[Pattern, list[str]]:
     """Build a version pattern to match the passed version string.
 
     Parameters
@@ -125,8 +140,8 @@ def _build_version_pattern(version: str) -> Pattern:
 
     Returns
     -------
-    Pattern
-        The regex pattern that will match the version.
+    tuple[Pattern, list[str]]
+        The tuple of the regex pattern that will match the version, and the list of version parts that were extracted.
 
     """
     # The version is split on non-alphanumeric characters to separate the version parts from the non-version parts.
@@ -138,24 +153,32 @@ def _build_version_pattern(version: str) -> Pattern:
         split = [version]
 
     this_version_pattern = ""
-    for part in split:
+    parts = []
+    for count, part in enumerate(split):
         # Validate the split part by checking it is only comprised of alphanumeric characters.
         valid = validation_pattern.match(part)
         if not valid:
             continue
+        parts.append(part)
+        # If the final version part has at least one alphabetic character in it, consider it to be optional.
+        # This requires wrapping it and the previous INFIX in brackets.
+        has_alphabetic_suffix = count == len(split) - 1 and alphabetic_pattern.match(str(part))
+        if has_alphabetic_suffix:
+            this_version_pattern = this_version_pattern + "("
         if this_version_pattern:
-            # Between one and three non-numeric characters are accepted between the version parts.
-            # This balances the tradeoff between maximal matching and minimal false positives.
+            # INFIX matches separators as described where it is instantiated.
             this_version_pattern = this_version_pattern + INFIX
         this_version_pattern = this_version_pattern + str(part)
+        if has_alphabetic_suffix:
+            this_version_pattern = this_version_pattern + ")?"
 
     # Prepend the optional prefix, add a named capture group for the version, and enforce end of string analysis.
     this_version_pattern = PREFIX + "(?P<version>" + this_version_pattern + ")" + "$"
     logger.debug("Created pattern: %s", this_version_pattern)
-    return re.compile(this_version_pattern, flags=re.IGNORECASE)
+    return re.compile(this_version_pattern, flags=re.IGNORECASE), parts
 
 
-def _match_tags(tag_list: list[TagReference], pattern: Pattern) -> list[TagReference]:
+def _match_tags(tag_list: list[TagReference], pattern: Pattern, parts: list[str]) -> list[TagReference]:
     """Return items of the passed tag list that match the passed pattern.
 
     Parameters
@@ -164,10 +187,13 @@ def _match_tags(tag_list: list[TagReference], pattern: Pattern) -> list[TagRefer
         The list of tags to check.
     pattern: Pattern
         The pattern to match against.
+    parts: list[str]
+        The list of version parts extracted from the version.
 
     Returns
     -------
-    The list of tags that matched the pattern.
+    list[TagReference]
+        The list of tags that matched the pattern.
     """
     matched_tags = []
     for tag in tag_list:
@@ -176,4 +202,29 @@ def _match_tags(tag_list: list[TagReference], pattern: Pattern) -> list[TagRefer
         if not match:
             continue
         matched_tags.append(tag)
+    if len(matched_tags) > 1:
+        # Sort the matched tags so that tags that contain all the version parts are prioritised.
+        matched_tags.sort(key=lambda item: _count_parts_in_tag(str(item), parts))
     return matched_tags
+
+
+def _count_parts_in_tag(tag: str, parts: list[str]) -> int:
+    """Count how many version part strings are contained in the tag.
+
+    Parameters
+    ----------
+    tag: str
+        The tag to be checked.
+    parts: list[str]
+        The version parts extracted from the version string.
+
+    Returns
+    -------
+    int
+        The count of contained parts subtracted from the number of parts.
+    """
+    count = len(parts)
+    for part in parts:
+        if part in tag:
+            count = count - 1
+    return count
