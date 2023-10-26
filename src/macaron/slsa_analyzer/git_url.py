@@ -238,6 +238,12 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
     This could happen when multiple runs of Macaron use the same `<output_dir>`, leading
     to Macaron potentially trying to clone a repository multiple times.
 
+    We use treeless partial clone to reduce clone time, by retrieving trees and blobs lazily.
+    For more details, see the following:
+    - https://git-scm.com/docs/partial-clone
+    - https://git-scm.com/docs/git-rev-list
+    - https://github.blog/2020-12-21-get-up-to-speed-with-partial-clone-and-shallow-clone
+
     Parameters
     ----------
     clone_dir : str
@@ -275,11 +281,6 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
     parent_dir = Path(clone_dir).parent
     parent_dir.mkdir(parents=True, exist_ok=True)
 
-    # We use treeless partial clone to reduce clone time, by retrieving trees and blobs lazily.
-    # For more details, see the following:
-    # - https://git-scm.com/docs/partial-clone
-    # - https://git-scm.com/docs/git-rev-list
-    # - https://github.blog/2020-12-21-get-up-to-speed-with-partial-clone-and-shallow-clone
     try:
         git_env_patch = {
             # Setting the GIT_TERMINAL_PROMPT environment variable to ``0`` stops
@@ -291,14 +292,21 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
                 args=["git", "clone", "--filter=tree:0", url],
                 capture_output=True,
                 cwd=parent_dir,
+                # If `check=True` and return status code is not zero, subprocess.CalledProcessError is
+                # raised, which we don't want. We want to check the return status code of the subprocess
+                # later on.
                 check=False,
             )
     except (subprocess.CalledProcessError, OSError):
         # Here, we raise from ``None`` to be extra-safe that no token is leaked.
+        # We should never store or print out the captured output from the subprocess
+        # because they might contain the secret-embedded URL.
         raise CloneError("Failed to clone repository.") from None
 
     if result.returncode != 0:
-        raise CloneError("Failed to clone repository: the `git clone` command exited with non-zero return code.")
+        raise CloneError(
+            "Failed to clone repository: the `git clone --filter=tree:0` command exited with non-zero return code."
+        )
 
     return Repo(path=clone_dir)
 
