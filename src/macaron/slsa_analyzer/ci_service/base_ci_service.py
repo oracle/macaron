@@ -164,7 +164,7 @@ class BaseCIService:
                 logger.info("No build command found in %s", file_path)
                 return "", ""
             except FileNotFoundError as error:
-                logger.error(error)
+                logger.debug(error)
                 continue
         return "", ""
 
