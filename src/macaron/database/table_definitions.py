@@ -273,7 +273,7 @@ class Repository(ORMBase):
     remote_path: Mapped[str] = mapped_column(String, nullable=False)
 
     #: The branch name.
-    branch_name: Mapped[str] = mapped_column(String, nullable=False)
+    branch_name: Mapped[str | None] = mapped_column(String, nullable=True)
 
     #: The release tag.
     release_tag: Mapped[str] = mapped_column(String, nullable=True)

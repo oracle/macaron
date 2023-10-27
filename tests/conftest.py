@@ -232,7 +232,7 @@ class MockGitHubActions(GitHubActions):
     """Mock the GitHubActions class."""
 
     def has_latest_run_passed(
-        self, repo_full_name: str, branch_name: str, commit_sha: str, commit_date: str, workflow: str
+        self, repo_full_name: str, branch_name: str | None, commit_sha: str, commit_date: str, workflow: str
     ) -> str:
         return "run_feedback"
 
