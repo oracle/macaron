@@ -111,7 +111,7 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
     - The pre-defined repository-based PURL type as defined in
     https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst
 
-    - The supprted git service domains (e.g. ``github.com``) defined in ``available_domains``.
+    - The supported git service domains (e.g. ``github.com``) defined in ``available_domains``.
 
     The repository path will be generated with the following format ``https://<type>/<namespace>/<name>``.
 
@@ -129,7 +129,9 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
     """
     domain = to_domain_from_known_purl_types(purl.type) or (purl.type if purl.type in available_domains else None)
     if not domain:
-        logger.error("The PURL type of %s is not valid as a repository type.", purl.to_string())
+        logger.info(
+            "The PURL type of %s is not valid as a repository type. Trying to find the repository...", purl.to_string()
+        )
         # Try to find the repository
         return find_repo(purl)
 
