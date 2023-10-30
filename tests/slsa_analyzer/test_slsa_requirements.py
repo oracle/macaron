@@ -5,26 +5,19 @@
 This module test the slsa_analyzer.requirement module
 """
 
-from unittest import TestCase
-
 from macaron.slsa_analyzer.slsa_req import SLSAReqStatus
 
 
-class TestSLSARequirements(TestCase):
+def test_slsa_requirements_status() -> None:
     """
-    This class provided tests for the Requirement module
+    Test requirement status
     """
+    req_status = SLSAReqStatus()
+    assert (False, False, "") == req_status.get_tuple()
 
-    def test_status(self) -> None:
-        """
-        Test requirement status
-        """
-        req_status = SLSAReqStatus()
-        assert (False, False, "") == req_status.get_tuple()
-
-        feedback = "This repo passes this requirement"
-        req_status.set_status(True, feedback)
-        assert req_status.is_addressed
-        assert req_status.is_pass
-        assert req_status.feedback == feedback
-        assert (True, True, feedback) == req_status.get_tuple()
+    feedback = "This repo passes this requirement"
+    req_status.set_status(True, feedback)
+    assert req_status.is_addressed
+    assert req_status.is_pass
+    assert req_status.feedback == feedback
+    assert (True, True, feedback) == req_status.get_tuple()
