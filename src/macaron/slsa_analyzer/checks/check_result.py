@@ -33,8 +33,13 @@ class CheckResultType(str, Enum):
 class CheckInfo:
     """This class identifies and describes a check."""
 
+    #: The id of the check.
     check_id: str
+
+    #: The description of the check.
     check_description: str
+
+    #: The list of SLSA requirements that this check addresses.
     eval_reqs: list[ReqName]
 
 
@@ -42,14 +47,16 @@ class CheckInfo:
 class CheckResultData:
     """This class stores the result of a check."""
 
-    # If an element in the justification is a string,
-    # it will be displayed as a string, if it is a mapping,
-    # the value will be rendered as a hyperlink in the html report.
+    #: List of justifications describing the reasons for the check result.
+    #: If an element in the justification is a string,
+    #: it will be displayed as a string, if it is a mapping,
+    #: the value will be rendered as a hyperlink in the html report.
     justification: Justification
-    # human_readable_justification: str
-    # result_values: dict[str, str | float | int] | list[dict[str, str | float | int]]
+
+    #: List of result tables produced by the check.
     result_tables: ResultTables
-    # recommendation: str
+
+    #: Result type of the check (e.g. PASSED).
     result_type: CheckResultType
 
 
@@ -57,7 +64,10 @@ class CheckResultData:
 class CheckResult:
     """This class stores the result of a check, including the description of the check that produced it."""
 
+    #: Info about the check that produced these results.
     check: CheckInfo
+
+    #: The results produced by the check.
     result: CheckResultData
 
     def get_dict(self) -> dict:
