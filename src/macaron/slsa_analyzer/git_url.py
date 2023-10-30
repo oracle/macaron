@@ -120,7 +120,8 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
 
     try:
         # Switch to the target branch by running ``git checkout <branch_name>`` in the target repository.
-        git_obj.repo.git.checkout(res_branch)
+        # We need to use force checkout to prevent issues similar to https://github.com/oracle/macaron/issues/530.
+        git_obj.repo.git.checkout("--force", res_branch)
     except GitCommandError as error:
         logger.error("Cannot checkout branch %s. Error: %s", res_branch, error)
         return False
@@ -150,8 +151,9 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
 
     if digest:
         # Checkout the specific commit that the user want by running ``git checkout <commit>`` in the target repository.
+        # We need to use force checkout to prevent issues similar to https://github.com/oracle/macaron/issues/530.
         try:
-            git_obj.repo.git.checkout(digest)
+            git_obj.repo.git.checkout("--force", digest)
         except GitCommandError as error:
             logger.error(
                 "Commit %s cannot be checked out. Error: %s",
