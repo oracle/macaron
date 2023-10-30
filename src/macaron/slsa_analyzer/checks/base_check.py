@@ -48,16 +48,34 @@ class BaseCheck:
         result_on_skip : CheckResultType
             The status for this check when it's skipped based on another check's result.
         """
-        self.check_info = CheckInfo(
+        self._check_info = CheckInfo(
             check_id=check_id, check_description=description, eval_reqs=eval_reqs if eval_reqs else []
         )
 
         if not depends_on:
-            self.depends_on = []
+            self._depends_on = []
         else:
-            self.depends_on = depends_on
+            self._depends_on = depends_on
 
-        self.result_on_skip = result_on_skip
+        self._result_on_skip = result_on_skip
+
+    @property
+    def check_info(self) -> CheckInfo:
+        """Get the information identifying/describing this check."""
+        return self._check_info
+
+    @property
+    def depends_on(self) -> list[tuple[str, CheckResultType]]:
+        """Get the list of parent checks that this check depends on.
+
+        Each member of the list is a tuple of the parent's id and the status of that parent check.
+        """
+        return self._depends_on
+
+    @property
+    def result_on_skip(self) -> CheckResultType:
+        """Get the status for this check when it's skipped based on another check's result."""
+        return self._result_on_skip
 
     def run(self, target: AnalyzeContext, skipped_info: SkippedInfo | None = None) -> CheckResult:
         """Run the check and return the results.
