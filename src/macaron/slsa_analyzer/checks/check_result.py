@@ -29,7 +29,7 @@ class CheckResultType(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-@dataclass
+@dataclass(frozen=True)
 class CheckInfo:
     """This class identifies and describes a check."""
 
@@ -43,7 +43,7 @@ class CheckInfo:
     eval_reqs: list[ReqName]
 
 
-@dataclass
+@dataclass(frozen=True)
 class CheckResultData:
     """This class stores the result of a check."""
 
@@ -60,7 +60,7 @@ class CheckResultData:
     result_type: CheckResultType
 
 
-@dataclass
+@dataclass(frozen=True)
 class CheckResult:
     """This class stores the result of a check, including the description of the check that produced it."""
 
