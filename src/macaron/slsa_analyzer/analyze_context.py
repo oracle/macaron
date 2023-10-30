@@ -180,7 +180,7 @@ class AnalyzeContext:
         # Remove result_tables since we don't have a good json representation for them.
         sorted_on_id = []
         for res in _sorted_on_id:
-            # res is CheckResult(TypedDict)
+            # res is CheckResult
             res_dict: dict = dict(res.get_dict())
             res_dict.pop("result_tables")
             sorted_on_id.append(res_dict)
