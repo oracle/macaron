@@ -292,6 +292,11 @@ An example configuration file for utilising this feature:
 Analyzing a locally cloned repository
 -------------------------------------
 
+.. warning::
+  During the analysis, Macaron can check out different commits, which can reset the index and working tree of the repository.
+  Therefore, any uncommitted changes in the repository need to be backed up to prevent loss (these include unstaged changes, staged changes and untracked files).
+  However, Macaron will not modify the history of the repository.
+
 If you have a local repository that you want to analyze, Macaron also supports running the analysis against a local repository.
 
 Assume that the dir tree at the local repository has the following components:
