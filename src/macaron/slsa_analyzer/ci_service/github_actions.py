@@ -294,7 +294,7 @@ class GitHubActions(BaseCIService):
                             )
 
     def has_latest_run_passed(
-        self, repo_full_name: str, branch_name: str, commit_sha: str, commit_date: str, workflow: str
+        self, repo_full_name: str, branch_name: str | None, commit_sha: str, commit_date: str, workflow: str
     ) -> str:
         """Check if the latest run of ``workflow`` on commit ``commit_sha`` is passing.
 
@@ -306,7 +306,7 @@ class GitHubActions(BaseCIService):
         ----------
         repo_full_name : str
             The target repo's full name.
-        branch_name : str
+        branch_name : str | None
             The target branch.
         commit_sha : str
             The commit sha of the target repo.
@@ -320,7 +320,7 @@ class GitHubActions(BaseCIService):
         str
             The URL for the passing workflow run, or empty if no passing GitHub Action build workflow is found.
         """
-        logger.info("Getting the latest workflow run of %s on commit %s", workflow, commit_sha)
+        logger.debug("Getting the latest workflow run of %s on commit %s", workflow, commit_sha)
 
         # Checking if the commit was created more than max_workflow_persist days ago.
         # We only avoid looking for workflow runs if only it's confirmed that the commit
@@ -365,20 +365,14 @@ class GitHubActions(BaseCIService):
             workflow_id,
             commit_sha,
             repo_full_name,
-            branch_name,
-            commit_date,
+            branch_name=branch_name,
+            created_after=commit_date,
         )
 
         if not latest_run_data:
             logger.info("Cannot find target workflow run with filtering.")
             logger.info("Perform the workflow runs search without any filtering instead.")
-            latest_run_data = self.search_for_workflow_run(
-                workflow_id,
-                commit_sha,
-                repo_full_name,
-                "",
-                "",
-            )
+            latest_run_data = self.search_for_workflow_run(workflow_id, commit_sha, repo_full_name)
 
         if not latest_run_data:
             logger.info("Cannot find target workflow run after trying both search methods.")
@@ -528,8 +522,8 @@ class GitHubActions(BaseCIService):
         workflow_id: str,
         commit_sha: str,
         full_name: str,
-        branch_name: str = "",
-        created_after: str = "",
+        branch_name: str | None = None,
+        created_after: str | None = None,
     ) -> dict:
         """Search for the target workflow run using GitHub API.
 
@@ -549,9 +543,9 @@ class GitHubActions(BaseCIService):
             The digest of the commit the workflow run on.
         full_name : str
             The full name of the repository (e.g. ``owner/repo``).
-        branch_name : str
+        branch_name : str | None
             The branch name to filter out workflow runs.
-        created_after : str
+        created_after : str | None
             Only look for workflow runs after this date (e.g. 2022-03-11T16:44:40Z).
 
         Returns
@@ -559,7 +553,7 @@ class GitHubActions(BaseCIService):
         dict
             The response data of the latest workflow run or an empty dict if error.
         """
-        logger.info(
+        logger.debug(
             "Search for workflow runs of %s with query params (branch=%s,created=%s)",
             workflow_id,
             branch_name,
@@ -568,7 +562,9 @@ class GitHubActions(BaseCIService):
 
         # Get the first page of runs for this workflow.
         query_page = 1
-        runs_data = self.api_client.get_workflow_runs(full_name, branch_name, created_after, query_page)
+        runs_data = self.api_client.get_workflow_runs(
+            full_name, branch_name=branch_name, created_after=created_after, page=query_page
+        )
 
         while runs_data and query_page <= self.query_page_threshold:
             logger.info(
@@ -589,7 +585,9 @@ class GitHubActions(BaseCIService):
 
                 # Query more items on the next result page of GitHub API.
                 query_page += 1
-                runs_data = self.api_client.get_workflow_runs(full_name, branch_name, created_after, query_page)
+                runs_data = self.api_client.get_workflow_runs(
+                    full_name, branch_name=branch_name, created_after=created_after, page=query_page
+                )
             except KeyError:
                 logger.error("Error while reading run data. Skipping ...")
                 continue
