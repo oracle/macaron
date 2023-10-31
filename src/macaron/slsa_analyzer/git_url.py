@@ -22,45 +22,6 @@ from macaron.errors import CloneError
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def reset_git_repo(git_obj: Git, stash: bool = True, index: bool = True, working_tree: bool = True) -> bool:
-    """Reset the index and working tree of the target repository.
-
-    Note that this method does not reset any untracked or ignored files.
-
-    Parameters
-    ----------
-    git_obj : Git
-        The pydriller.Git object of the repository.
-    stash : bool
-        If True, any uncommitted changes will be stashed.
-    index : bool
-        If True, the index of the repository will be reset.
-    working_tree : bool
-        If True, the working tree will be forcefully adjusted to match HEAD, possibly overwriting uncommitted changes.
-        If working_tree is True, index must be true as well.
-
-    Returns
-    -------
-    bool
-        True if no errors encountered, else False.
-    """
-    try:
-        if stash:
-            logger.info("Stashing any uncommitted changes.")
-            stash_out = git_obj.repo.git.stash(message="Stashing uncommitted changes by Macaron.")
-            logger.debug("\t Git CMD output: %s", stash_out)
-
-        logger.info("Forcefully reset the repository.")
-        git_obj.repo.head.reset(index=index, working_tree=working_tree)
-        return True
-    except GitCommandError as error:
-        logger.error("Error while trying to reset untracked changes in the repository: %s", error)
-        return False
-    except ValueError as error:
-        logger.error(error)
-        return False
-
-
 def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "", offline_mode: bool = False) -> bool:
     """Checkout the branch and commit specified by the user.
 
