@@ -181,7 +181,7 @@ class AnalyzeContext:
         sorted_on_id = []
         for res in _sorted_on_id:
             # res is CheckResult
-            res_dict: dict = dict(res.get_dict())
+            res_dict: dict = dict(res.get_summary())
             res_dict.pop("result_tables")
             sorted_on_id.append(res_dict)
         sorted_results = sorted(sorted_on_id, key=lambda item: item["result_type"], reverse=True)

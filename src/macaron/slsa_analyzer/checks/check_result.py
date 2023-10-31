@@ -70,8 +70,11 @@ class CheckResult:
     #: The results produced by the check.
     result: CheckResultData
 
-    def get_dict(self) -> dict:
-        """Get a flattened dictionary representation for this CheckResult.
+    def get_summary(self) -> dict:
+        """Get a flattened dictionary representation for this CheckResult, in a format suitable for the output report.
+
+        The SLSA requirements, in particular, are translated into a list of their textual descriptions, to be suitable
+        for display to users in the output report (as opposed to the internal representation as a list of enum identifiers).
 
         Returns
         -------
