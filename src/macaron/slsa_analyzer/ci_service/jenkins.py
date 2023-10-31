@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module analyzes Jenkins CI."""
@@ -79,7 +79,7 @@ class Jenkins(BaseCIService):
         return []
 
     def has_latest_run_passed(
-        self, repo_full_name: str, branch_name: str, commit_sha: str, commit_date: str, workflow: str
+        self, repo_full_name: str, branch_name: str | None, commit_sha: str, commit_date: str, workflow: str
     ) -> str:
         """Get the latest run of a workflow in the repository.
 
@@ -90,7 +90,7 @@ class Jenkins(BaseCIService):
         ----------
         repo_full_name : str
             The target repo's full name.
-        branch_name : str
+        branch_name : str | None
             The target branch.
         commit_sha : str
             The commit sha of the target repo.

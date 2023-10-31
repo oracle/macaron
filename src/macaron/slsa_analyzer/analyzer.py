@@ -308,7 +308,7 @@ class Analyzer:
             context=analyze_ctx,
         )
 
-    def add_repository(self, branch_name: str, git_obj: Git) -> Repository | None:
+    def add_repository(self, branch_name: str | None, git_obj: Git) -> Repository | None:
         """Create a repository instance for a target repository.
 
         The repository instances are transient objects for SQLAlchemy, which may be
@@ -316,7 +316,7 @@ class Analyzer:
 
         Parameters
         ----------
-        branch_name : str
+        branch_name : str | None
             The name of the branch that we are analyzing.
             We need this because when the target repository is in a detached state,
             the current branch name cannot be determined.
@@ -342,7 +342,7 @@ class Analyzer:
 
         logger.info("The complete name of this repository is %s", complete_name)
 
-        res_branch = ""
+        res_branch = None
 
         if branch_name:
             res_branch = branch_name
@@ -353,9 +353,8 @@ class Analyzer:
                 # HEAD is a detached symbolic reference. This happens when we checkout a commit.
                 # However, it shouldn't happen as we don't allow specifying a commit digest without
                 # a branch in the config.
-                logger.critical("The HEAD of the repo does not point to any branch.")
-                logger.error(err)
-                res_branch = ""
+                logger.debug("The HEAD of the repo does not point to any branch: %s.", err)
+                res_branch = None
 
         # Get the head commit.
         # This is the commit that Macaron will run the analysis on.

@@ -204,7 +204,9 @@ class GhAPIClient(BaseAPIClient):
 
         return response_data
 
-    def get_workflow_runs(self, full_name: str, branch_name: str, created_after: str, page: int) -> dict:
+    def get_workflow_runs(
+        self, full_name: str, branch_name: str | None = None, created_after: str | None = None, page: int = 1
+    ) -> dict:
         """Query the GitHub REST API for the data of all workflow run of a repository.
 
         The url would be in the following form:
@@ -218,7 +220,7 @@ class GhAPIClient(BaseAPIClient):
         ----------
         full_name : str
             The full name of the target repo in the form ``owner/repo``.
-        branch_name : str
+        branch_name : str | None
             The name of the branch to look for workflow runs (e.g ``master``).
         created_after : str
             Only look for workflow runs after this date (e.g. ``2022-03-11T16:44:40Z``).

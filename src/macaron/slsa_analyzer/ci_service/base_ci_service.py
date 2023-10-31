@@ -169,7 +169,7 @@ class BaseCIService:
         return "", ""
 
     def has_latest_run_passed(
-        self, repo_full_name: str, branch_name: str, commit_sha: str, commit_date: str, workflow: str
+        self, repo_full_name: str, branch_name: str | None, commit_sha: str, commit_date: str, workflow: str
     ) -> str:
         """Get the latest run of a workflow in the repository.
 
@@ -180,7 +180,7 @@ class BaseCIService:
         ----------
         repo_full_name : str
             The target repo's full name.
-        branch_name : str
+        branch_name : str | None
             The target branch.
         commit_sha : str
             The commit sha of the target repo.
@@ -297,7 +297,7 @@ class NoneCIService(BaseCIService):
         return []
 
     def has_latest_run_passed(
-        self, repo_full_name: str, branch_name: str, commit_sha: str, commit_date: str, workflow: str
+        self, repo_full_name: str, branch_name: str | None, commit_sha: str, commit_date: str, workflow: str
     ) -> str:
         """Get the latest run of a workflow in the repository.
 
@@ -308,7 +308,7 @@ class NoneCIService(BaseCIService):
         ----------
         repo_full_name : str
             The target repo's full name.
-        branch_name : str
+        branch_name : str | None
             The target branch.
         commit_sha : str
             The commit sha of the target repo.
