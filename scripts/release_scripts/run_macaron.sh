@@ -158,6 +158,9 @@ function create_dir_if_not_exists() {
 }
 
 # Add a directory to the list of volume mounts stored in the ``mounts`` global variable.
+# Note: Do not use this function directly for mounting directories.
+# Use one among these instead: `mount_dir_ro`, `mount_dir_rw_allow_create`, or
+# `mount_dir_rw_forbid_create` instead.
 #
 # Arguments:
 #   $1: The macaron argument from which the directory is passed into this script.
@@ -165,25 +168,72 @@ function create_dir_if_not_exists() {
 #   $3: The path to the directory inside the container.
 #   $4: Mount option. Note: this MUST be either `ro,Z` for readonly volume mounts,
 #       or `rw,Z` otherwise.
-function mount_dir() {
+function _mount_dir() {
     arg_name=$1
     dir_on_host=$2
     dir_in_container=$3
     mount_option=$4
 
     dir_on_host=$(to_absolute_path "$dir_on_host")
-
-    # If this is a read-only volume mount, error if the directory does not exist
-    # on host. Otherwise, create if it does not exist.
-    # This ensures compatibility with podman, as podman does not create the
-    # directory on host if it does not exist.
-    if [ "$mount_option" = "ro,Z" ]; then
-        assert_dir_exists "$dir_on_host" "$arg_name"
-    else
-        create_dir_if_not_exists "$dir_on_host"
-    fi
-
     mounts+=("-v" "${dir_on_host}:${dir_in_container}:${mount_option}")
+}
+
+# Add a directory to the list of volume mounts stored in the ``mounts`` global variable,
+# with the `ro,Z` mount option.
+# If the mounted directory does not exist on the host, this function errors
+# and exits the script.
+#
+# Arguments:
+#   $1: The macaron argument from which the directory is passed into this script.
+#   $2: The path to the directory on the host.
+#   $3: The path to the directory inside the container.
+function mount_dir_ro() {
+    arg_name=$1
+    dir_on_host=$2
+    dir_in_container=$3
+
+    assert_dir_exists "$dir_on_host" "$arg_name"
+    _mount_dir "$arg_name" "$dir_on_host" "$dir_in_container" "ro,Z"
+}
+
+# Add a directory to the list of volume mounts stored in the ``mounts`` global variable,
+# with the `rw,Z` mount option.
+# If the mounted directory does not exist on the host, this function creates
+# that directory before mounting.
+# Note: This function ensures compatibility with podman, as podman does not
+# create the directory on host if it does not exist and instead errors on mount.
+#
+# Arguments:
+#   $1: The macaron argument from which the directory is passed into this script.
+#   $2: The path to the directory on the host.
+#   $3: The path to the directory inside the container.
+function mount_dir_rw_allow_create() {
+    arg_name=$1
+    dir_on_host=$2
+    dir_in_container=$3
+
+    create_dir_if_not_exists "$dir_on_host"
+    _mount_dir "$arg_name" "$dir_on_host" "$dir_in_container" "rw,Z"
+}
+
+# Add a directory to the list of volume mounts stored in the ``mounts`` global variable,
+# with the `rw,Z` mount option.
+# If the mounted directory does not exist on the host, this function errors and
+# exits the script.
+# Note: This function ensures compatibility with podman, as podman does not
+# create the directory on host if it does not exist and instead errors on mount.
+#
+# Arguments:
+#   $1: The macaron argument from which the directory is passed into this script.
+#   $2: The path to the directory on the host.
+#   $3: The path to the directory inside the container.
+function mount_dir_rw_forbid_create() {
+    arg_name=$1
+    dir_on_host=$2
+    dir_in_container=$3
+
+    assert_dir_exists "$dir_on_host" "$arg_name"
+    _mount_dir "$arg_name" "$dir_on_host" "$dir_in_container" "rw,Z"
 }
 
 # Add a file to the list of volume mounts stored in the ``mounts`` global variable.
@@ -297,16 +347,16 @@ fi
 m2_dir="${output}/.m2"
 gradle_dir="${output}/.gradle"
 
-mount_dir "" "$output" "${MACARON_WORKSPACE}/output" "rw,Z"
-mount_dir "" "$m2_dir" "${MACARON_WORKSPACE}/.m2" "rw,Z"
-mount_dir "" "$gradle_dir" "${MACARON_WORKSPACE}/.gradle" "rw,Z"
+mount_dir_rw_allow_create "" "$output" "${MACARON_WORKSPACE}/output"
+mount_dir_rw_allow_create "" "$m2_dir" "${MACARON_WORKSPACE}/.m2"
+mount_dir_rw_allow_create "" "$gradle_dir" "${MACARON_WORKSPACE}/.gradle"
 
 # Determine the local repos path to be mounted into ${MACARON_WORKSPACE}/output/git_repos/local_repos/
 if [[ -n "${arg_local_repos_path:-}" ]]; then
     local_repo_path_in_container="${MACARON_WORKSPACE}/output/git_repos/local_repos"
 
     argv_main+=("--local-repos-path" "$local_repo_path_in_container")
-    mount_dir "-lr/--local-repos-path" "$arg_local_repos_path" "$local_repo_path_in_container" "rw,Z"
+    mount_dir_rw_allow_create "-lr/--local-repos-path" "$arg_local_repos_path" "$local_repo_path_in_container"
 fi
 
 # Determine the defaults path to be mounted into ${MACARON_WORKSPACE}/defaults/${file_name}
@@ -369,7 +419,7 @@ if [[ -n "${arg_prov_exp:-}" ]]; then
     argv_command+=("--provenance-expectation" "$prov_exp_path_in_container")
 
     if [ -d "$prov_exp_path" ]; then
-        mount_dir "-pe/--provenance-expectation" "$prov_exp_path" "$prov_exp_path_in_container" "ro,Z"
+        mount_dir_ro "-pe/--provenance-expectation" "$prov_exp_path" "$prov_exp_path_in_container"
     elif [ -f "$prov_exp_path" ]; then
         mount_file "-pe/--provenance-expectation" "$prov_exp_path" "$prov_exp_path_in_container" "ro,Z"
     fi
