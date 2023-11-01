@@ -1,7 +1,7 @@
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""Tests for context managers related to environment variables."""
+"""Tests for helper functions related to environment variables."""
 
 import pytest
 
@@ -45,7 +45,7 @@ def test_patched_env(
     patch: dict[str, str | None],
     after: dict[str, str],
 ) -> None:
-    """Tests for the ``patched_env`` context manager."""
+    """Tests for the ``get_patched_env`` helper function."""
     env = dict(before)
 
     assert get_patched_env(patch, env) == after
