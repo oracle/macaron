@@ -10,6 +10,7 @@ RESOURCES=$WORKSPACE/src/macaron/resources
 COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
 TEST_REPO_FINDER=$WORKSPACE/tests/e2e/repo_finder/repo_finder.py
+TEST_COMMIT_FINDER=$WORKSPACE/tests/e2e/repo_finder/commit_finder.py
 RUN_MACARON="python -m macaron -o $WORKSPACE/output"
 RESULT_CODE=0
 UPDATE=0
@@ -650,6 +651,17 @@ echo -e "\n---------------------------------------------------------------------
 echo "Testing Repo Finder functionality."
 echo -e "----------------------------------------------------------------------------------\n"
 check_or_update_expected_output $TEST_REPO_FINDER || log_fail
+if [ $? -ne 0 ];
+then
+    echo -e "Expect zero status code but got $?."
+    log_fail
+fi
+
+# Testing the Commit Finder's tag matching functionality.
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Testing Commit Finder tag matching functionality."
+echo -e "----------------------------------------------------------------------------------\n"
+python $TEST_COMMIT_FINDER || log_fail
 if [ $? -ne 0 ];
 then
     echo -e "Expect zero status code but got $?."
