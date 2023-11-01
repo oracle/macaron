@@ -4,14 +4,14 @@
 """Helper functions related to environment variables."""
 
 import os
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 
 
 def get_patched_env(
     patch: Mapping[str, str | None],
     _env: dict[str, str] | None = None,
-) -> MutableMapping[str, str]:
-    """Return a mapping whose elements copied from ``os.environ`` and are updated according to ``patch``.
+) -> dict[str, str]:
+    """Return a dictionary whose elements copied from ``os.environ`` and are updated according to ``patch``.
 
     This function does not modify ``os.environ``.
 
@@ -28,8 +28,8 @@ def get_patched_env(
 
     Returns
     -------
-    MutableMapping[str, str]
-        The patched mutable mapping which will not reflect any changes on it to ``os.environ``.
+    dict[str, str]
+        The the dictionary contains the patched env variables.
     """
     env = os.environ if _env is None else _env
 
