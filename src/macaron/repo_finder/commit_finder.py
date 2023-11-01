@@ -114,6 +114,7 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
                 break
 
         if not branch_name:
+            logger.debug("No branch associated with tag (commit): %s (%s)", tag_name, tag.commit.hexsha)
             continue
 
         logger.debug(
@@ -126,7 +127,7 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
         )
         return branch_name, tag.commit.hexsha
 
-    logger.debug("Could not find tagged commit for artifact version: %s@%s", purl.name, purl.version)
+    logger.debug("Could not find valid tagged commit for artifact version: %s@%s", purl.name, purl.version)
     return "", ""
 
 
