@@ -25,6 +25,14 @@ Subpackages
 Submodules
 ----------
 
+macaron.env module
+------------------
+
+.. automodule:: macaron.env
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.errors module
 ---------------------
 

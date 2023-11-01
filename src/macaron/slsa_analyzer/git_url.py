@@ -19,7 +19,7 @@ from git.repo import Repo
 from pydriller.git import Git
 
 from macaron.config.defaults import defaults
-from macaron.env import patched_env
+from macaron.env import get_patched_env
 from macaron.errors import CloneError
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -287,16 +287,16 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
             # ``git clone`` from prompting for login credentials.
             "GIT_TERMINAL_PROMPT": "0",
         }
-        with patched_env(git_env_patch):
-            result = subprocess.run(  # nosec B603
-                args=["git", "clone", "--filter=tree:0", url],
-                capture_output=True,
-                cwd=parent_dir,
-                # If `check=True` and return status code is not zero, subprocess.CalledProcessError is
-                # raised, which we don't want. We want to check the return status code of the subprocess
-                # later on.
-                check=False,
-            )
+        result = subprocess.run(  # nosec B603
+            args=["git", "clone", "--filter=tree:0", url],
+            capture_output=True,
+            cwd=parent_dir,
+            # If `check=True` and return status code is not zero, subprocess.CalledProcessError is
+            # raised, which we don't want. We want to check the return status code of the subprocess
+            # later on.
+            check=False,
+            env=get_patched_env(git_env_patch),
+        )
     except (subprocess.CalledProcessError, OSError):
         # Here, we raise from ``None`` to be extra-safe that no token is leaked.
         # We should never store or print out the captured output from the subprocess

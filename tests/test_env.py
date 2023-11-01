@@ -5,7 +5,7 @@
 
 import pytest
 
-from macaron.env import patched_env
+from macaron.env import get_patched_env
 
 
 @pytest.mark.parametrize(
@@ -48,7 +48,4 @@ def test_patched_env(
     """Tests for the ``patched_env`` context manager."""
     env = dict(before)
 
-    with patched_env(patch, env):
-        assert env == after
-
-    assert env == before
+    assert get_patched_env(patch, env) == after
