@@ -84,8 +84,8 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
     ----------
     git_obj: Git
         The repository.
-    purl: PackageURL | None
-        The PURL of the artifact.
+    purl: PackageURL
+        The PURL of the analysis target.
 
     Returns
     -------
@@ -96,8 +96,6 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
         logger.debug("Missing version for artifact: %s", purl.name)
         return "", ""
     logger.debug("Searching for commit of artifact version using tags: %s@%s", purl.name, purl.version)
-
-    target_version_pattern, parts, has_non_numeric_suffix = _build_version_pattern(purl.version)
 
     # Only consider tags that have a commit.
     valid_tags = []
@@ -116,7 +114,7 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
         return "", ""
 
     # Match tags.
-    matched_tags = _match_tags(valid_tags, target_version_pattern, parts, has_non_numeric_suffix, purl.name)
+    matched_tags = _match_tags(valid_tags, purl.name, purl.version)
 
     if not matched_tags:
         logger.debug("No tags matched for %s", str(purl))
@@ -232,29 +230,27 @@ def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
     return re.compile(this_version_pattern, flags=re.IGNORECASE), parts, has_non_numeric_suffix
 
 
-def _match_tags(
-    tag_list: list[TagReference], pattern: Pattern, parts: list[str], has_non_numeric_suffix: bool, artifact_name: str
-) -> list[TagReference]:
-    """Return items of the passed tag list that match the passed pattern.
+def _match_tags(tag_list: list[TagReference], artifact_name: str, artifact_version: str) -> list[TagReference]:
+    """Return items of the passed tag list that match the passed artifact name and version.
 
     Parameters
     ----------
     tag_list: list[TagReference]
         The list of tags to check.
-    pattern: Pattern
-        The pattern to match against.
-    parts: list[str]
-        The list of version parts extracted from the version.
-    has_non_numeric_suffix : bool
-        Whether the version string has a non-numeric suffix.
-    artifact_name : str
-        The name of the artifact.
+    artifact_name: str
+        The name of the artifact to match.
+    artifact_version: str
+        The version of the artifact to match.
 
     Returns
     -------
     list[TagReference]
         The list of tags that matched the pattern.
     """
+    # Create the pattern for the passed version.
+    pattern, parts, has_non_numeric_suffix = _build_version_pattern(artifact_version)
+
+    # Match the tags.
     matched_tags = []
     for tag in tag_list:
         tag_name = str(tag)

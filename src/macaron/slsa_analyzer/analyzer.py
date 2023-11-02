@@ -641,7 +641,7 @@ class Analyzer:
         digest : str
             The hash of the commit that we want to checkout in the branch.
         purl : PackageURL | None
-            The PURL of the artifact.
+            The PURL of the analysis target.
 
         Returns
         -------
