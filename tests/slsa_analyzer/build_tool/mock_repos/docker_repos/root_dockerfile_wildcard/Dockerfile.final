@@ -3,5 +3,5 @@
 
 # syntax=docker/dockerfile:1
 
-FROM node:18-alpine
+FROM node:18-alpine@sha256:51490771aba658439d29b1b03b60fc31e67bf0da3e01cb5903716310df4be1c1
 CMD ["echo", "Hello!"]
