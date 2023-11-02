@@ -78,7 +78,7 @@ docs = [
     "sphinx_tabs >=3.4.1,<4.0.0",
 ]
 hooks = [
-    "pre-commit >=3.0.0,<3.5.0",
+    "pre-commit >=3.0.0,<3.6.0",
 ]
 # Note that the `custom_exit_code` and `env` plugins may currently be unmaintained.
 test = [
