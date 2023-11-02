@@ -19,7 +19,7 @@ such as GitHub Actions workflows.
 * npm
 * Yarn
 * Go
-* Docker container
+* Docker
 
 
 ------------

@@ -6,7 +6,15 @@
 
 Macaron is a supply chain security analysis tool from [Oracle Labs](https://labs.oracle.com/pls/apex/r/labs/labs/intro), which focuses on the build integrity of an artifact and the artifact dependencies. It is based on the [Supply chain Levels for Software Artifacts (SLSA)](https://slsa.dev/) specification, which aims at preventing some of the software supply chain attacks as the systems get more complex, especially with respect to the use of open-source third-party code in applications. Attacks include stealing credentials, injecting malicious code etc., and it is critical to have security assurance on the third-party code to guarantee that the integrity of the code has not been compromised.
 
-Macaron uses [SLSA requirements specifications v0.1](https://slsa.dev/spec/v0.1/requirements) to define concrete rules for protecting software integrity that can be checked for compliance requirements automatically. Macaron provides a customizable checker platform that makes it easy to define checks that depend on each other. This is particularly useful for implementing checks for SLSA levels. In addition, Macaron also checks a user-specified policy for a software component to detect unexpected behavior in the build process. Macaron is a work-in-progress project and currently supports Maven and Gradle Java build systems, Pip or Poetry package managers for Python, npm and Yarn for JavaScript, Go, and Docker container. We plan to support more build systems in future.
+Macaron uses [SLSA requirements specifications v0.1](https://slsa.dev/spec/v0.1/requirements) to define concrete rules for protecting software integrity that can be checked for compliance requirements automatically. Macaron provides a customizable checker platform that makes it easy to define checks that depend on each other. This is particularly useful for implementing checks for SLSA levels. In addition, Macaron also checks a user-specified policy for a software component to detect unexpected behavior in the build process. We currently support the following build tools:
+
+* Maven and Gradle Java build systems
+* Pip or Poetry package managers for Python
+* npm and Yarn for JavaScript
+* Go
+* Docker
+
+To see the full list of supported technologies, such as CI services, registries, and provenance types see [this page](https://oracle.github.io/macaron/pages/supported_technologies/index.html). Macaron is a work-in-progress project. We plan to support more build systems and technologies in the future.
 
 ## Table of Contents
 
