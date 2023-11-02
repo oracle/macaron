@@ -45,11 +45,6 @@ PREFIX_SEPARATOR = "(?P<prefix_sep>(?:(?:(?<![0-9a-z])[vrc])|(?:[^0-9a-z][vrc])|
 # characters in length to prevent overlap with separators and confusion with versions; the prefix separator is at most
 # three characters; and a negative lookback passes if there are no preceding characters.
 
-# The infix exists between parts of the version string. The most recent design resulted in use of a back reference to
-# ensure non-suffix version parts were separated by the same separator, e.g. 1.2.3 but not 1.2-3. However, one edge
-# case required this to be partially reverted, as it required 1.2-3 to be accepted, while another edge case where
-# additional zeros need to be added after a version to pad its length, e.g. 1.2 becomes 1.2.0.0, still requires it.
-
 # The infix accepts either:
 # - One to three alphabetic characters.
 # - One to three non-alphanumeric characters.
@@ -57,6 +52,11 @@ PREFIX_SEPARATOR = "(?P<prefix_sep>(?:(?:(?<![0-9a-z])[vrc])|(?:[^0-9a-z][vrc])|
 INFIX_3 = "([a-z]{1,3}|[^0-9a-z]{1,3})"
 INFIX_1 = f"(?P<sep>{INFIX_3})"  # A named capture group of INFIX_3.
 INFIX_2 = "(?P=sep)"  # A back reference to INFIX_1.
+
+# The infix exists between parts of the version string. The most recent design resulted in use of a back reference to
+# ensure non-suffix version parts were separated by the same separator, e.g. 1.2.3 but not 1.2-3. However, one edge
+# case required this to be partially reverted, requiring 1.2-3 to be accepted, while another edge case where
+# additional zeros need to be added after a version to pad its length, e.g. 1.2 becomes 1.2.0.0, still requires it.
 
 # The suffix separator exists for much the same purpose as the prefix separator: splitting the suffix into the actual
 # suffix, and the characters that join it to the version.
@@ -274,7 +274,7 @@ def _match_tags(
         )
 
     if len(matched_tags) <= 1:
-        return _extract_tags_from_list(matched_tags)
+        return [_["tag"] for _ in matched_tags]
 
     # In the case of multiple matches, further work must be done.
     # Firstly, combine matches with their suffixes as some version patterns will not include the required suffix in the
@@ -315,28 +315,7 @@ def _match_tags(
             key=lambda matched_tag: _count_parts_in_tag(matched_tag["version"], matched_tag["suffix"], parts)
         )
 
-    return _extract_tags_from_list(matched_tags)
-
-
-def _extract_tags_from_list(matched_tags: list[dict[str, str | TagReference]]) -> list[TagReference]:
-    """Return a list of tags from a list of tags with regex match information.
-
-    Parameters
-    ----------
-    matched_tags: list[dict[str, str | TagReference]]
-        The matched tags to be converted.
-
-    Returns
-    -------
-    list[TagReference]
-        The list of tags.
-    """
-    tags: list[TagReference] = []
-    for matched_tag in matched_tags:
-        tag = matched_tag.get("tag")
-        if tag is not None and isinstance(tag, TagReference):
-            tags.append(tag)
-    return tags
+    return [_["tag"] for _ in matched_tags]
 
 
 def _count_parts_in_tag(tag_version: str, tag_suffix: str, version_parts: list[str]) -> int:
