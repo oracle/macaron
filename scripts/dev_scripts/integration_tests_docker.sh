@@ -58,7 +58,7 @@ echo -e "-----------------------------------------------------------------------
 JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
 
-$RUN_MACARON_SCRIPT -lr $WORKSPACE/output/git_repos/github_com analyze -r apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
+$RUN_MACARON_SCRIPT -lr $WORKSPACE/output/git_repos/github_com analyze -r apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -87,7 +87,7 @@ SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/apache_maven_
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/apache_maven_with_sbom_provided.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 
-$RUN_MACARON_SCRIPT analyze -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 -sbom $SBOM_FILE || log_fail
+$RUN_MACARON_SCRIPT analyze -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b -sbom $SBOM_FILE || log_fail
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
@@ -96,7 +96,7 @@ echo "apache/maven: Analyzing with PURL and repository path without dependency r
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.json
 JSON_RESULT=$WORKSPACE/output/reports/maven/apache/maven/maven.json
-$RUN_MACARON_SCRIPT analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
+$RUN_MACARON_SCRIPT analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
