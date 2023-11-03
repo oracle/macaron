@@ -99,13 +99,13 @@ class Record(Generic[RecordNode]):
         Examples
         --------
         >>> record.get_summary()
-        {'id': 'apache/maven', 'description': 'Analysis completed', 'report': 'apache.html', 'status': 'AVAILABLE'}
+        {'id': 'apache/maven', 'description': 'Analysis completed', 'report': 'apache.html', 'status': SCMStatus.AVAILABLE}
         """
         return {
             "id": self.record_id,
             "description": self.description,
             "report": f"{self.context.component.report_file_name}.html" if self.context else "",
-            "status": self.status,
+            "repo_url_status": self.pre_config.get_value("available") or SCMStatus.MISSING_SCM,
         }
 
     def get_dict(self) -> dict:

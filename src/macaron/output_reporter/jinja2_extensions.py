@@ -147,12 +147,12 @@ def j2_filter_get_flatten_dict(data: Any, has_key: bool = False) -> dict | Any:
     return {"0": str(data)}
 
 
-def j2_filter_get_dep_status_color(dep_status: str) -> str:
-    """Return the html class name for the color of the dep status.
+def j2_filter_get_dep_status_color(repo_url_status: str) -> str:
+    """Return the html class name for the color of the dep repo url status.
 
     Parameters
     ----------
-    dep_status : str
+    repo_url_status : str
         The dep status as string.
 
     Returns
@@ -161,7 +161,7 @@ def j2_filter_get_dep_status_color(dep_status: str) -> str:
         The css class name with the corresponding color or an empty string if the status is not recognized.
     """
     try:
-        scm_status = SCMStatus(dep_status)
+        scm_status = SCMStatus(repo_url_status)
         match scm_status:
             case SCMStatus.AVAILABLE:
                 return "green_bg"
