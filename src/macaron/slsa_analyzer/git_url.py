@@ -92,27 +92,6 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
 
     logger.info("Successfully checkout branch %s.", res_branch)
 
-    if not offline_mode:
-        # We only pull the latest changes if one of these scenarios happens:
-        #   - no digest is provided: we need to pull and analyze the latest commit.
-        #   - a commit digest is provided but it does not exist locally: we need to
-        #     pull the latest changes to check if that commit is available.
-        # We want to check if the commit already exist locally first because we want to avoid pulling unecessary
-        # if it does.
-        # We do this by checking if the commit we want to analyze is an ancestor of the commit being referenced by HEAD
-        # (which point to the tip of the branch).
-        # If the commit we want to analyze is same as HEAD, that commit is still considered as the ancestor of HEAD.
-        # The ``is_ancestor`` method runs ``git merge-base`` behind the scence.
-        # For more information on computing the ancestor status of two commits: https://git-scm.com/docs/git-merge-base.
-        if not digest or not git_obj.repo.is_ancestor(digest, "HEAD"):
-            logger.info("Pulling the latest changes of branch %s fast-forward only.", res_branch)
-            try:
-                # Pull the latest changes on the current branch fast-forward only.
-                git_obj.repo.git.pull("--ff-only")
-            except GitCommandError as error:
-                logger.error(error)
-                return False
-
     if digest:
         # Checkout the specific commit that the user want by running ``git checkout <commit>`` in the target repository.
         # We need to use force checkout to prevent issues similar to https://github.com/oracle/macaron/issues/530.
@@ -122,6 +101,18 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
             logger.error(
                 "Commit %s cannot be checked out. Error: %s",
                 digest,
+                error,
+            )
+            return False
+    else:
+        # Try to checkout the latest commit of the current branch in remote
+        # which is essentially the commit that origin/<branch_name> is pointing too.
+        try:
+            git_obj.repo.git.checkout("--force", f"origin/{res_branch}")
+        except GitCommandError as error:
+            logger.error(
+                "Cannot checked out origin/%s. Error: %s",
+                res_branch,
                 error,
             )
             return False
