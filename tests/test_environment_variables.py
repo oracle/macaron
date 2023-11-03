@@ -9,7 +9,7 @@ from macaron.environment_variables import get_patched_env
 
 
 @pytest.mark.parametrize(
-    ("before", "patch", "after"),
+    ("before", "patch", "expect"),
     [
         pytest.param(
             {"PATH": "/usr/local/bin"},
@@ -43,9 +43,9 @@ from macaron.environment_variables import get_patched_env
 def test_patched_env(
     before: dict[str, str],
     patch: dict[str, str | None],
-    after: dict[str, str],
+    expect: dict[str, str],
 ) -> None:
     """Tests for the ``get_patched_env`` helper function."""
     env = dict(before)
 
-    assert get_patched_env(patch, env) == after
+    assert get_patched_env(patch, env) == expect
