@@ -5,7 +5,7 @@
 
 import pytest
 
-from macaron.env import get_patched_env
+from macaron.environment_variables import get_patched_env
 
 
 @pytest.mark.parametrize(

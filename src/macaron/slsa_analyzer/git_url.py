@@ -19,7 +19,7 @@ from git.repo import Repo
 from pydriller.git import Git
 
 from macaron.config.defaults import defaults
-from macaron.env import get_patched_env
+from macaron.environment_variables import get_patched_env
 from macaron.errors import CloneError
 
 logger: logging.Logger = logging.getLogger(__name__)
