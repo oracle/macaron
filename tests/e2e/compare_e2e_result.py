@@ -93,6 +93,13 @@ def compare_target_info(result: dict, expected: dict) -> int:
     for key, exp_item in expected.items():
         result_item = result.get(key)
 
+        if key == "remote_path":
+            # Do not report differences that amount to only a trailing ".git"
+            if str(exp_item).endswith(".git"):
+                exp_item = str(exp_item).removesuffix(".git")
+            if str(result_item).endswith(".git"):
+                result_item = str(result_item).removesuffix(".git")
+
         if exp_item != result_item:
             logger.error(
                 "Compare failed at field %s. EXPECT %s, GOT %s",
