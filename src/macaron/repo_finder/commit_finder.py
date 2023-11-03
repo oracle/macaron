@@ -25,10 +25,10 @@ logger: logging.Logger = logging.getLogger(__name__)
 # - OR
 # - Two alphabetic characters.
 # E.g.
-# - name_prefix
-# - prefix-a444
-# - vm
-# - name-prefix-j5u
+# - 'name_prefix'     of 'name_prefix_1.2.3'
+# - 'prefix-a444'     of 'prefix-a444-v3.2.1.0'
+# - 'vm'              of 'vm-5-5-5'
+# - 'name-prefix-j5u' of 'name-prefix-j5u//r0_0_1'
 PREFIX = "^(?P<prefix>(?:[a-z].*(?:[a-z][0-9]+|[0-9][a-z]|[a-z]{2}))|[a-z]{2})?"
 
 # An optional named capture group "prefix_sep" that accepts one of:
@@ -39,10 +39,10 @@ PREFIX = "^(?P<prefix>(?:[a-z].*(?:[a-z][0-9]+|[0-9][a-z]|[a-z]{2}))|[a-z]{2})?"
 # - A non-alphanumeric character.
 # Then optionally ending with one non-alphanumeric character.
 # E.g.
-# - _v-
-# - r_
-# - c
-# - .
+# - '_v-' of 'prefix_v-1.2.3'
+# - 'r_'  of 'r_3_3_3'
+# - 'c'   of 'c4.1'
+# - '.'   of 'name.9-9-9-9'
 PREFIX_SEPARATOR = "(?P<prefix_sep>(?:(?:(?<![0-9a-z])[vrc])|(?:[^0-9a-z][vrc])|[^0-9a-z])(?:[^0-9a-z])?)?"
 
 # Together, the prefix and prefix separator exist to separate the prefix from version part of a tag, while ensuring that
@@ -66,12 +66,24 @@ INFIX_2 = "(?P=sep)"  # A back reference to INFIX_1.
 # The suffix separator exists for much the same purpose as the prefix separator: splitting the suffix into the actual
 # suffix, and the characters that join it to the version.
 # It optionally accepts:
-# One to two non-alphanumeric characters that are followed by a non-numeric character (positive lookahead).
-SUFFIX_SEPARATOR = "(?P<suffix_sep>[^0-9a-z]{1,2}(?=[^0-9]))?"
+# One to two non-alphanumeric characters that are followed by either:
+# - A non-numeric character (positive lookahead).
+# - No character of any kind (negative lookahead).
+# E.g.
+# - '_'  of 'prefix_1.2.3_suffix'
+# - '..  of 'name-v-4-4-4..RELEASE'
+# - '#'  of 'v0.0.1#'
+SUFFIX_SEPARATOR = "(?P<suffix_sep>(?:[^0-9a-z]{1,2}(?:(?=[^0-9])|(?!.))))?"
 
 # The suffix optionally accepts:
 # A string that starts with an alphabetic character, and continues for one or more characters of any kind.
 SUFFIX = "(?P<suffix>[a-z].*)?"
+
+# If a version string has less parts than this number it will be padded with additional zeros to provide better matching
+# opportunities.
+# For this to be applied, the version string must not have any non-numeric parts.
+# E.g 1.2 (2) -> 1.2.0.0 (4), 1.2.RELEASE (3) -> 1.2.RELEASE (3), 1.DEV-5 (3) -> 1.DEV-5 (3)
+MAX_ZERO_DIGIT_EXTENSION = 4
 
 split_pattern = re.compile("[^0-9a-z]", flags=re.IGNORECASE)
 validation_pattern = re.compile("[0-9a-z]+", flags=re.IGNORECASE)
@@ -249,7 +261,6 @@ def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
 
     this_version_pattern = ""
     parts = []
-    numeric_parts = 0
     has_non_numeric_suffix = False
     # Detect versions that end with a zero, so the zero can be made optional.
     has_trailing_zero = len(split) > 2 and split[-1] == "0"
@@ -264,15 +275,15 @@ def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
 
         if not has_non_numeric_suffix and not numeric_only:
             # A non-numeric part enables the flag for treating this and all remaining parts as version suffix parts.
+            # Within the built regex, such parts will be made optional.
+            # E.g.
+            # - 1.2.RELEASE -> 'RELEASE' becomes optional.
+            # - 3.1.test.2 -> 'test' and '2' become optional.
             has_non_numeric_suffix = True
 
         if has_trailing_zero or has_non_numeric_suffix:
             # This part will be made optional in the regex, hence the grouping bracket.
             this_version_pattern = this_version_pattern + "("
-
-        if not has_non_numeric_suffix and numeric_only:
-            # Keep track of version length for upcoming possible 'zero' digit extensions.
-            numeric_parts = numeric_parts + 1
 
         if count == 1:
             this_version_pattern = this_version_pattern + INFIX_1
@@ -286,13 +297,14 @@ def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
             # Complete the optional capture group.
             this_version_pattern = this_version_pattern + ")?"
 
-        # Extend the pattern with up to three additional zeros to help map mismatches between versions and tags.
-        # E.g. 1.0 to 1.0.0, or 3.2 to 3.2.0, etc.
-        if not has_non_numeric_suffix and count == len(split) - 1 and 1 < numeric_parts < 4:
-            while numeric_parts < 4:
-                # Additional zeros added for this purpose make use of a back reference to the first matched separator.
-                this_version_pattern = this_version_pattern + "(" + INFIX_2 + "0)?"
-                numeric_parts = numeric_parts + 1
+    # If the version parts are less than MAX_ZERO_DIGIT_EXTENSION, add additional optional zeros to pad out the
+    # regex, and thereby provide an opportunity to map mismatches between version and tags (that are still the same
+    # number).
+    # E.g. MAX_ZERO_DIGIT_EXTENSION = 4 -> 1.0 to 1.0.0.0, or 3 to 3.0.0.0, etc.
+    if not has_non_numeric_suffix and 0 < len(parts) < MAX_ZERO_DIGIT_EXTENSION:
+        for count in range(len(parts), MAX_ZERO_DIGIT_EXTENSION):
+            # Additional zeros added for this purpose make use of a back reference to the first matched separator.
+            this_version_pattern = this_version_pattern + "(" + (INFIX_2 if count > 1 else INFIX_1) + "0)?"
 
     this_version_pattern = f"{PREFIX}{PREFIX_SEPARATOR}(?P<version>{this_version_pattern}){SUFFIX_SEPARATOR}{SUFFIX}$"
     return re.compile(this_version_pattern, flags=re.IGNORECASE), parts, has_non_numeric_suffix

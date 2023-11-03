@@ -28,8 +28,7 @@ def test_commit_finder() -> int:
     for item in json_data:
         name = str(item["name"])
         name, version = name.split("@")
-        pattern, parts, non_numeric_suffix = commit_finder._build_version_pattern(version)
-        matched_tags = commit_finder._match_tags(item["tags"], pattern, parts, non_numeric_suffix, name)
+        matched_tags = commit_finder._match_tags(item["tags"], name, version)
         expected = str(item["match"])
         matched_tag = matched_tags[0] if matched_tags else ""
         if matched_tag != expected:
@@ -56,8 +55,7 @@ def update_commit_finder_results() -> None:
     for item in json_data:
         name = str(item["name"])
         name, version = name.split("@")
-        pattern, parts, non_numeric_suffix = commit_finder._build_version_pattern(version)
-        matched_tags = commit_finder._match_tags(item["tags"], pattern, parts, non_numeric_suffix, name)
+        matched_tags = commit_finder._match_tags(item["tags"], name, version)
         matched_tag = matched_tags[0] if matched_tags else ""
         item["match"] = matched_tag
     with open(path, "w", encoding="utf-8") as tag_file:
