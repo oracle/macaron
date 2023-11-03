@@ -1,3 +1,28 @@
+## v0.6.0 (2023-11-03)
+
+### Feat
+
+- add download timeout config (#483)
+- support gzipped provenance files (#504)
+- support running the analysis with SBOM and the main software component with no repository (#165)
+- add support for Go, npm and Yarn build tools (#451)
+- enable repo finder to support more languages via Open Source Insights (#388)
+
+### Fix
+
+- resolve podman compatibility issues (#512)
+- do not use git set-branches if the target branch is not currently available in the repository (#491)
+- fix bash syntax error when running `run_macaron.sh` on MacOS (#528)
+
+### Refactor
+
+- refactor interface of base check (#513)
+- allow the branch name in the schema of a repository to be null (#532)
+
+### Perf
+
+- use partial clone to reduce clone time (#389)
+
 ## v0.5.0 (2023-09-14)
 
 ### Feat
