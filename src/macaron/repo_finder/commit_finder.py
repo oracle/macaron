@@ -182,10 +182,8 @@ def get_commit_from_version(git_obj: Git, name: str, version: str) -> tuple[str,
     # Only consider tags that have a commit.
     valid_tags = []
     for tag in git_obj.repo.tags:
-        try:
-            if not tag.commit:
-                raise ValueError("The commit object is None")
-        except ValueError:
+        commit = _get_tag_commit(tag)
+        if not commit:
             logger.debug("No commit found for tag: %s", tag)
             continue
 
@@ -457,3 +455,15 @@ def _get_branch_of_commit(commit: Commit) -> str:
             break
 
     return branch_name
+
+
+def _get_tag_commit(tag: TagReference) -> Commit | None:
+    """Return the commit of the passed tag.
+
+    This is a standalone function to more clearly handle the potential error raised by accessing the tag's commit
+    property.
+    """
+    try:
+        return tag.commit
+    except ValueError:
+        return None
