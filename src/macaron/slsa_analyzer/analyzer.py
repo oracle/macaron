@@ -695,10 +695,6 @@ class Analyzer:
             logger.error("The target repository does not have any commit.")
             return None
 
-        if not git_url.reset_git_repo(git_obj):
-            logger.error("Cannot reset the target repository.")
-            return None
-
         # Checking out the specific branch or commit. This operation varies depends on the git service that the
         # repository uses.
         if not is_remote:
