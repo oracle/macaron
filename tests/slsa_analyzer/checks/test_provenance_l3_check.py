@@ -5,7 +5,7 @@
 
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.provenance_l3_check import ProvenanceL3Check
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
@@ -53,7 +53,6 @@ class TestProvL3Check(MacaronTestCase):
     def test_provenance_l3_check(self) -> None:
         """Test the provenance l3 check."""
         check = ProvenanceL3Check()
-        check_result = CheckResult(justification=[])  # type: ignore
         github_actions = MockGitHubActions()
         api_client = MockGhAPIClient({"headers": {}, "query": []})
         github_actions.api_client = api_client
@@ -96,7 +95,7 @@ class TestProvL3Check(MacaronTestCase):
         }
         ctx = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
         ctx.dynamic_data["ci_services"] = [ci_info]
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
         # Attestation size is too large.
         ci_info["provenance_assets"] = []
@@ -116,7 +115,7 @@ class TestProvL3Check(MacaronTestCase):
                 {"name": "artifact.txt", "url": "URL", "size": 10},
             ]
         }
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
         # No provenance available.
         ci_info["provenance_assets"] = []
@@ -126,7 +125,7 @@ class TestProvL3Check(MacaronTestCase):
                 {"name": "artifact.txt", "url": "URL", "size": 10},
             ]
         }
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
         # No release available
         ci_info["provenance_assets"] = []
@@ -141,20 +140,20 @@ class TestProvL3Check(MacaronTestCase):
             ]
         )
         ci_info["latest_release"] = {}
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
         # Test Jenkins.
         ci_info["service"] = jenkins
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
         # Test Travis.
         ci_info["service"] = travis
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
         # Test Circle CI.
         ci_info["service"] = circle_ci
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
         # Test GitLab CI.
         ci_info["service"] = gitlab_ci
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx).result_type == CheckResultType.FAILED

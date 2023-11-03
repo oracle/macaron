@@ -7,7 +7,7 @@ import os
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.parsers.actionparser import parse as parse_action
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.trusted_builder_l3_check import TrustedBuilderL3Check
 from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType, GitHubActions, GitHubNode
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
@@ -31,7 +31,6 @@ class TestTrustedBuilderL3Check(MacaronTestCase):
     def test_trusted_builder_l3_check(self) -> None:
         """Test the Build As Code Check."""
         check = TrustedBuilderL3Check()
-        check_result = CheckResult(justification=[])  # type: ignore
         workflows_dir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "resources", "github", "workflow_files"
         )
@@ -62,7 +61,7 @@ class TestTrustedBuilderL3Check(MacaronTestCase):
         root.add_callee(callee)
         github_actions.build_call_graph_from_node(callee)
         ci_info["callgraph"] = gh_cg
-        assert check.run_check(ctx, check_result) == CheckResultType.PASSED
+        assert check.run_check(ctx).result_type == CheckResultType.PASSED
 
         # This GitHub Actions workflow is not using a trusted builder.
         root = GitHubNode(name="root", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
@@ -79,4 +78,4 @@ class TestTrustedBuilderL3Check(MacaronTestCase):
         root.add_callee(callee)
         github_actions.build_call_graph_from_node(callee)
         ci_info["callgraph"] = gh_cg
-        assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+        assert check.run_check(ctx).result_type == CheckResultType.FAILED

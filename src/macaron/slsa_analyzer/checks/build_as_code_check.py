@@ -15,7 +15,7 @@ from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType
@@ -71,7 +71,7 @@ class BuildAsCodeCheck(BaseCheck):
             "service is verifiably derived from text file definitions "
             "stored in a version control system."
         )
-        depends_on = [
+        depends_on: list[tuple[str, CheckResultType]] = [
             ("mcn_trusted_builder_level_three_1", CheckResultType.FAILED),
         ]
         eval_reqs = [ReqName.BUILD_AS_CODE]
@@ -128,8 +128,13 @@ class BuildAsCodeCheck(BaseCheck):
         return ""
 
     def _check_build_tool(
-        self, build_tool: BaseBuildTool, ctx: AnalyzeContext, ci_services: list[CIInfo], check_result: CheckResult
-    ) -> CheckResultType | None:
+        self,
+        build_tool: BaseBuildTool,
+        ctx: AnalyzeContext,
+        ci_services: list[CIInfo],
+        justification: Justification,
+        result_tables: ResultTables,
+    ) -> CheckResultType:
         """Run the check for a single build tool to determine if "build as code" holds for it.
 
         Parameters
@@ -140,8 +145,10 @@ class BuildAsCodeCheck(BaseCheck):
             The object containing processed data for the target repo.
         ci_services: list[CIInfo]
             List of CI services in use.
-        check_result : CheckResult
-            The object containing result data of a check.
+        justification: Justification
+            List of justifications to add to.
+        result_tables: ResultTables
+            List of result tables to add to.
 
         Returns
         -------
@@ -192,7 +199,7 @@ class BuildAsCodeCheck(BaseCheck):
                             )
 
                             # TODO: include in the justification multiple cases of external action usage
-                            justification: list[str | dict[str, str]] = [
+                            justification_action: Justification = [
                                 {
                                     f"The target repository uses build tool {build_tool.name}"
                                     " to deploy": deploy_action_source_link,
@@ -203,7 +210,7 @@ class BuildAsCodeCheck(BaseCheck):
                                 if html_url
                                 else "However, could not find a passing workflow run.",
                             ]
-                            check_result["justification"].extend(justification)
+                            justification.extend(justification_action)
                             if (
                                 ctx.dynamic_data["is_inferred_prov"]
                                 and ci_info["provenances"]
@@ -221,7 +228,7 @@ class BuildAsCodeCheck(BaseCheck):
                                 ] = ctx.component.repository.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
                                 predicate["metadata"]["buildInvocationId"] = html_url
-                            check_result["result_tables"].append(
+                            result_tables.append(
                                 BuildAsCodeFacts(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
@@ -256,7 +263,7 @@ class BuildAsCodeCheck(BaseCheck):
                             bash_cmd["CI_path"],
                         )
 
-                        justification_cmd: list[str | dict[str, str]] = [
+                        justification_cmd: Justification = [
                             {
                                 f"The target repository uses build tool {build_tool.name} to deploy": bash_source_link,
                                 "The build is triggered by": trigger_link,
@@ -266,7 +273,7 @@ class BuildAsCodeCheck(BaseCheck):
                             if html_url
                             else "However, could not find a passing workflow run.",
                         ]
-                        check_result["justification"].extend(justification_cmd)
+                        justification.extend(justification_cmd)
                         if (
                             ctx.dynamic_data["is_inferred_prov"]
                             and ci_info["provenances"]
@@ -286,7 +293,7 @@ class BuildAsCodeCheck(BaseCheck):
                             predicate["buildConfig"]["jobID"] = bash_cmd["job_name"]
                             predicate["buildConfig"]["stepID"] = bash_cmd["step_name"]
                             predicate["metadata"]["buildInvocationId"] = html_url
-                        check_result["result_tables"].append(
+                        result_tables.append(
                             BuildAsCodeFacts(
                                 build_tool_name=build_tool.name,
                                 ci_service_name=ci_service.name,
@@ -308,7 +315,7 @@ class BuildAsCodeCheck(BaseCheck):
                             )
                             if not config_name:
                                 break
-                            check_result["justification"].append(
+                            justification.append(
                                 f"The target repository uses build tool {build_tool.name}"
                                 + f" in {ci_service.name} using {deploy_kw} to deploy."
                             )
@@ -329,7 +336,7 @@ class BuildAsCodeCheck(BaseCheck):
                                     "sha1"
                                 ] = ctx.component.repository.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = config_name
-                            check_result["result_tables"].append(
+                            result_tables.append(
                                 BuildAsCodeFacts(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
@@ -339,39 +346,38 @@ class BuildAsCodeCheck(BaseCheck):
                             return CheckResultType.PASSED
 
         pass_msg = f"The target repository does not use {build_tool.name} to deploy."
-        check_result["justification"].append(pass_msg)
+        justification.append(pass_msg)
         return CheckResultType.FAILED
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+    def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
 
         Parameters
         ----------
         ctx : AnalyzeContext
             The object containing processed data for the target repo.
-        check_result : CheckResult
-            The object containing result data of a check.
 
         Returns
         -------
-        CheckResultType
-            The result type of the check (e.g. PASSED).
+        CheckResultData
+            The result of the check.
         """
         # Get the build tool identified by the mcn_version_control_system_1, which we depend on.
         build_tools = ctx.dynamic_data["build_spec"]["tools"]
 
         if not build_tools:
             failed_msg = "The target repository does not have any build tools."
-            check_result["justification"].append(failed_msg)
-            return CheckResultType.FAILED
+            return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
 
         ci_services = ctx.dynamic_data["ci_services"]
 
         # Check if "build as code" holds for each build tool.
         overall_res = CheckResultType.FAILED
 
+        justification: Justification = []
+        result_tables: ResultTables = []
         for tool in build_tools:
-            res = self._check_build_tool(tool, ctx, ci_services, check_result)
+            res = self._check_build_tool(tool, ctx, ci_services, justification, result_tables)
 
             if res == CheckResultType.PASSED:
                 # The check passing is contingent on at least one passing, if
@@ -383,7 +389,7 @@ class BuildAsCodeCheck(BaseCheck):
                 # check fails instead
                 overall_res = CheckResultType.PASSED
 
-        return overall_res
+        return CheckResultData(justification=justification, result_tables=result_tables, result_type=overall_res)
 
 
 registry.register(BuildAsCodeCheck())

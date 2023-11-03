@@ -16,7 +16,7 @@ from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
 from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType, GitHubActions
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.registry import registry
@@ -83,27 +83,26 @@ class TrustedBuilderL3Check(BaseCheck):
             result_on_skip=CheckResultType.FAILED,
         )
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+    def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
 
         Parameters
         ----------
         ctx : AnalyzeContext
             The object containing processed data for the target repo.
-        check_result : CheckResult
-            The object containing result data of a check.
 
         Returns
         -------
-        CheckResultType
-            The result type of the check (e.g. PASSED).
+        CheckResultData
+            The result of the check.
         """
         # TODO: During verification, we need to fetch the workflow and verify that it's not
         # using self-hosted runners, custom containers or services, etc.
         found_builder = False
         ci_services = ctx.dynamic_data["ci_services"]
         result_values = []
-        check_result["result_tables"] = []
+        justification: Justification = []
+        result_tables: ResultTables = []
 
         for ci_info in ci_services:
             inferred_provenances = []
@@ -149,7 +148,7 @@ class TrustedBuilderL3Check(BaseCheck):
                         predicate["invocation"]["configSource"]["entryPoint"] = caller_link
                         predicate["metadata"]["buildInvocationId"] = html_url
                         inferred_provenances.append(InTotoV01Payload(statement=provenance))
-                    check_result["justification"].extend(
+                    justification.extend(
                         [
                             {f"Found trusted builder GitHub Actions: {callee.name} triggered by": caller_link},
                             {"The status of the build can be seen at": html_url}
@@ -171,13 +170,17 @@ class TrustedBuilderL3Check(BaseCheck):
             if inferred_provenances:
                 ci_info["provenances"] = inferred_provenances
 
-        check_result["result_tables"] = [TrustedBuilderFacts(**result) for result in result_values]
+        result_tables = [TrustedBuilderFacts(**result) for result in result_values]
 
         if found_builder:
-            return CheckResultType.PASSED
+            return CheckResultData(
+                justification=justification, result_tables=result_tables, result_type=CheckResultType.PASSED
+            )
 
-        check_result["justification"].append("Could not find a trusted level 3 builder as a GitHub Actions workflow.")
-        return CheckResultType.FAILED
+        justification.append("Could not find a trusted level 3 builder as a GitHub Actions workflow.")
+        return CheckResultData(
+            justification=justification, result_tables=result_tables, result_type=CheckResultType.FAILED
+        )
 
 
 registry.register(TrustedBuilderL3Check())

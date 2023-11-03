@@ -8,7 +8,7 @@ import logging
 from macaron.errors import ExpectationRuntimeError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck, CheckResultType
-from macaron.slsa_analyzer.checks.check_result import CheckResult
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, Justification, ResultTables
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
 from macaron.slsa_analyzer.provenance.loader import LoadIntotoAttestationError
@@ -39,29 +39,30 @@ class ProvenanceL3ContentCheck(BaseCheck):
             result_on_skip=CheckResultType.FAILED,
         )
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+    def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
 
         Parameters
         ----------
         ctx : AnalyzeContext
             The object containing processed data for the target repo.
-        check_result : CheckResult
-            The object containing result data of a check.
 
         Returns
         -------
-        CheckResultType
-            The result type of the check (e.g. PASSED).
+        CheckResultData
+            The result of the check.
         """
         expectation = ctx.dynamic_data["expectation"]
         if not expectation:
-            check_result["justification"].append("No expectation defined for this repository.")
-            logger.info("%s check was unable to find any expectations.", self.check_id)
-            return CheckResultType.UNKNOWN
+            msg = "No expectation defined for this repository."
+            logger.info("%s check was unable to find any expectations.", self.check_info.check_id)
+            return CheckResultData(justification=[msg], result_tables=[], result_type=CheckResultType.UNKNOWN)
 
         package_registry_info_entries = ctx.dynamic_data["package_registries"]
         ci_services = ctx.dynamic_data["ci_services"]
+
+        justification: Justification = []
+        result_tables: ResultTables = []
 
         # Check the provenances in package registries.
         for package_registry_info_entry in package_registry_info_entries:
@@ -78,16 +79,24 @@ class ProvenanceL3ContentCheck(BaseCheck):
                             )
 
                             if expectation.validate(provenance.payload):
-                                check_result["result_tables"].append(expectation)
-                                check_result["justification"].append(
+                                result_tables.append(expectation)
+                                justification.append(
                                     f"Successfully verified the expectation against the provenance {provenance.asset.url}."
                                 )
-                                return CheckResultType.PASSED
+                                return CheckResultData(
+                                    justification=justification,
+                                    result_tables=result_tables,
+                                    result_type=CheckResultType.PASSED,
+                                )
 
                         except (LoadIntotoAttestationError, ExpectationRuntimeError) as error:
                             logger.error(error)
-                            check_result["justification"].append("Could not verify expectation against the provenance.")
-                            return CheckResultType.FAILED
+                            justification.append("Could not verify expectation against the provenance.")
+                            return CheckResultData(
+                                justification=justification,
+                                result_tables=result_tables,
+                                result_type=CheckResultType.FAILED,
+                            )
 
         for ci_info in ci_services:
             ci_service = ci_info["service"]
@@ -108,19 +117,23 @@ class ProvenanceL3ContentCheck(BaseCheck):
                     if expectation.validate(payload):
                         # We need to use typing.Protocol for multiple inheritance, however, the Expectation
                         # class uses inlined functions, which is not supported by Protocol.
-                        check_result["result_tables"].append(expectation)
-                        check_result["justification"].append(
-                            "Successfully verified the expectation against provenance."
+                        result_tables.append(expectation)
+                        justification.append("Successfully verified the expectation against provenance.")
+                        return CheckResultData(
+                            justification=justification, result_tables=result_tables, result_type=CheckResultType.PASSED
                         )
-                        return CheckResultType.PASSED
 
                 except (LoadIntotoAttestationError, ExpectationRuntimeError) as error:
                     logger.error(error)
-                    check_result["justification"].append("Could not verify expectation against the provenance.")
-                    return CheckResultType.FAILED
+                    justification.append("Could not verify expectation against the provenance.")
+                    return CheckResultData(
+                        justification=justification, result_tables=result_tables, result_type=CheckResultType.FAILED
+                    )
 
-        check_result["justification"].append("Failed to successfully verify expectation against any provenance files.")
-        return CheckResultType.FAILED
+        justification.append("Failed to successfully verify expectation against any provenance files.")
+        return CheckResultData(
+            justification=justification, result_tables=result_tables, result_type=CheckResultType.FAILED
+        )
 
 
 registry.register(ProvenanceL3ContentCheck())

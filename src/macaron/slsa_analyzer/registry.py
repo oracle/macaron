@@ -16,7 +16,13 @@ from typing import Any
 from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType, SkippedInfo
+from macaron.slsa_analyzer.checks.check_result import (
+    CheckInfo,
+    CheckResult,
+    CheckResultData,
+    CheckResultType,
+    SkippedInfo,
+)
 from macaron.slsa_analyzer.runner import Runner
 from macaron.slsa_analyzer.slsa_req import ReqName
 
@@ -73,19 +79,19 @@ class Registry:
         # checks can still depend on it, and therefore it might have been initialized and added to the mapping
         # already. So we need to check if it already exists in `_check_relationships_mapping`.
         if not check.depends_on:
-            if check.check_id not in self._check_relationships_mapping:
-                self._check_relationships_mapping[check.check_id] = {}
+            if check.check_info.check_id not in self._check_relationships_mapping:
+                self._check_relationships_mapping[check.check_info.check_id] = {}
         else:
             for parent_relationship in check.depends_on:
-                if not self._add_relationship_entry(check.check_id, parent_relationship):
-                    logger.error("Cannot load relationships of check %s.", check.check_id)
+                if not self._add_relationship_entry(check.check_info.check_id, parent_relationship):
+                    logger.error("Cannot load relationships of check %s.", check.check_info.check_id)
                     sys.exit(1)
 
         if not self._add_node(check):
-            logger.critical("Cannot add check %s to the directed graph.", check.check_id)
+            logger.critical("Cannot add check %s to the directed graph.", check.check_info.check_id)
             sys.exit(1)
 
-        self._all_checks_mapping[check.check_id] = check
+        self._all_checks_mapping[check.check_info.check_id] = check
 
     def _add_relationship_entry(self, check_id: str, relationship: tuple[str, CheckResultType]) -> bool:
         """Add the relationship of a check to a parent.
@@ -174,35 +180,35 @@ class Registry:
 
         if check_file_abs_path:
             if not (hasattr(check, "result_on_skip") and isinstance(check.result_on_skip, CheckResultType)):
-                logger.error("The status_on_skipped in the Check at %s is invalid.", str(check.check_id))
+                logger.error("The status_on_skipped in the Check at %s is invalid.", str(check.check_info.check_id))
                 return False
 
-            if not Registry._validate_check_id_format(check.check_id):
+            if not Registry._validate_check_id_format(check.check_info.check_id):
                 logger.error(
                     "The check_id %s in the Check at %s has an invalid format.",
-                    str(check.check_id),
+                    str(check.check_info.check_id),
                     check_file_abs_path,
                 )
                 return False
 
-            if not Registry._validate_eval_reqs(check.eval_reqs):
+            if not Registry._validate_eval_reqs(check.check_info.eval_reqs):
                 logger.error(
                     "The eval reqs defined for Check %s are invalid.",
-                    str(check.check_id),
+                    str(check.check_info.check_id),
                 )
                 return False
 
-            if Registry._all_checks_mapping.get(check.check_id):
+            if Registry._all_checks_mapping.get(check.check_info.check_id):
                 logger.error(
                     "The check_id %s in the Check at %s has already been registered. Please use a different ID.",
-                    check.check_id,
+                    check.check_info.check_id,
                     check_file_abs_path,
                 )
                 return False
         else:
             logger.critical(
                 "Cannot resolve the source file of %s even when it has been resolved.",
-                check.check_id,
+                check.check_info.check_id,
             )
             return False
 
@@ -233,11 +239,11 @@ class Registry:
             # Add this check to the graph first.
             # The graphlib library supports adding duplicated nodes
             # or predecessors without breaking the graph.
-            self._graph.add(check.check_id)
+            self._graph.add(check.check_info.check_id)
 
             # Add predecessors.
             for parent in parent_ids:
-                self._graph.add(check.check_id, parent)
+                self._graph.add(check.check_info.check_id, parent)
 
             return True
         except ValueError as err:
@@ -369,12 +375,16 @@ class Registry:
                         message = f"Check {check_id} is not defined yet. Please add the implementation for {check_id}."
                         logger.error(message)
                         results[check_id] = CheckResult(
-                            check_id=check_id,
-                            check_description="",
-                            slsa_requirements=[],
-                            justification=[message],
-                            result_type=CheckResultType.UNKNOWN,
-                            result_tables=[],
+                            check=CheckInfo(
+                                check_id=check_id,
+                                check_description="",
+                                eval_reqs=[],
+                            ),
+                            result=CheckResultData(
+                                justification=[message],
+                                result_type=CheckResultType.UNKNOWN,
+                                result_tables=[],
+                            ),
                         )
                         graph.done(check_id)
                     else:
@@ -434,7 +444,7 @@ class Registry:
                 futures_queue.put(
                     (
                         runner,
-                        next_check.check_id,
+                        next_check.check_info.check_id,
                         submitted_future,
                     )
                 )
@@ -557,14 +567,14 @@ class Registry:
 
             # Look up the result of this parent check
             parent_result = results[parent_id]
-            got_status = parent_result["result_type"]
+            got_status = parent_result.result.result_type
 
-            if parent_result["result_type"] != expect_status:
+            if got_status != expect_status:
                 suppress_comment = (
-                    f"Check {check.check_id} is set to {check.result_on_skip.value} "
+                    f"Check {check.check_info.check_id} is set to {check.result_on_skip.value} "
                     f"because {parent_id} {got_status.value}."
                 )
-                skipped_info = SkippedInfo(check_id=check.check_id, suppress_comment=suppress_comment)
+                skipped_info = SkippedInfo(check_id=check.check_info.check_id, suppress_comment=suppress_comment)
                 return skipped_info
 
         return None
