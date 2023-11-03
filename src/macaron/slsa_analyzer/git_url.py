@@ -8,8 +8,10 @@ import logging
 import os
 import re
 import string
+import subprocess  # nosec B404
 import urllib.parse
 from configparser import ConfigParser
+from pathlib import Path
 
 from git import GitCommandError
 from git.objects import Commit
@@ -17,6 +19,7 @@ from git.repo import Repo
 from pydriller.git import Git
 
 from macaron.config.defaults import defaults
+from macaron.environment_variables import get_patched_env
 from macaron.errors import CloneError
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -235,6 +238,12 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
     This could happen when multiple runs of Macaron use the same `<output_dir>`, leading
     to Macaron potentially trying to clone a repository multiple times.
 
+    We use treeless partial clone to reduce clone time, by retrieving trees and blobs lazily.
+    For more details, see the following:
+    - https://git-scm.com/docs/partial-clone
+    - https://git-scm.com/docs/git-rev-list
+    - https://github.blog/2020-12-21-get-up-to-speed-with-partial-clone-and-shallow-clone
+
     Parameters
     ----------
     clone_dir : str
@@ -268,20 +277,38 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
             )
             return None
 
+    # Ensure that the parent directory where the repo is cloned into exists.
+    parent_dir = Path(clone_dir).parent
+    parent_dir.mkdir(parents=True, exist_ok=True)
+
     try:
-        # The Repo.clone_from method handles creating intermediate dirs.
-        return Repo.clone_from(
-            url=url,
-            to_path=clone_dir,
-            env={
-                # Setting the GIT_TERMINAL_PROMPT environment variable to ``0`` stops
-                # ``git clone`` from prompting for login credentials.
-                "GIT_TERMINAL_PROMPT": "0",
-            },
+        git_env_patch = {
+            # Setting the GIT_TERMINAL_PROMPT environment variable to ``0`` stops
+            # ``git clone`` from prompting for login credentials.
+            "GIT_TERMINAL_PROMPT": "0",
+        }
+        result = subprocess.run(  # nosec B603
+            args=["git", "clone", "--filter=tree:0", url],
+            capture_output=True,
+            cwd=parent_dir,
+            # If `check=True` and return status code is not zero, subprocess.CalledProcessError is
+            # raised, which we don't want. We want to check the return status code of the subprocess
+            # later on.
+            check=False,
+            env=get_patched_env(git_env_patch),
         )
-    except GitCommandError as error:
-        # stderr here does not contain secrets, so it is safe for logging.
-        raise CloneError(error.stderr) from None
+    except (subprocess.CalledProcessError, OSError):
+        # Here, we raise from ``None`` to be extra-safe that no token is leaked.
+        # We should never store or print out the captured output from the subprocess
+        # because they might contain the secret-embedded URL.
+        raise CloneError("Failed to clone repository.") from None
+
+    if result.returncode != 0:
+        raise CloneError(
+            "Failed to clone repository: the `git clone --filter=tree:0` command exited with non-zero return code."
+        )
+
+    return Repo(path=clone_dir)
 
 
 def get_repo_name_from_url(url: str) -> str:
