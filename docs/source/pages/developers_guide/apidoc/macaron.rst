@@ -25,10 +25,10 @@ Subpackages
 Submodules
 ----------
 
-macaron.env module
-------------------
+macaron.environment\_variables module
+-------------------------------------
 
-.. automodule:: macaron.env
+.. automodule:: macaron.environment_variables
    :members:
    :undoc-members:
    :show-inheritance:
