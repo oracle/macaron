@@ -7,8 +7,13 @@ import re
 from re import Pattern
 
 from git import TagReference
+from gitdb.exc import BadName
 from packageurl import PackageURL
-from pydriller import Git
+from pydriller import Commit, Git
+
+from macaron.repo_finder import repo_finder_deps_dev
+from macaron.repo_finder.repo_finder import to_domain_from_known_purl_types
+from macaron.slsa_analyzer.git_service import GIT_SERVICES
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -75,10 +80,12 @@ numeric_only_pattern = re.compile("[0-9]+")
 versioned_string = re.compile("[a-z]+[0-9]+", flags=re.IGNORECASE)  # e.g. RC1, M5, etc.
 
 
-def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
-    """Try to find the matching commit in a repository of a given version via tags.
+def find_commit(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
+    """Try to find the commit matching the passed PURL.
 
-    The version of the passed PackageURL is used to match with the tags in the target repository.
+    The PURL may have be a repository type, e.g. GitHub, in which case the commit might be in its version part.
+    Otherwise, the PURL should be a package manager type, e.g. Maven, in which case the commit must be found from
+    the artifact version.
 
     Parameters
     ----------
@@ -92,10 +99,85 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
     tuple[str, str]
         The branch name and digest as a tuple.
     """
-    if purl.version is None:
-        logger.debug("Missing version for artifact: %s", purl.name)
+    version = purl.version
+    if version is None:
+        logger.debug("Missing version for analysis target: %s", purl.name)
         return "", ""
-    logger.debug("Searching for commit of artifact version using tags: %s@%s", purl.name, purl.version)
+
+    available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
+    domain = to_domain_from_known_purl_types(purl.type) or (purl.type if purl.type in available_domains else None)
+    if domain:
+        # PURL is a repository type.
+        return get_commit_from_purl(git_obj, version)
+    if purl.type in repo_finder_deps_dev.SUPPORTED_TYPES:
+        # PURL is a package manager type.
+        return get_commit_from_version(git_obj, purl.name or "", version)
+
+    logger.debug("Type of PURL is not supported for commit finding: %s", purl.type)
+    return "", ""
+
+
+def get_commit_from_purl(git_obj: Git, version: str) -> tuple[str, str]:
+    """Try to find the commit in the PURL or from the tag in the PURL.
+
+    Parameters
+    ----------
+    git_obj: Git
+        The repository.
+    version: str
+        The version of the analysis target.
+
+    Returns
+    -------
+    tuple[str, str]
+        The branch name and digest as a tuple.
+    """
+    # A commit hash is 40 characters in length, but commits are often referenced using only some of those.
+    commit: Commit | None = None
+    if 7 <= len(version) <= 40:
+        try:
+            commit = git_obj.get_commit(version)
+        except BadName as error:
+            logger.debug("Failed to retrieve commit: %s", error)
+
+    if not commit:
+        # Treat the 'commit' as a tag.
+        try:
+            commit = git_obj.get_commit_from_tag(version)
+        except IndexError as error:
+            logger.debug("Failed to retrieve commit: %s", error)
+
+    if not commit:
+        return "", ""
+
+    branch_name = _get_branch_of_commit(commit)
+    if not branch_name:
+        logger.debug("No valid branch found for commit: %s", commit.hash)
+        return "", ""
+
+    return branch_name, commit.hash
+
+
+def get_commit_from_version(git_obj: Git, name: str, version: str) -> tuple[str, str]:
+    """Try to find the matching commit in a repository of a given version via tags.
+
+    The version of the passed PackageURL is used to match with the tags in the target repository.
+
+    Parameters
+    ----------
+    git_obj: Git
+        The repository.
+    name: str
+        The name of the analysis target.
+    version: str
+        The version of the analysis target.
+
+    Returns
+    -------
+    tuple[str, str]
+        The branch name and digest as a tuple.
+    """
+    logger.debug("Searching for commit of artifact version using tags: %s@%s", name, version)
 
     # Only consider tags that have a commit.
     valid_tags = []
@@ -110,37 +192,25 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
         valid_tags.append(tag)
 
     if not valid_tags:
-        logger.debug("No tags with commits found for %s", str(purl))
+        logger.debug("No tags with commits found for %s", name)
         return "", ""
 
     # Match tags.
-    matched_tags = _match_tags(valid_tags, purl.name, purl.version)
+    matched_tags = _match_tags(valid_tags, name, version)
 
     if not matched_tags:
-        logger.debug("No tags matched for %s", str(purl))
+        logger.debug("No tags matched for %s", name)
         return "", ""
 
     if len(matched_tags) > 1:
-        logger.debug("Tags found for %s: %s", str(purl), len(matched_tags))
+        logger.debug("Tags found for %s: %s", name, len(matched_tags))
         logger.debug("Best match: %s", matched_tags[0])
         logger.debug("Up to 5 others: %s", matched_tags[1:6])
 
     tag = matched_tags[0]
     tag_name = str(tag)
-    branches = git_obj.get_commit_from_tag(tag_name).branches
-    logger.debug("Branches: %s", branches)
 
-    if not branches:
-        logger.debug("No branch associated with tag (commit): %s (%s)", tag_name, tag.commit.hexsha)
-        return "", ""
-
-    branch_name = ""
-    for branch in branches:
-        # Ensure the detached head branch is not picked up.
-        if "(HEAD detached at" not in branch:
-            branch_name = branch
-            break
-
+    branch_name = _get_branch_of_commit(git_obj.get_commit_from_tag(tag_name))
     if not branch_name:
         logger.debug("No valid branch associated with tag (commit): %s (%s)", tag_name, tag.commit.hexsha)
         return "", ""
@@ -150,8 +220,8 @@ def get_commit_from_version(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
         tag,
         tag.commit.hexsha,
         branch_name,
-        purl.name,
-        purl.version,
+        name,
+        version,
     )
     return branch_name, tag.commit.hexsha
 
@@ -370,3 +440,21 @@ def _count_parts_in_tag(tag_version: str, tag_suffix: str, version_parts: list[s
                 count = count - 1
 
     return count
+
+
+def _get_branch_of_commit(commit: Commit) -> str:
+    """Get the branch of the passed commit as a string or return None."""
+    branches = commit.branches
+
+    if not branches:
+        logger.debug("No branch associated with commit: %s", commit.hash)
+        return ""
+
+    branch_name = ""
+    for branch in branches:
+        # Ensure the detached head branch is not picked up.
+        if "(HEAD detached at" not in branch:
+            branch_name = branch
+            break
+
+    return branch_name

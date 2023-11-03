@@ -14,6 +14,9 @@ from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+# This list should be updated based on updates to deps.dev.
+SUPPORTED_TYPES = ["maven", "pypi", "nuget", "cargo", "npm"]
+
 
 class DepsDevRepoFinder(BaseRepoFinder):
     """This class is used to find repositories using Google's Open Source Insights A.K.A. deps.dev."""

@@ -25,7 +25,7 @@ from macaron.errors import CloneError, DuplicateError, InvalidPURLError, PURLNot
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
-from macaron.repo_finder.commit_finder import get_commit_from_version
+from macaron.repo_finder.commit_finder import find_commit
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
@@ -703,7 +703,7 @@ class Analyzer:
 
         # Find the digest and branch if a version has been specified
         if not digest and purl and purl.version:
-            branch_name, digest = get_commit_from_version(git_obj, purl)
+            branch_name, digest = find_commit(git_obj, purl)
             if not (branch_name and digest):
                 logger.error("Could not map purl version to specific commit in repository.")
                 return None
