@@ -12,16 +12,16 @@ from macaron.environment_variables import get_patched_env
     ("before", "patch", "expect"),
     [
         pytest.param(
-            {"PATH": "/usr/local/bin"},
+            {"FOO": "some-value"},
             {},
-            {"PATH": "/usr/local/bin"},
+            {"FOO": "some-value"},
             id="patch is empty",
         ),
         pytest.param(
-            {"PATH": "/usr/local/bin"},
+            {"FOO": "some-value"},
             {"GIT_TERMINAL_PROMPT": "0"},
             {
-                "PATH": "/usr/local/bin",
+                "FOO": "some-value",
                 "GIT_TERMINAL_PROMPT": "0",
             },
             id="patch adding a variable",
