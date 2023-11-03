@@ -16,7 +16,7 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.package_registry.maven_central_registry import MavenCentralRegistry
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
@@ -70,7 +70,7 @@ class InferArtifactPipelineCheck(BaseCheck):
         """Initialize the InferArtifactPipeline instance."""
         check_id = "mcn_infer_artifact_pipeline_1"
         description = "Detects potential pipelines from which an artifact is published."
-        depends_on = [("mcn_build_as_code_1", CheckResultType.PASSED)]
+        depends_on: list[tuple[str, CheckResultType]] = [("mcn_build_as_code_1", CheckResultType.PASSED)]
         eval_reqs = [ReqName.BUILD_AS_CODE]
         super().__init__(
             check_id=check_id,
@@ -80,27 +80,23 @@ class InferArtifactPipelineCheck(BaseCheck):
             result_on_skip=CheckResultType.FAILED,
         )
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
+    def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
 
         Parameters
         ----------
         ctx : AnalyzeContext
             The object containing processed data for the target repo.
-        check_result : CheckResult
-            The object containing result data of a check.
 
         Returns
         -------
-        CheckResultType
-            The result type of the check (e.g. PASSED).
+        CheckResultData
+            The result type of the check.
         """
         # This check requires the build_as_code check to pass and a repository to be available.
         if not ctx.component.repository:
-            check_result["justification"] = [
-                "Unable to find a potential workflow run for the artifact because no repository is available."
-            ]
-            return CheckResultType.FAILED
+            failed_msg = "Unable to find a potential workflow run for the artifact because no repository is available."
+            return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
 
         # Look for the artifact in the corresponding registry and find the publish timestamp.
         artifact_published_date = None
@@ -125,8 +121,8 @@ class InferArtifactPipelineCheck(BaseCheck):
         # This check requires the artifact publish artifact to proceed. If the timestamp is not
         # found, we return with a fail result.
         if not artifact_published_date:
-            check_result["justification"] = ["Unable to find a publishing timestamp for the artifact."]
-            return CheckResultType.FAILED
+            failed_msg = "Unable to find a publishing timestamp for the artifact."
+            return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
 
         # Obtain the metadata inferred by the build_as_code check, which is stored in the `provenances`
         # attribute of the corresponding CI service.
@@ -170,10 +166,12 @@ class InferArtifactPipelineCheck(BaseCheck):
                             "Configuration error: publish_time_range in section of package_registries is not a valid integer %s.",
                             error,
                         )
-                        check_result["justification"] = [
+                        failed_msg = (
                             "Unable to find a potential workflow run for the artifact due to configuration issues."
-                        ]
-                        return CheckResultType.FAILED
+                        )
+                        return CheckResultData(
+                            justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED
+                        )
 
                     # Find the potential workflow runs.
                     if html_urls := ci_service.workflow_run_in_date_time_range(
@@ -183,8 +181,10 @@ class InferArtifactPipelineCheck(BaseCheck):
                         step_name=predicate["buildConfig"]["stepID"],
                         time_range=publish_time_range,
                     ):
+                        justification: Justification = []
+                        result_tables: ResultTables = []
                         for html_url in html_urls:
-                            justification: list[str | dict[str, str]] = [
+                            justification_url: Justification = [
                                 {
                                     f"The artifact is potentially published by workflow"
                                     f" job '{predicate['buildConfig']['jobID']}' at"
@@ -192,18 +192,20 @@ class InferArtifactPipelineCheck(BaseCheck):
                                     "triggered by": html_url,
                                 },
                             ]
-                            check_result["justification"].extend(justification)
-                            check_result["result_tables"].append(
+                            justification.extend(justification_url)
+                            result_tables.append(
                                 InferArtifactPipelineFacts(
                                     deploy_job=predicate["buildConfig"]["jobID"],
                                     deploy_step=predicate["buildConfig"]["stepID"],
                                     run_url=html_url,
                                 )
                             )
-                        return CheckResultType.PASSED
+                        return CheckResultData(
+                            justification=justification, result_tables=result_tables, result_type=CheckResultType.PASSED
+                        )
 
-        check_result["justification"] = ["Unable to find a potential workflow run for the artifact."]
-        return CheckResultType.FAILED
+        failed_msg = "Unable to find a potential workflow run for the artifact."
+        return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
 
 
 registry.register(InferArtifactPipelineCheck())

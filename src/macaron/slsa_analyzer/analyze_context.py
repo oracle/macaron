@@ -16,7 +16,7 @@ from macaron.slsa_analyzer.git_service import BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
-from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReq, get_requirements_dict
+from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus, create_requirement_status_dict
 from macaron.slsa_analyzer.specs.build_spec import BuildSpec
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -64,7 +64,7 @@ class AnalyzeContext:
             The output dir.
         """
         self.component = component
-        self.ctx_data: dict[ReqName, SLSAReq] = get_requirements_dict()
+        self.ctx_data: dict[ReqName, SLSAReqStatus] = create_requirement_status_dict()
 
         self.slsa_level = SLSALevels.LEVEL0
         # Indicate whether this repo fully reach a level or
@@ -176,14 +176,14 @@ class AnalyzeContext:
 
     def get_dict(self) -> dict:
         """Return the dictionary representation of the AnalyzeContext instance."""
-        _sorted_on_id = sorted(self.check_results.values(), key=lambda item: item["check_id"])
+        _sorted_on_id = sorted(self.check_results.values(), key=lambda item: item.check.check_id)
         # Remove result_tables since we don't have a good json representation for them.
         sorted_on_id = []
         for res in _sorted_on_id:
-            # res is CheckResult(TypedDict)
-            res_copy: dict = dict(res.copy())
-            res_copy.pop("result_tables")
-            sorted_on_id.append(res_copy)
+            # res is CheckResult
+            res_dict: dict = dict(res.get_summary())
+            res_dict.pop("result_tables")
+            sorted_on_id.append(res_dict)
         sorted_results = sorted(sorted_on_id, key=lambda item: item["result_type"], reverse=True)
         check_summary = {
             result_type.value: len(result_list) for result_type, result_list in self.get_check_summary().items()
@@ -219,7 +219,7 @@ class AnalyzeContext:
         result: dict[CheckResultType, list[CheckResult]] = {result_type: [] for result_type in CheckResultType}
 
         for check_result in self.check_results.values():
-            match check_result["result_type"]:
+            match check_result.result.result_type:
                 case CheckResultType.PASSED:
                     result[CheckResultType.PASSED].append(check_result)
                 case CheckResultType.SKIPPED:
@@ -243,8 +243,8 @@ class AnalyzeContext:
             output = "".join(
                 [
                     output,
-                    f"Check {check_result['check_id']}: {check_result['check_description']}\n",
-                    f"\t{check_result['result_type'].value}\n",
+                    f"Check {check_result.check.check_id}: {check_result.check.check_description}\n",
+                    f"\t{check_result.result.result_type.value}\n",
                 ]
             )
 

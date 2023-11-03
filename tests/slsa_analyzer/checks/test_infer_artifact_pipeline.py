@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from macaron.database.table_definitions import Repository
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.infer_artifact_pipeline_check import InferArtifactPipelineCheck
 from tests.conftest import MockAnalyzeContext
 
@@ -23,9 +23,8 @@ from tests.conftest import MockAnalyzeContext
 def test_infer_artifact_pipeline(macaron_path: Path, repository: Repository, expected: str) -> None:
     """Test that the check handles repositories correctly."""
     check = InferArtifactPipelineCheck()
-    check_result = CheckResult(justification=[])  # type: ignore
 
     # Set up the context object with provenances.
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     ctx.component.repository = repository
-    assert check.run_check(ctx, check_result) == expected
+    assert check.run_check(ctx).result_type == expected

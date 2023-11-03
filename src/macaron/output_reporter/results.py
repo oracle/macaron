@@ -14,7 +14,7 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.registry import registry
-from macaron.slsa_analyzer.slsa_req import ReqName
+from macaron.slsa_analyzer.slsa_req import BUILD_REQ_DESC, ReqName
 
 
 class DepSummary(TypedDict):
@@ -119,7 +119,7 @@ class Record(Generic[RecordNode]):
         has_passing_check = False
         if self.context:
             for res in self.context.check_results.values():
-                if res["result_type"] == CheckResultType.PASSED:
+                if res.result.result_type == CheckResultType.PASSED:
                     has_passing_check = True
                     break
 
@@ -156,9 +156,9 @@ class Record(Generic[RecordNode]):
                     result["unique_dep_repos"] += 1
                     if dep_record.context:
                         for check_result in dep_record.context.check_results.values():
-                            if check_result["result_type"] == CheckResultType.PASSED:
+                            if check_result.result.result_type == CheckResultType.PASSED:
                                 for entry in result["checks_summary"]:
-                                    if entry["check_id"] == check_result["check_id"]:
+                                    if entry["check_id"] == check_result.check.check_id:
                                         entry["num_deps_pass"] += 1
                 case SCMStatus.DUPLICATED_SCM:
                     result["analyzed_deps"] += 1
@@ -291,9 +291,10 @@ class Report:
         )
 
         slsa_req_mesg: dict[SLSALevels, list[str]] = {level: [] for level in SLSALevels if level != SLSALevels.LEVEL0}
-        for req in main_ctx.ctx_data.values():
-            if req.min_level_required != SLSALevels.LEVEL0 and req.is_addressed:
-                message = f"{req.name.capitalize()}: " + ("PASSED" if req.is_pass else "FAILED")
+        for req_name, req_status in main_ctx.ctx_data.items():
+            req = BUILD_REQ_DESC[req_name]
+            if req.min_level_required != SLSALevels.LEVEL0 and req_status.is_addressed:
+                message = f"{req.name.capitalize()}: " + ("PASSED" if req_status.is_pass else "FAILED")
 
                 if ctx_list:
                     # Get the fail count for dependencies.

@@ -25,4 +25,4 @@ class TestConfiguration(TestCase):
 
         with self.assertRaises(NotImplementedError):
             check = ChildCheck()  # type: ignore
-            check.run_check(MagicMock(), MagicMock())
+            check.run_check(MagicMock())

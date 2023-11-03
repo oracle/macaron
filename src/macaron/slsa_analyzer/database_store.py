@@ -33,16 +33,15 @@ def store_analyze_context_to_db(analyze_ctx: AnalyzeContext) -> None:
     # Store check result table.
     for check_result in analyze_ctx.check_results.values():
         check_result_row = MappedCheckResult(
-            check_id=check_result["check_id"],
+            check_id=check_result.check.check_id,
             component=analyze_ctx.component,
-            passed=check_result["result_type"] == CheckResultType.PASSED,
+            passed=check_result.result.result_type == CheckResultType.PASSED,
         )
 
-        if "result_tables" in check_result:
-            for check_facts in check_result["result_tables"]:
-                if isinstance(check_facts, CheckFacts):
-                    check_facts.checkresult = check_result_row
-                    check_facts.component = check_result_row.component
+        for check_facts in check_result.result.result_tables:
+            if isinstance(check_facts, CheckFacts):
+                check_facts.checkresult = check_result_row
+                check_facts.component = check_result_row.component
 
     # Store SLSA Requirements.
     for key, value in analyze_ctx.ctx_data.items():
@@ -50,6 +49,6 @@ def store_analyze_context_to_db(analyze_ctx: AnalyzeContext) -> None:
             SLSARequirement(
                 component=analyze_ctx.component,
                 requirement_name=key.name,
-                requirement_short_description=value.name,
+                requirement_short_description=key.value,
                 feedback=value.feedback,
             )

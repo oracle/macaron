@@ -70,250 +70,6 @@ class Category(Enum):
     """Related to common requirements for every trusted system involved in the supply chain."""
 
 
-# Contains the description, category and level each requirement correspond to.
-BUILD_REQ_DESC: dict[ReqName, tuple[str, Category, SLSALevels]] = {
-    ReqName.VCS: (
-        """
-        Every change to the source is tracked in a version control
-        """,
-        Category.SOURCE,
-        SLSALevels.LEVEL2,
-    ),
-    ReqName.VERIFIED_HISTORY: (
-        """
-        Every change in the revision's history has at least one strongly authenticated actor identity
-        (author, uploader, reviewer, etc.) and timestamp.
-        """,
-        Category.SOURCE,
-        SLSALevels.LEVEL3,
-    ),
-    ReqName.RETAINED_INDEFINITELY: (
-        """
-        The revision and its change history are preserved indefinitely and cannot be deleted,
-        except when subject to an established and transparent expectation for obliteration,
-        such as a legal or expectation requirement.
-        """,
-        Category.SOURCE,
-        SLSALevels.LEVEL3,
-    ),
-    ReqName.TWO_PERSON_REVIEWED: (
-        """
-        Every change in the revision's history was agreed to by two trusted persons prior to submission,
-        and both of these trusted persons were strongly authenticated.
-        """,
-        Category.SOURCE,
-        SLSALevels.LEVEL4,
-    ),
-    ReqName.SCRIPTED_BUILD: (
-        """
-        All build steps were fully defined in some sort of "build script".
-        The only manual command, if any, was to invoke the build script.
-        Examples:
-        - Build script is Makefile, invoked via make all.
-        - Build script is .github/workflows/build.yaml, invoked by GitHub Actions.
-        """,
-        Category.BUILD,
-        SLSALevels.LEVEL1,
-    ),
-    ReqName.BUILD_SERVICE: (
-        """
-        All build steps ran using some build service, not on a developer's workstation.
-        Examples: GitHub Actions, Google Cloud Build, Travis CI.
-        """,
-        Category.BUILD,
-        SLSALevels.LEVEL2,
-    ),
-    ReqName.BUILD_AS_CODE: (
-        """
-        The build definition and configuration is defined in source control and is executed by the build service.
-        """,
-        Category.BUILD,
-        SLSALevels.LEVEL3,
-    ),
-    ReqName.EPHEMERAL_ENVIRONMENT: (
-        """
-        The build service ensured that the build steps ran in an ephemeral environment, such as a container or VM,
-        provisioned solely for this build, and not reused from a prior build.
-        """,
-        Category.BUILD,
-        SLSALevels.LEVEL3,
-    ),
-    ReqName.ISOLATED: (
-        """
-        The build service ensured that the build steps ran in an isolated environment free of influence
-        from other build instances, whether prior or concurrent.
-        """,
-        Category.BUILD,
-        SLSALevels.LEVEL3,
-    ),
-    ReqName.PARAMETERLESS: (
-        """
-        The build output cannot be affected by user parameters other than the build entry point
-        and the top-level source location. In other words, the build is fully defined through the build script
-        and nothing else.
-        """,
-        Category.BUILD,
-        SLSALevels.LEVEL4,
-    ),
-    ReqName.HERMETIC: (
-        """
-        All transitive build steps, sources, and dependencies were fully declared up front with immutable references,
-        and the build steps ran with no network access.
-        """,
-        Category.BUILD,
-        SLSALevels.LEVEL4,
-    ),
-    ReqName.REPRODUCIBLE: (
-        """
-        Re-running the build steps with identical input artifacts results in bit-for-bit identical output.
-        Builds that cannot meet this MUST provide a justification why the build cannot be made reproducible.
-        """,
-        Category.BUILD,
-        SLSALevels.LEVEL4,
-    ),
-    ReqName.PROV_AVAILABLE: (
-        """
-        The provenance is available to the consumer in a format that the consumer accepts.
-        The format SHOULD be in-toto SLSA Provenance, but another format MAY be used if both
-        producer and consumer agree and it meets all the other requirements.
-        """,
-        Category.PROVENANCE,
-        SLSALevels.LEVEL1,
-    ),
-    ReqName.PROV_AUTH: (
-        """
-        The provenance's authenticity and integrity can be verified by the consumer. This SHOULD be through
-        a digital signature from a private key accessible only to the service generating the provenance.
-        """,
-        Category.PROVENANCE,
-        SLSALevels.LEVEL2,
-    ),
-    ReqName.PROV_SERVICE_GEN: (
-        """
-        The data in the provenance MUST be obtained from the build service (either because
-        the generator is the build service or because the provenance generator reads
-        the data directly from the build service).
-        Regular users of the service MUST NOT be able to inject or alter the contents.
-        """,
-        Category.PROVENANCE,
-        SLSALevels.LEVEL2,
-    ),
-    ReqName.PROV_NON_FALSIFIABLE: (
-        """
-        Provenance cannot be falsified by the build service's users.
-        """,
-        Category.PROVENANCE,
-        SLSALevels.LEVEL3,
-    ),
-    ReqName.PROV_DEPENDENCIES_COMPLETE: (
-        """
-        Provenance records all build dependencies that were available while running the build steps.
-        """,
-        Category.PROVENANCE,
-        SLSALevels.LEVEL4,
-    ),
-    ReqName.PROV_CONT_ARTI: (
-        """
-        The provenance MUST identify the output artifact via at least one cryptographic hash.
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL1,
-    ),
-    ReqName.PROV_CONT_BUILDER: (
-        """
-        The provenance identifies the entity that performed the build and generated the provenance.
-        This represents the entity that the consumer must trust.
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL1,
-    ),
-    ReqName.PROV_CONT_BUILD_INS: (
-        """
-        The provenance identifies the top-level instructions used to execute the build.
-        The identified instructions SHOULD be at the highest level available to the build.
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL1,
-    ),
-    ReqName.PROV_CONT_SOURCE: (
-        """
-        The provenance identifies the repository origin(s) for the source code used in the build.
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL2,
-    ),
-    ReqName.PROV_CONT_ENTRY: (
-        """
-        The provenance identifies the “entry point” of the build definition (see build-as-code)
-        used to drive the build including what source repo the configuration was read from.
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL3,
-    ),
-    ReqName.PROV_CONT_BUILD_PARAMS: (
-        """
-        The provenance includes all build parameters under a user's control.
-        See Parameterless for details. (At L3, the parameters must be listed; at L4, they must be empty.)
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL3,
-    ),
-    ReqName.PROV_CONT_TRANSITIVE_DEPS: (
-        """
-        The provenance includes all transitive dependencies listed in Provenance: Dependencies Complete requirement.
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL4,
-    ),
-    ReqName.PROV_CONT_REPRODUCIBLE_INFO: (
-        """
-        The provenance includes a boolean indicating whether build is intended to be reproducible and, if so,
-        all information necessary to reproduce the build. See Reproducible for more details.
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL4,
-    ),
-    ReqName.PROV_CONT_META_DATA: (
-        """
-        The provenance includes metadata to aid debugging and investigations.
-        This SHOULD at least include start and end timestamps and a permalink to debug logs.
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL1,
-    ),
-    ReqName.SECURITY: (
-        """
-        The system meets some baseline security standard to prevent compromise.
-        (Patching, vulnerability scanning, user isolation, transport security, secure boot, machine identity, etc.)
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL4,
-    ),
-    ReqName.ACCESS: (
-        """
-        All physical and remote access must be rare, logged, and gated behind multi-party approval.
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL4,
-    ),
-    ReqName.SUPERUSERS: (
-        """
-        Only a small number of platform admins may override the guarantees listed here.
-        Doing so MUST require approval of a second platform admin.
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL4,
-    ),
-    ReqName.EXPECTATION: (
-        """
-        Check whether the SLSA provenance for the produced artifact conforms to the expectation.
-        """,
-        Category.PROVENANCE_CONTENT,
-        SLSALevels.LEVEL3,
-    ),
-}
-
-
 class SLSAReq:
     """This class represents a SLSA requirement (e.g Version Controlled)."""
 
@@ -334,12 +90,23 @@ class SLSAReq:
         self.name = name
         self.desc = desc
         self.category = category
+        self.min_level_required = req_level
+
+    def __str__(self) -> str:  # pragma: no cover
+        """Return the status of a requirement in printable format."""
+        return f"{self.name} - {self.min_level_required.value}"
+
+
+class SLSAReqStatus:
+    """This class represents the status of a SLSA requirement."""
+
+    def __init__(self) -> None:
+        """Initialize instance."""
         self.is_addressed = False
         self.is_pass = False
         self.feedback = ""
-        self.min_level_required = req_level
 
-    def get_status(self) -> tuple:
+    def get_tuple(self) -> tuple:
         """Return the current feedback of a requirement.
 
         Returns
@@ -351,11 +118,6 @@ class SLSAReq:
         feedback : bool
             The feedback from the analyzer for this requirement.
         """
-        if self.is_addressed:
-            logger.debug("Return the status for requirement %s", self.name)
-        else:
-            logger.debug("Trying to return a feedback of unaddressed requirement %s", self.name)
-
         return self.is_addressed, self.is_pass, self.feedback
 
     def set_status(self, status: bool, fb_content: str) -> None:
@@ -372,34 +134,285 @@ class SLSAReq:
         self.feedback = fb_content
         self.is_addressed = True
 
-    def __str__(self) -> str:  # pragma: no cover
-        """Return the status of a requirement in printable format."""
-        return f"{self.name} - {self.min_level_required.value}"
 
-    def get_dict(self) -> dict:
-        """Get a dictionary representation for this SLSAReq instance.
-
-        Returns
-        -------
-        dict
+# Contains the description, category and level each requirement correspond to.
+_BUILD_REQ_LIST: list[tuple[ReqName, str, Category, SLSALevels]] = [
+    (
+        ReqName.VCS,
         """
-        return {
-            "Name": str(self.name),
-            "Description": " ".join((str(self.desc).replace("\n", "").strip()).split()),
-            "Category": str(self.category.value),
-            "Required from level": str(self.min_level_required.value),
-            "Is passing": str(self.is_pass),
-            "Justification": self.feedback,
-        }
+        Every change to the source is tracked in a version control
+        """,
+        Category.SOURCE,
+        SLSALevels.LEVEL2,
+    ),
+    (
+        ReqName.VERIFIED_HISTORY,
+        """
+        Every change in the revision's history has at least one strongly authenticated actor identity
+        (author, uploader, reviewer, etc.) and timestamp.
+        """,
+        Category.SOURCE,
+        SLSALevels.LEVEL3,
+    ),
+    (
+        ReqName.RETAINED_INDEFINITELY,
+        """
+        The revision and its change history are preserved indefinitely and cannot be deleted,
+        except when subject to an established and transparent expectation for obliteration,
+        such as a legal or expectation requirement.
+        """,
+        Category.SOURCE,
+        SLSALevels.LEVEL3,
+    ),
+    (
+        ReqName.TWO_PERSON_REVIEWED,
+        """
+        Every change in the revision's history was agreed to by two trusted persons prior to submission,
+        and both of these trusted persons were strongly authenticated.
+        """,
+        Category.SOURCE,
+        SLSALevels.LEVEL4,
+    ),
+    (
+        ReqName.SCRIPTED_BUILD,
+        """
+        All build steps were fully defined in some sort of "build script".
+        The only manual command, if any, was to invoke the build script.
+        Examples:
+        - Build script is Makefile, invoked via make all.
+        - Build script is .github/workflows/build.yaml, invoked by GitHub Actions.
+        """,
+        Category.BUILD,
+        SLSALevels.LEVEL1,
+    ),
+    (
+        ReqName.BUILD_SERVICE,
+        """
+        All build steps ran using some build service, not on a developer's workstation.
+        Examples: GitHub Actions, Google Cloud Build, Travis CI.
+        """,
+        Category.BUILD,
+        SLSALevels.LEVEL2,
+    ),
+    (
+        ReqName.BUILD_AS_CODE,
+        """
+        The build definition and configuration is defined in source control and is executed by the build service.
+        """,
+        Category.BUILD,
+        SLSALevels.LEVEL3,
+    ),
+    (
+        ReqName.EPHEMERAL_ENVIRONMENT,
+        """
+        The build service ensured that the build steps ran in an ephemeral environment, such as a container or VM,
+        provisioned solely for this build, and not reused from a prior build.
+        """,
+        Category.BUILD,
+        SLSALevels.LEVEL3,
+    ),
+    (
+        ReqName.ISOLATED,
+        """
+        The build service ensured that the build steps ran in an isolated environment free of influence
+        from other build instances, whether prior or concurrent.
+        """,
+        Category.BUILD,
+        SLSALevels.LEVEL3,
+    ),
+    (
+        ReqName.PARAMETERLESS,
+        """
+        The build output cannot be affected by user parameters other than the build entry point
+        and the top-level source location. In other words, the build is fully defined through the build script
+        and nothing else.
+        """,
+        Category.BUILD,
+        SLSALevels.LEVEL4,
+    ),
+    (
+        ReqName.HERMETIC,
+        """
+        All transitive build steps, sources, and dependencies were fully declared up front with immutable references,
+        and the build steps ran with no network access.
+        """,
+        Category.BUILD,
+        SLSALevels.LEVEL4,
+    ),
+    (
+        ReqName.REPRODUCIBLE,
+        """
+        Re-running the build steps with identical input artifacts results in bit-for-bit identical output.
+        Builds that cannot meet this MUST provide a justification why the build cannot be made reproducible.
+        """,
+        Category.BUILD,
+        SLSALevels.LEVEL4,
+    ),
+    (
+        ReqName.PROV_AVAILABLE,
+        """
+        The provenance is available to the consumer in a format that the consumer accepts.
+        The format SHOULD be in-toto SLSA Provenance, but another format MAY be used if both
+        producer and consumer agree and it meets all the other requirements.
+        """,
+        Category.PROVENANCE,
+        SLSALevels.LEVEL1,
+    ),
+    (
+        ReqName.PROV_AUTH,
+        """
+        The provenance's authenticity and integrity can be verified by the consumer. This SHOULD be through
+        a digital signature from a private key accessible only to the service generating the provenance.
+        """,
+        Category.PROVENANCE,
+        SLSALevels.LEVEL2,
+    ),
+    (
+        ReqName.PROV_SERVICE_GEN,
+        """
+        The data in the provenance MUST be obtained from the build service (either because
+        the generator is the build service or because the provenance generator reads
+        the data directly from the build service).
+        Regular users of the service MUST NOT be able to inject or alter the contents.
+        """,
+        Category.PROVENANCE,
+        SLSALevels.LEVEL2,
+    ),
+    (
+        ReqName.PROV_NON_FALSIFIABLE,
+        """
+        Provenance cannot be falsified by the build service's users.
+        """,
+        Category.PROVENANCE,
+        SLSALevels.LEVEL3,
+    ),
+    (
+        ReqName.PROV_DEPENDENCIES_COMPLETE,
+        """
+        Provenance records all build dependencies that were available while running the build steps.
+        """,
+        Category.PROVENANCE,
+        SLSALevels.LEVEL4,
+    ),
+    (
+        ReqName.PROV_CONT_ARTI,
+        """
+        The provenance MUST identify the output artifact via at least one cryptographic hash.
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL1,
+    ),
+    (
+        ReqName.PROV_CONT_BUILDER,
+        """
+        The provenance identifies the entity that performed the build and generated the provenance.
+        This represents the entity that the consumer must trust.
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL1,
+    ),
+    (
+        ReqName.PROV_CONT_BUILD_INS,
+        """
+        The provenance identifies the top-level instructions used to execute the build.
+        The identified instructions SHOULD be at the highest level available to the build.
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL1,
+    ),
+    (
+        ReqName.PROV_CONT_SOURCE,
+        """
+        The provenance identifies the repository origin(s) for the source code used in the build.
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL2,
+    ),
+    (
+        ReqName.PROV_CONT_ENTRY,
+        """
+        The provenance identifies the “entry point” of the build definition (see build-as-code)
+        used to drive the build including what source repo the configuration was read from.
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL3,
+    ),
+    (
+        ReqName.PROV_CONT_BUILD_PARAMS,
+        """
+        The provenance includes all build parameters under a user's control.
+        See Parameterless for details. (At L3, the parameters must be listed; at L4, they must be empty.)
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL3,
+    ),
+    (
+        ReqName.PROV_CONT_TRANSITIVE_DEPS,
+        """
+        The provenance includes all transitive dependencies listed in Provenance: Dependencies Complete requirement.
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL4,
+    ),
+    (
+        ReqName.PROV_CONT_REPRODUCIBLE_INFO,
+        """
+        The provenance includes a boolean indicating whether build is intended to be reproducible and, if so,
+        all information necessary to reproduce the build. See Reproducible for more details.
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL4,
+    ),
+    (
+        ReqName.PROV_CONT_META_DATA,
+        """
+        The provenance includes metadata to aid debugging and investigations.
+        This SHOULD at least include start and end timestamps and a permalink to debug logs.
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL1,
+    ),
+    (
+        ReqName.SECURITY,
+        """
+        The system meets some baseline security standard to prevent compromise.
+        (Patching, vulnerability scanning, user isolation, transport security, secure boot, machine identity, etc.)
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL4,
+    ),
+    (
+        ReqName.ACCESS,
+        """
+        All physical and remote access must be rare, logged, and gated behind multi-party approval.
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL4,
+    ),
+    (
+        ReqName.SUPERUSERS,
+        """
+        Only a small number of platform admins may override the guarantees listed here.
+        Doing so MUST require approval of a second platform admin.
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL4,
+    ),
+    (
+        ReqName.EXPECTATION,
+        """
+        Check whether the SLSA provenance for the produced artifact conforms to the expectation.
+        """,
+        Category.PROVENANCE_CONTENT,
+        SLSALevels.LEVEL3,
+    ),
+]
+
+BUILD_REQ_DESC: dict[ReqName, SLSAReq] = {
+    req[0]: SLSAReq(req[0].value, req[1], req[2], req[3]) for req in _BUILD_REQ_LIST
+}
 
 
-def get_requirements_dict() -> dict:
-    """Get a dictionary that stores the name of each requirement and its details."""
-    result = {}
-    for req_name, req_details in BUILD_REQ_DESC.items():
-        desc = req_details[0]
-        category = req_details[1]
-        min_level = req_details[2]
-        result[req_name] = SLSAReq(req_name.value, desc, category, min_level)
-
-    return result
+def create_requirement_status_dict() -> dict[ReqName, SLSAReqStatus]:
+    """Create a dictionary containing a new, unfilled, SLSA requirement status object for each known SLSA requirement."""
+    return {key: SLSAReqStatus() for key in BUILD_REQ_DESC}

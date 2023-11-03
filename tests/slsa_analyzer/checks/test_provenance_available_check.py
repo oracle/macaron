@@ -10,7 +10,7 @@ import pytest
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.database.table_definitions import Repository
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.provenance_available_check import ProvenanceAvailableCheck
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
@@ -60,7 +60,6 @@ class MockGhAPIClient(GhAPIClient):
 def test_provenance_available_check_with_repos(macaron_path: Path, repository: Repository, expected: str) -> None:
     """Test the provenance available check on different types of repositories."""
     check = ProvenanceAvailableCheck()
-    check_result = CheckResult(justification=[])  # type: ignore
     github_actions = MockGitHubActions()
     api_client = MockGhAPIClient({"headers": {}, "query": []})
     github_actions.api_client = api_client
@@ -79,13 +78,12 @@ def test_provenance_available_check_with_repos(macaron_path: Path, repository: R
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     ctx.component.repository = repository
     ctx.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(ctx, check_result) == expected
+    assert check.run_check(ctx).result_type == expected
 
 
 def test_provenance_available_check_on_ci(macaron_path: Path) -> None:
     """Test the provenance available check on different types of CI services."""
     check = ProvenanceAvailableCheck()
-    check_result = CheckResult(justification=[])  # type: ignore
     github_actions = MockGitHubActions()
     api_client = MockGhAPIClient({"headers": {}, "query": []})
     github_actions.api_client = api_client
@@ -114,22 +112,22 @@ def test_provenance_available_check_on_ci(macaron_path: Path) -> None:
 
     # Repo doesn't have a provenance.
     api_client.release = {"assets": [{"name": "attestation.intoto", "url": "URL", "size": 10}]}
-    assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+    assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
     api_client.release = {"assets": [{"name": "attestation.intoto.jsonl", "url": "URL", "size": 10}]}
 
     # Test Jenkins.
     ci_info["service"] = jenkins
-    assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+    assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
     # Test Travis.
     ci_info["service"] = travis
-    assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+    assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
     # Test Circle CI.
     ci_info["service"] = circle_ci
-    assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+    assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
     # Test GitLab CI.
     ci_info["service"] = gitlab_ci
-    assert check.run_check(ctx, check_result) == CheckResultType.FAILED
+    assert check.run_check(ctx).result_type == CheckResultType.FAILED

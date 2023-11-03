@@ -13,15 +13,15 @@ from hypothesis.strategies import SearchStrategy, binary, booleans, integers, li
 
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType
 from macaron.slsa_analyzer.registry import Registry
 
 
 class MockCheck(BaseCheck):
     """BaseCheck with no-op impl for abstract method"""
 
-    def run_check(self, ctx: AnalyzeContext, check_result: CheckResult) -> CheckResultType:
-        return CheckResultType.UNKNOWN
+    def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
+        return CheckResultData(justification=[], result_tables=[], result_type=CheckResultType.UNKNOWN)
 
 
 # pylint: disable=protected-access

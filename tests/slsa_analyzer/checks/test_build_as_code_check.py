@@ -5,6 +5,7 @@
 
 import os
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -16,8 +17,8 @@ from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.build_tool.poetry import Poetry
-from macaron.slsa_analyzer.checks.build_as_code_check import BuildAsCodeCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.checks.build_as_code_check import BuildAsCodeCheck, BuildAsCodeFacts
+from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType, GitHubActions, GitHubNode
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
@@ -41,7 +42,6 @@ def test_build_as_code_check(
 ) -> None:
     """Test the Build As Code Check."""
     check = BuildAsCodeCheck()
-    check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
     bash_commands = BashCommands(
         caller_path="source_file",
         CI_path="ci_file",
@@ -62,91 +62,91 @@ def test_build_as_code_check(
     # The target repo uses Maven build tool but does not deploy artifacts.
     use_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     use_build_tool.dynamic_data["build_spec"]["tools"] = [maven_tool]
-    assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
+    assert check.run_check(use_build_tool).result_type == CheckResultType.FAILED
 
     # The target repo uses Gradle build tool but does not deploy artifacts.
     use_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     use_build_tool.dynamic_data["build_spec"]["tools"] = [gradle_tool]
-    assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
+    assert check.run_check(use_build_tool).result_type == CheckResultType.FAILED
 
     # The target repo uses Poetry build tool but does not deploy artifacts.
     use_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     use_build_tool.dynamic_data["build_spec"]["tools"] = [poetry_tool]
-    assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
+    assert check.run_check(use_build_tool).result_type == CheckResultType.FAILED
 
     # The target repo uses Pip build tool but does not deploy artifacts.
     use_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     use_build_tool.dynamic_data["build_spec"]["tools"] = [pip_tool]
-    assert check.run_check(use_build_tool, check_result) == CheckResultType.FAILED
+    assert check.run_check(use_build_tool).result_type == CheckResultType.FAILED
 
     # The target repo does not use a build tool.
     no_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     no_build_tool.dynamic_data["build_spec"]["tools"] = []
-    assert check.run_check(no_build_tool, check_result) == CheckResultType.FAILED
+    assert check.run_check(no_build_tool).result_type == CheckResultType.FAILED
 
     # Use mvn deploy to deploy the artifact.
     maven_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     bash_commands["commands"] = [["mvn", "deploy"]]
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(maven_deploy, check_result) == CheckResultType.PASSED
+    assert check.run_check(maven_deploy).result_type == CheckResultType.PASSED
 
     # Use the mvn in the local directory to deploy the artifact.
     bash_commands["commands"] = [["./mvn", "deploy"]]
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(maven_deploy, check_result) == CheckResultType.PASSED
+    assert check.run_check(maven_deploy).result_type == CheckResultType.PASSED
 
     # Use an invalid build command that has mvn.
     bash_commands["commands"] = [["mvnblah", "deploy"]]
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
+    assert check.run_check(maven_deploy).result_type == CheckResultType.FAILED
 
     # Use mvn but do not deploy artifacts.
     no_maven_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     no_maven_deploy.dynamic_data["build_spec"]["tools"] = [maven_tool]
     bash_commands["commands"] = [["mvn", "verify"]]
     no_maven_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(no_maven_deploy, check_result) == CheckResultType.FAILED
+    assert check.run_check(no_maven_deploy).result_type == CheckResultType.FAILED
 
     # Use an invalid goal that has deploy keyword.
     bash_commands["commands"] = [["mvnb", "deployblah"]]
     no_maven_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(no_maven_deploy, check_result) == CheckResultType.FAILED
+    assert check.run_check(no_maven_deploy).result_type == CheckResultType.FAILED
 
     # Use gradle to deploy the artifact.
     gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool]
     bash_commands["commands"] = [["./gradlew", "publishToSonatype"]]
     gradle_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(gradle_deploy, check_result) == CheckResultType.PASSED
+    assert check.run_check(gradle_deploy).result_type == CheckResultType.PASSED
 
     # Use poetry publish to publish the artifact.
     poetry_publish = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     poetry_publish.dynamic_data["build_spec"]["tools"] = [poetry_tool]
     bash_commands["commands"] = [["poetry", "publish"]]
     poetry_publish.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(poetry_publish, check_result) == CheckResultType.PASSED
+    assert check.run_check(poetry_publish).result_type == CheckResultType.PASSED
 
     # Use Poetry but do not deploy artifacts.
     no_poetry_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     no_poetry_deploy.dynamic_data["build_spec"]["tools"] = [poetry_tool]
     bash_commands["commands"] = [["poetry", "upload"]]
     no_poetry_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(no_maven_deploy, check_result) == CheckResultType.FAILED
+    assert check.run_check(no_maven_deploy).result_type == CheckResultType.FAILED
 
     # Use twine upload to deploy the artifact.
     twine_upload = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     twine_upload.dynamic_data["build_spec"]["tools"] = [pip_tool]
     bash_commands["commands"] = [["twine", "upload", "dist/*"]]
     twine_upload.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(twine_upload, check_result) == CheckResultType.PASSED
+    assert check.run_check(twine_upload).result_type == CheckResultType.PASSED
 
     # Use flit publish to deploy the artifact.
     flit_publish = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     flit_publish.dynamic_data["build_spec"]["tools"] = [pip_tool]
     bash_commands["commands"] = [["flit", "publish"]]
     flit_publish.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(flit_publish, check_result) == CheckResultType.PASSED
+    assert check.run_check(flit_publish).result_type == CheckResultType.PASSED
 
     # Test Jenkins.
     maven_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
@@ -154,7 +154,7 @@ def test_build_as_code_check(
     ci_info["service"] = jenkins_service
     bash_commands["commands"] = []
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
+    assert check.run_check(maven_deploy).result_type == CheckResultType.FAILED
 
     # Test Travis.
     maven_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
@@ -162,7 +162,7 @@ def test_build_as_code_check(
     ci_info["service"] = travis_service
     bash_commands["commands"] = []
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
+    assert check.run_check(maven_deploy).result_type == CheckResultType.FAILED
 
     # Test Circle CI.
     maven_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
@@ -170,7 +170,7 @@ def test_build_as_code_check(
     ci_info["service"] = circle_ci_service
     bash_commands["commands"] = []
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
+    assert check.run_check(maven_deploy).result_type == CheckResultType.FAILED
 
     # Test GitLab CI.
     maven_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
@@ -178,34 +178,34 @@ def test_build_as_code_check(
     ci_info["service"] = gitlab_ci_service
     bash_commands["commands"] = []
     maven_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(maven_deploy, check_result) == CheckResultType.FAILED
+    assert check.run_check(maven_deploy).result_type == CheckResultType.FAILED
 
     # Using both gradle and maven with valid commands to deploy
     multi_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     multi_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
     bash_commands["commands"] = [["./gradlew", "publishToSonatype"], ["mvn", "deploy"]]
     multi_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(multi_deploy, check_result) == CheckResultType.PASSED
+    assert check.run_check(multi_deploy).result_type == CheckResultType.PASSED
 
     # Using both gradle and maven, but maven incorrect (singular failure in a list)
     multi_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     multi_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
     bash_commands["commands"] = [["./gradlew", "publishToSonatype"], ["mvn", "verify"]]
     multi_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(multi_deploy, check_result) == CheckResultType.PASSED
+    assert check.run_check(multi_deploy).result_type == CheckResultType.PASSED
 
     # Using both gradle and maven, both incorrect
     multi_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     multi_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
     bash_commands["commands"] = [["./gradlew", "build"], ["mvn", "verify"]]
     multi_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(multi_deploy, check_result) == CheckResultType.FAILED
+    assert check.run_check(multi_deploy).result_type == CheckResultType.FAILED
 
     # No build tools present
     none_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     none_deploy.dynamic_data["build_spec"]["tools"] = []
     none_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(none_deploy, check_result) == CheckResultType.FAILED
+    assert check.run_check(none_deploy).result_type == CheckResultType.FAILED
 
 
 def test_gha_workflow_deployment(
@@ -215,7 +215,6 @@ def test_gha_workflow_deployment(
 ) -> None:
     """Test the use of verified GitHub Actions to deploy."""
     check = BuildAsCodeCheck()
-    check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
     ci_info = CIInfo(
         service=github_actions_service,
         bash_commands=[],
@@ -246,7 +245,7 @@ def test_gha_workflow_deployment(
     root.add_callee(callee)
     github_actions_service.build_call_graph_from_node(callee)
     ci_info["callgraph"] = gh_cg
-    assert check.run_check(gha_deploy, check_result) == CheckResultType.PASSED
+    assert check.run_check(gha_deploy).result_type == CheckResultType.PASSED
 
     # This Github Actions workflow is not using a trusted action to publish the artifact.
     root = GitHubNode(name="root", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
@@ -263,7 +262,7 @@ def test_gha_workflow_deployment(
     root.add_callee(callee)
     github_actions_service.build_call_graph_from_node(callee)
     ci_info["callgraph"] = gh_cg
-    assert check.run_check(gha_deploy, check_result) == CheckResultType.FAILED
+    assert check.run_check(gha_deploy).result_type == CheckResultType.FAILED
 
 
 @pytest.mark.parametrize(
@@ -287,13 +286,12 @@ def test_travis_ci_deploy(
         latest_release={},
         provenances=[],
     )
-    check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
     gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     gradle_deploy.component.repository.fs_path = str(repo_path.absolute())
     gradle_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool]
     gradle_deploy.dynamic_data["ci_services"] = [ci_info]
 
-    assert check.run_check(gradle_deploy, check_result) == expect_result
+    assert check.run_check(gradle_deploy).result_type == expect_result
 
 
 def test_multibuild_facts_saved(
@@ -312,7 +310,6 @@ def test_multibuild_facts_saved(
         job_name="job",
         step_name="step",
     )
-    check_result = CheckResult(justification=[], result_tables=[])  # type: ignore
     ci_info = CIInfo(
         service=github_actions_service,
         bash_commands=[bash_commands],
@@ -325,9 +322,10 @@ def test_multibuild_facts_saved(
     multi_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     multi_deploy.dynamic_data["build_spec"]["tools"] = [gradle_tool, maven_tool]
     multi_deploy.dynamic_data["ci_services"] = [ci_info]
-    assert check.run_check(multi_deploy, check_result) == CheckResultType.PASSED
+    check_result = check.run_check(multi_deploy)
+    assert check_result.result_type == CheckResultType.PASSED
 
     # Check facts exist for both gradle and maven
-    existing_facts = [f.build_tool_name for f in check_result["result_tables"]]
+    existing_facts = [cast(BuildAsCodeFacts, f).build_tool_name for f in check_result.result_tables]
     assert gradle_tool.name in existing_facts
     assert maven_tool.name in existing_facts
