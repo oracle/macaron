@@ -155,7 +155,7 @@ echo "apache/maven: Analyzing with PURL and repository path without dependency r
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.json
 JSON_RESULT=$WORKSPACE/output/reports/maven/apache/maven/maven.json
-$RUN_MACARON analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
+$RUN_MACARON analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
@@ -166,7 +166,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
-$RUN_MACARON analyze -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 || log_fail
+$RUN_MACARON analyze -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
@@ -179,7 +179,7 @@ SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/apache_maven_
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/apache_maven_with_sbom_provided.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 
-$RUN_MACARON analyze -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 -sbom "$SBOM_FILE" || log_fail
+$RUN_MACARON analyze -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b -sbom "$SBOM_FILE" || log_fail
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
@@ -303,7 +303,7 @@ echo "Test using the default template file."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
-$RUN_MACARON analyze -rp https://github.com/apache/maven --skip-deps -b master -d 6767f2500f1d005924ccff27f04350c253858a84 -g $WORKSPACE/src/macaron/output_reporter/templates/macaron.html || log_fail
+$RUN_MACARON analyze -rp https://github.com/apache/maven --skip-deps -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b -g $WORKSPACE/src/macaron/output_reporter/templates/macaron.html || log_fail
 
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
@@ -352,7 +352,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
-$RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com analyze -rp apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 || log_fail
+$RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com analyze -rp apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
@@ -388,7 +388,7 @@ declare -a COMPARE_FILES=(
     "mockito.json"
 )
 
-$RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com/ analyze -rp apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
+$RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com/ analyze -rp apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
 for i in "${COMPARE_FILES[@]}"
 do
     python $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
@@ -404,7 +404,7 @@ git clone $WORKSPACE/output/git_repos/github_com/apache/maven $WORKSPACE/output/
 JSON_EXPECTED=$WORKSPACE/output/reports/local_repos/maven/maven.json
 HTML_EXPECTED=$WORKSPACE/output/reports/local_repos/maven/maven.html
 
-$RUN_MACARON -lr $WORKSPACE/output/git_repos/local_repos/ analyze -rp test_repo -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
+$RUN_MACARON -lr $WORKSPACE/output/git_repos/local_repos/ analyze -rp test_repo -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
 
 # We don't compare the report content because the remote_path fields in the reports are undeterministic when running
 # this test locally and running it in the GitHub Actions runner. We only check if the reports are generated as

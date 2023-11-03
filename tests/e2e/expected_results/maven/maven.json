@@ -1,20 +1,66 @@
 {
     "metadata": {
-        "timestamps": "2023-09-12 17:28:08"
+        "timestamps": "2023-11-02 15:56:10",
+        "has_passing_check": true
     },
     "target": {
         "info": {
-            "full_name": "pkg:github.com/apache/maven@6767f2500f1d005924ccff27f04350c253858a84",
+            "full_name": "pkg:github.com/apache/maven@3fc399318edef0d5ba593723a24fff64291d6f9b",
             "local_cloned_path": "git_repos/github_com/apache/maven",
-            "remote_path": "https://github.com/apache/maven",
+            "remote_path": "https://github.com/apache/maven.git",
             "branch": "master",
-            "commit_hash": "6767f2500f1d005924ccff27f04350c253858a84",
-            "commit_date": "2022-05-29T13:35:24+02:00"
+            "commit_hash": "3fc399318edef0d5ba593723a24fff64291d6f9b",
+            "commit_date": "2023-10-20T21:20:23+02:00"
         },
         "provenances": {
             "is_inferred": true,
             "content": {
                 "github_actions": [
+                    {
+                        "_type": "https://in-toto.io/Statement/v0.1",
+                        "subject": [],
+                        "predicateType": "https://slsa.dev/provenance/v0.2",
+                        "predicate": {
+                            "builder": {
+                                "id": "https://github.com/apache/maven/blob/3fc399318edef0d5ba593723a24fff64291d6f9b/.github/workflows/maven.yml"
+                            },
+                            "buildType": "Custom github_actions",
+                            "invocation": {
+                                "configSource": {
+                                    "uri": "https://github.com/apache/maven.git@refs/heads/master",
+                                    "digest": {
+                                        "sha1": "3fc399318edef0d5ba593723a24fff64291d6f9b"
+                                    },
+                                    "entryPoint": "https://github.com/apache/maven/blob/3fc399318edef0d5ba593723a24fff64291d6f9b/.github/workflows/maven.yml"
+                                },
+                                "parameters": {},
+                                "environment": {}
+                            },
+                            "buildConfig": {
+                                "jobID": "<STRING>",
+                                "stepID": "<STRING>"
+                            },
+                            "metadata": {
+                                "buildInvocationId": "",
+                                "buildStartedOn": "<TIMESTAMP>",
+                                "buildFinishedOn": "<TIMESTAMP>",
+                                "completeness": {
+                                    "parameters": "false",
+                                    "environment": "false",
+                                    "materials": "false"
+                                },
+                                "reproducible": "false"
+                            },
+                            "materials": [
+                                {
+                                    "uri": "<URI>",
+                                    "digest": {}
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "jenkins": [
                     {
                         "_type": "https://in-toto.io/Statement/v0.1",
                         "subject": [],
@@ -59,74 +105,18 @@
                         }
                     }
                 ],
-                "jenkins": [
-                    {
-                        "_type": "https://in-toto.io/Statement/v0.1",
-                        "subject": [],
-                        "predicateType": "https://slsa.dev/provenance/v0.2",
-                        "predicate": {
-                            "builder": {
-                                "id": "Jenkinsfile"
-                            },
-                            "buildType": "Custom jenkins",
-                            "invocation": {
-                                "configSource": {
-                                    "uri": "https://github.com/apache/maven@refs/heads/master",
-                                    "digest": {
-                                        "sha1": "6767f2500f1d005924ccff27f04350c253858a84"
-                                    },
-                                    "entryPoint": "Jenkinsfile"
-                                },
-                                "parameters": {},
-                                "environment": {}
-                            },
-                            "buildConfig": {
-                                "jobID": "<STRING>",
-                                "stepID": "<STRING>"
-                            },
-                            "metadata": {
-                                "buildInvocationId": "<STRING>",
-                                "buildStartedOn": "<TIMESTAMP>",
-                                "buildFinishedOn": "<TIMESTAMP>",
-                                "completeness": {
-                                    "parameters": "false",
-                                    "environment": "false",
-                                    "materials": "false"
-                                },
-                                "reproducible": "false"
-                            },
-                            "materials": [
-                                {
-                                    "uri": "<URI>",
-                                    "digest": {}
-                                }
-                            ]
-                        }
-                    }
-                ],
                 "Maven Central Registry": []
             }
         },
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 6,
-                "PASSED": 4,
+                "FAILED": 7,
+                "PASSED": 3,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
             "results": [
-                {
-                    "check_id": "mcn_build_as_code_1",
-                    "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
-                    "slsa_requirements": [
-                        "Build as code - SLSA Level 3"
-                    ],
-                    "justification": [
-                        "The target repository uses build tool maven in jenkins using artifactsPublisher to deploy."
-                    ],
-                    "result_type": "PASSED"
-                },
                 {
                     "check_id": "mcn_build_script_1",
                     "check_description": "Check if the target repo has a valid build script.",
@@ -145,7 +135,12 @@
                         "Build service - SLSA Level 2"
                     ],
                     "justification": [
-                        "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
+                        {
+                            "The target repository uses build tool maven to build": "https://github.com/apache/maven/blob/3fc399318edef0d5ba593723a24fff64291d6f9b/.github/workflows/maven.yml",
+                            "The build is triggered by": "https://github.com/apache/maven/blob/3fc399318edef0d5ba593723a24fff64291d6f9b/.github/workflows/maven.yml"
+                        },
+                        "Build command: ['mvn', 'verify', '-e', '-B', '-V', '-DdistributionFileName=apache-maven']",
+                        "However, could not find a passing workflow run."
                     ],
                     "result_type": "PASSED"
                 },
@@ -157,10 +152,21 @@
                     ],
                     "justification": [
                         {
-                            "This is a Git repository": "https://github.com/apache/maven"
+                            "This is a Git repository": "https://github.com/apache/maven.git"
                         }
                     ],
                     "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_build_as_code_1",
+                    "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "The target repository does not use maven to deploy."
+                    ],
+                    "result_type": "FAILED"
                 },
                 {
                     "check_id": "mcn_infer_artifact_pipeline_1",
@@ -169,7 +175,7 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "Unable to find a publishing timestamp for the artifact."
+                        "Check mcn_infer_artifact_pipeline_1 is set to FAILED because mcn_build_as_code_1 FAILED."
                     ],
                     "result_type": "FAILED"
                 },
@@ -183,7 +189,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Could not find any SLSA provenances."
+                        "Could not find any SLSA or Witness provenances."
                     ],
                     "result_type": "FAILED"
                 },
@@ -244,31 +250,35 @@
         }
     },
     "dependencies": {
-        "analyzed_deps": 0,
-        "unique_dep_repos": 0,
+        "analyzed_deps": 45,
+        "unique_dep_repos": 36,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
-                "num_deps_pass": 0
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 30
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 1
             },
             {
                 "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_infer_artifact_pipeline_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_build_as_code_1",
-                "num_deps_pass": 0
+                "num_deps_pass": 2
             },
             {
-                "check_id": "mcn_version_control_system_1",
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 24
+            },
+            {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 30
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
                 "num_deps_pass": 0
             },
             {
@@ -276,18 +286,285 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_script_1",
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             }
         ],
-        "dep_status": []
+        "dep_status": [
+            {
+                "id": "org.junit.jupiter:junit-jupiter-api",
+                "description": "Analysis Completed.",
+                "report": "junit-jupiter-api.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.hamcrest:hamcrest-core",
+                "description": "Analysis Completed.",
+                "report": "hamcrest-core.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.eclipse.sisu:org.eclipse.sisu.plexus",
+                "description": "Analysis Completed.",
+                "report": "org_eclipse_sisu_plexus.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "commons-cli:commons-cli",
+                "description": "Analysis Completed.",
+                "report": "commons-cli.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.apache.maven.wagon:wagon-http",
+                "description": "Analysis Completed.",
+                "report": "wagon-http.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.apache.maven.wagon:wagon-file",
+                "description": "Analysis Completed.",
+                "report": "wagon-file.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.slf4j:jcl-over-slf4j",
+                "description": "Analysis Completed.",
+                "report": "jcl-over-slf4j.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.apache.maven.resolver:maven-resolver-connector-basic",
+                "description": "Analysis Completed.",
+                "report": "maven-resolver-connector-basic.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.apache.maven.resolver:maven-resolver-transport-file",
+                "description": "Analysis Completed.",
+                "report": "maven-resolver-transport-file.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.apache.maven.resolver:maven-resolver-transport-http",
+                "description": "Analysis Completed.",
+                "report": "maven-resolver-transport-http.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.apache.maven.resolver:maven-resolver-transport-wagon",
+                "description": "Analysis Completed.",
+                "report": "maven-resolver-transport-wagon.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.fusesource.jansi:jansi",
+                "description": "Analysis Completed.",
+                "report": "jansi.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.ow2.asm:asm",
+                "description": "Analysis Completed.",
+                "report": "asm.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.apache.maven.resolver:maven-resolver-api",
+                "description": "Analysis Completed.",
+                "report": "maven-resolver-api.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.apache.maven.resolver:maven-resolver-util",
+                "description": "Analysis Completed.",
+                "report": "maven-resolver-util.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.apache.maven.resolver:maven-resolver-impl",
+                "description": "Analysis Completed.",
+                "report": "maven-resolver-impl.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "javax.inject:javax.inject",
+                "description": "Analysis Completed.",
+                "report": "javax_inject.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.codehaus.plexus:plexus-interpolation",
+                "description": "Analysis Completed.",
+                "report": "plexus-interpolation.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.apache.maven.wagon:wagon-provider-api",
+                "description": "Analysis Completed.",
+                "report": "wagon-provider-api.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.codehaus.plexus:plexus-testing",
+                "description": "Analysis Completed.",
+                "report": "plexus-testing.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.mockito:mockito-core",
+                "description": "Analysis Completed.",
+                "report": "mockito-core.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.apache.maven.resolver:maven-resolver-spi",
+                "description": "Analysis Completed.",
+                "report": "maven-resolver-spi.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "commons-io:commons-io",
+                "description": "Analysis Completed.",
+                "report": "commons-io.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.eclipse.sisu:org.eclipse.sisu.inject",
+                "description": "Analysis Completed.",
+                "report": "org_eclipse_sisu_inject.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "com.google.inject:guice",
+                "description": "Analysis Completed.",
+                "report": "guice.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "com.google.guava:guava",
+                "description": "Analysis Completed.",
+                "report": "guava.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "com.google.guava:failureaccess",
+                "description": "https://github.com/google/guava is already analyzed.",
+                "report": "",
+                "status": "DUPLICATED REPO URL"
+            },
+            {
+                "id": "org.codehaus.plexus:plexus-classworlds",
+                "description": "Analysis Completed.",
+                "report": "plexus-classworlds.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.slf4j:slf4j-api",
+                "description": "https://github.com/qos-ch/slf4j is already analyzed.",
+                "report": "",
+                "status": "DUPLICATED REPO URL"
+            },
+            {
+                "id": "org.slf4j:slf4j-simple",
+                "description": "https://github.com/qos-ch/slf4j is already analyzed.",
+                "report": "",
+                "status": "DUPLICATED REPO URL"
+            },
+            {
+                "id": "commons-jxpath:commons-jxpath",
+                "description": "Analysis Completed.",
+                "report": "commons-jxpath.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.mockito:mockito-inline",
+                "description": "https://github.com/mockito/mockito is already analyzed.",
+                "report": "",
+                "status": "DUPLICATED REPO URL"
+            },
+            {
+                "id": "org.hamcrest:hamcrest-library",
+                "description": "https://github.com/hamcrest/JavaHamcrest is already analyzed.",
+                "report": "",
+                "status": "DUPLICATED REPO URL"
+            },
+            {
+                "id": "org.xmlunit:xmlunit-assertj",
+                "description": "Analysis Completed.",
+                "report": "xmlunit-assertj.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.junit.jupiter:junit-jupiter-params",
+                "description": "https://github.com/junit-team/junit5 is already analyzed.",
+                "report": "",
+                "status": "DUPLICATED REPO URL"
+            },
+            {
+                "id": "javax.annotation:javax.annotation-api",
+                "description": "Analysis Completed.",
+                "report": "javax_annotation-api.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.codehaus.plexus:plexus-sec-dispatcher",
+                "description": "Analysis Completed.",
+                "report": "plexus-sec-dispatcher.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.codehaus.plexus:plexus-cipher",
+                "description": "Analysis Completed.",
+                "report": "plexus-cipher.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "ch.qos.logback:logback-classic",
+                "description": "Analysis Completed.",
+                "report": "logback-classic.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.xmlunit:xmlunit-core",
+                "description": "https://github.com/xmlunit/xmlunit is already analyzed.",
+                "report": "",
+                "status": "DUPLICATED REPO URL"
+            },
+            {
+                "id": "org.xmlunit:xmlunit-matchers",
+                "description": "https://github.com/xmlunit/xmlunit is already analyzed.",
+                "report": "",
+                "status": "DUPLICATED REPO URL"
+            },
+            {
+                "id": "org.codehaus.plexus:plexus-xml",
+                "description": "Analysis Completed.",
+                "report": "plexus-xml.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.openjdk.jmh:jmh-core",
+                "description": "Analysis Completed.",
+                "report": "jmh-core.html",
+                "status": "AVAILABLE"
+            },
+            {
+                "id": "org.openjdk.jmh:jmh-generator-annprocess",
+                "description": "https://github.com/openjdk/jmh is already analyzed.",
+                "report": "",
+                "status": "DUPLICATED REPO URL"
+            },
+            {
+                "id": "com.fasterxml.woodstox:woodstox-core",
+                "description": "Analysis Completed.",
+                "report": "woodstox-core.html",
+                "status": "AVAILABLE"
+            }
+        ]
     }
 }
