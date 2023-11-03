@@ -253,6 +253,8 @@ def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
     parts = []
     numeric_parts = 0
     has_non_numeric_suffix = False
+    # Detect versions that end with a zero, so the zero can be made optional.
+    has_trailing_zero = len(split) > 2 and split[-1] == "0"
     for count, part in enumerate(split):
         # Validate the split part by checking it is only comprised of alphanumeric characters.
         valid = validation_pattern.match(part)
@@ -260,9 +262,7 @@ def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
             continue
         parts.append(part)
 
-        # Detect versions that end with a zero, so the zero can be made optional.
-        has_trailing_zero = len(split) > 2 and count == len(split) - 1 and part == "0"
-        numeric_only = numeric_only_pattern.match(str(part))
+        numeric_only = numeric_only_pattern.match(part)
 
         if not has_non_numeric_suffix and not numeric_only:
             # A non-numeric part enables the flag for treating this and all remaining parts as version suffix parts.
@@ -282,7 +282,7 @@ def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
             this_version_pattern = this_version_pattern + INFIX_3
 
         # Add the current part to the pattern.
-        this_version_pattern = this_version_pattern + str(part)
+        this_version_pattern = this_version_pattern + part
 
         if has_trailing_zero or has_non_numeric_suffix:
             # Complete the optional capture group.
@@ -353,7 +353,7 @@ def _match_tags(tag_list: list[TagReference], artifact_name: str, artifact_versi
             if not suffix:
                 filtered_tags.append(item)
                 continue
-            if suffix == parts[len(parts) - 1]:
+            if suffix == parts[-1]:
                 filtered_tags.append(item)
                 continue
 
@@ -367,8 +367,7 @@ def _match_tags(tag_list: list[TagReference], artifact_name: str, artifact_versi
             continue
         if "/" in prefix:
             # Exclude prefix parts that exists before a forward slash, e.g. rel/
-            split = prefix.split("/")
-            prefix = split[len(split) - 1]
+            _, _, prefix = prefix.rpartition("/")
         if prefix.lower() == artifact_name.lower():
             named_tags.append(item)
 
@@ -407,12 +406,12 @@ def _count_parts_in_tag(tag_version: str, tag_suffix: str, version_parts: list[s
     tag_version_text = tag_version
     for part in version_parts:
         if part in tag_version_text:
-            tag_version_text.replace(part, "", 1)
+            tag_version_text = tag_version_text.replace(part, "", 1)
             count = count - 1
 
     # Try to reduce the count further based on the tag suffix.
     if tag_suffix:
-        last_part = version_parts[len(version_parts) - 1]
+        last_part = version_parts[-1]
         # The tag suffix might consist of multiple version parts, e.g. RC1.RELEASE
         suffix_split = split_pattern.split(tag_suffix)
         if len(suffix_split) > 1:

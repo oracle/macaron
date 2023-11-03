@@ -107,6 +107,6 @@ def test_get_commit_from_version() -> None:
 
 def _test_version(git_obj: Git, purl: PackageURL, hash_target: str) -> None:
     """Retrieve commit matching version and check commit hash is correct."""
-    branch, digest = commit_finder.get_commit_from_version(git_obj, purl)
+    branch, digest = commit_finder.get_commit_from_version(git_obj, purl.name or "", purl.version or "")
     assert branch
     assert git_obj.get_commit(digest).hash == hash_target
