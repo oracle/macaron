@@ -1,6 +1,7 @@
 {
     "metadata": {
-        "timestamps": "2023-09-22 14:22:34"
+        "timestamps": "2023-10-06 15:33:53",
+        "has_passing_check": true
     },
     "target": {
         "info": {
@@ -20,15 +21,15 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "subject": [
                             {
-                                "name": "urllib3-2.0.5-py3-none-any.whl",
+                                "name": "urllib3-2.0.6-py3-none-any.whl",
                                 "digest": {
-                                    "sha256": "ef16afa8ba34a1f989db38e1dbbe0c302e4289a47856990d0682e374563ce35e"
+                                    "sha256": "7a7c7003b000adf9e7ca2a377c9688bbc54ed41b985789ed576570342a375cd2"
                                 }
                             },
                             {
-                                "name": "urllib3-2.0.5.tar.gz",
+                                "name": "urllib3-2.0.6.tar.gz",
                                 "digest": {
-                                    "sha256": "13abf37382ea2ce6fb744d4dad67838eec857c9f4f57009891805e0b5e123594"
+                                    "sha256": "b19e1a85d206b56d7df1d5e683df4a7725252a964e3993648dd0fb5a1c157564"
                                 }
                             }
                         ],
@@ -39,32 +40,32 @@
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/v2.0.5",
+                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/2.0.6",
                                     "digest": {
-                                        "sha1": "d9f85a749488188c286cd50606d159874db94d5f"
+                                        "sha1": "262e3e332209ee93ff70e2b13502c8f20c105ac8"
                                     },
                                     "entryPoint": ".github/workflows/publish.yml"
                                 },
                                 "parameters": {},
                                 "environment": {
-                                    "github_actor": "pquentin",
-                                    "github_actor_id": "42327",
+                                    "github_actor": "illia-v",
+                                    "github_actor_id": "17710133",
                                     "github_base_ref": "",
                                     "github_event_name": "push",
                                     "github_event_payload": {
-                                        "after": "d4e424a471c79f245740a3734567e7402c036620",
+                                        "after": "3b5b1fea8680cc667af65dd0b66d9770696d7173",
                                         "base_ref": null,
                                         "before": "0000000000000000000000000000000000000000",
                                         "commits": [],
-                                        "compare": "https://github.com/urllib3/urllib3/compare/v2.0.5",
+                                        "compare": "https://github.com/urllib3/urllib3/compare/2.0.6",
                                         "created": true,
                                         "deleted": false,
                                         "forced": false,
                                         "head_commit": {
                                             "author": {
-                                                "email": "quentin.pradet@gmail.com",
-                                                "name": "Quentin Pradet",
-                                                "username": "pquentin"
+                                                "email": "illia.volochii@gmail.com",
+                                                "name": "Illia Volochii",
+                                                "username": "illia-v"
                                             },
                                             "committer": {
                                                 "email": "noreply@github.com",
@@ -72,11 +73,11 @@
                                                 "username": "web-flow"
                                             },
                                             "distinct": true,
-                                            "id": "d9f85a749488188c286cd50606d159874db94d5f",
-                                            "message": "Release 2.0.5",
-                                            "timestamp": "2023-09-20T08:59:31+02:00",
-                                            "tree_id": "842632ede50bc641555c90779642ab521e0c1401",
-                                            "url": "https://github.com/urllib3/urllib3/commit/d9f85a749488188c286cd50606d159874db94d5f"
+                                            "id": "262e3e332209ee93ff70e2b13502c8f20c105ac8",
+                                            "message": "Release 2.0.6",
+                                            "timestamp": "2023-10-02T20:07:11+03:00",
+                                            "tree_id": "327904150327c2fd790b5153ad3202225e7be6c2",
+                                            "url": "https://github.com/urllib3/urllib3/commit/262e3e332209ee93ff70e2b13502c8f20c105ac8"
                                         },
                                         "organization": {
                                             "avatar_url": "https://avatars.githubusercontent.com/u/26825299?v=4",
@@ -93,10 +94,10 @@
                                             "url": "https://api.github.com/orgs/urllib3"
                                         },
                                         "pusher": {
-                                            "email": "quentin.pradet@gmail.com",
-                                            "name": "pquentin"
+                                            "email": "illia.volochii@gmail.com",
+                                            "name": "illia-v"
                                         },
-                                        "ref": "refs/tags/v2.0.5",
+                                        "ref": "refs/tags/2.0.6",
                                         "repository": {
                                             "allow_forking": true,
                                             "archive_url": "https://api.github.com/repos/urllib3/urllib3/{archive_format}{/ref}",
@@ -119,8 +120,8 @@
                                             "downloads_url": "https://api.github.com/repos/urllib3/urllib3/downloads",
                                             "events_url": "https://api.github.com/repos/urllib3/urllib3/events",
                                             "fork": false,
-                                            "forks": 1092,
-                                            "forks_count": 1092,
+                                            "forks": 1090,
+                                            "forks_count": 1090,
                                             "forks_url": "https://api.github.com/repos/urllib3/urllib3/forks",
                                             "full_name": "urllib3/urllib3",
                                             "git_commits_url": "https://api.github.com/repos/urllib3/urllib3/git/commits{/sha}",
@@ -159,8 +160,8 @@
                                             "name": "urllib3",
                                             "node_id": "MDEwOlJlcG9zaXRvcnkyNDEwNjc2",
                                             "notifications_url": "https://api.github.com/repos/urllib3/urllib3/notifications{?since,all,participating}",
-                                            "open_issues": 130,
-                                            "open_issues_count": 130,
+                                            "open_issues": 133,
+                                            "open_issues_count": 133,
                                             "organization": "urllib3",
                                             "owner": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/26825299?v=4",
@@ -186,12 +187,12 @@
                                             },
                                             "private": false,
                                             "pulls_url": "https://api.github.com/repos/urllib3/urllib3/pulls{/number}",
-                                            "pushed_at": 1695193235,
+                                            "pushed_at": 1696266520,
                                             "releases_url": "https://api.github.com/repos/urllib3/urllib3/releases{/id}",
-                                            "size": 6839,
+                                            "size": 6864,
                                             "ssh_url": "git@github.com:urllib3/urllib3.git",
-                                            "stargazers": 3485,
-                                            "stargazers_count": 3485,
+                                            "stargazers": 3490,
+                                            "stargazers_count": 3490,
                                             "stargazers_url": "https://api.github.com/repos/urllib3/urllib3/stargazers",
                                             "statuses_url": "https://api.github.com/repos/urllib3/urllib3/statuses/{sha}",
                                             "subscribers_url": "https://api.github.com/repos/urllib3/urllib3/subscribers",
@@ -206,48 +207,48 @@
                                                 "urllib3"
                                             ],
                                             "trees_url": "https://api.github.com/repos/urllib3/urllib3/git/trees{/sha}",
-                                            "updated_at": "2023-09-19T20:11:25Z",
+                                            "updated_at": "2023-10-02T15:25:48Z",
                                             "url": "https://github.com/urllib3/urllib3",
                                             "visibility": "public",
-                                            "watchers": 3485,
-                                            "watchers_count": 3485,
+                                            "watchers": 3490,
+                                            "watchers_count": 3490,
                                             "web_commit_signoff_required": false
                                         },
                                         "sender": {
-                                            "avatar_url": "https://avatars.githubusercontent.com/u/42327?v=4",
-                                            "events_url": "https://api.github.com/users/pquentin/events{/privacy}",
-                                            "followers_url": "https://api.github.com/users/pquentin/followers",
-                                            "following_url": "https://api.github.com/users/pquentin/following{/other_user}",
-                                            "gists_url": "https://api.github.com/users/pquentin/gists{/gist_id}",
+                                            "avatar_url": "https://avatars.githubusercontent.com/u/17710133?v=4",
+                                            "events_url": "https://api.github.com/users/illia-v/events{/privacy}",
+                                            "followers_url": "https://api.github.com/users/illia-v/followers",
+                                            "following_url": "https://api.github.com/users/illia-v/following{/other_user}",
+                                            "gists_url": "https://api.github.com/users/illia-v/gists{/gist_id}",
                                             "gravatar_id": "",
-                                            "html_url": "https://github.com/pquentin",
-                                            "id": 42327,
-                                            "login": "pquentin",
-                                            "node_id": "MDQ6VXNlcjQyMzI3",
-                                            "organizations_url": "https://api.github.com/users/pquentin/orgs",
-                                            "received_events_url": "https://api.github.com/users/pquentin/received_events",
-                                            "repos_url": "https://api.github.com/users/pquentin/repos",
+                                            "html_url": "https://github.com/illia-v",
+                                            "id": 17710133,
+                                            "login": "illia-v",
+                                            "node_id": "MDQ6VXNlcjE3NzEwMTMz",
+                                            "organizations_url": "https://api.github.com/users/illia-v/orgs",
+                                            "received_events_url": "https://api.github.com/users/illia-v/received_events",
+                                            "repos_url": "https://api.github.com/users/illia-v/repos",
                                             "site_admin": false,
-                                            "starred_url": "https://api.github.com/users/pquentin/starred{/owner}{/repo}",
-                                            "subscriptions_url": "https://api.github.com/users/pquentin/subscriptions",
+                                            "starred_url": "https://api.github.com/users/illia-v/starred{/owner}{/repo}",
+                                            "subscriptions_url": "https://api.github.com/users/illia-v/subscriptions",
                                             "type": "User",
-                                            "url": "https://api.github.com/users/pquentin"
+                                            "url": "https://api.github.com/users/illia-v"
                                         }
                                     },
                                     "github_head_ref": "",
-                                    "github_ref": "refs/tags/v2.0.5",
+                                    "github_ref": "refs/tags/2.0.6",
                                     "github_ref_type": "tag",
                                     "github_repository_id": "2410676",
                                     "github_repository_owner": "urllib3",
                                     "github_repository_owner_id": "26825299",
                                     "github_run_attempt": "1",
-                                    "github_run_id": "6245105149",
-                                    "github_run_number": "22",
-                                    "github_sha1": "d9f85a749488188c286cd50606d159874db94d5f"
+                                    "github_run_id": "6383242672",
+                                    "github_run_number": "23",
+                                    "github_sha1": "262e3e332209ee93ff70e2b13502c8f20c105ac8"
                                 }
                             },
                             "metadata": {
-                                "buildInvocationID": "6245105149-1",
+                                "buildInvocationID": "6383242672-1",
                                 "completeness": {
                                     "parameters": true,
                                     "environment": false,
@@ -257,9 +258,9 @@
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/v2.0.5",
+                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/2.0.6",
                                     "digest": {
-                                        "sha1": "d9f85a749488188c286cd50606d159874db94d5f"
+                                        "sha1": "262e3e332209ee93ff70e2b13502c8f20c105ac8"
                                     }
                                 }
                             ]
@@ -272,7 +273,7 @@
             "summary": {
                 "DISABLED": 0,
                 "FAILED": 3,
-                "PASSED": 7,
+                "PASSED": 8,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
@@ -352,7 +353,19 @@
                     ],
                     "justification": [
                         "Successfully verified level 3: ",
-                        "verify passed : urllib3-2.0.5-py3-none-any.whl,verify passed : urllib3-2.0.5.tar.gz"
+                        "verify passed : urllib3-2.0.6-py3-none-any.whl,verify passed : urllib3-2.0.6.tar.gz"
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_two_person_reviewed_1",
+                    "check_description": "Check whether the merged pull requests has been reviewd and approved by at least one reviewer.",
+                    "slsa_requirements": [
+                        "Two-person reviewed - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "0 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 0 / 0"
                     ],
                     "result_type": "PASSED"
                 },
@@ -416,35 +429,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_infer_artifact_pipeline_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_script_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_trusted_builder_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_provenance_witness_level_one_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_available_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 0
             },
             {
@@ -452,7 +437,39 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_two_person_reviewed_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             }
         ],

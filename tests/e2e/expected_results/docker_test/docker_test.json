@@ -1,6 +1,7 @@
 {
     "metadata": {
-        "timestamps": "2023-09-12 17:09:42"
+        "timestamps": "2023-10-06 15:22:04",
+        "has_passing_check": true
     },
     "target": {
         "info": {
@@ -65,7 +66,7 @@
             "summary": {
                 "DISABLED": 0,
                 "FAILED": 6,
-                "PASSED": 4,
+                "PASSED": 5,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
@@ -82,7 +83,9 @@
                             "The build is triggered by": "https://github.com/timyarkov/docker_test/blob/404a51a2f38c4470af6b32e4e00b5318c2d7c0cc/.github/workflows/github-actions-basic.yml"
                         },
                         "Deploy command: ['docker', 'push', 'mock_proj']",
-                        "However, could not find a passing workflow run."
+                        "However, could not find a passing workflow run.",
+                        "The target repository does not use npm to deploy.",
+                        "The target repository does not use yarn to deploy."
                     ],
                     "result_type": "PASSED"
                 },
@@ -105,6 +108,18 @@
                     ],
                     "justification": [
                         "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_two_person_reviewed_1",
+                    "check_description": "Check whether the merged pull requests has been reviewd and approved by at least one reviewer.",
+                    "slsa_requirements": [
+                        "Two-person reviewed - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "0 pull requests have been reviewed by at least two person.",
+                        "The pass rate is 0 / 0"
                     ],
                     "result_type": "PASSED"
                 },
@@ -142,7 +157,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Could not find any SLSA provenances."
+                        "Could not find any SLSA or Witness provenances."
                     ],
                     "result_type": "FAILED"
                 },
@@ -207,35 +222,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_provenance_witness_level_one_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_available_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_infer_artifact_pipeline_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_as_code_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_trusted_builder_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_script_1",
                 "num_deps_pass": 0
             },
             {
@@ -243,7 +230,39 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_two_person_reviewed_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_build_service_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             }
         ],

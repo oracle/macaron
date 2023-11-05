@@ -12,7 +12,7 @@ from typing import NamedTuple
 
 from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.asset import AssetLocator
-from macaron.util import construct_query, download_github_build_log, send_get_http, send_get_http_raw
+from macaron.util import construct_query, download_github_build_log, send_get_http, send_get_http_raw, send_post_graphql
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -622,6 +622,112 @@ class GhAPIClient(BaseAPIClient):
             return False
 
         return True
+
+    def graphql_fetch_associated_prs(self, variables: dict) -> dict:
+        """Fetch the associated pull requests given the user provided digest.
+
+        Parameters
+        ----------
+        variables : dict
+            The variables that are passed to the graphql query.
+
+        Returns
+        -------
+        dict
+            The results for one page of the pull requests' data.
+        """
+        url = "https://api.github.com/graphql"
+
+        response = send_post_graphql(
+            url=url, query=self.query_list, timeout=None, headers=self.headers, variables=variables
+        )  # nosec B113:request_without_timeout
+
+        if response is None:
+            return {}
+
+        response_json = response.json()
+
+        approved_pr_num = 0
+        merged_pr_num = 0
+        ignore_analyse_list = ["Bot"]
+        branch_name = variables["branch_name"]
+        edges = response_json.get("data").get("repository").get("object").get("associatedPullRequests").get("edges")
+        for edge in edges:
+            node = edge.get("node")
+            review_decision = node.get("reviewDecision")
+            state = node.get("state")
+            base_ref_name = node.get("baseRefName")  # branch name
+            author = node.get("author").get("__typename")
+            merge_by = node.get("mergedBy").get("__typename")
+            if author in ignore_analyse_list or merge_by in ignore_analyse_list:
+                continue
+            if base_ref_name == branch_name and state == "MERGED":
+                merged_pr_num += 1
+                if review_decision == "APPROVED":
+                    approved_pr_num += 1
+        return {"merged_pr_num": merged_pr_num, "approved_pr_num": approved_pr_num}
+
+    def graphql_fetch_pull_requests(self, variables: dict) -> dict:
+        """Fetch the pull requests from the specified branch (if specified).
+
+        Parameters
+        ----------
+        url : str
+            The graphql URL.
+        variables : dict
+            The variables that are passed to the graphql query.
+
+        Returns
+        -------
+        dict
+            The results for one page of the pull requests' data.
+        """
+
+        def filter_response(approved_pr_num: int) -> int:
+            """Filter the merges that are trigger by the dependent bot, and only remain the approved pull requests.
+
+            Parameters
+            ----------
+            approved_pr_num : int
+                The number of the pull requests are merged and approved by the reviewers.
+
+            Returns
+            -------
+            tuple
+                The dependabot_num and approved_pr_num cumulative results.
+            """
+            ignore_analyse_list = ["Bot"]
+            for edge in response_json.get("data").get("repository").get("pullRequests").get("edges"):
+                node = edge.get("node")
+                review_decision = node.get("reviewDecision")
+                author = node.get("author").get("__typename")
+                merge_by = node.get("mergedBy").get("__typename")
+                if author in ignore_analyse_list or merge_by in ignore_analyse_list:
+                    continue
+                if review_decision == "APPROVED":
+                    approved_pr_num += 1
+            return approved_pr_num
+
+        url = "https://api.github.com/graphql"
+        response = send_post_graphql(
+            url=url, query=self.query_list, timeout=None, headers=self.headers, variables=variables
+        )  # nosec B113:request_without_timeout
+
+        if response is None:
+            return {}
+
+        response_json = response.json()
+        approved_pr_num = 0
+        filtered_response = filter_response(approved_pr_num)
+
+        pull_requests = response_json.get("data").get("repository").get("pullRequests")
+
+        return {
+            "merged_pr_num": pull_requests.get("totalCount"),  # nosec B113:request_without_timeout
+            "has_next_page": pull_requests.get("pageInfo").get("hasNextPage"),  # nosec B113:request_without_timeout
+            "end_cursor": pull_requests.get("pageInfo").get("endCursor"),  # nosec B113:request_without_timeout,
+            "approved_pr_num": filtered_response,  # nosec B113:request_without_timeout,
+        }
 
 
 def get_default_gh_client(access_token: str) -> GhAPIClient:
