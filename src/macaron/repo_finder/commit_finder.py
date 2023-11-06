@@ -86,10 +86,10 @@ SUFFIX = "(?P<suffix>[a-z].*)?"
 MAX_ZERO_DIGIT_EXTENSION = 4
 
 split_pattern = re.compile("[^0-9a-z]", flags=re.IGNORECASE)
-validation_pattern = re.compile("[0-9a-z]+", flags=re.IGNORECASE)
-alphabetic_only_pattern = re.compile("[a-z]+", flags=re.IGNORECASE)
-numeric_only_pattern = re.compile("[0-9]+")
-versioned_string = re.compile("[a-z]+[0-9]+", flags=re.IGNORECASE)  # e.g. RC1, M5, etc.
+validation_pattern = re.compile("[0-9a-z]+$", flags=re.IGNORECASE)
+alphabetic_only_pattern = re.compile("[a-z]+$", flags=re.IGNORECASE)
+numeric_only_pattern = re.compile("[0-9]+$")
+versioned_string = re.compile("[a-z]+[0-9]+$", flags=re.IGNORECASE)  # e.g. RC1, M5, etc.
 
 
 def find_commit(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
