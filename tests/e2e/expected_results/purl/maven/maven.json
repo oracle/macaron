@@ -7,7 +7,7 @@
         "info": {
             "full_name": "pkg:maven/apache/maven",
             "local_cloned_path": "git_repos/github_com/apache/maven",
-            "remote_path": "https://github.com/apache/maven.git",
+            "remote_path": "https://github.com/apache/maven",
             "branch": "master",
             "commit_hash": "3fc399318edef0d5ba593723a24fff64291d6f9b",
             "commit_date": "2023-10-20T21:20:23+02:00"
@@ -152,7 +152,7 @@
                     ],
                     "justification": [
                         {
-                            "This is a Git repository": "https://github.com/apache/maven.git"
+                            "This is a Git repository": "https://github.com/apache/maven"
                         }
                     ],
                     "result_type": "PASSED"
