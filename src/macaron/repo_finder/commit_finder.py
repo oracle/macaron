@@ -281,7 +281,7 @@ def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
             # - 3.1.test.2 -> 'test' and '2' become optional.
             has_non_numeric_suffix = True
 
-        if has_trailing_zero or has_non_numeric_suffix:
+        if count == len(split) - 1 and has_trailing_zero or has_non_numeric_suffix:
             # This part will be made optional in the regex, hence the grouping bracket.
             this_version_pattern = this_version_pattern + "("
 
@@ -293,7 +293,7 @@ def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
         # Add the current part to the pattern.
         this_version_pattern = this_version_pattern + part
 
-        if has_trailing_zero or has_non_numeric_suffix:
+        if count == len(split) - 1 and has_trailing_zero or has_non_numeric_suffix:
             # Complete the optional capture group.
             this_version_pattern = this_version_pattern + ")?"
 
@@ -441,12 +441,11 @@ def _count_parts_in_tag(tag_version: str, tag_suffix: str, version_parts: list[s
                         versioned_string_match = True
                     else:
                         count = count + 1
+
+        if tag_suffix != last_part:
+            count = count + 1
         else:
-            # The tag suffix is a single part: reduce the count if it matches the version.
-            if tag_suffix != last_part:
-                count = count + 1
-            else:
-                count = count - 1
+            count = count - 1
 
     return count
 

@@ -5,9 +5,10 @@
 
 import json
 import logging
-import os
 import sys
 from pathlib import Path
+
+from packageurl import PackageURL
 
 from macaron.repo_finder import commit_finder
 
@@ -26,25 +27,25 @@ def test_commit_finder() -> int:
         json_data = json.load(tag_file)
     fail_count = 0
     for item in json_data:
-        name = str(item["name"])
-        name, version = name.split("@")
-        matched_tags = commit_finder._match_tags(item["tags"], name, version)
-        expected = str(item["match"])
-        matched_tag = matched_tags[0] if matched_tags else ""
-        if matched_tag != expected:
-            logger.debug(
-                "Matched tag '%s' did not match expected value '%s' for artifact '%s'",
-                matched_tag,
-                expected,
-                item["name"],
-            )
-            fail_count = fail_count + 1
+        artifacts = item["artifacts"]
+        for artifact in artifacts:
+            purl = PackageURL.from_string(artifact["purl"])
+            matched_tags = commit_finder._match_tags(item["tags"], purl.name, purl.version or "")
+            matched_tag = matched_tags[0] if matched_tags else ""
+            expected = str(artifact["match"])
+            if matched_tag != expected:
+                logger.debug(
+                    "Matched tag '%s' did not match expected value '%s' for artifact '%s'",
+                    matched_tag,
+                    expected,
+                    artifact["purl"],
+                )
+                fail_count = fail_count + 1
 
     if fail_count:
         logger.debug("Tag match failure count: %s", fail_count)
-        return os.EX_DATAERR
 
-    return os.EX_OK
+    return fail_count
 
 
 def update_commit_finder_results() -> None:
