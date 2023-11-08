@@ -84,6 +84,14 @@ class CycloneDxMaven(DependencyAnalyzer):
             if Path(path) != top_path
         ]
 
+        # Ensure recursively found SBOMs are at most one per directory.
+        child_paths_set = set()
+        for path in child_paths:
+            child_paths_set.add(path.parent)
+        if len(child_paths_set) != len(child_paths):
+            logger.error("Only one JSON SBOM file is permitted per child directory.")
+            return {}
+
         # Check if the root BOM has been analyzed before as a child BOM.
         self.visited_deps.update(child_paths)
         if top_path in self.visited_deps:
