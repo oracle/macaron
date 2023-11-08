@@ -359,7 +359,7 @@ check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED ||
 echo -e "\n=================================================================================="
 echo "Run integration tests with configurations for FasterXML/jackson-databind..."
 echo -e "==================================================================================\n"
-JSON_RESULT=$WORKSPACE/output/reports/github_com/FasterXML/jackson-databind/jackson-databind.json
+JSON_RESULT=$WORKSPACE/output/reports/maven/com_fasterxml_jackson_core/jackson-databind/jackson-databind.json
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "FasterXML/jackson-databind: Check the e2e output JSON file with config and no dependency analyzing."
