@@ -5,6 +5,7 @@
 
 import json
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -44,8 +45,10 @@ def test_commit_finder() -> int:
 
     if fail_count:
         logger.debug("Tag match failure count: %s", fail_count)
+        print(fail_count)
+        return os.EX_DATAERR
 
-    return fail_count
+    return os.EX_OK
 
 
 def update_commit_finder_results() -> None:
@@ -67,4 +70,4 @@ if __name__ == "__main__":
     if len(sys.argv) >= 2 and sys.argv[1] == "--update":
         update_commit_finder_results()
     else:
-        test_commit_finder()
+        sys.exit(test_commit_finder())

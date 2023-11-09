@@ -5,6 +5,7 @@
 
 import logging
 import os
+import sys
 
 from packageurl import PackageURL
 
@@ -65,4 +66,4 @@ def test_repo_finder() -> int:
 
 
 if __name__ == "__main__":
-    test_repo_finder()
+    sys.exit(test_repo_finder())
