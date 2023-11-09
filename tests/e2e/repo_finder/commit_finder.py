@@ -45,7 +45,6 @@ def test_commit_finder() -> int:
 
     if fail_count:
         logger.debug("Tag match failure count: %s", fail_count)
-        print(fail_count)
         return os.EX_DATAERR
 
     return os.EX_OK

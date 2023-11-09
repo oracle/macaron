@@ -19,7 +19,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 # An optional named capture group "prefix" that accepts one of the following:
 # - A string of any characters starting with an alphabetic character, ending with one of:
-#   - One alphabetic character and one or more numbers.
+#   - One non-alphanumeric character, one alphabetic character, and one or more numbers.
 #   - One number and one alphabetic character.
 #   - Two alphabetic characters.
 # - OR
@@ -29,7 +29,11 @@ logger: logging.Logger = logging.getLogger(__name__)
 # - 'prefix-a444'     of 'prefix-a444-v3.2.1.0'
 # - 'vm'              of 'vm-5-5-5'
 # - 'name-prefix-j5u' of 'name-prefix-j5u//r0_0_1'
-PREFIX = "^(?P<prefix>(?:[a-z].*(?:[a-z][0-9]+|[0-9][a-z]|[a-z]{2}))|[a-z]{2})?"
+PREFIX = "(?P<prefix_0>(?:[a-z].*(?:[a-z0-9][a-z][0-9]+|[0-9][a-z]|[a-z]{2}))|[a-z]{2})?"
+
+# An alternative prefix pattern that is intended for a single use case: A prefix that contains a part that is
+# difficult to distinguish from part of a version, i.e. java-v1-1.1.0 (prefix: java-v1, version: 1.1.0)
+PREFIX_WITH_SEPARATOR = "(?P<prefix_1>(?:[a-z].*(?P<prefix_sep_1>[^a-z0-9])[a-z][0-9]+))(?:(?P=prefix_sep_1))"
 
 # An optional named capture group "prefix_sep" that accepts one of:
 # - A 'v', 'r', or 'c' character that is not preceded by a non-alphanumeric character.
@@ -43,7 +47,7 @@ PREFIX = "^(?P<prefix>(?:[a-z].*(?:[a-z][0-9]+|[0-9][a-z]|[a-z]{2}))|[a-z]{2})?"
 # - 'r_'  of 'r_3_3_3'
 # - 'c'   of 'c4.1'
 # - '.'   of 'name.9-9-9-9'
-PREFIX_SEPARATOR = "(?P<prefix_sep>(?:(?:(?<![0-9a-z])[vrc])|(?:[^0-9a-z][vrc])|[^0-9a-z])(?:[^0-9a-z])?)?"
+PREFIX_SEPARATOR = "(?P<prefix_sep_0>(?:(?:(?<![0-9a-z])[vrc])|(?:[^0-9a-z][vrc])|[^0-9a-z])(?:[^0-9a-z])?)?"
 
 # Together, the prefix and prefix separator exist to separate the prefix from version part of a tag, while ensuring that
 # the prefix is free from non-prefix characters (the separator). Note that the prefix is expected to be at least two
@@ -306,7 +310,10 @@ def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
             # Additional zeros added for this purpose make use of a back reference to the first matched separator.
             this_version_pattern = this_version_pattern + "(" + (INFIX_2 if count > 1 else INFIX_1) + "0)?"
 
-    this_version_pattern = f"{PREFIX}{PREFIX_SEPARATOR}(?P<version>{this_version_pattern}){SUFFIX_SEPARATOR}{SUFFIX}$"
+    this_version_pattern = (
+        f"^(?:(?:{PREFIX_WITH_SEPARATOR})|(?:{PREFIX}{PREFIX_SEPARATOR}))(?P<version>"
+        f"{this_version_pattern}){SUFFIX_SEPARATOR}{SUFFIX}$"
+    )
     return re.compile(this_version_pattern, flags=re.IGNORECASE), parts, has_non_numeric_suffix
 
 
@@ -342,8 +349,8 @@ def _match_tags(tag_list: list[TagReference], artifact_name: str, artifact_versi
             {
                 "tag": tag,
                 "version": match.group("version"),
-                "prefix": match.group("prefix"),
-                "prefix_sep": match.group("prefix_sep"),
+                "prefix": match.group("prefix_0") or match.group("prefix_1"),
+                "prefix_sep": match.group("prefix_sep_0") or match.group("prefix_sep_1"),
                 "suffix_sep": match.group("suffix_sep"),
                 "suffix": match.group("suffix"),
             }
