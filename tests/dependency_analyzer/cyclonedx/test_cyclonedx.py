@@ -114,4 +114,8 @@ def test_custom_sbom_name_with_maven() -> None:
     cyclonedx: CycloneDxMaven = CycloneDxMaven(
         "", "bom.json", "", defaults.get("dependency.resolver", "dep_tool_maven"), ""
     )
-    assert cyclonedx.collect_dependencies(str(RESOURCES_DIR))
+    custom_bom_dir = RESOURCES_DIR.joinpath("sbom_name_tests")
+    assert cyclonedx.collect_dependencies(str(custom_bom_dir.joinpath("single_named_sbom")))
+    assert cyclonedx.collect_dependencies(str(custom_bom_dir.joinpath("single_named_sbom_with_children")))
+    assert not cyclonedx.collect_dependencies(str(custom_bom_dir.joinpath("single_named_sbom_with_multiple_children")))
+    assert not cyclonedx.collect_dependencies(str(custom_bom_dir.joinpath("multiple_named_sboms")))
