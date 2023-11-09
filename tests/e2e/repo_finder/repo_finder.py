@@ -32,11 +32,11 @@ def test_repo_finder() -> int:
 
     if not defaults.has_section("git_service.github"):
         defaults.add_section("git_service.github")
-    defaults.set("git_service.github", "domain", "github.com")
+    defaults.set("git_service.github", "hostname", "github.com")
 
     if not defaults.has_section("git_service.gitlab"):
         defaults.add_section("git_service.gitlab")
-    defaults.set("git_service.gitlab", "domain", "gitlab.com")
+    defaults.set("git_service.gitlab", "hostname", "gitlab.com")
 
     # Test Java package with SCM metadata in artifact POM.
     if not find_repo(PackageURL.from_string("pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2")):
