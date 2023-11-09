@@ -10,6 +10,7 @@ import pytest
 from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
+from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.docker import Docker
 from macaron.slsa_analyzer.build_tool.go import Go
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
@@ -226,6 +227,34 @@ def go_tool(setup_test) -> Go:  # type: ignore # pylint: disable=unused-argument
     go = Go()  # pylint: disable=invalid-name
     go.load_defaults()
     return go
+
+
+@pytest.fixture(name="build_tools")
+def get_build_tools(
+    npm_tool: BaseBuildTool,
+    yarn_tool: BaseBuildTool,
+    go_tool: BaseBuildTool,
+    maven_tool: BaseBuildTool,
+    gradle_tool: BaseBuildTool,
+    pip_tool: BaseBuildTool,
+    poetry_tool: BaseBuildTool,
+    docker_tool: BaseBuildTool,
+) -> dict[str, BaseBuildTool]:
+    """Create a dictionary to look up build tool fixtures.
+
+    `pytest.mark.parametrize` does not accept fixtures as arguments. This fixture is created as
+    a workaround to parametrize tests with build tool fixtures.
+    """
+    return {
+        "npm": npm_tool,
+        "yarn": yarn_tool,
+        "go": go_tool,
+        "maven": maven_tool,
+        "gradle": gradle_tool,
+        "pip": pip_tool,
+        "poetry": poetry_tool,
+        "docker": docker_tool,
+    }
 
 
 class MockGitHubActions(GitHubActions):

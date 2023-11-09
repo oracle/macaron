@@ -8,6 +8,7 @@ The AnalyzeContext is used to store the data of the repository being analyzed.
 
 import logging
 import os
+from collections import defaultdict
 from typing import TypedDict
 
 from macaron.database.table_definitions import Component, SLSALevel
@@ -16,6 +17,8 @@ from macaron.slsa_analyzer.git_service import BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
+from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Statement
+from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1Statement
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus, create_requirement_status_dict
 from macaron.slsa_analyzer.specs.build_spec import BuildSpec
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
@@ -91,25 +94,27 @@ class AnalyzeContext:
         )
 
     @property
-    def provenances(self) -> dict:
+    def provenances(self) -> dict[str, list[InTotoV01Statement | InTotoV1Statement]]:
         """Return the provenances data as a dictionary.
 
         Returns
         -------
-        dict
+        dict[str : list[InTotoV01Statement]]
             A dictionary in which each key is a CI service's name and each value is
             the corresponding provenance payload.
         """
         try:
             ci_services = self.dynamic_data["ci_services"]
-            result = {}
+
+            # By default, initialize every key with an empty list.
+            result: dict[str, list[InTotoV01Statement | InTotoV1Statement]] = defaultdict(lambda: [])
             for ci_info in ci_services:
-                result[ci_info["service"].name] = [payload.statement for payload in ci_info["provenances"]]
+                result[ci_info["service"].name].extend(payload.statement for payload in ci_info["provenances"])
             package_registry_entries = self.dynamic_data["package_registries"]
             for package_registry_entry in package_registry_entries:
-                result[package_registry_entry.package_registry.name] = [
+                result[package_registry_entry.package_registry.name].extend(
                     provenance.payload.statement for provenance in package_registry_entry.provenances
-                ]
+                )
             return result
         except KeyError:
             return {}

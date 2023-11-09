@@ -5,7 +5,10 @@
 
 from pathlib import Path
 
+import hypothesis.provisional as st_pr
+import hypothesis.strategies as st
 import pytest
+from hypothesis import given
 from packageurl import PackageURL
 
 from macaron.config.target_config import Configuration
@@ -101,6 +104,41 @@ def test_resolve_analysis_target(
 ) -> None:
     """Test the resolve analysis target method with valid inputs."""
     assert Analyzer.to_analysis_target(config, available_domains) == expect
+
+
+@given(
+    purl_type=st.one_of(st.text(), st.sampled_from(["maven", "npm", "pypi", "github.com"])),
+    namespace=st.one_of(st.none(), st.text()),
+    artifact_id=st.text(),
+    version=st.text(),
+    url=st_pr.urls(),
+    branch=st.text(),
+    digest=st.text(),
+    available_domains=st.just(["github.com", "gitlab.com", "bitbucket.org"]),
+)
+def test_invalid_analysis_target(
+    purl_type: str,
+    namespace: str | None,
+    artifact_id: str,
+    version: str,
+    url: str,
+    branch: str,
+    digest: str,
+    available_domains: list[str],
+) -> None:
+    """Test the analysis target resolution with valid inputs."""
+    config = Configuration(
+        {
+            "purl": f"pkg:{purl_type}/{namespace}/{artifact_id}@{version}",
+            "path": url,
+            "branch": branch,
+            "digest": digest,
+        }
+    )
+    try:
+        Analyzer.to_analysis_target(config, available_domains)
+    except InvalidPURLError:
+        pass
 
 
 @pytest.mark.parametrize(

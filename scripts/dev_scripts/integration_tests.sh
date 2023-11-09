@@ -38,6 +38,13 @@ function check_or_update_expected_output() {
     fi
 }
 
+# Check if npm-related tests should be disabled.
+if [[ ! -z "$NO_NPM" ]]; then
+    echo "Note: NO_NPM environment variable is set, so npm tests will be skipped."
+fi
+NO_NPM_TEST=$NO_NPM
+
+
 function log_fail() {
     printf "Error: FAILED integration test (line ${BASH_LINENO}) %s\n" $@
     RESULT_CODE=1
@@ -65,6 +72,17 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-co
 $RUN_MACARON analyze -rp https://github.com/micronaut-projects/micronaut-core -b 3.8.x -d 68f9bb0a78fa930865d37fca39252b9ec66e4a43 --skip-deps || log_fail
 
 check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+if [[ -z "$NO_NPM_TEST" ]]; then
+    echo -e "\n----------------------------------------------------------------------------------"
+    echo "sigstore/mock@0.1.0: Analyzing the PURL when automatic dependency resolution is skipped."
+    echo -e "----------------------------------------------------------------------------------\n"
+    JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/npm/sigstore/mock/mock.json
+    JSON_RESULT=$WORKSPACE/output/reports/npm/_sigstore/mock/mock.json
+    $RUN_MACARON analyze -purl pkg:npm/@sigstore/mock@0.1.0 -rp https://github.com/sigstore/sigstore-js -b main -d ebdcfdfbdfeb9c9aeee6df53674ef230613629f5 --skip-deps || log_fail
+
+    check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+fi
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "gitlab.com/tinyMediaManager/tinyMediaManager: Analyzing the repo path and the branch name when automatic dependency resolution is skipped."

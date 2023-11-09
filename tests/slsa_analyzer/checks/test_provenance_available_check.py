@@ -4,12 +4,15 @@
 """This modules contains tests for the provenance available check."""
 
 
+import os
+import shutil
 from pathlib import Path
 
 import pytest
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.database.table_definitions import Repository
+from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.provenance_available_check import ProvenanceAvailableCheck
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -18,7 +21,9 @@ from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
+from macaron.slsa_analyzer.package_registry.npm_registry import NPMRegistry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 from tests.conftest import MockAnalyzeContext
 
 
@@ -48,6 +53,20 @@ class MockGhAPIClient(GhAPIClient):
 
     def download_asset(self, url: str, download_path: str) -> bool:
         return False
+
+
+class MockNPMRegistry(NPMRegistry):
+    """Mocj NPMRegistry class."""
+
+    resource_valid_prov_dir: str
+
+    def download_attestation_payload(self, url: str, download_path: str) -> bool:
+        src_path = os.path.join(self.resource_valid_prov_dir, "sigstore-mock.payload.json")
+        try:
+            shutil.copy2(src_path, download_path)
+        except shutil.Error:
+            return False
+        return True
 
 
 @pytest.mark.parametrize(
@@ -131,3 +150,41 @@ def test_provenance_available_check_on_ci(macaron_path: Path) -> None:
     # Test GitLab CI.
     ci_info["service"] = gitlab_ci
     assert check.run_check(ctx).result_type == CheckResultType.FAILED
+
+
+@pytest.mark.parametrize(
+    (
+        "build_tool_name",
+        "expected",
+    ),
+    [
+        ("npm", CheckResultType.PASSED),
+        ("yarn", CheckResultType.PASSED),
+        ("go", CheckResultType.FAILED),
+        ("maven", CheckResultType.FAILED),
+    ],
+)
+def test_provenance_available_check_on_npm_registry(
+    macaron_path: Path,
+    test_dir: Path,
+    build_tool_name: str,
+    expected: CheckResultType,
+    build_tools: dict[str, BaseBuildTool],
+) -> None:
+    """Test npm provenances published on npm registry."""
+    check = ProvenanceAvailableCheck()
+    ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
+    ctx.component.purl = "pkg:npm/@sigstore/mock@0.1.0"
+    npm_registry = MockNPMRegistry()
+    npm_registry.resource_valid_prov_dir = os.path.join(
+        test_dir, "slsa_analyzer", "provenance", "resources", "valid_provenances"
+    )
+    npm_registry.load_defaults()
+    ctx.dynamic_data["package_registries"] = [
+        PackageRegistryInfo(
+            build_tool=build_tools[build_tool_name],
+            package_registry=npm_registry,
+        )
+    ]
+
+    assert check.run_check(ctx).result_type == expected
