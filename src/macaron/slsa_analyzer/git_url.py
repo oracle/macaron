@@ -95,8 +95,8 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
         # Switch to the target branch by running ``git checkout <branch_name>`` in the target repository.
         # We need to use force checkout to prevent issues similar to https://github.com/oracle/macaron/issues/530.
         git_obj.repo.git.checkout("--force", res_branch)
-    except GitCommandError as error:
-        logger.error("Cannot checkout branch %s. Error: %s", res_branch, error)
+    except GitCommandError:
+        logger.error("Cannot checkout branch %s.", res_branch)
         return False
 
     logger.info("Successfully checkout branch %s.", res_branch)
@@ -118,8 +118,8 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
             try:
                 # Pull the latest changes on the current branch fast-forward only.
                 git_obj.repo.git.pull("--ff-only")
-            except GitCommandError as error:
-                logger.error(error)
+            except GitCommandError:
+                logger.error("Cannot pull the latest changes.")
                 return False
 
     if digest:
@@ -127,11 +127,10 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
         # We need to use force checkout to prevent issues similar to https://github.com/oracle/macaron/issues/530.
         try:
             git_obj.repo.git.checkout("--force", digest)
-        except GitCommandError as error:
+        except GitCommandError:
             logger.error(
-                "Commit %s cannot be checked out. Error: %s",
+                "Commit %s cannot be checked out.",
                 digest,
-                error,
             )
             return False
 
