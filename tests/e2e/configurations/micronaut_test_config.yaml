@@ -12,13 +12,13 @@ dependencies:
 - id: slf4j
     # For version 1.7.36
     # https://github.com/qos-ch/slf4j/commit/e9ee55cca93c2bf26f14482a9bdf961c750d2a56
-  branch: v_1.7.36
+  branch: 1.7-maintenance
   digest: e9ee55cca93c2bf26f14482a9bdf961c750d2a56
   path: https://github.com/qos-ch/slf4j.git
 
 - id: caffeine
     # For version 2.9.3
     # https://github.com/ben-manes/caffeine/commit/05a040c2478341bab8a58a02b3dc1fe14d626d72
-  branch: v2.9.3
+  branch: v2.dev
   digest: 05a040c2478341bab8a58a02b3dc1fe14d626d72
   path: https://github.com/ben-manes/caffeine.git

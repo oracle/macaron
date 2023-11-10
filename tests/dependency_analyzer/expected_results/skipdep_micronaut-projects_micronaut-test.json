@@ -3,7 +3,7 @@
         "id": "slf4j",
         "purl": "",
         "path": "https://github.com/qos-ch/slf4j.git",
-        "branch": "v_1.7.36",
+        "branch": "1.7-maintenance",
         "digest": "e9ee55cca93c2bf26f14482a9bdf961c750d2a56",
         "note": "",
         "available": "AVAILABLE"
@@ -12,7 +12,7 @@
         "id": "caffeine",
         "purl": "",
         "path": "https://github.com/ben-manes/caffeine.git",
-        "branch": "v2.9.3",
+        "branch": "v2.dev",
         "digest": "05a040c2478341bab8a58a02b3dc1fe14d626d72",
         "note": "",
         "available": "AVAILABLE"

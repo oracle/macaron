@@ -1,13 +1,14 @@
 {
     "metadata": {
-        "timestamps": "2023-09-12 22:55:15"
+        "timestamps": "2023-11-10 14:01:43",
+        "has_passing_check": true
     },
     "target": {
         "info": {
             "full_name": "pkg:github.com/qos-ch/slf4j@e9ee55cca93c2bf26f14482a9bdf961c750d2a56",
             "local_cloned_path": "git_repos/github_com/qos-ch/slf4j",
             "remote_path": "https://github.com/qos-ch/slf4j",
-            "branch": "v_1.7.36",
+            "branch": "1.7-maintenance",
             "commit_hash": "e9ee55cca93c2bf26f14482a9bdf961c750d2a56",
             "commit_date": "2022-02-08T14:32:21+01:00"
         },
@@ -26,7 +27,7 @@
                             "buildType": "Custom travis_ci",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "https://github.com/qos-ch/slf4j@refs/heads/v_1.7.36",
+                                    "uri": "https://github.com/qos-ch/slf4j@refs/heads/1.7-maintenance",
                                     "digest": {
                                         "sha1": "e9ee55cca93c2bf26f14482a9bdf961c750d2a56"
                                     },
@@ -138,7 +139,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Could not find any SLSA provenances."
+                        "Could not find any SLSA or Witness provenances."
                     ],
                     "result_type": "FAILED"
                 },
@@ -203,7 +204,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
+                "check_id": "mcn_version_control_system_1",
                 "num_deps_pass": 0
             },
             {
@@ -211,7 +212,7 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 0
             },
             {
@@ -219,15 +220,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_as_code_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
                 "num_deps_pass": 0
             },
             {
@@ -235,7 +232,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_level_three_1",
+                "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
             {

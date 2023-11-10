@@ -1,13 +1,14 @@
 {
     "metadata": {
-        "timestamps": "2023-09-12 22:55:15"
+        "timestamps": "2023-11-10 14:01:43",
+        "has_passing_check": true
     },
     "target": {
         "info": {
             "full_name": "pkg:github.com/ben-manes/caffeine@05a040c2478341bab8a58a02b3dc1fe14d626d72",
             "local_cloned_path": "git_repos/github_com/ben-manes/caffeine",
             "remote_path": "https://github.com/ben-manes/caffeine",
-            "branch": "v2.9.3",
+            "branch": "v2.dev",
             "commit_hash": "05a040c2478341bab8a58a02b3dc1fe14d626d72",
             "commit_date": "2021-12-02T01:04:44-08:00"
         },
@@ -26,7 +27,7 @@
                             "buildType": "Custom github_actions",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "https://github.com/ben-manes/caffeine@refs/heads/v2.9.3",
+                                    "uri": "https://github.com/ben-manes/caffeine@refs/heads/v2.dev",
                                     "digest": {
                                         "sha1": "05a040c2478341bab8a58a02b3dc1fe14d626d72"
                                     },
@@ -189,7 +190,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Could not find any SLSA provenances."
+                        "Could not find any SLSA or Witness provenances."
                     ],
                     "result_type": "FAILED"
                 },
@@ -254,7 +255,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
+                "check_id": "mcn_version_control_system_1",
                 "num_deps_pass": 0
             },
             {
@@ -262,7 +263,7 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 0
             },
             {
@@ -270,15 +271,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_as_code_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
                 "num_deps_pass": 0
             },
             {
@@ -286,7 +283,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_level_three_1",
+                "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
             {

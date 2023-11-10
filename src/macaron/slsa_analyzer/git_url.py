@@ -25,22 +25,126 @@ from macaron.errors import CloneError
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "", offline_mode: bool = False) -> bool:
+def parse_git_branch_output(content: str) -> list[str]:
+    """Return a list of branch name from the output of ``git branch``.
+
+    This function only work for the output format of the first form of ``git branch`` where the branches are listed.
+    See https://git-scm.com/docs/git-branch for definition of the first form of ``git branch``.
+
+    Parameters
+    ----------
+    content : str
+        The raw output as string from the ``git branch`` command.
+
+    Returns
+    -------
+    list[str]
+        The list of strings where each string is a branch element from the raw output.
+
+    Examples
+    --------
+    >>> print(content)
+    * (HEAD detached at 7fc81f8)
+      master
+      remotes/origin/HEAD -> origin/master
+      remotes/origin/master
+      remotes/origin/v2.dev
+      remotes/origin/v3.dev
+    >>> _parse_branch_output(content)
+    [
+        '(HEAD detached at 7fc81f8)',
+        'master',
+        'remotes/origin/HEAD -> origin/master',
+        'remotes/origin/master',
+        'remotes/origin/v2.dev',
+        'remotes/origin/v3.dev',
+    ]
+    """
+    raw_branch_names = content.split("\n")
+    result = []
+    for name in raw_branch_names:
+        # Ignore elements that doesn't contain only whitespaces. This is because the raw content of git branch
+        # can have extra new line at the end, which can be picked up as an empty element in `raw_branch_names`.
+        if len(name.strip()) == 0:
+            continue
+
+        # The ``*`` symbol will appear next to the branch name where HEAD is currently on.
+        # Branches in git cannot have ``*`` in its name so we can safely replace without tampering with its actual name.
+        # https://git-scm.com/docs/git-check-ref-format
+        cleaned_up_branch_name = name.replace("*", "").strip()
+
+        result.append(cleaned_up_branch_name)
+
+    return result
+
+
+def get_branches_for_commit(git_obj: Git, commit: str, remote: str = "origin") -> list[str]:
+    """Get the branches from a remote that contains a specific commit.
+
+    The returned branch names will be in the form of <remote>/<branch_name>.
+
+    Parameters
+    ----------
+    git_obj : Git
+        The pydriller.Git wrapper object of the target repository.
+    commit : str
+        The hash of the commit we want to get all the branches.
+    remote : str, optional
+        The name of the remote to check the branches, by default "origin".
+
+    Returns
+    -------
+    list[str]
+        The list of branches that contains the commit.
+    """
+    try:
+        raw_output: str = git_obj.repo.git.branch(
+            "--remotes",
+            "--list",
+            f"{remote}/*",
+            "--contains",
+            commit,
+        )
+    except GitCommandError:
+        logger.debug("Error while using git branch to look for branches that contains %s.", commit)
+        return []
+
+    return parse_git_branch_output(raw_output)
+
+
+def check_out_repo_target(
+    git_obj: Git,
+    branch_name: str = "",
+    digest: str = "",
+    offline_mode: bool = False,
+) -> bool:
     """Checkout the branch and commit specified by the user.
 
-    If no branch name is provided, this method will checkout the default branch
-    of the repository and analyze the latest commit from remote. Note that checking out the branch
-    is always performed before checking out the specific ``digest`` (if provided).
+    This fucntion assumes that a remote "origin" exist and checkout from that remote ONLY.
 
-    If ``digest`` is not provided, this method always pulls (fast-forward only) and checks out the latest commit.
+    If ``offline_mode`` is False, this function will fetch new changes from origin remote. The fetching operation
+    will prune and update all references (e.g. tags, branches) to make sure that the local repository is up-to-date
+    with the repository specified by origin remote.
 
-    If ``digest`` is provided, this method will checkout that specific commit. If ``digest``
-    cannot be found in the current branch, this method will pull (fast-forward only) from remote.
+    If ``branch_name`` and a commit are not provided, this function will checkout the latest commit of the
+    default branch (i.e. origin/HEAD).
 
-    This method supports repositories which are cloned from existing remote repositories.
+    If ``branch_name`` is provided and a commit is not provided, this function will checkout that branch from origin
+    remote (i.e. origin/<branch_name).
+
+    If ``branch_name`` is not provided and a commit is provided, this function will checkout the commit directly.
+
+    If both ``branch_name`` and a commit are provided, this function will checkout the commit directly only if that
+    commit exists in the branch origin/<branch_name>. If not, this fucntion will return False.
+
+    For all scenarios:
+    - If the checkout failed (e.g. a branch or a commit doesn't exist), this function will return
+    False.
+    - This function will perform a force checkout, which mean it will reset the index and working tree of the target
+    repository.
+
+    This function supports repositories which are cloned from existing remote repositories.
     Other scenarios are not covered (e.g. a newly initiated repository).
-
-    If ``offline_mode`` is set, this method will not pull/fetch from remote while checking out the branch or commit.
 
     Parameters
     ----------
@@ -58,17 +162,6 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
     bool
         True if succeed else False.
     """
-    # Resolve the branch name to check out.
-    res_branch = ""
-    if branch_name:
-        res_branch = branch_name
-    else:
-        res_branch = get_default_branch(git_obj)
-        if not res_branch:
-            logger.error("Cannot determine the default branch for this repository.")
-            logger.info("Consider providing the specific branch to be analyzed or fully cloning the repo instead.")
-            return False
-
     if not offline_mode:
         # Fetch from remote origin by running ``git fetch origin --force --tags --prune --prune-tags`` inside the target
         # repository.
@@ -91,49 +184,45 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
             logger.error("Unable to fetch from the origin remote of the repository.")
             return False
 
-    try:
-        # Switch to the target branch by running ``git checkout <branch_name>`` in the target repository.
-        # We need to use force checkout to prevent issues similar to https://github.com/oracle/macaron/issues/530.
-        git_obj.repo.git.checkout("--force", res_branch)
-    except GitCommandError:
-        logger.error("Cannot checkout branch %s.", res_branch)
-        return False
-
-    logger.info("Successfully checkout branch %s.", res_branch)
-
-    if not offline_mode:
-        # We only pull the latest changes if one of these scenarios happens:
-        #   - no digest is provided: we need to pull and analyze the latest commit.
-        #   - a commit digest is provided but it does not exist locally: we need to
-        #     pull the latest changes to check if that commit is available.
-        # We want to check if the commit already exist locally first because we want to avoid pulling unecessary
-        # if it does.
-        # We do this by checking if the commit we want to analyze is an ancestor of the commit being referenced by HEAD
-        # (which point to the tip of the branch).
-        # If the commit we want to analyze is same as HEAD, that commit is still considered as the ancestor of HEAD.
-        # The ``is_ancestor`` method runs ``git merge-base`` behind the scence.
-        # For more information on computing the ancestor status of two commits: https://git-scm.com/docs/git-merge-base.
-        if not digest or not git_obj.repo.is_ancestor(digest, "HEAD"):
-            logger.info("Pulling the latest changes of branch %s fast-forward only.", res_branch)
-            try:
-                # Pull the latest changes on the current branch fast-forward only.
-                git_obj.repo.git.pull("--ff-only")
-            except GitCommandError:
-                logger.error("Cannot pull the latest changes.")
-                return False
-
-    if digest:
-        # Checkout the specific commit that the user want by running ``git checkout <commit>`` in the target repository.
-        # We need to use force checkout to prevent issues similar to https://github.com/oracle/macaron/issues/530.
+    if not branch_name and not digest:
         try:
-            git_obj.repo.git.checkout("--force", digest)
+            git_obj.repo.git.checkout("--force", "origin/HEAD")
         except GitCommandError:
-            logger.error(
-                "Commit %s cannot be checked out.",
-                digest,
-            )
+            logger.debug("Cannot checkout the default branch at origin/HEAD")
             return False
 
+    if branch_name and not digest:
+        try:
+            git_obj.repo.git.checkout("--force", f"origin/{branch_name}")
+        except GitCommandError:
+            logger.debug("Cannot checkout branch %s from origin remote.", branch_name)
+            return False
+
+    if not branch_name and digest:
+        try:
+            git_obj.repo.git.checkout("--force", f"{digest}")
+        except GitCommandError:
+            logger.debug("Cannot checkout commit %s.", digest)
+            return False
+
+    if branch_name and digest:
+        branches = get_branches_for_commit(
+            git_obj=git_obj,
+            commit=digest,
+            remote="origin",
+        )
+
+        if f"origin/{branch_name}" in branches:
+            try:
+                git_obj.repo.git.checkout("--force", f"{digest}")
+            except GitCommandError:
+                logger.debug("Cannot checkout commit %s.", digest)
+                return False
+        else:
+            logger.error("Commit %s is not in branch %s.", digest, branch_name)
+            return False
+
+    # Further validation to make sure the git checkout operations happen as expected.
     final_head_commit: Commit = git_obj.repo.head.commit
     if not final_head_commit:
         logger.critical("Cannot get the head commit after checking out.")
