@@ -70,16 +70,25 @@ def check_out_repo_target(git_obj: Git, branch_name: str = "", digest: str = "",
             return False
 
     if not offline_mode:
-        # Fetch from remote by running ``git fetch`` inside the target repository.
-        # We don't specify any remote name (e.g. origin) because we want git to resolve the default fetching
-        # target by itself.
-        # For example, the user runs Macaron on a local repository where the remote is set to have name "foo_origin"
-        # instead.
-        # References: https://git-scm.com/docs/git-fetch
+        # Fetch from remote origin by running ``git fetch origin --force --tags --prune --prune-tags`` inside the target
+        # repository.
+        # The flags `--force --tags --prune --prune-tags` are used to make sure we analyze the most up-to-date version
+        # of the repo.
+        #   - Any modified tags in the remote repository is updated locally.
+        #   - Prune deleted branches and tags in the remote from the local repository.
+        # References:
+        #   https://git-scm.com/docs/git-fetch
+        #   https://github.com/oracle/macaron/issues/547
         try:
-            git_obj.repo.git.fetch()
-        except GitCommandError as error:
-            logger.error("Unable to fetch from the remote repository. Error: %s", error)
+            git_obj.repo.git.fetch(
+                "origin",
+                "--force",
+                "--tags",
+                "--prune",
+                "--prune-tags",
+            )
+        except GitCommandError:
+            logger.error("Unable to fetch from the origin remote of the repository.")
             return False
 
     try:
