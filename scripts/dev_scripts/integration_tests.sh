@@ -11,7 +11,6 @@ COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
 TEST_REPO_FINDER=$WORKSPACE/tests/e2e/repo_finder/repo_finder.py
 RUN_MACARON="python -m macaron -o $WORKSPACE/output"
-PYTHON="python "
 RESULT_CODE=0
 UPDATE=0
 
