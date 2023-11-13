@@ -60,25 +60,25 @@ def parse_git_branch_output(content: str) -> list[str]:
         'remotes/origin/v3.dev',
     ]
     """
-    raw_branch_names = content.split("\n")
-    result = []
-    for name in raw_branch_names:
-        # Ignore elements that doesn't contain only whitespaces. This is because the raw content of git branch
-        # can have extra new line at the end, which can be picked up as an empty element in `raw_branch_names`.
-        if len(name.strip()) == 0:
-            continue
-
+    git_branch_output_lines = content.splitlines()
+    branches = []
+    for line in git_branch_output_lines:
         # The ``*`` symbol will appear next to the branch name where HEAD is currently on.
         # Branches in git cannot have ``*`` in its name so we can safely replace without tampering with its actual name.
         # https://git-scm.com/docs/git-check-ref-format
-        cleaned_up_branch_name = name.replace("*", "").strip()
+        branch = line.replace("*", "").strip()
 
-        result.append(cleaned_up_branch_name)
+        # Ignore elements that contain only whitespaces. This is because the raw content of git branch
+        # can have extra new line at the end, which can be picked up as an empty element in `git_branch_output_lines`.
+        if len(branch) == 0:
+            continue
 
-    return result
+        branches.append(branch)
+
+    return branches
 
 
-def get_branches_for_commit(git_obj: Git, commit: str, remote: str = "origin") -> list[str]:
+def get_branches_containing_commit(git_obj: Git, commit: str, remote: str = "origin") -> list[str]:
     """Get the branches from a remote that contains a specific commit.
 
     The returned branch names will be in the form of <remote>/<branch_name>.
@@ -206,7 +206,7 @@ def check_out_repo_target(
             return False
 
     if branch_name and digest:
-        branches = get_branches_for_commit(
+        branches = get_branches_containing_commit(
             git_obj=git_obj,
             commit=digest,
             remote="origin",
