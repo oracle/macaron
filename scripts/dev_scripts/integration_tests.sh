@@ -35,7 +35,11 @@ echo -e "=======================================================================
 echo -e "\n----------------------------------------------------------------------------------"
 echo "micronaut-projects/micronaut-core: Analyzing the repo path and the branch name when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
-$RUN_MACARON analyze -rp https://github.com/micronaut-projects/micronaut-core -b 3.5.x --skip-deps || log_fail
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/micronaut-core/micronaut-core.json
+JSON_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-core/micronaut-core.json
+$RUN_MACARON analyze -rp https://github.com/micronaut-projects/micronaut-core -b 3.8.x -d 68f9bb0a78fa930865d37fca39252b9ec66e4a43 --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "gitlab.com/tinyMediaManager/tinyMediaManager: Analyzing the repo path and the branch name when automatic dependency resolution is skipped."
@@ -195,42 +199,42 @@ $RUN_MACARON analyze -purl pkg:private_domain.com/apache/maven -sbom "$SBOM_FILE
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-# Analyze micronaut-projects/micronaut-core.
+# Analyze micronaut-projects/micronaut-test.
 echo -e "\n=================================================================================="
-echo "Run integration tests with configurations for micronaut-projects/micronaut-core..."
+echo "Run integration tests with configurations for micronaut-projects/micronaut-test..."
 echo -e "==================================================================================\n"
-DEP_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-core/dependencies.json
+DEP_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-test/dependencies.json
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "micronaut-projects/micronaut-core: Check the resolved dependency output when automatic dependency resolution is skipped."
+echo "micronaut-projects/micronaut-test: Check the resolved dependency output when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/skipdep_micronaut-projects_micronaut-core.json
-$RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_core_config.yaml --skip-deps || log_fail
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/skipdep_micronaut-projects_micronaut-test.json
+$RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_test_config.yaml --skip-deps || log_fail
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-# echo -e "\n----------------------------------------------------------------------------------"
-# echo "micronaut-projects/micronaut-core: Check the resolved dependency output with config for cyclonedx gradle plugin (default)."
-# echo -e "----------------------------------------------------------------------------------\n"
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-core.json
-$RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_core_config.yaml || log_fail
-
 # TODO: uncomment the test below after resolving https://github.com/oracle/macaron/issues/60.
+# echo -e "\n----------------------------------------------------------------------------------"
+# echo "micronaut-projects/micronaut-test: Check the resolved dependency output with config for cyclonedx gradle plugin (default)."
+# echo -e "----------------------------------------------------------------------------------\n"
+# DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-test.json
+# $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_test_config.yaml || log_fail
+
 # python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "micronaut-projects/micronaut-core: Check the e2e output JSON file with config and no dependency analyzing."
+echo "micronaut-projects/micronaut-test: Check the e2e output JSON file with config and no dependency analyzing."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-core/
-JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/micronaut-core
+JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-test/
+JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/micronaut-test
 
 declare -a COMPARE_FILES=(
-    "micronaut-core.json"
+    "micronaut-test.json"
     "caffeine.json"
     "slf4j.json"
 )
 
-$RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/micronaut_core_config.yaml --skip-deps || log_fail
+$RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/micronaut_test_config.yaml --skip-deps || log_fail
 
 for i in "${COMPARE_FILES[@]}"
 do
