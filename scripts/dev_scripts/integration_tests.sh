@@ -17,26 +17,26 @@ UPDATE=0
 
 # Optional argument for updating the expected results.
 if [ $# -eq 3 ] && [ "$3" == "--update" ] ; then
-  echo "Updating the expected results to match those currently produced by Macaron."
-  UPDATE=1
+    echo "Updating the expected results to match those currently produced by Macaron."
+    UPDATE=1
 fi
 
 function check_or_update_expected_output() {
-  if [ $UPDATE -eq 1 ] ; then
-    # Perform update of expected results by copying over produced output files.
-    # The copy only takes place if sufficient arguments are present.
-    # This function assumes arguments #2 and #3 are files: <actual_result>, <expected_result>.
-    if [ $# -eq 3 ] ; then
-      echo "Copying $2 to $3"
-      cp "$2" "$3"
+    if [ $UPDATE -eq 1 ] ; then
+        # Perform update of expected results by copying over produced output files.
+        # The copy only takes place if sufficient arguments are present.
+        # This function assumes arguments #2 and #3 are files: <actual_result>, <expected_result>.
+        if [ $# -eq 3 ] ; then
+            echo "Copying $2 to $3"
+            cp "$2" "$3"
+        else
+            # Calls with insufficient arguments are ignored to avoid some needless computation during updates.
+            echo "Ignoring $@"
+        fi
     else
-      # Calls with insufficient arguments are ignored to avoid some needless computation during updates.
-      echo "Ignoring $@"
+        # Perform normal operation.
+        python "$@"
     fi
-  else
-    # Perform normal operation.
-    python "$@"
-  fi
 }
 
 function log_fail() {
