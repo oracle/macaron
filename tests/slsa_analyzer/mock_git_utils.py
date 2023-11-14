@@ -67,32 +67,6 @@ def commit_files(git_wrapper: Git, file_names: list) -> bool:
         return False
 
 
-def commit_nothing(git_wrapper: Git, message: str = "") -> str:
-    """Create an empty commit in the repository indicated by the git_wrapper.
-
-    Parameters
-    ----------
-    git_wrapper : Git
-        The git wrapper.
-    message : str
-        The commit message.
-
-    Returns
-    -------
-    str
-        The commit sha or an empty string if unsuccessful.
-    """
-    try:
-        # Store the index object as recommended by the documentation
-        current_index = git_wrapper.repo.index
-        if not message:
-            message = "Empty commit"
-        commit = current_index.commit(message)
-        return str(commit.hexsha)
-    except GitError:
-        return ""
-
-
 def prepare_repo_for_testing(
     repo_path: str | os.PathLike, macaron_path: str | os.PathLike, output_dir: str | os.PathLike
 ) -> AnalyzeContext:
@@ -135,20 +109,3 @@ def prepare_repo_for_testing(
     analyze_ctx = AnalyzeContext(component=component, macaron_path=str(macaron_path), output_dir=str(output_dir))
 
     return analyze_ctx
-
-
-def add_new_commit_with_tag(git_obj: Git, tag: str) -> str:
-    """Add passed tag to repository if not already present.
-
-    Parameters
-    ----------
-    git_obj: Git
-        The Git repository.
-    tag: str
-        The tag to possibly add.
-    """
-    if tag in git_obj.repo.tags:
-        return ""
-    sha = commit_nothing(git_obj)
-    git_obj.repo.create_tag(tag)
-    return sha

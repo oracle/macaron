@@ -196,21 +196,22 @@ def get_commit_from_version(git_obj: Git, name: str, version: str) -> tuple[str,
     logger.debug("Searching for commit of artifact version using tags: %s@%s", name, version)
 
     # Only consider tags that have a commit.
-    valid_tags = []
+    valid_tags = {}
     for tag in git_obj.repo.tags:
         commit = _get_tag_commit(tag)
         if not commit:
             logger.debug("No commit found for tag: %s", tag)
             continue
 
-        valid_tags.append(tag)
+        tag_name = str(tag)
+        valid_tags[tag_name] = tag
 
     if not valid_tags:
         logger.debug("No tags with commits found for %s", name)
         return "", ""
 
     # Match tags.
-    matched_tags = _match_tags(valid_tags, name, version)
+    matched_tags = match_tags(list(valid_tags.keys()), name, version)
 
     if not matched_tags:
         logger.debug("No tags matched for %s", name)
@@ -221,8 +222,11 @@ def get_commit_from_version(git_obj: Git, name: str, version: str) -> tuple[str,
         logger.debug("Best match: %s", matched_tags[0])
         logger.debug("Up to 5 others: %s", matched_tags[1:6])
 
-    tag = matched_tags[0]
-    tag_name = str(tag)
+    tag_name = matched_tags[0]
+    tag = valid_tags[tag_name]
+    if not tag:
+        # Tag names are taken from valid_tags and should always exist within it.
+        logger.debug("Missing tag name from tag dict: %s not in %s", tag_name, valid_tags.keys())
 
     branch_name = _get_branch_of_commit(git_obj.get_commit_from_tag(tag_name))
     if not branch_name:
@@ -240,7 +244,7 @@ def get_commit_from_version(git_obj: Git, name: str, version: str) -> tuple[str,
     return branch_name, tag.commit.hexsha
 
 
-def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
+def _build_version_pattern(version: str) -> tuple[Pattern | None, list[str], bool]:
     """Build a version pattern to match the passed version string.
 
     Parameters
@@ -250,14 +254,19 @@ def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
 
     Returns
     -------
-    tuple[Pattern, list[str], bool]
+    tuple[Pattern | None, list[str], bool]
         The tuple of the regex pattern that will match the version, the list of version parts that were extracted, and
         whether the version string has a non-numeric suffix.
 
     """
     # The version is split on non-alphanumeric characters to separate the version parts from the non-version parts.
     # e.g. 1.2.3-DEV -> [1, 2, 3, DEV]
-    split = split_pattern.split(version)
+    try:
+        split = split_pattern.split(version)
+    except TypeError as error:
+        logger.debug("Failed to perform regex split on version string %s -- %s", version, error)
+        return None, [], False
+
     logger.debug("Split version: %s", split)
     if not split:
         # If the version string contains no separators use it as is.
@@ -314,15 +323,20 @@ def _build_version_pattern(version: str) -> tuple[Pattern, list[str], bool]:
         f"^(?:(?:{PREFIX_WITH_SEPARATOR})|(?:{PREFIX}{PREFIX_SEPARATOR}))(?P<version>"
         f"{this_version_pattern}){SUFFIX_SEPARATOR}{SUFFIX}$"
     )
-    return re.compile(this_version_pattern, flags=re.IGNORECASE), parts, has_non_numeric_suffix
+    try:
+        return re.compile(this_version_pattern, flags=re.IGNORECASE), parts, has_non_numeric_suffix
+    except Exception as error:  # pylint: disable=broad-exception-caught
+        # The regex library uses an internal error that cannot be used here to satisfy pylint.
+        logger.debug("Error while compiling version regex: %s", error)
+        return None, [], False
 
 
-def _match_tags(tag_list: list[TagReference], artifact_name: str, artifact_version: str) -> list[TagReference]:
+def match_tags(tag_list: list[str], artifact_name: str, artifact_version: str) -> list[str]:
     """Return items of the passed tag list that match the passed artifact name and version.
 
     Parameters
     ----------
-    tag_list: list[TagReference]
+    tag_list: list[str]
         The list of tags to check.
     artifact_name: str
         The name of the artifact to match.
@@ -331,17 +345,18 @@ def _match_tags(tag_list: list[TagReference], artifact_name: str, artifact_versi
 
     Returns
     -------
-    list[TagReference]
+    list[str]
         The list of tags that matched the pattern.
     """
     # Create the pattern for the passed version.
     pattern, parts, has_non_numeric_suffix = _build_version_pattern(artifact_version)
+    if not pattern:
+        return []
 
     # Match the tags.
     matched_tags = []
     for tag in tag_list:
-        tag_name = str(tag)
-        match = pattern.match(tag_name)
+        match = pattern.match(tag)
         if not match:
             continue
         # Tags are append with their match information for possible further evaluation.
