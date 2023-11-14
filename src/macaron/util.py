@@ -232,7 +232,9 @@ def copy_file_bulk(file_list: list, src_path: str, target_path: str) -> bool:
     --------
     ``file.txt`` will be copied from ``src/foo/bar/file.txt`` to ``target/foo/bar/file.txt``
 
-    >>> copy_file_bulk(['foo/bar/file.txt'], 'src', 'target')
+    .. code-block:: python3
+
+        copy_file_bulk(["foo/bar/file.txt"], "src", "target")
     """
     for file in file_list:
         file_src_path = os.path.join(src_path, file)

@@ -98,8 +98,15 @@ class Record(Generic[RecordNode]):
 
         Examples
         --------
-        >>> record.get_summary()
-        {'id': 'apache/maven', 'description': 'Analysis completed', 'report': 'apache.html', 'status': SCMStatus.AVAILABLE}
+        .. code-block:: python3
+
+            summary = record.get_summary()
+            # summary == {
+            #     'id': 'apache/maven',
+            #     'description': 'Analysis completed',
+            #     'report': 'apache.html',
+            #     'status': SCMStatus.AVAILABLE,
+            # }
         """
         return {
             "id": self.record_id,
