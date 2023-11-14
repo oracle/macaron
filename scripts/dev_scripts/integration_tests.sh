@@ -12,6 +12,31 @@ COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
 TEST_REPO_FINDER=$WORKSPACE/tests/e2e/repo_finder/repo_finder.py
 RUN_MACARON="python -m macaron -o $WORKSPACE/output"
 RESULT_CODE=0
+UPDATE=0
+
+# Optional argument for updating the expected results.
+if [ $# -eq 3 ] && [ "$3" == "--update" ] ; then
+    echo "Updating the expected results to match those currently produced by Macaron."
+    UPDATE=1
+fi
+
+function check_or_update_expected_output() {
+    if [ $UPDATE -eq 1 ] ; then
+        # Perform update of expected results by copying over produced output files.
+        # The copy only takes place if sufficient arguments are present.
+        # This function assumes arguments #2 and #3 are files: <actual_result>, <expected_result>.
+        if [ $# -eq 3 ] ; then
+            echo "Copying $2 to $3"
+            cp "$2" "$3"
+        else
+            # Calls with insufficient arguments are ignored to avoid some needless computation during updates.
+            echo "Ignoring $@"
+        fi
+    else
+        # Perform normal operation.
+        python "$@"
+    fi
+}
 
 function log_fail() {
     printf "Error: FAILED integration test (line ${BASH_LINENO}) %s\n" $@
@@ -39,7 +64,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/micronaut-core/micronaut-cor
 JSON_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-core/micronaut-core.json
 $RUN_MACARON analyze -rp https://github.com/micronaut-projects/micronaut-core -b 3.8.x -d 68f9bb0a78fa930865d37fca39252b9ec66e4a43 --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "gitlab.com/tinyMediaManager/tinyMediaManager: Analyzing the repo path and the branch name when automatic dependency resolution is skipped."
@@ -48,7 +73,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/tinyMediaManager/tinyMediaMa
 JSON_RESULT=$WORKSPACE/output/reports/gitlab_com/tinyMediaManager/tinyMediaManager/tinyMediaManager.json
 $RUN_MACARON analyze -rp https://gitlab.com/tinyMediaManager/tinyMediaManager -b main -d cca6b67a335074eca42136556f0a321f75dc4f48 --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "jenkinsci/plot-plugin: Analyzing the repo path, the branch name and the commit digest when automatic dependency resolution is skipped."
@@ -57,7 +82,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/plot-plugin/plot-plugin.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/jenkinsci/plot-plugin/plot-plugin.json
 $RUN_MACARON analyze -rp https://github.com/jenkinsci/plot-plugin -b master -d 55b059187e252b35ac0d6cb52268833ee1bb7380 --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
@@ -68,7 +93,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/urllib3_PASS.cue
 $RUN_MACARON analyze -pe $EXPECTATION_FILE -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
@@ -79,7 +104,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
 EXPECTATION_DIR=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/
 $RUN_MACARON analyze -pe $EXPECTATION_DIR -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "timyarkov/multibuild_test: Analyzing the repo path, the branch name and the commit digest"
@@ -91,9 +116,9 @@ DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_tim
 DEP_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/multibuild_test/dependencies.json
 $RUN_MACARON analyze -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
 
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo "timyarkov/docker_test: Analyzing the repo path, the branch name and the commit digest"
 echo "when automatic dependency resolution is skipped, for a project using docker as a build tool."
@@ -102,7 +127,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/docker_test/docker_test.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/docker_test/docker_test.json
 $RUN_MACARON analyze -rp https://github.com/timyarkov/docker_test -b main -d 404a51a2f38c4470af6b32e4e00b5318c2d7c0cc --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "uiv-lib/uiv: Analysing the repo path, the branch name and the commit digest for an npm project,"
@@ -112,7 +137,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/uiv/uiv.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/uiv-lib/uiv/uiv.json
 $RUN_MACARON analyze -rp https://github.com/uiv-lib/uiv -b dev -d 057b25b4db0913edab4cf728c306085e6fc20d49 --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "onu-ui/onu-ui: Analysing the repo path, the branch name and the commit digest for a pnpm project,"
@@ -122,7 +147,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/onu-ui/onu-ui.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/onu-ui/onu-ui/onu-ui.json
 $RUN_MACARON analyze -rp https://github.com/onu-ui/onu-ui -b main -d e3f2825c3940002a920d65476116a64684b3d95e --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "facebook/yoga: Analysing the repo path, the branch name and the commit digest for a Yarn classic"
@@ -132,7 +157,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/yoga/yoga.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/facebook/yoga/yoga.json
 $RUN_MACARON analyze -rp https://github.com/facebook/yoga -b main -d f8e2bc0875c145c429d0e865c9b83a40f65b3070 --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "wojtekmaj/react-pdf: Analysing the repo path, the branch name and the commit digest for a Yarn modern"
@@ -142,7 +167,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/react-pdf/react-pdf.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/wojtekmaj/react-pdf/react-pdf.json
 $RUN_MACARON analyze -rp https://github.com/wojtekmaj/react-pdf -b main -d be18436b7be827eb993b2e1e4bd9230dd835a9a3 --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "sigstore/sget: Analysing the repo path, the branch name and the"
@@ -152,7 +177,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/sget/sget.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/sigstore/sget/sget.json
 $RUN_MACARON analyze -rp https://github.com/sigstore/sget -b main -d 99e7b91204d391ccc76507f7079b6d2a7957489e --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with PURL and repository path without dependency resolution."
@@ -161,7 +186,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.json
 JSON_RESULT=$WORKSPACE/output/reports/maven/apache/maven/maven.json
 $RUN_MACARON analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using cyclonedx maven plugin (default)."
@@ -172,9 +197,9 @@ DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apa
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 $RUN_MACARON analyze -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 || log_fail
 
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing using a CycloneDx SBOM with target repo path"
@@ -185,7 +210,7 @@ DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 
 $RUN_MACARON analyze -rp https://github.com/apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 -sbom "$SBOM_FILE" || log_fail
 
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -197,7 +222,7 @@ DEP_RESULT=$WORKSPACE/output/reports/private_domain_com/apache/maven/dependencie
 
 $RUN_MACARON analyze -purl pkg:private_domain.com/apache/maven -sbom "$SBOM_FILE" || log_fail
 
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 # Analyze micronaut-projects/micronaut-test.
 echo -e "\n=================================================================================="
@@ -211,7 +236,7 @@ echo -e "-----------------------------------------------------------------------
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/skipdep_micronaut-projects_micronaut-test.json
 $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_test_config.yaml --skip-deps || log_fail
 
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 # TODO: uncomment the test below after resolving https://github.com/oracle/macaron/issues/60.
 # echo -e "\n----------------------------------------------------------------------------------"
@@ -238,7 +263,7 @@ $RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/micronaut_test_confi
 
 for i in "${COMPARE_FILES[@]}"
 do
-    python $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
+    check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
 done
 
 # Analyze apache/maven.
@@ -253,7 +278,7 @@ echo -e "-----------------------------------------------------------------------
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/skipdep_apache_maven.json
 $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml --skip-deps || log_fail
 
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check the e2e output JSON file with config and no dependency analyzing."
@@ -271,7 +296,7 @@ $RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/maven_config.yaml --
 
 for i in "${COMPARE_FILES[@]}"
 do
-    python $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
+    check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
 done
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -280,7 +305,7 @@ echo -e "-----------------------------------------------------------------------
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || log_fail
 
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check: Check the e2e status code of running with invalid branch or digest defined in the yaml configuration."
@@ -309,7 +334,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
 $RUN_MACARON analyze -rp https://github.com/apache/maven --skip-deps -b master -d 6767f2500f1d005924ccff27f04350c253858a84 -g $WORKSPACE/src/macaron/output_reporter/templates/macaron.html || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 # Analyze FasterXML/jackson-databind.
 echo -e "\n=================================================================================="
@@ -323,7 +348,7 @@ echo -e "-----------------------------------------------------------------------
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/jackson-databind/jackson-databind.json
 $RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/jackson_databind_config.yaml --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 # echo -e "\n----------------------------------------------------------------------------------"
 # echo "FasterXML/jackson-databind: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
@@ -332,7 +357,7 @@ python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 # DEP_RESULT=$WORKSPACE/output/reports/github_com/FasterXML/jackson-databind/dependencies.json
 # $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/jackson_databind_config.yaml || log_fail
 
-# python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+# check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "google/guava: Analyzing with PURL and repository path without dependency resolution."
@@ -341,7 +366,7 @@ JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/com_google_guava/guava/
 JSON_RESULT=$WORKSPACE/output/reports/maven/com_google_guava/guava/guava.json
 $RUN_MACARON analyze -purl pkg:maven/com.google.guava/guava@32.1.2-jre?type=jar -rp https://github.com/google/guava -b master -d d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4 --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 
 # Running Macaron using local paths.
@@ -358,8 +383,8 @@ DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apa
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 $RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com analyze -rp apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 || log_fail
 
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with local paths in configuration and without dependency resolution."
@@ -376,7 +401,7 @@ declare -a COMPARE_FILES=(
 $RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com analyze -c $WORKSPACE/tests/e2e/configurations/maven_local_path.yaml --skip-deps || log_fail
 for i in "${COMPARE_FILES[@]}"
 do
-    python $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
+    check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
 done
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -395,7 +420,7 @@ declare -a COMPARE_FILES=(
 $RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com/ analyze -rp apache/maven -b master -d 6767f2500f1d005924ccff27f04350c253858a84 --skip-deps || log_fail
 for i in "${COMPARE_FILES[@]}"
 do
-    python $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
+    check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
 done
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -567,7 +592,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/sl
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
 $RUN_MACARON analyze -pe $EXPECTATION_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped"
@@ -578,7 +603,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/invalid_expectations/invalid.cue
 $RUN_MACARON analyze -pe $EXPECTATION_FILE -rp https://github.com/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
-python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 # Testing the Souffle policy engine.
 echo -e "\n----------------------------------------------------------------------------------"
@@ -592,7 +617,7 @@ POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/policy_report.js
 
 # Run policy engine on the database and compare results.
 $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
-python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
+check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 
 if [ $RESULT_CODE -ne 0 ];
 then
@@ -605,7 +630,7 @@ fi
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Testing Repo Finder functionality."
 echo -e "----------------------------------------------------------------------------------\n"
-python $TEST_REPO_FINDER || log_fail
+check_or_update_expected_output $TEST_REPO_FINDER || log_fail
 if [ $? -ne 0 ];
 then
     echo -e "Expect zero status code but got $?."
