@@ -14,6 +14,7 @@ Subpackages
 
    macaron.slsa_analyzer.provenance.expectations
    macaron.slsa_analyzer.provenance.intoto
+   macaron.slsa_analyzer.provenance.slsa
    macaron.slsa_analyzer.provenance.witness
 
 Submodules
