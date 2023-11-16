@@ -7,7 +7,7 @@ import re
 
 import hypothesis
 from hypothesis import given, settings
-from hypothesis.strategies import DataObject, data
+from hypothesis.strategies import DataObject, data, text
 from packageurl import PackageURL
 
 from macaron.repo_finder import commit_finder
@@ -45,7 +45,7 @@ def _test_version(tags: list[str], name: str, version: str, target_tag: str) -> 
 input_pattern = re.compile(r"[0-9]{1,3}(\.[0-9a-z]{1,3}){,5}([-+#][a-z0-9].+)?", flags=re.IGNORECASE)
 
 
-@given(hypothesis.strategies.text())
+@given(text())
 @settings(max_examples=1000)
 def test_pattern_generation(version: str) -> None:
     """Test stability of pattern creation from user input."""
@@ -57,10 +57,12 @@ def test_pattern_generation(version: str) -> None:
         purl = PackageURL(name="test", version=version, type="maven")
         if not purl.version:
             return
-        commit_finder._build_version_pattern(purl.version)
-        assert True
     except ValueError as error:
         logger.debug(error)
+        return
+
+    commit_finder._build_version_pattern(purl.version)
+    assert True
 
 
 # These numbers should be kept low as the complex regex makes generation slow.

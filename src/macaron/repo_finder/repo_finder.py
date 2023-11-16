@@ -111,7 +111,7 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
     - The pre-defined repository-based PURL type as defined in
     https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst
 
-    - The supprted git service domains (e.g. ``github.com``) defined in ``available_domains``.
+    - The supported git service domains (e.g. ``github.com``) defined in ``available_domains``.
 
     The repository path will be generated with the following format ``https://<type>/<namespace>/<name>``.
 
