@@ -140,8 +140,8 @@ def check_out_repo_target(
     For all scenarios:
     - If the checkout failed (e.g. a branch or a commit doesn't exist), this function will return
     False.
-    - This function will perform a force checkout, which mean it will reset the index and working tree of the target
-    repository.
+    - This function will perform a force checkout
+    https://git-scm.com/docs/git-checkout#Documentation/git-checkout.txt---force
 
     This function supports repositories which are cloned from existing remote repositories.
     Other scenarios are not covered (e.g. a newly initiated repository).
