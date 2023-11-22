@@ -61,7 +61,7 @@ def test_pattern_generation(version: str) -> None:
         logger.debug(error)
         return
 
-    commit_finder._build_version_pattern(purl.version)
+    commit_finder._build_version_pattern(purl.name, purl.version)
     assert True
 
 
@@ -87,7 +87,7 @@ def test_version_to_tag_matching(_data: DataObject) -> None:  # noqa: PT019
         if not purl.version:
             return
         # Build the pattern from the version.
-        pattern, parts, _ = commit_finder._build_version_pattern(purl.version)
+        pattern, parts, _ = commit_finder._build_version_pattern(purl.name, purl.version)
         if not pattern:
             return
         # Generate the tag from a pattern that is very similar to how version patterns are made.

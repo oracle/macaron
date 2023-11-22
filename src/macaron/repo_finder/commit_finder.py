@@ -29,7 +29,12 @@ logger: logging.Logger = logging.getLogger(__name__)
 # - 'prefix-a444'     of 'prefix-a444-v3.2.1.0'
 # - 'vm'              of 'vm-5-5-5'
 # - 'name-prefix-j5u' of 'name-prefix-j5u//r0_0_1'
-PREFIX = "(?P<prefix_0>(?:[a-z].*(?:[a-z0-9][a-z][0-9]+|[0-9][a-z]|[a-z]{2}))|[a-z]{2})?"
+# This part of the pattern terminates with an OR character to allow for it to be combined with the name of the target
+# artifact as another possible prefix match.
+# E.g.
+# PREFIX_START + <artifact_name> + PREFIX_END
+PREFIX_START = "(?P<prefix_0>(?:(?:[a-z].*(?:[a-z0-9][a-z][0-9]+|[0-9][a-z]|[a-z]{2}))|[a-z]{2})|"
+PREFIX_END = ")?"
 
 # An alternative prefix pattern that is intended for a single use case: A prefix that contains a part that is
 # difficult to distinguish from part of a version, i.e. java-v1-1.1.0 (prefix: java-v1, version: 1.1.0)
@@ -244,11 +249,13 @@ def get_commit_from_version(git_obj: Git, name: str, version: str) -> tuple[str,
     return branch_name, tag.commit.hexsha
 
 
-def _build_version_pattern(version: str) -> tuple[Pattern | None, list[str], bool]:
+def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, list[str], bool]:
     """Build a version pattern to match the passed version string.
 
     Parameters
     ----------
+    name: str
+        The name string.
     version: str
         The version string.
 
@@ -313,14 +320,14 @@ def _build_version_pattern(version: str) -> tuple[Pattern | None, list[str], boo
     # If the version parts are less than MAX_ZERO_DIGIT_EXTENSION, add additional optional zeros to pad out the
     # regex, and thereby provide an opportunity to map mismatches between version and tags (that are still the same
     # number).
-    # E.g. MAX_ZERO_DIGIT_EXTENSION = 4 -> 1.0 to 1.0.0.0, or 3 to 3.0.0.0, etc.
+    # E.g. MAX_ZERO_DIGIT_EXTENSION = 4 -> 1.2 to 1.2.0.0, or 3 to 3.0.0.0, etc.
     if not has_non_numeric_suffix and 0 < len(parts) < MAX_ZERO_DIGIT_EXTENSION:
         for count in range(len(parts), MAX_ZERO_DIGIT_EXTENSION):
             # Additional zeros added for this purpose make use of a back reference to the first matched separator.
             this_version_pattern = this_version_pattern + "(" + (INFIX_2 if count > 1 else INFIX_1) + "0)?"
 
     this_version_pattern = (
-        f"^(?:(?:{PREFIX_WITH_SEPARATOR})|(?:{PREFIX}{PREFIX_SEPARATOR}))(?P<version>"
+        f"^(?:(?:{PREFIX_WITH_SEPARATOR})|(?:{PREFIX_START}{name}{PREFIX_END}{PREFIX_SEPARATOR}))(?P<version>"
         f"{this_version_pattern}){SUFFIX_SEPARATOR}{SUFFIX}$"
     )
     try:
@@ -349,7 +356,7 @@ def match_tags(tag_list: list[str], artifact_name: str, artifact_version: str) -
         The list of tags that matched the pattern.
     """
     # Create the pattern for the passed version.
-    pattern, parts, has_non_numeric_suffix = _build_version_pattern(artifact_version)
+    pattern, parts, has_non_numeric_suffix = _build_version_pattern(artifact_name, artifact_version)
     if not pattern:
         return []
 
