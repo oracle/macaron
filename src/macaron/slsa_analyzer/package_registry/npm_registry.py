@@ -129,7 +129,7 @@ class NPMRegistry(PackageRegistry):
     def download_attestation_payload(self, url: str, download_path: str) -> bool:
         """Download the npm attestation from npm registry.
 
-        Each npm package has two types of attestations:
+        Each npm package can have the following types of attestations:
 
         * publish with "https://github.com/npm/attestation/tree/main/specs/publish/v0.1" predicateType
         * SLSA with "https://slsa.dev/provenance/v0.2" predicateType
