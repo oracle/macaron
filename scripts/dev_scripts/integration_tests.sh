@@ -39,8 +39,8 @@ function check_or_update_expected_output() {
 }
 
 # Check if npm-related tests should be disabled.
-if [[ ! -z "$NO_NPM" ]]; then
-    echo "Note: NO_NPM environment variable is set, so npm tests will be skipped."
+if [[ "$NO_NPM" == "TRUE" ]]; then
+    echo "Note: NO_NPM environment variable is set to TRUE, so npm tests will be skipped."
 fi
 NO_NPM_TEST=$NO_NPM
 

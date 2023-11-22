@@ -89,9 +89,9 @@ Provenances
      - Documentation
    * - `SLSA <https://slsa.dev>`_
      -
-       * | `SLSA provenance version 0.2 <https://slsa.dev/spec/v0.2/provenance>`_. The provenance should be
-         | - published as a GitHub release asset.
-         | - published on the `npm registry <https://registry.npmjs.org>`_.
+       * | `SLSA provenance version 0.2 <https://slsa.dev/spec/v0.2/provenance>`_. The provenance should be published in one of the following ways:
+         | - as a GitHub release asset.
+         | - on the `npm registry <https://registry.npmjs.org>`_.
      - :doc:`page </pages/supported_technologies/jfrog>`
    * - `Witness <https://github.com/testifysec/witness>`_
      -

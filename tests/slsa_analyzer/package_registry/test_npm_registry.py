@@ -11,26 +11,19 @@ import pytest
 from macaron.config.defaults import load_defaults
 from macaron.errors import ConfigurationError
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
+from macaron.slsa_analyzer.build_tool.npm import NPM
 from macaron.slsa_analyzer.package_registry.npm_registry import NPMAttestationAsset, NPMRegistry
-
-
-def _create_npm_registry() -> NPMRegistry:
-    """Create an npm registry instance.
-
-    This private function is used as parameter for Hypothesis, which otherwise does not accept a fixture.
-    """
-    return NPMRegistry(
-        hostname="registry.npmjs.org", attestation_endpoint="-/npm/v1/attestations", request_timeout=20, enabled=True
-    )
 
 
 @pytest.fixture(name="npm_registry")
 def create_npm_registry() -> NPMRegistry:
     """Create an npm registry instance."""
-    return _create_npm_registry()
+    return NPMRegistry(
+        hostname="registry.npmjs.org", attestation_endpoint="-/npm/v1/attestations", request_timeout=20, enabled=True
+    )
 
 
-def test_disable_npm_registry(npm_registry: NPMRegistry, tmp_path: Path) -> None:
+def test_disable_npm_registry(npm_registry: NPMRegistry, tmp_path: Path, npm_tool: NPM) -> None:
     """Test disabling npm registry."""
     config = """
     [package_registry.npm]
@@ -43,6 +36,7 @@ def test_disable_npm_registry(npm_registry: NPMRegistry, tmp_path: Path) -> None
     npm_registry.load_defaults()
 
     assert npm_registry.enabled is False
+    assert npm_registry.is_detected(build_tool=npm_tool) is False
 
 
 @pytest.mark.parametrize(

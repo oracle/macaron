@@ -126,7 +126,7 @@ def test_invalid_analysis_target(
     digest: str,
     available_domains: list[str],
 ) -> None:
-    """Test the analysis target resolution with valid inputs."""
+    """Test the analysis target resolution with invalid inputs."""
     config = Configuration(
         {
             "purl": f"pkg:{purl_type}/{namespace}/{artifact_id}@{version}",

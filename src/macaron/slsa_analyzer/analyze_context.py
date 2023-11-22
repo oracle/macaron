@@ -99,7 +99,7 @@ class AnalyzeContext:
 
         Returns
         -------
-        dict[str : list[InTotoV01Statement]]
+        dict[str, list[InTotoV01Statement | InTotoV1Statement] ]
             A dictionary in which each key is a CI service's name and each value is
             the corresponding provenance payload.
         """

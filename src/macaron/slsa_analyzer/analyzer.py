@@ -6,7 +6,6 @@
 import logging
 import os
 import sys
-import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -537,17 +536,11 @@ class Analyzer:
             parsed_purl = config.get_value("purl")
         else:
             try:
+                # Note that PackageURL.from_string sanitizes the unsafe characters in the purl string,
+                # which is user-controllable, by calling urllib's `urlsplit` function.
                 parsed_purl = PackageURL.from_string(config.get_value("purl"))
             except ValueError as error:
                 raise InvalidPURLError(f"Invalid input PURL: {config.get_value('purl')}") from error
-
-        # Validate the purl object, which is user-controllable.
-        if parsed_purl:
-            purl_str = parsed_purl.to_string()
-            # The urlparse API sanitizes unsafe characters.
-            parsed_url = urllib.parse.urlparse(purl_str)
-            if purl_str != parsed_url.geturl():
-                raise ValueError("The PURL provided as input has unsafe characters.")
 
         repo_path_input: str = config.get_value("path")
         input_branch: str = config.get_value("branch")

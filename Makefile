@@ -270,7 +270,7 @@ test-go:
 	go test ./golang/...
 
 # Run the integration tests.
-# Note: to disable npm tests set `NO_NPM` environment variable.
+# Note: to disable npm tests set `NO_NPM` environment variable to `TRUE`.
 .PHONY: integration-test
 integration-test:
 	scripts/dev_scripts/integration_tests.sh $(REPO_PATH) "${HOME}"

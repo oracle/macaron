@@ -56,7 +56,7 @@ class MockGhAPIClient(GhAPIClient):
 
 
 class MockNPMRegistry(NPMRegistry):
-    """Mocj NPMRegistry class."""
+    """Mock NPMRegistry class."""
 
     resource_valid_prov_dir: str
 

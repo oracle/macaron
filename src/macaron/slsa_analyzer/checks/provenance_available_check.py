@@ -211,9 +211,6 @@ class ProvenanceAvailableCheck(BaseCheck):
                     build_tool=NPM() | Yarn(),
                     package_registry=NPMRegistry() as npm_registry,
                 ) as npm_info_entry:
-                    if not npm_registry.enabled:
-                        logger.debug("Calling REST API calls to npm registry is disabled.")
-                        return []
                     if not component.version:
                         logger.debug(
                             "Unable to find provenance because artifact version is not available in %s.", component.purl
@@ -244,6 +241,7 @@ class ProvenanceAvailableCheck(BaseCheck):
                                 npm_provenance_payload = load_provenance_payload(download_path)
                             except LoadIntotoAttestationError as loadintotoerror:
                                 logger.error("Error while loading provenance %s", loadintotoerror)
+                                return []
                         npm_info_entry.provenances.append(
                             SLSAProvenanceData(asset=npm_provenance_asset, payload=npm_provenance_payload)
                         )

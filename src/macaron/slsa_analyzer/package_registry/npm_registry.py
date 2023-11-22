@@ -11,7 +11,7 @@ from urllib.parse import SplitResult, urlunsplit
 import requests
 
 from macaron.config.defaults import defaults
-from macaron.errors import ConfigurationError, InvalidHTTPResponseError, InvalidPURLError
+from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.npm import NPM
 from macaron.slsa_analyzer.build_tool.yarn import Yarn
@@ -40,7 +40,7 @@ class NPMRegistry(PackageRegistry):
 
         Parameters
         ----------
-        hostname : str
+        hostname : str | None
             The hostname of the npm registry.
         attestation_endpoint : str | None
             The attestation REST API.
@@ -71,7 +71,7 @@ class NPMRegistry(PackageRegistry):
 
         if not section.getboolean("enabled", fallback=True):
             self.enabled = False
-            logger.debug("npm registry is disabled in section [{section_name}] of the .ini configuration file.")
+            logger.debug("npm registry is disabled in section [%s] of the .ini configuration file.", section_name)
             return
 
         self.hostname = section.get("hostname")
@@ -80,7 +80,7 @@ class NPMRegistry(PackageRegistry):
                 f'The "hostname" key is missing in section [{section_name}] of the .ini configuration file.'
             )
 
-        self.attestation_endpoint = section.get("attestation_endpoint", "-/npm/v1/attestations")
+        self.attestation_endpoint = section.get("attestation_endpoint")
 
         if not self.attestation_endpoint:
             raise ConfigurationError(
@@ -96,13 +96,15 @@ class NPMRegistry(PackageRegistry):
             ) from error
 
     def is_detected(self, build_tool: BaseBuildTool) -> bool:
-        """Detect if artifacts of the repo under analysis can possibly be published to this package registry.
+        """Detect if artifacts under analysis can be published to this package registry.
 
         The detection here is based on the repo's detected build tools.
         If the package registry is compatible with the given build tools, it can be a
-        possible place where the artifacts produced from the repo are published.
+        possible place where the artifacts are published.
 
         ``NPMRegistry`` is compatible with npm and Yarn build tools.
+
+        Note: if the npm registry is disabled through the ini configuration, this method returns False.
 
         Parameters
         ----------
@@ -115,6 +117,9 @@ class NPMRegistry(PackageRegistry):
             ``True`` if the repo under analysis can be published to this package registry,
             based on the given build tool.
         """
+        if not self.enabled:
+            logger.debug("Support for the npm registry is disabled.")
+            return False
         compatible_build_tool_classes = [NPM, Yarn]
         for build_tool_class in compatible_build_tool_classes:
             if isinstance(build_tool, build_tool_class):
@@ -128,20 +133,28 @@ class NPMRegistry(PackageRegistry):
 
         * publish with "https://github.com/npm/attestation/tree/main/specs/publish/v0.1" predicateType
         * SLSA with "https://slsa.dev/provenance/v0.2" predicateType
+        * SLSA with "https://slsa.dev/provenance/v1" predicateType
 
-        We download the SLSA provenance in this method.
+        For now we download the SLSA provenance v0.2 in this method.
+
+        Here is an example SLSA v0.2 provenance: https://registry.npmjs.org/-/npm/v1/attestations/@sigstore/mock@0.1.0
 
         Parameters
         ----------
         url: str
             The attestation URL.
-        download_path: srt
+        download_path: str
             The download path for the asset.
 
         Returns
         -------
         bool
             ``True`` if the asset is downloaded successfully; ``False`` if not.
+
+        Raises
+        ------
+        InvalidHTTPResponseError
+            If the HTTP request to the registry fails or an unexpected response is returned.
         """
         response = send_get_http_raw(url, headers=None, timeout=self.request_timeout)
         if not response or response.status_code != 200:
@@ -150,7 +163,7 @@ class NPMRegistry(PackageRegistry):
         try:
             res_obj = response.json()
         except requests.exceptions.JSONDecodeError as error:
-            raise InvalidHTTPResponseError(f"Failed to process response from Maven central for {url}.") from error
+            raise InvalidHTTPResponseError(f"Failed to process response from npm for {url}.") from error
         if not res_obj:
             raise InvalidHTTPResponseError(f"Empty response returned by {url} .")
         if not res_obj.get("attestations"):
@@ -192,7 +205,9 @@ class NPMAttestationAsset(NamedTuple):
     The API Documentation can be found here:
     """
 
-    #: The namespace of the artifact on npm.
+    #: The optional scope of a package on npm, which is used as the namespace in a PURL string.
+    #: See https://docs.npmjs.com/cli/v10/using-npm/scope to know about npm scopes.
+    #: See https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst#npm for the namespace in an npm PURL string.
     namespace: str | None
 
     #: The artifact ID.
@@ -228,7 +243,7 @@ class NPMAttestationAsset(NamedTuple):
         if self.namespace:
             path_params.append(self.namespace)
         path_params.append(self.artifact_id)
-        path = f'{"/".join(path_params)}'
+        path = "/".join(path_params)
 
         # Check that version is not an empty string.
         if self.version:
@@ -260,6 +275,6 @@ class NPMAttestationAsset(NamedTuple):
         """
         try:
             return self.npm_registry.download_attestation_payload(self.url, dest)
-        except InvalidPURLError as error:
+        except InvalidHTTPResponseError as error:
             logger.debug(error)
             return False
