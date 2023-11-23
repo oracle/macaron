@@ -98,15 +98,23 @@ class Record(Generic[RecordNode]):
 
         Examples
         --------
-        .. code-block:: python3
-
-            summary = record.get_summary()
-            # summary == {
-            #     'id': 'apache/maven',
-            #     'description': 'Analysis completed',
-            #     'report': 'apache.html',
-            #     'status': SCMStatus.AVAILABLE,
-            # }
+        >>> from pprint import pprint
+        >>> from macaron.config.target_config import Configuration
+        >>> from macaron.output_reporter.scm import SCMStatus
+        >>> from macaron.output_reporter.results import Record
+        >>> record = Record(
+        ...     record_id="apache/maven",
+        ...     description="Analysis completed",
+        ...     pre_config=Configuration({}),
+        ...     status=SCMStatus.MISSING_SCM,
+        ...     context=None,
+        ...     dependencies=[],
+        ... )
+        >>> pprint(record.get_summary())
+        {'description': 'Analysis completed',
+         'id': 'apache/maven',
+         'repo_url_status': <SCMStatus.MISSING_SCM: 'MISSING REPO URL'>,
+         'report': ''}
         """
         return {
             "id": self.record_id,
