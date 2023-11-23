@@ -25,6 +25,14 @@ macaron.slsa\_analyzer.package\_registry.maven\_central\_registry module
    :undoc-members:
    :show-inheritance:
 
+macaron.slsa\_analyzer.package\_registry.npm\_registry module
+-------------------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.package_registry.npm_registry
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.slsa\_analyzer.package\_registry.package\_registry module
 -----------------------------------------------------------------
 

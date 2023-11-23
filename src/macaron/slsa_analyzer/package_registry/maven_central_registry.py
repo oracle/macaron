@@ -35,7 +35,7 @@ class MavenCentralRegistry(PackageRegistry):
         Parameters
         ----------
         hostname : str
-            The hostname of the JFrog instance.
+            The hostname of the Maven Central service.
         search_endpoint : str | None
             The search REST API to find artifacts.
         request_timeout : int | None
