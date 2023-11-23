@@ -536,6 +536,8 @@ class Analyzer:
             parsed_purl = config.get_value("purl")
         else:
             try:
+                # Note that PackageURL.from_string sanitizes the unsafe characters in the purl string,
+                # which is user-controllable, by calling urllib's `urlsplit` function.
                 parsed_purl = PackageURL.from_string(config.get_value("purl"))
             except ValueError as error:
                 raise InvalidPURLError(f"Invalid input PURL: {config.get_value('purl')}") from error

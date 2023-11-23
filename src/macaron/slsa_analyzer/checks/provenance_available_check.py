@@ -13,19 +13,23 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
 from macaron.config.defaults import defaults
-from macaron.database.table_definitions import CheckFacts
+from macaron.database.table_definitions import CheckFacts, Component
 from macaron.errors import MacaronError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
+from macaron.slsa_analyzer.build_tool.npm import NPM
+from macaron.slsa_analyzer.build_tool.yarn import Yarn
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
 from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAsset
+from macaron.slsa_analyzer.package_registry.npm_registry import NPMAttestationAsset, NPMRegistry
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 from macaron.slsa_analyzer.provenance.loader import LoadIntotoAttestationError, load_provenance_payload
+from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.provenance.witness import (
     WitnessProvenanceData,
     extract_repo_url,
@@ -81,8 +85,7 @@ class ProvenanceAvailableCheck(BaseCheck):
 
     def find_provenance_assets_on_package_registries(
         self,
-        repo_fs_path: str,
-        repo_remote_path: str,
+        component: Component,
         package_registry_info_entries: list[PackageRegistryInfo],
         provenance_extensions: list[str],
     ) -> Sequence[AssetLocator]:
@@ -93,10 +96,8 @@ class ProvenanceAvailableCheck(BaseCheck):
 
         Parameters
         ----------
-        repo_fs_path : str
-            The path to the repo on the local file system.
-        repo_remote_path : str
-            The URL to the remote repository.
+        component: Component
+            The target component under analysis.
         package_registry_info_entries : list[PackageRegistryInfo]
             A list of package registry info entries.
         provenance_extensions : list[str]
@@ -121,10 +122,21 @@ class ProvenanceAvailableCheck(BaseCheck):
                     build_tool=Gradle() as gradle,
                     package_registry=JFrogMavenRegistry() as jfrog_registry,
                 ) as info_entry:
+                    # The current provenance discovery mechanism for JFrog Maven registry requires a
+                    # repository to be available. Moreover, the repository path in Witness provenance
+                    # contents are checked to match the target repository path.
+                    # TODO: handle cases where a PURL string is provided for a software component but
+                    # no repository is available.
+                    if not component.repository:
+                        logger.debug(
+                            "Unable to find a provenance because a repository was not found for %s.", component.purl
+                        )
+                        return []
+
                     # Triples of group id, artifact id, version.
                     gavs: list[tuple[str, str, str]] = []
 
-                    group_ids = gradle.get_group_ids(repo_fs_path)
+                    group_ids = gradle.get_group_ids(component.repository.fs_path)
                     for group_id in group_ids:
                         artifact_ids = jfrog_registry.fetch_artifact_ids(group_id)
 
@@ -182,7 +194,7 @@ class ProvenanceAvailableCheck(BaseCheck):
 
                     provenances = self.obtain_witness_provenances(
                         provenance_assets=provenance_assets,
-                        repo_remote_path=repo_remote_path,
+                        repo_remote_path=component.repository.remote_path,
                     )
 
                     witness_provenance_assets = []
@@ -195,7 +207,48 @@ class ProvenanceAvailableCheck(BaseCheck):
                     # Persist the provenance assets in the package registry info entry.
                     info_entry.provenances.extend(provenances)
                     return provenance_assets
+                case PackageRegistryInfo(
+                    build_tool=NPM() | Yarn(),
+                    package_registry=NPMRegistry() as npm_registry,
+                ) as npm_info_entry:
+                    if not component.version:
+                        logger.debug(
+                            "Unable to find provenance because artifact version is not available in %s.", component.purl
+                        )
+                        return []
 
+                    namespace = component.namespace
+                    artifact_id = component.name
+                    version = component.version
+                    npm_provenance_assets = []
+
+                    # The size of the asset (in bytes) is added to match the AssetLocator
+                    # protocol and is not used because npm API registry does not provide it, so it is set to zero.
+                    npm_provenance_asset = NPMAttestationAsset(
+                        namespace=namespace,
+                        artifact_id=artifact_id,
+                        version=version,
+                        npm_registry=npm_registry,
+                        size_in_bytes=0,
+                    )
+                    try:
+                        with tempfile.TemporaryDirectory() as temp_dir:
+                            download_path = os.path.join(temp_dir, f"{artifact_id}.intoto.jsonl")
+                            if not npm_provenance_asset.download(download_path):
+                                logger.debug("Unable to find an npm provenance for %s@%s", artifact_id, version)
+                                return []
+                            try:
+                                npm_provenance_payload = load_provenance_payload(download_path)
+                            except LoadIntotoAttestationError as loadintotoerror:
+                                logger.error("Error while loading provenance %s", loadintotoerror)
+                                return []
+                        npm_info_entry.provenances.append(
+                            SLSAProvenanceData(asset=npm_provenance_asset, payload=npm_provenance_payload)
+                        )
+                        npm_provenance_assets.append(npm_provenance_asset)
+                    except OSError as error:
+                        logger.error("Error while storing provenance in the temporary directory: %s", error)
+                    return npm_provenance_assets
         return []
 
     def obtain_witness_provenances(
@@ -220,38 +273,41 @@ class ProvenanceAvailableCheck(BaseCheck):
         provenances = []
         witness_verifier_config = load_witness_verifier_config()
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            for provenance_asset in provenance_assets:
-                provenance_filepath = os.path.join(temp_dir, provenance_asset.name)
-                if not provenance_asset.download(provenance_filepath):
-                    logger.debug(
-                        "Could not download the provenance %s. Skip verifying...",
-                        provenance_asset.name,
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                for provenance_asset in provenance_assets:
+                    provenance_filepath = os.path.join(temp_dir, provenance_asset.name)
+                    if not provenance_asset.download(provenance_filepath):
+                        logger.debug(
+                            "Could not download the provenance %s. Skip verifying...",
+                            provenance_asset.name,
+                        )
+                        continue
+
+                    try:
+                        provenance_payload = load_provenance_payload(provenance_filepath)
+                    except LoadIntotoAttestationError as error:
+                        logger.error("Error while loading provenance: %s", error)
+                        continue
+
+                    if not is_witness_provenance_payload(
+                        provenance_payload,
+                        witness_verifier_config.predicate_types,
+                    ):
+                        continue
+
+                    repo_url = extract_repo_url(provenance_payload)
+                    if repo_url != repo_remote_path:
+                        continue
+
+                    provenances.append(
+                        WitnessProvenanceData(
+                            asset=provenance_asset,
+                            payload=provenance_payload,
+                        )
                     )
-                    continue
-
-                try:
-                    provenance_payload = load_provenance_payload(provenance_filepath)
-                except LoadIntotoAttestationError as error:
-                    logger.error("Error while loading provenance: %s", error)
-                    continue
-
-                if not is_witness_provenance_payload(
-                    provenance_payload,
-                    witness_verifier_config.predicate_types,
-                ):
-                    continue
-
-                repo_url = extract_repo_url(provenance_payload)
-                if repo_url != repo_remote_path:
-                    continue
-
-                provenances.append(
-                    WitnessProvenanceData(
-                        asset=provenance_asset,
-                        payload=provenance_payload,
-                    )
-                )
+        except OSError as error:
+            logger.error("Error while storing provenance in the temporary directory: %s", error)
 
         return provenances
 
@@ -308,7 +364,7 @@ class ProvenanceAvailableCheck(BaseCheck):
 
     def find_provenance_assets_on_ci_services(
         self,
-        repo_full_name: str,
+        component: Component,
         ci_info_entries: list[CIInfo],
         provenance_extensions: list[str],
     ) -> Sequence[AssetLocator]:
@@ -322,8 +378,8 @@ class ProvenanceAvailableCheck(BaseCheck):
 
         Parameters
         ----------
-        repo_full_name: str
-            The full name of the repo, in the format of ``owner/repo_name``.
+        component: Component
+            The target component under analysis.
         package_registry_info_entries : list[PackageRegistryInfo]
             A list of package registry info entries.
         provenance_extensions : list[str]
@@ -335,6 +391,11 @@ class ProvenanceAvailableCheck(BaseCheck):
         Sequence[Asset]
             A sequence of assets found on the given CI services.
         """
+        if not component.repository:
+            logger.debug("Unable to find a provenance because a repository was not found for %s.", component.purl)
+            return []
+
+        repo_full_name = component.repository.full_name
         for ci_info in ci_info_entries:
             ci_service = ci_info["service"]
 
@@ -387,45 +448,48 @@ class ProvenanceAvailableCheck(BaseCheck):
         ci_service = ci_info["service"]
         prov_assets = ci_info["provenance_assets"]
 
-        with tempfile.TemporaryDirectory() as temp_path:
-            downloaded_provs = []
-            for prov_asset in prov_assets:
-                # Check the size before downloading.
-                if prov_asset.size_in_bytes > defaults.getint(
-                    "slsa.verifier",
-                    "max_download_size",
-                    fallback=1000000,
-                ):
-                    logger.info(
-                        "Skip verifying the provenance %s: asset size too large.",
-                        prov_asset.name,
-                    )
-                    continue
+        try:
+            with tempfile.TemporaryDirectory() as temp_path:
+                downloaded_provs = []
+                for prov_asset in prov_assets:
+                    # Check the size before downloading.
+                    if prov_asset.size_in_bytes > defaults.getint(
+                        "slsa.verifier",
+                        "max_download_size",
+                        fallback=1000000,
+                    ):
+                        logger.info(
+                            "Skip verifying the provenance %s: asset size too large.",
+                            prov_asset.name,
+                        )
+                        continue
 
-                provenance_filepath = os.path.join(temp_path, prov_asset.name)
+                    provenance_filepath = os.path.join(temp_path, prov_asset.name)
 
-                if not ci_service.api_client.download_asset(
-                    prov_asset.url,
-                    provenance_filepath,
-                ):
-                    logger.debug(
-                        "Could not download the provenance %s. Skip verifying...",
-                        prov_asset.name,
-                    )
-                    continue
+                    if not ci_service.api_client.download_asset(
+                        prov_asset.url,
+                        provenance_filepath,
+                    ):
+                        logger.debug(
+                            "Could not download the provenance %s. Skip verifying...",
+                            prov_asset.name,
+                        )
+                        continue
 
-                # Read the provenance.
-                try:
-                    payload = load_provenance_payload(provenance_filepath)
-                except LoadIntotoAttestationError as error:
-                    logger.error("Error logging provenance: %s", error)
-                    continue
+                    # Read the provenance.
+                    try:
+                        payload = load_provenance_payload(provenance_filepath)
+                    except LoadIntotoAttestationError as error:
+                        logger.error("Error logging provenance: %s", error)
+                        continue
 
-                # Add the provenance file.
-                downloaded_provs.append(payload)
+                    # Add the provenance file.
+                    downloaded_provs.append(payload)
 
-            # Persist the provenance payloads into the CIInfo object.
-            ci_info["provenances"] = downloaded_provs
+                # Persist the provenance payloads into the CIInfo object.
+                ci_info["provenances"] = downloaded_provs
+        except OSError as error:
+            logger.error("Error while storing provenance in the temporary directory: %s", error)
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
@@ -448,22 +512,13 @@ class ProvenanceAvailableCheck(BaseCheck):
 
         # We look for the provenances in the package registries first, then CI services.
         # (Note the short-circuit evaluation with OR.)
-        # The current provenance discovery mechanism for package registries requires a
-        # repository to be available. Moreover, the repository path in Witness provenance
-        # contents are checked to match the target repository path.
-        # TODO: handle cases where a PURL string is provided for a software component but
-        # no repository is available.
-        if not ctx.component.repository:
-            failed_msg = "Unable to find provenances because no repository is available."
-            return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
         try:
             provenance_assets = self.find_provenance_assets_on_package_registries(
-                repo_fs_path=ctx.component.repository.fs_path,
-                repo_remote_path=ctx.component.repository.remote_path,
+                component=ctx.component,
                 package_registry_info_entries=ctx.dynamic_data["package_registries"],
                 provenance_extensions=provenance_extensions,
             ) or self.find_provenance_assets_on_ci_services(
-                repo_full_name=ctx.component.repository.full_name,
+                component=ctx.component,
                 ci_info_entries=ctx.dynamic_data["ci_services"],
                 provenance_extensions=provenance_extensions,
             )
@@ -478,7 +533,7 @@ class ProvenanceAvailableCheck(BaseCheck):
 
             justification.append("Found provenance in release assets:")
             justification.extend(
-                [asset.name for asset in provenance_assets],
+                [asset.url for asset in provenance_assets],
             )
             # We only write the result to the database when the check is PASSED.
             result_tables: ResultTables = [
