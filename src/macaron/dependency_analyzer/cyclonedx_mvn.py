@@ -70,7 +70,7 @@ class CycloneDxMaven(DependencyAnalyzer):
             possible_paths = glob.glob(os.path.join(dir_path, "target", "*.json"))
             if possible_paths:
                 if len(possible_paths) > 1:
-                    logger.error("Too many JSON SBOM files found. Expected: 1, Found: %s", len(possible_paths))
+                    logger.debug("Too many JSON SBOM files found. Expected: 1, Found: %s", len(possible_paths))
                     return {}
                 top_path = Path(possible_paths[0])
                 top_path_altered = True
@@ -89,7 +89,7 @@ class CycloneDxMaven(DependencyAnalyzer):
         for path in child_paths:
             child_paths_set.add(path.parent)
         if len(child_paths_set) != len(child_paths):
-            logger.error("Only one JSON SBOM file is permitted per child directory.")
+            logger.debug("Only one JSON SBOM file is permitted per child directory.")
             return {}
 
         # Check if the root BOM has been analyzed before as a child BOM.

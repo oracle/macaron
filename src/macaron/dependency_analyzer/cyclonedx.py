@@ -47,7 +47,7 @@ def deserialize_bom_json(file_path: Path) -> dict:
     # TODO: use the official CycloneDX library to validate and deserialize BOM files
     # once merged: https://github.com/CycloneDX/cyclonedx-python-lib/pull/290
     if not os.path.exists(file_path):
-        raise CycloneDXParserError(f"Unable to locate the BOM file: {str(file_path)}.")
+        raise CycloneDXParserError(f"Unable to locate any BOM files at: {str(file_path.parent)}.")
 
     with open(file_path, encoding="utf8") as file:
         try:
