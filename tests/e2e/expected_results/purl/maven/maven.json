@@ -1,6 +1,7 @@
 {
     "metadata": {
-        "timestamps": "2023-09-12 17:10:37"
+        "timestamps": "2023-11-03 10:55:56",
+        "has_passing_check": true
     },
     "target": {
         "info": {
@@ -8,13 +9,58 @@
             "local_cloned_path": "git_repos/github_com/apache/maven",
             "remote_path": "https://github.com/apache/maven",
             "branch": "master",
-            "commit_hash": "6767f2500f1d005924ccff27f04350c253858a84",
-            "commit_date": "2022-05-29T13:35:24+02:00"
+            "commit_hash": "3fc399318edef0d5ba593723a24fff64291d6f9b",
+            "commit_date": "2023-10-20T21:20:23+02:00"
         },
         "provenances": {
             "is_inferred": true,
             "content": {
                 "github_actions": [
+                    {
+                        "_type": "https://in-toto.io/Statement/v0.1",
+                        "subject": [],
+                        "predicateType": "https://slsa.dev/provenance/v0.2",
+                        "predicate": {
+                            "builder": {
+                                "id": "https://github.com/apache/maven/blob/3fc399318edef0d5ba593723a24fff64291d6f9b/.github/workflows/maven.yml"
+                            },
+                            "buildType": "Custom github_actions",
+                            "invocation": {
+                                "configSource": {
+                                    "uri": "https://github.com/apache/maven.git@refs/heads/master",
+                                    "digest": {
+                                        "sha1": "3fc399318edef0d5ba593723a24fff64291d6f9b"
+                                    },
+                                    "entryPoint": "https://github.com/apache/maven/blob/3fc399318edef0d5ba593723a24fff64291d6f9b/.github/workflows/maven.yml"
+                                },
+                                "parameters": {},
+                                "environment": {}
+                            },
+                            "buildConfig": {
+                                "jobID": "<STRING>",
+                                "stepID": "<STRING>"
+                            },
+                            "metadata": {
+                                "buildInvocationId": "",
+                                "buildStartedOn": "<TIMESTAMP>",
+                                "buildFinishedOn": "<TIMESTAMP>",
+                                "completeness": {
+                                    "parameters": "false",
+                                    "environment": "false",
+                                    "materials": "false"
+                                },
+                                "reproducible": "false"
+                            },
+                            "materials": [
+                                {
+                                    "uri": "<URI>",
+                                    "digest": {}
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "jenkins": [
                     {
                         "_type": "https://in-toto.io/Statement/v0.1",
                         "subject": [],
@@ -59,74 +105,18 @@
                         }
                     }
                 ],
-                "jenkins": [
-                    {
-                        "_type": "https://in-toto.io/Statement/v0.1",
-                        "subject": [],
-                        "predicateType": "https://slsa.dev/provenance/v0.2",
-                        "predicate": {
-                            "builder": {
-                                "id": "Jenkinsfile"
-                            },
-                            "buildType": "Custom jenkins",
-                            "invocation": {
-                                "configSource": {
-                                    "uri": "https://github.com/apache/maven@refs/heads/master",
-                                    "digest": {
-                                        "sha1": "6767f2500f1d005924ccff27f04350c253858a84"
-                                    },
-                                    "entryPoint": "Jenkinsfile"
-                                },
-                                "parameters": {},
-                                "environment": {}
-                            },
-                            "buildConfig": {
-                                "jobID": "<STRING>",
-                                "stepID": "<STRING>"
-                            },
-                            "metadata": {
-                                "buildInvocationId": "<STRING>",
-                                "buildStartedOn": "<TIMESTAMP>",
-                                "buildFinishedOn": "<TIMESTAMP>",
-                                "completeness": {
-                                    "parameters": "false",
-                                    "environment": "false",
-                                    "materials": "false"
-                                },
-                                "reproducible": "false"
-                            },
-                            "materials": [
-                                {
-                                    "uri": "<URI>",
-                                    "digest": {}
-                                }
-                            ]
-                        }
-                    }
-                ],
                 "Maven Central Registry": []
             }
         },
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 6,
-                "PASSED": 4,
+                "FAILED": 7,
+                "PASSED": 3,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
             "results": [
-                {
-                    "check_id": "mcn_build_as_code_1",
-                    "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
-                    "slsa_requirements": [
-                        "Build as code - SLSA Level 3"
-                    ],
-                    "justification": [
-                        "The target repository uses build tool maven in jenkins using artifactsPublisher to deploy."
-                    ],
-                    "result_type": "PASSED"
-                },
                 {
                     "check_id": "mcn_build_script_1",
                     "check_description": "Check if the target repo has a valid build script.",
@@ -145,7 +135,12 @@
                         "Build service - SLSA Level 2"
                     ],
                     "justification": [
-                        "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
+                        {
+                            "The target repository uses build tool maven to build": "https://github.com/apache/maven/blob/3fc399318edef0d5ba593723a24fff64291d6f9b/.github/workflows/maven.yml",
+                            "The build is triggered by": "https://github.com/apache/maven/blob/3fc399318edef0d5ba593723a24fff64291d6f9b/.github/workflows/maven.yml"
+                        },
+                        "Build command: ['mvn', 'verify', '-e', '-B', '-V', '-DdistributionFileName=apache-maven']",
+                        "However, could not find a passing workflow run."
                     ],
                     "result_type": "PASSED"
                 },
@@ -163,13 +158,24 @@
                     "result_type": "PASSED"
                 },
                 {
+                    "check_id": "mcn_build_as_code_1",
+                    "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "The target repository does not use maven to deploy."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
                     "check_id": "mcn_infer_artifact_pipeline_1",
                     "check_description": "Detects potential pipelines from which an artifact is published.",
                     "slsa_requirements": [
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "Unable to find a publishing timestamp for the artifact."
+                        "Check mcn_infer_artifact_pipeline_1 is set to FAILED because mcn_build_as_code_1 FAILED."
                     ],
                     "result_type": "FAILED"
                 },
@@ -183,7 +189,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Could not find any SLSA provenances."
+                        "Could not find any SLSA or Witness provenances."
                     ],
                     "result_type": "FAILED"
                 },
@@ -248,15 +254,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_witness_level_one_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_version_control_system_1",
                 "num_deps_pass": 0
             },
             {
@@ -264,15 +262,15 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_provenance_witness_level_one_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_trusted_builder_level_three_1",
+                "check_id": "mcn_build_service_1",
                 "num_deps_pass": 0
             },
             {
@@ -284,7 +282,15 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_service_1",
+                "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_available_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             }
         ],
