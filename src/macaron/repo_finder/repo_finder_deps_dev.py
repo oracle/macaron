@@ -4,6 +4,7 @@
 """This module contains the PythonRepoFinderDD class to be used for finding repositories using deps.dev."""
 import json
 import logging
+from enum import Enum
 from urllib.parse import quote as encode
 
 from packageurl import PackageURL
@@ -14,8 +15,19 @@ from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-# This list should be updated based on updates to deps.dev.
-SUPPORTED_TYPES = ["maven", "pypi", "nuget", "cargo", "npm"]
+
+class DepsDevType(Enum):
+    """
+    The package manager types supported by deps.dev.
+
+    This enum should be updated based on updates to deps.dev.
+    """
+
+    MAVEN = ("maven",)
+    PYPI = ("pypi",)
+    NUGET = ("nuget",)
+    CARGO = ("cargo",)
+    NPM = "npm"
 
 
 class DepsDevRepoFinder(BaseRepoFinder):

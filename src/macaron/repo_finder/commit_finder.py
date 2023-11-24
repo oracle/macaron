@@ -130,7 +130,7 @@ def find_commit(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
     if domain:
         # PURL is a repository type.
         return get_commit_from_purl(git_obj, version)
-    if purl.type in repo_finder_deps_dev.SUPPORTED_TYPES:
+    if purl.type in repo_finder_deps_dev.DepsDevType:
         # PURL is a package manager type.
         return get_commit_from_version(git_obj, purl.name or "", version)
 
