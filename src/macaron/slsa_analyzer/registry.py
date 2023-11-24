@@ -291,10 +291,10 @@ class Registry:
 
         Examples
         --------
-        >>> Register._validate_check_id_format("mcn_the_check_name_123")
+        >>> Registry._validate_check_id_format("mcn_the_check_name_123")
         True
 
-        >>> Register._validate_check_id_format("Some_Thing', '', '%(*$)")
+        >>> Registry._validate_check_id_format("Some_Thing', '', '%(*$)")
         False
         """
         if (not isinstance(check_id, str)) or (not Registry._id_format.match(check_id)):

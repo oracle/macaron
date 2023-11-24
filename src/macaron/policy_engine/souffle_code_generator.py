@@ -95,8 +95,11 @@ def table_to_declaration(table: Table) -> str:
 
     Examples
     --------
-    >>> tbl = Table("example", Column("id", Integer), Column("hello", String)
-    >>> assert table_to_declaration(tbl) == '.decl "example" (id: number, hello: symbol)'
+    >>> from sqlalchemy import Column, MetaData, Table
+    >>> from sqlalchemy.sql.sqltypes import Boolean, Integer, String, Text
+    >>> metadata = MetaData()
+    >>> tbl = Table("_example", metadata, Column("id", Integer, nullable=False), Column("hello", String))
+    >>> assert table_to_declaration(tbl) == '.decl example (id: number, hello: symbol)'
 
     Parameters
     ----------

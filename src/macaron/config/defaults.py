@@ -65,7 +65,7 @@ class ConfigParser(configparser.ConfigParser):
         --------
         Given the following ``defaults.ini``
 
-        .. code-block::
+        .. code-block:: ini
 
             [git]
             allowed_hosts =
@@ -73,8 +73,10 @@ class ConfigParser(configparser.ConfigParser):
                 boo.com gitlab.com
                 host com
 
-        >>> config_parser.get_list("git", "allowed_hosts")
-        ['github.com', 'boo.com gitlab.com', 'host com']
+        .. code-block:: python3
+
+            allowed_hosts = config_parser.get_list("git", "allowed_hosts")
+            # allowed_hosts == ['github.com', 'boo.com gitlab.com', 'host com']
         """
         try:
             value = self.get(section, item)

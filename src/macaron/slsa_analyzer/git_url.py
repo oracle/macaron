@@ -348,7 +348,10 @@ def get_repo_complete_name_from_url(url: str) -> str:
 
     Examples
     --------
-    >>> get_repo_complete_name_from_url("github.com/apache/maven")
+    >>> from macaron.config.defaults import load_defaults
+    >>> load_defaults("")
+    True
+    >>> get_repo_complete_name_from_url("https://github.com/apache/maven")
     'github.com/apache/maven'
     """
     remote_url = get_remote_vcs_url(url)

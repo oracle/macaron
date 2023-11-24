@@ -234,6 +234,7 @@ minversion = "7.0"
 addopts = "--verbose --doctest-modules -ra --cov macaron"  # Consider adding --pdb
 doctest_optionflags = "IGNORE_EXCEPTION_DETAIL"
 testpaths = [
+    "src/macaron",  # this is included to run doctest on examples
     "tests",
 ]
 env = [
