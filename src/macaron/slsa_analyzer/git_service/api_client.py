@@ -193,10 +193,12 @@ class GhAPIClient(BaseAPIClient):
         The following call to this method will perform a query to
         ``https://api.github.com/repos/owner/repo/actions/workflows/build.yml``
 
-        >>> gh_client.get_repo_workflow_data(
-            full_name="owner/repo",
-            workflow_name="build.yml"
-        )
+        .. code-block: python3
+
+            gh_client.get_repo_workflow_data(
+                full_name="owner/repo",
+                workflow_name="build.yml",
+            )
         """
         logger.debug("Query for %s workflow in repo %s", workflow_name, full_name)
         url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/actions/workflows/{workflow_name}"
@@ -239,12 +241,14 @@ class GhAPIClient(BaseAPIClient):
         ``https://api.github/com/repos/owner/repo/actions/runs?1&branch=master&created=>=
         2022-03-11T16:44:40Z&per_page=100``
 
-        >>> gh_client.get_workflow_runs(
-            full_name="owner/repo",
-            branch_name="master",
-            created_after="2022-03-11T16:44:40Z",
-            page=1
-        )
+        .. code-block: python3
+
+            gh_client.get_workflow_runs(
+                full_name="owner/repo",
+                branch_name="master",
+                created_after="2022-03-11T16:44:40Z",
+                page=1,
+            )
         """
         logger.debug("Query for runs data in repo %s", full_name)
         query_params: dict = {
@@ -290,10 +294,12 @@ class GhAPIClient(BaseAPIClient):
         ``https://api.github/com/repos/{full_name}/
         actions/runs/<run_id>/jobs``
 
-        >>> gh_client.get_workflow_run_jobs(
-            full_name="owner/repo",
-            run_id=<run_id>
-        )
+        .. code-block: python3
+
+            gh_client.get_workflow_run_jobs(
+                full_name="owner/repo",
+                run_id=<run_id>,
+            )
         """
         logger.debug("Query GitHub to get run jobs for %s with run ID %s", full_name, run_id)
 
@@ -325,10 +331,12 @@ class GhAPIClient(BaseAPIClient):
         The following call to this method will perform a query to
         ``https://api.github/com/repos/owner/repo/actions/runs?created=2022-11-05T20:38:40..2022-11-05T20:38:58``
 
-        >>> e.g., gh_client.get_workflow_run_for_date_time_range(
-            full_name="owner/repo",
-            created=2022-11-05T20:38:40..2022-11-05T20:38:58
-        )
+        .. code-block: python3
+
+            gh_client.get_workflow_run_for_date_time_range(
+                full_name="owner/repo",
+                created=2022-11-05T20:38:40..2022-11-05T20:38:58,
+            )
         """
         logger.debug("Query GitHub to get run details for %s at %s", full_name, datetime_range)
         query_params = {"created": datetime_range}
@@ -362,10 +370,12 @@ class GhAPIClient(BaseAPIClient):
         The following call to this method will perform a query to:
         ``https://api.github.com/repos/owner/repo/commits/6dcb09b5b57875f334f61aebed695e2e4193db5e``
 
-        >>> gh_client.get_commit_data_from_hash(
-            full_name="owner/repo",
-            commit_hash="6dcb09b5b57875f334f61aebed695e2e4193db5e"
-        )
+        .. code-block:: python3
+
+            gh_client.get_commit_data_from_hash(
+                full_name="owner/repo",
+                commit_hash="6dcb09b5b57875f334f61aebed695e2e4193db5e",
+            )
         """
         logger.debug("Query for commit %s 's data in repo %s", commit_hash, full_name)
         url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/commits/{commit_hash}"
@@ -396,10 +406,12 @@ class GhAPIClient(BaseAPIClient):
         The following call to this method will perform a query to:
         ``https://api.github.com/search/code?q=addClass+in:file+language:js+repo:jquery/jquery``
 
-        >>> gh_client.search(
-            target="repositories",
-            query="q=addClass+in:file+language:js+repo:jquery/jquery"
-        )
+        .. code-block:: python3
+
+            gh_client.search(
+                target="repositories",
+                query="q=addClass+in:file+language:js+repo:jquery/jquery",
+            )
         """
         logger.debug("Search %s with query: %s", target, query)
         url = f"{GhAPIClient._SEARCH_END_POINT}/{target}?{query}"
@@ -457,7 +469,9 @@ class GhAPIClient(BaseAPIClient):
         --------
         To get the repo data from repository ``apache/maven``:
 
-        >>> gh_client.get_repo_data("apache/maven")
+        .. code-block:: python3
+
+            gh_client.get_repo_data("apache/maven")
         """
         logger.debug("Get data of repository %s", full_name)
         url = f"{GhAPIClient._REPO_END_POINT}/{full_name}"
@@ -488,7 +502,8 @@ class GhAPIClient(BaseAPIClient):
 
         Examples
         --------
-        >>> get_files_link("owner/repo", "5aaaaa43caabbdbc26c254df8f3aaa7bb3f4ec01", ".travis_ci.yml")
+        >>> api_client = GhAPIClient(profile={"headers": "", "query": []})
+        >>> api_client.get_file_link("owner/repo", "5aaaaa43caabbdbc26c254df8f3aaa7bb3f4ec01", ".travis_ci.yml")
         'https://github.com/owner/repo/blob/5aaaaa43caabbdbc26c254df8f3aaa7bb3f4ec01/.travis_ci.yml'
         """
         return f"https://github.com/{full_name}/blob/{commit_sha}/{file_path}"
@@ -508,6 +523,7 @@ class GhAPIClient(BaseAPIClient):
 
         Examples
         --------
+        >>> api_client = GhAPIClient(profile={"headers": "", "query": []})
         >>> api_client.get_relative_path_of_workflow("build.yaml")
         '.github/workflows/build.yaml'
         """

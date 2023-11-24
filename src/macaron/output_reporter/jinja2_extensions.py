@@ -118,14 +118,13 @@ def j2_filter_get_flatten_dict(data: Any, has_key: bool = False) -> dict | Any:
     Examples
     --------
     >>> j2_filter_get_flatten_dict(
-        {
-            "A": [1,2,3],
-            "B": {
-                "C": ["blah", "bar", "foo"]
-            }
-        }
-    )
-    {'A': {'0': 1, '1': 2, '2': 3}, 'B': {'C': {'0': 'blah', '1': 'bar', '2': 'foo'}}}
+    ... {
+    ...     "A": [1, 2, 3],
+    ...     "B": {
+    ...         "C": ["blah", "bar", "foo"],
+    ...     },
+    ... })
+    {'A': {0: 1, 1: 2, 2: 3}, 'B': {'C': {0: 'blah', 1: 'bar', 2: 'foo'}}}
     """
     if isinstance(data, (str, int, bool, float)):
         if has_key:
