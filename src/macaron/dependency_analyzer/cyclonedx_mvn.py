@@ -53,10 +53,11 @@ class CycloneDxMaven(DependencyAnalyzer):
         """Process the dependency JSON files and collect direct dependencies.
 
         We allow the dependency JSON files to be accepted as long as there is only one JSON file in the target
-        directory. The name of the file is not considered because projects can be configured to produce a custom named
-        SBOM, which cannot be overridden if included at the parent POM level.
-        The presence of multiple JSON files within a target directory differs too greatly from the expectations of the
-        plugin's output. It is for this reason that an error is thrown in such cases.
+        directory. If a file with the expected name is found, it is accepted, otherwise any lone file is accepted
+        instead. This is because projects can be configured to produce a custom named SBOM, which cannot be
+        overridden if included at the parent POM level. The presence of multiple JSON files within a target directory
+        differs too greatly from the expectations of the plugin's output. It is for this reason that an error is
+        thrown in such cases.
 
         Parameters
         ----------
@@ -69,19 +70,26 @@ class CycloneDxMaven(DependencyAnalyzer):
             A dictionary where artifacts are grouped based on "artifactId:groupId".
         """
         # Load the top level file separately as it has different content.
-        possible_paths = glob.glob(os.path.join(dir_path, "target", "*.json"))
-        if not possible_paths:
-            logger.debug("No JSON files found in target directory.")
-            return {}
-        if len(possible_paths) > 1:
-            logger.debug("Too many JSON SBOM files found. Expected: 1, Found: %s", len(possible_paths))
-            return {}
-        top_path = Path(possible_paths[0])
+        top_path = Path(os.path.join(dir_path, "target", self.file_name))
+        top_path_altered = False
+        if not os.path.exists(top_path):
+            # Check for other JSON files.
+            possible_paths = glob.glob(os.path.join(dir_path, "target", "*.json"))
+            if not possible_paths:
+                logger.debug("No JSON files found in target directory.")
+                return {}
+            if len(possible_paths) > 1:
+                logger.debug("Too many JSON SBOM files found. Expected: 1, Found: %s", len(possible_paths))
+                return {}
+            top_path = Path(possible_paths[0])
+            top_path_altered = True
 
         # Collect all the dependency files recursively.
         child_paths = [
             Path(path)
-            for path in glob.glob(os.path.join(dir_path, "**", "target", "*.json"), recursive=True)
+            for path in glob.glob(
+                os.path.join(dir_path, "**", "target", "*.json" if top_path_altered else self.file_name), recursive=True
+            )
             if Path(path) != top_path
         ]
 
