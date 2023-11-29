@@ -4,6 +4,7 @@
 """This module contains the logic for matching PackageURL versions to repository commits via the tags they contain."""
 import logging
 import re
+from enum import Enum
 from re import Pattern
 
 from git import TagReference
@@ -101,6 +102,17 @@ numeric_only_pattern = re.compile("[0-9]+$")
 versioned_string = re.compile("[a-z]+[0-9]+$", flags=re.IGNORECASE)  # e.g. RC1, M5, etc.
 
 
+class PurlType(Enum):
+    """The type represented by a PURL in terms of repository versus artifact.
+
+    Unsupported types are allowed as a third type.
+    """
+
+    REPOSITORY = (0,)
+    ARTIFACT = (1,)
+    UNSUPPORTED = (2,)
+
+
 def find_commit(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
     """Try to find the commit matching the passed PURL.
 
@@ -125,18 +137,40 @@ def find_commit(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
         logger.debug("Missing version for analysis target: %s", purl.name)
         return "", ""
 
+    repo_type = abstract_purl_type(purl)
+    if repo_type == PurlType.REPOSITORY:
+        return extract_commit_from_version(git_obj, version)
+    if repo_type == PurlType.ARTIFACT:
+        return find_commit_from_version_and_name(git_obj, purl.name, version)
+    logger.debug("Type of PURL is not supported for commit finding: %s", purl.type)
+    return "", ""
+
+
+def abstract_purl_type(purl: PackageURL) -> PurlType:
+    """Determine if the passed purl is a repository type, artifact type, or unsupported type.
+
+    Parameters
+    ----------
+    purl: PackageURL
+        A PURL that represents a repository, artifact, or something that is not supported.
+
+    Returns
+    -------
+    PurlType:
+        The identified type of the PURL.
+    """
     available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
     domain = to_domain_from_known_purl_types(purl.type) or (purl.type if purl.type in available_domains else None)
     if domain:
         # PURL is a repository type.
-        return extract_commit_from_version(git_obj, version)
+        return PurlType.REPOSITORY
     try:
         repo_finder_deps_dev.DepsDevType(purl.type)
-        # PURL is a package manager type.
-        return find_commit_from_version_and_name(git_obj, purl.name, version)
+        # PURL is an artifact type.
+        return PurlType.ARTIFACT
     except ValueError:
-        logger.debug("Type of PURL is not supported for commit finding: %s", purl.type)
-        return "", ""
+        # PURL is an unsupported type.
+        return PurlType.UNSUPPORTED
 
 
 def extract_commit_from_version(git_obj: Git, version: str) -> tuple[str, str]:
@@ -236,19 +270,25 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
         logger.debug("Missing tag name from tag dict: %s not in %s", tag_name, valid_tags.keys())
 
     branch_name = _get_branch_of_commit(git_obj.get_commit_from_tag(tag_name))
+    try:
+        hexsha = tag.commit.hexsha
+    except ValueError:
+        logger.debug("Error trying to retrieve digest of commit: %s", tag.commit)
+        return "", ""
+
     if not branch_name:
-        logger.debug("No valid branch associated with tag (commit): %s (%s)", tag_name, tag.commit.hexsha)
+        logger.debug("No valid branch associated with tag (commit): %s (%s)", tag_name, hexsha)
         return "", ""
 
     logger.debug(
         "Found tag %s with commit %s of branch %s for artifact version %s@%s",
         tag,
-        tag.commit.hexsha,
+        hexsha,
         branch_name,
         name,
         version,
     )
-    return branch_name, tag.commit.hexsha
+    return branch_name, hexsha
 
 
 def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, list[str], bool]:
@@ -349,9 +389,9 @@ def match_tags(tag_list: list[str], artifact_name: str, artifact_version: str) -
     tag_list: list[str]
         The list of tags to check.
     artifact_name: str
-        The name of the artifact to match.
+        The name of the analysis target.
     artifact_version: str
-        The version of the artifact to match.
+        The version of the analysis target.
 
     Returns
     -------
@@ -419,13 +459,15 @@ def match_tags(tag_list: list[str], artifact_name: str, artifact_version: str) -
     # If multiple tags still remain, sort them based on the closest match in terms of individual parts.
     if len(matched_tags) > 1:
         matched_tags.sort(
-            key=lambda matched_tag: _count_parts_in_tag(matched_tag["version"], matched_tag["suffix"], parts)
+            key=lambda matched_tag: _compute_tag_version_similarity(
+                matched_tag["version"], matched_tag["suffix"], parts
+            )
         )
 
     return [_["tag"] for _ in matched_tags]
 
 
-def _count_parts_in_tag(tag_version: str, tag_suffix: str, version_parts: list[str]) -> int:
+def _compute_tag_version_similarity(tag_version: str, tag_suffix: str, version_parts: list[str]) -> int:
     """Return a sort value based on how well the tag version and tag suffix match the parts of the actual version.
 
     Parameters

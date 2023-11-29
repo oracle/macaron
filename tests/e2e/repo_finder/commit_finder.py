@@ -18,12 +18,12 @@ logger: logging.Logger = logging.getLogger(__name__)
 # Set logging debug level.
 logger.setLevel(logging.DEBUG)
 
-path = Path(__file__).parent.joinpath("resources", "java_tags.json")
+java_tags_file_path = Path(__file__).parent.joinpath("resources", "java_tags.json")
 
 
 def test_commit_finder() -> int:
     """Test the commit finder's tag matching functionality."""
-    with open(path, encoding="utf-8") as tag_file:
+    with open(java_tags_file_path, encoding="utf-8") as tag_file:
         json_data = json.load(tag_file)
     fail_count = 0
     for item in json_data:
@@ -52,7 +52,7 @@ def test_commit_finder() -> int:
 def update_commit_finder_results() -> None:
     """Run the commit finder with the current results file and update the match values (override the file)."""
     # pylint: disable=protected-access
-    with open(path, encoding="utf-8") as tag_file:
+    with open(java_tags_file_path, encoding="utf-8") as tag_file:
         json_data = json.load(tag_file)
     for item in json_data:
         name = str(item["name"])
@@ -60,7 +60,7 @@ def update_commit_finder_results() -> None:
         matched_tags = commit_finder.match_tags(item["tags"], name, version)
         matched_tag = matched_tags[0] if matched_tags else ""
         item["match"] = matched_tag
-    with open(path, "w", encoding="utf-8") as tag_file:
+    with open(java_tags_file_path, "w", encoding="utf-8") as tag_file:
         json.dump(json_data, tag_file, indent=4)
 
 

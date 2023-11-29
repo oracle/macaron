@@ -705,7 +705,9 @@ class Analyzer:
         if not digest and purl and purl.version:
             branch_name, digest = find_commit(git_obj, purl)
             if not (branch_name and digest):
-                logger.error("Could not map purl version to specific commit in repository.")
+                logger.error(
+                    "Could not map the input purl string to a specific commit in the corresponding repository."
+                )
                 return None
 
         # Checking out the specific branch or commit. This operation varies depends on the git service that the
