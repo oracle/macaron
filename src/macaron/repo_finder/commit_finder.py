@@ -129,24 +129,25 @@ def find_commit(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
     domain = to_domain_from_known_purl_types(purl.type) or (purl.type if purl.type in available_domains else None)
     if domain:
         # PURL is a repository type.
-        return get_commit_from_purl(git_obj, version)
-    if purl.type in repo_finder_deps_dev.DepsDevType:
+        return extract_commit_from_version(git_obj, version)
+    try:
+        repo_finder_deps_dev.DepsDevType(purl.type)
         # PURL is a package manager type.
-        return get_commit_from_version(git_obj, purl.name or "", version)
+        return find_commit_from_version_and_name(git_obj, purl.name, version)
+    except ValueError:
+        logger.debug("Type of PURL is not supported for commit finding: %s", purl.type)
+        return "", ""
 
-    logger.debug("Type of PURL is not supported for commit finding: %s", purl.type)
-    return "", ""
 
-
-def get_commit_from_purl(git_obj: Git, version: str) -> tuple[str, str]:
-    """Try to find the commit in the PURL or from the tag in the PURL.
+def extract_commit_from_version(git_obj: Git, version: str) -> tuple[str, str]:
+    """Try to extract the commit from the PURL's version parameter.
 
     Parameters
     ----------
     git_obj: Git
         The repository.
     version: str
-        The version of the analysis target.
+        The version part from the analysis target's PURL.
 
     Returns
     -------
@@ -179,10 +180,11 @@ def get_commit_from_purl(git_obj: Git, version: str) -> tuple[str, str]:
     return branch_name, commit.hash
 
 
-def get_commit_from_version(git_obj: Git, name: str, version: str) -> tuple[str, str]:
-    """Try to find the matching commit in a repository of a given version via tags.
+def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> tuple[str, str]:
+    """Try to find the matching commit in a repository of a given version (and name) via tags.
 
-    The version of the passed PackageURL is used to match with the tags in the target repository.
+    The passed version is used to match with the tags in the target repository. The passed name is used in cases where
+    a repository makes use of named prefixes in its tags.
 
     Parameters
     ----------
@@ -196,7 +198,7 @@ def get_commit_from_version(git_obj: Git, name: str, version: str) -> tuple[str,
     Returns
     -------
     tuple[str, str]
-        The branch name and digest as a tuple.
+        The branch name and digest as a tuple, or empty strings if the commit cannot be correctly retrieved.
     """
     logger.debug("Searching for commit of artifact version using tags: %s@%s", name, version)
 
@@ -263,7 +265,8 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
     -------
     tuple[Pattern | None, list[str], bool]
         The tuple of the regex pattern that will match the version, the list of version parts that were extracted, and
-        whether the version string has a non-numeric suffix.
+        whether the version string has a non-numeric suffix. If an exception occurs from any regex operation, the
+        pattern will be returned as None.
 
     """
     # The version is split on non-alphanumeric characters to separate the version parts from the non-version parts.

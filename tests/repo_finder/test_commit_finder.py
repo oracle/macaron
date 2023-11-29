@@ -42,9 +42,6 @@ def _test_version(tags: list[str], name: str, version: str, target_tag: str) -> 
     assert matched_tags[0] == target_tag
 
 
-input_pattern = re.compile(r"[0-9]{1,3}(\.[0-9a-z]{1,3}){,5}([-+#][a-z0-9].+)?", flags=re.IGNORECASE)
-
-
 @given(text())
 @settings(max_examples=1000)
 def test_pattern_generation(version: str) -> None:
@@ -65,6 +62,7 @@ def test_pattern_generation(version: str) -> None:
     assert True
 
 
+input_pattern = re.compile(r"[0-9]{1,3}(\.[0-9a-z]{1,3}){,5}([-+#][a-z0-9].+)?", flags=re.IGNORECASE)
 # These numbers should be kept low as the complex regex makes generation slow.
 VERSION_ITERATIONS = 50  # The number of times to iterate the test_version_to_tag_matching test.
 TAG_ITERATIONS = 10  # The number of tags to generate per version iteration.
@@ -82,31 +80,28 @@ def test_version_to_tag_matching(_data: DataObject) -> None:  # noqa: PT019
     version = _data.draw(hypothesis.strategies.from_regex(input_pattern, fullmatch=True))
     if not version:
         return
-    try:
-        purl = PackageURL(name="test", version=version, type="maven")
-        if not purl.version:
-            return
-        # Build the pattern from the version.
-        pattern, parts, _ = commit_finder._build_version_pattern(purl.name, purl.version)
-        if not pattern:
-            return
-        # Generate the tag from a pattern that is very similar to how version patterns are made.
-        sep = "[^a-z0-9]"
-        tag_pattern = (
-            "(?P<prefix_0>(?:[a-z].*(?:[a-z0-9][a-z][0-9]+|[0-9][a-z]|[a-z]{2}))|[a-z]{2})?("
-            "?P<prefix_sep_0>(?:(?:(?<![0-9a-z])[vrc])|(?:[^0-9a-z][vrc])|[^0-9a-z])(?:[^0-9a-z])?)?"
-        )
-        for count, part in enumerate(parts):
-            if count > 0:
-                tag_pattern = tag_pattern + f"{sep}"
-            tag_pattern = tag_pattern + part
-        tag_pattern = tag_pattern + f"({sep}[a-z].*)?"
-        compiled_pattern = re.compile(tag_pattern, flags=re.IGNORECASE)
-        # Generate tags to match the generated version.
-        for _ in range(TAG_ITERATIONS):
-            tag = _data.draw(hypothesis.strategies.from_regex(compiled_pattern, fullmatch=True))
-            # Perform the match.
-            match = pattern.match(tag)
-            assert match
-    except ValueError as error:
-        logger.debug(error)
+    purl = PackageURL(name="test", version=version, type="maven")
+    if not purl.version:
+        return
+    # Build the pattern from the version.
+    pattern, parts, _ = commit_finder._build_version_pattern(purl.name, purl.version)
+    if not pattern:
+        return
+    # Generate the tag from a pattern that is very similar to how version patterns are made.
+    sep = "[^a-z0-9]"
+    tag_pattern = (
+        "(?P<prefix_0>(?:[a-z].*(?:[a-z0-9][a-z][0-9]+|[0-9][a-z]|[a-z]{2}))|[a-z]{2})?("
+        "?P<prefix_sep_0>(?:(?:(?<![0-9a-z])[vrc])|(?:[^0-9a-z][vrc])|[^0-9a-z])(?:[^0-9a-z])?)?"
+    )
+    for count, part in enumerate(parts):
+        if count > 0:
+            tag_pattern = tag_pattern + f"{sep}"
+        tag_pattern = tag_pattern + part
+    tag_pattern = tag_pattern + f"({sep}[a-z].*)?"
+    compiled_pattern = re.compile(tag_pattern, flags=re.IGNORECASE)
+    # Generate tags to match the generated version.
+    for _ in range(TAG_ITERATIONS):
+        tag = _data.draw(hypothesis.strategies.from_regex(compiled_pattern, fullmatch=True))
+        # Perform the match.
+        match = pattern.match(tag)
+        assert match
