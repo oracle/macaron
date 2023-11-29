@@ -96,10 +96,11 @@ SUFFIX = "(?P<suffix>[a-z].*)?"
 MAX_ZERO_DIGIT_EXTENSION = 4
 
 split_pattern = re.compile("[^0-9a-z]", flags=re.IGNORECASE)
-validation_pattern = re.compile("[0-9a-z]+$", flags=re.IGNORECASE)
-alphabetic_only_pattern = re.compile("[a-z]+$", flags=re.IGNORECASE)
-numeric_only_pattern = re.compile("[0-9]+$")
-versioned_string = re.compile("[a-z]+[0-9]+$", flags=re.IGNORECASE)  # e.g. RC1, M5, etc.
+validation_pattern = re.compile("^[0-9a-z]+$", flags=re.IGNORECASE)
+alphabetic_only_pattern = re.compile("^[a-z]+$", flags=re.IGNORECASE)
+hex_only_pattern = re.compile("^[0-9a-f]+$", flags=re.IGNORECASE)
+numeric_only_pattern = re.compile("^[0-9]+$")
+versioned_string = re.compile("^[a-z]+[0-9]+$", flags=re.IGNORECASE)  # e.g. RC1, M5, etc.
 
 
 class PurlType(Enum):
@@ -133,7 +134,7 @@ def find_commit(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
         The branch name and digest as a tuple.
     """
     version = purl.version
-    if version is None:
+    if not version:
         logger.debug("Missing version for analysis target: %s", purl.name)
         return "", ""
 
@@ -141,7 +142,7 @@ def find_commit(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
     if repo_type == PurlType.REPOSITORY:
         return extract_commit_from_version(git_obj, version)
     if repo_type == PurlType.ARTIFACT:
-        return find_commit_from_version_and_name(git_obj, purl.name, version)
+        return find_commit_from_version_and_name(git_obj, re.escape(purl.name), version)
     logger.debug("Type of PURL is not supported for commit finding: %s", purl.type)
     return "", ""
 
@@ -176,6 +177,10 @@ def abstract_purl_type(purl: PackageURL) -> PurlType:
 def extract_commit_from_version(git_obj: Git, version: str) -> tuple[str, str]:
     """Try to extract the commit from the PURL's version parameter.
 
+    E.g.
+    With commit: pkg:github/package-url/purl-spec@244fd47e07d1004f0aed9c.
+    With tag: pkg:github/apache/maven@maven-3.9.1.
+
     Parameters
     ----------
     git_obj: Git
@@ -190,7 +195,7 @@ def extract_commit_from_version(git_obj: Git, version: str) -> tuple[str, str]:
     """
     # A commit hash is 40 characters in length, but commits are often referenced using only some of those.
     commit: Commit | None = None
-    if 7 <= len(version) <= 40:
+    if 7 <= len(version) <= 40 and re.match(hex_only_pattern, version):
         try:
             commit = git_obj.get_commit(version)
         except BadName as error:
@@ -200,7 +205,9 @@ def extract_commit_from_version(git_obj: Git, version: str) -> tuple[str, str]:
         # Treat the 'commit' as a tag.
         try:
             commit = git_obj.get_commit_from_tag(version)
-        except IndexError as error:
+        except (IndexError, ValueError) as error:
+            # If the tag exists but represents a tree or blob, a ValueError will be raised when trying to retrieve its
+            # commit.
             logger.debug("Failed to retrieve commit: %s", error)
 
     if not commit:
@@ -291,7 +298,7 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
     return branch_name, hexsha
 
 
-def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, list[str], bool]:
+def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, list[str]]:
     """Build a version pattern to match the passed version string.
 
     Parameters
@@ -303,37 +310,36 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
 
     Returns
     -------
-    tuple[Pattern | None, list[str], bool]
-        The tuple of the regex pattern that will match the version, the list of version parts that were extracted, and
-        whether the version string has a non-numeric suffix. If an exception occurs from any regex operation, the
-        pattern will be returned as None.
+    tuple[Pattern | None, list[str]]
+        The tuple of the regex pattern that will match the version, and the list of version parts that were extracted.
+        If an exception occurs from any regex operation, the pattern will be returned as None.
 
     """
+    if not version:
+        return None, []
+
     # The version is split on non-alphanumeric characters to separate the version parts from the non-version parts.
     # e.g. 1.2.3-DEV -> [1, 2, 3, DEV]
-    try:
-        split = split_pattern.split(version)
-    except TypeError as error:
-        logger.debug("Failed to perform regex split on version string %s -- %s", version, error)
-        return None, [], False
-
+    split = split_pattern.split(version)
     logger.debug("Split version: %s", split)
-    if not split:
-        # If the version string contains no separators use it as is.
-        split = [version]
 
-    this_version_pattern = ""
     parts = []
-    has_non_numeric_suffix = False
-    # Detect versions that end with a zero, so the zero can be made optional.
-    has_trailing_zero = len(split) > 2 and split[-1] == "0"
-    for count, part in enumerate(split):
+    for part in split:
         # Validate the split part by checking it is only comprised of alphanumeric characters.
         valid = validation_pattern.match(part)
         if not valid:
             continue
         parts.append(part)
 
+    if not parts:
+        logger.debug("Version contained no valid parts: %s", version)
+        return None, []
+
+    this_version_pattern = ""
+    has_non_numeric_suffix = False
+    # Detect versions that end with a zero, so the zero can be made optional.
+    has_trailing_zero = len(split) > 2 and split[-1] == "0"
+    for count, part in enumerate(parts):
         numeric_only = numeric_only_pattern.match(part)
 
         if not has_non_numeric_suffix and not numeric_only:
@@ -374,23 +380,23 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
         f"{this_version_pattern}){SUFFIX_SEPARATOR}{SUFFIX}$"
     )
     try:
-        return re.compile(this_version_pattern, flags=re.IGNORECASE), parts, has_non_numeric_suffix
+        return re.compile(this_version_pattern, flags=re.IGNORECASE), parts
     except Exception as error:  # pylint: disable=broad-exception-caught
         # The regex library uses an internal error that cannot be used here to satisfy pylint.
         logger.debug("Error while compiling version regex: %s", error)
-        return None, [], False
+        return None, []
 
 
-def match_tags(tag_list: list[str], artifact_name: str, artifact_version: str) -> list[str]:
+def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
     """Return items of the passed tag list that match the passed artifact name and version.
 
     Parameters
     ----------
     tag_list: list[str]
         The list of tags to check.
-    artifact_name: str
+    name: str
         The name of the analysis target.
-    artifact_version: str
+    version: str
         The version of the analysis target.
 
     Returns
@@ -399,7 +405,7 @@ def match_tags(tag_list: list[str], artifact_name: str, artifact_version: str) -
         The list of tags that matched the pattern.
     """
     # Create the pattern for the passed version.
-    pattern, parts, has_non_numeric_suffix = _build_version_pattern(artifact_name, artifact_version)
+    pattern, parts = _build_version_pattern(name, version)
     if not pattern:
         return []
 
@@ -425,23 +431,9 @@ def match_tags(tag_list: list[str], artifact_name: str, artifact_version: str) -
         return [_["tag"] for _ in matched_tags]
 
     # In the case of multiple matches, further work must be done.
-    # Firstly, combine matches with their suffixes as some version patterns will not include the required suffix in the
-    #  version group.
-    if has_non_numeric_suffix:
-        filtered_tags = []
-        for item in matched_tags:
-            # Discard tags with no suffix or with one that does not match the version.
-            suffix: str | None = item["suffix"]
-            if not suffix:
-                filtered_tags.append(item)
-                continue
-            if suffix == parts[-1]:
-                filtered_tags.append(item)
-                continue
 
-        matched_tags = filtered_tags
-
-    # If any of the matches contain a prefix that matches the target artifact name, remove those that don't.
+    # If any of the matches contain a prefix that matches the target artifact name, and otherwise perfectly matches
+    # the version, remove those that don't.
     named_tags = []
     for item in matched_tags:
         prefix: str | None = item["prefix"]
@@ -450,7 +442,10 @@ def match_tags(tag_list: list[str], artifact_name: str, artifact_version: str) -
         if "/" in prefix:
             # Exclude prefix parts that exists before a forward slash, e.g. rel/
             _, _, prefix = prefix.rpartition("/")
-        if prefix.lower() == artifact_name.lower():
+        if (
+            prefix.lower() == name.lower()
+            and _compute_tag_version_similarity(item["version"], item["suffix"], parts) == 0
+        ):
             named_tags.append(item)
 
     if named_tags:
@@ -515,7 +510,6 @@ def _compute_tag_version_similarity(tag_version: str, tag_suffix: str, version_p
                         versioned_string_match = True
                     else:
                         count = count + 1
-
         if tag_suffix != last_part:
             count = count + 1
         else:
@@ -528,7 +522,8 @@ def _get_branch_of_commit(commit: Commit) -> str:
     """Get the branch of the passed commit as a string or return None."""
     branches = commit.branches
 
-    if not branches:
+    if len(branches) == 1 and "" in branches:
+        # An 'empty' result for branches is a set containing a zero length string.
         logger.debug("No branch associated with commit: %s", commit.hash)
         return ""
 

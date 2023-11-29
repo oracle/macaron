@@ -55,11 +55,12 @@ def update_commit_finder_results() -> None:
     with open(java_tags_file_path, encoding="utf-8") as tag_file:
         json_data = json.load(tag_file)
     for item in json_data:
-        name = str(item["name"])
-        name, version = name.split("@")
-        matched_tags = commit_finder.match_tags(item["tags"], name, version)
-        matched_tag = matched_tags[0] if matched_tags else ""
-        item["match"] = matched_tag
+        tags = item["tags"]
+        for artifact in item["artifacts"]:
+            purl = PackageURL.from_string(artifact["purl"])
+            matched_tags = commit_finder.match_tags(tags, purl.name, purl.version or "")
+            matched_tag = matched_tags[0] if matched_tags else ""
+            artifact["match"] = matched_tag
     with open(java_tags_file_path, "w", encoding="utf-8") as tag_file:
         json.dump(json_data, tag_file, indent=4)
 
