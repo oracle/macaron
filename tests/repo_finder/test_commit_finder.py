@@ -14,7 +14,7 @@ from hypothesis.strategies import DataObject, data, text
 from packageurl import PackageURL
 
 from macaron.repo_finder import commit_finder
-from macaron.repo_finder.commit_finder import PurlType
+from macaron.repo_finder.commit_finder import AbstractPurlType
 from tests.slsa_analyzer.mock_git_utils import commit_files, initiate_repo
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ def _test_version(tags: list[str], name: str, version: str, target_tag: str) -> 
                 "pkg:nuget/system.text.json@8.0.0",
                 "pkg:cargo/mailmeld@1.0.0",
             ],
-            PurlType.ARTIFACT,
+            AbstractPurlType.ARTIFACT,
             id="Artifact PURLs",
         ),
         pytest.param(
@@ -71,20 +71,20 @@ def _test_version(tags: list[str], name: str, version: str, target_tag: str) -> 
                 "pkg:github/oracle/macaron@v0.6.0",
                 "pkg:bitbucket/owner/project@tag_5",
             ],
-            PurlType.REPOSITORY,
+            AbstractPurlType.REPOSITORY,
             id="Repository PURLs",
         ),
         pytest.param(
             ["pkg:gem/ruby-advisory-db-check@0.12.4", "pkg:unknown-domain/project/owner@tag"],
-            PurlType.UNSUPPORTED,
+            AbstractPurlType.UNSUPPORTED,
             id="Unsupported PURLs",
         ),
     ],
 )
-def test_abstract_purl_type(purls: list[str], expected: PurlType) -> None:
+def test_abstract_purl_type(purls: list[str], expected: AbstractPurlType) -> None:
     """Test each purl in list is of expected type."""
     for purl in purls:
-        assert commit_finder.abstract_purl_type(PackageURL.from_string(purl)) == expected
+        assert commit_finder.determine_abstract_purl_type(PackageURL.from_string(purl)) == expected
 
 
 def test_commit_finder() -> None:

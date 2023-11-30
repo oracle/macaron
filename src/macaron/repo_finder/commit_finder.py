@@ -103,8 +103,8 @@ numeric_only_pattern = re.compile("^[0-9]+$")
 versioned_string = re.compile("^[a-z]+[0-9]+$", flags=re.IGNORECASE)  # e.g. RC1, M5, etc.
 
 
-class PurlType(Enum):
-    """The type represented by a PURL in terms of repository versus artifact.
+class AbstractPurlType(Enum):
+    """The type represented by a PURL in terms of repositories versus artifacts.
 
     Unsupported types are allowed as a third type.
     """
@@ -138,16 +138,16 @@ def find_commit(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
         logger.debug("Missing version for analysis target: %s", purl.name)
         return "", ""
 
-    repo_type = abstract_purl_type(purl)
-    if repo_type == PurlType.REPOSITORY:
+    repo_type = determine_abstract_purl_type(purl)
+    if repo_type == AbstractPurlType.REPOSITORY:
         return extract_commit_from_version(git_obj, version)
-    if repo_type == PurlType.ARTIFACT:
+    if repo_type == AbstractPurlType.ARTIFACT:
         return find_commit_from_version_and_name(git_obj, re.escape(purl.name), version)
     logger.debug("Type of PURL is not supported for commit finding: %s", purl.type)
     return "", ""
 
 
-def abstract_purl_type(purl: PackageURL) -> PurlType:
+def determine_abstract_purl_type(purl: PackageURL) -> AbstractPurlType:
     """Determine if the passed purl is a repository type, artifact type, or unsupported type.
 
     Parameters
@@ -164,14 +164,14 @@ def abstract_purl_type(purl: PackageURL) -> PurlType:
     domain = to_domain_from_known_purl_types(purl.type) or (purl.type if purl.type in available_domains else None)
     if domain:
         # PURL is a repository type.
-        return PurlType.REPOSITORY
+        return AbstractPurlType.REPOSITORY
     try:
         repo_finder_deps_dev.DepsDevType(purl.type)
         # PURL is an artifact type.
-        return PurlType.ARTIFACT
+        return AbstractPurlType.ARTIFACT
     except ValueError:
         # PURL is an unsupported type.
-        return PurlType.UNSUPPORTED
+        return AbstractPurlType.UNSUPPORTED
 
 
 def extract_commit_from_version(git_obj: Git, version: str) -> tuple[str, str]:
@@ -404,6 +404,8 @@ def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
     list[str]
         The list of tags that matched the pattern.
     """
+    name = re.escape(name)
+
     # Create the pattern for the passed version.
     pattern, parts = _build_version_pattern(name, version)
     if not pattern:
