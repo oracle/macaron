@@ -9,6 +9,14 @@ macaron.repo\_finder package
 Submodules
 ----------
 
+macaron.repo\_finder.commit\_finder module
+------------------------------------------
+
+.. automodule:: macaron.repo_finder.commit_finder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.repo\_finder.repo\_finder module
 ----------------------------------------
 
