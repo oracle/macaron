@@ -1,7 +1,7 @@
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This check examines a witness provenance (https://github.com/testifysec/witness)."""
+"""This check examines a witness provenance (https://github.com/in-toto/witness)."""
 
 import logging
 
@@ -95,7 +95,7 @@ class ProvenanceWitnessL1Table(CheckFacts, ORMBase):
 
 
 class ProvenanceWitnessL1Check(BaseCheck):
-    """This check examines a Witness provenance (https://github.com/testifysec/witness).
+    """This check examines a Witness provenance (https://github.com/in-toto/witness).
 
     At the moment, we are only checking the actual digests of the artifacts
     against the digests in the provenance.

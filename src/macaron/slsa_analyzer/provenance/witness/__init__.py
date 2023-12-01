@@ -1,7 +1,7 @@
 # Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""Witness provenance (https://github.com/testifysec/witness)."""
+"""Witness provenance (https://github.com/in-toto/witness)."""
 
 import logging
 from typing import NamedTuple

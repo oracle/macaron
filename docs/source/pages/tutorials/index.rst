@@ -2,7 +2,7 @@
 .. Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 .. References/links
-.. _Witness: https://github.com/testifysec/witness
+.. _Witness: https://github.com/in-toto/witness
 .. _SLSA: https://slsa.dev
 
 

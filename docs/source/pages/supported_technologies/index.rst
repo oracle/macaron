@@ -89,7 +89,7 @@ Provenances
        * `SLSA provenance version 0.2 <https://slsa.dev/spec/v0.2/provenance>`_.
        * The provenance should be published as a GitHub release asset
      - :doc:`page </pages/supported_technologies/jfrog>`
-   * - `Witness <https://github.com/testifysec/witness>`_
+   * - `Witness <https://github.com/in-toto/witness>`_
      -
        * Witness provenance version 0.1
        * Projects built with Gradle on GitLab CI

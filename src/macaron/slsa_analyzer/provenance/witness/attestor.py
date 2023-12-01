@@ -30,7 +30,7 @@ class GitLabWitnessAttestor:
     """Witness attestor for GitLab.
 
     In the payload of a witness provenance, each subject corresponds to an attestor.
-    Docs: https://github.com/testifysec/witness/blob/main/docs/attestors/gitlab.md
+    Docs: https://github.com/in-toto/witness/blob/main/docs/attestors/gitlab.md
     """
 
     def extract_repo_url(self, payload: InTotoPayload) -> str | None:
