@@ -8,7 +8,7 @@
    :keywords: CI/CD, SLSA, supply-chain security
 
 .. References/links
-.. _Witness: https://github.com/testifysec/witness
+.. _Witness: https://github.com/in-toto/witness
 .. _SLSA: https://slsa.dev
 
 =====================
