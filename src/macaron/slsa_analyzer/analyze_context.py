@@ -107,7 +107,7 @@ class AnalyzeContext:
             ci_services = self.dynamic_data["ci_services"]
 
             # By default, initialize every key with an empty list.
-            result: dict[str, list[InTotoV01Statement | InTotoV1Statement]] = defaultdict(lambda: [])
+            result: dict[str, list[InTotoV01Statement | InTotoV1Statement]] = defaultdict(list)
             for ci_info in ci_services:
                 result[ci_info["service"].name].extend(payload.statement for payload in ci_info["provenances"])
             package_registry_entries = self.dynamic_data["package_registries"]
