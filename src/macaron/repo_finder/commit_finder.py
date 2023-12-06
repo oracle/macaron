@@ -142,7 +142,7 @@ def find_commit(git_obj: Git, purl: PackageURL) -> tuple[str, str]:
     if repo_type == AbstractPurlType.REPOSITORY:
         return extract_commit_from_version(git_obj, version)
     if repo_type == AbstractPurlType.ARTIFACT:
-        return find_commit_from_version_and_name(git_obj, re.escape(purl.name), version)
+        return find_commit_from_version_and_name(git_obj, purl.name, version)
     logger.debug("Type of PURL is not supported for commit finding: %s", purl.type)
     return "", ""
 
@@ -318,6 +318,8 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
     if not version:
         return None, []
 
+    name = re.escape(name)
+
     # The version is split on non-alphanumeric characters to separate the version parts from the non-version parts.
     # e.g. 1.2.3-DEV -> [1, 2, 3, DEV]
     split = split_pattern.split(version)
@@ -404,8 +406,6 @@ def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
     list[str]
         The list of tags that matched the pattern.
     """
-    name = re.escape(name)
-
     # Create the pattern for the passed version.
     pattern, parts = _build_version_pattern(name, version)
     if not pattern:
