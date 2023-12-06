@@ -43,22 +43,22 @@ def parse_git_branch_output(content: str) -> list[str]:
 
     Examples
     --------
-    >>> print(content)
-    * (HEAD detached at 7fc81f8)
-      master
-      remotes/origin/HEAD -> origin/master
-      remotes/origin/master
-      remotes/origin/v2.dev
-      remotes/origin/v3.dev
-    >>> _parse_branch_output(content)
-    [
-        '(HEAD detached at 7fc81f8)',
-        'master',
-        'remotes/origin/HEAD -> origin/master',
-        'remotes/origin/master',
-        'remotes/origin/v2.dev',
-        'remotes/origin/v3.dev',
-    ]
+    >>> from pprint import pprint
+    >>> content = '''
+    ... * (HEAD detached at 7fc81f8)
+    ...   master
+    ...   remotes/origin/HEAD -> origin/master
+    ...   remotes/origin/master
+    ...   remotes/origin/v2.dev
+    ...   remotes/origin/v3.dev
+    ... '''
+    >>> pprint(parse_git_branch_output(content))
+    ['(HEAD detached at 7fc81f8)',
+     'master',
+     'remotes/origin/HEAD -> origin/master',
+     'remotes/origin/master',
+     'remotes/origin/v2.dev',
+     'remotes/origin/v3.dev']
     """
     git_branch_output_lines = content.splitlines()
     branches = []
