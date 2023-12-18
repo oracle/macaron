@@ -4,6 +4,7 @@
 """This module contains the PythonRepoFinderDD class to be used for finding repositories using deps.dev."""
 import json
 import logging
+from enum import StrEnum
 from urllib.parse import quote as encode
 
 from packageurl import PackageURL
@@ -13,6 +14,20 @@ from macaron.repo_finder.repo_validator import find_valid_repository_url
 from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+class DepsDevType(StrEnum):
+    """
+    The package manager types supported by deps.dev.
+
+    This enum should be updated based on updates to deps.dev.
+    """
+
+    MAVEN = "maven"
+    PYPI = "pypi"
+    NUGET = "nuget"
+    CARGO = "cargo"
+    NPM = "npm"
 
 
 class DepsDevRepoFinder(BaseRepoFinder):

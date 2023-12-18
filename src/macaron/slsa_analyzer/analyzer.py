@@ -2,7 +2,6 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles the cloning and analyzing a Git repo."""
-
 import logging
 import os
 import sys
@@ -26,6 +25,7 @@ from macaron.errors import CloneError, DuplicateError, InvalidPURLError, PURLNot
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
+from macaron.repo_finder.commit_finder import find_commit
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
@@ -342,8 +342,6 @@ class Analyzer:
 
         logger.info("The complete name of this repository is %s", complete_name)
 
-        res_branch = None
-
         if branch_name:
             res_branch = branch_name
         else:
@@ -355,6 +353,8 @@ class Analyzer:
                 # a branch in the config.
                 logger.debug("The HEAD of the repo does not point to any branch: %s.", err)
                 res_branch = None
+
+        logger.debug("Branch: %s", res_branch)
 
         # Get the head commit.
         # This is the commit that Macaron will run the analysis on.
@@ -462,6 +462,7 @@ class Analyzer:
                 analysis_target.repo_path,
                 analysis_target.branch,
                 analysis_target.digest,
+                analysis_target.parsed_purl,
             )
             if git_obj:
                 # TODO: use both the repo URL and the commit hash to check.
@@ -617,6 +618,7 @@ class Analyzer:
         repo_path: str,
         branch_name: str = "",
         digest: str = "",
+        purl: PackageURL | None = None,
     ) -> Git | None:
         """Prepare the target repository for analysis.
 
@@ -632,12 +634,14 @@ class Analyzer:
         ----------
         target_dir : str
             The directory where all remote repository will be cloned.
-        repo_path: str
+        repo_path : str
             The path to the repository, can be either local or remote.
-        branch_name: str
+        branch_name : str
             The name of the branch we want to checkout.
-        digest: str
+        digest : str
             The hash of the commit that we want to checkout in the branch.
+        purl : PackageURL | None
+            The PURL of the analysis target.
 
         Returns
         -------
@@ -696,6 +700,15 @@ class Analyzer:
         if git_url.is_empty_repo(git_obj):
             logger.error("The target repository does not have any commit.")
             return None
+
+        # Find the digest and branch if a version has been specified
+        if not digest and purl and purl.version:
+            branch_name, digest = find_commit(git_obj, purl)
+            if not (branch_name and digest):
+                logger.error(
+                    "Could not map the input purl string to a specific commit in the corresponding repository."
+                )
+                return None
 
         # Checking out the specific branch or commit. This operation varies depends on the git service that the
         # repository uses.

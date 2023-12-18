@@ -5,6 +5,7 @@
 
 import logging
 import os
+import sys
 
 from packageurl import PackageURL
 
@@ -23,6 +24,7 @@ def test_repo_finder() -> int:
         defaults.add_section("repofinder.java")
     defaults.set("repofinder.java", "find_parents", "True")
     defaults.set("repofinder.java", "repo_pom_paths", "scm.url")
+    defaults.set("repofinder.java", "artifact_repositories", "https://repo.maven.apache.org/maven2")
 
     if not defaults.has_section("repofinder"):
         defaults.add_section("repofinder")
@@ -30,11 +32,11 @@ def test_repo_finder() -> int:
 
     if not defaults.has_section("git_service.github"):
         defaults.add_section("git_service.github")
-    defaults.set("git_service.github", "domain", "github.com")
+    defaults.set("git_service.github", "hostname", "github.com")
 
     if not defaults.has_section("git_service.gitlab"):
         defaults.add_section("git_service.gitlab")
-    defaults.set("git_service.gitlab", "domain", "gitlab.com")
+    defaults.set("git_service.gitlab", "hostname", "gitlab.com")
 
     # Test Java package with SCM metadata in artifact POM.
     if not find_repo(PackageURL.from_string("pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2")):
@@ -64,4 +66,4 @@ def test_repo_finder() -> int:
 
 
 if __name__ == "__main__":
-    test_repo_finder()
+    sys.exit(test_repo_finder())

@@ -166,6 +166,10 @@ For more detailed information on converting a given artifact into a PURL, see `P
 
 .. note:: If a repository is not also provided, Macaron will try to discover it based on the artifact purl. For this to work, ``find_repos`` in the configuration file **must be enabled**\. See `Analyzing more dependencies <#more-deps>`_ for more information about the configuration options of the Repository Finding feature.
 
+.. note:: If no repository is provided, but the PURL contains a version (as with all of the above examples), Macaron will attempt to find the exact commit that matches the provided version. For this to work, the discovered repository must support and make use of tags to denote commits relating to released artifacts.
+
+
+
 -------------------------------------------------
 Verifying provenance expectations in CUE language
 -------------------------------------------------
@@ -247,9 +251,7 @@ With ``path_to_sbom`` is the path to the SBOM you want to use.
 Analyzing more dependencies
 '''''''''''''''''''''''''''
 
-In some cases the dependencies that Macaron discovers lack a direct connection to a repository for it to analyze. To improve results in these instances, the Repository Finding feature can be enabled. This feature makes use of a dependency's identifying information that can be found using the package registries located on the Internet.
-
-.. note:: The Repository Finding feature currently only works for Java projects via SCM meta data found within artifact POM files.
+In some cases the dependencies that Macaron discovers lack a direct connection to a repository for it to analyze. To improve results in these instances, Macaron is capable of automatically determining the repository and exact commit that matches the given dependency. For repositories, this is achieved through examination of SCM meta data found within artifact POM files (for Java), or use of Google's Open Source Insights API (for other languages). For commits, Macaron will attempt to match repository tags with the artifact version being sought, thereby requiring that the repository supports and uses tags on commits that were used for releases.
 
 This feature is enabled by default. To disable, or configure its behaviour in other ways, a custom ``defaults.ini`` should be passed to Macaron during execution.
 

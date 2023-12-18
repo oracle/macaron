@@ -10,6 +10,7 @@ RESOURCES=$WORKSPACE/src/macaron/resources
 COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
 TEST_REPO_FINDER=$WORKSPACE/tests/e2e/repo_finder/repo_finder.py
+TEST_COMMIT_FINDER=$WORKSPACE/tests/e2e/repo_finder/commit_finder.py
 RUN_MACARON="python -m macaron -o $WORKSPACE/output"
 RESULT_CODE=0
 UPDATE=0
@@ -277,7 +278,7 @@ declare -a COMPARE_FILES=(
     "slf4j.json"
 )
 
-$RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/micronaut_test_config.yaml --skip-deps || log_fail
+$RUN_MACARON analyze -purl pkg:maven/io.micronaut/micronaut-test-core@4.1.0 --skip-deps || log_fail
 
 for i in "${COMPARE_FILES[@]}"
 do
@@ -358,13 +359,14 @@ check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED ||
 echo -e "\n=================================================================================="
 echo "Run integration tests with configurations for FasterXML/jackson-databind..."
 echo -e "==================================================================================\n"
-JSON_RESULT=$WORKSPACE/output/reports/github_com/FasterXML/jackson-databind/jackson-databind.json
+JSON_RESULT=$WORKSPACE/output/reports/maven/com_fasterxml_jackson_core/jackson-databind/jackson-databind.json
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "FasterXML/jackson-databind: Check the e2e output JSON file with config and no dependency analyzing."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/jackson-databind/jackson-databind.json
-$RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/jackson_databind_config.yaml --skip-deps || log_fail
+$RUN_MACARON analyze -purl pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.0-rc1 --skip-deps || log_fail
+# Original commit f0af53d085eb2aa9f7f6199846cc526068e09977 seems to be first included in version tagged commit 2.14.0-rc1.
 
 check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
@@ -373,7 +375,7 @@ check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED ||
 # echo -e "----------------------------------------------------------------------------------\n"
 # DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_FasterXML_jackson-databind.json
 # DEP_RESULT=$WORKSPACE/output/reports/github_com/FasterXML/jackson-databind/dependencies.json
-# $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/jackson_databind_config.yaml || log_fail
+# $RUN_MACARON analyze -purl pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.0-rc1 || log_fail
 
 # check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
@@ -649,6 +651,17 @@ echo -e "\n---------------------------------------------------------------------
 echo "Testing Repo Finder functionality."
 echo -e "----------------------------------------------------------------------------------\n"
 check_or_update_expected_output $TEST_REPO_FINDER || log_fail
+if [ $? -ne 0 ];
+then
+    echo -e "Expect zero status code but got $?."
+    log_fail
+fi
+
+# Testing the Commit Finder's tag matching functionality.
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Testing Commit Finder tag matching functionality."
+echo -e "----------------------------------------------------------------------------------\n"
+python $TEST_COMMIT_FINDER || log_fail
 if [ $? -ne 0 ];
 then
     echo -e "Expect zero status code but got $?."
