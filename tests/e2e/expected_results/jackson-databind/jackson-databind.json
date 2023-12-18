@@ -1,15 +1,16 @@
 {
     "metadata": {
-        "timestamps": "2023-09-12 17:24:16"
+        "timestamps": "2023-11-08 09:49:13",
+        "has_passing_check": true
     },
     "target": {
         "info": {
-            "full_name": "pkg:github.com/FasterXML/jackson-databind@f0af53d085eb2aa9f7f6199846cc526068e09977",
+            "full_name": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.0-rc1",
             "local_cloned_path": "git_repos/github_com/FasterXML/jackson-databind",
             "remote_path": "https://github.com/FasterXML/jackson-databind",
-            "branch": "2.14",
-            "commit_hash": "f0af53d085eb2aa9f7f6199846cc526068e09977",
-            "commit_date": "2022-05-29T17:25:03-07:00"
+            "branch": null,
+            "commit_hash": "6e7ff14e2d850bfed2ebf8ebd6b3d71ce668cadd",
+            "commit_date": "2022-09-25T16:03:22-07:00"
         },
         "provenances": {
             "is_inferred": true,
@@ -21,16 +22,16 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/FasterXML/jackson-databind/blob/f0af53d085eb2aa9f7f6199846cc526068e09977/.github/workflows/main.yml"
+                                "id": "https://github.com/FasterXML/jackson-databind/blob/6e7ff14e2d850bfed2ebf8ebd6b3d71ce668cadd/.github/workflows/main.yml"
                             },
                             "buildType": "Custom github_actions",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "https://github.com/FasterXML/jackson-databind@refs/heads/2.14",
+                                    "uri": "https://github.com/FasterXML/jackson-databind@refs/heads/None",
                                     "digest": {
-                                        "sha1": "f0af53d085eb2aa9f7f6199846cc526068e09977"
+                                        "sha1": "6e7ff14e2d850bfed2ebf8ebd6b3d71ce668cadd"
                                     },
-                                    "entryPoint": "https://github.com/FasterXML/jackson-databind/blob/f0af53d085eb2aa9f7f6199846cc526068e09977/.github/workflows/main.yml"
+                                    "entryPoint": "https://github.com/FasterXML/jackson-databind/blob/6e7ff14e2d850bfed2ebf8ebd6b3d71ce668cadd/.github/workflows/main.yml"
                                 },
                                 "parameters": {},
                                 "environment": {}
@@ -124,8 +125,8 @@
                     ],
                     "justification": [
                         {
-                            "The target repository uses build tool maven to deploy": "https://github.com/FasterXML/jackson-databind/blob/f0af53d085eb2aa9f7f6199846cc526068e09977/.github/workflows/main.yml",
-                            "The build is triggered by": "https://github.com/FasterXML/jackson-databind/blob/f0af53d085eb2aa9f7f6199846cc526068e09977/.github/workflows/main.yml"
+                            "The target repository uses build tool maven to deploy": "https://github.com/FasterXML/jackson-databind/blob/6e7ff14e2d850bfed2ebf8ebd6b3d71ce668cadd/.github/workflows/main.yml",
+                            "The build is triggered by": "https://github.com/FasterXML/jackson-databind/blob/6e7ff14e2d850bfed2ebf8ebd6b3d71ce668cadd/.github/workflows/main.yml"
                         },
                         "Deploy command: ['./mvnw', '-B', '-q', '-ff', '-DskipTests', '-ntp', 'source:jar', 'deploy']",
                         "However, could not find a passing workflow run."
@@ -174,7 +175,7 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "Unable to find a publishing timestamp for the artifact."
+                        "Unable to find a potential workflow run for the artifact."
                     ],
                     "result_type": "FAILED"
                 },
@@ -188,7 +189,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Could not find any SLSA provenances."
+                        "Could not find any SLSA or Witness provenances."
                     ],
                     "result_type": "FAILED"
                 },
@@ -253,15 +254,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_witness_level_one_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_build_service_1",
                 "num_deps_pass": 0
             },
             {
@@ -269,11 +262,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_as_code_1",
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_version_control_system_1",
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             },
             {
@@ -289,7 +282,15 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_service_1",
+                "check_id": "mcn_provenance_witness_level_one_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 0
             }
         ],
