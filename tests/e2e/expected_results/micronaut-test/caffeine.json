@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-11-10 14:01:43",
+        "timestamps": "2023-12-22 01:32:17",
         "has_passing_check": true
     },
     "target": {
@@ -8,7 +8,7 @@
             "full_name": "pkg:github.com/ben-manes/caffeine@05a040c2478341bab8a58a02b3dc1fe14d626d72",
             "local_cloned_path": "git_repos/github_com/ben-manes/caffeine",
             "remote_path": "https://github.com/ben-manes/caffeine",
-            "branch": "v2.dev",
+            "branch": null,
             "commit_hash": "05a040c2478341bab8a58a02b3dc1fe14d626d72",
             "commit_date": "2021-12-02T01:04:44-08:00"
         },
@@ -27,7 +27,7 @@
                             "buildType": "Custom github_actions",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "https://github.com/ben-manes/caffeine@refs/heads/v2.dev",
+                                    "uri": "https://github.com/ben-manes/caffeine@refs/heads/None",
                                     "digest": {
                                         "sha1": "05a040c2478341bab8a58a02b3dc1fe14d626d72"
                                     },
