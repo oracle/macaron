@@ -106,7 +106,7 @@ def get_branches_containing_commit(git_obj: Git, commit: str, remote: str = "ori
             commit,
         )
     except GitCommandError:
-        logger.debug("Error while using git branch to look for branches that contains %s.", commit)
+        logger.debug("Error while looking up branches that contain commit %s.", commit)
         return []
 
     return parse_git_branch_output(raw_output)
@@ -138,7 +138,7 @@ def check_out_repo_target(
     commit exists in the branch origin/<branch_name>. If not, this fucntion will return False.
 
     For all scenarios:
-    - If the checkout failed (e.g. a branch or a commit doesn't exist), this function will return
+    - If the checkout fails (e.g. a branch or a commit doesn't exist), this function will return
     False.
     - This function will perform a force checkout
     https://git-scm.com/docs/git-checkout#Documentation/git-checkout.txt---force

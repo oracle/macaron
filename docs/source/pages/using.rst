@@ -300,7 +300,7 @@ Analyzing a locally cloned repository
   However, Macaron will not modify the history of the repository.
 
 .. note::
-  Macaron will always assume that ``origin`` remote exists in the repository and only checkout commits from ``origin`` remote for the analysis.
+  We assume that the ``origin`` remote exists in the cloned repository and checkout the relevant commits from ``origin`` only.
 
 If you have a local repository that you want to analyze, Macaron also supports running the analysis against a local repository.
 
