@@ -8,6 +8,8 @@ import os
 from pathlib import Path
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from macaron.config.defaults import defaults, load_defaults
 from macaron.slsa_analyzer import git_url
@@ -277,3 +279,9 @@ def test_get_unique_path(url: str, path: str) -> None:
 def test_parse_git_branch_output(content: str, expected_output: list[str]) -> None:
     """Test the parse git branch output function."""
     assert git_url.parse_git_branch_output(content) == expected_output
+
+
+@given(st.text(min_size=10))
+def test_parse_git_branch_output_with_random_input(content: str) -> None:
+    """Test the parse git branch output function using random text input."""
+    git_url.parse_git_branch_output(content)
