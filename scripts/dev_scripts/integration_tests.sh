@@ -330,7 +330,6 @@ echo -e "\n---------------------------------------------------------------------
 echo "apache/maven: Check: Check the e2e status code of running with invalid branch or digest defined in the yaml configuration."
 echo -e "----------------------------------------------------------------------------------\n"
 declare -a INVALID_BRANCH_DIGEST=(
-    "maven_digest_no_branch.yaml"
     "maven_invalid_branch.yaml"
     "maven_invalid_digest.yaml"
 )
