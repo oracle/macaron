@@ -1,0 +1,518 @@
+{
+    "metadata": {
+        "timestamps": "2023-12-22 12:47:48",
+        "has_passing_check": true
+    },
+    "target": {
+        "info": {
+            "full_name": "pkg:github.com/micronaut-projects/micronaut-test@7679d10b4073a3b842b6c56877c35fa8cd10acff",
+            "local_cloned_path": "git_repos/github_com/micronaut-projects/micronaut-test",
+            "remote_path": "https://github.com/micronaut-projects/micronaut-test",
+            "branch": "master",
+            "commit_hash": "7679d10b4073a3b842b6c56877c35fa8cd10acff",
+            "commit_date": "2023-11-07T06:43:31+01:00"
+        },
+        "provenances": {
+            "is_inferred": false,
+            "content": {
+                "github_actions": [
+                    {
+                        "_type": "https://in-toto.io/Statement/v0.1",
+                        "predicateType": "https://slsa.dev/provenance/v0.2",
+                        "subject": [
+                            {
+                                "name": "build/repo/io/micronaut/test/micronaut-test-bom/4.1.1/micronaut-test-bom-4.1.1.pom",
+                                "digest": {
+                                    "sha256": "df0ac294009fb49a90d3b43eb6866b118d4e63f1e41f43b85ef472278835171e"
+                                }
+                            },
+                            {
+                                "name": "build/repo/io/micronaut/test/micronaut-test-core/4.1.1/micronaut-test-core-4.1.1.jar",
+                                "digest": {
+                                    "sha256": "374a135cd10f5dc3affb7c69129f51907260d5d09c40fe1c612a3f2967c1db82"
+                                }
+                            },
+                            {
+                                "name": "build/repo/io/micronaut/test/micronaut-test-core/4.1.1/micronaut-test-core-4.1.1.pom",
+                                "digest": {
+                                    "sha256": "de4735ef53a4019584c4f16cc17e476cecdd9e44efc37c3ba9c9cedeafe23e43"
+                                }
+                            },
+                            {
+                                "name": "build/repo/io/micronaut/test/micronaut-test-junit5/4.1.1/micronaut-test-junit5-4.1.1.jar",
+                                "digest": {
+                                    "sha256": "655a851b405ed4fa8d86927591f0860fe600458b5e311f5074096f6cfa8ac596"
+                                }
+                            },
+                            {
+                                "name": "build/repo/io/micronaut/test/micronaut-test-junit5/4.1.1/micronaut-test-junit5-4.1.1.pom",
+                                "digest": {
+                                    "sha256": "9210cec65c1050305497f4c7751d951964cfb1f1f60c1e21434f74d60345a487"
+                                }
+                            },
+                            {
+                                "name": "build/repo/io/micronaut/test/micronaut-test-kotest5/4.1.1/micronaut-test-kotest5-4.1.1.jar",
+                                "digest": {
+                                    "sha256": "b80e3b51b9a5af5ceab3c4e424069081872107d5fdd1e005811b204ea497e399"
+                                }
+                            },
+                            {
+                                "name": "build/repo/io/micronaut/test/micronaut-test-kotest5/4.1.1/micronaut-test-kotest5-4.1.1.pom",
+                                "digest": {
+                                    "sha256": "f9146d727be9811ff4dac12b0a96c60849cda063b51d534d2c4415766b438c45"
+                                }
+                            },
+                            {
+                                "name": "build/repo/io/micronaut/test/micronaut-test-rest-assured/4.1.1/micronaut-test-rest-assured-4.1.1.jar",
+                                "digest": {
+                                    "sha256": "39aaef0081f064468125446a1fab1da68e49f1af4cd396445dab6b89ec9f778c"
+                                }
+                            },
+                            {
+                                "name": "build/repo/io/micronaut/test/micronaut-test-rest-assured/4.1.1/micronaut-test-rest-assured-4.1.1.pom",
+                                "digest": {
+                                    "sha256": "9fc1c1f0c4824d990310234e223acba57cb7c3dbbcebbb194382989f5bd4145b"
+                                }
+                            },
+                            {
+                                "name": "build/repo/io/micronaut/test/micronaut-test-spock/4.1.1/micronaut-test-spock-4.1.1.jar",
+                                "digest": {
+                                    "sha256": "ba34b2238565a5d5737aabcc4e96dde1d328348b7fcbbc123c3f37cb3884c7fc"
+                                }
+                            },
+                            {
+                                "name": "build/repo/io/micronaut/test/micronaut-test-spock/4.1.1/micronaut-test-spock-4.1.1.pom",
+                                "digest": {
+                                    "sha256": "6ad7b0bc411fa8e0dcd3de9fb27aa8f1f23c5c946f738c607ecb873314ba86b4"
+                                }
+                            }
+                        ],
+                        "predicate": {
+                            "builder": {
+                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.9.0"
+                            },
+                            "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
+                            "invocation": {
+                                "configSource": {
+                                    "uri": "git+https://github.com/micronaut-projects/micronaut-test@refs/tags/v4.1.1",
+                                    "digest": {
+                                        "sha1": "0ad6b0e87e695e90ab9f0c8df28a49101cd00d70"
+                                    },
+                                    "entryPoint": ".github/workflows/release.yml"
+                                },
+                                "parameters": {},
+                                "environment": {
+                                    "github_actor": "sdelamo",
+                                    "github_actor_id": "864788",
+                                    "github_base_ref": "",
+                                    "github_event_name": "release",
+                                    "github_event_payload": {
+                                        "action": "published",
+                                        "organization": {
+                                            "avatar_url": "https://avatars.githubusercontent.com/u/36880643?v=4",
+                                            "description": "",
+                                            "events_url": "https://api.github.com/orgs/micronaut-projects/events",
+                                            "hooks_url": "https://api.github.com/orgs/micronaut-projects/hooks",
+                                            "id": 36880643,
+                                            "issues_url": "https://api.github.com/orgs/micronaut-projects/issues",
+                                            "login": "micronaut-projects",
+                                            "members_url": "https://api.github.com/orgs/micronaut-projects/members{/member}",
+                                            "node_id": "MDEyOk9yZ2FuaXphdGlvbjM2ODgwNjQz",
+                                            "public_members_url": "https://api.github.com/orgs/micronaut-projects/public_members{/member}",
+                                            "repos_url": "https://api.github.com/orgs/micronaut-projects/repos",
+                                            "url": "https://api.github.com/orgs/micronaut-projects"
+                                        },
+                                        "release": {
+                                            "assets": [],
+                                            "assets_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/releases/132296768/assets",
+                                            "author": {
+                                                "avatar_url": "https://avatars.githubusercontent.com/u/864788?v=4",
+                                                "events_url": "https://api.github.com/users/sdelamo/events{/privacy}",
+                                                "followers_url": "https://api.github.com/users/sdelamo/followers",
+                                                "following_url": "https://api.github.com/users/sdelamo/following{/other_user}",
+                                                "gists_url": "https://api.github.com/users/sdelamo/gists{/gist_id}",
+                                                "gravatar_id": "",
+                                                "html_url": "https://github.com/sdelamo",
+                                                "id": 864788,
+                                                "login": "sdelamo",
+                                                "node_id": "MDQ6VXNlcjg2NDc4OA==",
+                                                "organizations_url": "https://api.github.com/users/sdelamo/orgs",
+                                                "received_events_url": "https://api.github.com/users/sdelamo/received_events",
+                                                "repos_url": "https://api.github.com/users/sdelamo/repos",
+                                                "site_admin": false,
+                                                "starred_url": "https://api.github.com/users/sdelamo/starred{/owner}{/repo}",
+                                                "subscriptions_url": "https://api.github.com/users/sdelamo/subscriptions",
+                                                "type": "User",
+                                                "url": "https://api.github.com/users/sdelamo"
+                                            },
+                                            "body": "<!-- Release notes generated using configuration in .github/release.yml at 4.1.x -->\r\n\r\n## What's Changed\r\n### Improvements \u2b50\r\n* check if bean of type ResourceLoader exists by @sdelamo in https://github.com/micronaut-projects/micronaut-test/pull/906\r\n### Dependency updates \ud83d\ude80\r\n* fix(deps): update junit5 monorepo to v5.10.1 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/885\r\n* chore(deps): update graalvm/setup-graalvm action to v1.1.5 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/884\r\n\r\n\r\n**Full Changelog**: https://github.com/micronaut-projects/micronaut-test/compare/v4.1.0...v4.1.1",
+                                            "created_at": "2023-12-01T14:49:53Z",
+                                            "draft": false,
+                                            "html_url": "https://github.com/micronaut-projects/micronaut-test/releases/tag/v4.1.1",
+                                            "id": 132296768,
+                                            "mentions_count": 2,
+                                            "name": "Micronaut Test 4.1.1",
+                                            "node_id": "RE_kwDOCPx9Ys4H4rBA",
+                                            "prerelease": false,
+                                            "published_at": "2023-12-01T14:50:40Z",
+                                            "tag_name": "v4.1.1",
+                                            "tarball_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/tarball/v4.1.1",
+                                            "target_commitish": "4.1.x",
+                                            "upload_url": "https://uploads.github.com/repos/micronaut-projects/micronaut-test/releases/132296768/assets{?name,label}",
+                                            "url": "https://api.github.com/repos/micronaut-projects/micronaut-test/releases/132296768",
+                                            "zipball_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/zipball/v4.1.1"
+                                        },
+                                        "repository": {
+                                            "allow_forking": true,
+                                            "archive_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/{archive_format}{/ref}",
+                                            "archived": false,
+                                            "assignees_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/assignees{/user}",
+                                            "blobs_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/git/blobs{/sha}",
+                                            "branches_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/branches{/branch}",
+                                            "clone_url": "https://github.com/micronaut-projects/micronaut-test.git",
+                                            "collaborators_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/collaborators{/collaborator}",
+                                            "comments_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/comments{/number}",
+                                            "commits_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/commits{/sha}",
+                                            "compare_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/compare/{base}...{head}",
+                                            "contents_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/contents/{+path}",
+                                            "contributors_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/contributors",
+                                            "created_at": "2018-09-28T16:07:55Z",
+                                            "custom_properties": {},
+                                            "default_branch": "master",
+                                            "deployments_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/deployments",
+                                            "description": "Repository for Test Related Utilities for Micronaut",
+                                            "disabled": false,
+                                            "downloads_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/downloads",
+                                            "events_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/events",
+                                            "fork": false,
+                                            "forks": 58,
+                                            "forks_count": 58,
+                                            "forks_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/forks",
+                                            "full_name": "micronaut-projects/micronaut-test",
+                                            "git_commits_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/git/commits{/sha}",
+                                            "git_refs_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/git/refs{/sha}",
+                                            "git_tags_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/git/tags{/sha}",
+                                            "git_url": "git://github.com/micronaut-projects/micronaut-test.git",
+                                            "has_discussions": false,
+                                            "has_downloads": true,
+                                            "has_issues": true,
+                                            "has_pages": true,
+                                            "has_projects": true,
+                                            "has_wiki": true,
+                                            "homepage": "",
+                                            "hooks_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/hooks",
+                                            "html_url": "https://github.com/micronaut-projects/micronaut-test",
+                                            "id": 150764898,
+                                            "is_template": false,
+                                            "issue_comment_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/issues/comments{/number}",
+                                            "issue_events_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/issues/events{/number}",
+                                            "issues_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/issues{/number}",
+                                            "keys_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/keys{/key_id}",
+                                            "labels_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/labels{/name}",
+                                            "language": "Java",
+                                            "languages_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/languages",
+                                            "license": {
+                                                "key": "apache-2.0",
+                                                "name": "Apache License 2.0",
+                                                "node_id": "MDc6TGljZW5zZTI=",
+                                                "spdx_id": "Apache-2.0",
+                                                "url": "https://api.github.com/licenses/apache-2.0"
+                                            },
+                                            "merges_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/merges",
+                                            "milestones_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/milestones{/number}",
+                                            "mirror_url": null,
+                                            "name": "micronaut-test",
+                                            "node_id": "MDEwOlJlcG9zaXRvcnkxNTA3NjQ4OTg=",
+                                            "notifications_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/notifications{?since,all,participating}",
+                                            "open_issues": 44,
+                                            "open_issues_count": 44,
+                                            "owner": {
+                                                "avatar_url": "https://avatars.githubusercontent.com/u/36880643?v=4",
+                                                "events_url": "https://api.github.com/users/micronaut-projects/events{/privacy}",
+                                                "followers_url": "https://api.github.com/users/micronaut-projects/followers",
+                                                "following_url": "https://api.github.com/users/micronaut-projects/following{/other_user}",
+                                                "gists_url": "https://api.github.com/users/micronaut-projects/gists{/gist_id}",
+                                                "gravatar_id": "",
+                                                "html_url": "https://github.com/micronaut-projects",
+                                                "id": 36880643,
+                                                "login": "micronaut-projects",
+                                                "node_id": "MDEyOk9yZ2FuaXphdGlvbjM2ODgwNjQz",
+                                                "organizations_url": "https://api.github.com/users/micronaut-projects/orgs",
+                                                "received_events_url": "https://api.github.com/users/micronaut-projects/received_events",
+                                                "repos_url": "https://api.github.com/users/micronaut-projects/repos",
+                                                "site_admin": false,
+                                                "starred_url": "https://api.github.com/users/micronaut-projects/starred{/owner}{/repo}",
+                                                "subscriptions_url": "https://api.github.com/users/micronaut-projects/subscriptions",
+                                                "type": "Organization",
+                                                "url": "https://api.github.com/users/micronaut-projects"
+                                            },
+                                            "private": false,
+                                            "pulls_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/pulls{/number}",
+                                            "pushed_at": "2023-12-01T14:50:39Z",
+                                            "releases_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/releases{/id}",
+                                            "size": 23465,
+                                            "ssh_url": "git@github.com:micronaut-projects/micronaut-test.git",
+                                            "stargazers_count": 78,
+                                            "stargazers_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/stargazers",
+                                            "statuses_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/statuses/{sha}",
+                                            "subscribers_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/subscribers",
+                                            "subscription_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/subscription",
+                                            "svn_url": "https://github.com/micronaut-projects/micronaut-test",
+                                            "tags_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/tags",
+                                            "teams_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/teams",
+                                            "topics": [],
+                                            "trees_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/git/trees{/sha}",
+                                            "updated_at": "2023-11-26T20:02:46Z",
+                                            "url": "https://api.github.com/repos/micronaut-projects/micronaut-test",
+                                            "visibility": "public",
+                                            "watchers": 78,
+                                            "watchers_count": 78,
+                                            "web_commit_signoff_required": false
+                                        },
+                                        "sender": {
+                                            "avatar_url": "https://avatars.githubusercontent.com/u/864788?v=4",
+                                            "events_url": "https://api.github.com/users/sdelamo/events{/privacy}",
+                                            "followers_url": "https://api.github.com/users/sdelamo/followers",
+                                            "following_url": "https://api.github.com/users/sdelamo/following{/other_user}",
+                                            "gists_url": "https://api.github.com/users/sdelamo/gists{/gist_id}",
+                                            "gravatar_id": "",
+                                            "html_url": "https://github.com/sdelamo",
+                                            "id": 864788,
+                                            "login": "sdelamo",
+                                            "node_id": "MDQ6VXNlcjg2NDc4OA==",
+                                            "organizations_url": "https://api.github.com/users/sdelamo/orgs",
+                                            "received_events_url": "https://api.github.com/users/sdelamo/received_events",
+                                            "repos_url": "https://api.github.com/users/sdelamo/repos",
+                                            "site_admin": false,
+                                            "starred_url": "https://api.github.com/users/sdelamo/starred{/owner}{/repo}",
+                                            "subscriptions_url": "https://api.github.com/users/sdelamo/subscriptions",
+                                            "type": "User",
+                                            "url": "https://api.github.com/users/sdelamo"
+                                        }
+                                    },
+                                    "github_head_ref": "",
+                                    "github_ref": "refs/tags/v4.1.1",
+                                    "github_ref_type": "tag",
+                                    "github_repository_id": "150764898",
+                                    "github_repository_owner": "micronaut-projects",
+                                    "github_repository_owner_id": "36880643",
+                                    "github_run_attempt": "1",
+                                    "github_run_id": "7061527707",
+                                    "github_run_number": "74",
+                                    "github_sha1": "0ad6b0e87e695e90ab9f0c8df28a49101cd00d70"
+                                }
+                            },
+                            "metadata": {
+                                "buildInvocationID": "7061527707-1",
+                                "completeness": {
+                                    "parameters": true,
+                                    "environment": false,
+                                    "materials": false
+                                },
+                                "reproducible": false
+                            },
+                            "materials": [
+                                {
+                                    "uri": "git+https://github.com/micronaut-projects/micronaut-test@refs/tags/v4.1.1",
+                                    "digest": {
+                                        "sha1": "0ad6b0e87e695e90ab9f0c8df28a49101cd00d70"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Maven Central Registry": []
+            }
+        },
+        "checks": {
+            "summary": {
+                "DISABLED": 0,
+                "FAILED": 3,
+                "PASSED": 6,
+                "SKIPPED": 0,
+                "UNKNOWN": 1
+            },
+            "results": [
+                {
+                    "check_id": "mcn_provenance_expectation_1",
+                    "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the expected value.",
+                    "slsa_requirements": [
+                        "Provenance conforms with expectations - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "No expectation defined for this repository."
+                    ],
+                    "result_type": "UNKNOWN"
+                },
+                {
+                    "check_id": "mcn_build_as_code_1",
+                    "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        {
+                            "The target repository uses build tool gradle to deploy": "https://github.com/micronaut-projects/micronaut-test/blob/7679d10b4073a3b842b6c56877c35fa8cd10acff/.github/workflows/gradle.yml",
+                            "The build is triggered by": "https://github.com/micronaut-projects/micronaut-test/blob/7679d10b4073a3b842b6c56877c35fa8cd10acff/.github/workflows/gradle.yml"
+                        },
+                        "Deploy command: ['./gradlew', 'publishToSonatype', 'docs', '--no-daemon']",
+                        "However, could not find a passing workflow run."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_build_script_1",
+                    "check_description": "Check if the target repo has a valid build script.",
+                    "slsa_requirements": [
+                        "Scripted Build - SLSA Level 1"
+                    ],
+                    "justification": [
+                        "Check mcn_build_script_1 is set to PASSED because mcn_build_service_1 PASSED."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_build_service_1",
+                    "check_description": "Check if the target repo has a valid build service.",
+                    "slsa_requirements": [
+                        "Build service - SLSA Level 2"
+                    ],
+                    "justification": [
+                        "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_provenance_available_1",
+                    "check_description": "Check whether the target has intoto provenance.",
+                    "slsa_requirements": [
+                        "Provenance - Available - SLSA Level 1",
+                        "Provenance content - Identifies build instructions - SLSA Level 1",
+                        "Provenance content - Identifies artifacts - SLSA Level 1",
+                        "Provenance content - Identifies builder - SLSA Level 1"
+                    ],
+                    "justification": [
+                        "Found provenance in release assets:",
+                        "https://api.github.com/repos/micronaut-projects/micronaut-test/releases/assets/138429786"
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_provenance_level_three_1",
+                    "check_description": "Check whether the target has SLSA provenance level 3.",
+                    "slsa_requirements": [
+                        "Provenance - Non falsifiable - SLSA Level 3",
+                        "Provenance content - Includes all build parameters - SLSA Level 3",
+                        "Provenance content - Identifies entry point - SLSA Level 3",
+                        "Provenance content - Identifies source code - SLSA Level 2"
+                    ],
+                    "justification": [
+                        "Successfully verified level 3: ",
+                        "verify passed : build/repo/micronaut-test-bom/4.1.1/micronaut-test-bom-4.1.1.pom,verify passed : build/repo/micronaut-test-core/4.1.1/micronaut-test-core-4.1.1.jar,verify passed : build/repo/micronaut-test-core/4.1.1/micronaut-test-core-4.1.1.pom,verify passed : build/repo/micronaut-test-junit5/4.1.1/micronaut-test-junit5-4.1.1.jar,verify passed : build/repo/micronaut-test-junit5/4.1.1/micronaut-test-junit5-4.1.1.pom,verify passed : build/repo/micronaut-test-kotest5/4.1.1/micronaut-test-kotest5-4.1.1.jar,verify passed : build/repo/micronaut-test-kotest5/4.1.1/micronaut-test-kotest5-4.1.1.pom,verify passed : build/repo/micronaut-test-rest-assured/4.1.1/micronaut-test-rest-assured-4.1.1.jar,verify passed : build/repo/micronaut-test-rest-assured/4.1.1/micronaut-test-rest-assured-4.1.1.pom,verify passed : build/repo/micronaut-test-spock/4.1.1/micronaut-test-spock-4.1.1.jar,verify passed : build/repo/micronaut-test-spock/4.1.1/micronaut-test-spock-4.1.1.pom"
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_version_control_system_1",
+                    "check_description": "Check whether the target repo uses a version control system.",
+                    "slsa_requirements": [
+                        "Version controlled - SLSA Level 2"
+                    ],
+                    "justification": [
+                        {
+                            "This is a Git repository": "https://github.com/micronaut-projects/micronaut-test"
+                        }
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_infer_artifact_pipeline_1",
+                    "check_description": "Detects potential pipelines from which an artifact is published.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Unable to find a publishing timestamp for the artifact."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_witness_level_one_1",
+                    "check_description": "Check whether the target has a level-1 witness provenance.",
+                    "slsa_requirements": [
+                        "Provenance - Available - SLSA Level 1",
+                        "Provenance content - Identifies build instructions - SLSA Level 1",
+                        "Provenance content - Identifies artifacts - SLSA Level 1",
+                        "Provenance content - Identifies builder - SLSA Level 1"
+                    ],
+                    "justification": [
+                        "Failed to discover any witness provenance."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_trusted_builder_level_three_1",
+                    "check_description": "Check whether the target uses a trusted SLSA level 3 builder.",
+                    "slsa_requirements": [
+                        "Hermetic - SLSA Level 4",
+                        "Isolated - SLSA Level 3",
+                        "Parameterless - SLSA Level 4",
+                        "Ephemeral environment - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Could not find a trusted level 3 builder as a GitHub Actions workflow."
+                    ],
+                    "result_type": "FAILED"
+                }
+            ]
+        }
+    },
+    "dependencies": {
+        "analyzed_deps": 0,
+        "unique_dep_repos": 0,
+        "checks_summary": [
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_witness_level_one_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_available_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 0
+            }
+        ],
+        "dep_status": []
+    }
+}
