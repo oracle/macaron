@@ -257,17 +257,8 @@ $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micr
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-# TODO: uncomment the test below after resolving https://github.com/oracle/macaron/issues/60.
-# echo -e "\n----------------------------------------------------------------------------------"
-# echo "micronaut-projects/micronaut-test: Check the resolved dependency output with config for cyclonedx gradle plugin (default)."
-# echo -e "----------------------------------------------------------------------------------\n"
-# DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-test.json
-# $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_test_config.yaml || log_fail
-
-# python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
 echo -e "\n----------------------------------------------------------------------------------"
-echo "micronaut-projects/micronaut-test: Check the e2e output JSON file with config and no dependency analyzing."
+echo "micronaut-projects/micronaut-test: Check the e2e output JSON file with config when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-test/
 JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/micronaut-test
@@ -278,12 +269,19 @@ declare -a COMPARE_FILES=(
     "slf4j.json"
 )
 
-$RUN_MACARON analyze -purl pkg:maven/io.micronaut/micronaut-test-core@4.1.0 --skip-deps || log_fail
-
 for i in "${COMPARE_FILES[@]}"
 do
     check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
 done
+
+# TODO: uncomment the test below after resolving https://github.com/oracle/macaron/issues/60.
+# echo -e "\n----------------------------------------------------------------------------------"
+# echo "micronaut-projects/micronaut-test: Check the resolved dependency output with config for cyclonedx gradle plugin (default)."
+# echo -e "----------------------------------------------------------------------------------\n"
+# DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-test.json
+# $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_test_config.yaml || log_fail
+
+# python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 # Analyze apache/maven.
 echo -e "\n=================================================================================="
