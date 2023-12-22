@@ -90,11 +90,11 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         branch = analyzer_single_args.branch
         digest = analyzer_single_args.digest
 
-        if repo_path and purl and not (branch and digest):
+        if repo_path and purl and not digest:
             # To provide the purl together with the repository path, the user must specify the branch and commit
             # digest.
             logger.error(
-                "Please provide the branch and commit digest for the repo at %s that matches to the PURL string %s.",
+                "Please provide the commit digest for the repo at %s that matches to the PURL string %s.",
                 repo_path,
                 purl,
             )
