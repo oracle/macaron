@@ -26,10 +26,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def parse_git_branch_output(content: str) -> list[str]:
-    """Return a list of branch name from the output of ``git branch``.
-
-    This function only work for the output format of the first form of ``git branch`` where the branches are listed.
-    See https://git-scm.com/docs/git-branch for definition of the first form of ``git branch``.
+    """Return the list of branch names from a string that has a format similar to the output of ``git branch --list``.
 
     Parameters
     ----------
