@@ -649,13 +649,6 @@ class Analyzer:
             The pydriller.Git object of the repository or None if error.
         """
         # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
-        # Cannot specify a commit hash without specifying the branch.
-        if not branch_name and digest:
-            logger.error(
-                "Cannot specify a commit hash without specifying the branch for repo at %s.",
-                repo_path,
-            )
-            return None
 
         logger.info(
             "Preparing the repository for the analysis (path=%s, branch=%s, digest=%s)",

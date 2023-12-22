@@ -8,6 +8,8 @@ import os
 from pathlib import Path
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from macaron.config.defaults import defaults, load_defaults
 from macaron.slsa_analyzer import git_url
@@ -242,3 +244,46 @@ def test_get_remote_vcs_url_with_user_defined_allowed_hostnames(tmp_path: Path) 
 def test_get_unique_path(url: str, path: str) -> None:
     """Test the get unique path method."""
     assert git_url.get_repo_dir_name(url) == os.path.normpath(path)
+
+
+@pytest.mark.parametrize(
+    ("content", "expected_output"),
+    [
+        ("", []),
+        (
+            """
+            * (HEAD detached at 7fc81f8)
+            master
+            remotes/origin/HEAD -> origin/master
+            remotes/origin/master
+            remotes/origin/v2.dev
+            remotes/origin/v3.dev
+            """,
+            [
+                "(HEAD detached at 7fc81f8)",
+                "master",
+                "remotes/origin/HEAD -> origin/master",
+                "remotes/origin/master",
+                "remotes/origin/v2.dev",
+                "remotes/origin/v3.dev",
+            ],
+        ),
+        ("* master\n ", ["master"]),
+        (
+            "* (HEAD detached at origin/master)\n some_other_branch",
+            ["(HEAD detached at origin/master)", "some_other_branch"],
+        ),
+        ("origin/main\n origin/dev", ["origin/main", "origin/dev"]),
+    ],
+)
+def test_parse_git_branch_output(content: str, expected_output: list[str]) -> None:
+    """Test the parse git branch output function."""
+    assert git_url.parse_git_branch_output(content) == expected_output
+
+
+# TODO: add the git branch output strategy which has the same properties as
+# git branch where existing branch names are listed.
+@given(st.text(min_size=10))
+def test_parse_git_branch_output_with_random_input(content: str) -> None:
+    """Test the parse git branch output function using random text input."""
+    git_url.parse_git_branch_output(content)

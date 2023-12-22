@@ -299,6 +299,9 @@ Analyzing a locally cloned repository
   Therefore, any uncommitted changes in the repository need to be backed up to prevent loss (these include unstaged changes, staged changes and untracked files).
   However, Macaron will not modify the history of the repository.
 
+.. note::
+  We assume that the ``origin`` remote exists in the cloned repository and checkout the relevant commits from ``origin`` only.
+
 If you have a local repository that you want to analyze, Macaron also supports running the analysis against a local repository.
 
 Assume that the dir tree at the local repository has the following components:
