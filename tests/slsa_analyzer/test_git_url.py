@@ -281,6 +281,8 @@ def test_parse_git_branch_output(content: str, expected_output: list[str]) -> No
     assert git_url.parse_git_branch_output(content) == expected_output
 
 
+# TODO: add the git branch output strategy which has the same properties as
+# git branch where existing branch names are listed.
 @given(st.text(min_size=10))
 def test_parse_git_branch_output_with_random_input(content: str) -> None:
     """Test the parse git branch output function using random text input."""
