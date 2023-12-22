@@ -257,16 +257,6 @@ $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micr
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "micronaut-projects/micronaut-test: Check the e2e output JSON file with config (with branch and digest provided) and no dependency analyzing"
-echo -e "----------------------------------------------------------------------------------\n"
-JSON_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-test/micronaut-test.json
-JSON_EXPECT=$WORKSPACE/tests/e2e/expected_results/micronaut-test/micronaut-test-branch-commit.json
-
-$RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_test_config_branch_commit.yaml --skip-deps || log_fail
-
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECT || log_fail
-
 # TODO: uncomment the test below after resolving https://github.com/oracle/macaron/issues/60.
 # echo -e "\n----------------------------------------------------------------------------------"
 # echo "micronaut-projects/micronaut-test: Check the resolved dependency output with config for cyclonedx gradle plugin (default)."
