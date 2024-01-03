@@ -7,7 +7,6 @@ import base64
 import json
 
 from macaron.intoto.errors import DecodeIntotoAttestationError
-from macaron.util import JsonType
 
 
 def encode_payload(payload: dict) -> str:
