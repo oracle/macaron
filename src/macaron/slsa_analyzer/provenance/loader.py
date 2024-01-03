@@ -1,15 +1,15 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the loaders for SLSA provenances."""
 
-import base64
 import gzip
 import json
 import zlib
 
-from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
-from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError, ValidateInTotoPayloadError
+from macaron.intoto import InTotoPayload, validate_intoto_payload
+from macaron.intoto.encoder_decoder import decode_payload
+from macaron.intoto.errors import DecodeIntotoAttestationError, LoadIntotoAttestationError, ValidateInTotoPayloadError
 from macaron.util import JsonType
 
 
@@ -54,19 +54,9 @@ def load_provenance_file(filepath: str) -> dict[str, JsonType]:
         )
 
     try:
-        decoded_payload = base64.b64decode(provenance_payload)
-    except UnicodeDecodeError as error:
-        raise LoadIntotoAttestationError("Cannot decode the payload.") from error
-
-    try:
-        json_payload = json.loads(decoded_payload)
-    except (json.JSONDecodeError, TypeError) as error:
-        raise LoadIntotoAttestationError(
-            "Cannot deserialize the provenance payload as JSON.",
-        ) from error
-
-    if not isinstance(json_payload, dict):
-        raise LoadIntotoAttestationError("The provenance payload is not a JSON object.")
+        json_payload = decode_payload(provenance_payload)
+    except DecodeIntotoAttestationError as err:
+        raise LoadIntotoAttestationError("Cannot decode the attestation payload") from err
 
     return json_payload
 

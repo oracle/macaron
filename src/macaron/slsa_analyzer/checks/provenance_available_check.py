@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the implementation of the Provenance Available check."""
@@ -15,6 +15,7 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts, Component
 from macaron.errors import MacaronError
+from macaron.intoto import InTotoPayload
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
@@ -27,7 +28,6 @@ from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
 from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAsset
 from macaron.slsa_analyzer.package_registry.npm_registry import NPMAttestationAsset, NPMRegistry
-from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 from macaron.slsa_analyzer.provenance.loader import LoadIntotoAttestationError, load_provenance_payload
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.provenance.witness import (

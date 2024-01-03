@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -9,8 +9,8 @@ from unittest import TestCase
 from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from macaron.intoto import validate_intoto_payload
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
-from macaron.slsa_analyzer.provenance.intoto import validate_intoto_payload
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.util import JsonType

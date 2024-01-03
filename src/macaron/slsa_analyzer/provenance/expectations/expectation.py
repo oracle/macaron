@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides a base class for provenance expectation verifiers."""
@@ -9,7 +9,7 @@ from typing import Any, Self
 from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.errors import ExpectationRuntimeError
-from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
+from macaron.intoto import InTotoPayload
 
 ExpectationFn = Callable[[Any], bool]
 

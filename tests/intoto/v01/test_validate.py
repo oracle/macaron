@@ -1,12 +1,12 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for validation of in-toto attestation version 0.1."""
 
 import pytest
 
-from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
-from macaron.slsa_analyzer.provenance.intoto.v01 import validate_intoto_statement, validate_intoto_subject
+from macaron.intoto.errors import ValidateInTotoPayloadError
+from macaron.intoto.v01 import validate_intoto_statement, validate_intoto_subject
 from macaron.util import JsonType
 
 

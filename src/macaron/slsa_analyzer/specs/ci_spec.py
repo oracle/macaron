@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildSpec class."""
@@ -7,10 +7,10 @@ from collections.abc import Sequence
 from typing import TypedDict
 
 from macaron.code_analyzer.call_graph import CallGraph
+from macaron.intoto import InTotoPayload
 from macaron.parsers.bashparser import BashCommands
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
-from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 
 
 class CIInfo(TypedDict):

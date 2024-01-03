@@ -1,11 +1,11 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Witness Attestors."""
 
 from typing import Protocol
 
-from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payload
+from macaron.intoto import InTotoPayload, InTotoV01Payload
 
 
 class RepoAttestor(Protocol):

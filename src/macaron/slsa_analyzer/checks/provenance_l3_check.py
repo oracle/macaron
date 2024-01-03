@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This modules implements a check to verify a target repo has intoto provenance level 3."""
@@ -23,14 +23,14 @@ from sqlalchemy.orm import Mapped, mapped_column
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.database.table_definitions import CheckFacts, HashDigest, Provenance, ReleaseArtifact
+from macaron.intoto import InTotoV01Payload, v01
+from macaron.intoto.errors import InTotoAttestationError, UnsupportedInTotoVersionError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
 from macaron.slsa_analyzer.git_url import get_repo_dir_name
-from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload, v01
-from macaron.slsa_analyzer.provenance.intoto.errors import InTotoAttestationError, UnsupportedInTotoVersionError
 from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName

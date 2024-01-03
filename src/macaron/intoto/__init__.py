@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """In-toto provenance schemas and validation."""
@@ -8,8 +8,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import NamedTuple, TypeVar
 
-from macaron.slsa_analyzer.provenance.intoto import v01, v1
-from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
+from macaron.intoto import v01, v1
+from macaron.intoto.errors import ValidateInTotoPayloadError
 from macaron.util import JsonType
 
 # Type of an in-toto statement.
