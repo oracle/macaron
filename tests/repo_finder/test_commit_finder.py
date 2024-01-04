@@ -135,10 +135,6 @@ def test_commit_finder() -> None:
     git_obj.repo.create_tag(f"{tag_version_2}_DEV_RC1_RELEASE", ref=empty_commit.hexsha)
     git_obj.repo.create_tag(f"rel/prefix_name-{tag_version}", ref=empty_commit.hexsha)
 
-    # Create a tag on the commit that has no branch.
-    # tag_no_branch = "0.1.2"
-    # git_obj.repo.create_tag(tag_no_branch, ref=commit_with_no_branch.hexsha)
-
     # Version that fails to create a pattern.
     assert not commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/maven@{bad_version}"))
 
