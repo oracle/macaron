@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This script runs the integration tests using Macaron as a python package.
@@ -636,12 +636,6 @@ POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/policy_report.js
 $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 
-if [ $RESULT_CODE -ne 0 ];
-then
-    echo -e "Expected zero status code but got $RESULT_CODE."
-    exit 1
-fi
-
 # Testing the Repo Finder's remote calls.
 # This requires the 'packageurl' Python module
 echo -e "\n----------------------------------------------------------------------------------"
@@ -663,4 +657,11 @@ if [ $? -ne 0 ];
 then
     echo -e "Expect zero status code but got $?."
     log_fail
+fi
+
+# Important: This should be at the end of the file
+if [ $RESULT_CODE -ne 0 ];
+then
+    echo -e "Expected zero status code but got $RESULT_CODE."
+    exit 1
 fi
