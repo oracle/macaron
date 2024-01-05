@@ -25,15 +25,42 @@ def github_actions_() -> GitHubActions:
     return GitHubActions()
 
 
-def test_build_call_graph(github_actions: GitHubActions) -> None:
+@pytest.mark.parametrize(
+    (
+        "workflow_name",
+        "expect",
+    ),
+    [
+        (
+            "valid1.yaml",
+            [
+                "GitHubNode(valid1.yaml,GHWorkflowType.INTERNAL)",
+                "GitHubNode(apache/maven-gh-actions-shared/.github/workflows/maven-verify.yml@v2,GHWorkflowType.REUSABLE)",
+            ],
+        ),
+        (
+            "valid2.yaml",
+            [
+                "GitHubNode(valid2.yaml,GHWorkflowType.INTERNAL)",
+                "GitHubNode(actions/checkout@v3,GHWorkflowType.EXTERNAL)",
+                "GitHubNode(actions/cache@v3,GHWorkflowType.EXTERNAL)",
+                "GitHubNode(actions/setup-java@v3,GHWorkflowType.EXTERNAL)",
+            ],
+        ),
+    ],
+    ids=[
+        "Internal and reusable workflows",
+        "Internal and external workflows",
+    ],
+)
+def test_build_call_graph(github_actions: GitHubActions, workflow_name: str, expect: list[str]) -> None:
     """Test building call graphs for GitHub Actions workflows."""
     resources_dir = Path(__file__).parent.joinpath("resources", "github")
 
-    # Test internal and reusable workflows.
     # Parse GitHub Actions workflows.
     root = GitHubNode(name="root", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
     gh_cg = CallGraph(root, "")
-    workflow_path = os.path.join(resources_dir, "valid1.yaml")
+    workflow_path = os.path.join(resources_dir, workflow_name)
     parsed_obj = parse_action(workflow_path, macaron_path=MACARON_PATH)
 
     callee = GitHubNode(
@@ -45,33 +72,7 @@ def test_build_call_graph(github_actions: GitHubActions) -> None:
     )
     root.add_callee(callee)
     github_actions.build_call_graph_from_node(callee)
-    assert [
-        "GitHubNode(valid1.yaml,GHWorkflowType.INTERNAL)",
-        "GitHubNode(apache/maven-gh-actions-shared/.github/workflows/maven-verify.yml@v2,GHWorkflowType.REUSABLE)",
-    ] == [str(node) for node in gh_cg.bfs()]
-
-    # Test internal and external workflows.
-    # Parse GitHub Actions workflows.
-    root = GitHubNode(name="root", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
-    gh_cg = CallGraph(root, "")
-    workflow_path = os.path.join(resources_dir, "valid2.yaml")
-    parsed_obj = parse_action(workflow_path, macaron_path=MACARON_PATH)
-
-    callee = GitHubNode(
-        name=os.path.basename(workflow_path),
-        node_type=GHWorkflowType.INTERNAL,
-        source_path=workflow_path,
-        parsed_obj=parsed_obj,
-        caller_path="",
-    )
-    root.add_callee(callee)
-    github_actions.build_call_graph_from_node(callee)
-    assert [
-        "GitHubNode(valid2.yaml,GHWorkflowType.INTERNAL)",
-        "GitHubNode(actions/checkout@v3,GHWorkflowType.EXTERNAL)",
-        "GitHubNode(actions/cache@v3,GHWorkflowType.EXTERNAL)",
-        "GitHubNode(actions/setup-java@v3,GHWorkflowType.EXTERNAL)",
-    ] == [str(node) for node in gh_cg.bfs()]
+    assert [str(node) for node in gh_cg.bfs()] == expect
 
 
 def test_is_detected(github_actions: GitHubActions) -> None:
@@ -81,21 +82,24 @@ def test_is_detected(github_actions: GitHubActions) -> None:
     assert not github_actions.is_detected(str(jenkins_build))
 
 
-def test_get_workflows(github_actions: GitHubActions) -> None:
+@pytest.mark.parametrize(
+    "mock_repo",
+    [
+        ga_has_build_kws,
+        ga_no_build_kws,
+    ],
+    ids=[
+        "GH Actions with build",
+        "GH Actions with no build",
+    ],
+)
+def test_gh_get_workflows(github_actions: GitHubActions, mock_repo: Path) -> None:
     """Test detection of reachable GitHub Actions workflows."""
-    # Test GitHub Actions workflows that contain build commands.
-    expect = [str(path) for path in ga_has_build_kws.joinpath(".github", "workflows").glob("*")]
-    expect.sort()
-    workflows = github_actions.get_workflows(str(ga_has_build_kws))
-    workflows.sort()
-    assert workflows == expect
+    expect = [str(path) for path in mock_repo.joinpath(".github", "workflows").glob("*")]
+    workflows = github_actions.get_workflows(str(mock_repo))
+    assert sorted(workflows) == sorted(expect)
 
-    # Test GitHub Actions workflows that do not contain build commands.
-    expect = [str(path) for path in ga_no_build_kws.joinpath(".github", "workflows").glob("*")]
-    expect.sort()
-    workflows = github_actions.get_workflows(str(ga_no_build_kws))
-    workflows.sort()
-    assert workflows == expect
 
-    # The GitHubActions workflow detection should not work on Jenkins CI configuration files.
+def test_gh_get_workflows_fail_on_jenkins(github_actions: GitHubActions) -> None:
+    """Assert GitHubActions workflow detection not working on Jenkins CI configuration files."""
     assert not github_actions.get_workflows(str(jenkins_build))
