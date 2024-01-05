@@ -696,12 +696,13 @@ class Analyzer:
 
         # Find the digest and branch if a version has been specified
         if not digest and purl and purl.version:
-            digest = find_commit(git_obj, purl)
-            if not digest:
+            found_digest = find_commit(git_obj, purl)
+            if not found_digest:
                 logger.error(
                     "Could not map the input purl string to a specific commit in the corresponding repository."
                 )
                 return None
+            digest = found_digest
 
         # Checking out the specific branch or commit. This operation varies depends on the git service that the
         # repository uses.
