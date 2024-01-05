@@ -114,7 +114,7 @@ class AbstractPurlType(Enum):
     UNSUPPORTED = (2,)
 
 
-def find_commit(git_obj: Git, purl: PackageURL) -> str:
+def find_commit(git_obj: Git, purl: PackageURL) -> str | None:
     """Try to find the commit matching the passed PURL.
 
     The PURL may be a repository type, e.g. GitHub, in which case the commit might be in its version part.
@@ -130,13 +130,13 @@ def find_commit(git_obj: Git, purl: PackageURL) -> str:
 
     Returns
     -------
-    str
-        The digest, or an empty string if the commit cannot be correctly retrieved.
+    str | None
+        The digest, or None if the commit cannot be correctly retrieved.
     """
     version = purl.version
     if not version:
         logger.debug("Missing version for analysis target: %s", purl.name)
-        return ""
+        return None
 
     repo_type = determine_abstract_purl_type(purl)
     if repo_type == AbstractPurlType.REPOSITORY:
@@ -144,7 +144,7 @@ def find_commit(git_obj: Git, purl: PackageURL) -> str:
     if repo_type == AbstractPurlType.ARTIFACT:
         return find_commit_from_version_and_name(git_obj, purl.name, version)
     logger.debug("Type of PURL is not supported for commit finding: %s", purl.type)
-    return ""
+    return None
 
 
 def determine_abstract_purl_type(purl: PackageURL) -> AbstractPurlType:
@@ -174,7 +174,7 @@ def determine_abstract_purl_type(purl: PackageURL) -> AbstractPurlType:
         return AbstractPurlType.UNSUPPORTED
 
 
-def extract_commit_from_version(git_obj: Git, version: str) -> str:
+def extract_commit_from_version(git_obj: Git, version: str) -> str | None:
     """Try to extract the commit from the PURL's version parameter.
 
     E.g.
@@ -190,8 +190,8 @@ def extract_commit_from_version(git_obj: Git, version: str) -> str:
 
     Returns
     -------
-    str
-        The digest, or an empty string if the commit cannot be correctly retrieved.
+    str | None
+        The digest, or None if the commit cannot be correctly retrieved.
     """
     # A commit hash is 40 characters in length, but commits are often referenced using only some of those.
     commit: Commit | None = None
@@ -211,12 +211,12 @@ def extract_commit_from_version(git_obj: Git, version: str) -> str:
             logger.debug("Failed to retrieve commit: %s", error)
 
     if not commit:
-        return ""
+        return None
 
     return str(commit.hash)
 
 
-def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> str:
+def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> str | None:
     """Try to find the matching commit in a repository of a given version (and name) via tags.
 
     The passed version is used to match with the tags in the target repository. The passed name is used in cases where
@@ -233,8 +233,8 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
 
     Returns
     -------
-    str
-        The digest, or an empty string if the commit cannot be correctly retrieved.
+    str | None
+        The digest, or None if the commit cannot be correctly retrieved.
     """
     logger.debug("Searching for commit of artifact version using tags: %s@%s", name, version)
 
@@ -251,14 +251,14 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
 
     if not valid_tags:
         logger.debug("No tags with commits found for %s", name)
-        return ""
+        return None
 
     # Match tags.
     matched_tags = match_tags(list(valid_tags.keys()), name, version)
 
     if not matched_tags:
         logger.debug("No tags matched for %s", name)
-        return ""
+        return None
 
     if len(matched_tags) > 1:
         logger.debug("Tags found for %s: %s", name, len(matched_tags))
@@ -275,7 +275,7 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
         hexsha = tag.commit.hexsha
     except ValueError:
         logger.debug("Error trying to retrieve digest of commit: %s", tag.commit)
-        return ""
+        return None
 
     logger.debug(
         "Found tag %s with commit %s for artifact version %s@%s",
