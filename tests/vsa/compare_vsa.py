@@ -80,7 +80,7 @@ def compare_json(
         - At the top level: empty string ""
         - A subfield "bar" in an object field with name ".foo" has the name ".foo.bar".
         - A subfield "baz" in an object field with name ".foo.bar" has the name ".foo.bar.baz".
-        - All array elements in an array field with name ".foo" have the name ".foo[*]".
+        - The ith element in an array field with name ".foo" have the name ".foo[i]".
 
     Returns
     -------
@@ -104,7 +104,8 @@ def compare_json(
         return compare_dict(result, expected, compare_fn_map, name)
 
     if result != expected:
-        log_err(f"Mismatch found in '{name}': expected {expected}, found {result}.")
+        log_err(f"Mismatch found in '{name}'")
+        log_diff(result, expected)
         return False
 
     return True
@@ -142,12 +143,12 @@ def compare_list(
 
     equal = True
 
-    for result_element, expected_element in zip(result, expected):
+    for i, (result_element, expected_element) in enumerate(zip(result, expected)):
         equal &= compare_json(
             result=result_element,
             expected=expected_element,
             compare_fn_map=compare_fn_map,
-            name=f"{name}[*]",
+            name=f"{name}[{i}]",
         )
 
     return equal
