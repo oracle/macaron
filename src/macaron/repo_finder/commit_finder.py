@@ -213,7 +213,7 @@ def extract_commit_from_version(git_obj: Git, version: str) -> str | None:
     if not commit:
         return None
 
-    return str(commit.hash)
+    return commit.hash if commit else None
 
 
 def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> str | None:
