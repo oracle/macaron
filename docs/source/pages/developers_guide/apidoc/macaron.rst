@@ -21,6 +21,7 @@ Subpackages
    macaron.policy_engine
    macaron.repo_finder
    macaron.slsa_analyzer
+   macaron.vsa
 
 Submodules
 ----------
