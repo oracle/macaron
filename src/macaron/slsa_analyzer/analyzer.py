@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles the cloning and analyzing a Git repo."""
@@ -696,12 +696,13 @@ class Analyzer:
 
         # Find the digest and branch if a version has been specified
         if not digest and purl and purl.version:
-            branch_name, digest = find_commit(git_obj, purl)
-            if not (branch_name and digest):
+            found_digest = find_commit(git_obj, purl)
+            if not found_digest:
                 logger.error(
                     "Could not map the input purl string to a specific commit in the corresponding repository."
                 )
                 return None
+            digest = found_digest
 
         # Checking out the specific branch or commit. This operation varies depends on the git service that the
         # repository uses.
