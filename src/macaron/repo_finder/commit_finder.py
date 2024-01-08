@@ -284,7 +284,7 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
         name,
         version,
     )
-    return str(hexsha)
+    return hexsha if hexsha else None
 
 
 def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, list[str]]:
