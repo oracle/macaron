@@ -1,11 +1,38 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 #
 # Checks if copyright header is valid.
 #
+
+
+# Get the existing start year of a file, by checking if there is already a copyright
+# notice line and capturing the start year.
+#
+# Arguments:
+#   $1: The file to get the start year.
+# Outputs:
+#   STDOUT: The start year if it exists; empty string otherwise.
+get_existing_start_year() {
+  file="$1"
+  copyright_line=$(grep -i -e "Copyright (c) [0-9]* - [0-9]*, Oracle and/or its affiliates. All rights reserved." "$file")
+
+  # Use bash regex matching to get the start year with a capture group.
+  # Grep is not used since it does not have support for capture groups.
+  # Reference: https://stackoverflow.com/questions/1891797/capturing-groups-from-a-grep-regex
+  capture_pattern="Copyright \(c\) ([0-9]*) - [0-9]*, Oracle and/or its affiliates. All rights reserved."
+
+  if [[ $copyright_line =~ $capture_pattern ]]
+  then
+      year="${BASH_REMATCH[1]}"
+      echo "$year"
+  else
+      echo ""
+  fi
+}
+
 
 files=$(git diff --cached --name-only)
 currentyear=$(date +"%Y")
@@ -17,11 +44,7 @@ for f in $files; do
     if [ ! -f "$f" ]; then
         continue
     fi
-    startyear=$(git log --format=%ad --date=format:%Y "$f" | tail -1)
-    if [[ -z "${startyear// }" ]]; then
-        startyear=$currentyear
-    fi
-    if ! grep -i -e "Copyright (c) $startyear - $currentyear, Oracle and/or its affiliates. All rights reserved." "$f" 1>/dev/null;then
+    if ! grep -i -e "Copyright (c) [0-9]* - $currentyear, Oracle and/or its affiliates. All rights reserved." "$f" 1>/dev/null;then
         if [[ $f =~ .*\.(js$|py$|java$|tf$|go$|sh$|dl$|yaml$|yml$|gradle$|kts$|ini$|toml$) ]] || [[ "${f##*/}" = "Dockerfile" ]] \
             || [[ "${f##*/}" = "Makefile" ]] || [[ "${f##*/}" = "Jenkinsfile" ]];then
           missing_copyright_files+=("$f")
@@ -38,7 +61,7 @@ if [ ${#missing_copyright_files[@]} -ne 0 ]; then
             exit 1
         fi
         missing_license_note=$(grep -i "$license_note" "$f")
-        startyear=$(git log --format=%ad --date=format:%Y "$f" | tail -1)
+        startyear=$(get_existing_start_year "$f")
         if [[ -z "${startyear// }" ]]; then
             startyear=$currentyear
         fi
