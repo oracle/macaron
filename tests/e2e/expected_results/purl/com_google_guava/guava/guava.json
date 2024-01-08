@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamps": "2023-11-03 11:54:05",
+        "timestamps": "2024-01-03 15:57:20",
         "has_passing_check": true
     },
     "target": {
@@ -8,9 +8,9 @@
             "full_name": "pkg:maven/com.google.guava/guava@32.1.2-jre?type=jar",
             "local_cloned_path": "git_repos/github_com/google/guava",
             "remote_path": "https://github.com/google/guava",
-            "branch": "master",
-            "commit_hash": "d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4",
-            "commit_date": "2022-06-16T01:55:17-07:00"
+            "branch": null,
+            "commit_hash": "db74bd2fdac443223d45e6fc5c66548542be1081",
+            "commit_date": "2023-07-31T17:01:20-04:00"
         },
         "provenances": {
             "is_inferred": true,
@@ -22,16 +22,16 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/google/guava/blob/d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4/./util/deploy_snapshot.sh"
+                                "id": "https://github.com/google/guava/blob/db74bd2fdac443223d45e6fc5c66548542be1081/./util/deploy_snapshot.sh"
                             },
                             "buildType": "Custom github_actions",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "https://github.com/google/guava@refs/heads/master",
+                                    "uri": "https://github.com/google/guava@refs/heads/None",
                                     "digest": {
-                                        "sha1": "d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4"
+                                        "sha1": "db74bd2fdac443223d45e6fc5c66548542be1081"
                                     },
-                                    "entryPoint": "https://github.com/google/guava/blob/d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4/.github/workflows/ci.yml"
+                                    "entryPoint": "https://github.com/google/guava/blob/db74bd2fdac443223d45e6fc5c66548542be1081/.github/workflows/ci.yml"
                                 },
                                 "parameters": {},
                                 "environment": {}
@@ -79,9 +79,10 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
+                        "The target repository does not use gradle to deploy.",
                         {
-                            "The target repository uses build tool maven to deploy": "https://github.com/google/guava/blob/d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4/./util/deploy_snapshot.sh",
-                            "The build is triggered by": "https://github.com/google/guava/blob/d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4/.github/workflows/ci.yml"
+                            "The target repository uses build tool maven to deploy": "https://github.com/google/guava/blob/db74bd2fdac443223d45e6fc5c66548542be1081/./util/deploy_snapshot.sh",
+                            "The build is triggered by": "https://github.com/google/guava/blob/db74bd2fdac443223d45e6fc5c66548542be1081/.github/workflows/ci.yml"
                         },
                         "Deploy command: ['mvn', 'clean', 'source:jar', 'javadoc:jar', 'deploy', '-DskipTests=true', '\"$@\"']",
                         "However, could not find a passing workflow run."
@@ -211,15 +212,15 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_version_control_system_1",
+                "check_id": "mcn_build_script_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_infer_artifact_pipeline_1",
+                "check_id": "mcn_trusted_builder_level_three_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_witness_level_one_1",
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
             {
@@ -231,7 +232,7 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_script_1",
+                "check_id": "mcn_infer_artifact_pipeline_1",
                 "num_deps_pass": 0
             },
             {
@@ -239,11 +240,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_trusted_builder_level_three_1",
+                "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_version_control_system_1",
                 "num_deps_pass": 0
             },
             {
