@@ -1,9 +1,10 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This is the main entrypoint to run Macaron."""
 
 import argparse
+import json
 import logging
 import os
 import sys
@@ -21,6 +22,7 @@ from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
 from macaron.slsa_analyzer.analyzer import Analyzer
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
+from macaron.vsa.vsa import generate_vsa
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -144,7 +146,20 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
             logger.critical('The policy file "%s" does not exist.', verify_policy_args.file)
             return os.EX_OSFILE
 
-        result = run_policy_engine(verify_policy_args.database, verify_policy_args.file)
+        with open(verify_policy_args.file, encoding="utf-8") as file:
+            policy_content = file.read()
+
+        result = run_policy_engine(verify_policy_args.database, policy_content)
+        vsa = generate_vsa(policy_content=policy_content, policy_result=result)
+        if vsa is not None:
+            vsa_filepath = os.path.join(global_config.output_path, "vsa.intoto.jsonl")
+            logger.info("Generating a VSA to %s", vsa_filepath)
+            try:
+                with open(vsa_filepath, mode="w", encoding="utf-8") as file:
+                    file.write(json.dumps(vsa))
+            except OSError as err:
+                logger.error("Could not generate the VSA to %s. Error: %s", vsa_filepath, err)
+
         policy_reporter = PolicyReporter()
         policy_reporter.generate(global_config.output_path, result)
 
