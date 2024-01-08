@@ -9,6 +9,8 @@ HOMEDIR=$2
 RESOURCES=$WORKSPACE/src/macaron/resources
 COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
+COMPARE_POLICIES=$WORKSPACE/tests/policy_engine/compare_policy_reports.py
+COMPARE_VSA=$WORKSPACE/tests/vsa/compare_vsa.py
 TEST_REPO_FINDER=$WORKSPACE/tests/e2e/repo_finder/repo_finder.py
 TEST_COMMIT_FINDER=$WORKSPACE/tests/e2e/repo_finder/commit_finder.py
 RUN_MACARON="python -m macaron -o $WORKSPACE/output"
@@ -19,6 +21,7 @@ UPDATE=0
 if [ $# -eq 3 ] && [ "$3" == "--update" ] ; then
     echo "Updating the expected results to match those currently produced by Macaron."
     UPDATE=1
+    COMPARE_VSA="$COMPARE_VSA --update"
 fi
 
 function check_or_update_expected_output() {
@@ -627,7 +630,6 @@ echo -e "\n---------------------------------------------------------------------
 echo "Run policy CLI with slsa-verifier results."
 echo -e "----------------------------------------------------------------------------------\n"
 RUN_POLICY="macaron verify-policy"
-COMPARE_POLICIES=$WORKSPACE/tests/policy_engine/compare_policy_reports.py
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/policy_report.json
@@ -635,6 +637,32 @@ POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/policy_report.js
 # Run policy engine on the database and compare results.
 $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
+
+# Testing the VSA generation feature
+# Running Macaron without config files
+echo -e "\n=================================================================================="
+echo "Run integration tests for VSA generation"
+echo -e "==================================================================================\n"
+TEST_CASE_DIR="$WORKSPACE/tests/vsa/integration/github_slsa-framework_slsa-verifier"
+OUTPUT_DIR="$TEST_CASE_DIR/output"
+
+rm -rf "$OUTPUT_DIR"  # Make sure we regenerate a fresh database every time.
+macaron --output "$OUTPUT_DIR" analyze \
+    --repo-path "https://github.com/slsa-framework/slsa-verifier" \
+    --digest 7e1e47d7d793930ab0082c15c2b971fdb53a3c95 \
+    --skip-deps || log_fail
+check_or_update_expected_output "$COMPARE_JSON_OUT" \
+    "$OUTPUT_DIR/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json" \
+    "$TEST_CASE_DIR/slsa-verifier.json" || log_fail
+macaron --output "$OUTPUT_DIR" verify-policy \
+    --database "$OUTPUT_DIR/macaron.db" \
+    --file "$TEST_CASE_DIR/policy.dl" || log_fail
+check_or_update_expected_output "$COMPARE_POLICIES" \
+    "$OUTPUT_DIR/policy_report.json" \
+    "$TEST_CASE_DIR/policy_report.json" || log_fail
+python3 "$COMPARE_VSA" \
+    "$OUTPUT_DIR/vsa.intoto.jsonl" \
+    "$TEST_CASE_DIR/vsa.intoto.jsonl" || log_fail
 
 # Testing the Repo Finder's remote calls.
 # This requires the 'packageurl' Python module
