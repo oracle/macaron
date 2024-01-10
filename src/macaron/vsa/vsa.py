@@ -8,9 +8,12 @@ from __future__ import annotations
 import base64
 import datetime
 import json
+import logging
 from enum import StrEnum
 from importlib import metadata as importlib_metadata
 from typing import Any, TypedDict
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 # Note: The lint error "N815:mixedCase variable in class scope" is disabled for
 # field names in the VSA to conform with in-toto naming conventions.
@@ -208,7 +211,11 @@ def get_subject_verification_result(policy_result: dict) -> tuple[str, Verificat
     component_results: dict[str, tuple[int, VerificationResult]] = {}
 
     for component_id_string, purl, _ in component_violates_policy_facts:
-        component_id = int(component_id_string)
+        try:
+            component_id = int(component_id_string)
+        except ValueError:
+            logger.error("Expected component id %s to be an integer.", component_id_string)
+            return None
         if purl not in component_results:
             component_results[purl] = (component_id, VerificationResult.FAILED)
         else:
@@ -216,7 +223,11 @@ def get_subject_verification_result(policy_result: dict) -> tuple[str, Verificat
             if component_id > current_component_id:
                 component_results[purl] = (component_id, VerificationResult.FAILED)
     for component_id_string, purl, _ in component_satisfies_policy_facts:
-        component_id = int(component_id_string)
+        try:
+            component_id = int(component_id_string)
+        except ValueError:
+            logger.error("Expected component id %s to be an integer.", component_id_string)
+            return None
         if purl not in component_results:
             component_results[purl] = (component_id, VerificationResult.PASSED)
         else:

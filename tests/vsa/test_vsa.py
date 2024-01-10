@@ -190,6 +190,32 @@ def test_valid_subject_verification_result(
             {},
             id="Policy engine result is empty",
         ),
+        pytest.param(
+            {
+                "component_satisfies_policy": [
+                    [
+                        "foo",
+                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
+                        "slsa_verifier_policy",
+                    ],
+                ],
+                "component_violates_policy": [],
+            },
+            id="Component id is not an auto-incremented number 1",
+        ),
+        pytest.param(
+            {
+                "component_satisfies_policy": [],
+                "component_violates_policy": [
+                    [
+                        "foo",
+                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
+                        "slsa_verifier_policy",
+                    ],
+                ],
+            },
+            id="Component id is not an auto-incremented number 2",
+        ),
     ],
 )
 def test_invalid_subject_verification_result(
