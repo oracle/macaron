@@ -26,7 +26,9 @@ To see the full list of supported technologies, such as CI services, registries,
 
 ## Getting started
 
-To learn how to download and run Macaron, see our documentation [here](https://oracle.github.io/macaron/).
+* To learn how to download and run Macaron, see our documentation [here](https://oracle.github.io/macaron/).
+* Check out our [tutorials](https://oracle.github.io/macaron/pages/tutorials/index.html) to see how Macaron can detect software supply chain issues.
+* You can also watch [this demo](https://www.youtube.com/watch?v=ebo0kGKP6bw) to learn more about Macaron.
 
 ## Contributing
 
