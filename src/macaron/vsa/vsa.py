@@ -20,6 +20,7 @@ class Vsa(TypedDict):
     """The Macaron Verification Summary Attestation.
 
     For reference, see:
+
     * `SLSA <https://slsa.dev/spec/v1.0/verification_summary>`_.
     * `in-toto <https://github.com/in-toto/attestation/blob/main/spec/predicates/vsa.md>`_.
     """
@@ -35,6 +36,7 @@ class VsaStatement(TypedDict):
     """The Statement layer of a Macaron VSA.
 
     For reference, see:
+
     * in-toto Statement layer specification: https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md.
     """
 
@@ -48,10 +50,11 @@ class VsaPredicate(TypedDict):
     """The 'predicate' field in the Statement layer of a Macaron VSA.
 
     For reference, see:
+
     * in-toto Predicate layer specification:
-    https://github.com/in-toto/attestation/blob/main/spec/v1/predicate.md.
+      https://github.com/in-toto/attestation/blob/main/spec/v1/predicate.md.
     * SLSA VSA predicate schema:
-    https://slsa.dev/spec/v1.0/verification_summary#schema.
+      https://slsa.dev/spec/v1.0/verification_summary#schema.
     """
 
     #: Identity of the verifier, as a tool carrying out the verification.
@@ -59,7 +62,7 @@ class VsaPredicate(TypedDict):
 
     #: The timestamp when the verification occurred.
     #: The field has the type
-    # `Timestamp <https://github.com/in-toto/attestation/blob/main/spec/v1/field_types.md#Timestamp>`_.
+    #: `Timestamp <https://github.com/in-toto/attestation/blob/main/spec/v1/field_types.md#Timestamp>`_.
     timeVerified: str  # noqa: N815
 
     #: URI that identifies the resource associated with the software component being verified.
