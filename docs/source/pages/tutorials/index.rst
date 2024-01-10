@@ -275,3 +275,121 @@ dependency is manually uploaded to Maven Central and does not meet the security 
 You can use this policy in your GitHub Actions to prevent a deployment or fail a CI test during the
 development. Alternatively, you can treat the result as a warning and manually investigate the
 dependencies to make sure they are secure and can be trusted.
+
+-----------------------------------------------------------------
+More Accurate Analysis via Mappings of Artifacts to Exact Commits
+-----------------------------------------------------------------
+
+This tutorial demonstrates how Macaron can be used to determine the differences between one or more states of the single open source repository that produced one or more related artifacts. In this way, we show how a developer can be potentially mislead by supply chain security information that has been created for the current state of an artifact's source repository, rather than the version of the artifact they are actually using.
+
+The problem of mapping artifacts to the source code that built them is a challenging one, as most artifacts, even open source ones, do not provide a direct URL to their related repository. Services exist to make up for this lack, including Google's `Open Source Insights <https://deps.dev/>`_ tool that is in use by Macaron itself for this exact reason. However, without taking further steps, analysis of these repositories will reflect only the current state at the time of execution. One example of this is OpenSSF Scorecard, an automated tool that performs a number of a software security checks on a given project. These projects are typically provided in the form of a repository's public URL, which will be examined at its current state.
+
+To facilitate greater accuracy during analysis, Macaron allows a repository to be examined at more than just the current state through use of its Commit Finder feature. This feature performs a best effort attempt to map a given artifact to the exact commit that was used to create it by comparing.repository tags with artifact versions. Therefore, it has a requirement that any repository to be analyzed makes use of tags in a way that closely corresponds to the produced artifact's version numbers.
+
+For this tutorial, we have chosen the Python library, `Arrow <https://github.com/arrow-py/arrow>`_. Arrow is designed to greatly improve the developer experience whenever times or dates are involved.
+
+Arrow has two dependencies as of version 1.3.0:
+
+* ``python-dateutil``
+* ``types-python-dateutil``
+
+************
+Installation
+************
+
+Please follow the instructions :ref:`here <installation-guide>`. In summary, you need:
+
+* Docker
+* the ``run_macaron.sh``  script to run the Macaron image.
+
+.. note:: At the moment, Docker alternatives (e.g. podman) are not supported.
+
+*************
+Prerequisites
+*************
+
+You need to provide Macaron with a GitHub token through the ``GITHUB_TOKEN``  environment variable.
+
+To obtain a GitHub Token:
+
+* Go to ``GitHub settings`` → ``Developer Settings`` (at the bottom of the left side pane) → ``Personal Access Tokens`` → ``Fine-grained personal access tokens`` → ``Generate new token``. Give your token a name and an expiry period.
+* Under ``"Repository access"``, choosing ``"Public Repositories (read-only)"`` should be good enough in most cases.
+
+Now you should be good to run Macaron. For more details, see the documentation :ref:`here <prepare-github-token>`.
+
+********
+Analysis
+********
+
+To perform an analysis on Arrow, Macaron can be run with the following command:
+
+.. code-block:: shell
+
+    ./run_macaron.sh analyze -rp https://github.com/arrow-py/arrow
+
+However, this will return results based only on the current state of the repository, which as described above, is not what we want to achieve in this tutorial. To perform analyses on other repository states, we need to provide Macaron with the target artifact versions in the form of `PURLs <https://github.com/package-url/purl-spec>`_, or Package URLs, which is a convenient way to encodify packages from different ecosystems into the same format.
+
+In our case we are looking at a Python package, so our PURL must reflect that. For versions we will analyze ``1.3.0`` and ``0.15.0``, giving us the following PURLs:
+
+.. code-block:: shell
+
+    pkg:pypi/arrow@1.3.0
+    pkg:pypi/arrow@0.15.0
+
+.. note:: Macaron also accepts a branch and digest alongside a repository URL for analyzing a specific state. By using a PURL we let Macaron determine these details itself, saving us the trouble of looking them up.
+
+We will start by running the analysis on the latest version, ``1.3.0``, with the following command:
+
+.. code-block:: shell
+
+    ./run_macaron.sh analyze -purl pkg:pypi/arrow@1.3.0
+
+The analysis involves Macaron downloading the contents of the target repository to the configured, or default, ``output`` folder. (See :ref:`Output Files Guide <output_files_guide>`). Once the analysis is complete, Macaron will produce a report in the form of a HTML file.
+
+.. code-block:: shell
+
+  open output/reports/pypi/arrow/arrow.html
+
+.. note:: When analyzing multiple versions of the same artifact, keep in mind that Macaron will override the output report in subsequent runs.
+
+.. _fig_arrow_1.3.0:
+
+.. figure:: ../../_static/images/tutorial_arrow_1.3.0_report.png
+   :alt: HTML report for ``arrow 1.3.0``
+   :align: center
+
+The image above shows the results of the checks for the `Arrow <https://github.com/arrow-py/arrow>`_ repository at the commit where version ``1.3.0`` was produced.
+In summary, the repository is:
+
+* a Git repository (``mcn_version_control_system_1``)
+* using a build script (``mcn_build_script_1``)
+* using GitHub Actions to build using ``pip`` (``mcn_build_service_1``)
+
+Before running the analysis again on the other version of Arrow, we should backup the report for future reference.
+
+.. code-block:: shell
+
+    cp output/reports/pypi/arrow/arrow.html output/reports/pypi/arrow/arrow_1.3.0.html
+
+Now we are free to run the next analysis, and then open the new report.
+
+.. code-block:: shell
+
+    ./run_macaron.sh analyze -purl pkg:pypi/arrow@0.15.0
+    open output/reports/pypi/arrow/arrow.html
+
+.. note:: When analyzing multiple versions of the same artifact, keep in mind that Macaron will override the output report in subsequent runs.
+
+.. _fig_arrow_0.15.0:
+
+.. figure:: ../../_static/images/tutorial_arrow_0.15.0_report.png
+   :alt: HTML report for ``arrow 0.15.0``
+   :align: center
+
+In the second report for Arrow, we can see that Macaron has returned slightly different results. The previous success of (``mcn_build_script_1``) has now changed to a failure, as the earlier version of the library does not include a GitHub action for building with ``pip``. In this way Macaron has demonstrated the usefulness of being able to analyze a repository at multiple stages, thereby allowing for a more accurate analysis when investigating artifacts that are, or use, outdated libraries.
+
+***********
+Future Work
+***********
+
+Mapping artifacts to commits within repositories is a challenging endeavour. Macron's Commit Finder feature relies on repositories having and using version tags in a sensible way (a tag is considered sensible if it closely matches the version it represents). An alternative, or complimentary, approach would be to make use of the information found within provenance files, where information such as the commit hash used to create the artifact can potentially be found. Additionally, it should be noted that the Commit Finder feature was modelled on the intentions of developers (in terms of tag usage) within a large quantity of Java projects. This should translate well to other languages, as tag formatting is generally language agnostic, there may be some improvements to be made by further testing on a large number of non-Java projects.
