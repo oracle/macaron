@@ -236,6 +236,11 @@ def get_subject_verification_result(policy_result: dict) -> tuple[str, Verificat
                 component_results[purl] = (component_id, VerificationResult.PASSED)
 
     if len(component_results) != 1:
+        if len(component_results) == 0:
+            logger.info("The policy applies to no software components.")
+        if len(component_results) > 1:
+            logger.info("The policy applies to more than one software components.")
+        logger.info("No VSA will be generated.")
         return None
 
     subject_purl = next(iter(component_results.keys()))
