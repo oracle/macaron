@@ -153,7 +153,7 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
         vsa = generate_vsa(policy_content=policy_content, policy_result=result)
         if vsa is not None:
             vsa_filepath = os.path.join(global_config.output_path, "vsa.intoto.jsonl")
-            logger.info("Generating a VSA to %s", vsa_filepath)
+            logger.info("Generating the Verification Summary Attestation (VSA) to %s.", vsa_filepath)
             try:
                 with open(vsa_filepath, mode="w", encoding="utf-8") as file:
                     file.write(json.dumps(vsa))
