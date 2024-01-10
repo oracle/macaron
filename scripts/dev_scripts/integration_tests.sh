@@ -26,15 +26,27 @@ fi
 
 function check_or_update_expected_output() {
     if [ $UPDATE -eq 1 ] ; then
-        # Perform update of expected results by copying over produced output files.
-        # The copy only takes place if sufficient arguments are present.
-        # This function assumes arguments #2 and #3 are files: <actual_result>, <expected_result>.
+        # Perform update of expected results.
+        # The update only takes place if sufficient arguments are present.
+        # This function assumes:
+        # - argument #1 is the path to the compare script.
+        # - arguments #2 and #3 are files: <actual_result>, <expected_result>.
         if [ $# -eq 3 ] ; then
-            echo "Copying $2 to $3"
-            cp "$2" "$3"
+            compare_script_name=$(basename "$1")
+            case "$compare_script_name" in
+                # For scripts having an `--update` flag, use it.
+                compare_vsa.py)
+                  python "$1" --update "$2" "$3"
+                  ;;
+                # For the other scripts, copy over the produced output files.
+                *)
+                  echo "Copying $2 to $3"
+                  cp "$2" "$3"
+                  ;;
+            esac
         else
             # Calls with insufficient arguments are ignored to avoid some needless computation during updates.
-            echo "Ignoring $@"
+            echo "Ignoring" "$@"
         fi
     else
         # Perform normal operation.
@@ -660,7 +672,7 @@ macaron --output "$OUTPUT_DIR" verify-policy \
 check_or_update_expected_output "$COMPARE_POLICIES" \
     "$OUTPUT_DIR/policy_report.json" \
     "$TEST_CASE_DIR/policy_report.json" || log_fail
-python3 "$COMPARE_VSA" \
+check_or_update_expected_output "$COMPARE_VSA" \
     "$OUTPUT_DIR/vsa.intoto.jsonl" \
     "$TEST_CASE_DIR/vsa.intoto.jsonl" || log_fail
 
