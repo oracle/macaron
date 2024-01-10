@@ -12,6 +12,9 @@ from enum import StrEnum
 from importlib import metadata as importlib_metadata
 from typing import Any, TypedDict
 
+# Note: The lint error "N815:mixedCase variable in class scope" is disabled for
+# field names in the VSA to conform with in-toto naming conventions.
+
 
 class Vsa(TypedDict):
     """The Macaron Verification Summary Attestation.
