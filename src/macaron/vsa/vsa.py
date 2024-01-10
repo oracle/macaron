@@ -40,9 +40,23 @@ class VsaStatement(TypedDict):
     * in-toto Statement layer specification: https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md.
     """
 
+    #: Identifier for the schema of the Statement layer.
+    #: This follows `in-toto v1 Statement layer schema
+    #: <https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md>`_
+    #: and is always ``https://in-toto.io/Statement/v1``.
     _type: str
+
+    #: Subjects of the VSA.
+    #: Each entry is a software component being verified by Macaron.
+    #: *Note: In the current version of Macaron, this field only contains one single
+    #: software component, identified by a `PackageURL`_.*
     subject: list[dict]
+
+    #: Identifier for the type of the Predicate.
+    #: For Macaron-generated VSAs, this is always ``https://slsa.dev/verification_summary/v1``.
     predicateType: str  # noqa: N815
+
+    #: The Predicate of the attestation, providing information about the verification.
     predicate: VsaPredicate
 
 
