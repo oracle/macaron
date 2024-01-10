@@ -15,8 +15,8 @@ Use cases
 
 The use cases of Macaron VSAs includes, but not limited to:
 
-- **Caching verification results**: It could be expensive or inconvenient to run a full Macaron verification in certain circumstances. A VSA helps with caching and reusing verification results.
 - **Enabling delegated verification**: This allows software consumers to make use of verification results from another party.
+- **Caching verification results**: It could be expensive or inconvenient to run a full Macaron verification in certain circumstances. A VSA helps with caching and reusing verification results.
 
 
 ------
