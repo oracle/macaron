@@ -6,8 +6,8 @@
 from __future__ import annotations
 
 import base64
+import datetime
 import json
-from datetime import datetime
 from enum import StrEnum
 from importlib import metadata as importlib_metadata
 from typing import Any, TypedDict
@@ -142,7 +142,7 @@ def create_vsa_statement(
                     "macaron": importlib_metadata.version("macaron"),
                 },
             ),
-            timeVerified=datetime.utcnow().isoformat("T") + "Z",
+            timeVerified=datetime.datetime.now(tz=datetime.UTC).isoformat(),
             resourceUri=subject_purl,
             policy={
                 "content": policy_content,
