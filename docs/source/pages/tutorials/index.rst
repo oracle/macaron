@@ -22,11 +22,12 @@ Detect a malicious Java dependency uploaded manually to Maven Central
 ---------------------------------------------------------------------
 
 In this tutorial we show how Macaron can determine whether the dependencies of a Java project are built
-and published via transparent CI workflows or manually uploaded to Maven Central. When an artifact is
-manually uploaded, the artifact distributor can modify the artifact and potentially include malicious
-code without being detected.
+and published via transparent CI workflows or manually uploaded to Maven Central. You can also
+`watch <https://www.youtube.com/watch?v=ebo0kGKP6bw>`_ the demo of this tutorial.
 
-The example project we analyze in this tutorial is `example-maven-app <https://github.com/behnazh-w/example-maven-app>`_,
+When an artifact is manually uploaded, the artifact distributor can modify the artifact and potentially
+include malicious code without being detected. The example project we analyze in this tutorial is
+`example-maven-app <https://github.com/behnazh-w/example-maven-app>`_,
 which is hosted on GitHub. This example application uses Maven to build and manage dependencies, and has two
 dependencies:
 
