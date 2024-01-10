@@ -78,19 +78,19 @@ class VsaPredicate(TypedDict):
     verifier: Verifier
 
     #: The timestamp when the verification occurred.
-    #: The field has the type
+    #: The field is a
     #: `Timestamp <https://github.com/in-toto/attestation/blob/main/spec/v1/field_types.md#Timestamp>`_.
     timeVerified: str  # noqa: N815
 
     #: URI that identifies the resource associated with the software component being verified.
-    #: This field has the type
+    #: This field is a
     #: `ResourceURI <https://github.com/in-toto/attestation/blob/main/spec/v1/field_types.md#ResourceURI>`_.
     #: Currently, this has the same value as the subject of the VSA, i.e. the PURL of
     #: the software component being verified against.
     resourceUri: str  # noqa: N815
 
     #: The policy that the subject software component was verified against.
-    #: This field has the type
+    #: This field is a
     #: `ResourceDescriptor <https://github.com/in-toto/attestation/blob/main/spec/v1/resource_descriptor.md>`_.
     policy: dict[str, Any]
 
