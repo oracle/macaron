@@ -645,36 +645,13 @@ RUN_POLICY="macaron verify-policy"
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/policy_report.json
+VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
+VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_slsa-verifier/vsa_payload.json
 
 # Run policy engine on the database and compare results.
 $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
-
-# Testing the VSA generation feature
-# Running Macaron without config files
-echo -e "\n=================================================================================="
-echo "Run integration tests for VSA generation"
-echo -e "==================================================================================\n"
-TEST_CASE_DIR="$WORKSPACE/tests/vsa/integration/github_slsa-framework_slsa-verifier"
-OUTPUT_DIR="$TEST_CASE_DIR/output"
-
-rm -rf "$OUTPUT_DIR"  # Make sure we regenerate a fresh database every time.
-macaron --output "$OUTPUT_DIR" analyze \
-    --repo-path "https://github.com/slsa-framework/slsa-verifier" \
-    --digest 7e1e47d7d793930ab0082c15c2b971fdb53a3c95 \
-    --skip-deps || log_fail
-check_or_update_expected_output "$COMPARE_JSON_OUT" \
-    "$OUTPUT_DIR/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json" \
-    "$TEST_CASE_DIR/slsa-verifier.json" || log_fail
-macaron --output "$OUTPUT_DIR" verify-policy \
-    --database "$OUTPUT_DIR/macaron.db" \
-    --file "$TEST_CASE_DIR/policy.dl" || log_fail
-check_or_update_expected_output "$COMPARE_POLICIES" \
-    "$OUTPUT_DIR/policy_report.json" \
-    "$TEST_CASE_DIR/policy_report.json" || log_fail
-check_or_update_expected_output "$COMPARE_VSA" \
-    "$OUTPUT_DIR/vsa.intoto.jsonl" \
-    "$TEST_CASE_DIR/vsa_payload.json" || log_fail
+check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
 # Testing the Repo Finder's remote calls.
 # This requires the 'packageurl' Python module

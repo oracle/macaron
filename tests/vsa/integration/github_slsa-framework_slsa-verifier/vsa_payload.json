@@ -2,7 +2,7 @@
     "_type": "https://in-toto.io/Statement/v1",
     "subject": [
         {
-            "uri": "pkg:github.com/slsa-framework/slsa-verifier@7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+            "uri": "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac"
         }
     ],
     "predicateType": "https://slsa.dev/verification_summary/v1",
@@ -13,10 +13,10 @@
                 "macaron": "0.6.0"
             }
         },
-        "timeVerified": "2024-01-10T03:56:17.237887+00:00",
-        "resourceUri": "pkg:github.com/slsa-framework/slsa-verifier@7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+        "timeVerified": "2024-01-11T03:21:10.696997+00:00",
+        "resourceUri": "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac",
         "policy": {
-            "content": "/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */\n/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */\n\n#include \"prelude.dl\"\n\nPolicy(\"slsa_verifier_policy\", component_id, \"Policy for SLSA Verifier\") :-\n  check_passed(component_id, \"mcn_build_as_code_1\"),\n  check_passed(component_id, \"mcn_provenance_level_three_1\"),\n  check_passed(component_id, \"mcn_provenance_available_1\").\n\napply_policy_to(\"slsa_verifier_policy\", component_id) :-\n  is_repo(\n    _,  // repo_id\n    \"github.com/slsa-framework/slsa-verifier\",\n    component_id\n  ).\n"
+            "content": "/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */\n/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */\n\n\n#include \"prelude.dl\"\n\nPolicy(\"auth-provenance\", component_id, \"\") :- check_passed(component_id, \"mcn_provenance_level_three_1\").\napply_policy_to(\"auth-provenance\", component_id) :- is_component(component_id, \"pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac\").\n"
         },
         "verificationResult": "PASSED",
         "verifiedLevels": []
