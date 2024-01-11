@@ -104,7 +104,7 @@ The following is the schema of the Statement layer:
     The verification result. The result of ``"PASSED"`` means the subject software component conforms to the policy.
 
 * ``verificationResult``: array (`SlsaResult`_), required
-    Indicates the highest level of each SLSA track verified for the software component (and not its dependencies), or “FAILED” if policy verification failed.
+    Indicates the highest level of each SLSA track verified for the software component (and not its dependencies), or ``"FAILED"`` if policy verification failed.
 
     *Note: For the current version of Macaron, this is left empty.*
 
