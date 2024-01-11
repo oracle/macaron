@@ -674,7 +674,7 @@ check_or_update_expected_output "$COMPARE_POLICIES" \
     "$TEST_CASE_DIR/policy_report.json" || log_fail
 check_or_update_expected_output "$COMPARE_VSA" \
     "$OUTPUT_DIR/vsa.intoto.jsonl" \
-    "$TEST_CASE_DIR/vsa.intoto.jsonl" || log_fail
+    "$TEST_CASE_DIR/vsa_payload.json" || log_fail
 
 # Testing the Repo Finder's remote calls.
 # This requires the 'packageurl' Python module
