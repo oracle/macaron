@@ -8,21 +8,20 @@ from __future__ import annotations
 import argparse
 import base64
 import json
-import os
-import sys
+import logging
 import traceback
 from collections.abc import Callable
-from functools import partial
 
-# Works similarly to print, but prints to stderr by default.
-log = partial(print, file=sys.stderr)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logging.basicConfig(format="[%(filename)s:%(lineno)s %(tag)s] %(message)s")
 
 
 def log_with_tag(tag: str) -> Callable[[str], None]:
     """Generate a log function that prints the name of the file and a tag at the beginning of each line."""
 
     def log_fn(msg: str) -> None:
-        log(f"[{os.path.basename(__file__)} {tag}] {msg}")
+        logger.info(msg, extra={"tag": tag})
 
     return log_fn
 
@@ -33,13 +32,15 @@ log_failed = log_with_tag("FAILED")
 log_passed = log_with_tag("PASSED")
 
 
-def log_diff(result: object, expected: object) -> None:
+def log_diff(name: str, result: object, expected: object) -> None:
     """Pretty-print the diff of two Python objects."""
-    log("----  Result  ---")
-    log(json.dumps(result, indent=4))
-    log("---- Expected ---")
-    log(json.dumps(expected, indent=4))
-    log("-----------------")
+    output = [
+        f"'{name}'",
+        *("----  Result  ---", json.dumps(result, indent=4)),
+        *("---- Expected ---", json.dumps(expected, indent=4)),
+        "-----------------",
+    ]
+    log_info("\n".join(output))
 
 
 CompareFn = Callable[[object, object], bool]
@@ -91,21 +92,21 @@ def compare_json(
     if isinstance(expected, list):
         if not isinstance(result, list):
             log_err(f"Expected '{name}' to be a JSON array.")
-            log_diff(result, expected)
+            log_diff(name, result, expected)
             # Nothing else to check.
             return False
         return compare_list(result, expected, compare_fn_map, name)
     if isinstance(expected, dict):
         if not isinstance(result, dict):
             log_err(f"Expected '{name}' to be a JSON object.")
-            log_diff(result, expected)
+            log_diff(name, result, expected)
             # Nothing else to check.
             return False
         return compare_dict(result, expected, compare_fn_map, name)
 
     if result != expected:
         log_err(f"Mismatch found in '{name}'")
-        log_diff(result, expected)
+        log_diff(name, result, expected)
         return False
 
     return True
@@ -137,7 +138,7 @@ def compare_list(
     """
     if len(result) != len(expected):
         log_err(f"Expected field '{name}' of length {len(result)} in result to have length {len(expected)}")
-        log_diff(result, expected)
+        log_diff(name, result, expected)
         # Nothing else to compare
         return False
 
@@ -230,8 +231,7 @@ def main() -> int:
     try:
         payload = json.loads(base64.b64decode(vsa["payload"]))
     except (UnicodeDecodeError, json.JSONDecodeError, TypeError):
-        log_err("Error while decoding the VSA payload:")
-        log(traceback.format_exc())
+        log_err(f"Error while decoding the VSA payload:\n{traceback.format_exc()}")
         return 1
 
     if args.update:
@@ -257,7 +257,7 @@ def main() -> int:
         log_failed("The payload of the generated VSA does not match the expected payload.")
         return 1
 
-    log_passed("The payload of the generated VSA matches the expected payload.")
+    log_passed("The payload of the generated VSA matches the expected payload")
     return 0
 
 
