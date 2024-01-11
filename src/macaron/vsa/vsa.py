@@ -109,7 +109,7 @@ class Verifier(TypedDict):
     This field provides the identity of the verifier, as well as the versioning details of its components.
     """
 
-    #: The identity of the verifier as a value of type
+    #: The identity of the verifier as a
     #:   `TypeURI <https://github.com/in-toto/attestation/blob/main/spec/v1/field_types.md#TypeURI>`_.
     id: str  # noqa: A003
 
