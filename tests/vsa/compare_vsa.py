@@ -12,9 +12,7 @@ import os
 import sys
 import traceback
 from collections.abc import Callable
-from difflib import context_diff
 from functools import partial
-from pprint import pformat
 
 # Works similarly to print, but prints to stderr by default.
 log = partial(print, file=sys.stderr)
@@ -37,11 +35,11 @@ log_passed = log_with_tag("PASSED")
 
 def log_diff(result: object, expected: object) -> None:
     """Pretty-print the diff of two Python objects."""
-    log(
-        "".join(
-            context_diff(pformat(result), pformat(expected), "result", "expected"),
-        ),
-    )
+    log("----  Result  ---")
+    log(json.dumps(result, indent=4))
+    log("---- Expected ---")
+    log(json.dumps(expected, indent=4))
+    log("-----------------")
 
 
 CompareFn = Callable[[object, object], bool]
@@ -93,12 +91,14 @@ def compare_json(
     if isinstance(expected, list):
         if not isinstance(result, list):
             log_err(f"Expected '{name}' to be a JSON array.")
+            log_diff(result, expected)
             # Nothing else to check.
             return False
         return compare_list(result, expected, compare_fn_map, name)
     if isinstance(expected, dict):
         if not isinstance(result, dict):
             log_err(f"Expected '{name}' to be a JSON object.")
+            log_diff(result, expected)
             # Nothing else to check.
             return False
         return compare_dict(result, expected, compare_fn_map, name)
