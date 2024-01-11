@@ -272,13 +272,37 @@ def generate_vsa(policy_content: str, policy_result: dict) -> Vsa | None:
 
     subject_purl, verification_result = subject_verification_result
 
-    payload = create_vsa_statement(
+    unencoded_payload = create_vsa_statement(
         subject_purl=subject_purl,
         policy_content=policy_content,
         verification_result=verification_result,
     )
 
+    try:
+        payload = json.dumps(unencoded_payload)
+    except (TypeError, RecursionError, ValueError) as err:
+        logger.debug("Error encountered while deserializing the VSA payload: %s", err)
+        return None
+
+    try:
+        payload_bytes = payload.encode()
+    except UnicodeError as err:
+        logger.debug("Error encountered while byte-encoding the VSA payload: %s", err)
+        return None
+
+    try:
+        encoded_payload_bytes = base64.b64encode(payload_bytes)
+    except (ValueError, TypeError) as err:
+        logger.debug("Error encountered while base64-encoding the VSA payload: %s", err)
+        return None
+
+    try:
+        encoded_payload = encoded_payload_bytes.decode("ascii")
+    except (ValueError, TypeError) as err:
+        logger.debug("Error encountered while converting the base64-encoded VSA payload to string: %s", err)
+        return None
+
     return Vsa(
         payloadType="application/vnd.in-toto+json",
-        payload=base64.b64encode(json.dumps(payload).encode()).decode("ascii"),
+        payload=encoded_payload,
     )
