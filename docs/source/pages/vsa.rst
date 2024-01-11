@@ -72,7 +72,7 @@ The following is the schema of the Statement layer:
 * ``subject``: array of `ResourceDescriptor`_ objects
     Subjects of the VSA. Each entry is a software component being verified by Macaron.
 
-    *Note: In the current version of Macaron, this field only contains one single software component, identified by a `PackageURL`_.*
+    *Note: In the current version of Macaron, this field only contains one single software component, identified by a* `PackageURL`_.
 
 * ``predicateType``: string (`TypeURI`_)
     Identifier for the type of the Predicate. For Macaron-generated VSAs, this is always ``https://slsa.dev/verification_summary/v1``.
@@ -92,7 +92,7 @@ The following is the schema of the Statement layer:
 * ``predicate.resourceUri``: string (`ResourceURI`_)
     URI identifying the resource associated with the software component being verified.
 
-    *Note: In the current version of Macaron, the value of this field is similar to the `PackageURL`_ identifying the only subject software component of the VSA.*
+    *Note: In the current version of Macaron, the value of this field is similar to the* `PackageURL`_ *identifying the only subject software component of the VSA.*
 
 * ``policy``: object
     Details about the policy that the subject software component was verified against.

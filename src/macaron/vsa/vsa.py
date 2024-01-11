@@ -51,8 +51,8 @@ class VsaStatement(TypedDict):
 
     #: Subjects of the VSA.
     #: Each entry is a software component being verified by Macaron.
-    #: *Note: In the current version of Macaron, this field only contains one single
-    #: software component, identified by a `PackageURL`_.*
+    #: Note: In the current version of Macaron, this field only contains one single
+    #: software component, identified by a `PackageURL <https://github.com/package-url/purl-spec>`_.
     subject: list[dict]
 
     #: Identifier for the type of the Predicate.
