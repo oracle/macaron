@@ -154,6 +154,10 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
         if vsa is not None:
             vsa_filepath = os.path.join(global_config.output_path, "vsa.intoto.jsonl")
             logger.info("Generating the Verification Summary Attestation (VSA) to %s.", vsa_filepath)
+            logger.info(
+                "To decode and inspect the payload, run `cat %s | jq -r '.payload' | base64 -d | jq`.",
+                vsa_filepath,
+            )
             try:
                 with open(vsa_filepath, mode="w", encoding="utf-8") as file:
                     file.write(json.dumps(vsa))
