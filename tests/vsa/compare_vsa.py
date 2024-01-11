@@ -236,7 +236,7 @@ def main() -> int:
 
     if args.update:
         with open(args.expected_payload_file, mode="w", encoding="utf-8") as file:
-            json.dump(payload, fp=file, indent=4)
+            file.write(f"{json.dumps(payload, indent=4)}\n")
         log_info(f"Updated {args.expected_payload_file}.")
         return 0
 
