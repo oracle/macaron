@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the policies supported by the policy engine."""
@@ -32,7 +32,9 @@ def test_dump_prelude(database_setup) -> None:  # type: ignore # pylint: disable
 
 def test_eval_policy(database_setup) -> None:  # type: ignore # pylint: disable=unused-argument,redefined-outer-name
     """Test loading the policy from file."""
-    res = run_souffle(os.path.join(POLICY_FILE, DATABASE_FILE), POLICY_FILE)
+    with open(POLICY_FILE, encoding="utf-8") as file:
+        policy_content = file.read()
+    res = run_souffle(os.path.join(POLICY_FILE, DATABASE_FILE), policy_content)
     assert res == {
         "passed_policies": [["trusted_builder"]],
         "component_satisfies_policy": [

@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles invoking the souffle policy engine on a database."""
@@ -86,15 +86,15 @@ def copy_prelude(database_path: os.PathLike | str, sfl: SouffleWrapper, prelude:
             sfl.copy_to_includes(file_name, text)
 
 
-def run_souffle(database_path: str, policy_file: str) -> dict:
+def run_souffle(database_path: str, policy_content: str) -> dict:
     """Invoke souffle and report result.
 
     Parameters
     ----------
     database_path: str
         The path to the database to evaluate the policy on
-    policy_file: str
-        The path to the policy file to evaluate
+    policy_content: str
+        The Souffle policy code to evaluate
 
     Returns
     -------
@@ -103,11 +103,8 @@ def run_souffle(database_path: str, policy_file: str) -> dict:
     """
     with SouffleWrapper() as sfl:
         copy_prelude(database_path, sfl)
-        with open(policy_file, encoding="utf-8") as file:
-            text = file.read()
-
         try:
-            res = sfl.interpret_text(text)
+            res = sfl.interpret_text(policy_content)
         except SouffleError as error:
             logger.error("COMMAND: %s", error.command)
             logger.error("ERROR: %s", error.message)
@@ -151,15 +148,15 @@ def show_prelude(database_path: str) -> None:
     logger.info("\n%s", prelude)
 
 
-def run_policy_engine(database_path: str, policy_file: str) -> dict:
+def run_policy_engine(database_path: str, policy_content: str) -> dict:
     """Evaluate a policy based on configuration and exit.
 
     Parameters
     ----------
     database_path: str
         The SQLite database file to evaluate the policy against
-    policy_file: str
-        The policy file to evaluate
+    policy_content: str
+        The Souffle policy code to evaluate
 
     Returns
     -------
@@ -169,7 +166,7 @@ def run_policy_engine(database_path: str, policy_file: str) -> dict:
     # TODO: uncomment the following line when the check is improved.
     # _check_version(database_path)
 
-    res = run_souffle(database_path, policy_file)
+    res = run_souffle(database_path, policy_content)
 
     output = []
     for key, values in res.items():
