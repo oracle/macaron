@@ -9,6 +9,8 @@ HOMEDIR=$2
 RESOURCES=$WORKSPACE/src/macaron/resources
 COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
+COMPARE_POLICIES=$WORKSPACE/tests/policy_engine/compare_policy_reports.py
+COMPARE_VSA=$WORKSPACE/tests/vsa/compare_vsa.py
 TEST_REPO_FINDER=$WORKSPACE/tests/e2e/repo_finder/repo_finder.py
 TEST_COMMIT_FINDER=$WORKSPACE/tests/e2e/repo_finder/commit_finder.py
 RUN_MACARON="python -m macaron -o $WORKSPACE/output"
@@ -19,19 +21,32 @@ UPDATE=0
 if [ $# -eq 3 ] && [ "$3" == "--update" ] ; then
     echo "Updating the expected results to match those currently produced by Macaron."
     UPDATE=1
+    COMPARE_VSA="$COMPARE_VSA --update"
 fi
 
 function check_or_update_expected_output() {
     if [ $UPDATE -eq 1 ] ; then
-        # Perform update of expected results by copying over produced output files.
-        # The copy only takes place if sufficient arguments are present.
-        # This function assumes arguments #2 and #3 are files: <actual_result>, <expected_result>.
+        # Perform update of expected results.
+        # The update only takes place if sufficient arguments are present.
+        # This function assumes:
+        # - argument #1 is the path to the compare script.
+        # - arguments #2 and #3 are files: <actual_result>, <expected_result>.
         if [ $# -eq 3 ] ; then
-            echo "Copying $2 to $3"
-            cp "$2" "$3"
+            compare_script_name=$(basename "$1")
+            case "$compare_script_name" in
+                # For scripts having an `--update` flag, use it.
+                compare_vsa.py)
+                  python "$1" --update "$2" "$3"
+                  ;;
+                # For the other scripts, copy over the produced output files.
+                *)
+                  echo "Copying $2 to $3"
+                  cp "$2" "$3"
+                  ;;
+            esac
         else
             # Calls with insufficient arguments are ignored to avoid some needless computation during updates.
-            echo "Ignoring $@"
+            echo "Ignoring" "$@"
         fi
     else
         # Perform normal operation.
@@ -627,14 +642,16 @@ echo -e "\n---------------------------------------------------------------------
 echo "Run policy CLI with slsa-verifier results."
 echo -e "----------------------------------------------------------------------------------\n"
 RUN_POLICY="macaron verify-policy"
-COMPARE_POLICIES=$WORKSPACE/tests/policy_engine/compare_policy_reports.py
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/policy_report.json
+VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
+VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_slsa-verifier/vsa_payload.json
 
 # Run policy engine on the database and compare results.
 $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
+check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
 # Testing the Repo Finder's remote calls.
 # This requires the 'packageurl' Python module
