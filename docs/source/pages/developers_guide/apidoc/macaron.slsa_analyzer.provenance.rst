@@ -13,7 +13,6 @@ Subpackages
    :maxdepth: 1
 
    macaron.slsa_analyzer.provenance.expectations
-   macaron.slsa_analyzer.provenance.intoto
    macaron.slsa_analyzer.provenance.slsa
    macaron.slsa_analyzer.provenance.witness
 

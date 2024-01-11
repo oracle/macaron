@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles in-toto version 0.1 attestations."""
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TypedDict, TypeGuard
 
-from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
+from macaron.intoto.errors import ValidateInTotoPayloadError
 from macaron.util import JsonType
 
 

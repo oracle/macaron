@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for witness provenance."""
@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from macaron.config.defaults import load_defaults
-from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload, v01
+from macaron.intoto import InTotoV01Payload, v01
 from macaron.slsa_analyzer.provenance.witness import (
     WitnessProvenanceSubject,
     WitnessVerifierConfig,

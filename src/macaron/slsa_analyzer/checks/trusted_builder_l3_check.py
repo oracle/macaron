@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
@@ -14,11 +14,11 @@ from sqlalchemy.sql.sqltypes import String
 
 from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
+from macaron.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
 from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType, GitHubActions
-from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance

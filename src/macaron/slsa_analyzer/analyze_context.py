@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Analyze Context class.
@@ -12,13 +12,13 @@ from collections import defaultdict
 from typing import TypedDict
 
 from macaron.database.table_definitions import Component, SLSALevel
+from macaron.intoto.v01 import InTotoV01Statement
+from macaron.intoto.v1 import InTotoV1Statement
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.git_service import BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
-from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Statement
-from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1Statement
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus, create_requirement_status_dict
 from macaron.slsa_analyzer.specs.build_spec import BuildSpec
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo

@@ -22,6 +22,7 @@ from macaron.database.database_manager import DatabaseManager, get_db_manager, g
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.dependency_analyzer import DependencyAnalyzer, DependencyInfo
 from macaron.errors import CloneError, DuplicateError, InvalidPURLError, PURLNotFoundError, RepoCheckOutError
+from macaron.intoto import InTotoV01Payload
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
@@ -39,7 +40,6 @@ from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
-from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
