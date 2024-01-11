@@ -11,7 +11,7 @@ import json
 import logging
 from enum import StrEnum
 from importlib import metadata as importlib_metadata
-from typing import Any, TypedDict
+from typing import TypedDict
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ class VsaPredicate(TypedDict):
     #: The policy that the subject software component was verified against.
     #: This field is a
     #: `ResourceDescriptor <https://github.com/in-toto/attestation/blob/main/spec/v1/resource_descriptor.md>`_.
-    policy: dict[str, Any]
+    policy: Policy
 
     #: The verification result.
     verificationResult: VerificationResult  # noqa: N815
@@ -116,6 +116,16 @@ class Verifier(TypedDict):
     #: A mapping from components of the verifier and their corresponding versions.
     #: At the moment, this field only includes Macaron itself.
     version: dict[str, str]
+
+
+class Policy(TypedDict):
+    """The 'policy' field within the Macaron VSA predicate field.
+
+    This field provides information about the policy used for verification.
+    """
+
+    #: The Souffle Datalog code defining the policy in plain text.
+    content: str
 
 
 class VerificationResult(StrEnum):
