@@ -167,4 +167,4 @@ This policy enforces the subject software component to pass 3 Macaron checks:
 * ``mcn_provenance_level_three_1``
 * ``mcn_provenance_available_1``
 
-For more details on using the Macaron VSA generation feature and inspecting the resulting VSA, please refer to the :ref:`Output File Guide <output_files_guide>`.
+For more details on using the Macaron VSA generation feature and inspecting the resulting VSA, please refer to the :ref:`Output files of macaron verify-policy section <output_files_macaron_verify_policy>`.

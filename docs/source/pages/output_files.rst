@@ -133,6 +133,8 @@ to the directory:
 
 .. note:: Please see :ref:`pages/using:analyzing a locally cloned repository` to know how to set the directory for analyzing local repositories.
 
+.. _output_files_macaron_verify_policy:
+
 -------------------------------------
 Output files of macaron verify-policy
 -------------------------------------
