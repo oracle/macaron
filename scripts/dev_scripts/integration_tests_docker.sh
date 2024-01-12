@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This script runs the integration tests using Macaron as a Docker image. The image tag to run the integration tests
@@ -15,6 +15,8 @@ RUN_MACARON_SCRIPT=$2
 # The scripts to compare the results of the integration tests.
 COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
 COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
+COMPARE_POLICIES=$WORKSPACE/tests/policy_engine/compare_policy_reports.py
+COMPARE_VSA=$WORKSPACE/tests/vsa/compare_vsa.py
 UNIT_TEST_SCRIPT=$WORKSPACE/scripts/dev_scripts/test_run_macaron_sh.py
 
 RESULT_CODE=0
@@ -136,14 +138,16 @@ python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Run policy CLI with slsa-verifier results."
 echo -e "----------------------------------------------------------------------------------\n"
-COMPARE_POLICIES=$WORKSPACE/tests/policy_engine/compare_policy_reports.py
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/policy_report.json
+VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
+VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_slsa-verifier/vsa_payload.json
 
 # Run policy engine on the database and compare results.
 $RUN_MACARON_SCRIPT verify-policy -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
+python "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test running the analysis without setting the GITHUB_TOKEN environment variables."
