@@ -21,6 +21,7 @@ To see the full list of supported technologies, such as CI services, registries,
 * [Getting started](#getting-started)
 * [How to Contribute](#how-to-contribute)
 * [Defining new checks](#defining-new-checks)
+* [Publications](#publications)
 * [Security issue reports](#security-issue-reports)
 * [License](#license)
 
@@ -39,6 +40,25 @@ This project welcomes contributions from the community. Before submitting a pull
 After cloning a repository, Macaron parses the CI configuration files and bash scripts that are triggered by the CI, creates call graphs and other intermediate representations as abstractions. Using such abstractions, Macaron implements concrete checks to gather facts and metadata based on a security specification.
 
 To learn how to define your own checks, see the steps in the [checks documentation](/src/macaron/slsa_analyzer/checks/README.md).
+
+## Publications
+
+* Behnaz Hassanshahi, Trong Nhan Mai, Alistair Michael, Benjamin Selwyn-Smith, Sophie Bates, and Padmanabhan Krishnan: [Macaron: A Logic-based Framework for Software Supply Chain Security Assurance.](https://dl.acm.org/doi/abs/10.1145/3605770.3625213) SCORED 2023. (Best paper award)
+  ```tex
+  @inproceedings{10.1145/3605770.3625213,
+    author = {Hassanshahi, Behnaz and Mai, Trong Nhan and Michael, Alistair and Selwyn-Smith, Benjamin and Bates, Sophie and Krishnan, Padmanabhan},
+    title = {Macaron: A Logic-Based Framework for Software Supply Chain Security Assurance},
+    year = {2023},
+    isbn = {9798400702631},
+    publisher = {Association for Computing Machinery},
+    url = {https://doi.org/10.1145/3605770.3625213},
+    doi = {10.1145/3605770.3625213},
+    booktitle = {Proceedings of the 2023 Workshop on Software Supply Chain Offensive Research and Ecosystem Defenses},
+    pages = {29–37},
+    series = {SCORED'23}
+  }
+  ```
+
 
 ## Generating SLSA provenances for Macaron itself
 
