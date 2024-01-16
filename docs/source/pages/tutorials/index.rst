@@ -2,7 +2,7 @@
 .. Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 .. References/links
-.. _Witness: https://github.com/testifysec/witness
+.. _Witness: https://github.com/in-toto/witness
 .. _SLSA: https://slsa.dev
 
 
@@ -282,7 +282,7 @@ Analyzing and comparing different versions of an artifact
 
 This tutorial demonstrates how Macaron can be used to determine the differences between one or more states of the single open-source repository that produced one or more related artifacts. In this way, we show how a developer can be potentially misled by supply chain security information that has been created for the current state of an artifact's source repository, rather than the version of the artifact they are actually using.
 
-he problem of mapping artifacts to the source code that built them is a challenging one, as most artifacts, even open-source ones, do not provide a direct URL to the related repository and commit. In principle, provenances, such as `SLSA`_ or `Witness <https://github.com/in-toto/witness>`_, which contain the commit that was used to build the artifact provide the information that we need. However, currently the adoption rate in the open-source community is low, therefore limiting its value for this task.
+he problem of mapping artifacts to the source code that built them is a challenging one, as most artifacts, even open-source ones, do not provide a direct URL to the related repository and commit. In principle, provenances, such as `SLSA`_ or `Witness`_, which contain the commit that was used to build the artifact provide the information that we need. However, currently the adoption rate in the open-source community is low, therefore limiting its value for this task.
 
 Services exist to make up for this lack, including Google's `open-source Insights <https://deps.dev/>`_ tool that is in use by Macaron itself for this exact reason. However, without taking further steps, analysis of these repositories will reflect only the current state at the time of execution. One example of this is `OpenSSF Scorecard <https://github.com/ossf/scorecard>`_, an automated tool that performs a number of software security checks on a given project. These projects are typically provided in the form of a repository's public URL, which will be examined at its current state.
 
