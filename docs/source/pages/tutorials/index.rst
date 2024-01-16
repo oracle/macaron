@@ -396,7 +396,7 @@ Run ``verify-policy`` command
 
 Another feature of Macaron is policy verification. This allows Macaron to report on whether an artifact meets the security requirements specified by the user. Policies are written using `Soufflé Datalog <https://souffle-lang.github.io/index.html>`_ , a language similar to SQL. Results collected by the ``analyze`` command can be checked via declarative queries in the created policy, which Macaron can then automatically check.
 
-The security requirement chosen for this tutorial reflects the difference between the two versions in the previous section. That is, we want to ensure that the artifact has a valid build service. If we refer back to :ref:`step <fig_arrow_0.15.0>` and :ref:`step <fig_arrow_1.3.0>`, we can see that the relevant check ID of the difference between the two versions is ``mcn_build_service_1``. To include this in a policy we create the following:
+The security requirement chosen for this tutorial reflects the difference between the two versions in the previous section. That is, we want to ensure that the artifact has a valid build service. If we refer back to :ref:`step <fig_arrow_0.15.0>` and :ref:`step <fig_arrow_1.3.0>`, we can see that the relevant check ID of the difference between the two versions is ``mcn_build_as_code_1``. To include this in a policy we create the following:
 
 .. code-block:: c++
 
