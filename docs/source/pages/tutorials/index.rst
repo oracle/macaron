@@ -280,13 +280,15 @@ dependencies to make sure they are secure and can be trusted.
 Analyzing and comparing different versions of an artifact
 ---------------------------------------------------------
 
-This tutorial demonstrates how Macaron can be used to determine the differences between one or more states of the single open source repository that produced one or more related artifacts. In this way, we show how a developer can be potentially misled by supply chain security information that has been created for the current state of an artifact's source repository, rather than the version of the artifact they are actually using.
+This tutorial demonstrates how Macaron can be used to determine the differences between one or more states of the single open-source repository that produced one or more related artifacts. In this way, we show how a developer can be potentially misled by supply chain security information that has been created for the current state of an artifact's source repository, rather than the version of the artifact they are actually using.
 
-The problem of mapping artifacts to the source code that built them is a challenging one, as most artifacts, even open source ones, do not provide a direct URL to their related repository. Services exist to make up for this lack, including Google's `Open Source Insights <https://deps.dev/>`_ tool that is in use by Macaron itself for this exact reason. However, without taking further steps, analysis of these repositories will reflect only the current state at the time of execution. One example of this is OpenSSF Scorecard, an automated tool that performs a number of software security checks on a given project. These projects are typically provided in the form of a repository's public URL, which will be examined at its current state.
+he problem of mapping artifacts to the source code that built them is a challenging one, as most artifacts, even open-source ones, do not provide a direct URL to the related repository and commit. In principle, provenances, such as `SLSA`_ or `Witness`_, which contain the commit that was used to build the artifact provide the information that we need. However, currently the adoption rate in the open-source community is low, therefore limiting its value for this task.
 
-To facilitate greater accuracy during analysis, Macaron allows analyzing an artifact and its corresponding repository state by using the Commit Finder feature. This feature performs a best effort attempt to map a given artifact to the exact commit that was used to create it by comparing repository tags with artifact versions. Therefore, it has a requirement that any repository to be analyzed makes use of tags in a way that closely corresponds to the produced artifact's version numbers. Pre-existing techniques that achieve the same as this feature do exist, namely `SLSA`_ or `Witness`_ provenances, which contain the commit that was used to build the artifact they represent. However, currently the adoption rate in the open-source community is quite low, therefore limiting its value for this task.
+Services exist to make up for this lack, including Google's `open-source Insights <https://deps.dev/>`_ tool that is in use by Macaron itself for this exact reason. However, without taking further steps, analysis of these repositories will reflect only the current state at the time of execution. One example of this is `OpenSSF Scorecard <https://github.com/in-toto/witness>`_, an automated tool that performs a number of software security checks on a given project. These projects are typically provided in the form of a repository's public URL, which will be examined at its current state.
 
-For this tutorial, we have chosen the Python library, `Arrow <https://github.com/arrow-py/arrow>`_. Arrow is a popular library designed to improve the developer experience for manipulating dates and times.
+To facilitate greater accuracy during analysis, Macaron allows analyzing an artifact and its corresponding repository state by using the Commit Finder feature. This feature performs a best effort attempt to map a given artifact to the exact commit that was used to create it by comparing repository tags with artifact versions. Therefore, it has a requirement that any repository to be analyzed makes use of tags in a way that closely corresponds to the produced artifact's version numbers.
+
+For this tutorial, we analyze the Python library, `Arrow <https://github.com/arrow-py/arrow>`_. Arrow is a popular library designed to improve the developer experience for manipulating dates and times.
 
 ************
 Installation
@@ -360,7 +362,7 @@ The analysis involves Macaron downloading the contents of the target repository 
    :align: center
 
 The image above shows the results of the checks for the `Arrow <https://github.com/arrow-py/arrow>`_ repository at the commit where version ``1.3.0`` was produced.
-In summary, the repository is:
+In summary, our analysis finds the following information about this artifact:
 
 * A commit at a Git repository that corresponds to the artifact (``mcn_version_control_system_1``)
 * The build tool ``pip`` used in the build scripts (``mcn_build_script_1``)
@@ -386,13 +388,13 @@ Now we should run the next analysis, and then open the new report.
    :alt: HTML report for ``arrow 0.15.0``, checks
    :align: center
 
-In the second report for Arrow, we can see that Macaron has returned slightly different results. Starting with the ``Target Information`` section we can see that the repository for this older artifact is not the same as the current one: ``https://github.com/crsmithdev/arrow`` instead of ``https://github.com/arrow-py/arrow``. In the checks section, we can see that two of the four checks that passed for the previous version, did not pass for this earlier version. Checks ``mcn_build_service_1`` and ``mcn_build_as_code_1`` failed, indicating that the older artifact did not have a GitHub Actions workflow setup to build or publish the package. In this way Macaron has demonstrated the usefulness of being able to analyze a repository at multiple stages, thereby allowing for a more accurate analysis when investigating artifacts that are, or use, outdated libraries.
+In the second report for Arrow, we can see that Macaron has returned different results. Starting with the ``Target Information`` section we can see that the repository for this older artifact is not the same as the current one: ``https://github.com/crsmithdev/arrow`` instead of ``https://github.com/arrow-py/arrow``. In the checks section, we can see that two of the four checks that passed for the previous version, did not pass for this earlier version. Checks ``mcn_build_service_1`` and ``mcn_build_as_code_1`` failed, indicating that the older artifact did not have a GitHub Actions workflow setup to build or publish the package. In this way Macaron has demonstrated the usefulness of being able to analyze a repository at multiple stages, thereby allowing for a more accurate analysis when investigating artifacts that are, or use, outdated libraries.
 
 *****************************
 Run ``verify-policy`` command
 *****************************
 
-Another feature of Macaron is policy verification. This allows Macaron to report on whether a artifact meets the security requirements specified by the user. Policies are written using `Soufflé Datalog <https://souffle-lang.github.io/index.html>`_ , a language similar to SQL. Results collected by the ``analyze`` command can be checked via declarative queries in the created policy, which Macaron can then automatically check.
+Another feature of Macaron is policy verification. This allows Macaron to report on whether an artifact meets the security requirements specified by the user. Policies are written using `Soufflé Datalog <https://souffle-lang.github.io/index.html>`_ , a language similar to SQL. Results collected by the ``analyze`` command can be checked via declarative queries in the created policy, which Macaron can then automatically check.
 
 The security requirement chosen for this tutorial reflects the difference between the two versions in the previous section. That is, we want to ensure that the artifact has a valid build service. If we refer back to :ref:`step <fig_arrow_0.15.0>` and :ref:`step <fig_arrow_1.3.0>`, we can see that the relevant check ID of the difference between the two versions is ``mcn_build_service_1``. To include this in a policy we create the following:
 
@@ -400,29 +402,31 @@ The security requirement chosen for this tutorial reflects the difference betwee
 
     #include "prelude.dl"
 
-    Policy("has-build-service", component_id, "Require build with build scripts.") :-
-        check_passed(component_id, "mcn_build_service_1").
+    Policy("has-hosted-build", component_id, "Require a hosted build and publishing service.") :-
+        check_passed(component_id, "mcn_build_as_code_1").
 
-    apply_policy_to("has-build-service", component_id) :-
+    apply_policy_to("has-hosted-build", component_id) :-
         is_component(component_id, purl),
         match("pkg:pypi/arrow.*", purl).
 
-The second part of the above policy, ``apply_policy_to``, applies the policy to components found within Macaron's database based on the conditions within it. In this case, any component whose PURL begins with ``pkg:pypi/arrow``, thanks to the use of regular expression. This will capture both versions of the Arrow library used in the previous section. To use the completed policy, we save it to an easily accessible location, such as the directory Macaron is in, with a name such as ``has-build-service.dl``. With the policy file created and saved, we can have Macaron run is as follows:
+The second part of the above policy, ``apply_policy_to``, applies the policy to components found within Macaron's database based on the conditions within it. In this case, any component whose PURL begins with ``pkg:pypi/arrow``, thanks to the use of regular expression. This will capture both versions of the Arrow library used in the previous section. To use the completed policy, we save it to an easily accessible location, such as the directory Macaron is in, with a name such as ``has-hosted-build.dl``. With the policy file created and saved, we can have Macaron run is as follows:
 
 .. code-block:: shell
 
-  ./run_macaron.sh verify-policy --database ./output/macaron.db --file ./has-build-service.dl
+  ./run_macaron.sh verify-policy --database ./output/macaron.db --file ./has-hosted-build.dl
 
 At the end of the output of this command, Macaron will display the following:
 
 .. code-block:: javascript
 
+    passed_policies
     component_satisfies_policy
-        ['176', 'pkg:pypi/arrow@1.3.0', 'has-build-service']
-    component_violates_policy
-        ['177', 'pkg:pypi/arrow@0.15.0', 'has-build-service']
+        ['1', 'pkg:pypi/arrow@1.3.0', 'has-hosted-build']
     failed_policies
-        ['has-build-service']
+        ['has-hosted-build']
+    component_violates_policy
+        ['2', 'pkg:pypi/arrow@0.15.0', 'has-hosted-build']
+
 
 This confirms the findings of the previous section, showing that the earlier version of the Arrow library does not meet our expectations in that it is lacking a discoverable build service, while the more recent version is just fine and passes.
 
