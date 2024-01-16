@@ -43,7 +43,7 @@ To learn how to define your own checks, see the steps in the [checks documentati
 
 ## Publications
 
-* Behnaz Hassanshahi, Trong Nhan Mai, Alistair Michael, Benjamin Selwyn-Smith, Sophie Bates, and Padmanabhan Krishnan: [Macaron: A Logic-based Framework for Software Supply Chain Security Assurance.](https://dl.acm.org/doi/abs/10.1145/3605770.3625213) SCORED 2023. (Best paper award)
+* Behnaz Hassanshahi, Trong Nhan Mai, Alistair Michael, Benjamin Selwyn-Smith, Sophie Bates, and Padmanabhan Krishnan: [Macaron: A Logic-based Framework for Software Supply Chain Security Assurance](https://dl.acm.org/doi/abs/10.1145/3605770.3625213). SCORED 2023. Best paper award :trophy:
   ```tex
   @inproceedings{10.1145/3605770.3625213,
     author = {Hassanshahi, Behnaz and Mai, Trong Nhan and Michael, Alistair and Selwyn-Smith, Benjamin and Bates, Sophie and Krishnan, Padmanabhan},
@@ -70,5 +70,5 @@ Please consult the [security guide](./SECURITY.md) for our responsible security 
 
 ## License
 
-Copyright (c) 2022, 2023 Oracle and/or its affiliates.
+Copyright (c) 2022, 2024 Oracle and/or its affiliates.
 Macaron is licensed under the [Universal Permissive License (UPL), Version 1.0](./LICENSE.txt).
