@@ -21,6 +21,7 @@ To see the full list of supported technologies, such as CI services, registries,
 * [Getting started](#getting-started)
 * [How to Contribute](#how-to-contribute)
 * [Defining new checks](#defining-new-checks)
+* [Publications](#publications)
 * [Security issue reports](#security-issue-reports)
 * [License](#license)
 
@@ -40,6 +41,25 @@ After cloning a repository, Macaron parses the CI configuration files and bash s
 
 To learn how to define your own checks, see the steps in the [checks documentation](/src/macaron/slsa_analyzer/checks/README.md).
 
+## Publications
+
+* Behnaz Hassanshahi, Trong Nhan Mai, Alistair Michael, Benjamin Selwyn-Smith, Sophie Bates, and Padmanabhan Krishnan: [Macaron: A Logic-based Framework for Software Supply Chain Security Assurance](https://dl.acm.org/doi/abs/10.1145/3605770.3625213). SCORED 2023. Best paper award :trophy:
+  ```tex
+  @inproceedings{10.1145/3605770.3625213,
+    author = {Hassanshahi, Behnaz and Mai, Trong Nhan and Michael, Alistair and Selwyn-Smith, Benjamin and Bates, Sophie and Krishnan, Padmanabhan},
+    title = {Macaron: A Logic-Based Framework for Software Supply Chain Security Assurance},
+    year = {2023},
+    isbn = {9798400702631},
+    publisher = {Association for Computing Machinery},
+    url = {https://doi.org/10.1145/3605770.3625213},
+    doi = {10.1145/3605770.3625213},
+    booktitle = {Proceedings of the 2023 Workshop on Software Supply Chain Offensive Research and Ecosystem Defenses},
+    pages = {29–37},
+    series = {SCORED'23}
+  }
+  ```
+
+
 ## Generating SLSA provenances for Macaron itself
 
 We have integrated [SLSA provenance generation](https://github.com/slsa-framework/slsa-github-generator) for our Docker image and release artifacts. However, due to a strict policy regarding the use of third-party GitHub Actions, we cannot generate the provenances in this repository yet until [this issue](https://github.com/slsa-framework/slsa-github-generator/issues/2204) is resolved.
@@ -50,5 +70,5 @@ Please consult the [security guide](./SECURITY.md) for our responsible security 
 
 ## License
 
-Copyright (c) 2022, 2023 Oracle and/or its affiliates.
+Copyright (c) 2022, 2024 Oracle and/or its affiliates.
 Macaron is licensed under the [Universal Permissive License (UPL), Version 1.0](./LICENSE.txt).
