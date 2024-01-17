@@ -7,10 +7,6 @@
    :description: macaron - A CI/CD security analysis tool for supply-chain attacks
    :keywords: CI/CD, SLSA, supply-chain security
 
-.. References/links
-.. _Witness: https://github.com/testifysec/witness
-.. _SLSA: https://slsa.dev
-
 =====================
 Macaron documentation
 =====================
@@ -64,10 +60,10 @@ the requirements that are currently supported by Macaron.
      - Identify and validate build script(s).
    * - 1
      - **Provenance available** - Provenances are available.
-     - Check for existence of provenances, which can be `SLSA`_ or `Witness`_ provenances. If there is no provenance, the repo can still be compliant to level 1 given the build script is available.
+     - Check for existence of provenances, which can be :term:`SLSA` or :term:`Witness` provenances. If there is no provenance, the repo can still be compliant to level 1 given the build script is available.
    * - 1
-     - **Witness provenance** - One or more `Witness`_ provenances are discovered.
-     - Check for existence of `Witness`_ provenances, and whether artifact digests match those in the provenances.
+     - **Witness provenance** - One or more :term:`Witness` provenances are discovered.
+     - Check for existence of :term:`Witness` provenances, and whether artifact digests match those in the provenances.
    * - 2
      - **Build service** - All build steps are run using some build service (e.g. GitHub Actions)
      - Identify and validate the CI service(s) used for the build process.
@@ -105,7 +101,7 @@ configuration files and bash scripts that are triggered by the CI, creates call 
 intermediate representations as abstractions. Using such abstractions, Macaron implements concrete checks based on a security specification and verifies the desired properties.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    pages/installation
    pages/using
@@ -115,3 +111,4 @@ intermediate representations as abstractions. Using such abstractions, Macaron i
    pages/vsa
    pages/supported_technologies/index
    pages/developers_guide/index
+   glossary

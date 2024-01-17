@@ -14,7 +14,7 @@ Macaron uses [SLSA requirements specifications v0.1](https://slsa.dev/spec/v0.1/
 * Go
 * Docker
 
-To see the full list of supported technologies, such as CI services, registries, and provenance types see [this page](https://oracle.github.io/macaron/pages/supported_technologies/index.html). Macaron is a work-in-progress project. We plan to support more build systems and technologies in the future.
+For the full list of supported technologies, such as CI services, registries, and provenance types see [this page](https://oracle.github.io/macaron/pages/supported_technologies/index.html). Macaron is a work-in-progress project. We plan to support more build systems and technologies in the future.
 
 ## Table of Contents
 
