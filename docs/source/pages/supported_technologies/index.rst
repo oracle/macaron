@@ -1,6 +1,8 @@
 .. Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
 .. Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
+.. _supported_technologies:
+
 ======================
 Supported Technologies
 ======================
@@ -87,13 +89,13 @@ Provenances
    * - Provenance
      - Support
      - Documentation
-   * - `SLSA <https://slsa.dev>`_
+   * - :term:`SLSA`
      -
        * | `SLSA provenance version 0.2 <https://slsa.dev/spec/v0.2/provenance>`_. The provenance should be published in one of the following ways:
          | - as a GitHub release asset.
          | - on the `npm registry <https://registry.npmjs.org>`_.
      - :doc:`page </pages/supported_technologies/jfrog>`
-   * - `Witness <https://github.com/testifysec/witness>`_
+   * - :term:`Witness`
      -
        * Witness provenance version 0.1
        * Projects built with Gradle on GitLab CI
