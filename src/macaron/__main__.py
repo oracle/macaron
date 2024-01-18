@@ -187,12 +187,13 @@ def perform_action(action_args: argparse.Namespace) -> None:
             sys.exit(verify_policy(action_args))
 
         case "analyze":
-            # Check that the GitHub token is enabled.
-            gh_token = os.environ.get("GITHUB_TOKEN")
-            if not gh_token:
-                logger.error("GitHub access token not set.")
-                sys.exit(os.EX_USAGE)
-            global_config.gh_token = gh_token
+            # If the GitHub token has not already been read, try to read it here.
+            if not global_config.gh_token:
+                gh_token = os.environ.get("GITHUB_TOKEN")
+                if not gh_token:
+                    logger.error("GitHub access token not set.")
+                    sys.exit(os.EX_USAGE)
+                global_config.gh_token = gh_token
 
             # TODO: Here we should try to statically analyze the config before
             # actually running the analysis.
@@ -221,6 +222,15 @@ def main(argv: list[str] | None = None) -> None:
         If ``argv`` is ``None``, argparse automatically looks at ``sys.argv``.
         Hence, we set ``argv = None`` by default.
     """
+    # Handle presence of GitHub token.
+    token_file = "./.macaron_env_file"  # nosec B105
+    if os.path.exists(token_file):
+        with open(token_file, encoding="utf-8") as file:
+            global_config.gh_token = file.read().rstrip()
+        # Overwrite file contents as deleting won't work when in a container.
+        with open(token_file, "w", encoding="utf-8") as file:
+            file.write("")
+
     main_parser = argparse.ArgumentParser(prog="macaron")
 
     main_parser.add_argument(

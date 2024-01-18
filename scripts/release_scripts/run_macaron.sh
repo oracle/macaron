@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This script runs the Macaron Docker image.
@@ -254,6 +254,15 @@ function mount_file() {
     file_on_host=$(to_absolute_path "$file_on_host")
     mounts+=("-v" "${file_on_host}:${file_in_container}:${mount_option}")
 }
+
+# Handle environment token
+if [[ "${GITHUB_TOKEN+1}" ]]; then
+    token_file=".macaron_env_file"
+    echo ${GITHUB_TOKEN} > ${token_file}
+    mount_file "macaron_env_file" $token_file ${MACARON_WORKSPACE}/$token_file "rw,Z"
+else
+    log_warn "GitHub token not found in environment variables."
+fi
 
 # Parse main arguments.
 while [[ $# -gt 0 ]]; do
@@ -541,7 +550,6 @@ docker run \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" \
     -e "USER_GID=${USER_GID}" \
-    -e GITHUB_TOKEN \
     -e MCN_GITLAB_TOKEN \
     -e MCN_SELF_HOSTED_GITLAB_TOKEN \
     "${proxy_vars[@]}" \
