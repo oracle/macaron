@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # Configuration file for the Sphinx documentation builder.
@@ -36,7 +36,8 @@ extensions = [
     "sphinx.ext.intersphinx",  # Support referencing external APIs
     "sphinx_autodoc_typehints",  # Resolve type annotations in docstrings
     "numpydoc",  # Support numpydoc style docstrings
-    "sphinx_tabs.tabs",  # Support tabbed views in documentation
+    "sphinx_tabs.tabs",  # Support tabbed views in documentation,
+    "sphinx_togglebutton",  # Support toggle button for elements on the page.
 ]
 autosectionlabel_prefix_document = True
 autosectionlabel_maxdepth = 2
