@@ -1,3 +1,12 @@
+## v0.7.0 (2024-01-18)
+
+### Feat
+
+- support tox to publish artifacts to PyPI (#599)
+- generate Verification Summary Attestation (#592)
+- map artifacts to commits via repo tags (#508)
+- find SLSA provenance v0.2 published on npm registry (#551)
+
 ## v0.6.0 (2023-11-03)
 
 ### Feat
