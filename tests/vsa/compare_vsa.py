@@ -250,6 +250,9 @@ def main() -> int:
         expected=expected_payload,
         compare_fn_map={
             ".predicate.timeVerified": skip_compare,
+            # We should not compare Macaron version against the snapshot test VSA because the test will
+            # fail once we bump the Macaron version in the next release, failing the automatic release altogether!
+            ".predicate.verifier.version.macaron": skip_compare,
         },
     )
 
