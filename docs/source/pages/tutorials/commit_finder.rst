@@ -5,14 +5,9 @@
 Analyzing and comparing different versions of an artifact
 ---------------------------------------------------------
 
-This tutorial demonstrates how Macaron can be used to determine the differences between one or more
-states of the single open-source repository that produced one or more related artifacts. In this way,
-we show how a developer can be potentially misled by supply chain security information that has been
-created for the current state of an artifact's source repository, rather than the version of the
-artifact they are actually using.
+This tutorial demonstrates how Macaron can be used to determine the differences between one or more states of the single open-source repository that produced one or more related artifacts. In this way, we show how a developer can be potentially misled by supply chain security information that has been created for the current state of an artifact's source repository, rather than the version of the artifact they are actually using.
 
-It is challenging to map artifacts to the source code because most artifacts, even open-source ones, do
-not provide a direct URL to the related repository and commit:
+It is challenging to map artifacts to the source code because most artifacts, even open-source ones, do not provide a direct URL to the related repository and commit:
 
     * For finding repositories, services exist to make up for this lack, including Google's `Open Source Insights <https://deps.dev>`_ tool that is in use by Macaron itself for this exact reason. However, without the commit as well, analysis of these repositories will reflect only the current state at the time of execution. One example of this is `OpenSSF Scorecard <https://github.com/ossf/scorecard>`_, an automated tool that performs a number of software security checks on a given project. These projects are typically provided in the form of a repository's public URL, which will be examined at its current state.
 
