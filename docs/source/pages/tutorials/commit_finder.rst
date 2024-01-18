@@ -5,39 +5,47 @@
 Analyzing and comparing different versions of an artifact
 ---------------------------------------------------------
 
-This tutorial demonstrates how Macaron can be used to determine the differences between one or more states of the single open-source repository that produced one or more related artifacts. In this way, we show how a developer can be potentially misled by supply chain security information that has been created for the current state of an artifact's source repository, rather than the version of the artifact they are actually using.
+This tutorial demonstrates how Macaron can be used to determine the differences between one or more
+states of the single open-source repository that produced one or more related artifacts. In this way,
+we show how a developer can be potentially misled by supply chain security information that has been
+created for the current state of an artifact's source repository, rather than the version of the
+artifact they are actually using.
 
-he problem of mapping artifacts to the source code that built them is a challenging one, as most artifacts, even open-source ones, do not provide a direct URL to the related repository and commit. In principle, provenances, such as :term:`SLSA` or :term:`Witness`, which contain the commit that was used to build the artifact provide the information that we need. However, currently the adoption rate in the open-source community is low, therefore limiting its value for this task.
+It is challenging to map artifacts to the source code because most artifacts, even open-source ones, do
+not provide a direct URL to the related repository and commit:
 
-Services exist to make up for this lack, including Google's `open-source Insights <https://deps.dev/>`_ tool that is in use by Macaron itself for this exact reason. However, without taking further steps, analysis of these repositories will reflect only the current state at the time of execution. One example of this is `OpenSSF Scorecard <https://github.com/ossf/scorecard>`_, an automated tool that performs a number of software security checks on a given project. These projects are typically provided in the form of a repository's public URL, which will be examined at its current state.
+    * For finding repositories, services exist to make up for this lack, including Google's `Open Source Insights <https://deps.dev>`_ tool that is in use by Macaron itself for this exact reason. However, without the commit as well, analysis of these repositories will reflect only the current state at the time of execution. One example of this is `OpenSSF Scorecard <https://github.com/ossf/scorecard>`_, an automated tool that performs a number of software security checks on a given project. These projects are typically provided in the form of a repository's public URL, which will be examined at its current state.
 
-To facilitate greater accuracy during analysis, Macaron allows analyzing an artifact and its corresponding repository state by using the Commit Finder feature. This feature performs a best effort attempt to map a given artifact to the exact commit that was used to create it by comparing repository tags with artifact versions. Therefore, it has a requirement that any repository to be analyzed makes use of tags in a way that closely corresponds to the produced artifact's version numbers.
+    * For finding commits, we can look inside the provenances for an artifact, such as :term:`SLSA` or :term:`Witness`, as these contain a record of the commit used to build that artifact. However, the current adoption rate in the open-source community is low, therefore we need alternative solutions.
+
+Macaron's solution to this challenge is the Commit Finder feature. This feature performs a best effort attempt to map a given artifact to the exact commit that was used to create it so that the correct state for a given artifact can be analyzed. Commits are discovered by matching artifact versions to tags within repositories, necessitating a requirement that any repository to be analyzed makes use of tags in a way that closely corresponds to the produced artifact's version numbers.
 
 For this tutorial, we analyze the Python library, `Arrow <https://github.com/arrow-py/arrow>`_. Arrow is a popular library designed to improve the developer experience for manipulating dates and times.
 
-************
-Installation
-************
+******************************
+Installation and Prerequisites
+******************************
 
-Please follow the instructions :ref:`here <installation-guide>`. In summary, you need:
+Skip this section if you already know how to install Macaron.
 
-* Docker
-* the ``run_macaron.sh``  script to run the Macaron image.
+.. toggle::
 
-.. note:: At the moment, Docker alternatives (e.g. podman) are not supported.
+    Please follow the instructions :ref:`here <installation-guide>`. In summary, you need:
 
-*************
-Prerequisites
-*************
+        * Docker
+        * the ``run_macaron.sh``  script to run the Macaron image.
 
-You need to provide Macaron with a GitHub token through the ``GITHUB_TOKEN``  environment variable.
+    .. note:: At the moment, Docker alternatives (e.g. podman) are not supported.
 
-To obtain a GitHub Token:
 
-* Go to ``GitHub settings`` → ``Developer Settings`` (at the bottom of the left side pane) → ``Personal Access Tokens`` → ``Fine-grained personal access tokens`` → ``Generate new token``. Give your token a name and an expiry period.
-* Under ``"Repository access"``, choosing ``"Public Repositories (read-only)"`` should be good enough in most cases.
+    You also need to provide Macaron with a GitHub token through the ``GITHUB_TOKEN``  environment variable.
 
-Now you should be good to run Macaron. For more details, see the documentation :ref:`here <prepare-github-token>`.
+    To obtain a GitHub Token:
+
+    * Go to ``GitHub settings`` → ``Developer Settings`` (at the bottom of the left side pane) → ``Personal Access Tokens`` → ``Fine-grained personal access tokens`` → ``Generate new token``. Give your token a name and an expiry period.
+    * Under ``"Repository access"``, choosing ``"Public Repositories (read-only)"`` should be good enough in most cases.
+
+    Now you should be good to run Macaron. For more details, see the documentation :ref:`here <prepare-github-token>`.
 
 ********
 Analysis
@@ -64,7 +72,7 @@ We will start by running the analysis on the latest version, ``1.3.0``, with the
 
 .. code-block:: shell
 
-    ./run_macaron.sh analyze -purl pkg:pypi/arrow@1.3.0
+    ./run_macaron.sh analyze -purl pkg:pypi/arrow@1.3.0 --skip-deps
 
 The analysis involves Macaron downloading the contents of the target repository to the configured, or default, ``output`` folder. Results from the analysis, including checks, are stored in the database found at ``output/macaron.db``  (See :ref:`Output Files Guide <output_files_guide>`). Once the analysis is complete, Macaron will also produce a report in the form of a HTML file.
 
@@ -86,11 +94,11 @@ The analysis involves Macaron downloading the contents of the target repository 
    :alt: HTML report for ``arrow 1.3.0``, checks
    :align: center
 
-The image above shows the results of the checks for the `Arrow <https://github.com/arrow-py/arrow>`_ repository at the commit where version ``1.3.0`` was produced.
-In summary, our analysis finds the following information about this artifact:
+This image shows the results of the checks for the `Arrow <https://github.com/arrow-py/arrow>`_ repository at the commit where version ``1.3.0`` was produced.
+In summary, our analysis finds that the artifact has:
 
-* A commit at a Git repository that corresponds to the artifact (``mcn_version_control_system_1``)
-* The build tool ``pip`` used in the build scripts (``mcn_build_script_1``)
+* A commit in a Git repository that corresponds to the artifact (``mcn_version_control_system_1``)
+* Build scripts for the build tool ``pip`` (``mcn_build_script_1``)
 * GitHub Actions workflow to build the package (``mcn_build_service_1``)
 * GitHub Actions workflow to deploy and publish the package (``mcn_build_as_code_1``)
 
@@ -121,7 +129,7 @@ Run ``verify-policy`` command
 
 Another feature of Macaron is policy verification. This allows Macaron to report on whether an artifact meets the security requirements specified by the user. Policies are written using `Soufflé Datalog <https://souffle-lang.github.io/index.html>`_ , a language similar to SQL. Results collected by the ``analyze`` command can be checked via declarative queries in the created policy, which Macaron can then automatically check.
 
-The security requirement chosen for this tutorial reflects the difference between the two versions in the previous section. That is, we want to ensure that the artifact has a valid build service. If we refer back to :ref:`step <fig_arrow_0.15.0>` and :ref:`step <fig_arrow_1.3.0>`, we can see that the relevant check ID of the difference between the two versions is ``mcn_build_as_code_1``. To include this in a policy we create the following:
+The security requirement chosen for this tutorial reflects the difference between the two versions in the previous section. That is, we want to ensure that the artifact has a valid hosted build platform for building and publishing. If we refer back to :ref:`Arrow 0.15.0 <fig_arrow_0.15.0>` and :ref:`Arrow 1.3.0 <fig_arrow_1.3.0>`, we can use the check ID ``mcn_build_as_code_1`` to identify the differences between the two versions. Note that in Macaron the result of one check can depend on the result of another check. This is especially useful to avoid running checks if unnecessary. In this example, if the ``mcn_build_as_code_1`` check passes, it is implied that ``mcn_build_service_1`` is passed too because while the former checks that the CI service (GitHub Actions) is set up to automatically build and publish to a registry, the latter checks if a build step exists in the CI even if it is used for testing purposes only. Since we are interested to know if the Arrow artifact is published automatically from a hosted build platform, we just include the ``mcn_build_as_code_1`` check in the policy as follows:
 
 .. code-block:: c++
 
@@ -134,7 +142,7 @@ The security requirement chosen for this tutorial reflects the difference betwee
         is_component(component_id, purl),
         match("pkg:pypi/arrow.*", purl).
 
-The second part of the above policy, ``apply_policy_to``, applies the policy to software components found within Macaron's database based on the conditions within it. In this case, any software component whose PURL begins with ``pkg:pypi/arrow`` will be verified by the policy, thanks to Soufflé's `match constraint <https://souffle-lang.github.io/constraints>`_ that can be used for string matching. This will capture both versions of the Arrow library used in the previous section. To use the completed policy, we save it to an easily accessible location, such as the directory Macaron is in, with a name such as ``has-hosted-build.dl``. With the policy file created and saved, we can have Macaron run is as follows:
+The second part of the above policy, ``apply_policy_to``, applies the policy to software components found within Macaron's local database created and populated in the previous steps. In this policy, any software component whose PURL begins with ``pkg:pypi/arrow`` will be verified by the policy, thanks to Soufflé's `match constraint <https://souffle-lang.github.io/constraints>`_ that can be used for string matching. This will capture both versions of the Arrow library used in the previous section. To use the completed policy, we save it to an easily accessible location, such as the directory Macaron is in, with a name such as ``has-hosted-build.dl``. With the policy file created and saved, we can run Macaron's policy engine as follows:
 
 .. code-block:: shell
 
@@ -159,4 +167,4 @@ This confirms the findings of the previous section, showing that the earlier ver
 Future Work
 ***********
 
-Mapping artifact to commits within repositories is a challenging endeavour. Macron's Commit Finder feature relies on repositories having and using version tags in a sensible way (a tag is considered sensible if it closely matches the version it represents). An alternative, or complimentary, approach would be to make use of the information found within provenance files, where information such as the commit hash used to create the artifact can potentially be found. Additionally, it should be noted that the Commit Finder feature was modelled on the intentions of developers (in terms of tag usage) within a large quantity of Java projects. This should translate well to other languages, as tag formatting is generally language agnostic, there may be some improvements to be made by further testing on a large number of non-Java projects.
+Mapping artifact to commits within repositories is a challenging endeavour. Macron's Commit Finder feature relies on repositories having and using version tags in a sensible way (a tag is considered sensible if it closely matches the version it represents). An alternative, or complimentary, approach would be to make use of the information found within provenance files, where information such as the commit hash used to create the artifact can potentially be found. Additionally, it should be noted that the Commit Finder feature was modelled on the intentions of developers (in terms of tag usage) within a large quantity of Java projects. As tag formatting is "generally" language agnostic in the same way that versioning schemes are, this feature should work well for other languages. However, there may be some improvements to be made by further testing on a large number of non-Java projects.

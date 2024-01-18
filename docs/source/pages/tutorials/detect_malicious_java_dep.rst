@@ -35,30 +35,30 @@ this artifact is created for demonstration purposes and is not actually maliciou
 Now let's see how Macaron can help us with evaluating the supply chain security posture of
 ``example-maven-app`` and its dependencies.
 
-************
-Installation
-************
+******************************
+Installation and Prerequisites
+******************************
 
-Please follow the instructions :ref:`here <installation-guide>`. In summary, you need:
+Skip this section if you already know how to install Macaron.
 
-* Docker
-* the ``run_macaron.sh``  script to run the Macaron image.
+.. toggle::
 
-.. note:: At the moment, Docker alternatives (e.g. podman) are not supported.
+    Please follow the instructions :ref:`here <installation-guide>`. In summary, you need:
 
-*************
-Prerequisites
-*************
+        * Docker
+        * the ``run_macaron.sh``  script to run the Macaron image.
 
-You need to provide Macaron with a GitHub token through the ``GITHUB_TOKEN``  environment variable.
+    .. note:: At the moment, Docker alternatives (e.g. podman) are not supported.
 
-To obtain a GitHub Token:
 
-* Go to ``GitHub settings`` → ``Developer Settings`` (at the bottom of the left side pane) → ``Personal Access Tokens`` → ``Fine-grained personal access tokens`` → ``Generate new token``. Give your token a name and an expiry period.
-* Under ``"Repository access"``, choosing ``"Public Repositories (read-only)"`` should be good enough in most cases.
+    You also need to provide Macaron with a GitHub token through the ``GITHUB_TOKEN``  environment variable.
 
-Now you should be good to run Macaron. For more details, see the documentation :ref:`here <prepare-github-token>`.
+    To obtain a GitHub Token:
 
+    * Go to ``GitHub settings`` → ``Developer Settings`` (at the bottom of the left side pane) → ``Personal Access Tokens`` → ``Fine-grained personal access tokens`` → ``Generate new token``. Give your token a name and an expiry period.
+    * Under ``"Repository access"``, choosing ``"Public Repositories (read-only)"`` should be good enough in most cases.
+
+    Now you should be good to run Macaron. For more details, see the documentation :ref:`here <prepare-github-token>`.
 
 ***********************
 Run ``analyze`` command
@@ -89,7 +89,7 @@ After running the ``analyze`` command, we can view the data that Macaron has gat
 |
 
 The image above shows the results of the checks for `example-maven-app <https://github.com/behnazh-w/example-maven-app>`_ repository itself.
-As you can see, some of the checks are passing and some are failing. In summary, this project
+As you can see, some of the checks are passing and some are failing. In summary, this project:
 
 * is not producing any :term:`SLSA` or :term:`Witness` provenances (``mcn_provenance_available_1``)
 * is using GitHub Actions to build and test using ``mvnw`` (``mcn_build_service_1``)

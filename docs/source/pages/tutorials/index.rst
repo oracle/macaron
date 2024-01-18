@@ -17,5 +17,5 @@ For the full list of supported technologies, such as CI services, registries, an
 .. toctree::
    :maxdepth: 1
 
-   commit_finder
    detect_malicious_java_dep
+   commit_finder
