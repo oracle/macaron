@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for the GitLab git service."""
@@ -26,10 +26,11 @@ from tests.slsa_analyzer.mock_git_utils import commit_files, initiate_repo
 )
 def test_construct_clone_url_without_token(repo_url: str) -> None:
     """Test if the ``construct_clone_url`` method produces proper clone URLs without the access token."""
-    clone_url = repo_url
-    gitlab = PubliclyHostedGitLab()
-    gitlab.load_defaults()
-    assert gitlab.construct_clone_url(repo_url) == clone_url
+    with mock.patch.dict(os.environ, {"MCN_GITLAB_TOKEN": ""}):
+        clone_url = repo_url
+        gitlab = PubliclyHostedGitLab()
+        gitlab.load_defaults()
+        assert gitlab.construct_clone_url(repo_url) == clone_url
 
 
 @pytest.mark.parametrize(

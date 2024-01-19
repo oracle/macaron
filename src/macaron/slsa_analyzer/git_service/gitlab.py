@@ -253,6 +253,12 @@ class SelfHostedGitLab(GitLab):
         if not self.hostname:
             return
 
+        if not (os.environ.get(self.access_token_env_name) or self.token_function()):
+            raise ConfigurationError(
+                f"Environment variable '{self.access_token_env_name}' is not set "
+                + f"for private GitLab service '{self.hostname}'."
+            )
+
 
 class PubliclyHostedGitLab(GitLab):
     """The publicly-hosted GitLab instance."""
