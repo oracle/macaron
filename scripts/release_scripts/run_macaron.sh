@@ -48,6 +48,8 @@ if [[ -z ${MACARON_IMAGE_TAG:-} ]]; then
     MACARON_IMAGE_TAG="latest"
 fi
 
+TOKEN_FILE=".macaron_env_file"
+
 IMAGE="ghcr.io/oracle/macaron"
 
 # Workspace directory inside of the container.
@@ -255,14 +257,14 @@ function mount_file() {
     mounts+=("-v" "${file_on_host}:${file_in_container}:${mount_option}")
 }
 
-# Handle environment token
-if [[ "${GITHUB_TOKEN+1}" ]]; then
-    token_file=".macaron_env_file"
-    echo ${GITHUB_TOKEN} > ${token_file}
-    mount_file "macaron_env_file" $token_file ${MACARON_WORKSPACE}/$token_file "rw,Z"
-else
-    log_warn "GitHub token not found in environment variables."
-fi
+# Handle tokens.
+set +u
+echo "" > ${TOKEN_FILE}
+echo "GITHUB_TOKEN=${GITHUB_TOKEN}" >> ${TOKEN_FILE}
+echo "MCN_GITLAB_TOKEN=${MCN_GITLAB_TOKEN}" >> ${TOKEN_FILE}
+echo "MCN_SELF_HOSTED_GITLAB_TOKEN=${MCN_SELF_HOSTED_GITLAB_TOKEN}" >> ${TOKEN_FILE}
+mount_file "macaron_env_file" ${TOKEN_FILE} ${MACARON_WORKSPACE}/${TOKEN_FILE} "rw,Z"
+set -u
 
 # Parse main arguments.
 while [[ $# -gt 0 ]]; do
@@ -550,8 +552,6 @@ docker run \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" \
     -e "USER_GID=${USER_GID}" \
-    -e MCN_GITLAB_TOKEN \
-    -e MCN_SELF_HOSTED_GITLAB_TOKEN \
     "${proxy_vars[@]}" \
     "${prod_vars[@]}" \
     "${mounts[@]}" \

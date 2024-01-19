@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the spec for the GitLab service.
@@ -21,11 +21,13 @@ is in the ``[git_service.gitlab.self_hosted]`` section.
 import logging
 import os
 from abc import abstractmethod
+from collections.abc import Callable
 from urllib.parse import ParseResult, urlunparse
 
 from git import GitError
 from pydriller.git import Git
 
+from macaron.config.global_config import global_config
 from macaron.errors import CloneError, ConfigurationError, RepoCheckOutError
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
@@ -36,10 +38,11 @@ logger: logging.Logger = logging.getLogger(__name__)
 class GitLab(BaseGitService):
     """This class contains the spec of the GitLab service."""
 
-    def __init__(self, access_token_env_name: str) -> None:
+    def __init__(self, access_token_env_name: str, token_function: Callable[[], str]) -> None:
         """Initialize instance."""
         super().__init__("gitlab")
         self.access_token_env_name = access_token_env_name
+        self.token_function = token_function
 
     @abstractmethod
     def load_defaults(self) -> None:
@@ -81,7 +84,9 @@ class GitLab(BaseGitService):
 
         # Construct clone URL from ``urlparse`` result, with or without an access token.
         # https://docs.gitlab.com/ee/gitlab-basics/start-using-git.html#clone-using-a-token
-        access_token = os.environ.get(self.access_token_env_name)
+        access_token: str | None = self.token_function()
+        if not access_token:
+            access_token = os.environ.get(self.access_token_env_name)
         if access_token:
             clone_url_netloc = f"oauth2:{access_token}@{self.hostname}"
         else:
@@ -227,7 +232,7 @@ class SelfHostedGitLab(GitLab):
 
     def __init__(self) -> None:
         """Initialize instance."""
-        super().__init__("MCN_SELF_HOSTED_GITLAB_TOKEN")
+        super().__init__("MCN_SELF_HOSTED_GITLAB_TOKEN", lambda: global_config.gl_self_host_token)
 
     def load_defaults(self) -> None:
         """Load the values for this git service from the ini configuration and environment variables.
@@ -248,19 +253,13 @@ class SelfHostedGitLab(GitLab):
         if not self.hostname:
             return
 
-        if not os.environ.get(self.access_token_env_name):
-            raise ConfigurationError(
-                f"Environment variable '{self.access_token_env_name}' is not set "
-                + f"for private GitLab service '{self.hostname}'."
-            )
-
 
 class PubliclyHostedGitLab(GitLab):
     """The publicly-hosted GitLab instance."""
 
     def __init__(self) -> None:
         """Initialize instance."""
-        super().__init__("MCN_GITLAB_TOKEN")
+        super().__init__("MCN_GITLAB_TOKEN", lambda: global_config.gl_token)
 
     def load_defaults(self) -> None:
         """Load the values for this git service from the ini configuration and environment variables.

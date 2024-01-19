@@ -222,11 +222,22 @@ def main(argv: list[str] | None = None) -> None:
         If ``argv`` is ``None``, argparse automatically looks at ``sys.argv``.
         Hence, we set ``argv = None`` by default.
     """
-    # Handle presence of GitHub token.
+    # Handle presence of tokens.
     token_file = "./.macaron_env_file"  # nosec B105
     if os.path.exists(token_file):
         with open(token_file, encoding="utf-8") as file:
-            global_config.gh_token = file.read().rstrip()
+            for line in file:
+                print(f"Line: {line}")
+                if not line or "=" not in line:
+                    continue
+                key, value = line.rstrip().split("=")
+                if key and value:
+                    if key == "GITHUB_TOKEN":
+                        global_config.gh_token = value
+                    if key == "MCN_GITLAB_TOKEN":
+                        global_config.gl_token = value
+                    if key == "MCN_SELF_HOSTED_GITLAB_TOKEN":
+                        global_config.gl_self_host_token = value
         # Overwrite file contents as deleting won't work when in a container.
         with open(token_file, "w", encoding="utf-8") as file:
             file.write("")
