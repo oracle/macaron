@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This workflow lints the PR's title and commits. It uses the commitizen
@@ -34,12 +34,11 @@ jobs:
       with:
         python-version: '3.11'
 
-    # Install Commitizen without using the package's Makefile: that's much faster than
-    # creating a venv and installing heaps of dependencies that aren't required for this job.
-    - name: Set up Commitizen
-      run: |
-        pip install --upgrade pip wheel
-        pip install 'commitizen ==2.37.1'
+    # Prepare the environment to run commitizen.
+    - name: Create empty virtual environment for Actions
+      run: mkdir .venv
+    - name: Install dependencies
+      run: make setup-github-actions
 
     # Run Commitizen to check the title of the PR which triggered this workflow, and check
     # all commit messages of the PR's branch. If any of the checks fails then this job fails.
