@@ -25,5 +25,5 @@ class TestGitHub(MacaronTestCase):
         assert github.is_detected("ssh://git@github.com:7999/org/name")
         assert not github.is_detected("http://gitlab.com/org/name")
         assert not github.is_detected("git@githubb.com:org/name")
-        assert not github.is_detected("git@not_supported_git_host.com:7999/org/name")
+        assert not github.is_detected("git@not-supported-git-host.com:7999/org/name")
         assert not github.is_detected("ssh://git@bitbucket.com:7999/org/name")
