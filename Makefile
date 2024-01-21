@@ -156,7 +156,7 @@ souffle:
 # package dependencies declared in pyproject.toml.
 # Go dependencies are only upgraded by Dependabot and managed differently
 # from Python dependencies and by default the upgrade target does not
-# upgrade Go dependencies. To upgrade the Go depenencies use the
+# upgrade Go dependencies. To upgrade the Go dependencies use the
 # `upgrade-go` target directly, which uses the code snippet suggested
 # here instead of `go get -u` to avoid updating indirect dependencies
 # and creating a broken state:
