@@ -164,7 +164,7 @@ class BuildAsCodeCheck(BaseCheck):
 
                 trusted_deploy_actions = build_tool.ci_deploy_kws["github_actions"] or []
 
-                # Check for use of a trusted Github Actions workflow to publish/deploy.
+                # Check for use of a trusted GitHub Actions workflow to publish/deploy.
                 # TODO: verify that deployment is legitimate and not a test
                 if trusted_deploy_actions:
                     for callee in ci_info["callgraph"].bfs():

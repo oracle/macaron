@@ -18,12 +18,12 @@ Analyzing a source code repository
 ----------------------------------
 
 ''''''''''''''''''''''''''''''''''''
-Analyzing a public Github repository
+Analyzing a public GitHub repository
 ''''''''''''''''''''''''''''''''''''
 
-Macaron can analyze a Github public repository (and potentially the repositories of it dependencies) to determine its SLSA posture following the specification of `SLSA v0.1 <https://slsa.dev/spec/v0.1/>`_.
+Macaron can analyze a GitHub public repository (and potentially the repositories of it dependencies) to determine its SLSA posture following the specification of `SLSA v0.1 <https://slsa.dev/spec/v0.1/>`_.
 
-To run Macaron on a Github public repository, we use the following command:
+To run Macaron on a GitHub public repository, we use the following command:
 
 .. code-block:: shell
 
