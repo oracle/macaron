@@ -5434,7 +5434,7 @@ Copyright 2020 Google LLC.
 Copyright 2020 Google LLC. All Rights Reserved.
 Copyright 2020 Google LLC. All Rights Reserved.\n" +
 Copyright 2020 Gregor Martynus
-Copyright 2020 Intel Coporation.
+Copyright 2020 Intel Corporation.
 Copyright 2020 The Go Authors. All rights reserved.
 Copyright 2020 The Kubernetes Authors.
 Copyright 2020 The gRPC Authors
@@ -10201,7 +10201,7 @@ SPDX:Apache-2.0
 == Copyright
 Copyright 2013 Google Inc. All Rights Reserved.
 Copyright 2019 The Kubernetes Authors.
-Copyright 2020 Intel Coporation.
+Copyright 2020 Intel Corporation.
 Copyright 2020 The Kubernetes Authors.
 Copyright 2021 The Kubernetes Authors.
 Copyright 2022 The Kubernetes Authors.
@@ -10890,7 +10890,7 @@ Copyright 2020 Google LLC.
 Copyright 2020 Google LLC. All Rights Reserved.
 Copyright 2020 Google LLC. All Rights Reserved.\n" +
 Copyright 2020 Gregor Martynus
-Copyright 2020 Intel Coporation.
+Copyright 2020 Intel Corporation.
 Copyright 2020 The Go Authors. All rights reserved.
 Copyright 2020 The Kubernetes Authors.
 Copyright 2020 The gRPC Authors
