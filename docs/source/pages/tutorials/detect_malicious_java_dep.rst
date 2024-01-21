@@ -72,7 +72,7 @@ First, we need to run the ``analyze`` command of Macaron to run a number of :ref
 
 .. note:: By default, Macaron clones the repositories and creates output files under the ``output`` directory. To understand the structure of this directory please see :ref:`Output Files Guide <output_files_guide>`.
 
-By default, this command analyzes the the latest commit of the default branch of the repository. You can also analyze the repository
+By default, this command analyzes the latest commit of the default branch of the repository. You can also analyze the repository
 at a specific commit by providing the branch and commit digest. See the :ref:`CLI options<analyze-command-cli>` of the ``analyze`` command for more information.
 After running the ``analyze`` command, we can view the data that Macaron has gathered about the ``example-maven-app`` repository in an HTML report.
 

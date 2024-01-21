@@ -82,7 +82,7 @@ class BuildServiceCheck(BaseCheck):
                 continue
             # The first argument in a bash command is the program name.
             # So first check that the program name is a supported build tool name.
-            # We need to handle cases where the the first argument is a path to the program.
+            # We need to handle cases where the first argument is a path to the program.
             cmd_program_name = os.path.basename(com[0])
             if not cmd_program_name:
                 logger.debug("Found invalid program name %s.", com[0])
