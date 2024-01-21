@@ -332,7 +332,7 @@ Macaron's policy engine accepts policies specified in `Datalog <https://en.wikip
 can verify if a project and all its dependencies pass certain checks. We use `Soufflé <https://souffle-lang.github.io/index.html>`_
 as the Datalog engine in Macaron. Once you run the checks on a target project as described :ref:`here <analyze-command>`,
 the check results will be stored in ``macaron.db`` in the output directory. We pass the check results to the policy engine by providing the path to ``macaron.db`` together with a Datalog policy file to be validated by the policy engine.
-In the Datalog policy file, we must specify the identifier for the target software component that we are interested in to validate the policy against. These are two ways to specify the target software component in the Datalog policy file:
+In the Datalog policy file, we must specify the identifier for the target software component that interests us to validate the policy against. These are two ways to specify the target software component in the Datalog policy file:
 
 #. Using the complete name of the target component (e.g. ``github.com/oracle-quickstart/oci-micronaut``)
 #. Using the PURL string of the target component (e.g. ``pkg:github.com/oracle-quickstart/oci-micronaut@<commit_sha>``).
