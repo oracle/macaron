@@ -19,10 +19,10 @@ For the full list of supported technologies, such as CI services, registries, an
 ## Table of Contents
 
 * [Getting started](#getting-started)
-* [How to Contribute](#how-to-contribute)
+* [Contributing](#contributing)
 * [Defining new checks](#defining-new-checks)
 * [Publications](#publications)
-* [Security issue reports](#security-issue-reports)
+* [Security](#security)
 * [License](#license)
 
 ## Getting started
