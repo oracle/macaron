@@ -133,8 +133,8 @@ def test_get_remote_vcs_url() -> None:
     assert git_url.get_remote_vcs_url("ssh://gitlab.com:org/name.git") == ""
     assert git_url.get_remote_vcs_url("https://github.com/org") == ""
     assert git_url.get_remote_vcs_url("https://example.com") == ""
-    assert git_url.get_remote_vcs_url("https://unsupport.host.com/org/name") == ""
-    assert git_url.get_remote_vcs_url("git@unsupport.host.com:org/name/") == ""
+    assert git_url.get_remote_vcs_url("https://unsupported.host.com/org/name") == ""
+    assert git_url.get_remote_vcs_url("git@unsupported.host.com:org/name/") == ""
     assert git_url.get_remote_vcs_url("git@github.com:org/") == ""
     assert git_url.get_remote_vcs_url("git@github.com:7999/org/") == ""
 
