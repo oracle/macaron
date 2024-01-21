@@ -12,7 +12,7 @@ apply_policy_to("aggregate_level_3", repo_id) :-
     // if we have provenance, then require using a trusted builder,
     // verifying the provenance attestations, and
     // dependencies must use some kind of scripted build
-    repository_analysis(_, componen_id, repo_id, name),
+    repository_analysis(_, component_id, repo_id, name),
     provenance(_, component_id, _, _, _, _).
 
 // Require everything to have version control
