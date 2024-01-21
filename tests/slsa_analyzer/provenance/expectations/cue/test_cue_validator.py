@@ -12,16 +12,17 @@ import pytest
 from macaron.database.table_definitions import CUEExpectation
 from macaron.slsa_analyzer.provenance.expectations.cue.cue_validator import get_target, validate_expectation
 
-EXPEC_RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
+EXPECT_RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
 PROV_RESOURCE_PATH = Path(__file__).parent.parent.parent.joinpath("resources")
+PACKAGE_URLLIB3 = "pkg:github.com/urllib3/urllib3"
 
 
 @pytest.mark.parametrize(
     "expectation_path",
     [
-        os.path.join(EXPEC_RESOURCE_PATH, "invalid_expectations", "invalid.cue"),
-        os.path.join(EXPEC_RESOURCE_PATH, "invalid_expectations", "urllib3_INVALID.cue"),
-        os.path.join(EXPEC_RESOURCE_PATH, "invalid_expectations", "no_file.cue"),
+        os.path.join(EXPECT_RESOURCE_PATH, "invalid_expectations", "invalid.cue"),
+        os.path.join(EXPECT_RESOURCE_PATH, "invalid_expectations", "urllib3_INVALID.cue"),
+        os.path.join(EXPECT_RESOURCE_PATH, "invalid_expectations", "no_file.cue"),
     ],
 )
 def test_make_expectation(expectation_path: str) -> None:
@@ -35,8 +36,8 @@ def test_make_expectation(expectation_path: str) -> None:
 @pytest.mark.parametrize(
     ("expectation_path", "expected"),
     [
-        (os.path.join(EXPEC_RESOURCE_PATH, "valid_expectations", "urllib3_PASS.cue"), "pkg:github.com/urllib3/urllib3"),
-        (os.path.join(EXPEC_RESOURCE_PATH, "valid_expectations", "urllib3_FAIL.cue"), ""),
+        (os.path.join(EXPECT_RESOURCE_PATH, "valid_expectations", "urllib3_PASS.cue"), PACKAGE_URLLIB3),
+        (os.path.join(EXPECT_RESOURCE_PATH, "valid_expectations", "urllib3_FAIL.cue"), ""),
     ],
 )
 def test_get_target(expectation_path: str, expected: str) -> None:
@@ -52,22 +53,22 @@ def test_get_target(expectation_path: str, expected: str) -> None:
     ("expectation_path", "prov_path", "expected"),
     [
         (
-            os.path.join(EXPEC_RESOURCE_PATH, "valid_expectations", "urllib3_PASS.cue"),
+            os.path.join(EXPECT_RESOURCE_PATH, "valid_expectations", "urllib3_PASS.cue"),
             os.path.join(PROV_RESOURCE_PATH, "valid_provenances", "urllib3_decoded_PASS.json"),
             True,
         ),
         (
-            os.path.join(EXPEC_RESOURCE_PATH, "valid_expectations", "urllib3_PASS.cue"),
+            os.path.join(EXPECT_RESOURCE_PATH, "valid_expectations", "urllib3_PASS.cue"),
             os.path.join(PROV_RESOURCE_PATH, "valid_provenances", "urllib3_decoded_FAIL.json"),
             False,
         ),
         (
-            os.path.join(EXPEC_RESOURCE_PATH, "valid_expectations", "urllib3_FAIL.cue"),
+            os.path.join(EXPECT_RESOURCE_PATH, "valid_expectations", "urllib3_FAIL.cue"),
             os.path.join(PROV_RESOURCE_PATH, "valid_provenances", "urllib3_decoded_PASS.json"),
             False,
         ),
         (
-            os.path.join(EXPEC_RESOURCE_PATH, "valid_expectations", "urllib3_FAIL.cue"),
+            os.path.join(EXPECT_RESOURCE_PATH, "valid_expectations", "urllib3_FAIL.cue"),
             os.path.join(PROV_RESOURCE_PATH, "valid_provenances", "urllib3_decoded_FAIL.json"),
             False,
         ),
