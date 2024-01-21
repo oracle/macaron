@@ -102,7 +102,7 @@ To simplify the examples, we use the same configurations as above if needed (e.g
 
   pkg:<git_service_hostname>/<organization>/<name>
 
-The list bellow shows examples for the corresponding PURL strings for different git repositories:
+The list below shows examples for the corresponding PURL strings for different git repositories:
 
 .. list-table:: Examples of PURL strings for git repositories.
    :widths: 50 50
