@@ -56,7 +56,7 @@ enabled=1\
         # Exception: netbase (We couldn't find an equivalent in Oracle Linux).
         tzdata          \
         ca-certificates \
-        # git and finutils are needed for running and building Macaron.
+        # git and findutils are needed for running and building Macaron.
         git             \
         findutils       \
         # Runtime libraries for Souffle. These are based on
