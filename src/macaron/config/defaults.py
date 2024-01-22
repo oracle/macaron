@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides functions to manage default values."""
@@ -76,7 +76,7 @@ class ConfigParser(configparser.ConfigParser):
         .. code-block:: python3
 
             allowed_hosts = config_parser.get_list("git", "allowed_hosts")
-            # allowed_hosts == ['github.com', 'boo.com gitlab.com', 'host com']
+            allowed_hosts == ["github.com", "boo.com gitlab.com", "host com"]
         """
         try:
             value = self.get(section, item)

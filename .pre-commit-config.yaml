@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # See https://pre-commit.com for more information
@@ -166,7 +166,9 @@ repos:
   hooks:
   - id: pytest
     name: Run unit tests
-    entry: python -W always::DeprecationWarning -m pytest -c pyproject.toml --cov-config pyproject.toml
+    entry: |
+      python -W always::DeprecationWarning -m pytest -c pyproject.toml --cov-config pyproject.toml
+      src/macaron/ tests/ docs/
     language: system
     verbose: true
     always_run: true

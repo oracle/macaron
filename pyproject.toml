@@ -232,12 +232,13 @@ max-line-length = 120
 # https://docs.pytest.org/en/latest/reference/reference.html#command-line-flags
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "--verbose --doctest-modules -ra --cov macaron"  # Consider adding --pdb
+addopts = """-vv -ra --tb native \
+    --doctest-modules --doctest-continue-on-failure --doctest-glob '*.rst' \
+    --cov macaron \
+"""  # Consider adding --pdb
+# https://docs.python.org/3/library/doctest.html#option-flags
 doctest_optionflags = "IGNORE_EXCEPTION_DETAIL"
-testpaths = [
-    "src/macaron",  # this is included to run doctest on examples
-    "tests",
-]
+
 env = [
     "PYTHONWARNINGS=always::DeprecationWarning",
 ]
