@@ -165,7 +165,24 @@ This repository is set up to test either standalone or as a pre-push git hook. T
 ```bash
 make test
 ```
-which runs all unit tests in both your local environment. Test code and branch coverage is already tracked using [coverage](https://github.com/nedbat/coveragepy) and the [pytest-cov](https://github.com/pytest-dev/pytest-cov) plugin for pytest, and it measures how much code in the `src/package/` folder is covered by tests.
+which runs all unit tests in your local environment. You can also add tests to the docstrings in the Python source files or documentation `.rst` files, which will be picked up by pytest from `src/` and `docs/` directories. Here is an example:
+
+```python
+def do_something(value: bool = False) -> bool:
+    """Return true, always.
+
+    Test this function by adding the following code to the docstring:
+    .. code: pycon
+
+        >>> s = Something()
+        >>> s.do_something(False)
+        True
+        >>> s.do_something(value=True)
+        True
+    """
+```
+
+Test code and branch coverage is already tracked using [coverage](https://github.com/nedbat/coveragepy) and the [pytest-cov](https://github.com/pytest-dev/pytest-cov) plugin for pytest, and it measures how much code in the `src/macaron/` folder is covered by tests.
 
 You can also run integration tests locally:
 ```bash
