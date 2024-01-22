@@ -9,8 +9,7 @@
 import datetime
 import os
 import sys
-
-import pkg_resources
+from importlib import metadata as importlib_metadata
 
 # Path to source.
 sys.path.insert(0, os.path.abspath("../../src"))
@@ -22,7 +21,7 @@ year = datetime.datetime.now().year
 
 project = "Macaron"
 copyright = f"{year}, Oracle and/or its affiliates. " + "All rights reserved"  # noqa: A001
-version = pkg_resources.get_distribution("macaron").version
+version = importlib_metadata.version("macaron")
 html_logo = "assets/macaron.svg"
 author = "Macaron"
 
