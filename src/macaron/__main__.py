@@ -187,6 +187,9 @@ def perform_action(action_args: argparse.Namespace) -> None:
             sys.exit(verify_policy(action_args))
 
         case "analyze":
+            if not global_config.gh_token:
+                logger.error("GitHub access token not set.")
+                sys.exit(os.EX_USAGE)
             # TODO: Here we should try to statically analyze the config before
             # actually running the analysis.
             try:
@@ -235,10 +238,8 @@ def main(argv: list[str] | None = None) -> None:
     else:
         # If there is no token file, try to read from environment variables instead.
         gh_token = os.environ.get("GITHUB_TOKEN")
-        if not gh_token:
-            logger.error("GitHub access token not set.")
-            sys.exit(os.EX_USAGE)
-        global_config.gh_token = gh_token
+        if gh_token:
+            global_config.gh_token = gh_token
         gl_token = os.environ.get("MCN_GITLAB_TOKEN")
         if gl_token:
             global_config.gl_token = gl_token
