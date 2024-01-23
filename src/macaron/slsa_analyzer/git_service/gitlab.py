@@ -19,7 +19,6 @@ is in the ``[git_service.gitlab.self_hosted]`` section.
 """
 
 import logging
-import os
 from abc import abstractmethod
 from collections.abc import Callable
 from urllib.parse import ParseResult, urlunparse
@@ -38,10 +37,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 class GitLab(BaseGitService):
     """This class contains the spec of the GitLab service."""
 
-    def __init__(self, access_token_env_name: str, token_function: Callable[[], str]) -> None:
+    def __init__(self, token_function: Callable[[], str]) -> None:
         """Initialize instance."""
         super().__init__("gitlab")
-        self.access_token_env_name = access_token_env_name
         self.token_function = token_function
 
     @abstractmethod
@@ -85,8 +83,6 @@ class GitLab(BaseGitService):
         # Construct clone URL from ``urlparse`` result, with or without an access token.
         # https://docs.gitlab.com/ee/gitlab-basics/start-using-git.html#clone-using-a-token
         access_token: str | None = self.token_function()
-        if not access_token:
-            access_token = os.environ.get(self.access_token_env_name)
         if access_token:
             clone_url_netloc = f"oauth2:{access_token}@{self.hostname}"
         else:
@@ -232,7 +228,7 @@ class SelfHostedGitLab(GitLab):
 
     def __init__(self) -> None:
         """Initialize instance."""
-        super().__init__("MCN_SELF_HOSTED_GITLAB_TOKEN", lambda: global_config.gl_self_host_token)
+        super().__init__(lambda: global_config.gl_self_host_token)
 
     def load_defaults(self) -> None:
         """Load the values for this git service from the ini configuration and environment variables.
@@ -253,9 +249,9 @@ class SelfHostedGitLab(GitLab):
         if not self.hostname:
             return
 
-        if not (os.environ.get(self.access_token_env_name) or self.token_function()):
+        if not self.token_function():
             raise ConfigurationError(
-                f"Environment variable '{self.access_token_env_name}' is not set "
+                f"Environment variable for '{self.__class__}' is not set "
                 + f"for private GitLab service '{self.hostname}'."
             )
 
@@ -265,7 +261,7 @@ class PubliclyHostedGitLab(GitLab):
 
     def __init__(self) -> None:
         """Initialize instance."""
-        super().__init__("MCN_GITLAB_TOKEN", lambda: global_config.gl_token)
+        super().__init__(lambda: global_config.gl_token)
 
     def load_defaults(self) -> None:
         """Load the values for this git service from the ini configuration and environment variables.

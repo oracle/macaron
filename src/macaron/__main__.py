@@ -187,14 +187,6 @@ def perform_action(action_args: argparse.Namespace) -> None:
             sys.exit(verify_policy(action_args))
 
         case "analyze":
-            # If the GitHub token has not already been read, try to read it here.
-            if not global_config.gh_token:
-                gh_token = os.environ.get("GITHUB_TOKEN")
-                if not gh_token:
-                    logger.error("GitHub access token not set.")
-                    sys.exit(os.EX_USAGE)
-                global_config.gh_token = gh_token
-
             # TODO: Here we should try to statically analyze the config before
             # actually running the analysis.
             try:
@@ -227,10 +219,9 @@ def main(argv: list[str] | None = None) -> None:
     if os.path.exists(token_file):
         with open(token_file, encoding="utf-8") as file:
             for line in file:
-                print(f"Line: {line}")
                 if not line or "=" not in line:
                     continue
-                key, value = line.rstrip().split("=")
+                key, value = line.rstrip().split("=", 1)
                 if key and value:
                     if key == "GITHUB_TOKEN":
                         global_config.gh_token = value
@@ -240,7 +231,20 @@ def main(argv: list[str] | None = None) -> None:
                         global_config.gl_self_host_token = value
         # Overwrite file contents as deleting won't work when in a container.
         with open(token_file, "w", encoding="utf-8") as file:
-            file.write("")
+            pass
+    else:
+        # If there is no token file, try to read from environment variables instead.
+        gh_token = os.environ.get("GITHUB_TOKEN")
+        if not gh_token:
+            logger.error("GitHub access token not set.")
+            sys.exit(os.EX_USAGE)
+        global_config.gh_token = gh_token
+        gl_token = os.environ.get("MCN_GITLAB_TOKEN")
+        if gl_token:
+            global_config.gl_token = gl_token
+        gl_self_host_token = os.environ.get("MCN_SELF_HOSTED_GITLAB_TOKEN")
+        if gl_self_host_token:
+            global_config.gl_self_host_token = gl_self_host_token
 
     main_parser = argparse.ArgumentParser(prog="macaron")
 
