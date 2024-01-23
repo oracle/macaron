@@ -217,35 +217,25 @@ def main(argv: list[str] | None = None) -> None:
         If ``argv`` is ``None``, argparse automatically looks at ``sys.argv``.
         Hence, we set ``argv = None`` by default.
     """
-    # Handle presence of tokens.
+    # Handle presence of token file.
     token_file = "./.macaron_env_file"  # nosec B105
+    token_dict = {}
     if os.path.exists(token_file):
+        # Read values into dictionary.
         with open(token_file, encoding="utf-8") as file:
             for line in file:
                 if not line or "=" not in line:
                     continue
                 key, value = line.rstrip().split("=", 1)
-                if key and value:
-                    if key == "GITHUB_TOKEN":
-                        global_config.gh_token = value
-                    if key == "MCN_GITLAB_TOKEN":
-                        global_config.gl_token = value
-                    if key == "MCN_SELF_HOSTED_GITLAB_TOKEN":
-                        global_config.gl_self_host_token = value
-        # Overwrite file contents as deleting won't work when in a container.
-        with open(token_file, "w", encoding="utf-8") as file:
+                token_dict[key] = value
+        # Overwrite file contents.
+        with open(token_file, "w", encoding="utf-8"):
             pass
-    else:
-        # If there is no token file, try to read from environment variables instead.
-        gh_token = os.environ.get("GITHUB_TOKEN")
-        if gh_token:
-            global_config.gh_token = gh_token
-        gl_token = os.environ.get("MCN_GITLAB_TOKEN")
-        if gl_token:
-            global_config.gl_token = gl_token
-        gl_self_host_token = os.environ.get("MCN_SELF_HOSTED_GITLAB_TOKEN")
-        if gl_self_host_token:
-            global_config.gl_self_host_token = gl_self_host_token
+
+    # Check presence of tokens in dictionary or environment, preferring the former.
+    global_config.gh_token = _get_token_from_dict_or_env("GITHUB_TOKEN", token_dict)
+    global_config.gl_token = _get_token_from_dict_or_env("MCN_GITLAB_TOKEN", token_dict)
+    global_config.gl_self_host_token = _get_token_from_dict_or_env("MCN_SELF_HOSTED_GITLAB_TOKEN", token_dict)
 
     main_parser = argparse.ArgumentParser(prog="macaron")
 
@@ -459,6 +449,11 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(os.EX_NOINPUT)
 
     perform_action(args)
+
+
+def _get_token_from_dict_or_env(token: str, token_dict: dict[str, str]) -> str:
+    """Return the value of passed token from passed dictionary or os environment."""
+    return token_dict[token] if token in token_dict else os.environ.get(token) or ""
 
 
 if __name__ == "__main__":
