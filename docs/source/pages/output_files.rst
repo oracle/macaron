@@ -68,7 +68,7 @@ The report files will be stored into:
 
 .. code-block::
 
-  <path_to_ouput>/reports/github_com/micronaut-projects/micronaut-core
+  <path_to_output>/reports/github_com/micronaut-projects/micronaut-core
 
 .. note:: In the unique path, only ASCII letters, digits and ``-`` are allowed. Prohibited characters are changed into
   ``_``. No changes to the letter case are made.

@@ -16,7 +16,7 @@ ENV HOME="/home/macaron"
 
 ENV PACKAGE_PATH=$HOME/.venv/lib/python3.11/site-packages/macaron
 
-# Create the macaron user and group with abritary UID and GID.
+# Create the macaron user and group with arbitrary UID and GID.
 # The macaron GID and UID in this image will be modified by the
 # user.sh script on startup to get the UID and GID of the user who started
 # the Docker container.

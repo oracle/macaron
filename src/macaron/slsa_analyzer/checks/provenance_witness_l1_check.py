@@ -82,7 +82,7 @@ def verify_artifact_assets(
 
 
 class ProvenanceWitnessL1Table(CheckFacts, ORMBase):
-    """Result table for provenenance l3 check."""
+    """Result table for provenance l3 check."""
 
     __tablename__ = "_provenance_witness_l1_check"
 

@@ -97,7 +97,7 @@ jobs:
       contents: read
       packages: read
 
-  # Create a new Release on Github from the verified build artifacts, and optionally
+  # Create a new Release on GitHub from the verified build artifacts, and optionally
   # publish the artifacts to a PyPI server.
   release:
     needs: [build]
@@ -284,7 +284,7 @@ jobs:
   # provenance-docker:
   #   needs: [release]
   #   permissions:
-  #     actions: read # To detect the Github Actions environment.
+  #     actions: read # To detect the GitHub Actions environment.
   #     id-token: write # To create OIDC tokens for signing.
   #     packages: write # To upload provenance.
   #   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.6.0

@@ -338,7 +338,7 @@ class Registry:
         ----------
         target : AnalyzeContext
             The object containing processed data for the target repo.
-        skipped_checks : list[SkippedInfor]
+        skipped_checks : list[SkippedInfo]
             The list of skipped checks information.
 
         Returns

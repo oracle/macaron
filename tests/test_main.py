@@ -26,7 +26,7 @@ def test_version(capsys: pytest.CaptureFixture, flag: str) -> None:
         main([flag])
     out, err = capsys.readouterr()
 
-    # Test that we are indeed outputing Macaron version.
+    # Test that we are indeed outputting Macaron version.
     assert out == f"macaron {importlib_metadata.version('macaron')}\n"
     assert err == ""
     assert exc_info.value.code == 0

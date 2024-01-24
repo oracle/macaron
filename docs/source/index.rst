@@ -93,7 +93,7 @@ How does Macaron work?
    :alt: Macaron infrastructure
    :align: center
 
-   Macaron's infrastucture
+   Macaron's infrastructure
 
 Macaron is designed based on a Zero Trust model. It analyzes a target repository as an external
 tool and requires minimal configurations. After cloning a repository, Macaron parses the CI

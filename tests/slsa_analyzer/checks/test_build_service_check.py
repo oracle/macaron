@@ -179,7 +179,7 @@ class TestBuildServiceCheck(MacaronTestCase):
         # Use pip as a module in CI with invalid goal to build the artifact.
         no_pip_interpreter_build_ci = MockAnalyzeContext(macaron_path=MacaronTestCase.macaron_path, output_dir="")
         no_pip_interpreter_build_ci.dynamic_data["build_spec"]["tools"] = [pip]
-        bash_commands["commands"] = [["python", "-m", "pip", "installl"]]
+        bash_commands["commands"] = [["python", "-m", "pip", "install-"]]
         no_pip_interpreter_build_ci.dynamic_data["ci_services"] = [ci_info]
         assert check.run_check(no_pip_interpreter_build_ci).result_type == CheckResultType.FAILED
 

@@ -21,7 +21,7 @@
 
 - resolve podman compatibility issues (#512)
 - do not use git set-branches if the target branch is not currently available in the repository (#491)
-- fix bash syntax error when running `run_macaron.sh` on MacOS (#528)
+- fix bash syntax error when running `run_macaron.sh` on macOS (#528)
 
 ### Refactor
 

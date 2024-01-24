@@ -467,7 +467,7 @@ HTML_EXPECTED=$WORKSPACE/output/reports/local_repos/maven/maven.html
 
 $RUN_MACARON -lr $WORKSPACE/output/git_repos/local_repos/ analyze -rp test_repo -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
 
-# We don't compare the report content because the remote_path fields in the reports are undeterministic when running
+# We don't compare the report content because the remote_path fields in the reports are nondeterministic when running
 # this test locally and running it in the GitHub Actions runner. We only check if the reports are generated as
 # expected without the issue described in https://github.com/oracle/macaron/issues/116.
 ls $JSON_EXPECTED || log_fail

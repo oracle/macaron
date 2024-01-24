@@ -148,7 +148,7 @@ class _GhAPIEndPoint(Enum):
 
 
 class GhAPIClient(BaseAPIClient):
-    """This class acts as a client to use Github API.
+    """This class acts as a client to use GitHub API.
 
     See https://docs.github.com/en/rest for the GitHub API documentation.
     """

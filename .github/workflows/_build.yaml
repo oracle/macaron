@@ -91,7 +91,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
 
     # Generate the requirements.txt that contains the hash digests of the dependencies and
-    # generate the SBOM using CyclonDX SBOM generator.
+    # generate the SBOM using CycloneDX SBOM generator.
     - name: Generate requirements.txt and SBOM
       if: matrix.os == env.ARTIFACT_OS && matrix.python == env.ARTIFACT_PYTHON
       run: make requirements sbom

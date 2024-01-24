@@ -45,7 +45,7 @@ def test_error() -> None:
     raise ValueError()
 
 
-def test_consecuitve() -> None:
+def test_consecutive() -> None:
     """
     Test running different programs in the same context.
 
