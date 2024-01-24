@@ -226,7 +226,7 @@ def test_gha_workflow_deployment(
 
     workflows_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "github", "workflow_files")
 
-    # This Github Actions workflow uses gh-action-pypi-publish to publish the artifact.
+    # This GitHub Actions workflow uses gh-action-pypi-publish to publish the artifact.
     gha_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     gha_deploy.dynamic_data["build_spec"]["tools"] = [pip_tool]
     gha_deploy.dynamic_data["ci_services"] = [ci_info]
@@ -247,7 +247,7 @@ def test_gha_workflow_deployment(
     ci_info["callgraph"] = gh_cg
     assert check.run_check(gha_deploy).result_type == CheckResultType.PASSED
 
-    # This Github Actions workflow is not using a trusted action to publish the artifact.
+    # This GitHub Actions workflow is not using a trusted action to publish the artifact.
     root = GitHubNode(name="root", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
     gh_cg = CallGraph(root, "")
     workflow_path = os.path.join(workflows_dir, "pypi_publish_blah.yaml")

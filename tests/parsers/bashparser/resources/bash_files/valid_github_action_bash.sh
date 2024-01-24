@@ -4,7 +4,7 @@
 # This is a valid GitHub Actions expression.
 echo "hash=${{ steps.compute-hash.outputs.hash }}" >> "$GITHUB_OUTPUT"
 
-# These maynot be valid GitHub Actions expressions but we want to make
+# These may not be valid GitHub Actions expressions but we want to make
 # sure we can handle such cases using greedy regex matching.
 echo "hash=${{ ${{ FOO }} }}"
 echo "hash=${{ ${ FOO } }}"

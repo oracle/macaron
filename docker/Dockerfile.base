@@ -56,7 +56,7 @@ enabled=1\
         # Exception: netbase (We couldn't find an equivalent in Oracle Linux).
         tzdata          \
         ca-certificates \
-        # git and finutils are needed for running and building Macaron.
+        # git and findutils are needed for running and building Macaron.
         git             \
         findutils       \
         # Runtime libraries for Souffle. These are based on
@@ -205,7 +205,7 @@ enabled=1\
     && souffle --version \
 # ---------------------------------------------------------------------------------------------------------------------
     # CLEANING UP.
-    # We mark all unecessary packages to be removed while preserving the user installed packages.
+    # We mark all unnecessary packages to be removed while preserving the user installed packages.
     && dnf list installed | tail -n +2 | cut -d' ' -f1 | xargs -r dnf mark remove > /dev/null \
     && [ -z "$USER_MANUAL_INSTALLED" ] || dnf mark install $USER_MANUAL_INSTALLED \
     # Look for share libraries that are used by looking through the executables in /usr/local to preserve them.

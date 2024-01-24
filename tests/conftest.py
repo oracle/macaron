@@ -344,7 +344,7 @@ def circle_ci_service(setup_test):  # type: ignore # pylint: disable=unused-argu
 
 @pytest.fixture()
 def gitlab_ci_service(setup_test):  # type: ignore # pylint: disable=unused-argument
-    """Create a GitlabCI service instance.
+    """Create a GitLabCI service instance.
 
     Parameters
     ----------
@@ -353,8 +353,8 @@ def gitlab_ci_service(setup_test):  # type: ignore # pylint: disable=unused-argu
 
     Returns
     -------
-    GitlabCI
-        The GitlabCI instance.
+    GitLabCI
+        The GitLabCI instance.
     """
     gitlab_ci = GitLabCI()
     gitlab_ci.load_defaults()

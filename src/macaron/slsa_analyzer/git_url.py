@@ -117,7 +117,7 @@ def check_out_repo_target(
 ) -> bool:
     """Checkout the branch and commit specified by the user.
 
-    This fucntion assumes that a remote "origin" exist and checkout from that remote ONLY.
+    This function assumes that a remote "origin" exist and checkout from that remote ONLY.
 
     If ``offline_mode`` is False, this function will fetch new changes from origin remote. The fetching operation
     will prune and update all references (e.g. tags, branches) to make sure that the local repository is up-to-date
@@ -132,7 +132,7 @@ def check_out_repo_target(
     If ``branch_name`` is not provided and a commit is provided, this function will checkout the commit directly.
 
     If both ``branch_name`` and a commit are provided, this function will checkout the commit directly only if that
-    commit exists in the branch origin/<branch_name>. If not, this fucntion will return False.
+    commit exists in the branch origin/<branch_name>. If not, this function will return False.
 
     For all scenarios:
     - If the checkout fails (e.g. a branch or a commit doesn't exist), this function will return

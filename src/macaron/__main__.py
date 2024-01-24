@@ -109,7 +109,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         # of the Configuration class, but if `` analyzer_single_args.package_url`` is None, the ``purl`` field is set
         # to None in the Configuration instance.
         # This inconsistency could cause potential issues when Macaron handles those inputs.
-        # TODO: improve the implementation of ``Configuation`` class to avoid such inconsistencies.
+        # TODO: improve the implementation of ``Configuration`` class to avoid such inconsistencies.
         run_config = {
             "target": {
                 "id": purl or repo_path or "",

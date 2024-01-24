@@ -18,12 +18,12 @@ Analyzing a source code repository
 ----------------------------------
 
 ''''''''''''''''''''''''''''''''''''
-Analyzing a public Github repository
+Analyzing a public GitHub repository
 ''''''''''''''''''''''''''''''''''''
 
-Macaron can analyze a Github public repository (and potentially the repositories of it dependencies) to determine its SLSA posture following the specification of `SLSA v0.1 <https://slsa.dev/spec/v0.1/>`_.
+Macaron can analyze a GitHub public repository (and potentially the repositories of it dependencies) to determine its SLSA posture following the specification of `SLSA v0.1 <https://slsa.dev/spec/v0.1/>`_.
 
-To run Macaron on a Github public repository, we use the following command:
+To run Macaron on a GitHub public repository, we use the following command:
 
 .. code-block:: shell
 
@@ -102,7 +102,7 @@ To simplify the examples, we use the same configurations as above if needed (e.g
 
   pkg:<git_service_hostname>/<organization>/<name>
 
-The list bellow shows examples for the corresponding PURL strings for different git repositories:
+The list below shows examples for the corresponding PURL strings for different git repositories:
 
 .. list-table:: Examples of PURL strings for git repositories.
    :widths: 50 50
@@ -332,7 +332,7 @@ Macaron's policy engine accepts policies specified in `Datalog <https://en.wikip
 can verify if a project and all its dependencies pass certain checks. We use `Soufflé <https://souffle-lang.github.io/index.html>`_
 as the Datalog engine in Macaron. Once you run the checks on a target project as described :ref:`here <analyze-command>`,
 the check results will be stored in ``macaron.db`` in the output directory. We pass the check results to the policy engine by providing the path to ``macaron.db`` together with a Datalog policy file to be validated by the policy engine.
-In the Datalog policy file, we must specify the identifier for the target software component that we are interested in to validate the policy against. These are two ways to specify the target software component in the Datalog policy file:
+In the Datalog policy file, we must specify the identifier for the target software component that interests us to validate the policy against. These are two ways to specify the target software component in the Datalog policy file:
 
 #. Using the complete name of the target component (e.g. ``github.com/oracle-quickstart/oci-micronaut``)
 #. Using the PURL string of the target component (e.g. ``pkg:github.com/oracle-quickstart/oci-micronaut@<commit_sha>``).

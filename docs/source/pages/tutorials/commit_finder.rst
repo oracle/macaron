@@ -52,7 +52,7 @@ To perform an analysis on Arrow, Macaron can be run with the following command:
 
     ./run_macaron.sh analyze -rp https://github.com/arrow-py/arrow --skip-deps
 
-However, this will return results based only on the current state of the repository, which as described above, is not what we want to achieve in this tutorial. To perform analyses on other repository states, we need to provide Macaron with the target artifact versions in the form of `PURLs <https://github.com/package-url/purl-spec>`_, or Package URLs, which is a convenient way to encodify packages from different ecosystems into the same format.
+However, this will return results based only on the current state of the repository, which as described above, is not what we want to achieve in this tutorial. To perform analyses on other repository states, we need to provide Macaron with the target artifact versions in the form of `PURLs <https://github.com/package-url/purl-spec>`_, or Package URLs, which is a convenient way to encode packages from different ecosystems into the same format.
 
 In our case we are looking at a Python package, so our PURL must reflect that. For versions we will analyze ``1.3.0`` and ``0.15.0``, giving us the following PURLs:
 

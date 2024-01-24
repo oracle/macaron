@@ -19,7 +19,7 @@ other configured location).
 For Python, .NET, Rust, and NodeJS type PURLs, Google's Open Source Insights API is used to find the meta data.
 
 In either case, any repository links are extracted from the meta data, then checked for validity via
-``repo_validator::find_valid_repository_url`` which accepts URLs that point to a Github repository or similar.
+``repo_validator::find_valid_repository_url`` which accepts URLs that point to a GitHub repository or similar.
 
 Repository PURLs
 ----------------

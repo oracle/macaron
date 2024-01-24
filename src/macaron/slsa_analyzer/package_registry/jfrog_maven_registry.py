@@ -560,7 +560,7 @@ class JFrogMavenRegistry(PackageRegistry):
         Parameters
         ----------
         folder_info_payload : JsonType
-            The JSON payload of a Folder Info reponse.
+            The JSON payload of a Folder Info response.
         extensions : set[str] | None
             The set of allowed extensions.
             Filenames not ending in these extensions are omitted from the result.

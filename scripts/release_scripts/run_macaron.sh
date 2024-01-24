@@ -23,7 +23,7 @@
 set -euo pipefail
 
 # The `extglob` shopt option is required for the `@(...)` pattern matching syntax.
-# This option is not enabled by default for bash on some systems, most notably MacOS
+# This option is not enabled by default for bash on some systems, most notably macOS
 # where the default bash version is very old.
 # Reference: https://www.gnu.org/software/bash/manual/html_node/The-Shopt-Builtin.html
 shopt -s extglob
