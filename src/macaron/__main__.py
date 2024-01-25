@@ -217,20 +217,30 @@ def main(argv: list[str] | None = None) -> None:
         If ``argv`` is ``None``, argparse automatically looks at ``sys.argv``.
         Hence, we set ``argv = None`` by default.
     """
-    # Handle presence of token file.
-    token_file = "./.macaron_env_file"  # nosec B105
+    # Handle presence of token file. When running Macaron as a container, this file is created by the "run_macaron.sh"
+    # script and populated there. If Macaron is being run outside of a container, the token file should not exist, and
+    # tokens should be read directly from the environment instead.
+    token_file = os.path.join(os.getcwd(), ".macaron_env_file")
     token_dict = {}
     if os.path.exists(token_file):
         # Read values into dictionary.
-        with open(token_file, encoding="utf-8") as file:
-            for line in file:
-                if not line or "=" not in line:
-                    continue
-                key, value = line.rstrip().split("=", 1)
-                token_dict[key] = value
+        try:
+            with open(token_file, encoding="utf-8") as file:
+                for line in file:
+                    if not line or "=" not in line:
+                        continue
+                    key, value = line.rstrip().split("=", 1)
+                    token_dict[key] = value
+        except OSError as error:
+            logger.error("Could not open token file %s: %s", token_file, error)
+            sys.exit(1)
         # Overwrite file contents.
-        with open(token_file, "w", encoding="utf-8"):
-            pass
+        try:
+            with open(token_file, "w", encoding="utf-8"):
+                pass
+        except OSError as error:
+            logger.error("Could not overwrite token file %s: %s", token_file, error)
+            sys.exit(1)
 
     # Check presence of tokens in dictionary or environment, preferring the former.
     global_config.gh_token = _get_token_from_dict_or_env("GITHUB_TOKEN", token_dict)

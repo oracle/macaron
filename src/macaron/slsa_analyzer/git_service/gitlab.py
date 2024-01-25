@@ -38,7 +38,13 @@ class GitLab(BaseGitService):
     """This class contains the spec of the GitLab service."""
 
     def __init__(self, token_function: Callable[[], str]) -> None:
-        """Initialize instance."""
+        """Initialize instance.
+
+        Parameters
+        ----------
+        token_function: Callable[[], str]
+            A function that returns a token when called.
+        """
         super().__init__("gitlab")
         self.token_function = token_function
 
@@ -251,8 +257,7 @@ class SelfHostedGitLab(GitLab):
 
         if not self.token_function():
             raise ConfigurationError(
-                f"Environment variable for '{self.__class__}' is not set "
-                + f"for private GitLab service '{self.hostname}'."
+                f"Environment variable for self-hosted GitLab service '{self.hostname}' is not set."
             )
 
 

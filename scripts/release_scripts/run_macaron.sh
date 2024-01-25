@@ -48,6 +48,7 @@ if [[ -z ${MACARON_IMAGE_TAG:-} ]]; then
     MACARON_IMAGE_TAG="latest"
 fi
 
+# This file is used to store token environment variables that will later be read by Macaron.
 TOKEN_FILE=".macaron_env_file"
 
 IMAGE="ghcr.io/oracle/macaron"
@@ -558,3 +559,5 @@ docker run \
     "${IMAGE}:${MACARON_IMAGE_TAG}" \
     "${entrypoint[@]}" \
     "${macaron_args[@]}"
+
+rm -f "$TOKEN_FILE"
