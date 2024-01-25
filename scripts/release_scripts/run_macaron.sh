@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This script runs the Macaron Docker image.
@@ -47,6 +47,9 @@ fi
 if [[ -z ${MACARON_IMAGE_TAG:-} ]]; then
     MACARON_IMAGE_TAG="latest"
 fi
+
+# This file is used to store token environment variables that will later be read by Macaron.
+TOKEN_FILE=".macaron_env_file"
 
 IMAGE="ghcr.io/oracle/macaron"
 
@@ -254,6 +257,17 @@ function mount_file() {
     file_on_host=$(to_absolute_path "$file_on_host")
     mounts+=("-v" "${file_on_host}:${file_in_container}:${mount_option}")
 }
+
+# Handle tokens.
+set +u
+echo "" > ${TOKEN_FILE}
+{
+    echo "GITHUB_TOKEN=${GITHUB_TOKEN}" >> ${TOKEN_FILE}
+    echo "MCN_GITLAB_TOKEN=${MCN_GITLAB_TOKEN}" >> ${TOKEN_FILE}
+    echo "MCN_SELF_HOSTED_GITLAB_TOKEN=${MCN_SELF_HOSTED_GITLAB_TOKEN}"
+} >> ${TOKEN_FILE}
+mount_file "macaron_env_file" ${TOKEN_FILE} ${MACARON_WORKSPACE}/${TOKEN_FILE} "rw,Z"
+set -u
 
 # Parse main arguments.
 while [[ $# -gt 0 ]]; do
@@ -541,12 +555,11 @@ docker run \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" \
     -e "USER_GID=${USER_GID}" \
-    -e GITHUB_TOKEN \
-    -e MCN_GITLAB_TOKEN \
-    -e MCN_SELF_HOSTED_GITLAB_TOKEN \
     "${proxy_vars[@]}" \
     "${prod_vars[@]}" \
     "${mounts[@]}" \
     "${IMAGE}:${MACARON_IMAGE_TAG}" \
     "${entrypoint[@]}" \
     "${macaron_args[@]}"
+
+rm -f "$TOKEN_FILE"

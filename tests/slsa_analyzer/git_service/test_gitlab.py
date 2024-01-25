@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for the GitLab git service."""
@@ -26,10 +26,11 @@ from tests.slsa_analyzer.mock_git_utils import commit_files, initiate_repo
 )
 def test_construct_clone_url_without_token(repo_url: str) -> None:
     """Test if the ``construct_clone_url`` method produces proper clone URLs without the access token."""
-    clone_url = repo_url
-    gitlab = PubliclyHostedGitLab()
-    gitlab.load_defaults()
-    assert gitlab.construct_clone_url(repo_url) == clone_url
+    with mock.patch("macaron.config.global_config.global_config.gl_token", ""):
+        clone_url = repo_url
+        gitlab = PubliclyHostedGitLab()
+        gitlab.load_defaults()
+        assert gitlab.construct_clone_url(repo_url) == clone_url
 
 
 @pytest.mark.parametrize(
@@ -47,7 +48,7 @@ def test_construct_clone_url_without_token(repo_url: str) -> None:
 )
 def test_construct_clone_url_with_token(repo_url: str, clone_url: str) -> None:
     """Test if the ``construct_clone_url`` method produces proper clone URLs with the access token."""
-    with mock.patch.dict(os.environ, {"MCN_GITLAB_TOKEN": "abcxyz"}):
+    with mock.patch("macaron.config.global_config.global_config.gl_token", "abcxyz"):
         gitlab = PubliclyHostedGitLab()
         gitlab.load_defaults()
         assert gitlab.construct_clone_url(repo_url) == clone_url
@@ -88,7 +89,7 @@ def test_construct_clone_url_for_self_hosted_gitlab(
     # ``setup_test`` fixture.
     load_defaults(user_config_path)
 
-    with mock.patch.dict(os.environ, {"MCN_SELF_HOSTED_GITLAB_TOKEN": "abcxyz"}):
+    with mock.patch("macaron.config.global_config.global_config.gl_self_host_token", "abcxyz"):
         gitlab = SelfHostedGitLab()
         gitlab.load_defaults()
         assert gitlab.construct_clone_url(repo_url) == clone_url
@@ -108,8 +109,7 @@ def test_self_hosted_gitlab_without_env_set(tmp_path: Path) -> None:
     # pollution here, since we reload the ``defaults`` object before every test with the
     # ``setup_test`` fixture.
     load_defaults(user_config_path)
-
-    with mock.patch.dict(os.environ, {"MCN_SELF_HOSTED_GITLAB_TOKEN": ""}):
+    with mock.patch("macaron.config.global_config.global_config.gl_self_host_token", ""):
         gitlab = SelfHostedGitLab()
 
         with pytest.raises(ConfigurationError):
@@ -189,7 +189,7 @@ def test_origin_remote_url_masking(self_hosted_gitlab: Git, expected_origin_url:
     # ``setup_test`` fixture.
     load_defaults(user_config_path)
 
-    with mock.patch.dict(os.environ, {"MCN_SELF_HOSTED_GITLAB_TOKEN": "abcxyz"}):
+    with mock.patch("macaron.config.global_config.global_config.gl_self_host_token", "abcxyz"):
         gitlab = SelfHostedGitLab()
         gitlab.load_defaults()
 
