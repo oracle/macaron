@@ -233,14 +233,14 @@ def main(argv: list[str] | None = None) -> None:
                     token_dict[key] = value
         except OSError as error:
             logger.error("Could not open token file %s: %s", token_file, error)
-            sys.exit(1)
+            sys.exit(os.EX_OSFILE)
         # Overwrite file contents.
         try:
             with open(token_file, "w", encoding="utf-8"):
                 pass
         except OSError as error:
             logger.error("Could not overwrite token file %s: %s", token_file, error)
-            sys.exit(1)
+            sys.exit(os.EX_OSFILE)
 
     # Check presence of tokens in dictionary or environment, preferring the former.
     global_config.gh_token = _get_token_from_dict_or_env("GITHUB_TOKEN", token_dict)
