@@ -187,13 +187,9 @@ def perform_action(action_args: argparse.Namespace) -> None:
             sys.exit(verify_policy(action_args))
 
         case "analyze":
-            # Check that the GitHub token is enabled.
-            gh_token = os.environ.get("GITHUB_TOKEN")
-            if not gh_token:
+            if not global_config.gh_token:
                 logger.error("GitHub access token not set.")
                 sys.exit(os.EX_USAGE)
-            global_config.gh_token = gh_token
-
             # TODO: Here we should try to statically analyze the config before
             # actually running the analysis.
             try:
@@ -221,6 +217,36 @@ def main(argv: list[str] | None = None) -> None:
         If ``argv`` is ``None``, argparse automatically looks at ``sys.argv``.
         Hence, we set ``argv = None`` by default.
     """
+    # Handle presence of token file. When running Macaron as a container, this file is created by the "run_macaron.sh"
+    # script and populated there. If Macaron is being run outside of a container, the token file should not exist, and
+    # tokens should be read directly from the environment instead.
+    token_file = os.path.join(os.getcwd(), ".macaron_env_file")
+    token_dict = {}
+    if os.path.exists(token_file):
+        # Read values into dictionary.
+        try:
+            with open(token_file, encoding="utf-8") as file:
+                for line in file:
+                    if not line or "=" not in line:
+                        continue
+                    key, value = line.rstrip().split("=", 1)
+                    token_dict[key] = value
+        except OSError as error:
+            logger.error("Could not open token file %s: %s", token_file, error)
+            sys.exit(os.EX_OSFILE)
+        # Overwrite file contents.
+        try:
+            with open(token_file, "w", encoding="utf-8"):
+                pass
+        except OSError as error:
+            logger.error("Could not overwrite token file %s: %s", token_file, error)
+            sys.exit(os.EX_OSFILE)
+
+    # Check presence of tokens in dictionary or environment, preferring the former.
+    global_config.gh_token = _get_token_from_dict_or_env("GITHUB_TOKEN", token_dict)
+    global_config.gl_token = _get_token_from_dict_or_env("MCN_GITLAB_TOKEN", token_dict)
+    global_config.gl_self_host_token = _get_token_from_dict_or_env("MCN_SELF_HOSTED_GITLAB_TOKEN", token_dict)
+
     main_parser = argparse.ArgumentParser(prog="macaron")
 
     main_parser.add_argument(
@@ -433,6 +459,11 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(os.EX_NOINPUT)
 
     perform_action(args)
+
+
+def _get_token_from_dict_or_env(token: str, token_dict: dict[str, str]) -> str:
+    """Return the value of passed token from passed dictionary or os environment."""
+    return token_dict[token] if token in token_dict else os.environ.get(token) or ""
 
 
 if __name__ == "__main__":
