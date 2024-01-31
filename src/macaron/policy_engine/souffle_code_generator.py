@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Generate souffle datalog for policy prelude."""
@@ -6,7 +6,7 @@
 import logging
 import os
 
-from sqlalchemy import Column, MetaData, Table
+from sqlalchemy import Column, Float, MetaData, Table
 from sqlalchemy.sql.sqltypes import Boolean, Integer, String, Text
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -80,6 +80,8 @@ def column_to_souffle_type(column: Column) -> str:
     if isinstance(sql_type, String) or column.nullable:
         souffle_type = "symbol"
     elif isinstance(sql_type, Integer):
+        souffle_type = "number"
+    elif isinstance(sql_type, Float):
         souffle_type = "number"
     elif isinstance(sql_type, Text):
         souffle_type = "symbol"

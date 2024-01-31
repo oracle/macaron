@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildServiceCheck class."""
@@ -15,7 +15,7 @@ from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
@@ -38,19 +38,19 @@ class BuildServiceFacts(CheckFacts):
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
     #: The name of the tool used to build.
-    build_tool_name: Mapped[str] = mapped_column(String, nullable=False)
+    build_tool_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     #: The CI service name used to build.
-    ci_service_name: Mapped[str] = mapped_column(String, nullable=False)
+    ci_service_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     #: The entrypoint script that triggers the build.
-    build_trigger: Mapped[str] = mapped_column(String, nullable=True)
+    build_trigger: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
     #: The command used to build.
-    build_command: Mapped[str] = mapped_column(String, nullable=True)
+    build_command: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
 
     #: The run status of the CI service for this build.
-    build_status_url: Mapped[str] = mapped_column(String, nullable=True)
+    build_status_url: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
     __mapper_args__ = {
         "polymorphic_identity": "_build_service_check",
@@ -123,8 +123,7 @@ class BuildServiceCheck(BaseCheck):
         build_tool: BaseBuildTool,
         ctx: AnalyzeContext,
         ci_services: list[CIInfo],
-        justification: Justification,
-        result_tables: ResultTables,
+        result_tables: list[CheckFacts],
     ) -> CheckResultType:
         """
         Check that a single build tool has a build service associated to it.
@@ -137,8 +136,6 @@ class BuildServiceCheck(BaseCheck):
             The object containing processed data for the target repo.
         ci_services: list[CIInfo]
             List of objects containing information on present CI services.
-        justification: Justification
-            List of justifications to add to.
         result_tables: ResultTables
             List of result tables to add to.
 
@@ -174,31 +171,21 @@ class BuildServiceCheck(BaseCheck):
                         os.path.basename(bash_cmd["CI_path"]),
                     )
 
-                    justification_cmd: Justification = [
-                        {
-                            f"The target repository uses build tool {build_tool.name} to build": bash_source_link,
-                            "The build is triggered by": trigger_link,
-                        },
-                        f"Build command: {build_cmd}",
-                        {"The status of the build can be seen at": html_url}
-                        if html_url
-                        else "However, could not find a passing workflow run.",
-                    ]
-                    justification.extend(justification_cmd)
                     result_tables.append(
                         BuildServiceFacts(
                             build_tool_name=build_tool.name,
                             build_trigger=trigger_link,
                             ci_service_name=ci_service.name,
+                            confidence=Confidence.HIGH,
                         )
                     )
 
                     if (
                         ctx.dynamic_data["is_inferred_prov"]
                         and ci_info["provenances"]
-                        and isinstance(ci_info["provenances"][0], InTotoV01Payload)
+                        and isinstance(ci_info["provenances"][0].payload, InTotoV01Payload)
                     ):
-                        predicate: Any = ci_info["provenances"][0].statement["predicate"]
+                        predicate: Any = ci_info["provenances"][0].payload.statement["predicate"]
                         predicate["buildType"] = f"Custom {ci_service.name}"
                         predicate["builder"]["id"] = bash_source_link
                         predicate["invocation"]["configSource"]["uri"] = (
@@ -221,24 +208,20 @@ class BuildServiceCheck(BaseCheck):
                         if not config_name:
                             break
 
-                        justification.append(
-                            f"The target repository uses "
-                            f"build tool {build_tool.name} in {ci_service.name} to "
-                            f"build."
-                        )
                         result_tables.append(
                             BuildServiceFacts(
                                 build_tool_name=build_tool.name,
                                 ci_service_name=ci_service.name,
+                                confidence=Confidence.MEDIUM,
                             )
                         )
 
                         if (
                             ctx.dynamic_data["is_inferred_prov"]
                             and ci_info["provenances"]
-                            and isinstance(ci_info["provenances"][0], InTotoV01Payload)
+                            and isinstance(ci_info["provenances"][0].payload, InTotoV01Payload)
                         ):
-                            predicate = ci_info["provenances"][0].statement["predicate"]
+                            predicate = ci_info["provenances"][0].payload.statement["predicate"]
                             predicate["buildType"] = f"Custom {ci_service.name}"
                             predicate["builder"]["id"] = config_name
                             predicate["invocation"]["configSource"]["uri"] = (
@@ -251,9 +234,7 @@ class BuildServiceCheck(BaseCheck):
                             predicate["invocation"]["configSource"]["entryPoint"] = config_name
                         return CheckResultType.PASSED
 
-        # Nothing found; fail
-        fail_msg = f"The target repository does not have a build service for {build_tool}."
-        justification.append(fail_msg)
+        # Nothing found; fail.
         return CheckResultType.FAILED
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
@@ -278,11 +259,10 @@ class BuildServiceCheck(BaseCheck):
         # implemented, consider whether this should be one fail = whole
         # check fails instead
         all_passing = False
-        justification: Justification = []
-        result_tables: ResultTables = []
+        result_tables: list[CheckFacts] = []
 
         for tool in build_tools:
-            res = self._check_build_tool(tool, ctx, ci_services, justification, result_tables)
+            res = self._check_build_tool(tool, ctx, ci_services, result_tables)
 
             if res == CheckResultType.PASSED:
                 # Pass at some point so treat as entire check pass; we don't
@@ -291,15 +271,9 @@ class BuildServiceCheck(BaseCheck):
                 all_passing = True
 
         if not all_passing or not build_tools:
-            fail_msg = "The target repository does not have a build service for at least one build tool."
-            justification.append(fail_msg)
-            return CheckResultData(
-                justification=justification, result_tables=result_tables, result_type=CheckResultType.FAILED
-            )
+            return CheckResultData(result_tables=result_tables, result_type=CheckResultType.FAILED)
 
-        return CheckResultData(
-            justification=justification, result_tables=result_tables, result_type=CheckResultType.PASSED
-        )
+        return CheckResultData(result_tables=result_tables, result_type=CheckResultType.PASSED)
 
 
 registry.register(BuildServiceCheck())

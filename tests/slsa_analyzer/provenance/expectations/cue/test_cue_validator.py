@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the CUE expectation validator."""
@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from macaron.database.table_definitions import CUEExpectation
+from macaron.slsa_analyzer.provenance.expectations.cue import CUEExpectation
 from macaron.slsa_analyzer.provenance.expectations.cue.cue_validator import get_target, validate_expectation
 
 EXPECT_RESOURCE_PATH = Path(__file__).parent.joinpath("resources")

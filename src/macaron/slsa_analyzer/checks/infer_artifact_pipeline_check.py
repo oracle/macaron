@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the InferArtifactPipelineCheck class to check if an artifact is published from a pipeline automatically."""
@@ -16,7 +16,7 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.package_registry.maven_central_registry import MavenCentralRegistry
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
@@ -36,13 +36,13 @@ class InferArtifactPipelineFacts(CheckFacts):
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
     #: The workflow job that triggered deploy.
-    deploy_job: Mapped[str] = mapped_column(String, nullable=False)
+    deploy_job: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.HREF})
 
     #: The workflow step that triggered deploy.
-    deploy_step: Mapped[str] = mapped_column(String, nullable=False)
+    deploy_step: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.HREF})
 
     #: The workflow run URL.
-    run_url: Mapped[str] = mapped_column(String, nullable=False)
+    run_url: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.HREF})
 
     __mapper_args__ = {
         "polymorphic_identity": "_infer_artifact_pipeline_check",
@@ -95,8 +95,7 @@ class InferArtifactPipelineCheck(BaseCheck):
         """
         # This check requires the build_as_code check to pass and a repository to be available.
         if not ctx.component.repository:
-            failed_msg = "Unable to find a potential workflow run for the artifact because no repository is available."
-            return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
+            return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
 
         # Look for the artifact in the corresponding registry and find the publish timestamp.
         artifact_published_date = None
@@ -121,8 +120,7 @@ class InferArtifactPipelineCheck(BaseCheck):
         # This check requires the artifact publish artifact to proceed. If the timestamp is not
         # found, we return with a fail result.
         if not artifact_published_date:
-            failed_msg = "Unable to find a publishing timestamp for the artifact."
-            return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
+            return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
 
         # Obtain the metadata inferred by the build_as_code check, which is stored in the `provenances`
         # attribute of the corresponding CI service.
@@ -136,12 +134,12 @@ class InferArtifactPipelineCheck(BaseCheck):
             if ctx.dynamic_data["is_inferred_prov"] and ci_info["provenances"]:
                 for inferred_prov in ci_info["provenances"]:
                     # Skip processing the inferred provenance if it does not conform with the in-toto v0.1 specification.
-                    if not isinstance(inferred_prov, InTotoV01Payload):
+                    if not isinstance(inferred_prov.payload, InTotoV01Payload):
                         continue
 
                     # This check requires the job and step calling the deploy command.
                     # Validate the content of inferred_prov.
-                    predicate = inferred_prov.statement["predicate"]
+                    predicate = inferred_prov.payload.statement["predicate"]
                     if (
                         not predicate
                         or not isinstance(predicate["invocation"], dict)
@@ -166,12 +164,7 @@ class InferArtifactPipelineCheck(BaseCheck):
                             "Configuration error: publish_time_range in section of package_registries is not a valid integer %s.",
                             error,
                         )
-                        failed_msg = (
-                            "Unable to find a potential workflow run for the artifact due to configuration issues."
-                        )
-                        return CheckResultData(
-                            justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED
-                        )
+                        return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
 
                     # Find the potential workflow runs.
                     if html_urls := ci_service.workflow_run_in_date_time_range(
@@ -181,31 +174,19 @@ class InferArtifactPipelineCheck(BaseCheck):
                         step_name=predicate["buildConfig"]["stepID"],
                         time_range=publish_time_range,
                     ):
-                        justification: Justification = []
-                        result_tables: ResultTables = []
+                        result_tables: list[CheckFacts] = []
                         for html_url in html_urls:
-                            justification_url: Justification = [
-                                {
-                                    f"The artifact is potentially published by workflow"
-                                    f" job '{predicate['buildConfig']['jobID']}' at"
-                                    f" step '{predicate['buildConfig']['stepID']}' "
-                                    "triggered by": html_url,
-                                },
-                            ]
-                            justification.extend(justification_url)
                             result_tables.append(
                                 InferArtifactPipelineFacts(
                                     deploy_job=predicate["buildConfig"]["jobID"],
                                     deploy_step=predicate["buildConfig"]["stepID"],
                                     run_url=html_url,
+                                    confidence=Confidence.MEDIUM,
                                 )
                             )
-                        return CheckResultData(
-                            justification=justification, result_tables=result_tables, result_type=CheckResultType.PASSED
-                        )
+                        return CheckResultData(result_tables=result_tables, result_type=CheckResultType.PASSED)
 
-        failed_msg = "Unable to find a potential workflow run for the artifact."
-        return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
+        return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
 
 
 registry.register(InferArtifactPipelineCheck())

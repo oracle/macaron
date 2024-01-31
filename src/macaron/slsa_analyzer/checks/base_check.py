@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseCheck class to be inherited by other concrete Checks."""
@@ -99,9 +99,7 @@ class BaseCheck:
         check_result_data: CheckResultData
 
         if skipped_info:
-            check_result_data = CheckResultData(
-                justification=[skipped_info["suppress_comment"]], result_tables=[], result_type=self.result_on_skip
-            )
+            check_result_data = CheckResultData(result_tables=[], result_type=self.result_on_skip)
             logger.info(
                 "Check %s is skipped on target %s, comment: %s",
                 self.check_info.check_id,
@@ -115,14 +113,14 @@ class BaseCheck:
                 self.check_info.check_id,
                 check_result_data.result_type.value,
                 target.component.purl,
-                check_result_data.justification,
+                check_result_data.justification_report,
             )
 
+        # This justification string will be stored in the feedback column of `SLSARequirement` table.
+        # TODO: Storing the justification as feedback in the `SLSARequirement` table seems redundant and might need
+        # refactoring.
         justification_str = ""
-        for ele in check_result_data.justification:
-            if isinstance(ele, dict):
-                for key, val in ele.items():
-                    justification_str += f"{key}: {val}. "
+        for _, ele in check_result_data.justification_report:
             justification_str += f"{str(ele)}. "
 
         target.bulk_update_req_status(

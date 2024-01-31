@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Registry class for loading checks."""
@@ -372,8 +372,9 @@ class Registry:
                     check = all_checks.get(check_id)
 
                     if not check:
-                        message = f"Check {check_id} is not defined yet. Please add the implementation for {check_id}."
-                        logger.error(message)
+                        logger.error(
+                            "Check %s is not defined yet. Please add the implementation for %s.", check_id, check_id
+                        )
                         results[check_id] = CheckResult(
                             check=CheckInfo(
                                 check_id=check_id,
@@ -381,7 +382,6 @@ class Registry:
                                 eval_reqs=[],
                             ),
                             result=CheckResultData(
-                                justification=[message],
                                 result_type=CheckResultType.UNKNOWN,
                                 result_tables=[],
                             ),

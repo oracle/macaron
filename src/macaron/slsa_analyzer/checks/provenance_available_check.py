@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the implementation of the Provenance Available check."""
@@ -21,7 +21,7 @@ from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.npm import NPM
 from macaron.slsa_analyzer.build_tool.yarn import Yarn
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
@@ -57,10 +57,10 @@ class ProvenanceAvailableFacts(CheckFacts):
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
     #: The provenance asset name.
-    asset_name: Mapped[str] = mapped_column(String, nullable=False)
+    asset_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     #: The URL for the provenance asset.
-    asset_url: Mapped[str] = mapped_column(String, nullable=True)
+    asset_url: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
     __mapper_args__ = {
         "polymorphic_identity": "_provenance_available_check",
@@ -484,7 +484,7 @@ class ProvenanceAvailableCheck(BaseCheck):
                         continue
 
                     # Add the provenance file.
-                    downloaded_provs.append(payload)
+                    downloaded_provs.append(SLSAProvenanceData(payload=payload, asset=prov_asset))
 
                 # Persist the provenance payloads into the CIInfo object.
                 ci_info["provenances"] = downloaded_provs
@@ -523,32 +523,20 @@ class ProvenanceAvailableCheck(BaseCheck):
                 provenance_extensions=provenance_extensions,
             )
         except ProvenanceAvailableException as error:
-            failed_msg = str(error)
-            return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
+            logger.error(error)
+            return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
 
         if provenance_assets:
             ctx.dynamic_data["is_inferred_prov"] = False
 
-            justification: Justification = []
-
-            justification.append("Found provenance in release assets:")
-            justification.extend(
-                [asset.url for asset in provenance_assets],
-            )
             # We only write the result to the database when the check is PASSED.
-            result_tables: ResultTables = [
-                ProvenanceAvailableFacts(
-                    asset_name=asset.name,
-                    asset_url=asset.url,
-                )
+            result_tables: list[CheckFacts] = [
+                ProvenanceAvailableFacts(asset_name=asset.name, asset_url=asset.url, confidence=Confidence.HIGH)
                 for asset in provenance_assets
             ]
-            return CheckResultData(
-                justification=justification, result_tables=result_tables, result_type=CheckResultType.PASSED
-            )
+            return CheckResultData(result_tables=result_tables, result_type=CheckResultType.PASSED)
 
-        failed_msg = "Could not find any SLSA or Witness provenances."
-        return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
+        return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
 
 
 registry.register(ProvenanceAvailableCheck())

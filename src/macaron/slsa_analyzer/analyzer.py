@@ -28,6 +28,7 @@ from macaron.repo_finder import repo_finder
 from macaron.repo_finder.commit_finder import find_commit
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
+from macaron.slsa_analyzer.asset import VirtualReleaseAsset
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 
 # To load all checks into the registry
@@ -40,6 +41,7 @@ from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
+from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
@@ -857,7 +859,12 @@ class Analyzer:
                             callgraph=callgraph,
                             provenance_assets=[],
                             latest_release={},
-                            provenances=[InTotoV01Payload(statement=Provenance().payload)],
+                            provenances=[
+                                SLSAProvenanceData(
+                                    payload=InTotoV01Payload(statement=Provenance().payload),
+                                    asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0),
+                                )
+                            ],
                         )
                     )
 
