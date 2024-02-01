@@ -82,7 +82,8 @@ class AnalyzeContext:
         self.check_results: dict[str, CheckResult] = {}
 
         # Add the data computed at runtime to the dynamic_data attribute.
-        self.dynamic_data: ChecksOutputs = ChecksOutputs(
+        # This attribute should be accessed via the `dynamic_data` property.
+        self._dynamic_data: ChecksOutputs = ChecksOutputs(
             git_service=NoneGitService(),
             build_spec=BuildSpec(tools=[]),
             ci_services=[],
@@ -90,6 +91,24 @@ class AnalyzeContext:
             is_inferred_prov=True,
             expectation=None,
         )
+
+    @property
+    def dynamic_data(self) -> ChecksOutputs:
+        """Return the `dynamic_data` object that contains various intermediate representations.
+
+        This object is used to pass various models and intermediate representations from the backend
+        in Macaron to checks. A check can also store intermediate results in this object to be used
+        by checks that depend on it. However, please avoid adding arbitrary attributes to this object!
+
+        We recommend to take a look at the attributes in this object before writing a new check. Chances
+        are that what you try to implement is already implemented and the results are available in the
+        `dynamic_data` object.
+
+        Return
+        ------
+        ChecksOutputs
+        """
+        return self._dynamic_data
 
     @property
     def provenances(self) -> dict[str, list[InTotoV01Statement | InTotoV1Statement]]:
