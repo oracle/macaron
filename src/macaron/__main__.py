@@ -11,6 +11,7 @@ import sys
 from importlib import metadata as importlib_metadata
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from packageurl import PackageURL
 
 import macaron
 from macaron.config.defaults import create_defaults, load_defaults
@@ -92,15 +93,18 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         branch = analyzer_single_args.branch
         digest = analyzer_single_args.digest
 
-        if repo_path and purl and not digest:
-            # To provide the purl together with the repository path, the user must specify the branch and commit
-            # digest.
-            logger.error(
-                "Please provide the commit digest for the repo at %s that matches to the PURL string %s.",
-                repo_path,
-                purl,
-            )
-            sys.exit(os.EX_USAGE)
+        if repo_path and purl:
+            # To provide the purl together with the repository path, the user must specify the commit digest unless the
+            # purl has a version.
+            purl_object = PackageURL.from_string(purl)
+            if not purl_object or not (purl_object.version or digest):
+                logger.error(
+                    "Please provide the commit digest for the repo at %s that matches to the PURL string %s. Or "
+                    "include the version in the PURL",
+                    repo_path,
+                    purl,
+                )
+                sys.exit(os.EX_USAGE)
 
         # We need to use empty strings when the input values are of None type. This is because this dictionary will be
         # passed into the Configuration instance, where the existing values in Configuration.options are replaced by
