@@ -96,7 +96,11 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         if repo_path and purl:
             # To provide the purl together with the repository path, the user must specify the commit digest unless the
             # purl has a version.
-            purl_object = PackageURL.from_string(purl)
+            try:
+                purl_object = PackageURL.from_string(purl)
+            except ValueError as error:
+                logger.debug("Could not parse PURL: %s", error)
+                purl_object = None
             if not purl_object or not (purl_object.version or digest):
                 logger.error(
                     "Please provide the commit digest for the repo at %s that matches to the PURL string %s. Or "
