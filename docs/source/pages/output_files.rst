@@ -170,7 +170,7 @@ Others
 macaron.db
 ^^^^^^^^^^
 
-The file is the SQLite database used by Macaron for storing analysis results.
+The file is the SQLite database used by Macaron for storing analysis results. See :mod:`table_definitions<macaron.database.table_definitions>` for the database schema.
 
 ^^^^^^^^^
 debug.log
