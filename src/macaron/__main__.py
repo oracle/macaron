@@ -100,8 +100,8 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
                 purl_object = PackageURL.from_string(purl)
             except ValueError as error:
                 logger.debug("Could not parse PURL: %s", error)
-                purl_object = None
-            if not purl_object or not (purl_object.version or digest):
+                sys.exit(os.EX_USAGE)
+            if not (purl_object.version or digest):
                 logger.error(
                     "Please provide the commit digest for the repo at %s that matches to the PURL string %s. Or "
                     "include the version in the PURL",
