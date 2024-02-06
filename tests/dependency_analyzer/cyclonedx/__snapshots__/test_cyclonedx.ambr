@@ -377,8 +377,8 @@
       'url': 'https://github.com/apache/commons-codec',
     }),
     'commons-fileupload:commons-fileupload': dict({
-      'available': <SCMStatus.MISSING_SCM: 'MISSING REPO URL'>,
-      'note': 'Manual configuration required. Could not find SCM URL.',
+      'available': <SCMStatus.AVAILABLE: 'AVAILABLE'>,
+      'note': '',
       'purl': PackageURL(
         name='commons-fileupload',
         namespace='commons-fileupload',
@@ -389,11 +389,11 @@
         type='maven',
         version='1.4',
       ),
-      'url': '',
+      'url': 'https://github.com/apache/commons-fileupload',
     }),
     'commons-io:commons-io': dict({
-      'available': <SCMStatus.MISSING_SCM: 'MISSING REPO URL'>,
-      'note': 'Manual configuration required. Could not find SCM URL.',
+      'available': <SCMStatus.AVAILABLE: 'AVAILABLE'>,
+      'note': '',
       'purl': PackageURL(
         name='commons-io',
         namespace='commons-io',
@@ -404,7 +404,7 @@
         type='maven',
         version='2.11.0',
       ),
-      'url': '',
+      'url': 'https://github.com/apache/commons-io',
     }),
     'commons-logging:commons-logging': dict({
       'available': <SCMStatus.MISSING_SCM: 'MISSING REPO URL'>,
@@ -1547,8 +1547,8 @@
       'url': 'https://github.com/JodaOrg/joda-time',
     }),
     'org.apache.commons:commons-compress': dict({
-      'available': <SCMStatus.MISSING_SCM: 'MISSING REPO URL'>,
-      'note': 'Manual configuration required. Could not find SCM URL.',
+      'available': <SCMStatus.AVAILABLE: 'AVAILABLE'>,
+      'note': '',
       'purl': PackageURL(
         name='commons-compress',
         namespace='org.apache.commons',
@@ -1559,7 +1559,7 @@
         type='maven',
         version='1.21',
       ),
-      'url': '',
+      'url': 'https://github.com/apache/commons-compress',
     }),
     'org.apache.httpcomponents:httpclient': dict({
       'available': <SCMStatus.MISSING_SCM: 'MISSING REPO URL'>,

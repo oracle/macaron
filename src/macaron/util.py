@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module includes utilities functions for Macaron."""
@@ -56,7 +56,9 @@ def send_get_http(url: str, headers: dict) -> dict:
     return dict(response.json())
 
 
-def send_get_http_raw(url: str, headers: dict | None = None, timeout: int | None = None) -> Response | None:
+def send_get_http_raw(
+    url: str, headers: dict | None = None, timeout: int | None = None, allow_redirects: bool = True
+) -> Response | None:
     """Send the GET HTTP request with the given url and headers.
 
     This method also handle logging when the API server return error status code.
@@ -69,6 +71,8 @@ def send_get_http_raw(url: str, headers: dict | None = None, timeout: int | None
         The dict that describes the headers of the request.
     timeout: int | None
         The request timeout (optional).
+    allow_redirects: bool
+        Whether to allow redirects. Default: True.
 
     Returns
     -------
@@ -78,11 +82,17 @@ def send_get_http_raw(url: str, headers: dict | None = None, timeout: int | None
     logger.debug("GET - %s", url)
     try:
         response = requests.get(
-            url=url, headers=headers, timeout=timeout or defaults.getint("requests", "timeout", fallback=10)
+            url=url,
+            headers=headers,
+            timeout=timeout or defaults.getint("requests", "timeout", fallback=10),
+            allow_redirects=allow_redirects,
         )  # nosec B113:request_without_timeout
     except requests.exceptions.RequestException as error:
         logger.debug(error)
         return None
+    if not allow_redirects and response.status_code == 302:
+        # Found, most likely because a redirect is about to happen.
+        return response
     while response.status_code != 200:
         logger.debug(
             "Receiving error code %s from server.",
@@ -93,7 +103,10 @@ def send_get_http_raw(url: str, headers: dict | None = None, timeout: int | None
         else:
             return None
         response = requests.get(
-            url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
+            url=url,
+            headers=headers,
+            timeout=defaults.getint("requests", "timeout", fallback=10),
+            allow_redirects=allow_redirects,
         )  # nosec B113:request_without_timeout
 
     return response

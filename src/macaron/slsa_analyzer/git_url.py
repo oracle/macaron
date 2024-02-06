@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides methods to perform generic actions on Git URLS."""
@@ -21,6 +21,7 @@ from pydriller.git import Git
 from macaron.config.defaults import defaults
 from macaron.environment_variables import get_patched_env
 from macaron.errors import CloneError
+from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -567,7 +568,7 @@ def get_remote_vcs_url(url: str, clean_up: bool = True) -> str:
 
 
 def parse_remote_url(
-    url: str, allowed_git_service_hostnames: list[str] | None = None
+    url: str, allowed_git_service_hostnames: list[str] | None = None, return_redirects: bool = True
 ) -> urllib.parse.ParseResult | None:
     """Verify if the given repository path is a valid vcs.
 
@@ -583,6 +584,8 @@ def parse_remote_url(
         The list of allowed git service hostnames.
         If this is ``None``, fall back to the  ``.ini`` configuration.
         (Default: None).
+    return_redirects: bool
+        Whether to return the URL a parsed URL points to instead of the URL itself.
 
     Returns
     -------
@@ -616,6 +619,20 @@ def parse_remote_url(
 
     # e.g., https://github.com/owner/project.git
     if parsed_url.scheme in ("http", "https", "ftp", "ftps", "git+https"):
+        # Handle Apache indirect GitHub links
+        if return_redirects:
+            redirect_list = defaults.get_list("repofinder", "redirect_urls", fallback=[])
+            if redirect_list and parsed_url.netloc in redirect_list:
+                response = send_get_http_raw(parsed_url.geturl(), allow_redirects=False)
+                if not response:
+                    return None
+                redirect_url = response.headers.get("location")
+                if not redirect_url:
+                    return None
+                # Pass the redirect_url through this function and prevent loops by setting the redirect parameter to an
+                # empty string.
+                return parse_remote_url(redirect_url, allowed_git_service_hostnames, False)
+
         if parsed_url.netloc not in allowed_git_service_hostnames:
             return None
         path_params = parsed_url.path.strip("/").split("/")
