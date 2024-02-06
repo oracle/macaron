@@ -1,8 +1,9 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildAsCodeCheck class."""
 
+import json
 import logging
 import os
 from typing import Any
@@ -117,14 +118,16 @@ class BuildAsCodeCheck(BaseCheck):
                 # If there are no deploy args for this build tool, accept as deploy command.
                 # TODO: Support multi-argument build keywords, issue #493.
                 if not build_tool.deploy_arg:
-                    logger.info("No deploy arguments required. Accept %s as deploy command.", str(com))
-                    return str(com)
+                    com_str = json.dumps(com)
+                    logger.info("No deploy arguments required. Accept %s as deploy command.", com_str)
+                    return com_str
 
                 for word in com[(prog_name_index + 1) :]:
                     # TODO: allow plugin versions in arguments, e.g., maven-plugin:1.6.8:deploy.
                     if word in build_tool.deploy_arg:
-                        logger.info("Found deploy command %s.", str(com))
-                        return str(com)
+                        com_str = json.dumps(com)
+                        logger.info("Found deploy command %s.", com_str)
+                        return com_str
         return ""
 
     def _check_build_tool(
