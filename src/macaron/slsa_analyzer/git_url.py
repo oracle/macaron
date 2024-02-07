@@ -629,8 +629,7 @@ def parse_remote_url(
                 redirect_url = response.headers.get("location")
                 if not redirect_url:
                     return None
-                # Pass the redirect_url through this function and prevent loops by setting the redirect parameter to an
-                # empty string.
+                # Pass the redirect_url through this function and prevent loops by setting the redirect flag to False.
                 return parse_remote_url(redirect_url, allowed_git_service_hostnames, False)
 
         if parsed_url.netloc not in allowed_git_service_hostnames:
