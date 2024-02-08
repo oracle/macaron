@@ -125,13 +125,19 @@ Run the analysis using the PURL string as follows:
 
   ./run_macaron.sh analyze -purl <purl_string>
 
-You can also provide the PURL string together with the repository path. In this case, the PURL string will be used as the unique identifier for the analysis target:
+You can also provide the PURL string together with the repository path. In this case, the PURL string will be used as the unique identifier for the analysis target. If providing a PURL with a version, providing the repository path as well is sufficient for analysis to take place. If providing a PURL without a version, the branch and digest must also be provided alongside the repository path. Examples of both use cases follow.
+
+Analyzing a PURL (with an included version) and a repository path:
+
+.. code-block:: shell
+
+  ./run_macaron.sh analyze -purl <purl_string_with_version> -rp <repo_path>
+
+Analyzing a PURL (without an included version) and a repository path (with a digest and branch):
 
 .. code-block:: shell
 
   ./run_macaron.sh analyze -purl <purl_string> -rp <repo_path> -b <branch> -d <digest>
-
-.. note:: When providing the PURL and the repository path, both the branch name and commit digest must be provided as well.
 
 ''''''''''''''''''''''''''''''''''''''
 Providing an artifact as a PURL string
