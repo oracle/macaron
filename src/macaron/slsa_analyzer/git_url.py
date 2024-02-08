@@ -21,7 +21,6 @@ from pydriller.git import Git
 from macaron.config.defaults import defaults
 from macaron.environment_variables import get_patched_env
 from macaron.errors import CloneError
-from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -567,8 +566,35 @@ def get_remote_vcs_url(url: str, clean_up: bool = True) -> str:
     return url_as_str
 
 
+def clean_url(url: str) -> urllib.parse.ParseResult | None:
+    """Clean the passed url, removing extraneous prefixes and parsing it with urllib.
+
+    Parameters
+    ----------
+    url: str
+        The path to a repository.
+
+    Returns
+    -------
+    ParseResult:
+        The parsed URL.
+    """
+    try:
+        # Remove prefixes, such as "scm:" and "git:".
+        match = re.match(r"(?P<prefix>(.*?))(git\+http|http|ftp|ssh\+git|ssh|git@)(.)*", str(url))
+        if match is None:
+            return None
+        cleaned_url = url.replace(match.group("prefix"), "")
+
+        # Parse the URL string to determine how to handle it.
+        return urllib.parse.urlparse(cleaned_url)
+    except (ValueError, TypeError) as error:
+        logger.debug(error)
+        return None
+
+
 def parse_remote_url(
-    url: str, allowed_git_service_hostnames: list[str] | None = None, return_redirects: bool = True
+    url: str, allowed_git_service_hostnames: list[str] | None = None
 ) -> urllib.parse.ParseResult | None:
     """Verify if the given repository path is a valid vcs.
 
@@ -584,8 +610,6 @@ def parse_remote_url(
         The list of allowed git service hostnames.
         If this is ``None``, fall back to the  ``.ini`` configuration.
         (Default: None).
-    return_redirects: bool
-        Whether to return the URL a parsed URL points to instead of the URL itself.
 
     Returns
     -------
@@ -600,17 +624,8 @@ def parse_remote_url(
     if allowed_git_service_hostnames is None:
         allowed_git_service_hostnames = get_allowed_git_service_hostnames(defaults)
 
-    try:
-        # Remove prefixes, such as "scm:" and "git:".
-        match = re.match(r"(?P<prefix>(.*?))(git\+http|http|ftp|ssh\+git|ssh|git@)(.)*", str(url))
-        if match is None:
-            return None
-        cleaned_url = url.replace(match.group("prefix"), "")
-
-        # Parse the URL string to determine how to handle it.
-        parsed_url = urllib.parse.urlparse(cleaned_url)
-    except (ValueError, TypeError) as error:
-        logger.debug(error)
+    parsed_url = clean_url(url)
+    if not parsed_url:
         return None
 
     res_scheme = ""
@@ -619,19 +634,6 @@ def parse_remote_url(
 
     # e.g., https://github.com/owner/project.git
     if parsed_url.scheme in ("http", "https", "ftp", "ftps", "git+https"):
-        # Handle Apache indirect GitHub links
-        if return_redirects:
-            redirect_list = defaults.get_list("repofinder", "redirect_urls", fallback=[])
-            if redirect_list and parsed_url.netloc in redirect_list:
-                response = send_get_http_raw(parsed_url.geturl(), allow_redirects=False)
-                if not response:
-                    return None
-                redirect_url = response.headers.get("location")
-                if not redirect_url:
-                    return None
-                # Pass the redirect_url through this function and prevent loops by setting the redirect flag to False.
-                return parse_remote_url(redirect_url, allowed_git_service_hostnames, False)
-
         if parsed_url.netloc not in allowed_git_service_hostnames:
             return None
         path_params = parsed_url.path.strip("/").split("/")
