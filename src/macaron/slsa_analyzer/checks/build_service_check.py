@@ -1,8 +1,9 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildServiceCheck class."""
 
+import json
 import logging
 import os
 from typing import Any
@@ -74,6 +75,21 @@ class BuildServiceCheck(BaseCheck):
             result_on_skip=CheckResultType.PASSED,
         )
 
+    def _serialize_command(self, cmd: list[str]) -> str:
+        """Convert a list of command-line arguments to a json-encoded string so that it is easily parsable by later consumers.
+
+        Parameters
+        ----------
+        cmd: list[str]
+            List of command-line arguments.
+
+        Returns
+        -------
+        str
+            The list of command-line arguments as a json-encoded string.
+        """
+        return json.dumps(cmd)
+
     def _has_build_command(self, commands: list[list[str]], build_tool: BaseBuildTool) -> str:
         """Check if the bash command is a build command."""
         for com in commands:
@@ -109,13 +125,15 @@ class BuildServiceCheck(BaseCheck):
                 # If there are no build args for this build tool, accept as build command.
                 # TODO: Support multi-argument build keywords, issue #493.
                 if not build_tool.build_arg:
-                    logger.info("No build arguments required. Accept %s as build command.", str(com))
-                    return str(com)
+                    com_str = self._serialize_command(com)
+                    logger.info("No build arguments required. Accept %s as build command.", com_str)
+                    return com_str
                 for word in com[(prog_name_index + 1) :]:
                     # TODO: allow plugin versions in arguments, e.g., maven-plugin:1.6.8:package.
                     if word in build_tool.build_arg:
-                        logger.info("Found build command %s.", str(com))
-                        return str(com)
+                        com_str = self._serialize_command(com)
+                        logger.info("Found build command %s.", com_str)
+                        return com_str
         return ""
 
     def _check_build_tool(
@@ -189,6 +207,7 @@ class BuildServiceCheck(BaseCheck):
                         BuildServiceFacts(
                             build_tool_name=build_tool.name,
                             build_trigger=trigger_link,
+                            build_command=build_cmd,
                             ci_service_name=ci_service.name,
                         )
                     )
