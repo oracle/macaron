@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the generic actions on Git repositories."""
@@ -287,3 +287,21 @@ def test_parse_git_branch_output(content: str, expected_output: list[str]) -> No
 def test_parse_git_branch_output_with_random_input(content: str) -> None:
     """Test the parse git branch output function using random text input."""
     git_url.parse_git_branch_output(content)
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        ("", ""),
+        ("scm:git:git@github.com:FasterXML/jackson-databind.git", "git@github.com:FasterXML/jackson-databind.git"),
+        ("https://github.com/commons-io/commons-io", "https://github.com/commons-io/commons-io"),
+        ("askjdlkajsdlkajsdlkjasldjlk:scm", ""),
+    ],
+)
+def test_clean_url(url: str, expected: str) -> None:
+    """Test the functionality of the clean_url function."""
+    result = git_url.clean_url(url)
+    if result is None:
+        assert expected == ""
+    else:
+        assert expected == result.geturl()
