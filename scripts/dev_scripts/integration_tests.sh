@@ -289,6 +289,18 @@ do
     check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
 done
 
+echo -e "\n----------------------------------------------------------------------------------"
+echo "micronaut-projects/micronaut-test: Analyzing the repo path when automatic dependency resolution is skipped"
+echo "and all provenance checks are excluded."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-test/micronaut-test.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/micronaut-test/micronaut-test_provenance_checks_excluded.json
+DEFAULTS_FILE=$WORKSPACE/tests/e2e/configurations/exclude_provenance_checks.ini
+
+$RUN_MACARON -dp $DEFAULTS_FILE analyze -rp https://github.com/micronaut-projects/micronaut-test/ -d 7679d10b4073a3b842b6c56877c35fa8cd10acff --skip-deps || log_fail
+
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
 # TODO: uncomment the test below after resolving https://github.com/oracle/macaron/issues/60.
 # echo -e "\n----------------------------------------------------------------------------------"
 # echo "micronaut-projects/micronaut-test: Check the resolved dependency output with config for cyclonedx gradle plugin (default)."
@@ -576,6 +588,17 @@ fi
 # Clean up the repos.
 rm -rf "$SOURCE_REPO"
 rm -rf "$TARGET_REPO"
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Running the analysis with all checks excluded should returns an error code."
+echo -e "----------------------------------------------------------------------------------\n"
+$RUN_MACARON -dp tests/e2e/configurations/exclude_all_checks.ini analyze -rp https://github.com/apache/maven --skip-deps
+
+if [ $? -eq 0 ];
+then
+    echo -e "Expect non-zero status code but got $?."
+    log_fail
+fi
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: test analyzing without the environment variable GITHUB_TOKEN being set."
