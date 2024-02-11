@@ -36,10 +36,10 @@ class InferArtifactPipelineFacts(CheckFacts):
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
     #: The workflow job that triggered deploy.
-    deploy_job: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.HREF})
+    deploy_job: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     #: The workflow step that triggered deploy.
-    deploy_step: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.HREF})
+    deploy_step: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     #: The workflow run URL.
     run_url: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.HREF})

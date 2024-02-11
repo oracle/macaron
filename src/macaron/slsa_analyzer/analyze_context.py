@@ -64,7 +64,9 @@ class AnalyzeContext:
         output_dir : str
             The output dir.
         """
-        self.component = component
+        # The component attribute should be accessed via the `component` property.
+        self._component = component
+
         self.ctx_data: dict[ReqName, SLSAReqStatus] = create_requirement_status_dict()
 
         self.slsa_level = SLSALevels.LEVEL0
@@ -93,6 +95,20 @@ class AnalyzeContext:
         )
 
     @property
+    def component(self) -> Component:
+        """Return the object associated with a target software component.
+
+        This property contains the information about a software component, such as it's
+        corresponding repository and dependencies.
+
+
+        Returns
+        -------
+        Component
+        """
+        return self._component
+
+    @property
     def dynamic_data(self) -> ChecksOutputs:
         """Return the `dynamic_data` object that contains various intermediate representations.
 
@@ -104,8 +120,8 @@ class AnalyzeContext:
         are that what you try to implement is already implemented and the results are available in the
         `dynamic_data` object.
 
-        Return
-        ------
+        Returns
+        -------
         ChecksOutputs
         """
         return self._dynamic_data

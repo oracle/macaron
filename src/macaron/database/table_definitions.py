@@ -15,7 +15,7 @@ import os
 import string
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Self
+from typing import Any
 
 from packageurl import PackageURL
 from sqlalchemy import (
@@ -447,30 +447,6 @@ class CheckFacts(ORMBase):
 
     #: A many-to-one relationship with check results.
     checkresult: Mapped["MappedCheckResult"] = relationship(back_populates="checkfacts")
-
-    def __lt__(self, other: Self) -> bool:
-        """Compare two check facts using their confidence values.
-
-        This comparison function is intended to be used by a heapq, which is a Min-Heap data structure.
-        The root element in a heapq is the minimum element in the queue and each `confidence` value is in [0, 1].
-        Therefore, we need reverse the comparison function to make sure the fact with highest confidence is stored
-        in the root element. This implementation compares `1 - confidence` to return True if the confidence of
-        `fact_a` is greater than the confidence of `fact_b`.
-
-        .. code-block:: pycon
-
-            >>> fact_a = CheckFacts()
-            >>> fact_b = CheckFacts()
-            >>> fact_a.confidence = 0.2
-            >>> fact_b.confidence = 0.7
-            >>> fact_b < fact_a
-            True
-
-        Return
-        ------
-        bool
-        """
-        return (1 - self.confidence) < (1 - other.confidence)
 
     #: The polymorphic inheritance configuration.
     __mapper_args__ = {

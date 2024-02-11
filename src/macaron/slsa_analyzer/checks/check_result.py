@@ -4,7 +4,6 @@
 """This module contains the CheckResult class for storing the result of a check."""
 from dataclasses import dataclass
 from enum import Enum
-from heapq import heappush
 from typing import TypedDict
 
 from macaron.database.table_definitions import CheckFacts
@@ -78,19 +77,18 @@ class CheckResultData:
     @property
     def justification_report(self) -> list[tuple[Confidence, list]]:
         """
-        Return the list of justifications for the check result generated from the tables in the database.
+        Return a sorted list of justifications based on confidence scores in descending order.
 
-        Note that the elements in the justification will be rendered different based on their types:
+        These justifications are generated from the tables in the database.
+        Note that the elements in the justification will be rendered differently based on their types:
 
         * a :class:`JustificationType.TEXT` element is displayed in plain text in the HTML report.
         * a :class:`JustificationType.HREF` element is rendered as a hyperlink in the HTML report.
 
-        Return
-        ------
+        Returns
+        -------
         list[tuple[Confidence, list]]
         """
-        # Interestingly, mypy cannot infer the type of elements later at `heappush` if we specify
-        # list[tuple[Confidence, list]]. But still, it insists on specifying the `list` type here.
         justification_list: list = []
         for result in self.result_tables:
             # The HTML report generator requires the justification elements that need to be rendered in HTML
@@ -112,15 +110,15 @@ class CheckResultData:
             if dict_elements:
                 list_elements.append(dict_elements)
 
-            # Use heapq to always keep the justification with the highest confidence score in the first element.
             if list_elements:
-                heappush(justification_list, (result.confidence, list_elements))
+                justification_list.append((result.confidence, list_elements))
 
         # If there are no justifications available, return a default "Not Available" one.
         if not justification_list:
             return [(Confidence.HIGH, ["Not Available."])]
 
-        return justification_list
+        # Sort the justification list based on the confidence score in descending order.
+        return sorted(justification_list, key=lambda item: item[0], reverse=True)
 
 
 @dataclass(frozen=True)
@@ -147,7 +145,7 @@ class CheckResult:
             "check_id": self.check.check_id,
             "check_description": self.check.check_description,
             "slsa_requirements": [str(BUILD_REQ_DESC.get(req)) for req in self.check.eval_reqs],
-            # The justification report is stored in a heapq where the first element has the highest confidence score.
+            # The justification report is sorted and the first element has the highest confidence score.
             "justification": self.result.justification_report[0][1],
             "result_tables": self.result.result_tables,
             "result_type": self.result.result_type,

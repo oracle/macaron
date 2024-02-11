@@ -6,7 +6,7 @@
 import os
 from pathlib import Path
 
-from macaron.database.table_definitions import Analysis, Component, Repository
+from macaron.database.table_definitions import Repository
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.vcs_check import VCSCheck
 from tests.conftest import MockAnalyzeContext
@@ -22,11 +22,8 @@ def test_vcs_check_valid_repo(macaron_path: Path) -> None:
     check = VCSCheck()
     initiate_repo(REPO_DIR)
     use_git_repo = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
-    use_git_repo.component = Component(
-        purl="pkg:github/package-url/purl-spec@244fd47e07d1004f0aed9c",
-        analysis=Analysis(),
-        repository=Repository(complete_name="github.com/package-url/purl-spec"),
-    )
+    use_git_repo.component.repository = Repository(complete_name="github.com/package-url/purl-spec")
+
     assert check.run_check(use_git_repo).result_type == CheckResultType.PASSED
 
 
@@ -35,7 +32,9 @@ def test_vcs_check_invalid_repo(macaron_path: Path) -> None:
     check = VCSCheck()
     initiate_repo(REPO_DIR)
     no_git_repo = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
-    no_git_repo.component = Component(
-        purl="pkg:github/package-url/purl-spec@244fd47e07d1004f0aed9c", analysis=Analysis(), repository=None
-    )
+    # The repository column is nullable, however, SQLAlchemy does not automatically help mypy to infer that.
+    # TODO: remove the type ignore comment below once we add the explicit `None` type to the repository
+    # column in the `Component` ORM mapping.
+    no_git_repo.component.repository = None  # type: ignore
+
     assert check.run_check(no_git_repo).result_type == CheckResultType.FAILED

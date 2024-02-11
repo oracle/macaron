@@ -10,7 +10,7 @@ from macaron.code_analyzer.call_graph import CallGraph
 from macaron.parsers.bashparser import BashCommands
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
-from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
+from macaron.slsa_analyzer.provenance.provenance import DownloadedProvenanceData
 
 
 class CIInfo(TypedDict):
@@ -26,7 +26,7 @@ class CIInfo(TypedDict):
     """The call graph for this CI service."""
 
     provenance_assets: list[AssetLocator]
-    """Release assets for SLSA provenances, e.g., asset for attestation.intoto.jsonl.
+    """Release assets for provenances, e.g., asset for attestation.intoto.jsonl.
 
     For GitHub Actions, each asset is a member of the ``assets`` list in the GitHub
     Actions latest release payload.
@@ -38,5 +38,5 @@ class CIInfo(TypedDict):
     Schema: https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release.
     """
 
-    provenances: Sequence[SLSAProvenanceData]
-    """The SLSA provenances data."""
+    provenances: Sequence[DownloadedProvenanceData]
+    """The provenances data."""
