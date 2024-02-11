@@ -286,6 +286,13 @@
         .active {
             display: block;
         }
+
+        .check-tree-node::before {
+            content: "\2514";
+            color: black;
+            display: inline-block;
+            margin-right: 6px;
+        }
     </style>
 </head>
 
@@ -681,6 +688,13 @@
             check_status_toggler.addEventListener("click", function() {
                 this.classList.toggle("toggler-extend");
                 document.getElementById("check_report_content").classList.toggle("hidden");
+            });
+
+            // Add a listener toggle the display of run checks.
+            let run_check_toggler = document.getElementById("run-checks");
+            run_check_toggler.addEventListener("click", function() {
+                this.classList.toggle("toggler-extend");
+                document.getElementById("run-checks-tree").classList.toggle("hidden");
             });
 
             // When loaded, expand all CI services.<n> elements

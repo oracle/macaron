@@ -164,6 +164,31 @@
 {% endcall %}
 {% endmacro %}
 
+{#
+    The `check-tree-node` class will add a small symbol before the check ID
+    indicating a non-root node. Therefore, we don't apply it for the checks without
+    parent (i.e the first level checks).
+#}
+{% macro render_run_checks(check_tree, run_checks) %}
+<ul class="tree-view-nested-list">
+    {% for key, next_level in check_tree.items() recursive %}
+    <li>
+        <div
+            class="{% if loop.depth0 != 0 %}check-tree-node{% endif %}"
+            {% if key not in run_checks %}
+            style="text-decoration-line: line-through;"
+            {% endif %}>
+        {{ key }}
+        </div>
+        <ul>
+        {{ loop(next_level.items()) | indent(2 * 4) }}
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
+{% endmacro %}
+
+
 {# -------------------------------------------- #}
 
 {#
@@ -236,6 +261,13 @@
     <div class="table_caption toggler" id="check_report_title">Reports for Macaron checks</div>
     <div id="check_report_content" class="hidden">
     {% endif %}
+        <div class="table_sub_caption toggler" id="run-checks">Run checks</div>
+        <div id="run-checks-tree" class="hidden">
+        {{ render_run_checks(metadata.check_tree, metadata.run_checks) | indent(4, first=true) }}
+        </div>
+
+        <div class="table_sub_caption">Checks report</div>
+
         {{ render_checks_report(target.checks.results) | indent(8) }}
     </div>
 

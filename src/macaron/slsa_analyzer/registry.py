@@ -10,6 +10,7 @@ import logging
 import queue
 import re
 import sys
+from collections.abc import Mapping
 from copy import deepcopy
 from graphlib import CycleError, TopologicalSorter
 from typing import Any
@@ -67,6 +68,9 @@ class Registry:
         self.runner_timeout = 5
 
         self.checks_to_run: list[str] = []
+        self.no_parent_checks: list[str] = []
+
+        self.check_tree: CheckTree = {}
 
     def register(self, check: BaseCheck) -> None:
         """Register the check.
@@ -86,6 +90,7 @@ class Registry:
         # checks can still depend on it, and therefore it might have been initialized and added to the mapping
         # already. So we need to check if it already exists in `_check_relationships_mapping`.
         if not check.depends_on:
+            self.no_parent_checks.append(check.check_info.check_id)
             if check.check_info.check_id not in self._check_relationships_mapping:
                 self._check_relationships_mapping[check.check_info.check_id] = {}
         else:
@@ -702,6 +707,10 @@ class Registry:
             return False
         self.checks_to_run = checks_to_run
 
+        # Store the check tree as dictionary to be used in the HTML report.
+        if not self.check_tree:
+            self.check_tree.update(self._get_check_tree_as_dict())
+
         return True
 
     @staticmethod
@@ -765,6 +774,67 @@ class Registry:
                 return skipped_info
 
         return None
+
+    def _get_check_tree_as_dict(self) -> CheckTree:
+        """Return a dictionary representation of the check relationships.
+
+        Returns
+        -------
+        CheckTree
+            A nested dictionary that represent the relationship between
+            checks. Each mapping (K, V) in the returned dictionary has K is the check id and
+            V is a dictionary contains the children of that check.
+
+        Examples
+        --------
+        Given the following checks and its relationships
+
+        .. code-block::
+
+            mcn_provenance_available_1
+            |-- mcn_provenance_level_three_1
+                |-- mcn_provenance_expectation_1
+            mcn_version_control_system_1
+            |-- mcn_trusted_builder_level_three_1
+
+        The result dictionary will be
+
+        .. code-block::
+
+            {
+                'mcn_provenance_available_1': {
+                    'mcn_provenance_level_three_1': {
+                        'mcn_provenance_expectation_1': {}
+                    }
+                },
+                'mcn_version_control_system_1': {
+                    'mcn_trusted_builder_level_three_1': {}
+                },
+            }
+        """
+
+        def _traverse(
+            relation_mapping: Mapping[str, dict[str, CheckResultType]],
+            root: str,
+            visited: list[str],
+        ) -> CheckTree:
+            result = {}
+            visited.append(root)
+            children = relation_mapping.get(root, {})
+            for child in children:
+                if child in visited:
+                    # Cycles detected, however it won't happen as this
+                    # method is only called after the cycle checking.
+                    continue
+                result[child] = _traverse(relation_mapping, child, visited)
+
+            return result
+
+        result: CheckTree = {}
+        for check in self.no_parent_checks:
+            result[check] = _traverse(self._check_relationships_mapping, check, [])
+
+        return result
 
 
 registry = Registry()

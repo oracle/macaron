@@ -72,6 +72,12 @@ class Analyzer:
             logger.error("Cannot start the analysis. Exiting ...")
             sys.exit(1)
 
+        logger.info(
+            "The following checks are excluded from user configuration: %s",
+            [check for check in registry.get_all_checks_mapping() if check not in registry.checks_to_run],
+        )
+        logger.info("The following checks will be run: %s", registry.checks_to_run)
+
         self.output_path = output_path
 
         # Prepare the directory to store all the build logs in the
