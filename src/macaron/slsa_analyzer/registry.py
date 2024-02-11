@@ -1,9 +1,10 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Registry class for loading checks."""
 
 import concurrent.futures
+import fnmatch
 import inspect
 import logging
 import queue
@@ -14,6 +15,7 @@ from graphlib import CycleError, TopologicalSorter
 from typing import Any
 
 from macaron.config.defaults import defaults
+from macaron.errors import CheckCircularDependencyError, CheckNotExistError, CheckRegistryError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import (
@@ -27,6 +29,9 @@ from macaron.slsa_analyzer.runner import Runner
 from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+CheckTree = dict[str, "CheckTree"]
 
 
 class Registry:
@@ -60,6 +65,8 @@ class Registry:
         # Use default values.
         self.runner_num = 1
         self.runner_timeout = 5
+
+        self.checks_to_run: list[str] = []
 
     def register(self, check: BaseCheck) -> None:
         """Register the check.
@@ -331,7 +338,166 @@ class Registry:
 
         return False
 
-    def scan(self, target: AnalyzeContext, skipped_checks: list[SkippedInfo]) -> dict[str, CheckResult]:
+    def get_transitive_children(self, check_id: str) -> list[str]:
+        """Return a list of all transitive children for a check.
+
+        Parameters
+        ----------
+        check_id : str
+            The id of the check to find transitive children.
+
+        Returns
+        -------
+        list[str]
+            The list of transitive children check id.
+
+        Raises
+        ------
+        CheckNotExistError
+            If `check_id` does not exist in the register.
+
+        CheckCircularDependencyError
+            If  cyclic dependency relationship is found.
+        """
+        visited = []
+        stack = [check_id]
+
+        while stack:
+            current_check_id = stack[-1]
+
+            if current_check_id not in visited:
+                visited.append(current_check_id)
+
+                if current_check_id not in self._all_checks_mapping:
+                    raise CheckNotExistError(f"Check {current_check_id} does not exist.")
+
+                # If this check is not defined in the check relationships mapping, it mean that it
+                # doesn't have any children, hence the default empty dictionary.
+                children = self._check_relationships_mapping.get(current_check_id, {})
+
+                for child in children:
+                    if child not in visited:
+                        stack.append(child)
+                    elif child in stack:
+                        raise CheckCircularDependencyError("cycle nodes detected")
+            else:
+                stack.pop()
+
+        return visited
+
+    def get_transitive_parents(self, child_id: str) -> list[str]:
+        """Return a list of all transitive parent for a check.
+
+        Parameters
+        ----------
+        child_id : str
+            The id of the child check.
+
+        Returns
+        -------
+        list[str]
+            The list of transitive parents check id.
+
+        Raises
+        ------
+        CheckNotExistError
+            If `check_id` does not exist in the register.
+
+        CheckCircularDependencyError
+            If  cyclic dependency relationship is found.
+        """
+        visited = []
+        stack = [child_id]
+
+        while stack:
+            current_check_id = stack[-1]
+
+            if current_check_id not in visited:
+                visited.append(current_check_id)
+
+                current_check = self._all_checks_mapping.get(current_check_id, None)
+                if current_check is None:
+                    raise CheckNotExistError(f"Check {current_check_id} does not exist")
+
+                for relation in current_check.depends_on:
+                    parent = relation[0]
+                    if parent not in visited:
+                        stack.append(parent)
+                    elif parent in stack:
+                        raise CheckCircularDependencyError("cycle nodes detected")
+            else:
+                stack.pop()
+
+        return visited
+
+    def get_final_checks(self, ex_pats: list[str], in_pats: list[str]) -> list[str]:
+        """Return a set of the checks' id to run from exclude and include glob patterns.
+
+        The exclude and include glob patterns are used to match against the id of registered checks.
+
+        Including a check would effectively include all transitive parents of that check.
+        Excluding a check would effectively exclude all transitive children of that check.
+
+        The final list of check to run would be the included checks minus the excluded checks.
+
+        Parameters
+        ----------
+        ex_pats : list[str]
+            The list of excluded glob patterns.
+        in_pats : list[str]
+            The list of included glob patterns.
+
+        Returns
+        -------
+        list[str]
+            The set of final checks to run
+
+        Raises
+        ------
+        CheckRegistryError
+            If there is an error while obtaining the final checks to run.
+        """
+        all_checks = self._all_checks_mapping.keys()
+
+        if "*" in in_pats and not ex_pats:
+            return list(all_checks)
+
+        if "*" in ex_pats:
+            return []
+
+        exclude: set[str] = set()
+        for ex_pat in set(ex_pats):
+            exclude.update(fnmatch.filter(all_checks, ex_pat))
+
+        transitive_ex: set[str] = set()
+        for direct_ex in exclude:
+            try:
+                transitive_children = self.get_transitive_children(direct_ex)
+            except (CheckCircularDependencyError, CheckNotExistError) as error:
+                raise CheckRegistryError("Cannot obtain list of final checks to run") from error
+
+            transitive_ex.update(transitive_children)
+
+        include: set[str] = set()
+        for in_pat in set(in_pats):
+            include.update(fnmatch.filter(all_checks, in_pat))
+
+        transitive_in: set[str] = set()
+        for direct_in in include:
+            try:
+                transitive_parents = self.get_transitive_parents(direct_in)
+            except (CheckCircularDependencyError, CheckNotExistError) as error:
+                raise CheckRegistryError("Cannot obtain list of final checks to run") from error
+
+            transitive_in.update(transitive_parents)
+
+        include.update(transitive_in)
+        exclude.update(transitive_ex)
+
+        final = include.difference(exclude)
+        return list(final)
+
+    def scan(self, target: AnalyzeContext) -> dict[str, CheckResult]:
         """Run all checks on a target repo.
 
         Parameters
@@ -348,6 +514,7 @@ class Registry:
         """
         all_checks = self._all_checks_mapping
         results: dict[str, CheckResult] = {}
+        skipped_checks: list[SkippedInfo] = []
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.runner_num) as executor:
             # To allow the graph to be traversed again after this run.
@@ -434,7 +601,14 @@ class Registry:
                     return results
                 next_check: BaseCheck = check_queue.get()
 
-                # Look up check results to see if this check should be run
+                # Don't run excluded checks
+                if next_check.check_info.check_id not in self.checks_to_run:
+                    logger.debug("Check %s is disabled from user configutation.", next_check.check_info.check_id)
+                    graph.done(next_check.check_info.check_id)
+                    self.runner_queue.put(runner)
+                    continue
+
+                # Look up check results to see if this check should be run based on its parent status
                 skipped_info = self._should_skip_check(next_check, results)
                 if skipped_info:
                     skipped_checks.append(skipped_info)
@@ -498,24 +672,37 @@ class Registry:
         """
         self._init_runners()
 
+        # Only support 1 runner at the moment.
+        if not self.runners or len(self.runners) != 1:
+            logger.critical("Invalid number of runners.")
+            return False
+
+        if not self._all_checks_mapping:
+            logger.error("Cannot run because there is no check registered.")
+            return False
+
         try:
             if not self._is_graph_ready:
                 self._graph.prepare()
                 self._is_graph_ready = True
-
-            # Only support 1 runner at the moment.
-            if not self.runners or len(self.runners) != 1:
-                logger.critical("Invalid number of runners.")
-                return False
-
-            if not self._all_checks_mapping:
-                logger.error("Cannot run because there is no check registered.")
-                return False
-
-            return True
         except CycleError as error:
             logger.error("Found circular dependencies in registered checks: %s", str(error))
             return False
+
+        ex_pats = defaults.get_list(section="analysis.checks", item="exclude", fallback=[])
+        in_pats = defaults.get_list(section="analysis.checks", item="include", fallback=["*"])
+        try:
+            checks_to_run = registry.get_final_checks(ex_pats, in_pats)
+        except CheckRegistryError as error:
+            logger.error(error)
+            return False
+
+        if len(checks_to_run) == 0:
+            logger.info("There is no check to run according to the exclude/include configuration.")
+            return False
+        self.checks_to_run = checks_to_run
+
+        return True
 
     @staticmethod
     def get_all_checks_mapping() -> dict[str, BaseCheck]:

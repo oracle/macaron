@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for the Registry class."""
@@ -8,13 +8,14 @@ from graphlib import TopologicalSorter
 from unittest import TestCase
 from unittest.mock import patch
 
+import pytest
 from hypothesis import given
 from hypothesis.strategies import SearchStrategy, binary, booleans, integers, lists, none, one_of, text, tuples
 
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType
-from macaron.slsa_analyzer.registry import Registry
+from macaron.slsa_analyzer.registry import CheckRegistryError, Registry
 
 
 class MockCheck(BaseCheck):
@@ -22,6 +23,59 @@ class MockCheck(BaseCheck):
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         return CheckResultData(justification=[], result_tables=[], result_type=CheckResultType.UNKNOWN)
+
+
+# pylint: disable=protected-access
+@pytest.fixture(name="check_registry")
+def check_registry_fixture() -> Registry:
+    """Return a registry instance with sample checks registered.
+
+    Returns
+    -------
+    Registry
+        The sample registry instance.
+    """
+    # Refresh Registry static variables before each test case
+    Registry._all_checks_mapping = {}
+    Registry._check_relationships_mapping = {}
+    Registry._graph = TopologicalSorter()
+    Registry._is_graph_ready = False
+
+    registry = Registry()
+    registry.register(BaseCheck("mcn_a_1", "Depend on b", [("mcn_b_1", CheckResultType.PASSED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_b_1", "Depend on c", [("mcn_c_1", CheckResultType.PASSED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_c_1", "Depend on d", [("mcn_d_1", CheckResultType.PASSED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_d_1", "Depend on e", [("mcn_e_1", CheckResultType.PASSED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_e_1", "Have no parent", []))  # type: ignore
+    registry.register(BaseCheck("mcn_f_1", "Depend on c", [("mcn_c_1", CheckResultType.FAILED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_g_1", "Depend on h", [("mcn_h_1", CheckResultType.FAILED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_h_1", "Depend on i", [("mcn_i_1", CheckResultType.FAILED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_i_1", "Have no parent", []))  # type: ignore
+    return registry
+
+
+# pylint: disable=protected-access
+@pytest.fixture(name="circular_registry")
+def circular_registry_fixture() -> Registry:
+    """Return a registry instance with circular check dependencies.
+
+    Returns
+    -------
+    Registry
+        The registry with circular dependencies.
+    """
+    # Refresh Registry static variables before each test case
+    Registry._all_checks_mapping = {}
+    Registry._check_relationships_mapping = {}
+    Registry._graph = TopologicalSorter()
+    Registry._is_graph_ready = False
+
+    registry = Registry()
+    registry.register(BaseCheck("mcn_a_1", "Depend on b", [("mcn_b_1", CheckResultType.PASSED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_b_1", "Depend on c", [("mcn_c_1", CheckResultType.PASSED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_c_1", "Depend on a", [("mcn_a_1", CheckResultType.PASSED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_d_1", "Depend on nothing", []))  # type: ignore
+    return registry
 
 
 # pylint: disable=protected-access
@@ -200,3 +254,112 @@ class TestRegistry(TestCase):
 
         assert all(Registry._validate_check_id_format(check_id) for check_id in valid_ids)
         assert all(not Registry._validate_check_id_format(check_id) for check_id in invalid_ids)
+
+
+@pytest.mark.parametrize(
+    ("ex_pats", "in_pats", "final_checks"),
+    [
+        (
+            [],
+            ["*"],
+            ["mcn_a_1", "mcn_b_1", "mcn_c_1", "mcn_d_1", "mcn_e_1", "mcn_f_1", "mcn_g_1", "mcn_h_1", "mcn_i_1"],
+        ),
+        (
+            [],
+            ["*", "*"],
+            ["mcn_a_1", "mcn_b_1", "mcn_c_1", "mcn_d_1", "mcn_e_1", "mcn_f_1", "mcn_g_1", "mcn_h_1", "mcn_i_1"],
+        ),
+        (
+            [],
+            ["mcn_?_1"],
+            ["mcn_a_1", "mcn_b_1", "mcn_c_1", "mcn_d_1", "mcn_e_1", "mcn_f_1", "mcn_g_1", "mcn_h_1", "mcn_i_1"],
+        ),
+        (
+            [],
+            ["mcn_[cf]_1"],
+            ["mcn_c_1", "mcn_f_1", "mcn_d_1", "mcn_e_1"],
+        ),
+        ([], [], []),
+        (["*"], [], []),
+        (["*"], ["*"], []),
+        (["*", "*", "*"], ["*", "*"], []),
+        (
+            [],
+            ["mcn_a_1", "mcn_b_1", "mcn_c_1", "mcn_d_1", "mcn_e_1", "mcn_f_1", "mcn_g_1", "mcn_h_1", "mcn_i_1"],
+            ["mcn_a_1", "mcn_b_1", "mcn_c_1", "mcn_d_1", "mcn_e_1", "mcn_f_1", "mcn_g_1", "mcn_h_1", "mcn_i_1"],
+        ),
+        (["mcn_c_1"], ["*"], ["mcn_d_1", "mcn_e_1", "mcn_g_1", "mcn_h_1", "mcn_i_1"]),
+        ([], ["mcn_c_1"], ["mcn_c_1", "mcn_d_1", "mcn_e_1"]),
+        (["mcn_d_1"], ["mcn_c_1"], ["mcn_e_1"]),
+        (["mcn_*"], ["*"], []),
+    ],
+)
+def test_get_final_checks(
+    check_registry: Registry, ex_pats: list[str], in_pats: list[str], final_checks: list[str]
+) -> None:
+    """This method tests the get_final_checks method."""
+    assert check_registry.get_final_checks(ex_pats=ex_pats, in_pats=in_pats).sort() == final_checks.sort()
+
+
+@pytest.mark.parametrize(
+    ("parent_id", "children"),
+    [
+        ("mcn_c_1", ["mcn_c_1", "mcn_f_1", "mcn_b_1", "mcn_a_1"]),
+        # ("mcn_a_1", ["mcn_a_1"]),
+    ],
+)
+def test_get_transitive_children(check_registry: Registry, parent_id: str, children: list[str]) -> None:
+    """This method test the get_transitive_children method."""
+    result = sorted(check_registry.get_transitive_children(parent_id))
+    expect = sorted(children)
+    assert result == expect
+
+
+@pytest.mark.parametrize(
+    ("child_id", "parents"),
+    [
+        ("mcn_c_1", ["mcn_c_1", "mcn_d_1", "mcn_e_1"]),
+        ("mcn_a_1", ["mcn_a_1", "mcn_b_1", "mcn_c_1", "mcn_d_1", "mcn_e_1"]),
+        ("mcn_e_1", ["mcn_e_1"]),
+    ],
+)
+def test_get_transitive_parents(check_registry: Registry, child_id: str, parents: list[str]) -> None:
+    """This method test the get_transitive_parents method."""
+    result = sorted(check_registry.get_transitive_parents(child_id))
+    expect = sorted(parents)
+    assert result == expect
+
+
+def test_get_children_parents_special_cases(check_registry: Registry) -> None:
+    """This method test the special cases for getting transitive child or parent checks."""
+    with pytest.raises(CheckRegistryError):
+        check_registry.get_transitive_parents("not_exist")
+
+    with pytest.raises(CheckRegistryError):
+        check_registry.get_transitive_children("not_exist")
+
+
+@pytest.mark.parametrize(
+    ("parent_id", "has_error"),
+    [("mcn_a_1", True), ("mcn_b_1", True), ("mcn_d_1", False)],
+)
+def test_get_transitive_children_circular(circular_registry: Registry, parent_id: str, has_error: bool) -> None:
+    """This method test get_transitive_children method with circular detection"""
+    if has_error:
+        with pytest.raises(CheckRegistryError):
+            circular_registry.get_transitive_children(parent_id)
+    else:
+        assert circular_registry.get_transitive_children(parent_id)
+
+
+@pytest.mark.parametrize(
+    ("child_id", "has_error"),
+    [("mcn_a_1", True), ("mcn_b_1", True), ("mcn_d_1", False)],
+)
+def test_get_transitive_parent_circular(circular_registry: Registry, child_id: str, has_error: bool) -> None:
+    """This method test get_transitive_parent method with circular detection"""
+    if has_error:
+        with pytest.raises(CheckRegistryError):
+            circular_registry.get_transitive_parents(child_id)
+    else:
+        assert circular_registry.get_transitive_parents(child_id)
