@@ -267,7 +267,7 @@ Under the related header ``repofinder``, three more options exist: ``find_repos`
 
 - ``find_repos`` (Values: True or False) - Enables or disables the Repository Finding feature.
 - ``use_open_source_insights`` (Values: True or False) - Enables or disables use of Google's Open Source Insights API.
-- ``redirect_urls`` (Values: List of URLs) - Found URLs that exist in this list will be returned as the URL they redirect to.
+- ``redirect_urls`` (Values: List of URLs) - These are URLs that are known to redirect to actual repository URLs.
 
 .. note:: Finding repositories requires at least one remote call, adding some additional overhead to an analysis run.
 
