@@ -292,16 +292,13 @@ def test_parse_git_branch_output_with_random_input(content: str) -> None:
 @pytest.mark.parametrize(
     ("url", "expected"),
     [
-        ("", ""),
+        ("", None),
         ("scm:git:git@github.com:FasterXML/jackson-databind.git", "git@github.com:FasterXML/jackson-databind.git"),
         ("https://github.com/commons-io/commons-io", "https://github.com/commons-io/commons-io"),
-        ("askjdlkajsdlkajsdlkjasldjlk:scm", ""),
+        ("askjdlkajsdlkajsdlkjasldjlk:scm", None),
     ],
 )
-def test_clean_url(url: str, expected: str) -> None:
+def test_clean_url(url: str, expected: str | None) -> None:
     """Test the functionality of the clean_url function."""
     result = git_url.clean_url(url)
-    if result is None:
-        assert expected == ""
-    else:
-        assert expected == result.geturl()
+    assert result.geturl() == expected if result is not None else expected is None
