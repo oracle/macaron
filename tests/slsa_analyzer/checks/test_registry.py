@@ -12,10 +12,11 @@ import pytest
 from hypothesis import given
 from hypothesis.strategies import SearchStrategy, binary, booleans, integers, lists, none, one_of, text, tuples
 
+from macaron.errors import CheckCircularDependencyError, CheckNotExistError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType
-from macaron.slsa_analyzer.registry import CheckRegistryError, Registry
+from macaron.slsa_analyzer.registry import Registry
 
 
 class MockCheck(BaseCheck):
@@ -332,10 +333,10 @@ def test_get_transitive_parents(check_registry: Registry, child_id: str, parents
 
 def test_get_children_parents_special_cases(check_registry: Registry) -> None:
     """This method test the special cases for getting transitive child or parent checks."""
-    with pytest.raises(CheckRegistryError):
+    with pytest.raises(CheckNotExistError):
         check_registry.get_transitive_parents("not_exist")
 
-    with pytest.raises(CheckRegistryError):
+    with pytest.raises(CheckNotExistError):
         check_registry.get_transitive_children("not_exist")
 
 
@@ -346,7 +347,7 @@ def test_get_children_parents_special_cases(check_registry: Registry) -> None:
 def test_get_transitive_children_circular(circular_registry: Registry, parent_id: str, has_error: bool) -> None:
     """This method test get_transitive_children method with circular detection"""
     if has_error:
-        with pytest.raises(CheckRegistryError):
+        with pytest.raises(CheckCircularDependencyError):
             circular_registry.get_transitive_children(parent_id)
     else:
         assert circular_registry.get_transitive_children(parent_id)
@@ -359,7 +360,7 @@ def test_get_transitive_children_circular(circular_registry: Registry, parent_id
 def test_get_transitive_parent_circular(circular_registry: Registry, child_id: str, has_error: bool) -> None:
     """This method test get_transitive_parent method with circular detection"""
     if has_error:
-        with pytest.raises(CheckRegistryError):
+        with pytest.raises(CheckCircularDependencyError):
             circular_registry.get_transitive_parents(child_id)
     else:
         assert circular_registry.get_transitive_parents(child_id)
