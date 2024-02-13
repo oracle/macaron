@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides abstractions for the npm package registry."""
@@ -135,9 +135,10 @@ class NPMRegistry(PackageRegistry):
         * SLSA with "https://slsa.dev/provenance/v0.2" predicateType
         * SLSA with "https://slsa.dev/provenance/v1" predicateType
 
-        For now we download the SLSA provenance v0.2 in this method.
+        For now we download the SLSA provenance v0.2 or v1 in this method.
 
-        Here is an example SLSA v0.2 provenance: https://registry.npmjs.org/-/npm/v1/attestations/@sigstore/mock@0.1.0
+        An example SLSA v0.2 provenance: https://registry.npmjs.org/-/npm/v1/attestations/@sigstore/mock@0.1.0
+        An example SLSA v1 provenance: https://registry.npmjs.org/-/npm/v1/attestations/@sigstore/mock@0.6.3
 
         Parameters
         ----------
@@ -174,7 +175,7 @@ class NPMRegistry(PackageRegistry):
             if not att.get("predicateType"):
                 logger.debug("predicateType attribute is missing for %s", url)
                 continue
-            if att.get("predicateType") != "https://slsa.dev/provenance/v0.2":
+            if att.get("predicateType") not in ["https://slsa.dev/provenance/v0.2", "https://slsa.dev/provenance/v1"]:
                 logger.debug("predicateType %s is not accepted. Skipping...", att.get("predicateType"))
                 continue
             if not (bundle := att.get("bundle")):
