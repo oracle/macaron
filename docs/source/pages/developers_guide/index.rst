@@ -149,9 +149,8 @@ provide the check details in the initializer method, and implement the logic of 
 
 A ``check_id`` should meet the following requirements:
 
-    - The general format: ``mcn_<name>_<digits>``
-    - In ``name``, only lowercase alphabetical letters are allowed. If ``name`` contains multiple \
-        words, they must be separated by underscores.
+    - The general format: ``mcn_<name>_<digits>``.
+    - Lowercase alphabetical letters are allowed in ``name`` only. If ``name`` contains multiple words, they must be separated by underscores.
 
 
 You can set the ``depends_on`` attribute in the initializer method to declare such dependencies. In this example, we leave this list empty.
