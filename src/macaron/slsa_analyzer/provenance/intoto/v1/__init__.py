@@ -221,7 +221,7 @@ def _validate_property(
     object_: JsonType,
     key: str,
     required: bool,
-    validator_function: Callable[[JsonType], bool],
+    validator: Callable[[JsonType], bool],
     report_errors: bool = True,
 ) -> _ValidityState:
     """Validate the existence and type of target within the passed Json object."""
@@ -238,7 +238,7 @@ def _validate_property(
             return _ValidityState.MISSING
         return _ValidityState.VALID
 
-    valid = validator_function(value)
+    valid = validator(value)
     if not valid:
         if report_errors:
             raise ValidateInTotoPayloadError(f"The attribute {key} of the in-toto subject is invalid.")
