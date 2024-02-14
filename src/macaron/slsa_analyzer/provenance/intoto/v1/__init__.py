@@ -6,11 +6,15 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from enum import Enum
 from typing import TypedDict, TypeGuard
 
 from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
 from macaron.util import JsonType
 
+# The full list of cryptographic algorithms supported in SLSA v1 provenance. These are used as keys within the digest
+#  set of the resource descriptors within the subject.
+# See: https://github.com/in-toto/attestation/blob/main/spec/v1/digest_set.md
 VALID_ALGORITHMS = [
     "sha256",
     "sha224",
@@ -138,7 +142,7 @@ def validate_intoto_subject(subject: JsonType) -> TypeGuard[InTotoV1ResourceDesc
 
     Returns
     -------
-    TypeGuard[InTotoSubject]
+    TypeGuard[InTotoV1ResourceDescriptor]
         ``True`` if the subject element is valid, in which case its type is narrowed to an
         ``InTotoSubject``; ``False`` otherwise.
 
@@ -152,30 +156,20 @@ def validate_intoto_subject(subject: JsonType) -> TypeGuard[InTotoV1ResourceDesc
             "A subject in the in-toto statement is invalid: expecting an object.",
         )
 
-    name_valid = _validate_property(subject, "name", False, lambda x: isinstance(x, str))
-    if not name_valid:
-        raise ValidateInTotoPayloadError("The subject name is not valid.")
-
     # At least one of 'uri', 'digest', and 'content' must be valid and present.
-    uri_valid = _validate_property(subject, "uri", True, lambda x: isinstance(x, str))
-    content_valid = _validate_property(subject, "content", True, lambda x: isinstance(x, str))
-    digest_valid = _validate_property(subject, "digest", True, is_valid_digest_set)
-    if not (uri_valid or content_valid or digest_valid):
+    uri_state = _validate_property(subject, "uri", True, lambda x: isinstance(x, str), False)
+    content_state = _validate_property(subject, "content", True, lambda x: isinstance(x, str), False)
+    digest_state = _validate_property(subject, "digest", True, is_valid_digest_set, False)
+    if _ValidityState.VALID not in (uri_state, content_state, digest_state):
         raise ValidateInTotoPayloadError(
-            "One of 'uri', 'digest', or 'content' must be present and valid within 'subject'."
+            f"One of 'uri', 'digest', or 'content' must be present and valid within 'subject'. URI: {uri_state.name}. "
+            f"Content: {content_state.name}. DIGEST: {digest_state.name}."
         )
 
-    download_location_valid = _validate_property(subject, "downloadLocation", False, lambda x: isinstance(x, str))
-    if not download_location_valid:
-        raise ValidateInTotoPayloadError("The subject downloadLocation is not valid.")
-
-    media_type_valid = _validate_property(subject, "mediaType", False, lambda x: isinstance(x, str))
-    if not media_type_valid:
-        raise ValidateInTotoPayloadError("The subject mediaType is not valid.")
-
-    annotations_valid = _validate_property(subject, "annotations", False, is_valid_annotation_map)
-    if not annotations_valid:
-        raise ValidateInTotoPayloadError("The subject annotations are not valid.")
+    _validate_property(subject, "name", False, lambda x: isinstance(x, str))
+    _validate_property(subject, "downloadLocation", False, lambda x: isinstance(x, str))
+    _validate_property(subject, "mediaType", False, lambda x: isinstance(x, str))
+    _validate_property(subject, "annotations", False, is_valid_annotation_map)
 
     return True
 
@@ -224,14 +218,37 @@ def is_valid_annotation_map(annotation_map: JsonType) -> bool:
 
 
 def _validate_property(
-    object_: JsonType, target_name: str, required: bool, validator_function: Callable[[JsonType], bool]
-) -> bool:
+    object_: JsonType,
+    key: str,
+    required: bool,
+    validator_function: Callable[[JsonType], bool],
+    report_errors: bool = True,
+) -> _ValidityState:
     """Validate the existence and type of target within the passed Json object."""
     if not isinstance(object_, dict):
-        return False
+        # The passed object is checked before this function is called, but mypy requires it be explicitly checked here
+        #  too. Also known as: this branch should never be taken.
+        return _ValidityState.INVALID
 
-    target = object_.get(target_name)
-    if not target:
-        return not required
+    value = object_.get(key)
+    if not value:
+        if required:
+            if report_errors:
+                raise ValidateInTotoPayloadError(f"The attribute {key} of the in-toto subject is missing.")
+            return _ValidityState.MISSING
+        return _ValidityState.VALID
 
-    return validator_function(target)
+    valid = validator_function(value)
+    if not valid:
+        if report_errors:
+            raise ValidateInTotoPayloadError(f"The attribute {key} of the in-toto subject is invalid.")
+        return _ValidityState.INVALID
+    return _ValidityState.VALID
+
+
+class _ValidityState(str, Enum):
+    """Represents the validity state of properties being validated."""
+
+    VALID = 0
+    MISSING = 1
+    INVALID = 2
