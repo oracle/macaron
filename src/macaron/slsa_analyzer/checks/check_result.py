@@ -27,7 +27,7 @@ class CheckResultType(str, Enum):
 class Confidence(float, Enum):
     """This class contains confidence score for a check result.
 
-    The scores must be in [0.0, 1.0].
+    The scores must be in the range [0.0, 1.0].
     """
 
     #: A high confidence score.

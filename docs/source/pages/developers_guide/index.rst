@@ -15,8 +15,8 @@ For API reference, see the :doc:`API Reference </pages/developers_guide/apidoc/i
 Writing a New Check
 -------------------
 
-As a contributor to Macaron, it is very likely to need to write a new check or modify an existing one at some point. In this
-section, we will understand how Macaron checks work and what we need to do to develop one.
+Contributors to Macaron are very likely to need to write a new check or modify an existing one at some point. In this
+section, we will explain how Macaron checks work. We will also show how to develop a new check.
 
 +++++++++++++++++
 High-level Design
@@ -37,8 +37,8 @@ to make that possible as we will see later.
 
 Once you get familiar with writing a basic check, you can explore the check dependency feature in Macaron. The checks
 in our framework can be customized to only run if another check has run and returned a specific
-:class:`result type <macaron.slsa_analyzer.checks.check_result.CheckResultType>`. This feature can be used when some checks
-can be ordered and have a parent-child relationship, i.e., one check implements a weaker or stronger version of a
+:class:`result type <macaron.slsa_analyzer.checks.check_result.CheckResultType>`. This feature can be used when checks
+have an ordering and a parent-child relationship, i.e., one check implements a weaker or stronger version of a
 security property in a parent check. Therefore, it might make sense to skip running the check and report a
 :class:`result type <macaron.slsa_analyzer.checks.check_result.CheckResultType>` based on the result of the parent check.
 
@@ -147,11 +147,10 @@ Add a class for your check that subclasses :class:`BaseCheck <macaron.slsa_analy
 provide the check details in the initializer method, and implement the logic of the check in
 :func:`run_check <macaron.slsa_analyzer.checks.base_check.BaseCheck.run_check>`.
 
-A ``check_id`` should meet the following requirements:
+A ``check_id`` should match the ``^mcn_([a-z]+_)+([0-9]+)$`` regular expression, which means it should meet the following requirements:
 
     - The general format: ``mcn_<name>_<digits>``.
-    - Lowercase alphabetical letters are allowed in ``name`` only. If ``name`` contains multiple words, they must be separated by underscores.
-
+    - Use lowercase alphabetical letters in ``name``. If ``name`` contains multiple words, they must be separated by underscores.
 
 You can set the ``depends_on`` attribute in the initializer method to declare such dependencies. In this example, we leave this list empty.
 

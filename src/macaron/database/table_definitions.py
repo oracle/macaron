@@ -423,7 +423,7 @@ class CheckFacts(ORMBase):
     #: The primary key.
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
 
-    #: The confidence score to estimate the accuracy of the check fact. This value should be in [0.0, 1.0] with
+    #: The confidence score to estimate the accuracy of the check fact. This value should be in the range [0.0, 1.0] with
     #: a lower value depicting a lower confidence. Because some analyses used in checks may use
     #: heuristics, the results can be inaccurate in certain cases.
     #: We use the confidence score to enable the check designer to assign a confidence estimate.
