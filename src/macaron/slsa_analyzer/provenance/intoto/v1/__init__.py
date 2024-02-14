@@ -144,7 +144,7 @@ def validate_intoto_subject(subject: JsonType) -> TypeGuard[InTotoV1ResourceDesc
     -------
     TypeGuard[InTotoV1ResourceDescriptor]
         ``True`` if the subject element is valid, in which case its type is narrowed to an
-        ``InTotoSubject``; ``False`` otherwise.
+        ``InTotoV1ResourceDescriptor``; ``False`` otherwise.
 
     Raises
     ------
