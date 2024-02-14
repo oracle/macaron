@@ -1,10 +1,13 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module exists to validate URLs in terms of their use as a repository that can be analyzed."""
+import urllib.parse
 from collections.abc import Iterable
 
-from macaron.slsa_analyzer.git_url import get_remote_vcs_url
+from macaron.config.defaults import defaults
+from macaron.slsa_analyzer.git_url import clean_url, get_remote_vcs_url
+from macaron.util import send_get_http_raw
 
 
 def find_valid_repository_url(urls: Iterable[str]) -> str:
@@ -18,9 +21,19 @@ def find_valid_repository_url(urls: Iterable[str]) -> str:
     Returns
     -------
     str
-        A valid URL or empty if it can't find any valid URL.
+        A valid URL, or an empty string if none can be found.
     """
-    vcs_set = {get_remote_vcs_url(value) for value in urls if get_remote_vcs_url(value) != ""}
+    pruned_list = []
+    for url in urls:
+        parsed_url = clean_url(url)
+        if not parsed_url:
+            # URLs that failed to parse can be rejected here.
+            continue
+        redirect_url = _resolve_redirects(parsed_url)
+        # If a redirect URL is found add it, otherwise add the parsed url.
+        pruned_list.append(redirect_url if redirect_url else parsed_url.geturl())
+
+    vcs_set = {get_remote_vcs_url(value) for value in pruned_list if get_remote_vcs_url(value) != ""}
 
     # To avoid non-deterministic results we sort the URLs.
     vcs_list = sorted(vcs_set)
@@ -30,3 +43,14 @@ def find_valid_repository_url(urls: Iterable[str]) -> str:
 
     # Report the first valid URL from the end of the list.
     return vcs_list.pop()
+
+
+def _resolve_redirects(parsed_url: urllib.parse.ParseResult) -> str | None:
+    """Resolve redirecting URLs by returning the location they point to."""
+    redirect_list = defaults.get_list("repofinder", "redirect_urls", fallback=[])
+    if parsed_url.netloc in redirect_list:
+        response = send_get_http_raw(parsed_url.geturl(), allow_redirects=False)
+        if not response:
+            return None
+        return response.headers.get("location")
+    return None

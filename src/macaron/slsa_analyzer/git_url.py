@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides methods to perform generic actions on Git URLS."""
@@ -566,6 +566,33 @@ def get_remote_vcs_url(url: str, clean_up: bool = True) -> str:
     return url_as_str
 
 
+def clean_url(url: str) -> urllib.parse.ParseResult | None:
+    """Clean the passed url, removing extraneous prefixes and parsing it with urllib.
+
+    Parameters
+    ----------
+    url: str
+        The path to a repository.
+
+    Returns
+    -------
+    ParseResult:
+        The parsed URL.
+    """
+    try:
+        # Remove prefixes, such as "scm:" and "git:".
+        match = re.match(r"(?P<prefix>(.*?))(git\+http|http|ftp|ssh\+git|ssh|git@)(.)*", str(url))
+        if match is None:
+            return None
+        cleaned_url = url.replace(match.group("prefix"), "")
+
+        # Parse the URL string to determine how to handle it.
+        return urllib.parse.urlparse(cleaned_url)
+    except (ValueError, TypeError) as error:
+        logger.debug(error)
+        return None
+
+
 def parse_remote_url(
     url: str, allowed_git_service_hostnames: list[str] | None = None
 ) -> urllib.parse.ParseResult | None:
@@ -597,17 +624,8 @@ def parse_remote_url(
     if allowed_git_service_hostnames is None:
         allowed_git_service_hostnames = get_allowed_git_service_hostnames(defaults)
 
-    try:
-        # Remove prefixes, such as "scm:" and "git:".
-        match = re.match(r"(?P<prefix>(.*?))(git\+http|http|ftp|ssh\+git|ssh|git@)(.)*", str(url))
-        if match is None:
-            return None
-        cleaned_url = url.replace(match.group("prefix"), "")
-
-        # Parse the URL string to determine how to handle it.
-        parsed_url = urllib.parse.urlparse(cleaned_url)
-    except (ValueError, TypeError) as error:
-        logger.debug(error)
+    parsed_url = clean_url(url)
+    if not parsed_url:
         return None
 
     res_scheme = ""
