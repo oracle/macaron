@@ -29,7 +29,7 @@
     {
         "id": "commons-cli:commons-cli",
         "purl": "pkg:maven/commons-cli/commons-cli@1.5.0?type=jar",
-        "path": "https://github.com/apache/maven-apache-parent",
+        "path": "https://github.com/apache/commons-cli",
         "branch": "",
         "digest": "",
         "note": "",
@@ -200,7 +200,7 @@
     {
         "id": "commons-io:commons-io",
         "purl": "pkg:maven/commons-io/commons-io@2.11.0?type=jar",
-        "path": "https://github.com/apache/maven-apache-parent",
+        "path": "https://github.com/apache/commons-io",
         "branch": "",
         "digest": "",
         "note": "",
