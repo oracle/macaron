@@ -382,14 +382,14 @@ class Registry:
         return set(self._check_relationships_mapping.get(check_id, {}))
 
     def get_final_checks(self, ex_pats: list[str], in_pats: list[str]) -> list[str]:
-        """Return a set of the checks' id to run from exclude and include glob patterns.
+        """Return a set of the check ids to run from the exclude and include glob patterns.
 
         The exclude and include glob patterns are used to match against the id of registered checks.
 
         Including a check would effectively include all transitive parents of that check.
         Excluding a check would effectively exclude all transitive children of that check.
 
-        The final list of check to run would be the included checks minus the excluded checks.
+        The final list of checks to run would be the included checks minus the excluded checks.
 
         Parameters
         ----------
@@ -554,7 +554,7 @@ class Registry:
 
                 # Don't run excluded checks
                 if next_check.check_info.check_id not in self.checks_to_run:
-                    logger.debug("Check %s is disabled from user configutation.", next_check.check_info.check_id)
+                    logger.debug("Check %s is disabled by user configuration.", next_check.check_info.check_id)
                     graph.done(next_check.check_info.check_id)
                     self.runner_queue.put(runner)
                     continue
@@ -649,7 +649,7 @@ class Registry:
             return False
 
         if len(checks_to_run) == 0:
-            logger.info("There is no check to run according to the exclude/include configuration.")
+            logger.info("There are no checks to run according to the exclude/include configuration.")
             return False
         self.checks_to_run = checks_to_run
 
@@ -728,12 +728,12 @@ class Registry:
         -------
         CheckTree
             A nested dictionary that represent the relationship between
-            checks. Each mapping (K, V) in the returned dictionary has K is the check id and
-            V is a dictionary contains the children of that check.
+            checks. For each mapping (K, V) in the returned dictionary, K is the check id and
+            V is a dictionary that contains the children of that check.
 
         Examples
         --------
-        Given the following checks and its relationships
+        Given the following checks and their relationships:
 
         .. code-block::
 
@@ -743,7 +743,7 @@ class Registry:
             mcn_version_control_system_1
             |-- mcn_trusted_builder_level_three_1
 
-        The result dictionary will be
+        The resulting dictionary will be:
 
         .. code-block::
 
@@ -760,7 +760,7 @@ class Registry:
         """
 
         def _traverse(
-            start_node: str,
+            node: str,
             get_successors: Callable[[str], set[str]],
         ) -> CheckTree:
             """We assume that the data structure we are working with is a tree.
@@ -768,7 +768,7 @@ class Registry:
             Therefore, no cycle checking is needed.
             """
             result = {}
-            successors = get_successors(start_node)
+            successors = get_successors(node)
             for successor in successors:
                 result[successor] = _traverse(successor, get_successors)
 
