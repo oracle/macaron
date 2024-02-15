@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This script tests the functionality of the repo finder's remote API calls."""
@@ -29,6 +29,7 @@ def test_repo_finder() -> int:
     if not defaults.has_section("repofinder"):
         defaults.add_section("repofinder")
     defaults.set("repofinder", "use_open_source_insights", "True")
+    defaults.set("repofinder", "redirect_urls", "gitbox.apache.org git-wip-us.apache.org")
 
     if not defaults.has_section("git_service.github"):
         defaults.add_section("git_service.github")
@@ -60,6 +61,10 @@ def test_repo_finder() -> int:
 
     # Test deps.dev API for Cargo package.
     if not find_repo(PackageURL.from_string("pkg:cargo/rand_core")):
+        return os.EX_UNAVAILABLE
+
+    # Test redirecting URL from Apache commons-io package.
+    if not find_repo(PackageURL.from_string("pkg:maven/commons-io/commons-io@2.15.1")):
         return os.EX_UNAVAILABLE
 
     return os.EX_OK
