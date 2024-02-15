@@ -12,7 +12,6 @@ import pytest
 from hypothesis import given
 from hypothesis.strategies import SearchStrategy, binary, booleans, integers, lists, none, one_of, text, tuples
 
-from macaron.errors import CheckCircularDependencyError, CheckNotExistError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType
@@ -52,30 +51,6 @@ def check_registry_fixture() -> Registry:
     registry.register(BaseCheck("mcn_g_1", "Depend on h", [("mcn_h_1", CheckResultType.FAILED)]))  # type: ignore
     registry.register(BaseCheck("mcn_h_1", "Depend on i", [("mcn_i_1", CheckResultType.FAILED)]))  # type: ignore
     registry.register(BaseCheck("mcn_i_1", "Have no parent", []))  # type: ignore
-    return registry
-
-
-# pylint: disable=protected-access
-@pytest.fixture(name="circular_registry")
-def circular_registry_fixture() -> Registry:
-    """Return a registry instance with circular check dependencies.
-
-    Returns
-    -------
-    Registry
-        The registry with circular dependencies.
-    """
-    # Refresh Registry static variables before each test case
-    Registry._all_checks_mapping = {}
-    Registry._check_relationships_mapping = {}
-    Registry._graph = TopologicalSorter()
-    Registry._is_graph_ready = False
-
-    registry = Registry()
-    registry.register(BaseCheck("mcn_a_1", "Depend on b", [("mcn_b_1", CheckResultType.PASSED)]))  # type: ignore
-    registry.register(BaseCheck("mcn_b_1", "Depend on c", [("mcn_c_1", CheckResultType.PASSED)]))  # type: ignore
-    registry.register(BaseCheck("mcn_c_1", "Depend on a", [("mcn_a_1", CheckResultType.PASSED)]))  # type: ignore
-    registry.register(BaseCheck("mcn_d_1", "Depend on nothing", []))  # type: ignore
     return registry
 
 
@@ -299,68 +274,52 @@ def test_get_final_checks(
     check_registry: Registry, ex_pats: list[str], in_pats: list[str], final_checks: list[str]
 ) -> None:
     """This method tests the get_final_checks method."""
-    assert check_registry.get_final_checks(ex_pats=ex_pats, in_pats=in_pats).sort() == final_checks.sort()
+    assert sorted(check_registry.get_final_checks(ex_pats=ex_pats, in_pats=in_pats)) == sorted(final_checks)
 
 
 @pytest.mark.parametrize(
-    ("parent_id", "children"),
+    ("check_id", "children"),
     [
-        ("mcn_c_1", ["mcn_c_1", "mcn_f_1", "mcn_b_1", "mcn_a_1"]),
-        # ("mcn_a_1", ["mcn_a_1"]),
+        (
+            "mcn_a_1",
+            [],
+        ),
+        (
+            "mcn_b_1",
+            ["mcn_a_1"],
+        ),
+        (
+            "mcn_c_1",
+            ["mcn_f_1", "mcn_b_1"],
+        ),
     ],
 )
-def test_get_transitive_children(check_registry: Registry, parent_id: str, children: list[str]) -> None:
-    """This method test the get_transitive_children method."""
-    result = sorted(check_registry.get_transitive_children(parent_id))
+def test_get_children(check_registry: Registry, check_id: str, children: set[str]) -> None:
+    """This method test the get_children method."""
+    result = sorted(check_registry.get_children(check_id))
     expect = sorted(children)
     assert result == expect
 
 
 @pytest.mark.parametrize(
-    ("child_id", "parents"),
+    ("check_id", "parent"),
     [
-        ("mcn_c_1", ["mcn_c_1", "mcn_d_1", "mcn_e_1"]),
-        ("mcn_a_1", ["mcn_a_1", "mcn_b_1", "mcn_c_1", "mcn_d_1", "mcn_e_1"]),
-        ("mcn_e_1", ["mcn_e_1"]),
+        (
+            "mcn_a_1",
+            ["mcn_b_1"],
+        ),
+        (
+            "mcn_b_1",
+            ["mcn_c_1"],
+        ),
+        (
+            "mcn_e_1",
+            [],
+        ),
     ],
 )
-def test_get_transitive_parents(check_registry: Registry, child_id: str, parents: list[str]) -> None:
-    """This method test the get_transitive_parents method."""
-    result = sorted(check_registry.get_transitive_parents(child_id))
-    expect = sorted(parents)
+def test_get_parents(check_registry: Registry, check_id: str, parent: set[str]) -> None:
+    """This method test the get_children method."""
+    result = sorted(check_registry.get_parents(check_id))
+    expect = sorted(parent)
     assert result == expect
-
-
-def test_get_children_parents_special_cases(check_registry: Registry) -> None:
-    """This method test the special cases for getting transitive child or parent checks."""
-    with pytest.raises(CheckNotExistError):
-        check_registry.get_transitive_parents("not_exist")
-
-    with pytest.raises(CheckNotExistError):
-        check_registry.get_transitive_children("not_exist")
-
-
-@pytest.mark.parametrize(
-    ("parent_id", "has_error"),
-    [("mcn_a_1", True), ("mcn_b_1", True), ("mcn_d_1", False)],
-)
-def test_get_transitive_children_circular(circular_registry: Registry, parent_id: str, has_error: bool) -> None:
-    """This method test get_transitive_children method with circular detection"""
-    if has_error:
-        with pytest.raises(CheckCircularDependencyError):
-            circular_registry.get_transitive_children(parent_id)
-    else:
-        assert circular_registry.get_transitive_children(parent_id)
-
-
-@pytest.mark.parametrize(
-    ("child_id", "has_error"),
-    [("mcn_a_1", True), ("mcn_b_1", True), ("mcn_d_1", False)],
-)
-def test_get_transitive_parent_circular(circular_registry: Registry, child_id: str, has_error: bool) -> None:
-    """This method test get_transitive_parent method with circular detection"""
-    if has_error:
-        with pytest.raises(CheckCircularDependencyError):
-            circular_registry.get_transitive_parents(child_id)
-    else:
-        assert circular_registry.get_transitive_parents(child_id)

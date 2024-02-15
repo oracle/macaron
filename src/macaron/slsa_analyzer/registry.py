@@ -10,13 +10,14 @@ import logging
 import queue
 import re
 import sys
-from collections.abc import Mapping
+from collections.abc import Callable
 from copy import deepcopy
 from graphlib import CycleError, TopologicalSorter
 from typing import Any
 
 from macaron.config.defaults import defaults
-from macaron.errors import CheckCircularDependencyError, CheckNotExistError, CheckRegistryError
+from macaron.errors import CheckRegistryError
+from macaron.graph.graph import get_transitive_closure
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import (
@@ -343,97 +344,42 @@ class Registry:
 
         return False
 
-    def get_transitive_children(self, check_id: str) -> list[str]:
-        """Return a list of all transitive children for a check.
+    def get_parents(self, check_id: str) -> set[str]:
+        """Return the ids of all direct parent checks.
 
         Parameters
         ----------
         check_id : str
-            The id of the check to find transitive children.
+            The check id we want to obtain the parents.
 
         Returns
         -------
-        list[str]
-            The list of transitive children check id.
-
-        Raises
-        ------
-        CheckNotExistError
-            If `check_id` does not exist in the register.
-
-        CheckCircularDependencyError
-            If  cyclic dependency relationship is found.
+        set[str]
+            The set of ids for all parent checks.
         """
-        visited = []
-        stack = [check_id]
+        check = self._all_checks_mapping.get(check_id)
+        if not check:
+            # It won't happen as we have validated the existence of check_id in registry.prepare().
+            return set()
 
-        while stack:
-            current_check_id = stack[-1]
+        return {relation[0] for relation in check.depends_on}
 
-            if current_check_id not in visited:
-                visited.append(current_check_id)
-
-                if current_check_id not in self._all_checks_mapping:
-                    raise CheckNotExistError(f"Check {current_check_id} does not exist.")
-
-                # If this check is not defined in the check relationships mapping, it mean that it
-                # doesn't have any children, hence the default empty dictionary.
-                children = self._check_relationships_mapping.get(current_check_id, {})
-
-                for child in children:
-                    if child not in visited:
-                        stack.append(child)
-                    elif child in stack:
-                        raise CheckCircularDependencyError("cycle nodes detected")
-            else:
-                stack.pop()
-
-        return visited
-
-    def get_transitive_parents(self, child_id: str) -> list[str]:
-        """Return a list of all transitive parent for a check.
+    def get_children(self, check_id: str) -> set[str]:
+        """Return the ids of all direct children checks.
 
         Parameters
         ----------
-        child_id : str
-            The id of the child check.
+        check_id : str
+            The check id we want to obtain the children.
 
         Returns
         -------
-        list[str]
-            The list of transitive parents check id.
-
-        Raises
-        ------
-        CheckNotExistError
-            If `check_id` does not exist in the register.
-
-        CheckCircularDependencyError
-            If  cyclic dependency relationship is found.
+        set[str]
+            The set of ids for all children checks.
         """
-        visited = []
-        stack = [child_id]
-
-        while stack:
-            current_check_id = stack[-1]
-
-            if current_check_id not in visited:
-                visited.append(current_check_id)
-
-                current_check = self._all_checks_mapping.get(current_check_id, None)
-                if current_check is None:
-                    raise CheckNotExistError(f"Check {current_check_id} does not exist")
-
-                for relation in current_check.depends_on:
-                    parent = relation[0]
-                    if parent not in visited:
-                        stack.append(parent)
-                    elif parent in stack:
-                        raise CheckCircularDependencyError("cycle nodes detected")
-            else:
-                stack.pop()
-
-        return visited
+        # If this check is not defined in the check relationships mapping, it mean that it
+        # doesn't have any children, hence the default empty dictionary.
+        return set(self._check_relationships_mapping.get(check_id, {}))
 
     def get_final_checks(self, ex_pats: list[str], in_pats: list[str]) -> list[str]:
         """Return a set of the checks' id to run from exclude and include glob patterns.
@@ -476,10 +422,10 @@ class Registry:
 
         transitive_ex: set[str] = set()
         for direct_ex in exclude:
-            try:
-                transitive_children = self.get_transitive_children(direct_ex)
-            except (CheckCircularDependencyError, CheckNotExistError) as error:
-                raise CheckRegistryError("Cannot obtain list of final checks to run") from error
+            transitive_children = get_transitive_closure(
+                node=direct_ex,
+                get_successors=self.get_children,
+            )
 
             transitive_ex.update(transitive_children)
 
@@ -489,10 +435,10 @@ class Registry:
 
         transitive_in: set[str] = set()
         for direct_in in include:
-            try:
-                transitive_parents = self.get_transitive_parents(direct_in)
-            except (CheckCircularDependencyError, CheckNotExistError) as error:
-                raise CheckRegistryError("Cannot obtain list of final checks to run") from error
+            transitive_parents = get_transitive_closure(
+                node=direct_in,
+                get_successors=self.get_parents,
+            )
 
             transitive_in.update(transitive_parents)
 
@@ -814,25 +760,23 @@ class Registry:
         """
 
         def _traverse(
-            relation_mapping: Mapping[str, dict[str, CheckResultType]],
-            root: str,
-            visited: list[str],
+            start_node: str,
+            get_successors: Callable[[str], set[str]],
         ) -> CheckTree:
+            """We assume that the data structure we are working with is a tree.
+
+            Therefore, no cycle checking is needed.
+            """
             result = {}
-            visited.append(root)
-            children = relation_mapping.get(root, {})
-            for child in children:
-                if child in visited:
-                    # Cycles detected, however it won't happen as this
-                    # method is only called after the cycle checking.
-                    continue
-                result[child] = _traverse(relation_mapping, child, visited)
+            successors = get_successors(start_node)
+            for successor in successors:
+                result[successor] = _traverse(successor, get_successors)
 
             return result
 
         result: CheckTree = {}
         for check in self.no_parent_checks:
-            result[check] = _traverse(self._check_relationships_mapping, check, [])
+            result[check] = _traverse(check, self.get_children)
 
         return result
 

@@ -58,11 +58,3 @@ class InvalidHTTPResponseError(MacaronError):
 
 class CheckRegistryError(MacaronError):
     """The Check Registry Error class."""
-
-
-class CheckCircularDependencyError(CheckRegistryError):
-    """This error is raised when there is a circular dependency in the registered checks."""
-
-
-class CheckNotExistError(CheckRegistryError):
-    """This error is raised trying to obtain a un-registered check."""
