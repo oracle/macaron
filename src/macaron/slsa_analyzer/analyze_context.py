@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Analyze Context class.
@@ -38,8 +38,6 @@ class ChecksOutputs(TypedDict):
     """The CI services information for this repository."""
     is_inferred_prov: bool
     """True if we cannot find the provenance and Macaron need to infer the provenance."""
-    # We need to use typing.Protocol for multiple inheritance, however, the Expectation
-    # class uses inlined functions, which is not supported by Protocol.
     expectation: Expectation | None
     """The expectation to verify the provenance for this repository."""
     package_registries: list[PackageRegistryInfo]
@@ -66,7 +64,9 @@ class AnalyzeContext:
         output_dir : str
             The output dir.
         """
-        self.component = component
+        # The component attribute should be accessed via the `component` property.
+        self._component = component
+
         self.ctx_data: dict[ReqName, SLSAReqStatus] = create_requirement_status_dict()
 
         self.slsa_level = SLSALevels.LEVEL0
@@ -84,7 +84,8 @@ class AnalyzeContext:
         self.check_results: dict[str, CheckResult] = {}
 
         # Add the data computed at runtime to the dynamic_data attribute.
-        self.dynamic_data: ChecksOutputs = ChecksOutputs(
+        # This attribute should be accessed via the `dynamic_data` property.
+        self._dynamic_data: ChecksOutputs = ChecksOutputs(
             git_service=NoneGitService(),
             build_spec=BuildSpec(tools=[]),
             ci_services=[],
@@ -92,6 +93,38 @@ class AnalyzeContext:
             is_inferred_prov=True,
             expectation=None,
         )
+
+    @property
+    def component(self) -> Component:
+        """Return the object associated with a target software component.
+
+        This property contains the information about a software component, such as it's
+        corresponding repository and dependencies.
+
+
+        Returns
+        -------
+        Component
+        """
+        return self._component
+
+    @property
+    def dynamic_data(self) -> ChecksOutputs:
+        """Return the `dynamic_data` object that contains various intermediate representations.
+
+        This object is used to pass various models and intermediate representations from the backend
+        in Macaron to checks. A check can also store intermediate results in this object to be used
+        by checks that depend on it. However, please avoid adding arbitrary attributes to this object!
+
+        We recommend to take a look at the attributes in this object before writing a new check. Chances
+        are that what you try to implement is already implemented and the results are available in the
+        `dynamic_data` object.
+
+        Returns
+        -------
+        ChecksOutputs
+        """
+        return self._dynamic_data
 
     @property
     def provenances(self) -> dict[str, list[InTotoV01Statement | InTotoV1Statement]]:
@@ -109,7 +142,9 @@ class AnalyzeContext:
             # By default, initialize every key with an empty list.
             result: dict[str, list[InTotoV01Statement | InTotoV1Statement]] = defaultdict(list)
             for ci_info in ci_services:
-                result[ci_info["service"].name].extend(payload.statement for payload in ci_info["provenances"])
+                result[ci_info["service"].name].extend(
+                    prov_asset.payload.statement for prov_asset in ci_info["provenances"]
+                )
             package_registry_entries = self.dynamic_data["package_registries"]
             for package_registry_entry in package_registry_entries:
                 result[package_registry_entry.package_registry.name].extend(

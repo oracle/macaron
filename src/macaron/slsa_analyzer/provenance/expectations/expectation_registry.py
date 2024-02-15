@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The provenance expectation module manages expectations that will be provided to checks."""
@@ -6,7 +6,7 @@
 import logging
 import os
 
-from macaron.database.table_definitions import CUEExpectation
+from macaron.slsa_analyzer.provenance.expectations.cue import CUEExpectation
 from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
 
 logger: logging.Logger = logging.getLogger(__name__)

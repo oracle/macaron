@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildScriptCheck class."""
@@ -12,7 +12,7 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 
@@ -28,7 +28,7 @@ class BuildScriptFacts(CheckFacts):
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
     #: The name of the tool used to build.
-    build_tool_name: Mapped[str] = mapped_column(String, nullable=False)
+    build_tool_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     __mapper_args__ = {
         "polymorphic_identity": "_build_script_check",
@@ -68,22 +68,16 @@ class BuildScriptCheck(BaseCheck):
         build_tools = ctx.dynamic_data["build_spec"]["tools"]
 
         if not build_tools:
-            failed_msg = "The target repository does not have any build tools."
-            return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
+            return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
 
         # Check if any build tools are discovered for this repo.
         # TODO: look for build commands in the bash scripts. Currently
         #       we parse bash scripts that are reachable through CI only.
-        justification: Justification = []
-        result_tables: ResultTables = []
+        result_tables: list[CheckFacts] = []
         for tool in build_tools:
-            pass_msg = f"The target repository uses build tool {tool.name}."
-            justification.append(pass_msg)
-            result_tables.append(BuildScriptFacts(build_tool_name=tool.name))
+            result_tables.append(BuildScriptFacts(build_tool_name=tool.name, confidence=Confidence.HIGH))
 
-        return CheckResultData(
-            justification=justification, result_tables=result_tables, result_type=CheckResultType.PASSED
-        )
+        return CheckResultData(result_tables=result_tables, result_type=CheckResultType.PASSED)
 
 
 registry.register(BuildScriptCheck())

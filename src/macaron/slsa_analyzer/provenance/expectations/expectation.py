@@ -1,22 +1,28 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides a base class for provenance expectation verifiers."""
 
+from abc import abstractmethod
 from collections.abc import Callable
 from typing import Any, Self
 
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
+from macaron.database.table_definitions import CheckFacts
 from macaron.errors import ExpectationRuntimeError
+from macaron.slsa_analyzer.checks.check_result import JustificationType
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 
 ExpectationFn = Callable[[Any], bool]
 
 
-# pylint: disable=invalid-name
-class Expectation:
-    """The SQLAlchemy mixin for the expectation used to validate a target provenance."""
+class Expectation(CheckFacts):
+    """An intermediate abstract SQLAlchemy mapping for the expectation used to validate a target provenance."""
+
+    # We would like to map different Expectation subclasses to individual tables. We need to leave this base class unmapped.
+    __abstract__ = True
 
     #: The description.
     description: Mapped[str] = mapped_column(nullable=False)
@@ -36,12 +42,16 @@ class Expectation:
     #: The kind of expectation, e.g., CUE.
     expectation_type: Mapped[str] = mapped_column(nullable=False)
 
+    #: The URL for the provenance asset that the expectation is verified against.
+    asset_url: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Create an instance provenance expectation."""
         self._validator: ExpectationFn | None = None
         super().__init__(*args, **kwargs)
 
     @classmethod
+    @abstractmethod
     def make_expectation(cls, expectation_path: str) -> Self | None:
         """Generate an expectation instance from an expectation file.
 
@@ -55,7 +65,8 @@ class Expectation:
         Self | None
             The instantiated expectation object.
         """
-        raise NotImplementedError()
+        # SQLAlchemy does not allow to subclass abc.ABC. So, we need to raise `NotImplementedError`.
+        raise NotImplementedError
 
     def __str__(self) -> str:
         return f"Expectation(description='{self.description}', path='{self.path}', target='{self.target}')"

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the base classes for defining SLSA requirements."""
@@ -115,7 +115,7 @@ class SLSAReqStatus:
             Whether this SLSA req has been addressed from the analysis.
         is_pass : bool
             True if the repository pass this requirement else False.
-        feedback : bool
+        feedback : str
             The feedback from the analyzer for this requirement.
         """
         return self.is_addressed, self.is_pass, self.feedback

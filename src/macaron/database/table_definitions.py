@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -10,23 +10,31 @@ The current ERD of Macaron is shown below:
 
 For table associated with a check see the check module.
 """
-import hashlib
 import logging
 import os
 import string
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Self
+from typing import Any
 
 from packageurl import PackageURL
-from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Table, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Column,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from macaron.database.database_manager import ORMBase
 from macaron.database.rfc3339_datetime import RFC3339DateTime
-from macaron.errors import CUEExpectationError, CUERuntimeError, InvalidPURLError
-from macaron.slsa_analyzer.provenance.expectations.cue import cue_validator
-from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
+from macaron.errors import InvalidPURLError
 from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -415,6 +423,16 @@ class CheckFacts(ORMBase):
     #: The primary key.
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
 
+    #: The confidence score to estimate the accuracy of the check fact. This value should be in the range [0.0, 1.0] with
+    #: a lower value depicting a lower confidence. Because some analyses used in checks may use
+    #: heuristics, the results can be inaccurate in certain cases.
+    #: We use the confidence score to enable the check designer to assign a confidence estimate.
+    #: This confidence is stored in the database to be used by the policy. This confidence score is
+    #: also used to decide which evidence should be shown to the user in the HTML/JSON report.
+    confidence: Mapped[float] = mapped_column(
+        Float, CheckConstraint("confidence>=0.0 AND confidence<=1.0"), nullable=False
+    )
+
     #: The foreign key to the software component.
     component_id: Mapped[int] = mapped_column(Integer, ForeignKey("_component.id"), nullable=False)
 
@@ -435,62 +453,6 @@ class CheckFacts(ORMBase):
         "polymorphic_identity": "CheckFacts",
         "polymorphic_on": "check_type",
     }
-
-
-class CUEExpectation(Expectation, CheckFacts):
-    """ORM Class for an expectation."""
-
-    # TODO: provenance content check should store the expectation, its evaluation result,
-    # and which PROVENANCE it was applied to rather than only linking to the repository.
-
-    __tablename__ = "_expectation"
-
-    #: The primary key, which is also a foreign key to the base check table.
-    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
-
-    #: The polymorphic inheritance configuration.
-    __mapper_args__ = {
-        "polymorphic_identity": "_expectation",
-    }
-
-    @classmethod
-    def make_expectation(cls, expectation_path: str) -> Self | None:
-        """Construct a CUE expectation from a CUE file.
-
-        Note: we require the CUE expectation file to have a "target" field.
-
-        Parameters
-        ----------
-        expectation_path: str
-            The path to the expectation file.
-
-        Returns
-        -------
-        Self
-            The instantiated expectation object.
-        """
-        logger.info("Generating an expectation from file %s", expectation_path)
-        expectation: CUEExpectation = CUEExpectation(
-            description="CUE expectation",
-            path=expectation_path,
-            target="",
-            expectation_type="CUE",
-        )
-
-        try:
-            with open(expectation_path, encoding="utf-8") as expectation_file:
-                expectation.text = expectation_file.read()
-                expectation.sha = str(hashlib.sha256(expectation.text.encode("utf-8")).hexdigest())
-                expectation.target = cue_validator.get_target(expectation.text)
-                expectation._validator = (  # pylint: disable=protected-access
-                    lambda provenance: cue_validator.validate_expectation(expectation.text, provenance)
-                )
-        except (OSError, CUERuntimeError, CUEExpectationError) as error:
-            logger.error("CUE expectation error: %s", error)
-            return None
-
-        # TODO remove type ignore once mypy adds support for Self.
-        return expectation  # type: ignore
 
 
 class Provenance(ORMBase):
