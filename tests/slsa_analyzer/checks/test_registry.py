@@ -3,8 +3,10 @@
 
 """This module contains the tests for the Registry class."""
 
+import os
 import queue
 from graphlib import TopologicalSorter
+from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -12,6 +14,7 @@ import pytest
 from hypothesis import given
 from hypothesis.strategies import SearchStrategy, binary, booleans, integers, lists, none, one_of, text, tuples
 
+from macaron.config.defaults import load_defaults
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType
@@ -323,3 +326,49 @@ def test_get_parents(check_registry: Registry, check_id: str, parent: set[str]) 
     result = sorted(check_registry.get_parents(check_id))
     expect = sorted(parent)
     assert result == expect
+
+
+@pytest.mark.parametrize(
+    ("user_config_input"),
+    [
+        pytest.param(
+            """
+            [analysis.checks]
+            exclude = *
+            include = *
+            """,
+            id="Exclude every checks",
+        ),
+        pytest.param(
+            """
+            [analysis.checks]
+            exclude =
+            include =
+            """,
+            id="No check is included",
+        ),
+        pytest.param(
+            """
+            [analysis.checks]
+            exclude = *
+            include =
+            """,
+            id="No check is included and no check is included",
+        ),
+    ],
+)
+def test_invalid_exclude_include_from_defaults(
+    tmp_path: Path,
+    check_registry: Registry,
+    user_config_input: str,
+) -> None:
+    """Test Registry.prepare on invalid exclude/include check config.
+
+    An invalid exclude/include check config means that it results in no run check.
+    """
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(user_config_input)
+
+    load_defaults(user_config_path)
+    assert not check_registry.prepare()
