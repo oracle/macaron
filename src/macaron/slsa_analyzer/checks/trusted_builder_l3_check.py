@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
@@ -15,10 +15,12 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
+from macaron.slsa_analyzer.asset import VirtualReleaseAsset
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType, GitHubActions
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
+from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
@@ -35,13 +37,13 @@ class TrustedBuilderFacts(CheckFacts):
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
     #: The name of the tool used to build.
-    build_tool_name: Mapped[str] = mapped_column(String, nullable=False)
+    build_tool_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     #: The CI service name used to build.
-    ci_service_name: Mapped[str] = mapped_column(String, nullable=False)
+    ci_service_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     #: The entrypoint script that triggers the build.
-    build_trigger: Mapped[str] = mapped_column(String, nullable=True)
+    build_trigger: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
     __mapper_args__ = {
         "polymorphic_identity": "_trusted_builder_check",
@@ -101,8 +103,7 @@ class TrustedBuilderL3Check(BaseCheck):
         found_builder = False
         ci_services = ctx.dynamic_data["ci_services"]
         result_values = []
-        justification: Justification = []
-        result_tables: ResultTables = []
+        result_tables: list[CheckFacts] = []
 
         for ci_info in ci_services:
             inferred_provenances = []
@@ -147,15 +148,13 @@ class TrustedBuilderL3Check(BaseCheck):
                         predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.component.repository.commit_sha
                         predicate["invocation"]["configSource"]["entryPoint"] = caller_link
                         predicate["metadata"]["buildInvocationId"] = html_url
-                        inferred_provenances.append(InTotoV01Payload(statement=provenance))
-                    justification.extend(
-                        [
-                            {f"Found trusted builder GitHub Actions: {callee.name} triggered by": caller_link},
-                            {"The status of the build can be seen at": html_url}
-                            if html_url
-                            else "However, could not find a passing workflow run.",
-                        ]
-                    )
+                        inferred_provenances.append(
+                            SLSAProvenanceData(
+                                asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0),
+                                payload=InTotoV01Payload(statement=provenance),
+                            )
+                        )
+
                     found_builder = True
                     result_values.append(
                         {
@@ -170,16 +169,14 @@ class TrustedBuilderL3Check(BaseCheck):
             if inferred_provenances:
                 ci_info["provenances"] = inferred_provenances
 
-        result_tables = [TrustedBuilderFacts(**result) for result in result_values]
+        result_tables = [TrustedBuilderFacts(**result, confidence=Confidence.HIGH) for result in result_values]
 
         if found_builder:
-            return CheckResultData(
-                justification=justification, result_tables=result_tables, result_type=CheckResultType.PASSED
-            )
+            return CheckResultData(result_tables=result_tables, result_type=CheckResultType.PASSED)
 
-        justification.append("Could not find a trusted level 3 builder as a GitHub Actions workflow.")
         return CheckResultData(
-            justification=justification, result_tables=result_tables, result_type=CheckResultType.FAILED
+            result_tables=result_tables,
+            result_type=CheckResultType.FAILED,
         )
 
 

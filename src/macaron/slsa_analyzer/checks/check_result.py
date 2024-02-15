@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the CheckResult class for storing the result of a check."""
@@ -6,13 +6,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TypedDict
 
-from sqlalchemy.orm import DeclarativeBase
-
-from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
+from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.slsa_req import BUILD_REQ_DESC, ReqName
-
-Justification = list[str | dict[str, str]]
-ResultTables = list[DeclarativeBase | Expectation]
 
 
 class CheckResultType(str, Enum):
@@ -27,6 +22,32 @@ class CheckResultType(str, Enum):
     # The result of the check is unknown or Macaron cannot resolve the
     # implementation of this check.
     UNKNOWN = "UNKNOWN"
+
+
+class Confidence(float, Enum):
+    """This class contains confidence score for a check result.
+
+    The scores must be in the range [0.0, 1.0].
+    """
+
+    #: A high confidence score.
+    HIGH = 1.0
+
+    #: A medium confidence score.
+    MEDIUM = 0.7
+
+    #: A low confidence score.
+    LOW = 0.5
+
+
+class JustificationType(str, Enum):
+    """This class contains the type of a justification that will be used in creating the HTML report."""
+
+    #: If a justification has a text type, it will be added as a plain text.
+    TEXT = "text"
+
+    #: If a justification has a href type, it will be added as a hyperlink.
+    HREF = "href"
 
 
 @dataclass(frozen=True)
@@ -47,17 +68,57 @@ class CheckInfo:
 class CheckResultData:
     """This class stores the result of a check."""
 
-    #: List of justifications describing the reasons for the check result.
-    #: If an element in the justification is a string,
-    #: it will be displayed as a string, if it is a mapping,
-    #: the value will be rendered as a hyperlink in the html report.
-    justification: Justification
-
     #: List of result tables produced by the check.
-    result_tables: ResultTables
+    result_tables: list[CheckFacts]
 
     #: Result type of the check (e.g. PASSED).
     result_type: CheckResultType
+
+    @property
+    def justification_report(self) -> list[tuple[Confidence, list]]:
+        """
+        Return a sorted list of justifications based on confidence scores in descending order.
+
+        These justifications are generated from the tables in the database.
+        Note that the elements in the justification will be rendered differently based on their types:
+
+        * a :class:`JustificationType.TEXT` element is displayed in plain text in the HTML report.
+        * a :class:`JustificationType.HREF` element is rendered as a hyperlink in the HTML report.
+
+        Returns
+        -------
+        list[tuple[Confidence, list]]
+        """
+        justification_list: list = []
+        for result in self.result_tables:
+            # The HTML report generator requires the justification elements that need to be rendered in HTML
+            # to be passed as a dictionary as key-value pairs. The elements that need to be displayed in plain
+            # text should be passed as string values.
+            dict_elements: dict[str, str] = {}
+            list_elements: list[str | dict] = []
+
+            # Look for columns that are have "justification" metadata.
+            for col in result.__table__.columns:
+                column_value = getattr(result, col.name)
+                if col.info.get("justification") and column_value:
+                    if col.info.get("justification") == JustificationType.HREF:
+                        dict_elements[col.name] = column_value
+                    elif col.info.get("justification") == JustificationType.TEXT:
+                        list_elements.append(f"{col.name}: {column_value}")
+
+            # Add the dictionary elements to the list of justification elements.
+            if dict_elements:
+                list_elements.append(dict_elements)
+
+            if list_elements:
+                justification_list.append((result.confidence, list_elements))
+
+        # If there are no justifications available, return a default "Not Available" one.
+        if not justification_list:
+            return [(Confidence.HIGH, ["Not Available."])]
+
+        # Sort the justification list based on the confidence score in descending order.
+        return sorted(justification_list, key=lambda item: item[0], reverse=True)
 
 
 @dataclass(frozen=True)
@@ -84,7 +145,8 @@ class CheckResult:
             "check_id": self.check.check_id,
             "check_description": self.check.check_description,
             "slsa_requirements": [str(BUILD_REQ_DESC.get(req)) for req in self.check.eval_reqs],
-            "justification": self.result.justification,
+            # The justification report is sorted and the first element has the highest confidence score.
+            "justification": self.result.justification_report[0][1],
             "result_tables": self.result.result_tables,
             "result_type": self.result.result_type,
         }

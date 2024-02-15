@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This modules implements a check to verify a target repo has intoto provenance level 3."""
@@ -26,7 +26,7 @@ from macaron.database.table_definitions import CheckFacts, HashDigest, Provenanc
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
 from macaron.slsa_analyzer.git_url import get_repo_dir_name
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload, v01
@@ -36,6 +36,19 @@ from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+class ProvenanceL3VerifiedFacts(CheckFacts):
+    """The ORM mapping for justifications in provenance_l3 check."""
+
+    __tablename__ = "_provenance_l3_check"
+
+    # The primary key.
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+
+    __mapper_args__ = {
+        "polymorphic_identity": "_provenance_l3_check",
+    }
 
 
 class _VerifyArtifactResultType(Enum):
@@ -70,19 +83,6 @@ class _VerifyArtifactResult:
 
     def __str__(self) -> str:
         return f"{str(self.result.value)} : {self.artifact_name}"
-
-
-class ProvenanceResultFacts(CheckFacts):
-    """The ORM mapping for justifications in provenance_l3 check."""
-
-    __tablename__ = "_provenance_l3_check"
-
-    # The primary key.
-    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
-
-    __mapper_args__ = {
-        "polymorphic_identity": "_provenance_l3_check",
-    }
 
 
 class ProvenanceL3Check(BaseCheck):
@@ -285,17 +285,20 @@ class ProvenanceL3Check(BaseCheck):
         class Feedback(NamedTuple):
             """Store feedback item."""
 
+            #: The CI service name.
             ci_service_name: str
-            asset_url: str
+
+            #: The provenance asset url.
+            prov_asset_url: str
+
+            #: The verification result.
             verify_result: _VerifyArtifactResult
 
         all_feedback: list[Feedback] = []
         ci_services = ctx.dynamic_data["ci_services"]
 
-        justification: Justification = []
-        result_tables: ResultTables = []
+        result_tables: list[CheckFacts] = []
 
-        result_tables = [ProvenanceResultFacts()]
         for ci_info in ci_services:
             ci_service = ci_info["service"]
 
@@ -356,8 +359,6 @@ class ProvenanceL3Check(BaseCheck):
                         prov.release_tag = ci_info["latest_release"]["tag_name"]
                         prov.component = ctx.component
 
-                        result_tables.append(prov)
-
                         # Iterate through the subjects and verify.
                         for subject in provenance_payload.statement["subject"]:
                             sub_asset = self._find_asset(subject, all_assets, temp_path, ci_service)
@@ -406,7 +407,7 @@ class ProvenanceL3Check(BaseCheck):
                                 all_feedback.append(
                                     Feedback(
                                         ci_service_name=ci_service.name,
-                                        asset_url=prov_asset.url,
+                                        prov_asset_url=prov_asset.url,
                                         verify_result=result,
                                     )
                                 )
@@ -416,52 +417,44 @@ class ProvenanceL3Check(BaseCheck):
                                 artifact.name = subject["name"]
                                 artifact.slsa_verified = result.result == _VerifyArtifactResultType.PASSED
                                 artifact.provenance = prov  # pylint: disable=protected-access
-                                result_tables.append(artifact)
 
                                 for k, val in subject["digest"].items():
                                     digest = HashDigest()
                                     digest.digest_algorithm = k
                                     digest.digest = val
-                                    # foreign key relations
+                                    # Foreign key relation.
                                     digest.artifact = artifact
-                                    result_tables.append(digest)
 
             except (OSError, InTotoAttestationError) as error:
                 logger.error(" %s: %s.", self.check_info.check_id, error)
-                justification.append("Could not verify level 3 provenance.")
                 return CheckResultData(
-                    justification=justification, result_tables=result_tables, result_type=CheckResultType.FAILED
+                    result_tables=result_tables,
+                    result_type=CheckResultType.FAILED,
                 )
 
         result_value = CheckResultType.FAILED
         if all_feedback:
-            all_results = [feedback.verify_result for feedback in all_feedback]
             failed = [
-                result
-                for ci_name, prov_url, result in all_feedback
-                if result.result == _VerifyArtifactResultType.FAILED
+                feedback
+                for feedback in all_feedback
+                if feedback.verify_result.result == _VerifyArtifactResultType.FAILED
             ]
-            passed = [
-                result
-                for ci_name, prov_url, result in all_feedback
-                if result.result == _VerifyArtifactResultType.PASSED
-            ]
+
             skipped = [
-                result for ci_name, prov_url, result in all_feedback if result not in passed and result not in failed
+                feedback
+                for feedback in all_feedback
+                if feedback.verify_result.result
+                not in [_VerifyArtifactResultType.FAILED, _VerifyArtifactResultType.PASSED]
             ]
 
             if failed or skipped:
-                justification.append("Failed verification for level 3: ")
                 result_value = CheckResultType.FAILED
             else:
-                justification.append("Successfully verified level 3: ")
+                result_tables.append(ProvenanceL3VerifiedFacts(confidence=Confidence.HIGH))
                 result_value = CheckResultType.PASSED
+                return CheckResultData(result_tables=result_tables, result_type=result_value)
 
-            justification.append(",".join(map(str, all_results)))
-            return CheckResultData(justification=justification, result_tables=result_tables, result_type=result_value)
-
-        justification.append("Could not verify level 3 provenance.")
-        return CheckResultData(justification=justification, result_tables=result_tables, result_type=result_value)
+        return CheckResultData(result_tables=result_tables, result_type=result_value)
 
 
 registry.register(ProvenanceL3Check())

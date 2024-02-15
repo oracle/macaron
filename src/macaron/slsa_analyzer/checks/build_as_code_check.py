@@ -16,7 +16,7 @@ from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Justification, ResultTables
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType
@@ -40,19 +40,19 @@ class BuildAsCodeFacts(CheckFacts):
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
     #: The name of the tool used to build.
-    build_tool_name: Mapped[str] = mapped_column(String, nullable=False)
+    build_tool_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     #: The CI service name used to build and deploy.
-    ci_service_name: Mapped[str] = mapped_column(String, nullable=False)
+    ci_service_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     #: The entrypoint script that triggers the build and deploy.
-    build_trigger: Mapped[str] = mapped_column(String, nullable=True)
+    build_trigger: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
     #: The command used to deploy.
-    deploy_command: Mapped[str] = mapped_column(String, nullable=True)
+    deploy_command: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
 
     #: The run status of the CI service for this build.
-    build_status_url: Mapped[str] = mapped_column(String, nullable=True)
+    build_status_url: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
     __mapper_args__ = {
         "polymorphic_identity": "_build_as_code_check",
@@ -150,8 +150,7 @@ class BuildAsCodeCheck(BaseCheck):
         build_tool: BaseBuildTool,
         ctx: AnalyzeContext,
         ci_services: list[CIInfo],
-        justification: Justification,
-        result_tables: ResultTables,
+        result_tables: list[CheckFacts],
     ) -> CheckResultType:
         """Run the check for a single build tool to determine if "build as code" holds for it.
 
@@ -163,8 +162,6 @@ class BuildAsCodeCheck(BaseCheck):
             The object containing processed data for the target repo.
         ci_services: list[CIInfo]
             List of CI services in use.
-        justification: Justification
-            List of justifications to add to.
         result_tables: ResultTables
             List of result tables to add to.
 
@@ -173,6 +170,7 @@ class BuildAsCodeCheck(BaseCheck):
         CheckResultType
             The result type of the check (e.g. PASSED).
         """
+        check_result = CheckResultType.FAILED
         if build_tool:
             for ci_info in ci_services:
                 ci_service = ci_info["service"]
@@ -217,24 +215,12 @@ class BuildAsCodeCheck(BaseCheck):
                             )
 
                             # TODO: include in the justification multiple cases of external action usage
-                            justification_action: Justification = [
-                                {
-                                    f"The target repository uses build tool {build_tool.name}"
-                                    " to deploy": deploy_action_source_link,
-                                    "The build is triggered by": trigger_link,
-                                },
-                                f"Deploy action: {workflow_name}",
-                                {"The status of the build can be seen at": html_url}
-                                if html_url
-                                else "However, could not find a passing workflow run.",
-                            ]
-                            justification.extend(justification_action)
                             if (
                                 ctx.dynamic_data["is_inferred_prov"]
                                 and ci_info["provenances"]
-                                and isinstance(ci_info["provenances"][0], InTotoV01Payload)
+                                and isinstance(ci_info["provenances"][0].payload, InTotoV01Payload)
                             ):
-                                predicate: Any = ci_info["provenances"][0].statement["predicate"]
+                                predicate: Any = ci_info["provenances"][0].payload.statement["predicate"]
                                 predicate["buildType"] = f"Custom {ci_service.name}"
                                 predicate["builder"]["id"] = deploy_action_source_link
                                 predicate["invocation"]["configSource"]["uri"] = (
@@ -253,9 +239,10 @@ class BuildAsCodeCheck(BaseCheck):
                                     build_trigger=trigger_link,
                                     deploy_command=workflow_name,
                                     build_status_url=html_url,
+                                    confidence=Confidence.HIGH,
                                 )
                             )
-                            return CheckResultType.PASSED
+                            check_result = CheckResultType.PASSED
 
                 for bash_cmd in ci_info["bash_commands"]:
                     deploy_cmd = self._has_deploy_command(bash_cmd["commands"], build_tool)
@@ -281,23 +268,12 @@ class BuildAsCodeCheck(BaseCheck):
                             bash_cmd["CI_path"],
                         )
 
-                        justification_cmd: Justification = [
-                            {
-                                f"The target repository uses build tool {build_tool.name} to deploy": bash_source_link,
-                                "The build is triggered by": trigger_link,
-                            },
-                            f"Deploy command: {deploy_cmd}",
-                            {"The status of the build can be seen at": html_url}
-                            if html_url
-                            else "However, could not find a passing workflow run.",
-                        ]
-                        justification.extend(justification_cmd)
                         if (
                             ctx.dynamic_data["is_inferred_prov"]
                             and ci_info["provenances"]
-                            and isinstance(ci_info["provenances"][0], InTotoV01Payload)
+                            and isinstance(ci_info["provenances"][0].payload, InTotoV01Payload)
                         ):
-                            predicate = ci_info["provenances"][0].statement["predicate"]
+                            predicate = ci_info["provenances"][0].payload.statement["predicate"]
                             predicate["buildType"] = f"Custom {ci_service.name}"
                             predicate["builder"]["id"] = bash_source_link
                             predicate["invocation"]["configSource"]["uri"] = (
@@ -318,10 +294,10 @@ class BuildAsCodeCheck(BaseCheck):
                                 build_trigger=trigger_link,
                                 deploy_command=deploy_cmd,
                                 build_status_url=html_url,
+                                confidence=Confidence.HIGH,
                             )
                         )
-
-                        return CheckResultType.PASSED
+                        check_result = CheckResultType.PASSED
 
                 # We currently don't parse these CI configuration files.
                 # We just look for a keyword for now.
@@ -333,17 +309,13 @@ class BuildAsCodeCheck(BaseCheck):
                             )
                             if not config_name:
                                 break
-                            justification.append(
-                                f"The target repository uses build tool {build_tool.name}"
-                                + f" in {ci_service.name} using {deploy_kw} to deploy."
-                            )
 
                             if (
                                 ctx.dynamic_data["is_inferred_prov"]
                                 and ci_info["provenances"]
-                                and isinstance(ci_info["provenances"][0], InTotoV01Payload)
+                                and isinstance(ci_info["provenances"][0].payload, InTotoV01Payload)
                             ):
-                                predicate = ci_info["provenances"][0].statement["predicate"]
+                                predicate = ci_info["provenances"][0].payload.statement["predicate"]
                                 predicate["buildType"] = f"Custom {ci_service.name}"
                                 predicate["builder"]["id"] = config_name
                                 predicate["invocation"]["configSource"]["uri"] = (
@@ -354,18 +326,18 @@ class BuildAsCodeCheck(BaseCheck):
                                     "sha1"
                                 ] = ctx.component.repository.commit_sha
                                 predicate["invocation"]["configSource"]["entryPoint"] = config_name
+
                             result_tables.append(
                                 BuildAsCodeFacts(
                                     build_tool_name=build_tool.name,
                                     ci_service_name=ci_service.name,
                                     deploy_command=deploy_kw,
+                                    confidence=Confidence.MEDIUM,
                                 )
                             )
-                            return CheckResultType.PASSED
+                            check_result = CheckResultType.PASSED
 
-        pass_msg = f"The target repository does not use {build_tool.name} to deploy."
-        justification.append(pass_msg)
-        return CheckResultType.FAILED
+        return check_result
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
@@ -384,18 +356,16 @@ class BuildAsCodeCheck(BaseCheck):
         build_tools = ctx.dynamic_data["build_spec"]["tools"]
 
         if not build_tools:
-            failed_msg = "The target repository does not have any build tools."
-            return CheckResultData(justification=[failed_msg], result_tables=[], result_type=CheckResultType.FAILED)
+            return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
 
         ci_services = ctx.dynamic_data["ci_services"]
 
         # Check if "build as code" holds for each build tool.
         overall_res = CheckResultType.FAILED
 
-        justification: Justification = []
-        result_tables: ResultTables = []
+        result_tables: list[CheckFacts] = []
         for tool in build_tools:
-            res = self._check_build_tool(tool, ctx, ci_services, justification, result_tables)
+            res = self._check_build_tool(tool, ctx, ci_services, result_tables)
 
             if res == CheckResultType.PASSED:
                 # The check passing is contingent on at least one passing, if
@@ -407,7 +377,7 @@ class BuildAsCodeCheck(BaseCheck):
                 # check fails instead
                 overall_res = CheckResultType.PASSED
 
-        return CheckResultData(justification=justification, result_tables=result_tables, result_type=overall_res)
+        return CheckResultData(result_tables=result_tables, result_type=overall_res)
 
 
 registry.register(BuildAsCodeCheck())

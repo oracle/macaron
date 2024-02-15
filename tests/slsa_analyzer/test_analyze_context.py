@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -9,8 +9,10 @@ from unittest import TestCase
 from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from macaron.slsa_analyzer.asset import VirtualReleaseAsset
 from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
 from macaron.slsa_analyzer.provenance.intoto import validate_intoto_payload
+from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.util import JsonType
@@ -96,7 +98,11 @@ class TestAnalyzeContext(TestCase):
             callgraph=CallGraph(BaseNode(), ""),
             provenance_assets=[],
             latest_release={},
-            provenances=[expected_payload],
+            provenances=[
+                SLSAProvenanceData(
+                    payload=expected_payload, asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0)
+                )
+            ],
         )
 
         self.analyze_ctx.dynamic_data["ci_services"].append(gh_actions_ci_info)

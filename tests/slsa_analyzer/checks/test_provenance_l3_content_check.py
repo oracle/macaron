@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This modules contains tests for the expectation check."""
@@ -6,7 +6,7 @@
 import os
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.database.table_definitions import CUEExpectation
+from macaron.slsa_analyzer.asset import VirtualReleaseAsset
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.provenance_l3_content_check import ProvenanceL3ContentCheck
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -15,7 +15,9 @@ from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
+from macaron.slsa_analyzer.provenance.expectations.cue import CUEExpectation
 from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
+from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from tests.conftest import MockAnalyzeContext
 
@@ -93,7 +95,10 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
 
         # Repo has a provenance, but no expectation.
         ci_info["provenances"] = [
-            load_provenance_payload(os.path.join(prov_dir, "slsa-verifier-linux-amd64.intoto.jsonl")),
+            SLSAProvenanceData(
+                asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0),
+                payload=load_provenance_payload(os.path.join(prov_dir, "slsa-verifier-linux-amd64.intoto.jsonl")),
+            ),
         ]
         ctx.dynamic_data["is_inferred_prov"] = False
         ctx.dynamic_data["expectation"] = None
@@ -136,7 +141,10 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
         # Repo has a (gzipped) provenance and valid expectation, and expectation passes.
         ci_info["service"] = github_actions
         ci_info["provenances"] = [
-            load_provenance_payload(os.path.join(prov_dir, "slsa-verifier-linux-amd64.intoto.jsonl.gz")),
+            SLSAProvenanceData(
+                asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0),
+                payload=load_provenance_payload(os.path.join(prov_dir, "slsa-verifier-linux-amd64.intoto.jsonl.gz")),
+            ),
         ]
         ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
             os.path.join(expectation_dir, "valid_expectations", "slsa_verifier_PASS.cue")
