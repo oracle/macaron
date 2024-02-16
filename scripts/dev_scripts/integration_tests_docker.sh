@@ -125,6 +125,17 @@ $RUN_MACARON_SCRIPT analyze -pe $EXPECTATION_DIR -rp https://github.com/urllib3/
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
+echo "Test verifying CUE provenance expectation for ossf/scorecard"
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/scorecard/scorecard.json
+JSON_RESULT=$WORKSPACE/output/reports/github/ossf/scorecard/scorecard.json
+DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/scorecard.ini
+EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/scorecard_PASS.cue
+$RUN_MACARON_SCRIPT -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -purl pkg:github/ossf/scorecard@v4.13.1 --skip-deps || log_fail
+
+python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
 echo "slsa-framework/slsa-verifier: Analyzing the repo path when automatic dependency resolution is skipped"
 echo "and CUE file is provided as expectation."
 echo -e "----------------------------------------------------------------------------------\n"
@@ -136,15 +147,14 @@ $RUN_MACARON_SCRIPT analyze -pe $EXPECTATION_FILE -rp https://github.com/slsa-fr
 python $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Run policy CLI with slsa-verifier results."
+echo "Run policy CLI with scorecard results."
 echo -e "----------------------------------------------------------------------------------\n"
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
+POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/scorecard/scorecard.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
-POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/policy_report.json
+POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/scorecard/scorecard_policy_report.json
 VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
-VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_slsa-verifier/vsa_payload.json
+VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_scorecard/vsa_payload.json
 
-# Run policy engine on the database and compare results.
 $RUN_MACARON_SCRIPT verify-policy -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 python "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
