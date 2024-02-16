@@ -1,0 +1,16 @@
+{
+    "component_satisfies_policy": [
+        [
+            "1",
+            "pkg:github/ossf/scorecard@v4.13.1",
+            "auth-provenance"
+        ]
+    ],
+    "passed_policies": [
+        [
+            "auth-provenance"
+        ]
+    ],
+    "component_violates_policy": [],
+    "failed_policies": []
+}
