@@ -655,7 +655,7 @@ class Registry:
 
         # Store the check tree as dictionary to be used in the HTML report.
         if not self.check_tree:
-            self.check_tree.update(self._get_check_tree_as_dict())
+            self.check_tree = self._get_check_tree_as_dict()
 
         return True
 
