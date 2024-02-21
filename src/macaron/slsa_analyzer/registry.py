@@ -4,16 +4,19 @@
 """This module contains the Registry class for loading checks."""
 
 import concurrent.futures
+import fnmatch
 import inspect
 import logging
 import queue
 import re
 import sys
+from collections.abc import Callable, Iterable
 from copy import deepcopy
 from graphlib import CycleError, TopologicalSorter
-from typing import Any
+from typing import Any, TypeVar
 
 from macaron.config.defaults import defaults
+from macaron.errors import CheckRegistryError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import (
@@ -27,6 +30,10 @@ from macaron.slsa_analyzer.runner import Runner
 from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+CheckTree = dict[str, "CheckTree"]
+T = TypeVar("T")
 
 
 class Registry:
@@ -61,6 +68,11 @@ class Registry:
         self.runner_num = 1
         self.runner_timeout = 5
 
+        self.checks_to_run: list[str] = []
+        self.no_parent_checks: list[str] = []
+
+        self.check_tree: CheckTree = {}
+
     def register(self, check: BaseCheck) -> None:
         """Register the check.
 
@@ -79,6 +91,7 @@ class Registry:
         # checks can still depend on it, and therefore it might have been initialized and added to the mapping
         # already. So we need to check if it already exists in `_check_relationships_mapping`.
         if not check.depends_on:
+            self.no_parent_checks.append(check.check_info.check_id)
             if check.check_info.check_id not in self._check_relationships_mapping:
                 self._check_relationships_mapping[check.check_info.check_id] = {}
         else:
@@ -331,7 +344,151 @@ class Registry:
 
         return False
 
-    def scan(self, target: AnalyzeContext, skipped_checks: list[SkippedInfo]) -> dict[str, CheckResult]:
+    def get_parents(self, check_id: str) -> set[str]:
+        """Return the ids of all direct parent checks.
+
+        Parameters
+        ----------
+        check_id : str
+            The check id we want to obtain the parents.
+
+        Returns
+        -------
+        set[str]
+            The set of ids for all parent checks.
+        """
+        check = self._all_checks_mapping.get(check_id)
+        if not check:
+            # It won't happen as we have validated the existence of check_id in registry.prepare().
+            return set()
+
+        return {relation[0] for relation in check.depends_on}
+
+    def get_children(self, check_id: str) -> set[str]:
+        """Return the ids of all direct children checks.
+
+        Parameters
+        ----------
+        check_id : str
+            The check id we want to obtain the children.
+
+        Returns
+        -------
+        set[str]
+            The set of ids for all children checks.
+        """
+        # If this check is not defined in the check relationships mapping, it means that it
+        # doesn't have any children, hence the default empty dictionary.
+        return set(self._check_relationships_mapping.get(check_id, {}))
+
+    @staticmethod
+    def get_reachable_nodes(
+        node: T,
+        get_successors: Callable[[T], Iterable[T]],
+    ) -> Iterable[T]:
+        """Return the set that contains `node` and nodes that can be transitively reached from it.
+
+        This method obtains the successors of a node from `get_successors`. This `get_successors` function takes
+        a node as input and returns a Collection of successors of that node.
+
+        Parameters
+        ----------
+        node : T
+            The start node to find the transitive successors.
+        get_successors : Callable[[T], Iterable[T]]
+            The function to obtain successors of every node.
+
+        Returns
+        -------
+        Iterable[T]
+            Contains `node` and its transitive successors.
+        """
+        visited = []
+        stack = [node]
+
+        while stack:
+            current_node = stack[-1]
+
+            if current_node not in visited:
+                visited.append(current_node)
+
+                for successor in get_successors(current_node):
+                    if successor not in visited:
+                        stack.append(successor)
+
+            else:
+                stack.pop()
+
+        return visited
+
+    def get_final_checks(self, ex_pats: list[str], in_pats: list[str]) -> list[str]:
+        """Return a set of the check ids to run from the exclude and include glob patterns.
+
+        The exclude and include glob patterns are used to match against the id of registered checks.
+
+        Including a check would effectively include all transitive parents of that check.
+        Excluding a check would effectively exclude all transitive children of that check.
+
+        The final list of checks to run would be the included checks minus the excluded checks.
+
+        Parameters
+        ----------
+        ex_pats : list[str]
+            The list of excluded glob patterns.
+        in_pats : list[str]
+            The list of included glob patterns.
+
+        Returns
+        -------
+        list[str]
+            The set of final checks to run
+
+        Raises
+        ------
+        CheckRegistryError
+            If there is an error while obtaining the final checks to run.
+        """
+        all_checks = self._all_checks_mapping.keys()
+
+        if "*" in in_pats and not ex_pats:
+            return list(all_checks)
+
+        if "*" in ex_pats:
+            return []
+
+        exclude: set[str] = set()
+        for ex_pat in set(ex_pats):
+            exclude.update(fnmatch.filter(all_checks, ex_pat))
+
+        transitive_ex: set[str] = set()
+        for direct_ex in exclude:
+            transitive_children = self.get_reachable_nodes(
+                node=direct_ex,
+                get_successors=self.get_children,
+            )
+
+            transitive_ex.update(transitive_children)
+
+        include: set[str] = set()
+        for in_pat in set(in_pats):
+            include.update(fnmatch.filter(all_checks, in_pat))
+
+        transitive_in: set[str] = set()
+        for direct_in in include:
+            transitive_parents = self.get_reachable_nodes(
+                node=direct_in,
+                get_successors=self.get_parents,
+            )
+
+            transitive_in.update(transitive_parents)
+
+        include.update(transitive_in)
+        exclude.update(transitive_ex)
+
+        final = include.difference(exclude)
+        return list(final)
+
+    def scan(self, target: AnalyzeContext) -> dict[str, CheckResult]:
         """Run all checks on a target repo.
 
         Parameters
@@ -348,6 +505,7 @@ class Registry:
         """
         all_checks = self._all_checks_mapping
         results: dict[str, CheckResult] = {}
+        skipped_checks: list[SkippedInfo] = []
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.runner_num) as executor:
             # To allow the graph to be traversed again after this run.
@@ -434,7 +592,14 @@ class Registry:
                     return results
                 next_check: BaseCheck = check_queue.get()
 
-                # Look up check results to see if this check should be run
+                # Don't run excluded checks
+                if next_check.check_info.check_id not in self.checks_to_run:
+                    logger.debug("Check %s is disabled by user configuration.", next_check.check_info.check_id)
+                    graph.done(next_check.check_info.check_id)
+                    self.runner_queue.put(runner)
+                    continue
+
+                # Look up check results to see if this check should be run based on its parent status
                 skipped_info = self._should_skip_check(next_check, results)
                 if skipped_info:
                     skipped_checks.append(skipped_info)
@@ -498,24 +663,41 @@ class Registry:
         """
         self._init_runners()
 
+        # Only support 1 runner at the moment.
+        if not self.runners or len(self.runners) != 1:
+            logger.critical("Invalid number of runners.")
+            return False
+
+        if not self._all_checks_mapping:
+            logger.error("Cannot run because there is no check registered.")
+            return False
+
         try:
             if not self._is_graph_ready:
                 self._graph.prepare()
                 self._is_graph_ready = True
-
-            # Only support 1 runner at the moment.
-            if not self.runners or len(self.runners) != 1:
-                logger.critical("Invalid number of runners.")
-                return False
-
-            if not self._all_checks_mapping:
-                logger.error("Cannot run because there is no check registered.")
-                return False
-
-            return True
         except CycleError as error:
             logger.error("Found circular dependencies in registered checks: %s", str(error))
             return False
+
+        ex_pats = defaults.get_list(section="analysis.checks", item="exclude", fallback=[])
+        in_pats = defaults.get_list(section="analysis.checks", item="include", fallback=["*"])
+        try:
+            checks_to_run = registry.get_final_checks(ex_pats, in_pats)
+        except CheckRegistryError as error:
+            logger.error(error)
+            return False
+
+        if len(checks_to_run) == 0:
+            logger.info("There are no checks to run according to the exclude/include configuration.")
+            return False
+        self.checks_to_run = checks_to_run
+
+        # Store the check tree as dictionary to be used in the HTML report.
+        if not self.check_tree:
+            self.check_tree = self._get_check_tree_as_dict()
+
+        return True
 
     @staticmethod
     def get_all_checks_mapping() -> dict[str, BaseCheck]:
@@ -578,6 +760,65 @@ class Registry:
                 return skipped_info
 
         return None
+
+    def _get_check_tree_as_dict(self) -> CheckTree:
+        """Return a dictionary representation of the check relationships.
+
+        Returns
+        -------
+        CheckTree
+            A nested dictionary that represent the relationship between
+            checks. For each mapping (K, V) in the returned dictionary, K is the check id and
+            V is a dictionary that contains the children of that check.
+
+        Examples
+        --------
+        Given the following checks and their relationships:
+
+        .. code-block::
+
+            mcn_provenance_available_1
+            |-- mcn_provenance_level_three_1
+                |-- mcn_provenance_expectation_1
+            mcn_version_control_system_1
+            |-- mcn_trusted_builder_level_three_1
+
+        The resulting dictionary will be:
+
+        .. code-block::
+
+            {
+                'mcn_provenance_available_1': {
+                    'mcn_provenance_level_three_1': {
+                        'mcn_provenance_expectation_1': {}
+                    }
+                },
+                'mcn_version_control_system_1': {
+                    'mcn_trusted_builder_level_three_1': {}
+                },
+            }
+        """
+
+        def _traverse(
+            node: str,
+            get_successors: Callable[[str], set[str]],
+        ) -> CheckTree:
+            """We assume that the data structure we are working with is a tree.
+
+            Therefore, no cycle checking is needed.
+            """
+            result = {}
+            successors = get_successors(node)
+            for successor in successors:
+                result[successor] = _traverse(successor, get_successors)
+
+            return result
+
+        result: CheckTree = {}
+        for check in self.no_parent_checks:
+            result[check] = _traverse(check, self.get_children)
+
+        return result
 
 
 registry = Registry()
