@@ -377,7 +377,7 @@ class Registry:
         set[str]
             The set of ids for all children checks.
         """
-        # If this check is not defined in the check relationships mapping, it mean that it
+        # If this check is not defined in the check relationships mapping, it means that it
         # doesn't have any children, hence the default empty dictionary.
         return set(self._check_relationships_mapping.get(check_id, {}))
 

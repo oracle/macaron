@@ -578,7 +578,7 @@ rm -rf "$SOURCE_REPO"
 rm -rf "$TARGET_REPO"
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Running the analysis with all checks excluded should returns an error code."
+echo "Running the analysis with all checks excluded. This test should return an error code."
 echo -e "----------------------------------------------------------------------------------\n"
 $RUN_MACARON -dp tests/e2e/defaults/exclude_all_checks.ini analyze -rp https://github.com/apache/maven --skip-deps
 

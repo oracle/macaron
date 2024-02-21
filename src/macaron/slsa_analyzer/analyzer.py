@@ -73,7 +73,7 @@ class Analyzer:
             sys.exit(1)
 
         logger.info(
-            "The following checks are excluded from user configuration: %s",
+            "The following checks are excluded based on the user configuration: %s",
             [check for check in registry.get_all_checks_mapping() if check not in registry.checks_to_run],
         )
         logger.info("The following checks will be run: %s", registry.checks_to_run)
