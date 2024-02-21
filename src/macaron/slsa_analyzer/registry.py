@@ -382,7 +382,7 @@ class Registry:
         return set(self._check_relationships_mapping.get(check_id, {}))
 
     @staticmethod
-    def get_transitive_closure(
+    def get_reachable_nodes(
         node: T,
         get_successors: Callable[[T], Iterable[T]],
     ) -> Iterable[T]:
@@ -462,7 +462,7 @@ class Registry:
 
         transitive_ex: set[str] = set()
         for direct_ex in exclude:
-            transitive_children = self.get_transitive_closure(
+            transitive_children = self.get_reachable_nodes(
                 node=direct_ex,
                 get_successors=self.get_children,
             )
@@ -475,7 +475,7 @@ class Registry:
 
         transitive_in: set[str] = set()
         for direct_in in include:
-            transitive_parents = self.get_transitive_closure(
+            transitive_parents = self.get_reachable_nodes(
                 node=direct_in,
                 get_successors=self.get_parents,
             )

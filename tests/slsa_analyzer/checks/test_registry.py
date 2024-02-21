@@ -408,7 +408,7 @@ def test_get_transitive_closure(start_node: str, expected: list[str]) -> None:
                 return set()
 
     assert sorted(
-        Registry.get_transitive_closure(
+        Registry.get_reachable_nodes(
             node=start_node,
             get_successors=get_successors,
         )
