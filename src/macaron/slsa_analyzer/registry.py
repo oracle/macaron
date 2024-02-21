@@ -10,14 +10,13 @@ import logging
 import queue
 import re
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from copy import deepcopy
 from graphlib import CycleError, TopologicalSorter
-from typing import Any
+from typing import Any, TypeVar
 
 from macaron.config.defaults import defaults
 from macaron.errors import CheckRegistryError
-from macaron.graph.graph import get_transitive_closure
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import (
@@ -34,6 +33,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 CheckTree = dict[str, "CheckTree"]
+T = TypeVar("T")
 
 
 class Registry:
@@ -381,6 +381,46 @@ class Registry:
         # doesn't have any children, hence the default empty dictionary.
         return set(self._check_relationships_mapping.get(check_id, {}))
 
+    @staticmethod
+    def get_transitive_closure(
+        node: T,
+        get_successors: Callable[[T], Iterable[T]],
+    ) -> Iterable[T]:
+        """Return the set that contains `node` and nodes that can be transitively reached from it.
+
+        This method obtains the successors of a node from `get_successors`. This `get_successors` function takes
+        a node as input and returns a Collection of successors of that node.
+
+        Parameters
+        ----------
+        node : T
+            The start node to find the transitive successors.
+        get_successors : Callable[[T], Iterable[T]]
+            The function to obtain successors of every node.
+
+        Returns
+        -------
+        Iterable[T]
+            Contains `node` and its transitive successors.
+        """
+        visited = []
+        stack = [node]
+
+        while stack:
+            current_node = stack[-1]
+
+            if current_node not in visited:
+                visited.append(current_node)
+
+                for successor in get_successors(current_node):
+                    if successor not in visited:
+                        stack.append(successor)
+
+            else:
+                stack.pop()
+
+        return visited
+
     def get_final_checks(self, ex_pats: list[str], in_pats: list[str]) -> list[str]:
         """Return a set of the check ids to run from the exclude and include glob patterns.
 
@@ -422,7 +462,7 @@ class Registry:
 
         transitive_ex: set[str] = set()
         for direct_ex in exclude:
-            transitive_children = get_transitive_closure(
+            transitive_children = self.get_transitive_closure(
                 node=direct_ex,
                 get_successors=self.get_children,
             )
@@ -435,7 +475,7 @@ class Registry:
 
         transitive_in: set[str] = set()
         for direct_in in include:
-            transitive_parents = get_transitive_closure(
+            transitive_parents = self.get_transitive_closure(
                 node=direct_in,
                 get_successors=self.get_parents,
             )

@@ -372,3 +372,44 @@ def test_invalid_exclude_include_from_defaults(
 
     load_defaults(user_config_path)
     assert not check_registry.prepare()
+
+
+@pytest.mark.parametrize(
+    ("start_node", "expected"),
+    [
+        ("A", ["A", "B", "C", "D", "E", "F", "H"]),
+        ("B", ["B", "D"]),
+        ("C", ["C", "F", "E", "H"]),
+        ("D", ["D"]),
+        ("E", ["E"]),
+        ("F", ["F", "H"]),
+        ("G", ["G", "C", "E", "F", "H"]),
+        ("H", ["H"]),
+    ],
+)
+def test_get_transitive_closure(start_node: str, expected: list[str]) -> None:
+    """This method test get_transitive_closure method."""
+
+    def get_successors(start: str) -> set[str]:
+        match start:
+            case "A":
+                return {"B", "C"}
+            case "B":
+                return {"D"}
+            case "C":
+                return {"E", "F"}
+            case "G":
+                return {"C", "H"}
+            case "F":
+                return {"H"}
+            case "D" | "E" | "H":
+                return set()
+            case _:
+                return set()
+
+    assert sorted(
+        Registry.get_transitive_closure(
+            node=start_node,
+            get_successors=get_successors,
+        )
+    ) == sorted(expected)

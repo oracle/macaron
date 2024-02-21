@@ -16,7 +16,6 @@ Subpackages
    macaron.config
    macaron.database
    macaron.dependency_analyzer
-   macaron.graph
    macaron.output_reporter
    macaron.parsers
    macaron.policy_engine
