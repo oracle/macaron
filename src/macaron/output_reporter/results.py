@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains classes that represent the result of the Macaron analysis."""
@@ -142,6 +142,8 @@ class Record(Generic[RecordNode]):
             "metadata": {
                 "timestamps": datetime.now().isoformat(sep=" ", timespec="seconds"),
                 "has_passing_check": has_passing_check,
+                "run_checks": registry.checks_to_run,
+                "check_tree": registry.check_tree,
             },
             "target": self.context.get_dict() if self.context else {},
             "dependencies": self.get_dep_summary(),

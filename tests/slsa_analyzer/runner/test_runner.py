@@ -124,6 +124,6 @@ class TestRunner(MacaronTestCase):
             repository=Repository(complete_name="github.com/package-url/purl-spec", fs_path=""),
         )
         target = AnalyzeContext(component=component)
-        results = registry.scan(target, [])
+        results = registry.scan(target)
 
         assert results["mcn_e_1"].result.result_type == results["mcn_d_1"].result.result_type == CheckResultType.SKIPPED

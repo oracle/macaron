@@ -578,6 +578,17 @@ rm -rf "$SOURCE_REPO"
 rm -rf "$TARGET_REPO"
 
 echo -e "\n----------------------------------------------------------------------------------"
+echo "Running the analysis with all checks excluded. This test should return an error code."
+echo -e "----------------------------------------------------------------------------------\n"
+$RUN_MACARON -dp tests/e2e/defaults/exclude_all_checks.ini analyze -rp https://github.com/apache/maven --skip-deps
+
+if [ $? -eq 0 ];
+then
+    echo -e "Expect non-zero status code but got $?."
+    log_fail
+fi
+
+echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: test analyzing without the environment variable GITHUB_TOKEN being set."
 echo -e "----------------------------------------------------------------------------------\n"
 temp="$GITHUB_TOKEN"
@@ -626,12 +637,24 @@ fi
 
 # Testing the CUE provenance expectation verifier.
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Test verifying CUE provenance expectation."
+echo "Test verifying CUE provenance expectation for ossf/scorecard"
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/scorecard/scorecard.json
+JSON_RESULT=$WORKSPACE/output/reports/github/ossf/scorecard/scorecard.json
+DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/scorecard.ini
+EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/scorecard_PASS.cue
+$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -purl pkg:github/ossf/scorecard@v4.13.1 --skip-deps || log_fail
+
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Test verifying CUE provenance expectation for slsa-verifier"
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_cue_PASS.json
 JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
-$RUN_MACARON analyze -pe $EXPECTATION_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/slsa_verifier.ini
+$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 
 check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
@@ -648,16 +671,15 @@ check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED ||
 
 # Testing the Souffle policy engine.
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Run policy CLI with slsa-verifier results."
+echo "Run policy CLI with scorecard results."
 echo -e "----------------------------------------------------------------------------------\n"
 RUN_POLICY="macaron verify-policy"
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/valid/slsa-verifier.dl
+POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/scorecard/scorecard.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
-POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/policy_report.json
+POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/scorecard/scorecard_policy_report.json
 VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
-VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_slsa-verifier/vsa_payload.json
+VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_scorecard/vsa_payload.json
 
-# Run policy engine on the database and compare results.
 $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail

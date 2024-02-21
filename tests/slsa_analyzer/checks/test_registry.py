@@ -3,14 +3,18 @@
 
 """This module contains the tests for the Registry class."""
 
+import os
 import queue
 from graphlib import TopologicalSorter
+from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch
 
+import pytest
 from hypothesis import given
 from hypothesis.strategies import SearchStrategy, binary, booleans, integers, lists, none, one_of, text, tuples
 
+from macaron.config.defaults import load_defaults
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType
@@ -22,6 +26,35 @@ class MockCheck(BaseCheck):
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
+
+
+# pylint: disable=protected-access
+@pytest.fixture(name="check_registry")
+def check_registry_fixture() -> Registry:
+    """Return a registry instance with sample checks registered.
+
+    Returns
+    -------
+    Registry
+        The sample registry instance.
+    """
+    # Refresh Registry static variables before each test case
+    Registry._all_checks_mapping = {}
+    Registry._check_relationships_mapping = {}
+    Registry._graph = TopologicalSorter()
+    Registry._is_graph_ready = False
+
+    registry = Registry()
+    registry.register(BaseCheck("mcn_a_1", "Depend on b", [("mcn_b_1", CheckResultType.PASSED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_b_1", "Depend on c", [("mcn_c_1", CheckResultType.PASSED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_c_1", "Depend on d", [("mcn_d_1", CheckResultType.PASSED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_d_1", "Depend on e", [("mcn_e_1", CheckResultType.PASSED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_e_1", "Have no parent", []))  # type: ignore
+    registry.register(BaseCheck("mcn_f_1", "Depend on c", [("mcn_c_1", CheckResultType.FAILED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_g_1", "Depend on h", [("mcn_h_1", CheckResultType.FAILED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_h_1", "Depend on i", [("mcn_i_1", CheckResultType.FAILED)]))  # type: ignore
+    registry.register(BaseCheck("mcn_i_1", "Have no parent", []))  # type: ignore
+    return registry
 
 
 # pylint: disable=protected-access
@@ -200,3 +233,183 @@ class TestRegistry(TestCase):
 
         assert all(Registry._validate_check_id_format(check_id) for check_id in valid_ids)
         assert all(not Registry._validate_check_id_format(check_id) for check_id in invalid_ids)
+
+
+@pytest.mark.parametrize(
+    ("ex_pats", "in_pats", "final_checks"),
+    [
+        (
+            [],
+            ["*"],
+            ["mcn_a_1", "mcn_b_1", "mcn_c_1", "mcn_d_1", "mcn_e_1", "mcn_f_1", "mcn_g_1", "mcn_h_1", "mcn_i_1"],
+        ),
+        (
+            [],
+            ["*", "*"],
+            ["mcn_a_1", "mcn_b_1", "mcn_c_1", "mcn_d_1", "mcn_e_1", "mcn_f_1", "mcn_g_1", "mcn_h_1", "mcn_i_1"],
+        ),
+        (
+            [],
+            ["mcn_?_1"],
+            ["mcn_a_1", "mcn_b_1", "mcn_c_1", "mcn_d_1", "mcn_e_1", "mcn_f_1", "mcn_g_1", "mcn_h_1", "mcn_i_1"],
+        ),
+        (
+            [],
+            ["mcn_[cf]_1"],
+            ["mcn_c_1", "mcn_f_1", "mcn_d_1", "mcn_e_1"],
+        ),
+        ([], [], []),
+        (["*"], [], []),
+        (["*"], ["*"], []),
+        (["*", "*", "*"], ["*", "*"], []),
+        (
+            [],
+            ["mcn_a_1", "mcn_b_1", "mcn_c_1", "mcn_d_1", "mcn_e_1", "mcn_f_1", "mcn_g_1", "mcn_h_1", "mcn_i_1"],
+            ["mcn_a_1", "mcn_b_1", "mcn_c_1", "mcn_d_1", "mcn_e_1", "mcn_f_1", "mcn_g_1", "mcn_h_1", "mcn_i_1"],
+        ),
+        (["mcn_c_1"], ["*"], ["mcn_d_1", "mcn_e_1", "mcn_g_1", "mcn_h_1", "mcn_i_1"]),
+        ([], ["mcn_c_1"], ["mcn_c_1", "mcn_d_1", "mcn_e_1"]),
+        (["mcn_d_1"], ["mcn_c_1"], ["mcn_e_1"]),
+        (["mcn_*"], ["*"], []),
+    ],
+)
+def test_get_final_checks(
+    check_registry: Registry, ex_pats: list[str], in_pats: list[str], final_checks: list[str]
+) -> None:
+    """This method tests the get_final_checks method."""
+    assert sorted(check_registry.get_final_checks(ex_pats=ex_pats, in_pats=in_pats)) == sorted(final_checks)
+
+
+@pytest.mark.parametrize(
+    ("check_id", "children"),
+    [
+        (
+            "mcn_a_1",
+            [],
+        ),
+        (
+            "mcn_b_1",
+            ["mcn_a_1"],
+        ),
+        (
+            "mcn_c_1",
+            ["mcn_f_1", "mcn_b_1"],
+        ),
+    ],
+)
+def test_get_children(check_registry: Registry, check_id: str, children: set[str]) -> None:
+    """This method test the get_children method."""
+    result = sorted(check_registry.get_children(check_id))
+    expect = sorted(children)
+    assert result == expect
+
+
+@pytest.mark.parametrize(
+    ("check_id", "parent"),
+    [
+        (
+            "mcn_a_1",
+            ["mcn_b_1"],
+        ),
+        (
+            "mcn_b_1",
+            ["mcn_c_1"],
+        ),
+        (
+            "mcn_e_1",
+            [],
+        ),
+    ],
+)
+def test_get_parents(check_registry: Registry, check_id: str, parent: set[str]) -> None:
+    """This method test the get_children method."""
+    result = sorted(check_registry.get_parents(check_id))
+    expect = sorted(parent)
+    assert result == expect
+
+
+@pytest.mark.parametrize(
+    ("user_config_input"),
+    [
+        pytest.param(
+            """
+            [analysis.checks]
+            exclude = *
+            include = *
+            """,
+            id="Exclude every checks",
+        ),
+        pytest.param(
+            """
+            [analysis.checks]
+            exclude =
+            include =
+            """,
+            id="No check is included",
+        ),
+        pytest.param(
+            """
+            [analysis.checks]
+            exclude = *
+            include =
+            """,
+            id="No check is included and no check is included",
+        ),
+    ],
+)
+def test_invalid_exclude_include_from_defaults(
+    tmp_path: Path,
+    check_registry: Registry,
+    user_config_input: str,
+) -> None:
+    """Test Registry.prepare on invalid exclude/include check config.
+
+    An invalid exclude/include check config means that it results in no run check.
+    """
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(user_config_input)
+
+    load_defaults(user_config_path)
+    assert not check_registry.prepare()
+
+
+@pytest.mark.parametrize(
+    ("start_node", "expected"),
+    [
+        ("A", ["A", "B", "C", "D", "E", "F", "H"]),
+        ("B", ["B", "D"]),
+        ("C", ["C", "F", "E", "H"]),
+        ("D", ["D"]),
+        ("E", ["E"]),
+        ("F", ["F", "H"]),
+        ("G", ["G", "C", "E", "F", "H"]),
+        ("H", ["H"]),
+    ],
+)
+def test_get_transitive_closure(start_node: str, expected: list[str]) -> None:
+    """This method test get_transitive_closure method."""
+
+    def get_successors(start: str) -> set[str]:
+        match start:
+            case "A":
+                return {"B", "C"}
+            case "B":
+                return {"D"}
+            case "C":
+                return {"E", "F"}
+            case "G":
+                return {"C", "H"}
+            case "F":
+                return {"H"}
+            case "D" | "E" | "H":
+                return set()
+            case _:
+                return set()
+
+    assert sorted(
+        Registry.get_reachable_nodes(
+            node=start_node,
+            get_successors=get_successors,
+        )
+    ) == sorted(expected)
