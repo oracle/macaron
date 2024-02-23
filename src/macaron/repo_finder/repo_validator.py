@@ -13,8 +13,6 @@ from macaron.util import send_get_http_raw
 def find_valid_repository_url(urls: Iterable[str]) -> str:
     """Find a valid URL from the provided URLs.
 
-    URLs are assumed to be a priority list, with the first match preventing further processing.
-
     Parameters
     ----------
     urls : Iterable[str]
@@ -23,12 +21,12 @@ def find_valid_repository_url(urls: Iterable[str]) -> str:
     Returns
     -------
     str
-        A valid URL, or an empty string if none can be found.
+        The first valid URL from the iterable, or an empty string if none can be found.
     """
     for url in urls:
         parsed_url = clean_url(url)
         if not parsed_url:
-            # URLs that failed to parse can be rejected here.
+            # URLs that fail to parse can be rejected here.
             continue
         redirect_url = resolve_redirects(parsed_url)
         checked_url = get_remote_vcs_url(redirect_url if redirect_url else parsed_url.geturl())
