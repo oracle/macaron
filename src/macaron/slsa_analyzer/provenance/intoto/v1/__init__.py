@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from enum import Enum
 from typing import TypedDict, TypeGuard
 
 from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
@@ -157,19 +156,18 @@ def validate_intoto_subject(subject: JsonType) -> TypeGuard[InTotoV1ResourceDesc
         )
 
     # At least one of 'uri', 'digest', and 'content' must be valid and present.
-    uri_state = _validate_property(subject, "uri", True, lambda x: isinstance(x, str), False)
-    content_state = _validate_property(subject, "content", True, lambda x: isinstance(x, str), False)
-    digest_state = _validate_property(subject, "digest", True, is_valid_digest_set, False)
-    if _ValidityState.VALID not in (uri_state, content_state, digest_state):
+    uri = _validate_property(subject, "uri", lambda x: isinstance(x, str))
+    content = _validate_property(subject, "content", lambda x: isinstance(x, str))
+    digest = _validate_property(subject, "digest", is_valid_digest_set)
+    if not any([uri, content, digest]):
         raise ValidateInTotoPayloadError(
-            f"One of 'uri', 'digest', or 'content' must be present and valid within 'subject'. URI: {uri_state.name}. "
-            f"Content: {content_state.name}. DIGEST: {digest_state.name}."
+            "One of 'uri', 'digest', or 'content' must be present and valid within 'subject'."
         )
 
-    _validate_property(subject, "name", False, lambda x: isinstance(x, str))
-    _validate_property(subject, "downloadLocation", False, lambda x: isinstance(x, str))
-    _validate_property(subject, "mediaType", False, lambda x: isinstance(x, str))
-    _validate_property(subject, "annotations", False, is_valid_annotation_map)
+    _validate_property(subject, "name", lambda x: isinstance(x, str))
+    _validate_property(subject, "downloadLocation", lambda x: isinstance(x, str))
+    _validate_property(subject, "mediaType", lambda x: isinstance(x, str))
+    _validate_property(subject, "annotations", is_valid_annotation_map)
 
     return True
 
@@ -218,37 +216,16 @@ def is_valid_annotation_map(annotation_map: JsonType) -> bool:
 
 
 def _validate_property(
-    object_: JsonType,
+    object_: dict[str, JsonType],
     key: str,
-    required: bool,
     validator: Callable[[JsonType], bool],
-    report_errors: bool = True,
-) -> _ValidityState:
+) -> JsonType:
     """Validate the existence and type of target within the passed Json object."""
-    if not isinstance(object_, dict):
-        # The passed object is checked before this function is called, but mypy requires it be explicitly checked here
-        #  too. Also known as: this branch should never be taken.
-        return _ValidityState.INVALID
-
     value = object_.get(key)
     if not value:
-        if required:
-            if report_errors:
-                raise ValidateInTotoPayloadError(f"The attribute {key} of the in-toto subject is missing.")
-            return _ValidityState.MISSING
-        return _ValidityState.VALID
+        return None
 
-    valid = validator(value)
-    if not valid:
-        if report_errors:
-            raise ValidateInTotoPayloadError(f"The attribute {key} of the in-toto subject is invalid.")
-        return _ValidityState.INVALID
-    return _ValidityState.VALID
+    if not validator(value):
+        raise ValidateInTotoPayloadError(f"The attribute {key} of the in-toto subject is invalid.")
 
-
-class _ValidityState(str, Enum):
-    """Represents the validity state of properties being validated."""
-
-    VALID = 0
-    MISSING = 1
-    INVALID = 2
+    return value
