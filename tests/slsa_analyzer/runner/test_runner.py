@@ -3,8 +3,6 @@
 
 """This module contains the tests for the Runner module."""
 
-from graphlib import TopologicalSorter
-
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
@@ -56,8 +54,6 @@ class TestRunner(MacaronTestCase):
         registry = Registry()
         Registry._all_checks_mapping = {}
         Registry._check_relationships_mapping = {}
-        Registry._graph = TopologicalSorter()
-        Registry._is_graph_ready = False
 
         # Register checks
         # The final graph should be:
