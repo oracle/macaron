@@ -10,7 +10,9 @@ import sys
 from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
+from macaron.repo_finder import repo_validator
 from macaron.repo_finder.repo_finder import find_repo
+from macaron.slsa_analyzer.git_url import clean_url
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ def test_repo_finder() -> int:
     if not defaults.has_section("repofinder"):
         defaults.add_section("repofinder")
     defaults.set("repofinder", "use_open_source_insights", "True")
-    defaults.set("repofinder", "redirect_urls", "gitbox.apache.org git-wip-us.apache.org")
+    defaults.set("repofinder", "redirect_urls", "\n".join(["gitbox.apache.org", "git-wip-us.apache.org"]))
 
     if not defaults.has_section("git_service.github"):
         defaults.add_section("git_service.github")
@@ -64,7 +66,8 @@ def test_repo_finder() -> int:
         return os.EX_UNAVAILABLE
 
     # Test redirecting URL from Apache commons-io package.
-    if not find_repo(PackageURL.from_string("pkg:maven/commons-io/commons-io@2.15.1")):
+    parsed_url = clean_url("https://git-wip-us.apache.org/repos/asf?p=commons-io.git")
+    if not parsed_url or not repo_validator.resolve_redirects(parsed_url):
         return os.EX_UNAVAILABLE
 
     return os.EX_OK
