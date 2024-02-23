@@ -22,8 +22,13 @@ def initiate_repo(repo_path: str | os.PathLike, git_init_options: dict | None = 
 
     Parameters
     ----------
-    repo_path : str or os.PathLike
+    repo_path : str | os.PathLike
         The path to the target repo.
+
+    git_init_options : dict
+        Additional keyword arguments passed to the `git.Repo.init` method.
+        Each key is the name of the argument and each value is the corresponding value
+        for the argument.
 
     Returns
     -------
