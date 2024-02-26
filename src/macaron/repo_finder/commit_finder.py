@@ -12,9 +12,10 @@ from gitdb.exc import BadName
 from packageurl import PackageURL
 from pydriller import Commit, Git
 
+from macaron.config.global_config import global_config
 from macaron.repo_finder import repo_finder_deps_dev
 from macaron.repo_finder.repo_finder import to_domain_from_known_purl_types
-from macaron.slsa_analyzer.git_service import GIT_SERVICES
+from macaron.slsa_analyzer.git_service import GIT_SERVICES, api_client
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -114,7 +115,7 @@ class AbstractPurlType(Enum):
     UNSUPPORTED = (2,)
 
 
-def find_commit(git_obj: Git, purl: PackageURL) -> str | None:
+def find_commit(git_obj: Git, purl: PackageURL, git_url: str = "") -> tuple[str, str] | None:
     """Try to find the commit matching the passed PURL.
 
     The PURL may be a repository type, e.g. GitHub, in which case the commit might be in its version part.
@@ -127,11 +128,13 @@ def find_commit(git_obj: Git, purl: PackageURL) -> str | None:
         The repository.
     purl: PackageURL
         The PURL of the analysis target.
+    git_url: str
+        The path to the remote git repository, or an empty string.
 
     Returns
     -------
-    str | None
-        The digest, or None if the commit cannot be correctly retrieved.
+    tuple[str, str] | None
+        The branch name, and tag (if applicable) as a tuple, or None if the commit cannot be retrieved.
     """
     version = purl.version
     if not version:
@@ -140,9 +143,12 @@ def find_commit(git_obj: Git, purl: PackageURL) -> str | None:
 
     repo_type = determine_abstract_purl_type(purl)
     if repo_type == AbstractPurlType.REPOSITORY:
-        return extract_commit_from_version(git_obj, version)
+        digest = extract_commit_from_version(git_obj, version)
+        if not digest:
+            return None
+        return digest, ""
     if repo_type == AbstractPurlType.ARTIFACT:
-        return find_commit_from_version_and_name(git_obj, purl.name, version)
+        return find_commit_from_version_and_name(git_obj, purl.name, version, git_url)
     logger.debug("Type of PURL is not supported for commit finding: %s", purl.type)
     return None
 
@@ -216,7 +222,7 @@ def extract_commit_from_version(git_obj: Git, version: str) -> str | None:
     return commit.hash if commit else None
 
 
-def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> str | None:
+def find_commit_from_version_and_name(git_obj: Git, name: str, version: str, git_url: str) -> tuple[str, str] | None:
     """Try to find the matching commit in a repository of a given version (and name) via tags.
 
     The passed version is used to match with the tags in the target repository. The passed name is used in cases where
@@ -230,11 +236,13 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
         The name of the analysis target.
     version: str
         The version of the analysis target.
+    git_url: str
+        The path to the remote gif repository, or an empty string.
 
     Returns
     -------
-    str | None
-        The digest, or None if the commit cannot be correctly retrieved.
+    tuple[str, str] | None
+        The digest, and tag (if it is a release tag) as a tuple, or None if the commit cannot be retrieved.
     """
     logger.debug("Searching for commit of artifact version using tags: %s@%s", name, version)
 
@@ -253,8 +261,33 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
         logger.debug("No tags with commits found for %s", name)
         return None
 
-    # Match tags.
-    matched_tags = match_tags(list(valid_tags.keys()), name, version)
+    # Try to filter tags based on what exists in the GitHub releases API.
+    release_tags = {}
+    if git_url:
+        client = api_client.get_default_gh_client(global_config.gh_token)
+        split = git_url.split("/")
+        releases = client.get_all_releases(f"{split[-2]}/{split[-1]}")
+        for release in releases:
+            release_tags[release["name"]] = release["tag_name"]
+
+    matched_tags = []
+    if release_tags:
+        # Try to match using release tags.
+        filtered_tags = {}
+        filtered_keys = filter(lambda _key: _key in release_tags, valid_tags.keys())
+        for key in filtered_keys:
+            filtered_tags[key] = valid_tags[key]
+        if filtered_tags:
+            matched_tags = match_tags(list(filtered_tags.keys()), name, version)
+        if not matched_tags:
+            # Try to match using release names. Here we assume that the tag name is similar to the target version
+            # while the connected tag is not. Names are mapped back to actual tags after matching has taken place.
+            matched_names = match_tags(list(release_tags.keys()), name, version)
+            matched_tags = [release_tags[matched_name] for matched_name in matched_names]
+
+    if not matched_tags:
+        # Try to match using all tags if nothing matched so far.
+        matched_tags = match_tags(list(valid_tags.keys()), name, version)
 
     if not matched_tags:
         logger.debug("No tags matched for %s", name)
@@ -284,7 +317,14 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
         name,
         version,
     )
-    return hexsha if hexsha else None
+
+    if not hexsha:
+        return None
+
+    release_tag_name = ""
+    if release_tags and (tag_name in release_tags.values() or tag_name in release_tags):
+        release_tag_name = tag_name
+    return hexsha, release_tag_name
 
 
 def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, list[str]]:

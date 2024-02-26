@@ -145,35 +145,42 @@ def test_commit_finder() -> None:
     assert not commit_finder.find_commit(git_obj, PackageURL.from_string("pkg:maven/apache/maven@1"))
 
     # Valid repository PURL.
-    digest = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:github/apache/maven@{commit_0.hexsha}"))
-    assert digest == commit_0.hexsha
+    result = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:github/apache/maven@{commit_0.hexsha}"))
+    assert result
+    assert result[0] == commit_0.hexsha
 
     # Valid artifact PURL.
-    digest = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/maven@{tag_version}"))
-    assert digest == commit_0.hexsha
+    result = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/maven@{tag_version}"))
+    assert result
+    assert result[0] == commit_0.hexsha
 
     # Valid artifact PURL with an alphanumeric suffix.
-    digest = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/maven@{tag_version}-RC1"))
-    assert digest == commit_0.hexsha
+    result = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/maven@{tag_version}-RC1"))
+    assert result
+    assert result[0] == commit_0.hexsha
 
     # Valid artifact PURL that should match a tag with a name prefix.
-    digest = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/prefix_name@{tag_version}"))
-    assert digest == empty_commit.hexsha
+    result = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/prefix_name@{tag_version}"))
+    assert result
+    assert result[0] == empty_commit.hexsha
 
     # Valid artifact PURL that matches a version with a suffix, to a tag with the same suffix.
-    digest = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/maven@{tag_version_2}-DEV"))
-    assert digest == empty_commit.hexsha
+    result = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/maven@{tag_version_2}-DEV"))
+    assert result
+    assert result[0] == empty_commit.hexsha
 
     # Valid artifact PURL that matches a version with a suffix, to a tag with the same suffix part in a multi-suffix.
-    digest = commit_finder.find_commit(
+    result = commit_finder.find_commit(
         git_obj, PackageURL.from_string(f"pkg:maven/apache/maven@{tag_version_2}_RELEASE")
     )
-    assert digest == empty_commit.hexsha
+    assert result
+    assert result[0] == empty_commit.hexsha
 
     # Valid artifact PURL that matches a version with an alphanumeric suffix, to a tag with the same suffix part in a
     # multi-suffix.
-    digest = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/maven@{tag_version_2}_RC1"))
-    assert digest == empty_commit.hexsha
+    result = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/maven@{tag_version_2}_RC1"))
+    assert result
+    assert result[0] == empty_commit.hexsha
 
 
 @given(text())

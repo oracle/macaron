@@ -36,7 +36,7 @@ from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,un
 from macaron.slsa_analyzer.checks.check_result import CheckResult, SkippedInfo
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.database_store import store_analyze_context_to_db
-from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
+from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService, GitHub
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
@@ -310,7 +310,7 @@ class Analyzer:
             context=analyze_ctx,
         )
 
-    def add_repository(self, branch_name: str | None, git_obj: Git) -> Repository | None:
+    def add_repository(self, branch_name: str | None, git_obj: Git, release_tag: str = "") -> Repository | None:
         """Create a repository instance for a target repository.
 
         The repository instances are transient objects for SQLAlchemy, which may be
@@ -324,6 +324,8 @@ class Analyzer:
             the current branch name cannot be determined.
         git_obj : Git
             The pydriller Git object of the target repository.
+        release_tag: str
+            The name of the related release tag, or an empty string.
 
         Returns
         -------
@@ -385,6 +387,7 @@ class Analyzer:
             commit_date=commit_date_str,
             fs_path=str(git_obj.path),
             files=git_obj.files(),
+            release_tag=release_tag or None,
         )
 
         logger.info(
@@ -459,7 +462,7 @@ class Analyzer:
 
         repository = None
         if analysis_target.repo_path:
-            git_obj = self._prepare_repo(
+            git_obj, release_tag = self._prepare_repo(
                 os.path.join(self.output_path, self.GIT_REPOS_DIR),
                 analysis_target.repo_path,
                 analysis_target.branch,
@@ -477,7 +480,7 @@ class Analyzer:
                         f"{analysis_target.repo_path} is already analyzed.", context=existing_record.context
                     )
 
-                repository = self.add_repository(analysis_target.branch, git_obj)
+                repository = self.add_repository(analysis_target.branch, git_obj, release_tag)
             else:
                 # We cannot prepare the repository even though we have successfully resolved the repository path for the
                 # software component. If this happens, we don't raise error and treat the software component as if it
@@ -621,7 +624,7 @@ class Analyzer:
         branch_name: str = "",
         digest: str = "",
         purl: PackageURL | None = None,
-    ) -> Git | None:
+    ) -> tuple[Git | None, str]:
         """Prepare the target repository for analysis.
 
         If ``repo_path`` is a remote path, the target repo is cloned to ``{target_dir}/{unique_path}``.
@@ -647,11 +650,11 @@ class Analyzer:
 
         Returns
         -------
-        Git | None
-            The pydriller.Git object of the repository or None if error.
+        tuple[Git | None, str]
+            The pydriller.Git object of the repository or None if error, and the related release tag or
+            an empty string, as a tuple.
         """
         # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
-
         logger.info(
             "Preparing the repository for the analysis (path=%s, branch=%s, digest=%s)",
             repo_path,
@@ -660,14 +663,16 @@ class Analyzer:
         )
 
         resolved_local_path = ""
+        resolved_remote_path = ""
         is_remote = git_url.is_remote_repo(repo_path)
+        git_service: BaseGitService | None = None
 
         if is_remote:
             logger.info("The path to repo %s is a remote path.", repo_path)
             resolved_remote_path = git_url.get_remote_vcs_url(repo_path)
             if not resolved_remote_path:
                 logger.error("The provided path to repo %s is not a valid remote path.", repo_path)
-                return None
+                return None, ""
 
             git_service = self.get_git_service(resolved_remote_path)
             repo_unique_path = git_url.get_repo_dir_name(resolved_remote_path)
@@ -677,7 +682,7 @@ class Analyzer:
                 git_service.clone_repo(resolved_local_path, resolved_remote_path)
             except CloneError as error:
                 logger.error("Cannot clone %s: %s", resolved_remote_path, str(error))
-                return None
+                return None, ""
         else:
             logger.info("The path to repo %s is a local path.", repo_path)
             resolved_local_path = self._resolve_local_path(self.local_repos_path, repo_path)
@@ -687,24 +692,24 @@ class Analyzer:
                 git_obj = Git(resolved_local_path)
             except InvalidGitRepositoryError:
                 logger.error("No git repo exists at %s.", resolved_local_path)
-                return None
+                return None, ""
         else:
             logger.error("Error happened while preparing the repo.")
-            return None
+            return None, ""
 
         if git_url.is_empty_repo(git_obj):
             logger.error("The target repository does not have any commit.")
-            return None
+            return None, ""
 
         # Find the digest and branch if a version has been specified
+        release_tag = ""
         if not digest and purl and purl.version:
-            found_digest = find_commit(git_obj, purl)
-            if not found_digest:
+            commit_result = find_commit(git_obj, purl, resolved_remote_path if isinstance(git_service, GitHub) else "")
+            if not commit_result or not commit_result[0]:
                 logger.error(
                     "Could not map the input purl string to a specific commit in the corresponding repository."
                 )
-                return None
-            digest = found_digest
+                return None, ""
 
         # Checking out the specific branch or commit. This operation varies depends on the git service that the
         # repository uses.
@@ -723,18 +728,19 @@ class Analyzer:
                 # ``git_url.check_out_repo_target``.
                 if not git_url.check_out_repo_target(git_obj, branch_name, digest, not is_remote):
                     logger.error("Cannot checkout the specific branch or commit of the target repo.")
-                    return None
+                    return None, ""
 
-                return git_obj
+                return git_obj, ""
 
         try:
-            git_service.check_out_repo(git_obj, branch_name, digest, not is_remote)
+            if git_service:
+                git_service.check_out_repo(git_obj, branch_name, digest, not is_remote)
         except RepoCheckOutError as error:
             logger.error("Failed to check out repository at %s", resolved_local_path)
             logger.error(error)
-            return None
+            return None, ""
 
-        return git_obj
+        return git_obj, release_tag
 
     @staticmethod
     def get_git_service(remote_path: str | None) -> BaseGitService:
