@@ -167,7 +167,7 @@ def validate_intoto_subject(subject: JsonType) -> TypeGuard[InTotoV1ResourceDesc
     _validate_property(subject, "name", lambda x: isinstance(x, str))
     _validate_property(subject, "downloadLocation", lambda x: isinstance(x, str))
     _validate_property(subject, "mediaType", lambda x: isinstance(x, str))
-    _validate_property(subject, "annotations", is_valid_annotation_map)
+    _validate_property(subject, "annotations", lambda x: isinstance(x, dict))
 
     return True
 
@@ -194,24 +194,6 @@ def is_valid_digest_set(digest: JsonType) -> bool:
             return False
         if not isinstance(digest[key], str):
             return False
-    return True
-
-
-def is_valid_annotation_map(annotation_map: JsonType) -> bool:
-    """Validate the annotation map which is a dictionary with string keys and JsonType values.
-
-    Parameters
-    ----------
-    annotation_map : JsonType
-        The annotation map dictionary.
-
-    Returns
-    -------
-    bool:
-        ``True`` if the annotation map is valid according to the spec.
-    """
-    if not isinstance(annotation_map, dict):
-        return False
     return True
 
 
