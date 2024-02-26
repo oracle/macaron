@@ -84,7 +84,7 @@ def test_resolve_analysis_target(
                 repo_pom_paths =
                     scm.connection
                     scm.url
-                """,
+            """,
             ["scm:git:git@github.com:oracle-samples/macaron.git", "https://github.com/oracle/macaron"],
         ),
         (
@@ -93,7 +93,7 @@ def test_resolve_analysis_target(
                 repo_pom_paths =
                     scm.url
                     scm.connection
-                """,
+            """,
             ["https://github.com/oracle/macaron", "scm:git:git@github.com:oracle-samples/macaron.git"],
         ),
     ],
