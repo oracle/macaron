@@ -29,7 +29,7 @@ def find_valid_repository_url(urls: Iterable[str]) -> str:
         if not parsed_url:
             # URLs that failed to parse can be rejected here.
             continue
-        redirect_url = _resolve_redirects(parsed_url)
+        redirect_url = resolve_redirects(parsed_url)
         # If a redirect URL is found add it, otherwise add the parsed url.
         pruned_list.append(redirect_url if redirect_url else parsed_url.geturl())
 
@@ -45,8 +45,19 @@ def find_valid_repository_url(urls: Iterable[str]) -> str:
     return vcs_list.pop()
 
 
-def _resolve_redirects(parsed_url: urllib.parse.ParseResult) -> str | None:
-    """Resolve redirecting URLs by returning the location they point to."""
+def resolve_redirects(parsed_url: urllib.parse.ParseResult) -> str | None:
+    """Resolve redirecting URLs by returning the location they point to.
+
+    Parameters
+    ----------
+    parsed_url: ParseResult
+        A parsed URL.
+
+    Returns
+    -------
+    str | None
+        The resolved redirect location, or None if none was found.
+    """
     redirect_list = defaults.get_list("repofinder", "redirect_urls", fallback=[])
     if parsed_url.netloc in redirect_list:
         response = send_get_http_raw(parsed_url.geturl(), allow_redirects=False)
