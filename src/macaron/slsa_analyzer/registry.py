@@ -683,7 +683,7 @@ class Registry:
         ex_pats = defaults.get_list(section="analysis.checks", item="exclude", fallback=[])
         in_pats = defaults.get_list(section="analysis.checks", item="include", fallback=["*"])
         try:
-            checks_to_run = registry.get_final_checks(ex_pats, in_pats)
+            checks_to_run = self.get_final_checks(ex_pats, in_pats)
         except CheckRegistryError as error:
             logger.error(error)
             return False
