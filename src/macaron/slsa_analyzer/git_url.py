@@ -109,6 +109,67 @@ def get_branches_containing_commit(git_obj: Git, commit: str, remote: str = "ori
     return parse_git_branch_output(raw_output)
 
 
+def _attempt_check_out(git_obj: Git, branch_name: str, digest: str) -> bool:
+    """Try checking out a repository at given branch or commit.
+
+    This function is internal to the ``check_out_repo_target`` function.
+    Check out the ``check_out_repo_target`` function for more information.
+
+    Parameters
+    ----------
+    git_obj : Git
+        The pydriller.Git wrapper object of the target repository.
+    branch_name : str
+        The name of the branch we want to checkout.
+    digest : str
+        The hash of the commit that we want to checkout in the branch.
+
+    Returns
+    -------
+    bool
+        True if succeed else False.
+    """
+    if not branch_name and not digest:
+        try:
+            git_obj.repo.git.checkout("--force", "origin/HEAD")
+        except GitCommandError:
+            logger.debug("Cannot checkout the default branch at origin/HEAD")
+            return False
+
+    if branch_name and not digest:
+        try:
+            git_obj.repo.git.checkout("--force", f"origin/{branch_name}")
+        except GitCommandError:
+            logger.debug("Cannot checkout branch %s from origin remote.", branch_name)
+            return False
+
+    if not branch_name and digest:
+        try:
+            git_obj.repo.git.checkout("--force", f"{digest}")
+        except GitCommandError:
+            logger.debug("Cannot checkout commit %s.", digest)
+            return False
+
+    if branch_name and digest:
+        branches = get_branches_containing_commit(
+            git_obj=git_obj,
+            commit=digest,
+            remote="origin",
+        )
+
+        if f"origin/{branch_name}" in branches:
+            try:
+                git_obj.repo.git.checkout("--force", f"{digest}")
+            except GitCommandError:
+                logger.debug("Cannot checkout commit %s.", digest)
+                return False
+        else:
+            logger.error("Commit %s is not in branch %s.", digest, branch_name)
+            return False
+
+    return True
+
+
 def check_out_repo_target(
     git_obj: Git,
     branch_name: str = "",
@@ -159,7 +220,13 @@ def check_out_repo_target(
     bool
         True if succeed else False.
     """
-    if not offline_mode:
+    successful = _attempt_check_out(git_obj, branch_name, digest)
+
+    if not successful and not offline_mode:
+        # Retry with fetching.
+        # We only fetch "on-demand", i.e. if we cannot check out the first time,
+        # instead of fetching all the time. This is to save some time.
+        #
         # Fetch from remote origin by running ``git fetch origin --force --tags --prune --prune-tags`` inside the target
         # repository.
         # The flags `--force --tags --prune --prune-tags` are used to make sure we analyze the most up-to-date version
@@ -181,43 +248,11 @@ def check_out_repo_target(
             logger.error("Unable to fetch from the origin remote of the repository.")
             return False
 
-    if not branch_name and not digest:
-        try:
-            git_obj.repo.git.checkout("--force", "origin/HEAD")
-        except GitCommandError:
-            logger.debug("Cannot checkout the default branch at origin/HEAD")
-            return False
+        successful = _attempt_check_out(git_obj, branch_name, digest)
 
-    if branch_name and not digest:
-        try:
-            git_obj.repo.git.checkout("--force", f"origin/{branch_name}")
-        except GitCommandError:
-            logger.debug("Cannot checkout branch %s from origin remote.", branch_name)
-            return False
-
-    if not branch_name and digest:
-        try:
-            git_obj.repo.git.checkout("--force", f"{digest}")
-        except GitCommandError:
-            logger.debug("Cannot checkout commit %s.", digest)
-            return False
-
-    if branch_name and digest:
-        branches = get_branches_containing_commit(
-            git_obj=git_obj,
-            commit=digest,
-            remote="origin",
-        )
-
-        if f"origin/{branch_name}" in branches:
-            try:
-                git_obj.repo.git.checkout("--force", f"{digest}")
-            except GitCommandError:
-                logger.debug("Cannot checkout commit %s.", digest)
-                return False
-        else:
-            logger.error("Commit %s is not in branch %s.", digest, branch_name)
-            return False
+    if not successful:
+        logger.error("Failed to checkout.")
+        return False
 
     # Further validation to make sure the git checkout operations happen as expected.
     final_head_commit: Commit = git_obj.repo.head.commit
