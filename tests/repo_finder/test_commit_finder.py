@@ -91,7 +91,12 @@ def test_commit_finder() -> None:
     """Test commit finder using mocked repository."""
     if os.path.exists(REPO_DIR):
         shutil.rmtree(REPO_DIR)
-    git_obj = initiate_repo(REPO_DIR)
+    git_obj = initiate_repo(
+        REPO_DIR,
+        git_init_options={
+            "initial_branch": "master",
+        },
+    )
 
     # Create a commit from a newly created file.
     with open(os.path.join(REPO_DIR, "file_1"), "w", encoding="utf-8") as file:

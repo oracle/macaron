@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -15,21 +15,28 @@ from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 
 
-def initiate_repo(repo_path: str | os.PathLike) -> Git:
+def initiate_repo(repo_path: str | os.PathLike, git_init_options: dict | None = None) -> Git:
     """Init the repo at `repo_path` and return a Git wrapper of that repository.
 
     This function will create the directory `repo_path` if it does not exist.
 
     Parameters
     ----------
-    repo_path : str or os.PathLike
+    repo_path : str | os.PathLike
         The path to the target repo.
+
+    git_init_options : dict
+        Additional keyword arguments passed to the `git.Repo.init` method.
+        Each key is the name of the argument and each value is the corresponding value
+        for the argument.
 
     Returns
     -------
     Git
         The wrapper of the Git repository.
     """
+    git_init_options = git_init_options or {}
+
     if not os.path.isdir(repo_path):
         os.makedirs(repo_path)
 
@@ -38,7 +45,7 @@ def initiate_repo(repo_path: str | os.PathLike) -> Git:
         return git_wrapper
     except GitError:
         # No git repo at repo_path
-        git.Repo.init(repo_path)
+        git.Repo.init(repo_path, **git_init_options)
         return Git(repo_path)
 
 
