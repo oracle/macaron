@@ -17,6 +17,7 @@ from macaron.slsa_analyzer.git_service import BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Statement
 from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1Statement
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus, create_requirement_status_dict
@@ -42,6 +43,8 @@ class ChecksOutputs(TypedDict):
     """The expectation to verify the provenance for this repository."""
     package_registries: list[PackageRegistryInfo]
     """The package registries for this repository."""
+    provenance: InTotoPayload | None
+    """The provenance payload for this repository snapshot."""
 
 
 class AnalyzeContext:
@@ -92,6 +95,7 @@ class AnalyzeContext:
             package_registries=[],
             is_inferred_prov=True,
             expectation=None,
+            provenance=None,
         )
 
     @property
