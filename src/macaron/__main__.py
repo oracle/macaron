@@ -383,7 +383,7 @@ def main(argv: list[str] | None = None) -> None:
         "-pf",
         "--provenance-file",
         required=False,
-        help=("The path to provenance document file."),
+        help=("The path to the provenance file in in-toto format."),
     )
 
     group.add_argument(
