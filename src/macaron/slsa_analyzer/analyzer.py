@@ -131,7 +131,7 @@ class Analyzer:
             The path to the SBOM.
         skip_deps : bool
             Flag to skip dependency resolution.
-        prov_payload : InToToPayload
+        prov_payload : InToToPayload | None
             The provenance intoto payload for the main software component.
 
         Returns
