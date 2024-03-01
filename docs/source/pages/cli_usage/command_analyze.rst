@@ -58,6 +58,10 @@ Options
 
     The path to provenance expectation file or directory.
 
+.. option:: -pf PROVENANCE_FILE, --provenance-file PROVENANCE_FILE
+
+    The path to the provenance file in in-toto format.
+
 .. option:: -c CONFIG_PATH, --config-path CONFIG_PATH
 
     The path to the user configuration.
