@@ -40,7 +40,7 @@ from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
-from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payload
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
@@ -111,7 +111,13 @@ class Analyzer:
         # Create database tables: all checks have been registered so all tables should be mapped now
         self.db_man.create_tables()
 
-    def run(self, user_config: dict, sbom_path: str = "", skip_deps: bool = False) -> int:
+    def run(
+        self,
+        user_config: dict,
+        sbom_path: str = "",
+        skip_deps: bool = False,
+        prov_payload: InTotoPayload | None = None,
+    ) -> int:
         """Run the analysis and write results to the output path.
 
         This method handles the configuration file and writes the result html reports including dependencies.
@@ -125,6 +131,8 @@ class Analyzer:
             The path to the SBOM.
         skip_deps : bool
             Flag to skip dependency resolution.
+        prov_payload : InToToPayload | None
+            The provenance intoto payload for the main software component.
 
         Returns
         -------
@@ -154,7 +162,11 @@ class Analyzer:
                 )
 
                 # Analyze the main target.
-                main_record = self.run_single(main_config, analysis)
+                main_record = self.run_single(
+                    main_config,
+                    analysis,
+                    prov_payload=prov_payload,
+                )
 
                 if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
                     logger.info("Analysis has failed.")
@@ -255,6 +267,7 @@ class Analyzer:
         config: Configuration,
         analysis: Analysis,
         existing_records: dict[str, Record] | None = None,
+        prov_payload: InTotoPayload | None = None,
     ) -> Record:
         """Run the checks for a single repository target.
 
@@ -269,6 +282,8 @@ class Analyzer:
             The current analysis instance.
         existing_records : dict[str, Record] | None
             The mapping of existing records that the analysis has run successfully.
+        prov_payload : InToToPayload | None
+            The provenance intoto payload for the analyzed software component.
 
         Returns
         -------
@@ -306,6 +321,7 @@ class Analyzer:
         analyze_ctx.dynamic_data["expectation"] = self.expectations.get_expectation_for_target(
             analyze_ctx.component.purl.split("@")[0]
         )
+        analyze_ctx.dynamic_data["provenance"] = prov_payload
         analyze_ctx.check_results = self.perform_checks(analyze_ctx)
 
         return Record(

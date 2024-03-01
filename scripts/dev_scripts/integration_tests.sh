@@ -635,6 +635,17 @@ then
     log_fail
 fi
 
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Test providing an invalid provenance file as input."
+echo -e "----------------------------------------------------------------------------------\n"
+$RUN_MACARON analyze -rp https://github.com/apache/maven --provenance-file $WORKSPACE/golang/internal/cue_validator/resources/invalid_provenance.json --skip-deps
+
+if [ $? -eq 0 ];
+then
+    echo -e "Expect non-zero status code but got $?."
+    log_fail
+fi
+
 # Testing the CUE provenance expectation verifier.
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test verifying CUE provenance expectation for ossf/scorecard"

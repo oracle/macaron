@@ -23,6 +23,8 @@ from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
 from macaron.slsa_analyzer.analyzer import Analyzer
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
+from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError
+from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
 from macaron.vsa.vsa import generate_vsa
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -78,7 +80,6 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     analyzer.reporters.append(JSONReporter())
 
     run_config = {}
-
     if analyzer_single_args.config_path:
         # Get user config from yaml file
         loaded_config = YamlLoader.load(analyzer_single_args.config_path)
@@ -129,7 +130,20 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
             "dependencies": [],
         }
 
-    status_code = analyzer.run(run_config, analyzer_single_args.sbom_path, analyzer_single_args.skip_deps)
+    prov_payload = None
+    if analyzer_single_args.provenance_file:
+        try:
+            prov_payload = load_provenance_payload(analyzer_single_args.provenance_file)
+        except LoadIntotoAttestationError as error:
+            logger.error("Error while loading the input provenance file: %s", error)
+            sys.exit(os.EX_DATAERR)
+
+    status_code = analyzer.run(
+        run_config,
+        analyzer_single_args.sbom_path,
+        analyzer_single_args.skip_deps,
+        prov_payload=prov_payload,
+    )
     sys.exit(status_code)
 
 
@@ -363,6 +377,13 @@ def main(argv: list[str] | None = None) -> None:
         "--provenance-expectation",
         required=False,
         help=("The path to provenance expectation file or directory."),
+    )
+
+    single_analyze_parser.add_argument(
+        "-pf",
+        "--provenance-file",
+        required=False,
+        help=("The path to the provenance file in in-toto format."),
     )
 
     group.add_argument(
