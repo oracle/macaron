@@ -17,6 +17,7 @@ from macaron.slsa_analyzer.git_service import BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Statement
 from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1Statement
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus, create_requirement_status_dict
@@ -31,17 +32,19 @@ class ChecksOutputs(TypedDict):
     """Data computed at runtime by checks."""
 
     git_service: BaseGitService
-    """The git service information for this repository."""
+    """The git service information for the target software component."""
     build_spec: BuildSpec
-    """The build spec inferred for this repository."""
+    """The build spec inferred for the target software component."""
     ci_services: list[CIInfo]
-    """The CI services information for this repository."""
+    """The CI services information for the target software component."""
     is_inferred_prov: bool
     """True if we cannot find the provenance and Macaron need to infer the provenance."""
     expectation: Expectation | None
-    """The expectation to verify the provenance for this repository."""
+    """The expectation to verify the provenance for the target software component."""
     package_registries: list[PackageRegistryInfo]
-    """The package registries for this repository."""
+    """The package registries for the target software component."""
+    provenance: InTotoPayload | None
+    """The provenance payload for the target software component."""
 
 
 class AnalyzeContext:
@@ -92,6 +95,7 @@ class AnalyzeContext:
             package_registries=[],
             is_inferred_prov=True,
             expectation=None,
+            provenance=None,
         )
 
     @property
