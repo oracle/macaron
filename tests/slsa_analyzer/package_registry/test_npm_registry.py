@@ -17,14 +17,14 @@ from macaron.slsa_analyzer.package_registry.npm_registry import NPMAttestationAs
 
 @pytest.fixture(name="npm_registry")
 def create_npm_registry() -> NPMRegistry:
-    """Create an NPM registry instance."""
+    """Create an npm registry instance."""
     return NPMRegistry(
         hostname="registry.npmjs.org", attestation_endpoint="-/npm/v1/attestations", request_timeout=20, enabled=True
     )
 
 
 def test_disable_npm_registry(npm_registry: NPMRegistry, tmp_path: Path, npm_tool: NPM) -> None:
-    """Test disabling NPM registry."""
+    """Test disabling npm registry."""
     config = """
     [package_registry.npm]
     enabled = False
@@ -57,7 +57,7 @@ def test_disable_npm_registry(npm_registry: NPMRegistry, tmp_path: Path, npm_too
     ],
 )
 def test_npm_registry_invalid_config(npm_registry: NPMRegistry, tmp_path: Path, config: str) -> None:
-    """Test loading invalid NPM registry configuration."""
+    """Test loading invalid npm registry configuration."""
     config_path = os.path.join(tmp_path, "test_config.ini")
     with open(config_path, mode="w", encoding="utf-8") as config_file:
         config_file.write(config)
@@ -117,7 +117,7 @@ def test_is_detected(
 def test_npm_attestation_asset_url(
     npm_registry: NPMRegistry, namespace: str | None, artifact_id: str, version: str, expected: str
 ) -> None:
-    """Test that the NPM attestation url is correctly constructed."""
+    """Test that the npm attestation url is correctly constructed."""
     asset = NPMAttestationAsset(
         namespace=namespace, artifact_id=artifact_id, version=version, npm_registry=npm_registry, size_in_bytes=0
     )
