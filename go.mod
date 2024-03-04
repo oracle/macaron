@@ -6,7 +6,7 @@ module github.com/oracle/macaron
 go 1.18
 
 require (
-	cuelang.org/go v0.7.0
+	cuelang.org/go v0.7.1
 	github.com/rhysd/actionlint v1.6.27
 	mvdan.cc/sh/v3 v3.7.0
 )
