@@ -25,25 +25,31 @@ def extract_repo_and_commit_from_provenance(payload: InTotoPayload) -> tuple[str
     tuple[str, str]
         The repository URL and commit hash if found, a pair of empty strings otherwise.
     """
+    repo = ""
+    commit = ""
     predicate_type = payload.statement.get("predicateType")
     if isinstance(payload, InTotoV1Payload):
         if isinstance(payload, InTotoV1Payload):
             if predicate_type == "https://slsa.dev/provenance/v1":
-                return _extract_from_slsa_v1(payload)
+                repo, commit = _extract_from_slsa_v1(payload)
     elif isinstance(payload, InTotoV01Payload):
         if predicate_type == "https://slsa.dev/provenance/v0.2":
-            return _extract_from_slsa_v02(payload)
+            repo, commit = _extract_from_slsa_v02(payload)
         if predicate_type == "https://slsa.dev/provenance/v0.1":
-            return _extract_from_slsa_v01(payload)
+            repo, commit = _extract_from_slsa_v01(payload)
         if predicate_type == "https://witness.testifysec.com/attestation-collection/v0.1":
-            return _extract_from_witness_provenance(payload)
+            repo, commit = _extract_from_witness_provenance(payload)
 
-    logger.debug(
-        "Extraction from provenance not supported for versions: predicate_type %s, in-toto %s.",
-        predicate_type,
-        payload.__class__,
-    )
-    return "", ""
+    if not repo or not commit:
+        logger.debug(
+            "Extraction from provenance not supported for versions: predicate_type %s, in-toto %s.",
+            predicate_type,
+            payload.__class__,
+        )
+        return "", ""
+
+    logger.debug("Extracted repo and commit from provenance: %s, %s", repo, commit)
+    return repo, commit
 
 
 def _extract_from_slsa_v01(payload: InTotoV01Payload) -> tuple[str, str]:
