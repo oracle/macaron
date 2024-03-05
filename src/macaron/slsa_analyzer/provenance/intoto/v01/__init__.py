@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles in-toto version 0.1 attestations."""
@@ -39,10 +39,6 @@ def validate_intoto_statement(payload: dict[str, JsonType]) -> TypeGuard[InTotoV
 
     Specification: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement.
 
-    TODO: Consider using the in-toto-attestation package (https://github.com/in-toto/attestation/tree/main/python),
-    which contains Python bindings for in-toto attestation.
-    See issue: https://github.com/oracle/macaron/issues/426.
-
     Parameters
     ----------
     payload : dict[str, JsonType]
@@ -64,9 +60,9 @@ def validate_intoto_statement(payload: dict[str, JsonType]) -> TypeGuard[InTotoV
         raise ValidateInTotoPayloadError(
             "The attribute '_type' of the in-toto statement is missing.",
         )
-    if not isinstance(type_, str):
+    if not isinstance(type_, str) or not type_ == "https://in-toto.io/Statement/v0.1":
         raise ValidateInTotoPayloadError(
-            "The value of attribute '_type' in the in-toto statement is invalid: expecting a string.",
+            "The value of attribute '_type' in the in-toto statement must be: 'https://in-toto.io/Statement/v0.1'",
         )
 
     subjects_payload = payload.get("subject")
@@ -106,10 +102,6 @@ def validate_intoto_subject(subject: JsonType) -> TypeGuard[InTotoV01Subject]:
     """Validate a single subject in the in-toto statement.
 
     See specification: https://github.com/in-toto/attestation/tree/main/spec/v0.1.0#statement.
-
-    TODO: Consider using the in-toto-attestation package (https://github.com/in-toto/attestation/tree/main/python),
-    which contains Python bindings for in-toto attestation.
-    See issue: https://github.com/oracle/macaron/issues/426.
 
     Parameters
     ----------
