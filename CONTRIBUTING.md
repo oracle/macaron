@@ -25,7 +25,7 @@ or `-s`, e.g.
 git commit --signoff
 ```
 
-Finally, make sure to sign your commits using a GPG key. See the instructions [here](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key) for more information. A green `verified` label will appear next to your commit on GitHub if it is successfully signed.
+Finally, **make sure to sign your commits** following the instructions provided by [GitHub](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits). Note that we run [GitHub's commit verification](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification) tool to check the commit signatures. A green `verified` label should appear next to **all** of your commits on GitHub.
 
 ### Style Guide
 
@@ -35,13 +35,14 @@ See our [Macaron Style Guide](./docs/source/pages/developers_guide/style_guide.r
 
 1. Ensure there is an issue created to track and discuss the fix or enhancement
    you intend to submit.
-2. Fork this repository.
-3. Create a branch in your fork to implement the changes. We recommend using the issue number as part of your branch name, e.g. `1234-fixes`.
-4. The name of the PR should follow the convention of [commit messages](#commit-messages).
+2. Fork this repository including the `staging` branch. In Macaron, the `staging` branch is the active development branch and contains the most recent changes.
+3. Create a branch in your fork to implement the changes.  Make sure to create your branch from the `staging` branch and not `main`. We recommend using the issue number as part of your branch name, e.g. `1234-fixes`.
+4. The title of the PR should follow the convention of [commit messages](#commit-messages).
 5. Ensure that any documentation is updated with the changes that are required by your change.
 6. Ensure that any samples are updated if the base image has been changed.
 7. Submit the pull request. *Do not leave the pull request blank*. Explain exactly what your changes are meant to do and provide simple steps on how to validate. your changes. Ensure that you reference the issue you created as well.
-8. We will assign the pull request to 2-3 people for review before it is merged.
+8. Choose `staging` as the base branch for your PR.
+9. We will assign the pull request to 2-3 people for review before it is merged.
 
 ### Commit messages
 
