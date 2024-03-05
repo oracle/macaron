@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the JavaRepoFinder class to be used for finding Java repositories."""
@@ -116,7 +116,10 @@ class JavaRepoFinder(BaseRepoFinder):
             The list of created URLs.
         """
         repositories = defaults.get_list(
-            "repofinder.java", "artifact_repositories", fallback=["https://repo.maven.apache.org/maven2"]
+            "repofinder.java",
+            "artifact_repositories",
+            fallback=["https://repo.maven.apache.org/maven2"],
+            duplicated_ok=True,
         )
         urls = []
         for repo in repositories:
@@ -160,7 +163,7 @@ class JavaRepoFinder(BaseRepoFinder):
             The extracted contents as a list of strings.
         """
         # Retrieve tags
-        tags = defaults.get_list("repofinder.java", "repo_pom_paths")
+        tags = defaults.get_list("repofinder.java", "repo_pom_paths", duplicated_ok=True)
         if not any(tags):
             logger.debug("No POM tags found for URL discovery.")
             return []
