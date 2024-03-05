@@ -1,13 +1,14 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the defaults module."""
 
 import os
+from pathlib import Path
 
 import pytest
 
-from macaron.config.defaults import ConfigParser, create_defaults, defaults, load_defaults
+from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.config.global_config import global_config
 
 
@@ -41,93 +42,194 @@ def test_create_defaults_without_permission() -> None:
 
 
 @pytest.mark.parametrize(
-    ("section", "item", "delimiter", "strip", "duplicated_ok", "expect"),
+    ("user_config_input", "delimiter", "strip", "expect"),
     [
         (
-            "test.list",
-            "commas_string",
+            """
+            [test.list]
+            list = ,github.com, gitlab.com, space string, space string
+            """,
             ",",
             False,
-            True,
-            ["", " gitlab.com", " space string", " space string", "github.com"],
+            ["", "github.com", " gitlab.com", " space string", " space string"],
         ),
-        ("test.list", "commas_string", ",", False, False, ["", " gitlab.com", " space string", "github.com"]),
-        ("test.list", "commas_string", ",", True, True, ["github.com", "gitlab.com", "space string", "space string"]),
-        ("test.list", "commas_string", ",", True, False, ["github.com", "gitlab.com", "space string"]),
-        # Using None as the delimiter parameter will ignore cleanup
-        ("test.list", "default", None, True, False, ["comma_ended,", "github.com", "space", "string"]),
-        ("test.list", "default", None, False, False, ["comma_ended,", "github.com", "space", "string"]),
         (
-            "test.list",
-            "default",
+            """
+            [test.list]
+            list = ,github.com, gitlab.com, space string, space string
+            """,
+            ",",
+            True,
+            ["github.com", "gitlab.com", "space string", "space string"],
+        ),
+        # Using None as the `delimiter` will also remove leading and trailing spaces of elements. Therefore,
+        # the results must be the same whether `strip` is set to True or False.
+        (
+            """
+            [test.list]
+            list =
+                github.com
+                comma_ended,
+                space string
+                space string
+            """,
+            None,
+            True,
+            ["github.com", "comma_ended,", "space", "string", "space", "string"],
+        ),
+        (
+            """
+            [test.list]
+            list =
+                github.com
+                comma_ended,
+                space string
+                space string
+            """,
             None,
             False,
-            True,
-            ["comma_ended,", "github.com", "space", "space", "string", "string"],
+            ["github.com", "comma_ended,", "space", "string", "space", "string"],
         ),
-        ("test.list", "one_line", None, True, False, ["comma_ended,", "github.com", "space", "string"]),
         (
-            "test.list",
-            "one_line",
+            """
+            [test.list]
+            list = github.com comma_ended, space string space string
+            """,
             None,
             True,
-            True,
-            ["comma_ended,", "github.com", "space", "space", "string", "string"],
+            ["github.com", "comma_ended,", "space", "string", "space", "string"],
         ),
     ],
 )
 def test_get_str_list_with_custom_delimiter(
-    section: str, item: str, delimiter: str, strip: bool, duplicated_ok: bool, expect: list[str]
+    user_config_input: str,
+    delimiter: str,
+    strip: bool,
+    expect: list[str],
+    tmp_path: Path,
 ) -> None:
     """Test getting a list of strings from defaults.ini using a custom delimiter."""
-    content = """
-    [test.list]
-    default =
-        github.com
-        comma_ended,
-        space string
-        space string
-    empty =
-    one_line = github.com comma_ended, space string space string
-    commas_string = ,github.com, gitlab.com, space string, space string
-    """
-    custom_defaults = ConfigParser()
-    custom_defaults.read_string(content)
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(user_config_input)
+    load_defaults(user_config_path)
 
-    results = custom_defaults.get_list(section, item, delimiter=delimiter, strip=strip, duplicated_ok=duplicated_ok)
-    results.sort()
+    results = defaults.get_list(section="test.list", option="list", delimiter=delimiter, strip=strip)
     assert results == expect
 
 
 @pytest.mark.parametrize(
-    ("section", "item", "strip", "duplicated_ok", "fallback", "expect"),
+    ("user_config_input", "expect"),
     [
-        ("test.list", "default", True, False, [], ["comma_ended,", "github.com", "space string"]),
-        ("test.list", "default", True, True, [], ["comma_ended,", "github.com", "space string", "space string"]),
-        ("test.list", "empty", False, True, [], [""]),
-        ("test.list", "empty", True, True, [], []),
-        # Test for an item that does not exist in defaults.ini
-        ("test.list", "item_not_exist", True, True, [], []),
-        # Test value for fallback. The fallback value must be returned as is and shouldn't be modified by the method.
-        ("test.list", "item_not_exist", True, True, ["", "fallback_val"], ["", "fallback_val"]),
+        (
+            """
+            [test.list]
+            list = ,github.com, gitlab.com, space string, space string
+            """,
+            [",github.com, gitlab.com, space string, space string"],
+        ),
+        (
+            """
+            [test.list]
+            list =
+                github.com
+                comma_ended,
+                space string
+                space string
+            """,
+            ["github.com", "comma_ended,", "space string", "space string"],
+        ),
+        (
+            """
+            [test.list]
+            list =
+            """,
+            [],
+        ),
     ],
 )
-def test_get_str_list_with_default_delimiter(
-    section: str, item: str, strip: bool, duplicated_ok: bool, fallback: list[str], expect: list[str]
+def test_get_str_list_default(
+    user_config_input: str,
+    expect: list[str],
+    tmp_path: Path,
 ) -> None:
-    """Test getting a list of strings from defaults.ini using the default delimiter."""
+    """Test default behavior of getting a list of strings from an option in defaults.ini."""
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(user_config_input)
+    load_defaults(user_config_path)
+
+    results = defaults.get_list(section="test.list", option="list")
+    assert results == expect
+
+
+@pytest.mark.parametrize(
+    ("section", "option", "fallback", "expect"),
+    [
+        (
+            "section",
+            "non-existing",
+            None,
+            [],
+        ),
+        (
+            "non-existing",
+            "option",
+            None,
+            [],
+        ),
+        (
+            "non-existing",
+            "non-existing",
+            None,
+            [],
+        ),
+        (
+            "section",
+            "non-existing",
+            ["some", "fallback", "value"],
+            ["some", "fallback", "value"],
+        ),
+        (
+            "non-existing",
+            "option",
+            ["some", "fallback", "value"],
+            ["some", "fallback", "value"],
+        ),
+        (
+            "non-existing",
+            "non-existing",
+            ["some", "fallback", "value"],
+            ["some", "fallback", "value"],
+        ),
+    ],
+)
+def test_get_str_list_default_with_errors(
+    section: str,
+    option: str,
+    fallback: list[str] | None,
+    expect: list[str],
+    tmp_path: Path,
+) -> None:
+    """Test default behavior of getting a list of strings with errors from defaults.ini."""
     content = """
-    [test.list]
-    default =
+    [section]
+    option =
         github.com
         comma_ended,
         space string
         space string
-    empty =
     """
-    custom_defaults = ConfigParser()
-    custom_defaults.read_string(content)
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(content)
+    load_defaults(user_config_path)
 
-    results = custom_defaults.get_list(section, item, strip=strip, fallback=fallback, duplicated_ok=duplicated_ok)
-    results.sort()
-    assert results == expect
+    assert (
+        defaults.get_list(
+            section=section,
+            option=option,
+            fallback=fallback,
+        )
+        == expect
+    )

@@ -18,13 +18,12 @@ class ConfigParser(configparser.ConfigParser):
     def get_list(
         self,
         section: str,
-        item: str,
+        option: str,
         delimiter: str | None = "\n",
         fallback: list[str] | None = None,
-        duplicated_ok: bool = False,
         strip: bool = True,
     ) -> list[str]:
-        r"""Parse and return a list of strings from an item in ``defaults.ini``.
+        r"""Parse and return a list of strings from an ``option`` for ``section`` in ``defaults.ini``.
 
         This method uses str.split() to split the value into list of strings.
         References: https://docs.python.org/3/library/stdtypes.html#str.split.
@@ -37,22 +36,19 @@ class ConfigParser(configparser.ConfigParser):
         If ``strip`` is True  (default: True), strings are whitespace-stripped and empty strings
         are removed from the final result.
 
-        If ``duplicated_ok`` is True (default: False), duplicated values are not removed from the final list.
-
+        The order of non-empty elements in the list is preserved.
         The content of each string in the list is not validated and should be handled separately.
 
         Parameters
         ----------
         section : str
             The section in ``defaults.ini``.
-        item : str
-            The item to parse the list.
+        option : str
+            The option whose value will be split into the return list of strings.
         delimiter : str | None
             The delimiter used to split the strings.
         fallback : list | None
             The fallback value in case of errors.
-        duplicated_ok : bool
-            If True allow duplicate values.
         strip: bool
             If True, strings are whitespace-stripped and any empty strings are removed.
 
@@ -79,20 +75,15 @@ class ConfigParser(configparser.ConfigParser):
             allowed_hosts == ["github.com", "boo.com gitlab.com", "host com"]
         """
         try:
-            value = self.get(section, item)
+            value = self.get(section, option)
             if isinstance(value, str):
                 content = value.split(sep=delimiter)
 
                 if strip:
                     content = [x.strip() for x in content if x.strip()]
 
-                if duplicated_ok:
-                    return content
-
-                distinct_values = set()
-                distinct_values.update(content)
-                return list(distinct_values)
-        except configparser.NoOptionError as error:
+                return content
+        except (configparser.NoOptionError, configparser.NoSectionError) as error:
             logger.error(error)
 
         return fallback or []

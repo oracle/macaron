@@ -119,7 +119,6 @@ class JavaRepoFinder(BaseRepoFinder):
             "repofinder.java",
             "artifact_repositories",
             fallback=["https://repo.maven.apache.org/maven2"],
-            duplicated_ok=True,
         )
         urls = []
         for repo in repositories:
@@ -163,7 +162,7 @@ class JavaRepoFinder(BaseRepoFinder):
             The extracted contents as a list of strings.
         """
         # Retrieve tags
-        tags = defaults.get_list("repofinder.java", "repo_pom_paths", duplicated_ok=True)
+        tags = defaults.get_list("repofinder.java", "repo_pom_paths")
         if not any(tags):
             logger.debug("No POM tags found for URL discovery.")
             return []
