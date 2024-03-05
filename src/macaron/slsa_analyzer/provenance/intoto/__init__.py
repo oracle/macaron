@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """In-toto provenance schemas and validation."""
@@ -69,10 +69,6 @@ InTotoPayload = InTotoV01Payload | InTotoV1Payload
 def validate_intoto_payload(payload: dict[str, JsonType]) -> InTotoPayload:
     """Validate the schema of an in-toto provenance payload.
 
-    TODO: Consider using the in-toto-attestation package (https://github.com/in-toto/attestation/tree/main/python),
-    which contains Python bindings for in-toto attestation.
-    See issue: https://github.com/oracle/macaron/issues/426.
-
     Parameters
     ----------
     payload : dict[str, JsonType]
@@ -110,6 +106,16 @@ def validate_intoto_payload(payload: dict[str, JsonType]) -> InTotoPayload:
         except ValidateInTotoPayloadError as error:
             raise error
 
-    # TODO: add support for version 1.
+    if type_ == "https://in-toto.io/Statement/v1":
+        # The type must always be this value for version v1.
+        # See specification: https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md.
+
+        try:
+            if v1.validate_intoto_statement(payload):
+                return InTotoV1Payload(statement=payload)
+
+            raise ValidateInTotoPayloadError("Unexpected error while validating the in-toto statement.")
+        except ValidateInTotoPayloadError as error:
+            raise error
 
     raise ValidateInTotoPayloadError("Invalid value for the attribute '_type' of the provenance payload.")
