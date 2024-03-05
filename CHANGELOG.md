@@ -1,3 +1,13 @@
+## v0.8.0 (2024-03-05)
+
+### Feat
+
+- discover slsa v1 provenances for npm packages (#639)
+- add exclude and include check in ini config (#254)
+- introduce confidence scores for check facts (#620)
+- follow indirect repository URLs (#629)
+- use repository url provided as input for finding a commit (#622)
+
 ## v0.7.0 (2024-01-18)
 
 ### Feat
