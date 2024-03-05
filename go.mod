@@ -8,7 +8,7 @@ go 1.18
 require (
 	cuelang.org/go v0.7.1
 	github.com/rhysd/actionlint v1.6.27
-	mvdan.cc/sh/v3 v3.7.0
+	mvdan.cc/sh/v3 v3.8.0
 )
 
 require (
