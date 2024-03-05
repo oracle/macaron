@@ -35,8 +35,8 @@ See our [Macaron Style Guide](./docs/source/pages/developers_guide/style_guide.r
 
 1. Ensure there is an issue created to track and discuss the fix or enhancement
    you intend to submit.
-2. Fork this repository including the `staging` branch. In Macaron, the `staging` branch is the active development branch and contains the most recent changes. Make sure to create a branch from the `staging` branch and not `main`.
-3. Create a branch in your fork to implement the changes. We recommend using the issue number as part of your branch name, e.g. `1234-fixes`.
+2. Fork this repository including the `staging` branch. In Macaron, the `staging` branch is the active development branch and contains the most recent changes.
+3. Create a branch in your fork to implement the changes.  Make sure to create your branch from the `staging` branch and not `main`. We recommend using the issue number as part of your branch name, e.g. `1234-fixes`.
 4. The title of the PR should follow the convention of [commit messages](#commit-messages).
 5. Ensure that any documentation is updated with the changes that are required by your change.
 6. Ensure that any samples are updated if the base image has been changed.
