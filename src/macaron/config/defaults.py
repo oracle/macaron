@@ -22,6 +22,7 @@ class ConfigParser(configparser.ConfigParser):
         delimiter: str | None = "\n",
         fallback: list[str] | None = None,
         strip: bool = True,
+        duplicated_ok: bool = False,
     ) -> list[str]:
         r"""Parse and return a list of strings from an ``option`` for ``section`` in ``defaults.ini``.
 
@@ -36,6 +37,9 @@ class ConfigParser(configparser.ConfigParser):
         If ``strip`` is True  (default: True), strings are whitespace-stripped and empty strings
         are removed from the final result.
 
+        If `duplicated_ok` is False, duplicated elements which come after the their first instances will
+        be removed from the list. This operation happens after ``strip`` is handled.
+
         The order of non-empty elements in the list is preserved.
         The content of each string in the list is not validated and should be handled separately.
 
@@ -49,8 +53,10 @@ class ConfigParser(configparser.ConfigParser):
             The delimiter used to split the strings.
         fallback : list | None
             The fallback value in case of errors.
-        strip: bool
+        strip : bool
             If True, strings are whitespace-stripped and any empty strings are removed.
+        duplicated_ok : bool
+            If True, duplicated elements are removed from the list.
 
         Returns
         -------
@@ -82,7 +88,15 @@ class ConfigParser(configparser.ConfigParser):
                 if strip:
                     content = [x.strip() for x in content if x.strip()]
 
-                return content
+                if duplicated_ok:
+                    return content
+
+                values = []
+                for ele in content:
+                    if ele in values:
+                        continue
+                    values.append(ele)
+                return values
         except (configparser.NoOptionError, configparser.NoSectionError) as error:
             logger.error(error)
 

@@ -51,7 +51,7 @@ def test_create_defaults_without_permission() -> None:
             """,
             ",",
             False,
-            ["", "github.com", " gitlab.com", " space string", " space string"],
+            ["", "github.com", " gitlab.com", " space string"],
         ),
         (
             """
@@ -60,7 +60,7 @@ def test_create_defaults_without_permission() -> None:
             """,
             ",",
             True,
-            ["github.com", "gitlab.com", "space string", "space string"],
+            ["github.com", "gitlab.com", "space string"],
         ),
         # Using None as the `delimiter` will also remove leading and trailing spaces of elements. Therefore,
         # the results must be the same whether `strip` is set to True or False.
@@ -75,7 +75,7 @@ def test_create_defaults_without_permission() -> None:
             """,
             None,
             True,
-            ["github.com", "comma_ended,", "space", "string", "space", "string"],
+            ["github.com", "comma_ended,", "space", "string"],
         ),
         (
             """
@@ -88,16 +88,7 @@ def test_create_defaults_without_permission() -> None:
             """,
             None,
             False,
-            ["github.com", "comma_ended,", "space", "string", "space", "string"],
-        ),
-        (
-            """
-            [test.list]
-            list = github.com comma_ended, space string space string
-            """,
-            None,
-            True,
-            ["github.com", "comma_ended,", "space", "string", "space", "string"],
+            ["github.com", "comma_ended,", "space", "string"],
         ),
     ],
 )
@@ -135,9 +126,11 @@ def test_get_str_list_with_custom_delimiter(
                 github.com
                 comma_ended,
                 space string
+                foo bar
+                foo bar
                 space string
             """,
-            ["github.com", "comma_ended,", "space string", "space string"],
+            ["github.com", "comma_ended,", "space string", "foo bar"],
         ),
         (
             """
@@ -233,3 +226,50 @@ def test_get_str_list_default_with_errors(
         )
         == expect
     )
+
+
+@pytest.mark.parametrize(
+    ("user_config_input", "expect"),
+    [
+        (
+            """
+            [test.list]
+            list = ,github.com, gitlab.com, space string, space string
+            """,
+            [",github.com, gitlab.com, space string, space string"],
+        ),
+        (
+            """
+            [test.list]
+            list =
+                github.com
+                comma_ended,
+                space string
+                foo bar
+                foo bar
+                space string
+            """,
+            ["github.com", "comma_ended,", "space string", "foo bar", "foo bar", "space string"],
+        ),
+        (
+            """
+            [test.list]
+            list =
+            """,
+            [],
+        ),
+    ],
+)
+def test_get_str_list_default_duplicated_ok(
+    user_config_input: str,
+    expect: list[str],
+    tmp_path: Path,
+) -> None:
+    """Test getting a list of strings from defaults.ini without removing duplicated elements."""
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(user_config_input)
+    load_defaults(user_config_path)
+
+    results = defaults.get_list(section="test.list", option="list", duplicated_ok=True)
+    assert results == expect
