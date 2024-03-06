@@ -3,7 +3,7 @@
 
 """This module contains methods for extracting repository and commit metadata from provenance files."""
 import logging
-from typing import overload
+from typing import TypeVar
 
 from macaron.slsa_analyzer.provenance import intoto
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV1Payload, InTotoV01Payload
@@ -238,27 +238,10 @@ def _extract_from_witness_provenance(payload: InTotoV01Payload) -> tuple[str, st
     return repo, commit
 
 
-@overload
-def _json_extract(entry: dict[str, JsonType], keys: list[str], type_: type[int]) -> int | None:
-    ...
+T = TypeVar("T", bound=JsonType)
 
 
-@overload
-def _json_extract(entry: dict[str, JsonType], keys: list[str], type_: type[list]) -> list | None:
-    ...
-
-
-@overload
-def _json_extract(entry: dict[str, JsonType], keys: list[str], type_: type[dict]) -> dict | None:
-    ...
-
-
-@overload
-def _json_extract(entry: dict[str, JsonType], keys: list[str], type_: type[str]) -> str | None:
-    ...
-
-
-def _json_extract(entry: dict[str, JsonType], keys: list[str], type_: type[JsonType]) -> JsonType:
+def _json_extract(entry: dict[str, JsonType], keys: list[str], type_: type[T]) -> T | None:
     """Return the value found by following the list of depth-sequential keys inside the passed dictionary.
 
     The value's type is validated against the passed type.
