@@ -48,7 +48,7 @@ class ConfigParser(configparser.ConfigParser):
         section : str
             The section in ``defaults.ini``.
         option : str
-            The option whose value will be split into the return list of strings.
+            The option whose values will be split into the a list of strings.
         delimiter : str | None
             The delimiter used to split the strings.
         fallback : list | None
