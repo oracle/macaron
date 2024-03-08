@@ -271,5 +271,5 @@ def test_get_str_list_default_duplicated_ok(
         user_config_file.write(user_config_input)
     load_defaults(user_config_path)
 
-    results = defaults.get_list(section="test.list", option="list", duplicated_ok=True)
+    results = defaults.get_list(section="test.list", option="list", remove_duplicates=False)
     assert results == expect
