@@ -26,6 +26,11 @@ from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
 from macaron.repo_finder.commit_finder import find_commit
+from macaron.repo_finder.provenance_extractor import (
+    ProvenanceExtractionException,
+    extract_repo_and_commit_from_provenance,
+)
+from macaron.repo_finder.provenance_finder import ProvenanceFinder
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import VirtualReleaseAsset
@@ -116,7 +121,7 @@ class Analyzer:
         user_config: dict,
         sbom_path: str = "",
         skip_deps: bool = False,
-        prov_payload: InTotoPayload | None = None,
+        provenance_payload: InTotoPayload | None = None,
     ) -> int:
         """Run the analysis and write results to the output path.
 
@@ -131,7 +136,7 @@ class Analyzer:
             The path to the SBOM.
         skip_deps : bool
             Flag to skip dependency resolution.
-        prov_payload : InToToPayload | None
+        provenance_payload : InToToPayload | None
             The provenance intoto payload for the main software component.
 
         Returns
@@ -165,7 +170,7 @@ class Analyzer:
                 main_record = self.run_single(
                     main_config,
                     analysis,
-                    prov_payload=prov_payload,
+                    provenance_payload=provenance_payload,
                 )
 
                 if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
@@ -267,7 +272,7 @@ class Analyzer:
         config: Configuration,
         analysis: Analysis,
         existing_records: dict[str, Record] | None = None,
-        prov_payload: InTotoPayload | None = None,
+        provenance_payload: InTotoPayload | None = None,
     ) -> Record:
         """Run the checks for a single repository target.
 
@@ -282,7 +287,7 @@ class Analyzer:
             The current analysis instance.
         existing_records : dict[str, Record] | None
             The mapping of existing records that the analysis has run successfully.
-        prov_payload : InToToPayload | None
+        provenance_payload : InToToPayload | None
             The provenance intoto payload for the analyzed software component.
 
         Returns
@@ -292,8 +297,9 @@ class Analyzer:
         """
         repo_id = config.get_value("id")
         component = None
+        provenance_finder = ProvenanceFinder()
         try:
-            component = self.add_component(config, analysis, existing_records)
+            component = self.add_component(config, analysis, provenance_finder, existing_records, provenance_payload)
         except PURLNotFoundError as error:
             logger.error(error)
             return Record(
@@ -321,7 +327,10 @@ class Analyzer:
         analyze_ctx.dynamic_data["expectation"] = self.expectations.get_expectation_for_target(
             analyze_ctx.component.purl.split("@")[0]
         )
-        analyze_ctx.dynamic_data["provenance"] = prov_payload
+        if not provenance_payload:
+            # Retrieve the provenance file from the finder. May also be None.
+            provenance_payload = provenance_finder.last_provenance_payload
+        analyze_ctx.dynamic_data["provenance"] = provenance_payload
         analyze_ctx.check_results = self.perform_checks(analyze_ctx)
 
         return Record(
@@ -441,7 +450,12 @@ class Analyzer:
         digest: str
 
     def add_component(
-        self, config: Configuration, analysis: Analysis, existing_records: dict[str, Record] | None = None
+        self,
+        config: Configuration,
+        analysis: Analysis,
+        provenance_finder: ProvenanceFinder,
+        existing_records: dict[str, Record] | None = None,
+        provenance_payload: InTotoPayload | None = None,
     ) -> Component:
         """Add a software component if it does not exist in the DB already.
 
@@ -454,8 +468,12 @@ class Analyzer:
             The configuration for running Macaron.
         analysis: Analysis
             The current analysis instance.
+        provenance_finder: ProvenanceFinder
+            The provenance finder object to use when finding provenance.
         existing_records : dict[str, Record] | None
             The mapping of existing records that the analysis has run successfully.
+        provenance_payload : InToToPayload | None
+            The provenance in-toto payload for the software component.
 
         Returns
         -------
@@ -472,7 +490,9 @@ class Analyzer:
         # Note: the component created in this function will be added to the database.
         available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
         try:
-            analysis_target = Analyzer.to_analysis_target(config, available_domains)
+            analysis_target = Analyzer.to_analysis_target(
+                config, available_domains, provenance_finder, provenance_payload
+            )
         except InvalidPURLError as error:
             raise PURLNotFoundError("Invalid input PURL.") from error
 
@@ -528,7 +548,12 @@ class Analyzer:
         return Component(purl=analysis_target.parsed_purl.to_string(), analysis=analysis, repository=repository)
 
     @staticmethod
-    def to_analysis_target(config: Configuration, available_domains: list[str]) -> AnalysisTarget:
+    def to_analysis_target(
+        config: Configuration,
+        available_domains: list[str],
+        provenance_finder: ProvenanceFinder | None = None,
+        provenance_payload: InTotoPayload | None = None,
+    ) -> AnalysisTarget:
         """Resolve the details of a software component from user input.
 
         Parameters
@@ -538,6 +563,10 @@ class Analyzer:
         available_domains : list[str]
             The list of supported git service host domain. This is used to convert repo-based PURL to a repository path
             of the corresponding software component.
+        provenance_finder: ProvenanceFinder
+            The provenance finder object to use when finding provenance.
+        provenance_payload : InToToPayload | None
+            The provenance in-toto payload for the software component.
 
         Returns
         -------
@@ -587,10 +616,29 @@ class Analyzer:
             case (_, ""):
                 # If a PURL but no repository path is provided, we try to extract the repository path from the PURL.
                 # Note that we can't always extract the repository path from any provided PURL.
-                repo = ""
                 converted_repo_path = None
+                repo: str = ""
+                digest: str = ""
                 # parsed_purl cannot be None here, but mypy cannot detect that without some extra help.
                 if parsed_purl is not None:
+                    # Try to find repository and commit via provenance.
+                    if not provenance_payload and provenance_finder:
+                        provenance_payload = provenance_finder.find_provenance(parsed_purl)
+                    if provenance_payload:
+                        try:
+                            repo, digest = extract_repo_and_commit_from_provenance(provenance_payload)
+                        except ProvenanceExtractionException as error:
+                            logger.debug("Failed to extract repo and commit from provenance: %s", error)
+
+                    if repo and digest:
+                        return Analyzer.AnalysisTarget(
+                            parsed_purl=parsed_purl,
+                            repo_path=repo,
+                            branch="",
+                            digest=digest,
+                        )
+
+                    # The commit was not found from provenance. Proceed with Repo and Commit Finder.
                     converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)
                     if converted_repo_path is None:
                         # Try to find repo from PURL

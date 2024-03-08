@@ -11,7 +11,7 @@ from packageurl import PackageURL
 from macaron.config.defaults import defaults
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
 from macaron.slsa_analyzer.checks.provenance_available_check import ProvenanceAvailableException
-from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry, NPMRegistry
+from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, JFrogMavenRegistry, NPMRegistry
 from macaron.slsa_analyzer.package_registry.npm_registry import NPMAttestationAsset
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError
@@ -26,6 +26,15 @@ class ProvenanceFinder:
 
     def __init__(self) -> None:
         self.last_provenance_payload: InTotoPayload | None = None
+        registries = PACKAGE_REGISTRIES
+        self.npm_registry: NPMRegistry | None = None
+        self.jfrog_registry: JFrogMavenRegistry | None = None
+        if registries:
+            for registry in registries:
+                if isinstance(registry, NPMRegistry):
+                    self.npm_registry = registry
+                elif isinstance(registry, JFrogMavenRegistry):
+                    self.jfrog_registry = registry
 
     def find_provenance(self, purl: PackageURL) -> InTotoPayload | None:
         """Find the provenance files of the passed PURL.
@@ -42,12 +51,20 @@ class ProvenanceFinder:
         """
         if determine_abstract_purl_type(purl) == AbstractPurlType.REPOSITORY:
             # Do not perform this function for repository type targets.
-            self.last_provenance_payload = None
+            return None
+
+        self.last_provenance_payload = None
 
         if purl.type == "npm":
-            self.last_provenance_payload = ProvenanceFinder.find_npm_provenance(purl)
+            if self.npm_registry:
+                self.last_provenance_payload = ProvenanceFinder.find_npm_provenance(purl, self.npm_registry)
+            else:
+                logger.debug("Missing npm registry to find provenance in.")
         elif purl.type in ["gradle", "maven"]:
-            self.last_provenance_payload = ProvenanceFinder.find_gav_provenance(purl)
+            if self.jfrog_registry:
+                self.last_provenance_payload = ProvenanceFinder.find_gav_provenance(purl, self.jfrog_registry)
+            else:
+                logger.debug("Missing JFrog registry to find provenance in.")
         else:
             logger.debug("Provenance finding not supported for PURL type: %s", purl.type)
             self.last_provenance_payload = None
@@ -55,37 +72,24 @@ class ProvenanceFinder:
         return self.last_provenance_payload
 
     @staticmethod
-    def find_npm_provenance(purl: PackageURL) -> InTotoPayload | None:
+    def find_npm_provenance(purl: PackageURL, npm_registry: NPMRegistry) -> InTotoPayload | None:
         """Find and download the NPM based provenance for the passed PURL.
 
         Parameters
         ----------
         purl: PackageURL
             The PURL of the analysis target.
+        npm_registry: NPMRegistry
+            The npm registry to find provenance in.
 
         Returns
         -------
         InTotoPayload | None
             The provenance payload if found, or None.
         """
-        # Retrieve NPM registry configuration values.
-        npm_section = "package_registry.npm"
-        if not defaults.has_section(npm_section):
-            logger.debug("No NPM section found in config.")
+        if not npm_registry.enabled:
+            logger.debug("The npm registry is not enabled.")
             return None
-        if not defaults.get(npm_section, "enabled"):
-            logger.debug("NPM section disabled in config.")
-            return None
-
-        hostname = defaults.get(npm_section, "hostname")
-        attestation_endpoint = defaults.get(npm_section, "attestation_endpoint")
-        try:
-            request_timeout = int(defaults.get(npm_section, "request_timeout"))
-        except ValueError as error:
-            logger.debug("Invalid value for NPM package registry timeout: %s", error)
-            return None
-        # Create registry from configuration values.
-        npm_registry = NPMRegistry(hostname, attestation_endpoint, request_timeout)
 
         namespace = purl.namespace or ""
         artifact_id = purl.name
@@ -127,38 +131,33 @@ class ProvenanceFinder:
             return None
 
     @staticmethod
-    def find_gav_provenance(purl: PackageURL) -> InTotoPayload | None:
+    def find_gav_provenance(purl: PackageURL, jfrog_registry: JFrogMavenRegistry) -> InTotoPayload | None:
         """Find and download the GAV based provenance for the passed PURL.
 
         Parameters
         ----------
         purl: PackageURL
             The PURL of the analysis target.
+        jfrog_registry: JFrogMavenRegistry
+            The JFrog registry to find provenance in.
 
         Returns
         -------
         InTotoPayload | None
             The provenance payload if found, or None.
 
+        Raises
+        ------
+        ProvenanceAvailableException
+            If the discovered provenance file size exceeds the configured limit.
         """
-        jfrog_section = "package_registry.jfrog.maven"
-        if not defaults.has_section(jfrog_section):
-            logger.debug("No JFrog section found in config.")
+        if not jfrog_registry.enabled:
+            logger.debug("JFrog registry not enabled.")
             return None
 
-        try:
-            request_timeout = defaults.getint(jfrog_section, "request_timeout")
-            download_timeout = defaults.getint(jfrog_section, "download_timeout")
-        except ValueError as error:
-            logger.debug("Failed to parse default value as int: %s", error)
+        if not purl.namespace or not purl.version:
+            logger.debug("Missing purl namespace or version for finding provenance in JFrog registry.")
             return None
-
-        jfrog_registry = JFrogMavenRegistry(
-            defaults.get(jfrog_section, "hostname"),
-            defaults.get(jfrog_section, "repo"),
-            request_timeout,
-            download_timeout,
-        )
 
         provenance_extensions = defaults.get_list(
             "slsa.verifier",
@@ -167,9 +166,9 @@ class ProvenanceFinder:
         )
 
         provenance_assets = jfrog_registry.fetch_assets(
-            group_id=purl.namespace if purl.namespace else "",
+            group_id=purl.namespace,
             artifact_id=purl.name,
-            version=purl.version if purl.version else "",
+            version=purl.version,
             extensions=set(provenance_extensions),
         )
 

@@ -11,9 +11,9 @@ from typing import TypedDict, TypeGuard
 from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
 from macaron.util import JsonType
 
-# The full list of cryptographic algorithms supported in SLSA v1 provenance. These are used as keys within the digest
-#  set of the resource descriptors within the subject.
-# See: https://github.com/in-toto/attestation/blob/main/spec/v1/digest_set.md
+# The full list of cryptographic algorithms supported in in-toto v1 provenance.
+# These are used as keys within the digest set of the resource descriptors within the subject.
+# For v1 see: https://github.com/in-toto/attestation/blob/main/spec/v1/digest_set.md
 VALID_ALGORITHMS = [
     "sha256",
     "sha224",
