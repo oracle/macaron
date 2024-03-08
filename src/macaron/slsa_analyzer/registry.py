@@ -680,8 +680,8 @@ class Registry:
             logger.error("Found circular dependencies in registered checks: %s", str(error))
             return False
 
-        ex_pats = defaults.get_list(section="analysis.checks", item="exclude", fallback=[])
-        in_pats = defaults.get_list(section="analysis.checks", item="include", fallback=["*"])
+        ex_pats = defaults.get_list(section="analysis.checks", option="exclude", fallback=[])
+        in_pats = defaults.get_list(section="analysis.checks", option="include", fallback=["*"])
         try:
             checks_to_run = self.get_final_checks(ex_pats, in_pats)
         except CheckRegistryError as error:
