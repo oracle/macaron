@@ -146,7 +146,11 @@ def test_get_str_list_default(
     expect: list[str],
     tmp_path: Path,
 ) -> None:
-    """Test default behavior of getting a list of strings from an option in defaults.ini."""
+    """Test default behavior of getting a list of strings from an option in defaults.ini.
+
+    The default behavior includes striping leading/trailing whitespaces from elements, removing empty elements and
+    removing duplicated elements from the return list.
+    """
     user_config_path = os.path.join(tmp_path, "config.ini")
     with open(user_config_path, "w", encoding="utf-8") as user_config_file:
         user_config_file.write(user_config_input)
@@ -204,7 +208,7 @@ def test_get_str_list_default_with_errors(
     expect: list[str],
     tmp_path: Path,
 ) -> None:
-    """Test default behavior of getting a list of strings with errors from defaults.ini."""
+    """Test errors from getting a list of string from defaults.ini."""
     content = """
     [section]
     option =
