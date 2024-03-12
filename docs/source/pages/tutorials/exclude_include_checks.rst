@@ -61,7 +61,7 @@ With these two configuration options, all checks except for the excluded ``mcn_p
 
   ./run_macaron.sh --defaults-path ./defaults.ini analyze --package-url pkg:/github.com/micronaut-projects/micronaut-core@v4.3.10 --skip-deps
 
-In this run, the check ``mcn_provenance_witness_level_one_1`` mentioned above will not be run. After running the analyze command, we can view the data that Macaron has gathered about the ``micronaut-projects/micronaut-core`` repository at ``v4.3.10`` in an HTML report. Note that the result of the excluded check is not recorded in the Macaron HTML report (this also happens to JSON reports and the database).
+This time, the check ``mcn_provenance_witness_level_one_1`` doesn't run. After the ``analyze`` command finishes, we can view the data that Macaron has gathered about the ``micronaut-projects/micronaut-core`` repository at ``v4.3.10`` in an HTML report. Note that the result of the excluded check is not recorded in the Macaron HTML reports, JSON reports, or the database).
 
 .. code-block:: shell
 
@@ -120,7 +120,7 @@ More examples
 ^^^^^^^^^^^^^^^^^^^^^
 Not running any check
 ^^^^^^^^^^^^^^^^^^^^^
-The following configurations will result in no check run and Macaron will return on error.
+The following configurations will result in no check running and Macaron will return on error.
 
 .. code-block:: ini
 
@@ -146,7 +146,7 @@ Run a subset of checks
         mcn_provenance_witness_level_one_1
         mcn_trusted_builder_level_three_1
 
-This will results in ``mcn_provenance_witness_level_one_1``, ``mcn_trusted_builder_level_three_1`` and their transitive parents being run.
+This will result in ``mcn_provenance_witness_level_one_1``, ``mcn_trusted_builder_level_three_1`` and their transitive parents running.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Only run checks whose ID starts with ``mcn_build_*``
