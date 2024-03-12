@@ -14,32 +14,12 @@ This tutorial will show how you can configure Macaron to:
 * exclude checks that you don't want to run.
 * include only checks that you want to run.
 
-------------------------------
-Installation and Prerequisites
-------------------------------
+-------------
+Prerequisites
+-------------
 
-This tutorial requires a high-level understanding of checks in Macaron and how they depend on each other. Please see this :ref:`page <macaron-developer-guide>` for more information.
-
-Skip this section if you already know how to install Macaron.
-
-.. toggle::
-
-    Please follow the instructions :ref:`here <installation-guide>`. In summary, you need:
-
-        * Docker
-        * the ``run_macaron.sh``  script to run the Macaron image.
-
-    .. note:: At the moment, Docker alternatives (e.g. podman) are not supported.
-
-
-    You also need to provide Macaron with a GitHub token through the ``GITHUB_TOKEN``  environment variable.
-
-    To obtain a GitHub Token:
-
-    * Go to ``GitHub settings`` → ``Developer Settings`` (at the bottom of the left side pane) → ``Personal Access Tokens`` → ``Fine-grained personal access tokens`` → ``Generate new token``. Give your token a name and an expiry period.
-    * Under ``"Repository access"``, choosing ``"Public Repositories (read-only)"`` should be good enough in most cases.
-
-    Now you should be good to run Macaron. For more details, see the documentation :ref:`here <prepare-github-token>`.
+* You are expected to have gone through :ref:`this tutorial <detect-malicious-java-dep>`.
+* This tutorial requires a high-level understanding of checks in Macaron and how they depend on each other. Please see this :ref:`page <macaron-developer-guide>` for more information.
 
 ------------------
 Motivating example
