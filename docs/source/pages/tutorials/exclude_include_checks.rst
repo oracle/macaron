@@ -50,7 +50,9 @@ In the ini configuration above:
 * The ``exclude`` option contains the check ID ``mcn_provenance_witness_level_one_1``. The check with this ID will be excluded.
 * The ``include`` option contains the `glob <https://docs.python.org/3/library/glob.html>`_ pattern ``*``. Checks whose ID matched this glob pattern will be included in the analysis. In this case, ``*`` matches all check IDs.
 
-2. Run Macaron analyze by providing the path to the custom ``defaults.ini`` configuration.
+With these two configuration options, all checks except for the excluded ``mcn_provenance_witness_level_one_1`` will run.
+
+1. Run Macaron analyze by providing the path to the custom ``defaults.ini`` configuration.
 
 .. code-block:: shell
 
