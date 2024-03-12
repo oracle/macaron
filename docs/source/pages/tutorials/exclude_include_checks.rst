@@ -148,6 +148,20 @@ Run a subset of checks
 
 This will result in ``mcn_provenance_witness_level_one_1``, ``mcn_trusted_builder_level_three_1`` and their transitive parents running.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Disable a subset of checks
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: ini
+
+    [analysis.checks]
+    exclude =
+        mcn_provenance_witness_level_one_1
+        mcn_trusted_builder_level_three_1
+    include = *
+
+This will result in ``mcn_provenance_witness_level_one_1``, ``mcn_trusted_builder_level_three_1`` and their transitive children not running.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Only run checks whose ID starts with ``mcn_build_*``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
