@@ -312,13 +312,13 @@ def witness_gitlab_provenance_() -> str:
                             {
                                 "type": "https://witness.dev/attestations/gitlab/v0.1",
                                 "attestation": {
-                                    "projecturl": "https://github.com/oracle/macaron"
+                                    "projecturl": "https://gitlab.com/tinyMediaManager/tinyMediaManager"
                                 }
                             },
                             {
                                 "type": "https://witness.dev/attestations/git/v0.1",
                                 "attestation": {
-                                    "commithash": "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"
+                                    "commithash": "cf6080a92d1c748ba5f05ea16529e05e5c641a49"
                                 }
                             }
                         ]
@@ -356,8 +356,10 @@ def witness_github_provenance_() -> str:
             """
 
 
-def test_witness_gitlab(witness_gitlab_provenance: str, target_repository: str, target_commit: str) -> None:
+def test_witness_gitlab(witness_gitlab_provenance: str) -> None:
     """Test Witness v01 GitLab provenance."""
+    target_repository = "https://gitlab.com/tinyMediaManager/tinyMediaManager"
+    target_commit = "cf6080a92d1c748ba5f05ea16529e05e5c641a49"
     payload = json.loads(witness_gitlab_provenance)
     assert isinstance(payload, dict)
     _perform_provenance_comparison(payload, target_repository, target_commit)
