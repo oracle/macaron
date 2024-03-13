@@ -51,7 +51,7 @@ For example, the ``mcn_provenance_witness_level_one_1`` check (defined in :class
 In the ini configuration above:
 
 * The ``exclude`` option contains the check ID ``mcn_provenance_witness_level_one_1``. The check with this ID will be excluded.
-* The ``include`` option contains the `glob <https://docs.python.org/3/library/glob.html>`_ pattern ``*``. Checks whose ID matched this glob pattern will be included in the analysis. In this case, ``*`` matches all check IDs.
+* The ``include`` option contains the `glob <https://docs.python.org/3/library/glob.html>`_ pattern ``*``. Checks with IDs matching this glob pattern will be included in the analysis. In this case, ``*`` matches all check IDs.
 
 With these two configuration options, all checks except for the excluded ``mcn_provenance_witness_level_one_1`` will run.
 
@@ -146,7 +146,7 @@ Run a subset of checks
         mcn_provenance_witness_level_one_1
         mcn_trusted_builder_level_three_1
 
-This will result in ``mcn_provenance_witness_level_one_1``, ``mcn_trusted_builder_level_three_1`` and their transitive parents running.
+This will result in ``mcn_provenance_witness_level_one_1``, ``mcn_trusted_builder_level_three_1``, and their transitive parents running.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Disable a subset of checks
@@ -160,7 +160,7 @@ Disable a subset of checks
         mcn_trusted_builder_level_three_1
     include = *
 
-This will result in ``mcn_provenance_witness_level_one_1``, ``mcn_trusted_builder_level_three_1`` and their transitive children not running.
+This will result in ``mcn_provenance_witness_level_one_1``, ``mcn_trusted_builder_level_three_1``, and their transitive children not running.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Only run checks whose ID starts with ``mcn_build_*``
