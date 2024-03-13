@@ -37,8 +37,8 @@ Normally, this is how you would run Macaron:
 
   ./run_macaron.sh analyze --package-url pkg:github.com/micronaut-projects/micronaut-core@v4.3.10 --skip-deps
 
-However, there can be checks in Macaron that are not applicable to ``micronaut-projects/micronaut-core``.
-For example, the ``mcn_provenance_witness_level_one_1`` check (defined in :class:`ProvenanceWitnessL1Check <macaron.slsa_analyzer.checks.provenance_witness_l1_check.ProvenanceWitnessL1Check>`) is not applicable because ``micronaut-projects/micronaut-core`` doesn't generate and publish any `Witness provenance <https://github.com/testifysec/witness>`_. Therefore, we could exclude this check from running by performing the following steps.
+However, there can be checks in Macaron that are not relevant for ``micronaut-projects/micronaut-core``.
+For example, the ``mcn_provenance_witness_level_one_1`` check (defined in :class:`ProvenanceWitnessL1Check <macaron.slsa_analyzer.checks.provenance_witness_l1_check.ProvenanceWitnessL1Check>`) is not relevant because ``micronaut-projects/micronaut-core`` doesn't generate and publish any `Witness provenance <https://github.com/testifysec/witness>`_. Therefore, we could exclude this check from running by performing the following steps.
 
 1. In your current directory, create a ``defaults.ini`` configuration file with the following content.
 
