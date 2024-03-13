@@ -55,7 +55,7 @@ In the ini configuration above:
 
 With these two configuration options, all checks except for the excluded ``mcn_provenance_witness_level_one_1`` will run.
 
-1. Run Macaron analyze by providing the path to the custom ``defaults.ini`` configuration.
+2. Run Macaron analyze by providing the path to the custom ``defaults.ini`` configuration.
 
 .. code-block:: shell
 
