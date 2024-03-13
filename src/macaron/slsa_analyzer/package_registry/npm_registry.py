@@ -231,13 +231,13 @@ class NPMRegistry(PackageRegistry):
             return None
 
         json_data = json.loads(response.text)
-        version = json_data.get("version")
+        version: str | None = json_data.get("version")
         if not version:
             logger.debug("No version found in response from NPM server.")
             return None
 
         logger.debug("Found version for NPM artifact: %s", version)
-        return version if isinstance(version, str) else str(version)
+        return version
 
 
 class NPMAttestationAsset(NamedTuple):
