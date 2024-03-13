@@ -201,12 +201,12 @@ class NPMRegistry(PackageRegistry):
 
         return False
 
-    def get_latest_version(self, namespace: str, name: str) -> str | None:
+    def get_latest_version(self, namespace: str | None, name: str) -> str | None:
         """Try to retrieve the latest version of a package from the registry.
 
         Parameters
         ----------
-        namespace: str
+        namespace: str | None
             The optional namespace of the package.
         name: str
             The name of the package.
@@ -231,10 +231,7 @@ class NPMRegistry(PackageRegistry):
             return None
 
         json_data = json.loads(response.text)
-        try:
-            version = json_data["version"]
-        except KeyError:
-            version = ""
+        version = json_data.get("version")
         if not version:
             logger.debug("No version found in response from NPM server.")
             return None

@@ -85,7 +85,7 @@ class ProvenanceFinder:
             logger.debug("The npm registry is not enabled.")
             return None
 
-        namespace = purl.namespace or ""
+        namespace = purl.namespace
         artifact_id = purl.name
         version = purl.version
 
@@ -219,7 +219,7 @@ class ProvenanceFinder:
             logger.debug("No payloads found in provenance files.")
             return None
 
-        # TODO decide what to do when multiple provenance payloads are present.
+        # We assume that there is only one provenance per GAV.
         provenance = provenances[0]
 
         return provenance

@@ -17,9 +17,10 @@ from macaron.util import JsonType
 
 
 @pytest.fixture(name="slsa_v1_gcb_1_provenance")
-def slsa_v1_gcb_1_provenance_() -> str:
+def slsa_v1_gcb_1_provenance_() -> dict[str, JsonType]:
     """Return a valid SLSA v1 provenance using build type gcb and sourceToBuild."""
-    return """
+    return _load_and_validate_josn(
+        """
                 {
                     "_type": "https://in-toto.io/Statement/v1",
                     "subject": [],
@@ -42,12 +43,14 @@ def slsa_v1_gcb_1_provenance_() -> str:
                     }
                 }
             """
+    )
 
 
 @pytest.fixture(name="slsa_v1_gcb_2_provenance")
-def slsa_v1_gcb_2_provenance_() -> str:
+def slsa_v1_gcb_2_provenance_() -> dict[str, JsonType]:
     """Return a valid SLSA v1 provenance using build type gcb and configSource."""
-    return """
+    return _load_and_validate_josn(
+        """
                 {
                     "_type": "https://in-toto.io/Statement/v1",
                     "subject": [],
@@ -72,12 +75,14 @@ def slsa_v1_gcb_2_provenance_() -> str:
                     }
                 }
             """
+    )
 
 
 @pytest.fixture(name="slsa_v1_github_provenance")
-def slsa_v1_github_provenance_() -> str:
+def slsa_v1_github_provenance_() -> dict[str, JsonType]:
     """Return a valid SLSA v1 provenance using build type GitHub."""
-    return """
+    return _load_and_validate_josn(
+        """
                 {
                     "_type": "https://in-toto.io/Statement/v1",
                     "subject": [],
@@ -105,12 +110,14 @@ def slsa_v1_github_provenance_() -> str:
                     }
                 }
             """
+    )
 
 
 @pytest.fixture(name="slsa_v02_provenance")
-def slsa_v02_provenance_() -> str:
+def slsa_v02_provenance_() -> dict[str, JsonType]:
     """Return a valid SLSA v02 provenance."""
-    return """
+    return _load_and_validate_josn(
+        """
                 {
                     "_type": "https://in-toto.io/Statement/v0.1",
                     "subject": [],
@@ -127,12 +134,14 @@ def slsa_v02_provenance_() -> str:
                     }
                 }
             """
+    )
 
 
 @pytest.fixture(name="slsa_v01_provenance")
-def slsa_v01_provenance_() -> str:
+def slsa_v01_provenance_() -> dict[str, JsonType]:
     """Return a valid SLSA v01 provenance."""
-    return """
+    return _load_and_validate_josn(
+        """
                 {
                     "_type": "https://in-toto.io/Statement/v0.1",
                     "subject": [],
@@ -155,153 +164,14 @@ def slsa_v01_provenance_() -> str:
                     }
                 }
             """
-
-
-@pytest.fixture(name="target_repository")
-def target_repository_() -> str:
-    """Return the target repository URL."""
-    return "https://github.com/oracle/macaron"
-
-
-@pytest.fixture(name="target_commit")
-def target_commit_() -> str:
-    """Return the target commit hash."""
-    return "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"
-
-
-def test_slsa_v1_gcb_1(slsa_v1_gcb_1_provenance: str, target_repository: str, target_commit: str) -> None:
-    """Test SLSA v1 provenance with build type gcb and sourceToBuild."""
-    payload = json.loads(slsa_v1_gcb_1_provenance)
-    assert isinstance(payload, dict)
-    _perform_provenance_comparison(payload, target_repository, target_commit)
-
-    # Set repository to an empty string.
-    _json_modify(payload, ["predicate", "buildDefinition", "externalParameters", "sourceToBuild", "repository"], "")
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-    # Remove repository key.
-    _json_modify(payload, ["predicate", "buildDefinition", "externalParameters", "sourceToBuild", "repository"], None)
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-    # Add repository back.
-    _json_modify(
-        payload,
-        ["predicate", "buildDefinition", "externalParameters", "sourceToBuild", "repository"],
-        target_repository,
     )
-    # Re-test provenance validity.
-    _perform_provenance_comparison(payload, target_repository, target_commit)
-
-    # Remove commit.
-    _json_modify(payload, ["predicate", "buildDefinition", "resolvedDependencies"], None)
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-
-def test_slsa_v1_gcb_2(slsa_v1_gcb_2_provenance: str, target_repository: str, target_commit: str) -> None:
-    """Test SLSA v1 provenance with build type gcb and configSource."""
-    payload = json.loads(slsa_v1_gcb_2_provenance)
-    assert isinstance(payload, dict)
-    _perform_provenance_comparison(payload, target_repository, target_commit)
-
-    # Set repository to an empty string.
-    _json_modify(payload, ["predicate", "buildDefinition", "externalParameters", "configSource", "repository"], "")
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-    # Remove repository key.
-    _json_modify(payload, ["predicate", "buildDefinition", "externalParameters", "configSource", "repository"], None)
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-    # Re-add repository key with a bad value.
-    _json_modify(payload, ["predicate", "buildDefinition", "externalParameters", "configSource", "repository"], "bad")
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-
-def test_slsa_v1_github(slsa_v1_github_provenance: str, target_repository: str, target_commit: str) -> None:
-    """Test SLSA v1 provenance with build type GitHub."""
-    payload = json.loads(slsa_v1_github_provenance)
-    assert isinstance(payload, dict)
-    _perform_provenance_comparison(payload, target_repository, target_commit)
-
-    # Set repository to an empty string.
-    _json_modify(payload, ["predicate", "buildDefinition", "externalParameters", "workflow", "repository"], "")
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-    # Remove repository key.
-    _json_modify(payload, ["predicate", "buildDefinition", "externalParameters", "workflow", "repository"], None)
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-
-def test_slsa_v02(slsa_v02_provenance: str, target_repository: str, target_commit: str) -> None:
-    """Test SLSA v0.2 provenance."""
-    payload = json.loads(slsa_v02_provenance)
-    assert isinstance(payload, dict)
-    _perform_provenance_comparison(payload, target_repository, target_commit)
-
-    # Set repository to an empty string.
-    _json_modify(payload, ["predicate", "invocation", "configSource", "uri"], "")
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-    # Remove repository key.
-    _json_modify(payload, ["predicate", "invocation", "configSource", "uri"], None)
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-    # Re-add repository and re-validate.
-    _json_modify(
-        payload, ["predicate", "invocation", "configSource", "uri"], f"git+{target_repository}@refs/heads/main"
-    )
-    _perform_provenance_comparison(payload, target_repository, target_commit)
-
-    # Remove commit.
-    _json_modify(payload, ["predicate", "invocation", "configSource", "digest", "sha1"], None)
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-
-def test_slsa_v01(slsa_v01_provenance: str, target_repository: str, target_commit: str) -> None:
-    """Test SLSA v0.1 provenance."""
-    payload = json.loads(slsa_v01_provenance)
-    assert isinstance(payload, dict)
-    _perform_provenance_comparison(payload, target_repository, target_commit)
-
-    # Set repository to an empty string.
-    materials = json_extract(payload, ["predicate", "materials"], list)
-    material_index = json_extract(payload, ["predicate", "recipe", "definedInMaterial"], int)
-    _json_modify(materials[material_index], ["uri"], "")
-    _json_modify(payload, ["predicate", "materials"], materials)
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-    # Remove repository.
-    _json_modify(materials[material_index], ["uri"], None)
-    _json_modify(payload, ["predicate", "materials"], materials)
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
-
-    # Restore repository and re-validate.
-    _json_modify(materials[material_index], ["uri"], f"git+{target_repository}@refs/heads/main")
-    _json_modify(payload, ["predicate", "materials"], materials)
-    _perform_provenance_comparison(payload, target_repository, target_commit)
-
-    # Set material index to an invalid value.
-    _json_modify(payload, ["predicate", "recipe", "definedInMaterial"], 10)
-    with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
 
 
 @pytest.fixture(name="witness_gitlab_provenance")
-def witness_gitlab_provenance_() -> str:
+def witness_gitlab_provenance_() -> dict[str, JsonType]:
     """Return a Witness v0.1 provenance with a GitLab attestation."""
-    return """
+    return _load_and_validate_josn(
+        """
                 {
                     "_type": "https://in-toto.io/Statement/v0.1",
                     "subject": [],
@@ -325,12 +195,14 @@ def witness_gitlab_provenance_() -> str:
                     }
                 }
             """
+    )
 
 
 @pytest.fixture(name="witness_github_provenance")
-def witness_github_provenance_() -> str:
+def witness_github_provenance_() -> dict[str, JsonType]:
     """Return a Witness v0.1 provenance with a GitHub attestation."""
-    return """
+    return _load_and_validate_josn(
+        """
                 {
                     "_type": "https://in-toto.io/Statement/v0.1",
                     "subject": [],
@@ -354,51 +226,190 @@ def witness_github_provenance_() -> str:
                     }
                 }
             """
+    )
 
 
-def test_witness_gitlab(witness_gitlab_provenance: str) -> None:
-    """Test Witness v01 GitLab provenance."""
-    target_repository = "https://gitlab.com/tinyMediaManager/tinyMediaManager"
-    target_commit = "cf6080a92d1c748ba5f05ea16529e05e5c641a49"
-    payload = json.loads(witness_gitlab_provenance)
-    assert isinstance(payload, dict)
-    _perform_provenance_comparison(payload, target_repository, target_commit)
+@pytest.fixture(name="target_repository")
+def target_repository_() -> str:
+    """Return the target repository URL."""
+    return "https://github.com/oracle/macaron"
 
-    # Set repository to an empty string.
-    attestations = json_extract(payload, ["predicate", "attestations"], list)
-    _json_modify(attestations[0], ["attestation", "projecturl"], "")
-    _json_modify(payload, ["attestation"], attestations)
+
+@pytest.fixture(name="target_commit")
+def target_commit_() -> str:
+    """Return the target commit hash."""
+    return "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"
+
+
+def test_slsa_v1_gcb_1_is_valid(
+    slsa_v1_gcb_1_provenance: dict[str, JsonType], target_repository: str, target_commit: str
+) -> None:
+    """Test valid SLSA v1 provenance with build type gcb and sourceToBuild."""
+    _perform_provenance_comparison(slsa_v1_gcb_1_provenance, target_repository, target_commit)
+
+
+@pytest.mark.parametrize(
+    ("keys", "new_value"),
+    [
+        (["predicate", "buildDefinition", "externalParameters", "sourceToBuild", "repository"], ""),
+        (["predicate", "buildDefinition", "externalParameters", "sourceToBuild", "repository"], None),
+        (["predicate", "buildDefinition", "externalParameters", "sourceToBuild", "repository"], "bad_url"),
+        (["predicate", "buildDefinition", "resolvedDependencies"], ""),
+        (["predicate", "buildDefinition", "resolvedDependencies"], None),
+    ],
+)
+def test_slsa_v1_gcb_1_is_invalid(
+    slsa_v1_gcb_1_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType
+) -> None:
+    """Test invalidly modified SLSA v1 provenance with build type gcb and sourceToBuild."""
+    _json_modify(slsa_v1_gcb_1_provenance, keys, new_value)
     with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
+        _perform_provenance_comparison(slsa_v1_gcb_1_provenance, "", "")
 
-    # Remove repository.
-    _json_modify(attestations[0], ["attestation", "projecturl"], None)
-    _json_modify(payload, ["attestation"], attestations)
+
+def test_slsa_v1_gcb_2_is_valid(
+    slsa_v1_gcb_2_provenance: dict[str, JsonType], target_repository: str, target_commit: str
+) -> None:
+    """Test valid SLSA v1 provenance with build type gcb and configSource."""
+    _perform_provenance_comparison(slsa_v1_gcb_2_provenance, target_repository, target_commit)
+
+
+@pytest.mark.parametrize(
+    ("keys", "new_value"),
+    [
+        (["predicate", "buildDefinition", "externalParameters", "configSource", "repository"], ""),
+        (["predicate", "buildDefinition", "externalParameters", "configSource", "repository"], None),
+        (["predicate", "buildDefinition", "externalParameters", "configSource", "repository"], "bad_url"),
+    ],
+)
+def test_slsa_v1_gcb_2_is_invalid(
+    slsa_v1_gcb_2_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType
+) -> None:
+    """Test invalidly modified SLSA v1 provenance with build type gcb and configSource."""
+    _json_modify(slsa_v1_gcb_2_provenance, keys, new_value)
     with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
+        _perform_provenance_comparison(slsa_v1_gcb_2_provenance, "", "")
 
-    # Restore repository and re-validate.
-    _json_modify(attestations[0], ["attestation", "projecturl"], target_repository)
-    _json_modify(payload, ["attestation"], attestations)
-    _perform_provenance_comparison(payload, target_repository, target_commit)
 
-    # Set commit to an empty string.
-    _json_modify(attestations[1], ["attestation", "commithash"], "")
-    _json_modify(payload, ["attestation"], attestations)
+def test_slsa_v1_github_is_valid(
+    slsa_v1_github_provenance: dict[str, JsonType], target_repository: str, target_commit: str
+) -> None:
+    """Test valid SLSA v1 provenance with build type GitHub."""
+    _perform_provenance_comparison(slsa_v1_github_provenance, target_repository, target_commit)
+
+
+@pytest.mark.parametrize(
+    ("keys", "new_value"),
+    [
+        (["predicate", "buildDefinition", "externalParameters", "workflow", "repository"], ""),
+        (["predicate", "buildDefinition", "externalParameters", "workflow", "repository"], None),
+        (["predicate", "buildDefinition", "externalParameters", "workflow", "repository"], "bad_url"),
+    ],
+)
+def test_slsa_v1_github_is_invalid(
+    slsa_v1_github_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType
+) -> None:
+    """Test invalidly modified SLSA v1 provenance with build type GitHub."""
+    _json_modify(slsa_v1_github_provenance, keys, new_value)
     with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
+        _perform_provenance_comparison(slsa_v1_github_provenance, "", "")
 
-    # Remove the Git attestation.
-    _json_modify(payload, ["attestation"], attestations[:1])
+
+def test_slsa_v02_is_valid(
+    slsa_v02_provenance: dict[str, JsonType], target_repository: str, target_commit: str
+) -> None:
+    """Test SLSA v0.2 provenance."""
+    _perform_provenance_comparison(slsa_v02_provenance, target_repository, target_commit)
+
+
+@pytest.mark.parametrize(
+    ("keys", "new_value"),
+    [
+        (["predicate", "invocation", "configSource", "uri"], ""),
+        (["predicate", "invocation", "configSource", "uri"], None),
+        (["predicate", "invocation", "configSource", "uri"], "bad_url"),
+        (["predicate", "invocation", "configSource", "digest", "sha1"], ""),
+        (["predicate", "invocation", "configSource", "digest", "sha1"], None),
+    ],
+)
+def test_slsa_v02_is_invalid(slsa_v02_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType) -> None:
+    """Test invalidly modified SLSA v0.2 provenance."""
+    _json_modify(slsa_v02_provenance, keys, new_value)
     with pytest.raises(ProvenanceExtractionException):
-        _perform_provenance_comparison(payload, "", "")
+        _perform_provenance_comparison(slsa_v02_provenance, "", "")
 
 
-def test_witness_github(witness_github_provenance: str, target_repository: str, target_commit: str) -> None:
-    """Test Witness v01 GitHub provenance."""
-    payload = json.loads(witness_github_provenance)
-    assert isinstance(payload, dict)
-    _perform_provenance_comparison(payload, target_repository, target_commit)
+def test_slsa_v01_is_valid(
+    slsa_v01_provenance: dict[str, JsonType], target_repository: str, target_commit: str
+) -> None:
+    """Test valid SLSA v0.1 provenance."""
+    _perform_provenance_comparison(slsa_v01_provenance, target_repository, target_commit)
+
+
+@pytest.mark.parametrize(
+    "new_value",
+    [
+        "",
+        None,
+    ],
+)
+def test_slsa_v01_is_invalid(slsa_v01_provenance: dict[str, JsonType], new_value: JsonType) -> None:
+    """Test invalidly modified SLSA v0.1 provenance."""
+    materials = json_extract(slsa_v01_provenance, ["predicate", "materials"], list)
+    material_index = json_extract(slsa_v01_provenance, ["predicate", "recipe", "definedInMaterial"], int)
+    _json_modify(materials[material_index], ["uri"], new_value)
+    with pytest.raises(ProvenanceExtractionException):
+        _perform_provenance_comparison(slsa_v01_provenance, "", "")
+
+
+def test_slsa_v01_invalid_material_index(slsa_v01_provenance: dict[str, JsonType]) -> None:
+    """Test the SLSA v0.1 provenance with an invalid materials index."""
+    _json_modify(slsa_v01_provenance, ["predicate", "recipe", "definedInMaterial"], 10)
+    with pytest.raises(ProvenanceExtractionException):
+        _perform_provenance_comparison(slsa_v01_provenance, "", "")
+
+
+def test_witness_gitlab_is_valid(witness_gitlab_provenance: dict[str, JsonType]) -> None:
+    """Test valid Witness v0.1 GitLab provenance."""
+    _perform_provenance_comparison(
+        witness_gitlab_provenance,
+        "https://gitlab.com/tinyMediaManager/tinyMediaManager",
+        "cf6080a92d1c748ba5f05ea16529e05e5c641a49",
+    )
+
+
+def test_witness_github_is_valid(
+    witness_github_provenance: dict[str, JsonType], target_repository: str, target_commit: str
+) -> None:
+    """Test valid Witness v0.1 GitHub provenance."""
+    _perform_provenance_comparison(witness_github_provenance, target_repository, target_commit)
+
+
+@pytest.mark.parametrize(
+    ("keys", "new_value", "attestation_index"),
+    [
+        (["attestation", "projecturl"], "", 0),
+        (["attestation", "projecturl"], None, 0),
+        (["attestation", "commithash"], "", 1),
+        (["attestation", "commithash"], None, 1),
+    ],
+)
+def test_witness_github_is_invalid(
+    witness_github_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType, attestation_index: int
+) -> None:
+    """Test invalidly modified Witness v0.1 GitHub provenance."""
+    attestations = json_extract(witness_github_provenance, ["predicate", "attestations"], list)
+    _json_modify(attestations[attestation_index], keys, new_value)
+    with pytest.raises(ProvenanceExtractionException):
+        _perform_provenance_comparison(witness_github_provenance, "", "")
+
+
+def test_witness_github_remove_attestation(witness_github_provenance: dict[str, JsonType]) -> None:
+    """Test removing Git attestation from Witness V0.1 GitHub provenance."""
+    attestations = json_extract(witness_github_provenance, ["predicate", "attestations"], list)
+    _json_modify(witness_github_provenance, ["predicate", "attestations"], attestations[:1])
+    with pytest.raises(ProvenanceExtractionException):
+        _perform_provenance_comparison(witness_github_provenance, "", "")
 
 
 @pytest.mark.parametrize(
@@ -419,9 +430,8 @@ def test_invalid_type_payloads(type_: str, predicate_type: str) -> None:
         _perform_provenance_comparison(payload, "", "")
 
 
-def _perform_provenance_comparison(payload: JsonType, expected_repo: str, expected_commit: str) -> None:
+def _perform_provenance_comparison(payload: dict[str, JsonType], expected_repo: str, expected_commit: str) -> None:
     """Accept a provenance and extraction function, assert the extracted values match the expected ones."""
-    assert isinstance(payload, dict)
     provenance = validate_intoto_payload(payload)
     repo, commit = extract_repo_and_commit_from_provenance(provenance)
     assert expected_repo == repo
@@ -455,3 +465,10 @@ def _json_modify(entry: dict[str, JsonType], keys: list[str], new_value: JsonTyp
             if not isinstance(next_target, dict):
                 raise JsonExtractionException(f"Cannot extract value from non-dict type: {str(type(next_target))}")
             target = next_target
+
+
+def _load_and_validate_josn(payload: str) -> dict[str, JsonType]:
+    """Load payload as JSON and validate it is of type dict."""
+    json_payload = json.loads(payload)
+    assert isinstance(json_payload, dict)
+    return json_payload

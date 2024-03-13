@@ -13,7 +13,7 @@ from packageurl import PackageURL
 
 from macaron.config.target_config import Configuration
 from macaron.errors import InvalidPURLError
-from macaron.slsa_analyzer.analyzer import Analyzer
+from macaron.slsa_analyzer.analyzer import Analyzer, InvalidAnalysisTargetError
 
 from ..macaron_testcase import MacaronTestCase
 
@@ -154,3 +154,9 @@ def test_resolve_analysis_target_invalid_purl(config: Configuration) -> None:
     """Test the resolve analysis target method with invalid inputs."""
     with pytest.raises(InvalidPURLError):
         Analyzer.parse_purl(config)
+
+
+def test_resolve_analysis_target_no_purl_or_repository() -> None:
+    """Test creation of an Analysis Target when no PURL or repository path is provided."""
+    with pytest.raises(InvalidAnalysisTargetError):
+        Analyzer.to_analysis_target(Configuration(), [], None)

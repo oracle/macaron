@@ -216,7 +216,7 @@ def _clean_spdx(uri: str) -> str:
     return url
 
 
-class JsonExtractionException(BaseException):
+class JsonExtractionException(MacaronError):
     """When there is an error while extracting from JSON."""
 
 

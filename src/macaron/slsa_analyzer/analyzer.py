@@ -21,7 +21,14 @@ from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.dependency_analyzer import DependencyAnalyzer, DependencyInfo
-from macaron.errors import CloneError, DuplicateError, InvalidPURLError, PURLNotFoundError, RepoCheckOutError
+from macaron.errors import (
+    CloneError,
+    DuplicateError,
+    InvalidPURLError,
+    MacaronError,
+    PURLNotFoundError,
+    RepoCheckOutError,
+)
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
@@ -313,23 +320,18 @@ class Analyzer:
             provenance_payload = ProvenanceFinder().find_provenance(parsed_purl)
 
         # Create the analysis target.
-        msg = ""
         available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
         try:
             analysis_target = Analyzer.to_analysis_target(config, available_domains, parsed_purl, provenance_payload)
-        except InvalidPURLError as error:
-            logger.debug("Invalid input PURL: %s", error)
-            msg = "Invalid input PURL."
-            analysis_target = None
-
-        if not analysis_target or (not analysis_target.parsed_purl and not analysis_target.repo_path):
+        except InvalidAnalysisTargetError as error:
             return Record(
                 record_id=repo_id,
-                description=msg or "Cannot determine the analysis as PURL and/or repository path is not provided.",
+                description=str(error),
                 pre_config=config,
                 status=SCMStatus.ANALYSIS_FAILED,
             )
 
+        # Create the component.
         component = None
         try:
             component = self.add_component(analysis, analysis_target, existing_records)
@@ -624,8 +626,8 @@ class Analyzer:
 
         Raises
         ------
-        InvalidPURLError
-            If the PURL provided from the user is invalid.
+        InvalidAnalysisTargetError
+            Raised if a valid Analysis Target cannot be created.
         """
         repo_path_input: str = config.get_value("path")
         input_branch: str = config.get_value("branch")
@@ -633,7 +635,9 @@ class Analyzer:
 
         match (parsed_purl, repo_path_input):
             case (None, ""):
-                return Analyzer.AnalysisTarget(parsed_purl=None, repo_path="", branch="", digest="")
+                raise InvalidAnalysisTargetError(
+                    "Cannot determine the analysis target: PURL and repository path are missing."
+                )
 
             case (None, _):
                 # If only the repository path is provided, we will use the user-provided repository path to create the
@@ -689,7 +693,9 @@ class Analyzer:
                 )
 
             case _:
-                return Analyzer.AnalysisTarget(parsed_purl=None, repo_path="", branch="", digest="")
+                raise InvalidAnalysisTargetError(
+                    "Cannot determine the analysis target: PURL and repository path are missing."
+                )
 
     def get_analyze_ctx(self, component: Component) -> AnalyzeContext:
         """Return the analyze context for a target component.
@@ -996,3 +1002,7 @@ class DuplicateCmpError(DuplicateError):
         """
         super().__init__(*args, **kwargs)
         self.context: AnalyzeContext | None = context
+
+
+class InvalidAnalysisTargetError(MacaronError):
+    """When a valid Analysis Target cannot be constructed."""
