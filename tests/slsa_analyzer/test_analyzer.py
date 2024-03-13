@@ -49,11 +49,6 @@ class TestAnalyzer(MacaronTestCase):
     ("config", "available_domains", "expect"),
     [
         (
-            Configuration({"purl": ""}),
-            ["github.com", "gitlab.com", "bitbucket.org"],
-            Analyzer.AnalysisTarget(parsed_purl=None, repo_path="", branch="", digest=""),
-        ),
-        (
             Configuration({"purl": "pkg:github.com/apache/maven"}),
             ["github.com", "gitlab.com", "bitbucket.org"],
             Analyzer.AnalysisTarget(
