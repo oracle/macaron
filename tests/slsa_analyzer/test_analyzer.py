@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the slsa_analyzer.Gh module."""
@@ -103,7 +103,8 @@ def test_resolve_analysis_target(
     config: Configuration, available_domains: list[str], expect: Analyzer.AnalysisTarget
 ) -> None:
     """Test the resolve analysis target method with valid inputs."""
-    assert Analyzer.to_analysis_target(config, available_domains) == expect
+    parsed_purl = Analyzer.parse_purl(config)
+    assert Analyzer.to_analysis_target(config, available_domains, parsed_purl) == expect
 
 
 @given(
@@ -136,7 +137,8 @@ def test_invalid_analysis_target(
         }
     )
     try:
-        Analyzer.to_analysis_target(config, available_domains)
+        purl = Analyzer.parse_purl(config)
+        Analyzer.to_analysis_target(config, available_domains, purl)
     except InvalidPURLError:
         pass
 
@@ -151,4 +153,4 @@ def test_invalid_analysis_target(
 def test_resolve_analysis_target_invalid_purl(config: Configuration) -> None:
     """Test the resolve analysis target method with invalid inputs."""
     with pytest.raises(InvalidPURLError):
-        Analyzer.to_analysis_target(config, [])
+        Analyzer.parse_purl(config)

@@ -25,7 +25,6 @@ class ProvenanceFinder:
     """This class is used to find and retrieve provenance files from supported registries."""
 
     def __init__(self) -> None:
-        self.last_provenance_payload: InTotoPayload | None = None
         registries = PACKAGE_REGISTRIES
         self.npm_registry: NPMRegistry | None = None
         self.jfrog_registry: JFrogMavenRegistry | None = None
@@ -53,23 +52,18 @@ class ProvenanceFinder:
             # Do not perform this function for repository type targets.
             return None
 
-        self.last_provenance_payload = None
-
         if purl.type == "npm":
             if self.npm_registry:
-                self.last_provenance_payload = ProvenanceFinder.find_npm_provenance(purl, self.npm_registry)
-            else:
-                logger.debug("Missing npm registry to find provenance in.")
+                return ProvenanceFinder.find_npm_provenance(purl, self.npm_registry)
+            logger.debug("Missing npm registry to find provenance in.")
         elif purl.type in ["gradle", "maven"]:
             if self.jfrog_registry:
-                self.last_provenance_payload = ProvenanceFinder.find_gav_provenance(purl, self.jfrog_registry)
-            else:
-                logger.debug("Missing JFrog registry to find provenance in.")
+                return ProvenanceFinder.find_gav_provenance(purl, self.jfrog_registry)
+            logger.debug("Missing JFrog registry to find provenance in.")
         else:
             logger.debug("Provenance finding not supported for PURL type: %s", purl.type)
-            self.last_provenance_payload = None
 
-        return self.last_provenance_payload
+        return None
 
     @staticmethod
     def find_npm_provenance(purl: PackageURL, npm_registry: NPMRegistry) -> InTotoPayload | None:

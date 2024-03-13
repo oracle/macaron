@@ -72,7 +72,8 @@ def test_resolve_analysis_target(
     config: Configuration, available_domains: list[str], expect: Analyzer.AnalysisTarget
 ) -> None:
     """Test the resolve analysis target method with valid inputs."""
-    assert Analyzer.to_analysis_target(config, available_domains) == expect
+    parsed_purl = Analyzer.parse_purl(config)
+    assert Analyzer.to_analysis_target(config, available_domains, parsed_purl) == expect
 
 
 @pytest.mark.parametrize(

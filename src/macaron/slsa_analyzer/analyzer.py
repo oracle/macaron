@@ -295,11 +295,44 @@ class Analyzer:
         Record
             The record of the analysis for this repository.
         """
+        # Parse the PURL.
         repo_id = config.get_value("id")
-        component = None
-        provenance_finder = ProvenanceFinder()
         try:
-            component = self.add_component(config, analysis, provenance_finder, existing_records, provenance_payload)
+            parsed_purl = Analyzer.parse_purl(config)
+        except InvalidPURLError as error:
+            logger.error(error)
+            return Record(
+                record_id=repo_id,
+                description=str(error),
+                pre_config=config,
+                status=SCMStatus.ANALYSIS_FAILED,
+            )
+
+        if not provenance_payload and parsed_purl and not config.get_value("path"):
+            # Try to find the provenance file for the parsed PURL.
+            provenance_payload = ProvenanceFinder().find_provenance(parsed_purl)
+
+        # Create the analysis target.
+        msg = ""
+        available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
+        try:
+            analysis_target = Analyzer.to_analysis_target(config, available_domains, parsed_purl, provenance_payload)
+        except InvalidPURLError as error:
+            logger.debug("Invalid input PURL: %s", error)
+            msg = "Invalid input PURL."
+            analysis_target = None
+
+        if not analysis_target or (not analysis_target.parsed_purl and not analysis_target.repo_path):
+            return Record(
+                record_id=repo_id,
+                description=msg or "Cannot determine the analysis as PURL and/or repository path is not provided.",
+                pre_config=config,
+                status=SCMStatus.ANALYSIS_FAILED,
+            )
+
+        component = None
+        try:
+            component = self.add_component(analysis, analysis_target, existing_records)
         except PURLNotFoundError as error:
             logger.error(error)
             return Record(
@@ -327,9 +360,6 @@ class Analyzer:
         analyze_ctx.dynamic_data["expectation"] = self.expectations.get_expectation_for_target(
             analyze_ctx.component.purl.split("@")[0]
         )
-        if not provenance_payload:
-            # Retrieve the provenance file from the finder. May also be None.
-            provenance_payload = provenance_finder.last_provenance_payload
         analyze_ctx.dynamic_data["provenance"] = provenance_payload
         analyze_ctx.check_results = self.perform_checks(analyze_ctx)
 
@@ -451,11 +481,9 @@ class Analyzer:
 
     def add_component(
         self,
-        config: Configuration,
         analysis: Analysis,
-        provenance_finder: ProvenanceFinder,
+        analysis_target: AnalysisTarget,
         existing_records: dict[str, Record] | None = None,
-        provenance_payload: InTotoPayload | None = None,
     ) -> Component:
         """Add a software component if it does not exist in the DB already.
 
@@ -464,16 +492,12 @@ class Analyzer:
 
         Parameters
         ----------
-        config: Configuration
-            The configuration for running Macaron.
         analysis: Analysis
             The current analysis instance.
-        provenance_finder: ProvenanceFinder
-            The provenance finder object to use when finding provenance.
+        analysis_target: AnalysisTarget
+            The target of this analysis.
         existing_records : dict[str, Record] | None
             The mapping of existing records that the analysis has run successfully.
-        provenance_payload : InToToPayload | None
-            The provenance in-toto payload for the software component.
 
         Returns
         -------
@@ -488,17 +512,6 @@ class Analyzer:
             The component is already analyzed in the same session.
         """
         # Note: the component created in this function will be added to the database.
-        available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
-        try:
-            analysis_target = Analyzer.to_analysis_target(
-                config, available_domains, provenance_finder, provenance_payload
-            )
-        except InvalidPURLError as error:
-            raise PURLNotFoundError("Invalid input PURL.") from error
-
-        if not analysis_target.parsed_purl and not analysis_target.repo_path:
-            raise PURLNotFoundError("Cannot determine the analysis as PURL and/or repository path is not provided.")
-
         repository = None
         if analysis_target.repo_path:
             git_obj = self._prepare_repo(
@@ -548,10 +561,46 @@ class Analyzer:
         return Component(purl=analysis_target.parsed_purl.to_string(), analysis=analysis, repository=repository)
 
     @staticmethod
+    def parse_purl(config: Configuration) -> PackageURL | None:
+        """Parse the PURL provided in the input.
+
+        Parameters
+        ----------
+        config : Configuration
+            The target configuration that stores the user input values for the software component.
+
+        Returns
+        -------
+        PackageURL | None
+            The parsed PURL, or None if one was not provided as input.
+
+        Raises
+        ------
+        InvalidPURLError
+            If the PURL provided from the user is invalid.
+        """
+        # Due to the current design of Configuration class, repo_path, branch and digest are initialized
+        # as empty strings, and we assumed that they are always set with input values as non-empty strings.
+        # Therefore, their true types are ``str``, and an empty string indicates that the input value is not provided.
+        # The purl might be a PackageURL type, a string, or None, which should be reduced down to an optional
+        # PackageURL type.
+        if config.get_value("purl") is None or config.get_value("purl") == "":
+            return None
+        purl = config.get_value("purl")
+        if isinstance(purl, PackageURL):
+            return purl
+        try:
+            # Note that PackageURL.from_string sanitizes the unsafe characters in the purl string,
+            # which is user-controllable, by calling urllib's `urlsplit` function.
+            return PackageURL.from_string(purl)
+        except ValueError as error:
+            raise InvalidPURLError(f"Invalid input PURL: {purl}") from error
+
+    @staticmethod
     def to_analysis_target(
         config: Configuration,
         available_domains: list[str],
-        provenance_finder: ProvenanceFinder | None = None,
+        parsed_purl: PackageURL | None,
         provenance_payload: InTotoPayload | None = None,
     ) -> AnalysisTarget:
         """Resolve the details of a software component from user input.
@@ -563,8 +612,8 @@ class Analyzer:
         available_domains : list[str]
             The list of supported git service host domain. This is used to convert repo-based PURL to a repository path
             of the corresponding software component.
-        provenance_finder: ProvenanceFinder
-            The provenance finder object to use when finding provenance.
+        parsed_purl: PackageURL | None
+            The PURL to use for the analysis target, or None if one has not been provided.
         provenance_payload : InToToPayload | None
             The provenance in-toto payload for the software component.
 
@@ -578,24 +627,6 @@ class Analyzer:
         InvalidPURLError
             If the PURL provided from the user is invalid.
         """
-        # Due to the current design of Configuration class, repo_path, branch and digest are initialized
-        # as empty strings, and we assumed that they are always set with input values as non-empty strings.
-        # Therefore, their true types are ``str``, and an empty string indicates that the input value is not provided.
-        # The purl might be a PackageURL type, a string, or None, which should be reduced down to an optional
-        # PackageURL type.
-        parsed_purl: PackageURL | None
-        if config.get_value("purl") is None or config.get_value("purl") == "":
-            parsed_purl = None
-        elif isinstance(config.get_value("purl"), PackageURL):
-            parsed_purl = config.get_value("purl")
-        else:
-            try:
-                # Note that PackageURL.from_string sanitizes the unsafe characters in the purl string,
-                # which is user-controllable, by calling urllib's `urlsplit` function.
-                parsed_purl = PackageURL.from_string(config.get_value("purl"))
-            except ValueError as error:
-                raise InvalidPURLError(f"Invalid input PURL: {config.get_value('purl')}") from error
-
         repo_path_input: str = config.get_value("path")
         input_branch: str = config.get_value("branch")
         input_digest: str = config.get_value("digest")
@@ -621,10 +652,8 @@ class Analyzer:
                 digest: str = ""
                 # parsed_purl cannot be None here, but mypy cannot detect that without some extra help.
                 if parsed_purl is not None:
-                    # Try to find repository and commit via provenance.
-                    if not provenance_payload and provenance_finder:
-                        provenance_payload = provenance_finder.find_provenance(parsed_purl)
                     if provenance_payload:
+                        # Try to find repository and commit via provenance.
                         try:
                             repo, digest = extract_repo_and_commit_from_provenance(provenance_payload)
                         except ProvenanceExtractionException as error:
@@ -721,7 +750,6 @@ class Analyzer:
             The pydriller.Git object of the repository or None if error.
         """
         # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
-
         logger.info(
             "Preparing the repository for the analysis (path=%s, branch=%s, digest=%s)",
             repo_path,
