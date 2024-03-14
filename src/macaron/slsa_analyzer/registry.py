@@ -3,15 +3,12 @@
 
 """This module contains the Registry class for loading checks."""
 
-import concurrent.futures
 import fnmatch
 import inspect
 import logging
-import queue
 import re
 import sys
 from collections.abc import Callable, Iterable
-from copy import deepcopy
 from graphlib import CycleError, TopologicalSorter
 from typing import Any, TypeVar
 
@@ -26,7 +23,6 @@ from macaron.slsa_analyzer.checks.check_result import (
     CheckResultType,
     SkippedInfo,
 )
-from macaron.slsa_analyzer.runner import Runner
 from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -47,31 +43,13 @@ class Registry:
     # The format for check id
     _id_format = re.compile(r"^mcn_([a-z]+_)+([0-9]+)$")
 
-    # The directed graph that represents the check relationships.
-    # This graph is used to get the order in which checks are
-    # executed. Each node of this graph is the id of a check.
-    _graph: TopologicalSorter = TopologicalSorter()
-
-    # True if we have already call Registry._graph.prepare
-    # (which will then call TopologicalSorter.prepare).
-    # This is because TopologicalSorter will raise an Exception
-    # if we call TopologicalSorter.prepare multiple times.
-    # Reference: https://docs.python.org/3/library/graphlib.html
-    _is_graph_ready = False
-
     def __init__(self) -> None:
         """Initiate the Registry instance."""
-        self.runners: list[Runner] = []
-        self.runner_queue: queue.Queue = queue.Queue()
-
-        # Use default values.
-        self.runner_num = 1
-        self.runner_timeout = 5
-
         self.checks_to_run: list[str] = []
         self.no_parent_checks: list[str] = []
 
         self.check_tree: CheckTree = {}
+        self.execution_order: list[str] = []
 
     def register(self, check: BaseCheck) -> None:
         """Register the check.
@@ -99,10 +77,6 @@ class Registry:
                 if not self._add_relationship_entry(check.check_info.check_id, parent_relationship):
                     logger.error("Cannot load relationships of check %s.", check.check_info.check_id)
                     sys.exit(1)
-
-        if not self._add_node(check):
-            logger.critical("Cannot add check %s to the directed graph.", check.check_info.check_id)
-            sys.exit(1)
 
         self._all_checks_mapping[check.check_info.check_id] = check
 
@@ -226,42 +200,6 @@ class Registry:
             return False
 
         return True
-
-    def _add_node(self, check: BaseCheck) -> bool:
-        """Add this check to the directed graph along with its predecessors.
-
-        This method only fails if Registry._graph.prepare() has already been called.
-
-        References
-        ----------
-            - https://docs.python.org/3/library/graphlib.html#graphlib.TopologicalSorter.add
-
-        Parameters
-        ----------
-        check : BaseCheck
-            The check to be added.
-
-        Returns
-        -------
-        bool
-            True if added successfully, else False.
-        """
-        try:
-            parent_ids = (parent[0] for parent in check.depends_on)
-
-            # Add this check to the graph first.
-            # The graphlib library supports adding duplicated nodes
-            # or predecessors without breaking the graph.
-            self._graph.add(check.check_info.check_id)
-
-            # Add predecessors.
-            for parent in parent_ids:
-                self._graph.add(check.check_info.check_id, parent)
-
-            return True
-        except ValueError as err:
-            logger.error(str(err))
-            return False
 
     @staticmethod
     def _validate_eval_reqs(eval_reqs: list[Any]) -> bool:
@@ -488,6 +426,24 @@ class Registry:
         final = include.difference(exclude)
         return list(final)
 
+    def get_check_execution_order(self) -> list[str]:
+        """Get the execution order of checks.
+
+        This follows the topological order on the check graph.
+
+        Returns
+        -------
+        list[str]
+            A list of check ids representing the order of checks to run.
+        """
+        graph: TopologicalSorter = TopologicalSorter()
+        for node in self._all_checks_mapping:
+            graph.add(node)
+        for node, children_entries in self._check_relationships_mapping.items():
+            for child in children_entries:
+                graph.add(child, node)
+        return list(graph.static_order())
+
     def scan(self, target: AnalyzeContext) -> dict[str, CheckResult]:
         """Run all checks on a target repo.
 
@@ -507,149 +463,45 @@ class Registry:
         results: dict[str, CheckResult] = {}
         skipped_checks: list[SkippedInfo] = []
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.runner_num) as executor:
-            # To allow the graph to be traversed again after this run.
-            graph = deepcopy(self._graph)
+        for check_id in self.execution_order:
+            check = all_checks.get(check_id)
 
-            # This queue contains the futures instances returned from
-            # submitting tasks to the ThreadPoolExecutor.
-            futures_queue: queue.Queue = queue.Queue()
-
-            # This queue contains the currently available Check instances
-            # for the Runners to pickup and execute.
-            check_queue: queue.Queue = queue.Queue()
-
-            while graph.is_active():
-                # Enqueue all checks that are available to be processed.
-                # After a runner has completed a check, we call graph.done(check_id)
-                # to signal the TopologicalSorter to proceed with more nodes.
-                # These newly proceeded nodes are returned to us in the next call
-                # to graph.get_ready().
-                for check_id in graph.get_ready():
-                    logger.debug("Check to run %s", check_id)
-                    check = all_checks.get(check_id)
-
-                    if not check:
-                        logger.error(
-                            "Check %s is not defined yet. Please add the implementation for %s.", check_id, check_id
-                        )
-                        results[check_id] = CheckResult(
-                            check=CheckInfo(
-                                check_id=check_id,
-                                check_description="",
-                                eval_reqs=[],
-                            ),
-                            result=CheckResultData(
-                                result_type=CheckResultType.UNKNOWN,
-                                result_tables=[],
-                            ),
-                        )
-                        graph.done(check_id)
-                    else:
-                        check_queue.put(check)
-
-                # If the runner_queue is empty, wait for a runner to become available.
-                if self.runner_queue.empty():
-                    while not futures_queue.empty():
-                        current_runner, current_check_id, current_future = futures_queue.get()
-
-                        try:
-                            # Explicitly check and exit if the check has raised any exception.
-                            if current_future.exception(timeout=self.runner_timeout):
-                                logger.error("Exception in check %s: %s.", current_check_id, current_future.exception())
-                                logger.info("Check %s has failed.", current_check_id)
-                                current_future.cancel()
-                                self.runner_queue.put(current_runner)
-                                return results
-                        except (
-                            concurrent.futures.TimeoutError,
-                            concurrent.futures.CancelledError,
-                            concurrent.futures.InvalidStateError,
-                            concurrent.futures.BrokenExecutor,
-                        ):
-                            # The check is still running, put the future back into the queue.
-                            futures_queue.put((current_runner, current_check_id, current_future))
-
-                            # Break out if a runner is available.
-                            if not self.runner_queue.empty():
-                                break
-
-                        if current_future.done():
-                            result = current_future.result()
-                            results[current_check_id] = result
-                            graph.done(current_check_id)
-
-                # Run the check with the next available runner.
-                if self.runner_queue.empty():
-                    # We should not reach here.
-                    logger.critical("Could not find any available runners. Stop the analysis...")
-                    return results
-                runner: Runner = self.runner_queue.get()
-
-                if check_queue.empty():
-                    # We should not reach here.
-                    logger.error("Could not find any checks to run.")
-                    return results
-                next_check: BaseCheck = check_queue.get()
-
-                # Don't run excluded checks
-                if next_check.check_info.check_id not in self.checks_to_run:
-                    logger.debug("Check %s is disabled by user configuration.", next_check.check_info.check_id)
-                    graph.done(next_check.check_info.check_id)
-                    self.runner_queue.put(runner)
-                    continue
-
-                # Look up check results to see if this check should be run based on its parent status
-                skipped_info = self._should_skip_check(next_check, results)
-                if skipped_info:
-                    skipped_checks.append(skipped_info)
-
-                # Submit check to run with specified runner.
-                submitted_future = executor.submit(runner.run, target, next_check, skipped_checks)
-                futures_queue.put(
-                    (
-                        runner,
-                        next_check.check_info.check_id,
-                        submitted_future,
-                    )
+            if not check:
+                logger.error("Check %s is not defined yet. Please add the implementation for %s.", check_id, check_id)
+                results[check_id] = CheckResult(
+                    check=CheckInfo(
+                        check_id=check_id,
+                        check_description="",
+                        eval_reqs=[],
+                    ),
+                    result=CheckResultData(
+                        result_type=CheckResultType.UNKNOWN,
+                        result_tables=[],
+                    ),
                 )
+                continue
 
-                # If the check queue is empty, wait for current check to complete.
-                if check_queue.empty():
-                    while not futures_queue.empty():
-                        current_runner, current_check_id, current_future = futures_queue.get()
+            # Don't run excluded checks
+            if check_id not in self.checks_to_run:
+                logger.debug(
+                    "Check %s is disabled by user configuration.",
+                    check.check_info.check_id,
+                )
+                continue
 
-                        try:
-                            # Explicitly check and exit if the check has raised any exception.
-                            if current_future.exception(timeout=self.runner_timeout):
-                                logger.error("Exception in check %s: %s.", current_check_id, current_future.exception())
-                                logger.info("Check %s has failed.", current_check_id)
-                                current_future.cancel()
-                                return results
-                        except concurrent.futures.TimeoutError:
-                            # The check is still running, put the future back into the queue.
-                            futures_queue.put((current_runner, current_check_id, current_future))
+            # Look up check results to see if this check should be run based on its parent status
+            skipped_info = self._should_skip_check(check, results)
+            if skipped_info:
+                skipped_checks.append(skipped_info)
 
-                            # Break out if more checks can be processed.
-                            if not self.runner_queue.empty():
-                                break
-
-                        if current_future.done():
-                            result = current_future.result()
-                            results[current_check_id] = result
-                            graph.done(current_check_id)
+            try:
+                results[check_id] = check.run(target, skipped_info)
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                logger.error("Exception in check %s: %s.", check_id, exc)
+                logger.info("Check %s has failed.", check_id)
+                return results
 
         return results
-
-    def _init_runners(self) -> None:
-        """Initiate runners from values in defaults.ini."""
-        self.runner_num = defaults.getint("runner", "runner_num", fallback=1)
-        self.runner_timeout = defaults.getint("runner", "timeout", fallback=5)
-        if not self.runners:
-            self.runners.extend([Runner(self, i) for i in range(self.runner_num)])
-
-        for runner in self.runners:
-            self.runner_queue.put(runner)
 
     def prepare(self) -> bool:
         """Prepare for the analysis.
@@ -661,21 +513,12 @@ class Registry:
         bool
             True if there are no errors, else False.
         """
-        self._init_runners()
-
-        # Only support 1 runner at the moment.
-        if not self.runners or len(self.runners) != 1:
-            logger.critical("Invalid number of runners.")
-            return False
-
         if not self._all_checks_mapping:
             logger.error("Cannot run because there is no check registered.")
             return False
 
         try:
-            if not self._is_graph_ready:
-                self._graph.prepare()
-                self._is_graph_ready = True
+            self.execution_order = self.get_check_execution_order()
         except CycleError as error:
             logger.error("Found circular dependencies in registered checks: %s", str(error))
             return False
