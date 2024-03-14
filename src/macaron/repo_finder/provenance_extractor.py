@@ -82,10 +82,14 @@ def _extract_from_slsa_v01(payload: InTotoV01Payload) -> tuple[str, str]:
         raise ProvenanceExtractionException("Indexed material list entry is invalid.")
 
     uri = json_extract(material, ["uri"], str)
+
     repo = _clean_spdx(uri)
 
     digest_set = json_extract(material, ["digest"], dict)
     commit = _extract_commit_from_digest_set(digest_set, intoto.v01.VALID_ALGORITHMS)
+
+    if not commit:
+        raise ProvenanceExtractionException("Failed to extract commit hash from provenance.")
 
     return repo, commit
 
@@ -99,10 +103,15 @@ def _extract_from_slsa_v02(payload: InTotoV01Payload) -> tuple[str, str]:
     # The repository URL and commit are stored within the predicate -> invocation -> configSource object.
     # See https://slsa.dev/spec/v0.2/provenance
     uri = json_extract(predicate, ["invocation", "configSource", "uri"], str)
+    if not uri:
+        raise ProvenanceExtractionException("Failed to extract repository URL from provenance.")
     repo = _clean_spdx(uri)
 
     digest_set = json_extract(predicate, ["invocation", "configSource", "digest"], dict)
     commit = _extract_commit_from_digest_set(digest_set, intoto.v01.VALID_ALGORITHMS)
+
+    if not commit:
+        raise ProvenanceExtractionException("Failed to extract commit hash from provenance.")
 
     return repo, commit
 
@@ -223,15 +232,15 @@ class JsonExtractionException(MacaronError):
 T = TypeVar("T", bound=JsonType)
 
 
-def json_extract(entry: dict[str, JsonType], keys: list[str], type_: type[T]) -> T:
+def json_extract(entry: JsonType, keys: list[str], type_: type[T]) -> T:
     """Return the value found by following the list of depth-sequential keys inside the passed JSON dictionary.
 
-    The value must be truthy, and be of the passed type.
+    The value must be of the passed type.
 
     Parameters
     ----------
-    entry: dict[str, JsonType]
-        An entry point into the JSON structure.
+    entry: JsonType
+        An entry point into a JSON structure.
     keys: list[str]
         The list of depth-sequential keys within the JSON.
     type: type[T]
@@ -248,16 +257,15 @@ def json_extract(entry: dict[str, JsonType], keys: list[str], type_: type[T]) ->
         Raised if an error occurs while searching for or validating the value.
     """
     target = entry
-    for index, key in enumerate(keys):
-        if key not in target:
-            raise JsonExtractionException(f"JSON key not found: {key}")
-        next_target = target[key]
-        if index == len(keys) - 1:
-            if next_target and isinstance(next_target, type_):
-                return next_target
-        else:
-            if not isinstance(next_target, dict):
-                raise JsonExtractionException(f"Cannot extract value from non-dict type: {str(type(next_target))}")
-            target = next_target
 
-    raise JsonExtractionException(f"Failed to find '{' > '.join(keys)}' as type '{type_}' in JSON dictionary.")
+    for index, key in enumerate(keys):
+        if not isinstance(target, dict):
+            raise JsonExtractionException(f"Expect the value .{'.'.join(keys[:index])} to be a dict.")
+        if key not in target:
+            raise JsonExtractionException(f"JSON key '{key}' not found in .{'.'.join(keys[:index])}.")
+        target = target[key]
+
+    if isinstance(target, type_):
+        return target
+
+    raise JsonExtractionException(f"Expect the value .{'.'.join(keys)} to be of type '{type_}'.")

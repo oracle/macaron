@@ -671,7 +671,7 @@ class Analyzer:
                             digest=digest,
                         )
 
-                    # The commit was not found from provenance. Proceed with Repo and Commit Finder.
+                    # The commit was not found from provenance. Proceed with Repo Finder.
                     converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)
                     if converted_repo_path is None:
                         # Try to find repo from PURL
