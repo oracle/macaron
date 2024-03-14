@@ -19,7 +19,7 @@ from macaron.util import JsonType
 @pytest.fixture(name="slsa_v1_gcb_1_provenance")
 def slsa_v1_gcb_1_provenance_() -> dict[str, JsonType]:
     """Return a valid SLSA v1 provenance using build type gcb and sourceToBuild."""
-    return _load_and_validate_josn(
+    return _load_and_validate_json(
         """
                 {
                     "_type": "https://in-toto.io/Statement/v1",
@@ -49,7 +49,7 @@ def slsa_v1_gcb_1_provenance_() -> dict[str, JsonType]:
 @pytest.fixture(name="slsa_v1_gcb_2_provenance")
 def slsa_v1_gcb_2_provenance_() -> dict[str, JsonType]:
     """Return a valid SLSA v1 provenance using build type gcb and configSource."""
-    return _load_and_validate_josn(
+    return _load_and_validate_json(
         """
                 {
                     "_type": "https://in-toto.io/Statement/v1",
@@ -81,7 +81,7 @@ def slsa_v1_gcb_2_provenance_() -> dict[str, JsonType]:
 @pytest.fixture(name="slsa_v1_github_provenance")
 def slsa_v1_github_provenance_() -> dict[str, JsonType]:
     """Return a valid SLSA v1 provenance using build type GitHub."""
-    return _load_and_validate_josn(
+    return _load_and_validate_json(
         """
                 {
                     "_type": "https://in-toto.io/Statement/v1",
@@ -116,7 +116,7 @@ def slsa_v1_github_provenance_() -> dict[str, JsonType]:
 @pytest.fixture(name="slsa_v02_provenance")
 def slsa_v02_provenance_() -> dict[str, JsonType]:
     """Return a valid SLSA v02 provenance."""
-    return _load_and_validate_josn(
+    return _load_and_validate_json(
         """
                 {
                     "_type": "https://in-toto.io/Statement/v0.1",
@@ -140,7 +140,7 @@ def slsa_v02_provenance_() -> dict[str, JsonType]:
 @pytest.fixture(name="slsa_v01_provenance")
 def slsa_v01_provenance_() -> dict[str, JsonType]:
     """Return a valid SLSA v01 provenance."""
-    return _load_and_validate_josn(
+    return _load_and_validate_json(
         """
                 {
                     "_type": "https://in-toto.io/Statement/v0.1",
@@ -170,7 +170,7 @@ def slsa_v01_provenance_() -> dict[str, JsonType]:
 @pytest.fixture(name="witness_gitlab_provenance")
 def witness_gitlab_provenance_() -> dict[str, JsonType]:
     """Return a Witness v0.1 provenance with a GitLab attestation."""
-    return _load_and_validate_josn(
+    return _load_and_validate_json(
         """
                 {
                     "_type": "https://in-toto.io/Statement/v0.1",
@@ -201,7 +201,7 @@ def witness_gitlab_provenance_() -> dict[str, JsonType]:
 @pytest.fixture(name="witness_github_provenance")
 def witness_github_provenance_() -> dict[str, JsonType]:
     """Return a Witness v0.1 provenance with a GitHub attestation."""
-    return _load_and_validate_josn(
+    return _load_and_validate_json(
         """
                 {
                     "_type": "https://in-toto.io/Statement/v0.1",
@@ -467,7 +467,7 @@ def _json_modify(entry: dict[str, JsonType], keys: list[str], new_value: JsonTyp
             target = next_target
 
 
-def _load_and_validate_josn(payload: str) -> dict[str, JsonType]:
+def _load_and_validate_json(payload: str) -> dict[str, JsonType]:
     """Load payload as JSON and validate it is of type dict."""
     json_payload = json.loads(payload)
     assert isinstance(json_payload, dict)
