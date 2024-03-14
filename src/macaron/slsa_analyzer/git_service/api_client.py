@@ -1,14 +1,16 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides API clients for VCS services, such as GitHub."""
 
 from __future__ import annotations
 
+import json
 import logging
 from collections.abc import Sequence
 from enum import Enum
 from typing import NamedTuple
+from urllib.parse import urlparse
 
 from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.asset import AssetLocator
@@ -65,6 +67,21 @@ class BaseAPIClient:
             The latest release object in JSON format.
         """
         return {}
+
+    def get_tags(self, full_name: str) -> tuple[list[dict], bool]:  # pylint: disable=unused-argument
+        """Return tags from the repo.
+
+        Parameters
+        ----------
+        full_name: str
+            The full name of th repo.
+
+        Returns
+        -------
+        tuple[list[dict], bool]
+            The tags in JSON format, and a flag representing full (True) retrieval or partial (False).
+        """
+        return [], False
 
     def fetch_assets(self, release: dict, ext: str = "") -> Sequence[AssetLocator]:  # pylint: disable=unused-argument
         """Return the release assets that match or empty if it doesn't exist.
@@ -548,6 +565,94 @@ class GhAPIClient(BaseAPIClient):
         response_data = send_get_http(url, self.headers)
 
         return response_data or {}
+
+    def get_tags(self, full_name: str) -> tuple[list[dict], bool]:
+        """Return the first page of tags for the repo.
+
+        Parameters
+        ----------
+        full_name: str
+            The full name of th repo.
+
+        Returns
+        -------
+        tuple[list[dict], bool]
+            The tags in JSON format, and a flag representing full (True) retrieval or partial (False).
+        """
+        logger.debug("Get tags for %s.", full_name)
+        return self._get_via_pagination(full_name, "tags", 1)
+
+    def _get_via_pagination(self, full_name: str, endpoint: str, page_limit: int) -> tuple[list[dict], bool]:
+        """Return all results found for the passed paginated endpoint.
+
+        Note that maximum results returned may be limited by the API.
+        """
+        url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/{endpoint}"
+        page_limit = max(1, page_limit)
+        last_page = 0
+        page_count = 0
+        results: list[dict] = []
+        while page_count < page_limit:
+            response = send_get_http_raw(f"{url}?per_page=100&page={page_count+1}", self.headers)
+            if not response:
+                break
+
+            if response.text == "[]":
+                # An "empty" response can occur when the API limit has been reached, or when no more results are
+                # available.
+                break
+
+            try:
+                release_data = json.loads(response.text)
+            except ValueError as error:
+                logger.debug("Failed to parse response data: %s", error)
+                return [], False
+
+            for entry in release_data:
+                results.append(entry)
+
+            if not response.links:
+                # This header may be empty if this is the only page (no pagination).
+                break
+
+            if not last_page and response.links:
+                # The response links header can be used to validate the passed page_limit as it contains the number
+                # of the final page.
+                print(f"LINK: {response.links}")
+                last: dict | None = response.links.get("last")
+                if not last:
+                    break
+                last_url = last.get("url")
+                if not last_url or not isinstance(last_url, str):
+                    break
+                try:
+                    last_url_parsed = urlparse(last_url)
+                except ValueError as error:
+                    logger.debug("Could not parse response links url: %s", error)
+                    break
+                query = last_url_parsed.query
+                query_parts = query.split("&")
+                if len(query_parts) == 1:
+                    query_parts = [query]
+                for query_part in query_parts:
+                    if query_part.startswith("page="):
+                        last_page_string = query_part.split("=")[-1]
+                        try:
+                            last_page = int(last_page_string)
+                            logger.debug("Last page of pagination is: %s", last_page)
+                        except ValueError as error:
+                            logger.debug("Last page value could not be parsed as int: %s", error)
+                if not last_page:
+                    break
+
+                page_limit = min(page_limit, last_page)
+
+            if page_count == 0:
+                pass
+
+            page_count = page_count + 1
+
+        return results, not (last_page and page_limit < last_page)
 
     def fetch_assets(self, release: dict, ext: str = "") -> Sequence[AssetLocator]:
         """Return the release assets that match or empty if it doesn't exist.

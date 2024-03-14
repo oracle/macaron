@@ -12,9 +12,10 @@ from gitdb.exc import BadName
 from packageurl import PackageURL
 from pydriller import Commit, Git
 
+from macaron.config.global_config import global_config
 from macaron.repo_finder import repo_finder_deps_dev
 from macaron.repo_finder.repo_finder import to_domain_from_known_purl_types
-from macaron.slsa_analyzer.git_service import GIT_SERVICES
+from macaron.slsa_analyzer.git_service import GIT_SERVICES, api_client
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -114,6 +115,10 @@ class AbstractPurlType(Enum):
     UNSUPPORTED = (2,)
 
 
+class CommitNotFoundException(BaseException):
+    """An exception that occurs when a commit cannot be found."""
+
+
 def find_commit(git_obj: Git, purl: PackageURL) -> str | None:
     """Try to find the commit matching the passed PURL.
 
@@ -145,6 +150,52 @@ def find_commit(git_obj: Git, purl: PackageURL) -> str | None:
         return find_commit_from_version_and_name(git_obj, purl.name, version)
     logger.debug("Type of PURL is not supported for commit finding: %s", purl.type)
     return None
+
+
+def find_commit_via_github_tag_api(purl: PackageURL, git_url: str) -> str:
+    """Try to find the commit matching the passed PURL in the passed GitHub repository using the tags found there.
+
+    Note that only the first page of tags returned by the API is considered as further calls can increase the total
+    retrieval time by too great an extent.
+
+    Parameters
+    ----------
+    purl: PackageURL
+        The PURL of the analysis target.
+    git_url: str
+        The Git URL of the repository.
+
+    Returns
+    -------
+    str
+        The digest, or an empty string if the input was invalid.
+
+    Raises
+    ------
+    CommitNotFoundException
+        If the commit cannot be found but the input to this function was valid, and all tags were retrieved.
+    """
+    if not git_url or not purl.version:
+        return ""
+
+    tags_and_commits: dict[str, str] = {}
+    client = api_client.get_default_gh_client(global_config.gh_token)
+    split = git_url.split("/")
+    tag_entries, complete_retrieval = client.get_tags(f"{split[-2]}/{split[-1]}")
+    for tag_entry in tag_entries:
+        tags_and_commits[tag_entry["name"]] = tag_entry["commit"]["sha"]
+
+    # Find matching tags.
+    matched_tags = match_tags(list(tags_and_commits.keys()), purl.name, purl.version)
+    if not matched_tags:
+        if complete_retrieval:
+            # All tags were retrieved but no match was found.
+            raise CommitNotFoundException("No tags matched for %s.")
+        # No match was found in the partial set of tags that were retrieved.
+        return ""
+
+    # Return best match.
+    return tags_and_commits[matched_tags[0]]
 
 
 def determine_abstract_purl_type(purl: PackageURL) -> AbstractPurlType:
