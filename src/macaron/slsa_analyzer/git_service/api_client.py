@@ -618,7 +618,6 @@ class GhAPIClient(BaseAPIClient):
             if not last_page and response.links:
                 # The response links header can be used to validate the passed page_limit as it contains the number
                 # of the final page.
-                print(f"LINK: {response.links}")
                 last: dict | None = response.links.get("last")
                 if not last:
                     break
