@@ -29,16 +29,16 @@ Prerequisites
 Motivating example
 ------------------
 
-Let's say you want to run the analysis on `the micronaut-projects/micronaut-core Github repository <https://github.com/micronaut-projects/micronaut-core>`_ at the tag ``4.3.10``.
+Let's say you want to run the analysis on Maven artifact ``io.micronaut/micronaut-core`` version ``4.3.10``.
 
 Normally, this is how you would run Macaron:
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze --package-url pkg:github.com/micronaut-projects/micronaut-core@v4.3.10 --skip-deps
+  ./run_macaron.sh analyze --package-url pkg:maven/io.micronaut/micronaut-core@4.3.10 --skip-deps
 
-However, there can be checks in Macaron that are not relevant for ``micronaut-projects/micronaut-core``.
-For example, the ``mcn_provenance_witness_level_one_1`` check (defined in :class:`ProvenanceWitnessL1Check <macaron.slsa_analyzer.checks.provenance_witness_l1_check.ProvenanceWitnessL1Check>`) is not relevant because ``micronaut-projects/micronaut-core`` doesn't generate and publish any `Witness provenance <https://github.com/testifysec/witness>`_. Therefore, we could exclude this check from running by performing the following steps.
+However, there can be checks in Macaron that are not relevant for the ``io.micronaut/micronaut-core`` artifact.
+For example, the ``mcn_provenance_witness_level_one_1`` check (defined in :class:`ProvenanceWitnessL1Check <macaron.slsa_analyzer.checks.provenance_witness_l1_check.ProvenanceWitnessL1Check>`) is not relevant because ``micronaut-projects/micronaut-core`` generates and publishes :term:`SLSA` provenances and no :term:`Witness` provenances. Therefore, we could exclude this check from running by performing the following steps.
 
 1. In your current directory, create a ``defaults.ini`` configuration file with the following content.
 
@@ -59,19 +59,19 @@ With these two configuration options, all checks except for the excluded ``mcn_p
 
 .. code-block:: shell
 
-  ./run_macaron.sh --defaults-path ./defaults.ini analyze --package-url pkg:github.com/micronaut-projects/micronaut-core@v4.3.10 --skip-deps
+  ./run_macaron.sh --defaults-path ./defaults.ini analyze --package-url pkg:maven/io.micronaut/micronaut-core@4.3.10 --skip-deps
 
 This time, the check ``mcn_provenance_witness_level_one_1`` doesn't run. After the ``analyze`` command finishes, we can view the data that Macaron has gathered about the ``micronaut-projects/micronaut-core`` repository at ``v4.3.10`` in an HTML report. Note that the result of the excluded check is not recorded in the Macaron HTML reports, JSON reports, or the database).
 
 .. code-block:: shell
 
-  open output/reports/github_com/micronaut-projects/micronaut-core/micronaut-core.html
+  open output/reports/maven/io_micronaut/micronaut-core/micronaut-core.html
 
 .. _fig_exclude_provenance_withness_level_one:
 
 
 .. figure:: ../../_static/images/exclude_provenance_withness_level_one.png
-   :alt: Check results for ``micronaut-projects/micronaut-core v4.3.10 wit`` with witness provenance check excluded
+   :alt: Check results for ``io.micronaut/micronaut-core`` version ``4.3.10`` with witness provenance check excluded
    :align: center
 
 
