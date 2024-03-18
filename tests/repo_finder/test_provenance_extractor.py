@@ -261,7 +261,7 @@ def test_slsa_v1_gcb_1_is_invalid(
     slsa_v1_gcb_1_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType
 ) -> None:
     """Test invalidly modified SLSA v1 provenance with build type gcb and sourceToBuild."""
-    assert _json_modify(slsa_v1_gcb_1_provenance, keys, new_value)
+    _json_modify(slsa_v1_gcb_1_provenance, keys, new_value)
     with pytest.raises(ProvenanceExtractionException):
         _test_extract_repo_and_commit_from_provenance(slsa_v1_gcb_1_provenance)
 
@@ -285,7 +285,7 @@ def test_slsa_v1_gcb_2_is_invalid(
     slsa_v1_gcb_2_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType
 ) -> None:
     """Test invalidly modified SLSA v1 provenance with build type gcb and configSource."""
-    assert _json_modify(slsa_v1_gcb_2_provenance, keys, new_value)
+    _json_modify(slsa_v1_gcb_2_provenance, keys, new_value)
     with pytest.raises(ProvenanceExtractionException):
         _test_extract_repo_and_commit_from_provenance(slsa_v1_gcb_2_provenance)
 
@@ -309,7 +309,7 @@ def test_slsa_v1_github_is_invalid(
     slsa_v1_github_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType
 ) -> None:
     """Test invalidly modified SLSA v1 provenance with build type GitHub."""
-    assert _json_modify(slsa_v1_github_provenance, keys, new_value)
+    _json_modify(slsa_v1_github_provenance, keys, new_value)
     with pytest.raises(ProvenanceExtractionException):
         _test_extract_repo_and_commit_from_provenance(slsa_v1_github_provenance)
 
@@ -333,7 +333,7 @@ def test_slsa_v02_is_valid(
 )
 def test_slsa_v02_is_invalid(slsa_v02_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType) -> None:
     """Test invalidly modified SLSA v0.2 provenance."""
-    assert _json_modify(slsa_v02_provenance, keys, new_value)
+    _json_modify(slsa_v02_provenance, keys, new_value)
     with pytest.raises(ProvenanceExtractionException):
         _test_extract_repo_and_commit_from_provenance(slsa_v02_provenance)
 
@@ -356,14 +356,14 @@ def test_slsa_v01_is_invalid(slsa_v01_provenance: dict[str, JsonType], new_value
     """Test invalidly modified SLSA v0.1 provenance."""
     materials = json_extract(slsa_v01_provenance, ["predicate", "materials"], list)
     material_index = json_extract(slsa_v01_provenance, ["predicate", "recipe", "definedInMaterial"], int)
-    assert _json_modify(materials[material_index], ["uri"], new_value)
+    _json_modify(materials[material_index], ["uri"], new_value)
     with pytest.raises(ProvenanceExtractionException):
         _test_extract_repo_and_commit_from_provenance(slsa_v01_provenance)
 
 
 def test_slsa_v01_invalid_material_index(slsa_v01_provenance: dict[str, JsonType]) -> None:
     """Test the SLSA v0.1 provenance with an invalid materials index."""
-    assert _json_modify(slsa_v01_provenance, ["predicate", "recipe", "definedInMaterial"], 10)
+    _json_modify(slsa_v01_provenance, ["predicate", "recipe", "definedInMaterial"], 10)
     with pytest.raises(ProvenanceExtractionException):
         _test_extract_repo_and_commit_from_provenance(slsa_v01_provenance)
 
@@ -398,7 +398,7 @@ def test_witness_github_is_invalid(
 ) -> None:
     """Test invalidly modified Witness v0.1 GitHub provenance."""
     attestations = json_extract(witness_github_provenance, ["predicate", "attestations"], list)
-    assert _json_modify(attestations[attestation_index], keys, new_value)
+    _json_modify(attestations[attestation_index], keys, new_value)
     with pytest.raises(ProvenanceExtractionException):
         _test_extract_repo_and_commit_from_provenance(witness_github_provenance)
 
@@ -406,7 +406,7 @@ def test_witness_github_is_invalid(
 def test_witness_github_remove_attestation(witness_github_provenance: dict[str, JsonType]) -> None:
     """Test removing Git attestation from Witness V0.1 GitHub provenance."""
     attestations = json_extract(witness_github_provenance, ["predicate", "attestations"], list)
-    assert _json_modify(witness_github_provenance, ["predicate", "attestations"], attestations[:1])
+    _json_modify(witness_github_provenance, ["predicate", "attestations"], attestations[:1])
     with pytest.raises(ProvenanceExtractionException):
         _test_extract_repo_and_commit_from_provenance(witness_github_provenance)
 
@@ -440,28 +440,16 @@ def _test_extract_repo_and_commit_from_provenance(
 def _json_modify(entry: JsonType, keys: list[str], new_value: JsonType) -> bool:
     """Modify the value found by following the list of depth-sequential keys inside the passed JSON dictionary.
 
-    The found value will be overwritten by the new_value parameter.
-    If new_value is None, the value will be removed.
-    If the final key does not exist, it will be created as new_value.
+    The found value will be overwritten by the `new_value` parameter.
+    If `new_value` is `None`, the value will be removed.
+    If the final key does not exist, it will be created as `new_value`.
     """
-    target = entry
-    last_target = None
-
-    for key in keys:
-        if not isinstance(target, dict):
-            return False
-        if key not in target:
-            return False
-        last_target = target
-        target = target[key]
-
-    if last_target is None:
-        return False
+    target: dict[str, JsonType] = json_extract(entry, keys[:-1], dict)
 
     if new_value is None:
-        del last_target[keys[len(keys) - 1]]
+        del target[keys[-1]]
     else:
-        last_target[keys[len(keys) - 1]] = new_value
+        target[keys[-1]] = new_value
 
     return True
 
