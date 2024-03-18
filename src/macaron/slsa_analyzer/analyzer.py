@@ -586,9 +586,9 @@ class Analyzer:
         # Therefore, their true types are ``str``, and an empty string indicates that the input value is not provided.
         # The purl might be a PackageURL type, a string, or None, which should be reduced down to an optional
         # PackageURL type.
-        if config.get_value("purl") is None or config.get_value("purl") == "":
-            return None
         purl = config.get_value("purl")
+        if purl is None or purl == "":
+            return None
         if isinstance(purl, PackageURL):
             return purl
         try:

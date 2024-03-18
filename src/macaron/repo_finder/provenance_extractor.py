@@ -204,7 +204,6 @@ def _extract_commit_from_digest_set(digest_set: dict[str, JsonType], valid_algor
 
     The DigestSet is an in-toto object that maps algorithm types to commit hashes (digests).
     """
-    # TODO decide on a preference for which algorithm to accept.
     if len(digest_set.keys()) > 1:
         logger.debug("DigestSet contains multiple algorithms: %s", digest_set.keys())
 
