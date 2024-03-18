@@ -6,7 +6,6 @@ import logging
 from typing import TypeVar
 
 from macaron.errors import MacaronError
-from macaron.slsa_analyzer.provenance import intoto
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV1Payload, InTotoV01Payload
 from macaron.util import JsonType
 
@@ -15,6 +14,11 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 class ProvenanceExtractionException(MacaronError):
     """When there is an error while extracting from provenance."""
+
+
+SLSA_V01_DIGEST_SET_ALGORITHMS = ["sha1"]
+SLSA_V02_DIGEST_SET_ALGORITHMS = ["sha1"]
+SLSA_V1_DIGEST_SET_ALGORITHMS = ["sha1", "gitCommit"]
 
 
 def extract_repo_and_commit_from_provenance(payload: InTotoPayload) -> tuple[str, str]:
@@ -86,7 +90,7 @@ def _extract_from_slsa_v01(payload: InTotoV01Payload) -> tuple[str, str]:
     repo = _clean_spdx(uri)
 
     digest_set = json_extract(material, ["digest"], dict)
-    commit = _extract_commit_from_digest_set(digest_set, intoto.v01.VALID_ALGORITHMS)
+    commit = _extract_commit_from_digest_set(digest_set, SLSA_V01_DIGEST_SET_ALGORITHMS)
 
     if not commit:
         raise ProvenanceExtractionException("Failed to extract commit hash from provenance.")
@@ -108,7 +112,7 @@ def _extract_from_slsa_v02(payload: InTotoV01Payload) -> tuple[str, str]:
     repo = _clean_spdx(uri)
 
     digest_set = json_extract(predicate, ["invocation", "configSource", "digest"], dict)
-    commit = _extract_commit_from_digest_set(digest_set, intoto.v01.VALID_ALGORITHMS)
+    commit = _extract_commit_from_digest_set(digest_set, SLSA_V02_DIGEST_SET_ALGORITHMS)
 
     if not commit:
         raise ProvenanceExtractionException("Failed to extract commit hash from provenance.")
@@ -149,7 +153,7 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str, str]:
         if url != repo:
             continue
         digest_set = json_extract(dep, ["digest"], dict)
-        commit = _extract_commit_from_digest_set(digest_set, intoto.v1.VALID_ALGORITHMS)
+        commit = _extract_commit_from_digest_set(digest_set, SLSA_V1_DIGEST_SET_ALGORITHMS)
 
     if not commit:
         raise ProvenanceExtractionException("Failed to extract commit hash from provenance.")
