@@ -212,7 +212,7 @@ def _extract_commit_from_digest_set(digest_set: dict[str, JsonType], valid_algor
             value = digest_set.get(key)
             if isinstance(value, str):
                 return value
-    raise ProvenanceExtractionException("No valid digest in digest set.")
+    raise ProvenanceExtractionException(f"No valid digest in digest set: {digest_set.keys()} not in {valid_algorithms}")
 
 
 def _clean_spdx(uri: str) -> str:
