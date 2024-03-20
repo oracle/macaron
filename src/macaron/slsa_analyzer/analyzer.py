@@ -25,7 +25,7 @@ from macaron.errors import CloneError, DuplicateError, InvalidPURLError, PURLNot
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
-from macaron.repo_finder.commit_finder import find_commit
+from macaron.repo_finder.commit_finder import CommitNotFoundException, find_commit, find_commit_via_github_tag_api
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import VirtualReleaseAsset
@@ -36,7 +36,7 @@ from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,un
 from macaron.slsa_analyzer.checks.check_result import CheckResult
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.database_store import store_analyze_context_to_db
-from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
+from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService, GitHub
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
@@ -692,6 +692,14 @@ class Analyzer:
                 return None
 
             git_service = self.get_git_service(resolved_remote_path)
+            if not digest and purl and repo_path and isinstance(git_service, GitHub):
+                try:
+                    digest = find_commit_via_github_tag_api(purl, resolved_remote_path)
+                except CommitNotFoundException as error:
+                    # If the commit cannot be found, cloning the repository should be skipped, and the analysis, ended.
+                    logger.debug("No match found in GitHub tags for purl: %s", error)
+                    return None
+
             repo_unique_path = git_url.get_repo_dir_name(resolved_remote_path)
             resolved_local_path = os.path.join(target_dir, repo_unique_path)
             logger.info("Cloning the repository.")
