@@ -184,10 +184,9 @@ class AnalyzeContext:
         req = self.ctx_data.get(req_name)
         if req:
             logger.debug(
-                "Update requirement %s: set to %s (%s)",
+                "Update requirement %s: set to %s.",
                 req_name.value,
                 status,
-                feedback,
             )
             self.ctx_data[req_name].set_status(status, feedback)
         else:

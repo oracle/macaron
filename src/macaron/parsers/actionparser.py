@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module is a Python wrapper for the compiled actionparser binary.
@@ -13,9 +13,11 @@ import json
 import logging
 import os
 import subprocess  # nosec B404
+from typing import Any, cast
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
+from macaron.errors import ParseError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -34,6 +36,11 @@ def parse(workflow_path: str, macaron_path: str = "") -> dict:
     -------
     dict
         The parsed workflow as a JSON (dict) object.
+
+    Raises
+    ------
+    ParseError
+        When parsing fails with errors.
     """
     if not macaron_path:
         macaron_path = global_config.macaron_path
@@ -56,15 +63,83 @@ def parse(workflow_path: str, macaron_path: str = "") -> dict:
         subprocess.TimeoutExpired,
         FileNotFoundError,
     ) as error:
-        logger.error("Error while parsing GitHub Action workflow %s: %s", workflow_path, error)
-        return {}
+        raise ParseError(f"Error while parsing GitHub Action workflow {workflow_path}") from error
 
     try:
         if result.returncode == 0:
             parsed_obj: dict = json.loads(result.stdout.decode("utf-8"))
             return parsed_obj
-        logger.error("GitHub Actions parser failed: %s", result.stderr)
-        return {}
+        raise ParseError(f"GitHub Actions parser failed: {result.stderr.decode('utf-8')}")
     except json.JSONDecodeError as error:
-        logger.error("Error while loading the parsed Actions workflow: %s", error)
-        return {}
+        raise ParseError("Error while loading the parsed Actions workflow") from error
+
+
+def validate_step(step: dict[str, Any]) -> dict | None:
+    """Validate the parsed GitHub Action step.
+
+    Parameters
+    ----------
+    step: dict[str, Any]
+        The parsed step object.
+
+    Returns
+    -------
+    dict | None
+        The Exec object in the parsed step object..
+    """
+    # This validation function can be extended over time based on our use cases.
+    if "Exec" not in step:
+        return None
+
+    return cast(dict, step["Exec"])
+
+
+def validate_run_step(step: dict[str, Any]) -> str | None:
+    """Validate the parsed GitHub Action run step.
+
+    Parameters
+    ----------
+    step: dict[str, Any]
+        The parsed step object.
+
+    Returns
+    -------
+    str | None
+        The inlined run script.
+    """
+    if validate_step(step=step) is None:
+        return None
+    if step["Exec"].get("Run") is None:
+        return None
+    if step["Exec"]["Run"].get("Value") is None:
+        return None
+
+    return cast(str, step["Exec"]["Run"]["Value"])
+
+
+def get_step_input(step: dict[str, Any], key: str) -> str | None:
+    """Get an input value from a GitHub Action step.
+
+    Parameters
+    ----------
+    step: dict[str, Any]
+        The parsed step object.
+    key: str
+        The key to be looked up.
+
+    Returns
+    -------
+    str | None
+        The input value or None if it doesn't exist or the parsed object validation fails.
+    """
+    if validate_step(step=step) is None:
+        return None
+    if step["Exec"].get("Inputs") is None:
+        return None
+    if step["Exec"]["Inputs"].get(key) is None:
+        return None
+    if step["Exec"]["Inputs"][key].get("Value") is None:
+        return None
+    if (value := step["Exec"]["Inputs"][key]["Value"].get("Value")) is None:
+        return None
+    return cast(str, value)

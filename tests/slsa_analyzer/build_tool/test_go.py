@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Go build functions."""
@@ -7,7 +7,10 @@ from pathlib import Path
 
 import pytest
 
+from macaron.code_analyzer.call_graph import BaseNode
+from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
 from macaron.slsa_analyzer.build_tool.go import Go
+from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 
 
@@ -52,3 +55,174 @@ def test_go_build_tool(
     with open(proj_dir.joinpath(file), "w", encoding="utf-8"):
         ctx = prepare_repo_for_testing(proj_dir, macaron_path, base_dir)
         assert go_tool.is_detected(ctx.component.repository.fs_path) == expected_value
+
+
+@pytest.mark.parametrize(
+    (
+        "command",
+        "language",
+        "language_versions",
+        "language_distributions",
+        "ci_path",
+        "reachable_secrets",
+        "events",
+        "filter_configs",
+        "expected_result",
+    ),
+    [
+        (
+            ["goreleaser", "release"],
+            BuildLanguage.GO,
+            None,
+            None,
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["release"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["goreleaser", "release"],
+            BuildLanguage.GO,
+            None,
+            None,
+            ".github/workflows/go.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["go.yaml"],
+            False,
+        ),
+        (
+            ["goreleaser", "release"],
+            BuildLanguage.JAVASCRIPT,
+            None,
+            None,
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            None,
+            False,
+        ),
+    ],
+)
+def test_is_go_deploy_command(
+    go_tool: Go,
+    command: list[str],
+    language: str,
+    language_versions: list[str],
+    language_distributions: list[str],
+    ci_path: str,
+    reachable_secrets: list[str],
+    events: list[str],
+    filter_configs: list[str],
+    expected_result: bool,
+) -> None:
+    """Test the deploy commend detection function."""
+    result, _ = go_tool.is_deploy_command(
+        BuildToolCommand(
+            command=command,
+            language=language,
+            language_versions=language_versions,
+            language_distributions=language_distributions,
+            language_url=None,
+            caller_path="",
+            ci_path=ci_path,
+            job_name="",
+            step_node=BaseNode(),
+            reachable_secrets=reachable_secrets,
+            events=events,
+        ),
+        filter_configs=filter_configs,
+    )
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    (
+        "command",
+        "language",
+        "language_versions",
+        "language_distributions",
+        "ci_path",
+        "reachable_secrets",
+        "events",
+        "filter_configs",
+        "expected_result",
+    ),
+    [
+        (
+            ["go", "build"],
+            BuildLanguage.GO,
+            None,
+            None,
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["release"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["go", "install"],
+            BuildLanguage.GO,
+            None,
+            None,
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["go.yaml"],
+            True,
+        ),
+        (
+            ["go", "version"],
+            BuildLanguage.GO,
+            None,
+            None,
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["release"],
+            ["codeql-analysis.yaml"],
+            False,
+        ),
+        (
+            ["go", "build"],
+            BuildLanguage.JAVA,
+            None,
+            None,
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            None,
+            False,
+        ),
+    ],
+)
+def test_is_go_package_command(
+    go_tool: Go,
+    command: list[str],
+    language: str,
+    language_versions: list[str],
+    language_distributions: list[str],
+    ci_path: str,
+    reachable_secrets: list[str],
+    events: list[str],
+    filter_configs: list[str],
+    expected_result: bool,
+) -> None:
+    """Test the packaging command detection function."""
+    result, _ = go_tool.is_package_command(
+        BuildToolCommand(
+            command=command,
+            language=language,
+            language_versions=language_versions,
+            language_distributions=language_distributions,
+            language_url=None,
+            caller_path="",
+            ci_path=ci_path,
+            job_name="",
+            step_node=BaseNode(),
+            reachable_secrets=reachable_secrets,
+            events=events,
+        ),
+        filter_configs=filter_configs,
+    )
+    assert result == expected_result

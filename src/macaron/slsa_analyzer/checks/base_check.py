@@ -5,6 +5,7 @@
 
 import logging
 from abc import abstractmethod
+from typing import Any
 
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import (
@@ -15,7 +16,10 @@ from macaron.slsa_analyzer.checks.check_result import (
     SkippedInfo,
     get_result_as_bool,
 )
+from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
+from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.slsa_req import ReqName
+from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -77,6 +81,49 @@ class BaseCheck:
         """Get the status for this check when it's skipped based on another check's result."""
         return self._result_on_skip
 
+    def store_inferred_provenance(
+        self,
+        ctx: AnalyzeContext,
+        ci_info: CIInfo,
+        ci_service: BaseCIService,
+        trigger_link: str,
+        job_id: str | None = None,
+        step_id: str | None = None,
+    ) -> None:
+        """Store the inferred provenance.
+
+        Parameters
+        ----------
+        ctx: AnalyzeContext
+            The analyze context object.
+        ci_info: CIInfo
+            The CI data representation.
+        ci_service: BaseCIService
+            The CI service representation.
+        trigger_link: str
+            The link to the CI workflow.
+        job_id: str | None
+            The CI job ID.
+        step_id: str | None
+            The CI step ID.
+        """
+        # TODO: include in the justification multiple cases of external action usage
+        if (
+            ctx.dynamic_data["is_inferred_prov"]
+            and ci_info["provenances"]
+            and isinstance(ci_info["provenances"][0].payload, InTotoV01Payload)
+        ):
+            predicate: Any = ci_info["provenances"][0].payload.statement["predicate"]
+            predicate["buildType"] = f"Custom {ci_service.name}"
+            predicate["builder"]["id"] = trigger_link
+            predicate["invocation"]["configSource"]["uri"] = (
+                f"{ctx.component.repository.remote_path}" f"@refs/heads/{ctx.component.repository.branch_name}"
+            )
+            predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.component.repository.commit_sha
+            predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
+            predicate["buildConfig"]["jobID"] = job_id or ""
+            predicate["buildConfig"]["stepID"] = step_id or ""
+
     def run(self, target: AnalyzeContext, skipped_info: SkippedInfo | None = None) -> CheckResult:
         """Run the check and return the results.
 
@@ -100,7 +147,7 @@ class BaseCheck:
 
         if skipped_info:
             check_result_data = CheckResultData(result_tables=[], result_type=self.result_on_skip)
-            logger.info(
+            logger.debug(
                 "Check %s is skipped on target %s, comment: %s",
                 self.check_info.check_id,
                 target.component.purl,
@@ -109,12 +156,12 @@ class BaseCheck:
         else:
             check_result_data = self.run_check(target)
             logger.info(
-                "Check %s run %s on target %s, result: %s",
+                "Check %s run %s on target %s.",
                 self.check_info.check_id,
                 check_result_data.result_type.value,
                 target.component.purl,
-                check_result_data.justification_report,
             )
+            logger.debug("Check result: %s", check_result_data.justification_report)
 
         # This justification string will be stored in the feedback column of `SLSARequirement` table.
         # TODO: Storing the justification as feedback in the `SLSARequirement` table seems redundant and might need

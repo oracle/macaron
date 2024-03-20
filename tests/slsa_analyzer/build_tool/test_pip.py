@@ -1,49 +1,14 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module tests the Docker build functions."""
-
-from pathlib import Path
+"""This module tests the Pip build functions."""
 
 import pytest
 
 from macaron.code_analyzer.call_graph import BaseNode
 from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
-from macaron.slsa_analyzer.build_tool.docker import Docker
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
-from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
-
-
-@pytest.mark.parametrize(
-    "mock_repo",
-    [
-        Path(__file__).parent.joinpath("mock_repos", "docker_repos", "root_dockerfile"),
-        Path(__file__).parent.joinpath("mock_repos", "docker_repos", "nested_dockerfile"),
-        Path(__file__).parent.joinpath("mock_repos", "docker_repos", "root_wildcard_dockerfile"),
-        Path(__file__).parent.joinpath("mock_repos", "docker_repos", "root_dockerfile_wildcard"),
-        Path(__file__).parent.joinpath("mock_repos", "docker_repos", "no_docker"),
-    ],
-)
-def test_get_build_dirs(snapshot: list, docker_tool: Docker, mock_repo: Path) -> None:
-    """Test discovering build directories."""
-    assert list(docker_tool.get_build_dirs(str(mock_repo))) == snapshot
-
-
-@pytest.mark.parametrize(
-    ("mock_repo", "expected_value"),
-    [
-        (Path(__file__).parent.joinpath("mock_repos", "docker_repos", "root_dockerfile"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "docker_repos", "nested_dockerfile"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "docker_repos", "root_wildcard_dockerfile"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "docker_repos", "root_dockerfile_wildcard"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "docker_repos", "no_docker"), False),
-    ],
-)
-def test_docker_build_tool(docker_tool: Docker, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
-    """Test the Docker build tool."""
-    base_dir = Path(__file__).parent
-    ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
-    assert docker_tool.is_detected(ctx.component.repository.fs_path) == expected_value
+from macaron.slsa_analyzer.build_tool.pip import Pip
 
 
 @pytest.mark.parametrize(
@@ -60,8 +25,8 @@ def test_docker_build_tool(docker_tool: Docker, macaron_path: str, mock_repo: st
     ),
     [
         (
-            ["docker", "push"],
-            BuildLanguage.DOCKER,
+            ["twine", "upload"],
+            BuildLanguage.PYTHON,
             None,
             None,
             ".github/workflows/release.yaml",
@@ -71,30 +36,30 @@ def test_docker_build_tool(docker_tool: Docker, macaron_path: str, mock_repo: st
             True,
         ),
         (
-            ["docker", "push"],
-            BuildLanguage.DOCKER,
+            ["flit", "publish"],
+            BuildLanguage.PYTHON,
             None,
             None,
-            ".github/workflows/docker.yaml",
+            ".github/workflows/pip.yaml",
             [{"key", "pass"}],
             ["push"],
-            ["docker.yaml"],
+            ["pip.yaml"],
             False,
         ),
         (
-            ["docker", "build"],
-            BuildLanguage.DOCKER,
+            ["python", "-m", "twine", "upload"],
+            BuildLanguage.PYTHON,
             None,
             None,
             ".github/workflows/release.yaml",
             [{"key", "pass"}],
             ["release"],
             ["codeql-analysis.yaml"],
-            False,
+            True,
         ),
         (
-            ["docker", "push"],
-            BuildLanguage.JAVA,
+            ["flit", "publish"],
+            BuildLanguage.JAVASCRIPT,
             None,
             None,
             ".github/workflows/release.yaml",
@@ -105,8 +70,8 @@ def test_docker_build_tool(docker_tool: Docker, macaron_path: str, mock_repo: st
         ),
     ],
 )
-def test_is_docker_deploy_command(
-    docker_tool: Docker,
+def test_is_pip_deploy_command(
+    pip_tool: Pip,
     command: list[str],
     language: str,
     language_versions: list[str],
@@ -118,7 +83,7 @@ def test_is_docker_deploy_command(
     expected_result: bool,
 ) -> None:
     """Test the deploy commend detection function."""
-    result, _ = docker_tool.is_deploy_command(
+    result, _ = pip_tool.is_deploy_command(
         BuildToolCommand(
             command=command,
             language=language,
@@ -151,8 +116,8 @@ def test_is_docker_deploy_command(
     ),
     [
         (
-            ["docker", "build"],
-            BuildLanguage.DOCKER,
+            ["pip", "build"],
+            BuildLanguage.PYTHON,
             None,
             None,
             ".github/workflows/release.yaml",
@@ -162,19 +127,41 @@ def test_is_docker_deploy_command(
             True,
         ),
         (
-            ["docker", "build"],
-            BuildLanguage.DOCKER,
+            ["python", "-m", "pip", "build"],
+            BuildLanguage.PYTHON,
             None,
             None,
-            ".github/workflows/docker.yaml",
+            ".github/workflows/release.yaml",
             [{"key", "pass"}],
             ["push"],
-            ["docker.yaml"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["python", "-m", "flit", "build"],
+            BuildLanguage.PYTHON,
+            None,
+            None,
+            ".github/workflows/build.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            None,
+            True,
+        ),
+        (
+            ["python", "-m", "flit", "build"],
+            BuildLanguage.PYTHON,
+            None,
+            None,
+            ".github/workflows/flit.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["flit.yaml"],
             False,
         ),
         (
-            ["docker", "test"],
-            BuildLanguage.DOCKER,
+            ["pip", "install", "--upgrade", "pip"],
+            BuildLanguage.PYTHON,
             None,
             None,
             ".github/workflows/release.yaml",
@@ -184,7 +171,7 @@ def test_is_docker_deploy_command(
             False,
         ),
         (
-            ["docker", "build"],
+            ["pip", "build"],
             BuildLanguage.JAVA,
             None,
             None,
@@ -196,8 +183,8 @@ def test_is_docker_deploy_command(
         ),
     ],
 )
-def test_is_docker_package_command(
-    docker_tool: Docker,
+def test_is_pip_package_command(
+    pip_tool: Pip,
     command: list[str],
     language: str,
     language_versions: list[str],
@@ -209,7 +196,7 @@ def test_is_docker_package_command(
     expected_result: bool,
 ) -> None:
     """Test the packaging command detection function."""
-    result, _ = docker_tool.is_package_command(
+    result, _ = pip_tool.is_package_command(
         BuildToolCommand(
             command=command,
             language=language,

@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.slsa_analyzer.asset import VirtualReleaseAsset
-from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
+from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.provenance.intoto import validate_intoto_payload
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus
@@ -94,7 +94,6 @@ class TestAnalyzeContext(TestCase):
 
         gh_actions_ci_info = CIInfo(
             service=gh_actions,
-            bash_commands=[],
             callgraph=CallGraph(BaseNode(), ""),
             provenance_assets=[],
             latest_release={},

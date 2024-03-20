@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseCIService class to be inherited by a CI service."""
@@ -10,7 +10,8 @@ from collections.abc import Iterable
 from datetime import datetime
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.parsers.bashparser import BashCommands
+from macaron.errors import CallGraphError
+from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand
 from macaron.slsa_analyzer.git_service.api_client import BaseAPIClient
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
 
@@ -105,24 +106,6 @@ class BaseCIService:
         -------
         CallGraph : CallGraph
             The call graph built for the CI.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def extract_all_bash(self, callgraph: CallGraph, macaron_path: str = "") -> Iterable[BashCommands]:
-        """Parse configurations to extract the bash scripts triggered by the CI service.
-
-        Parameters
-        ----------
-        callgraph : CallGraph
-            The call graph for this CI.
-        macaron_path : str
-            Macaron's root path (optional).
-
-        Yields
-        ------
-        BashCommands
-            The parsed bash script commands.
         """
         raise NotImplementedError
 
@@ -233,6 +216,41 @@ class BaseCIService:
         """
         return set()
 
+    def get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
+        """
+        Traverse the callgraph and find all the reachable build tool commands.
+
+        Parameters
+        ----------
+        callgraph: CallGraph
+            The callgraph reachable from the CI workflows.
+        build_tool: BaseBuildTool
+            The corresponding build tool for which shell commands need to be detected.
+
+        Yields
+        ------
+        BuildToolCommand
+            The object that contains the build command as well useful contextual information.
+
+        Raises
+        ------
+        CallGraphError
+            Error raised when an error occurs while traversing the callgraph.
+        """
+        # By default we assume that there is no callgraph available for a CI service.
+        # Each CI service should override this method if a callgraph is generated for it.
+        raise CallGraphError("There is no callgraph for this CI service.")
+
+    def get_third_party_configurations(self) -> list[str]:
+        """Get the list of third-party CI configuration files.
+
+        Returns
+        -------
+        list[str]
+            The list of third-party CI configuration files
+        """
+        return []
+
 
 class NoneCIService(BaseCIService):
     """This class can be used to initialize an empty CI service."""
@@ -279,22 +297,28 @@ class NoneCIService(BaseCIService):
         """
         return CallGraph(BaseNode(), "")
 
-    def extract_all_bash(self, callgraph: CallGraph, macaron_path: str = "") -> Iterable[BashCommands]:
-        """Parse configurations to extract the bash scripts triggered by the CI service.
+    def get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
+        """
+        Traverse the callgraph and find all the reachable build tool commands.
 
         Parameters
         ----------
-        callgraph : CallGraph
-            The call graph for this CI.
-        macaron_path : str
-            Macaron's root path (optional).
+        callgraph: CallGraph
+            The callgraph reachable from the CI workflows.
+        build_tool: BaseBuildTool
+            The corresponding build tool for which shell commands need to be detected.
 
         Yields
         ------
-        BashCommands
-            The parsed bash script commands.
+        BuildToolCommand
+            The object that contains the build command as well useful contextual information.
+
+        Raises
+        ------
+        CallGraphError
+            Error raised when an error occurs while traversing the callgraph.
         """
-        return []
+        raise CallGraphError("There is no callgraph for this CI service.")
 
     def has_latest_run_passed(
         self, repo_full_name: str, branch_name: str | None, commit_sha: str, commit_date: str, workflow: str
@@ -323,3 +347,13 @@ class NoneCIService(BaseCIService):
             The feed back of the check, or empty if no passing workflow is found.
         """
         return ""
+
+    def get_third_party_configurations(self) -> list[str]:
+        """Get the list of third-party CI configuration files.
+
+        Returns
+        -------
+        list[str]
+            The list of third-party CI configuration files
+        """
+        return []

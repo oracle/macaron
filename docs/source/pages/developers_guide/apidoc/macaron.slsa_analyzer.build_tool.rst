@@ -41,6 +41,14 @@ macaron.slsa\_analyzer.build\_tool.gradle module
    :undoc-members:
    :show-inheritance:
 
+macaron.slsa\_analyzer.build\_tool.language module
+--------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.build_tool.language
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.slsa\_analyzer.build\_tool.maven module
 -----------------------------------------------
 

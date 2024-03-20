@@ -6,7 +6,6 @@
 
 import logging
 import os
-from typing import Any
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
@@ -15,15 +14,12 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.asset import VirtualReleaseAsset
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
-from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType, GitHubActions
-from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
-from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
+from macaron.slsa_analyzer.ci_service.github_actions.analyzer import GHWorkflowType, GitHubJobNode, GitHubWorkflowNode
+from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
-from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -106,7 +102,6 @@ class TrustedBuilderL3Check(BaseCheck):
         result_tables: list[CheckFacts] = []
 
         for ci_info in ci_services:
-            inferred_provenances = []
             ci_service = ci_info["service"]
             # We only support GitHub Actions for now.
             if not isinstance(ci_service, GitHubActions):
@@ -116,58 +111,33 @@ class TrustedBuilderL3Check(BaseCheck):
 
             # Look for trusted builders called as GitHub Actions.
             for callee in ci_info["callgraph"].bfs():
-                workflow_name = callee.name.split("@")[0]
+                if isinstance(callee, GitHubWorkflowNode):
+                    workflow_name = callee.name.split("@")[0]
 
-                # Check if the action is called as a third-party or reusable workflow.
-                if not workflow_name or callee.node_type not in [GHWorkflowType.EXTERNAL, GHWorkflowType.REUSABLE]:
-                    logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
-                    continue
-                if workflow_name in trusted_builders:
-                    html_url = ci_service.has_latest_run_passed(
-                        ctx.component.repository.full_name,
-                        ctx.component.repository.branch_name,
-                        ctx.component.repository.commit_sha,
-                        ctx.component.repository.commit_date,
-                        os.path.basename(callee.caller_path),
-                    )
-
-                    caller_link = ci_service.api_client.get_file_link(
-                        ctx.component.repository.full_name,
-                        ctx.component.repository.commit_sha,
-                        ci_service.api_client.get_relative_path_of_workflow(os.path.basename(callee.caller_path)),
-                    )
-
-                    if ctx.dynamic_data["is_inferred_prov"]:
-                        provenance: Any = Provenance().payload
-                        predicate = provenance["predicate"]
-                        predicate["buildType"] = f"Trusted {ci_service.name}"
-                        predicate["builder"]["id"] = callee.name
-                        predicate["invocation"]["configSource"][
-                            "uri"
-                        ] = f"{ctx.component.repository.remote_path}@refs/heads/{ctx.component.repository.branch_name}"
-                        predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.component.repository.commit_sha
-                        predicate["invocation"]["configSource"]["entryPoint"] = caller_link
-                        predicate["metadata"]["buildInvocationId"] = html_url
-                        inferred_provenances.append(
-                            SLSAProvenanceData(
-                                asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0),
-                                payload=InTotoV01Payload(statement=provenance),
-                            )
+                    # Check if the action is called as a third-party or reusable workflow.
+                    if not workflow_name or callee.node_type not in [GHWorkflowType.EXTERNAL, GHWorkflowType.REUSABLE]:
+                        logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
+                        continue
+                    if workflow_name in trusted_builders:
+                        caller_path = callee.caller.source_path if isinstance(callee.caller, GitHubJobNode) else ""
+                        caller_link = ci_service.api_client.get_file_link(
+                            ctx.component.repository.full_name,
+                            ctx.component.repository.commit_sha,
+                            ci_service.api_client.get_relative_path_of_workflow(os.path.basename(caller_path)),
                         )
 
-                    found_builder = True
-                    result_values.append(
-                        {
-                            "build_tool_name": callee.name,
-                            "build_trigger": caller_link,
-                            "ci_service_name": ci_service.name,
-                        }
-                    )
+                        self.store_inferred_provenance(
+                            ctx=ctx, ci_info=ci_info, ci_service=ci_service, trigger_link=caller_link
+                        )
 
-            # If inferred provenances is not empty, store them and replace existing inferred provenances
-            # because trusted builders have the highest priority.
-            if inferred_provenances:
-                ci_info["provenances"] = inferred_provenances
+                        found_builder = True
+                        result_values.append(
+                            {
+                                "build_tool_name": callee.name,
+                                "build_trigger": caller_link,
+                                "ci_service_name": ci_service.name,
+                            }
+                        )
 
         result_tables = [TrustedBuilderFacts(**result, confidence=Confidence.HIGH) for result in result_values]
 

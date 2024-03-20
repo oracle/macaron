@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Gradle build functions."""
@@ -7,8 +7,11 @@ from pathlib import Path
 
 import pytest
 
+from macaron.code_analyzer.call_graph import BaseNode
 from macaron.config.defaults import load_defaults
+from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
+from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 
 
@@ -113,3 +116,306 @@ def test_get_group_ids_timeout(tmp_path: Path, gradle_tool: Gradle, timeout: str
     gradle_tool.load_defaults()
 
     assert set(gradle_tool.get_group_ids(str(repo_dir))) == expected
+
+
+@pytest.mark.parametrize(
+    (
+        "command",
+        "language",
+        "language_versions",
+        "language_distributions",
+        "ci_path",
+        "reachable_secrets",
+        "events",
+        "filter_configs",
+        "expected_result",
+    ),
+    [
+        (
+            ["gradle", "publish"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["gradle", "build"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["codeql-analysis.yaml"],
+            False,
+        ),
+        (
+            ["gradle", "publish"],
+            BuildLanguage.PYTHON,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["codeql-analysis.yaml"],
+            False,
+        ),
+        (
+            ["gradle", "publish"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            None,
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["gradle", "publish"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/maven.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["gradle", "publish"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/release.yaml",
+            [],
+            ["push"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["gradle", "publish"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["release"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["gradle", "publish"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/maven.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["maven.yaml"],
+            False,
+        ),
+        (
+            ["npm", "publish"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/maven.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["maven.yaml"],
+            False,
+        ),
+    ],
+)
+def test_is_gradle_deploy_command(
+    gradle_tool: Gradle,
+    command: list[str],
+    language: str,
+    language_versions: list[str],
+    language_distributions: list[str],
+    ci_path: str,
+    reachable_secrets: list[str],
+    events: list[str],
+    filter_configs: list[str],
+    expected_result: bool,
+) -> None:
+    """Test the deploy commend detection function."""
+    result, _ = gradle_tool.is_deploy_command(
+        BuildToolCommand(
+            command=command,
+            language=language,
+            language_versions=language_versions,
+            language_distributions=language_distributions,
+            language_url=None,
+            caller_path="",
+            ci_path=ci_path,
+            job_name="",
+            step_node=BaseNode(),
+            reachable_secrets=reachable_secrets,
+            events=events,
+        ),
+        filter_configs=filter_configs,
+    )
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    (
+        "command",
+        "language",
+        "language_versions",
+        "language_distributions",
+        "ci_path",
+        "reachable_secrets",
+        "events",
+        "filter_configs",
+        "expected_result",
+    ),
+    [
+        (
+            ["gradle", "build"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["gradle", "test"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["codeql-analysis.yaml"],
+            False,
+        ),
+        (
+            ["gradle", "build"],
+            BuildLanguage.PYTHON,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["codeql-analysis.yaml"],
+            False,
+        ),
+        (
+            ["gradle", "build"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            None,
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["gradle", "build"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/maven.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["gradle", "build"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/release.yaml",
+            [],
+            ["push"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["gradle", "build"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/release.yaml",
+            [{"key", "pass"}],
+            ["release"],
+            ["codeql-analysis.yaml"],
+            True,
+        ),
+        (
+            ["gradle", "build"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/maven.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["maven.yaml"],
+            False,
+        ),
+        (
+            ["npm", "publish"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/maven.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["maven.yaml"],
+            False,
+        ),
+        (
+            ["gradle", "publish"],
+            BuildLanguage.JAVA,
+            ["11", "17"],
+            ["temurin"],
+            ".github/workflows/maven.yaml",
+            [{"key", "pass"}],
+            ["push"],
+            ["maven.yaml"],
+            False,
+        ),
+    ],
+)
+def test_is_gradle_package_command(
+    gradle_tool: Gradle,
+    command: list[str],
+    language: str,
+    language_versions: list[str],
+    language_distributions: list[str],
+    ci_path: str,
+    reachable_secrets: list[str],
+    events: list[str],
+    filter_configs: list[str],
+    expected_result: bool,
+) -> None:
+    """Test the packaging command detection function."""
+    result, _ = gradle_tool.is_package_command(
+        BuildToolCommand(
+            command=command,
+            language=language,
+            language_versions=language_versions,
+            language_distributions=language_distributions,
+            language_url=None,
+            caller_path="",
+            ci_path=ci_path,
+            job_name="",
+            step_node=BaseNode(),
+            reachable_secrets=reachable_secrets,
+            events=events,
+        ),
+        filter_configs=filter_configs,
+    )
+    assert result == expected_result

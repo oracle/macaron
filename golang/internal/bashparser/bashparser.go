@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 // Package bashparser parses the bash scripts and provides parsed objects in JSON.
@@ -22,10 +22,10 @@ type CMDResult struct {
 // It returns the parsed commands in JSON format.
 func ParseCommands(data string) (string, error) {
 	// Remove GitHub Actions's expressions because the bash parser doesn't recognize it.
-	// We use greedy matching, so if we have `${{ $ {{ foo }} }}`, it will be matched
-	// to `$MACARON_UNKNOWN`, even though it's not a valid GitHub expression.
+	// We don't use greedy matching, so if we have `${{ $ {{ foo }} }}`, it will not be matched
+	// to `$MACARON_UNKNOWN`.
 	// See: https://docs.github.com/en/actions/learn-github-actions/expressions.
-	var re, reg_error = regexp.Compile(`\$\{\{.*\}\}`)
+	var re, reg_error = regexp.Compile(`\$\{\{.*?\}\}`)
 	if reg_error != nil {
 		return "", reg_error
 	}
