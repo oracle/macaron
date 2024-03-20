@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # Use bash as the shell when executing a rule's recipe. For more details:
@@ -96,7 +96,7 @@ setup-go:
 	go build -o $(PACKAGE_PATH)/bin/cuevalidate.so -buildmode=c-shared $(REPO_PATH)/golang/internal/cue_validator/cue_validator.go
 setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier $(PACKAGE_PATH)/resources/mvnw $(PACKAGE_PATH)/resources/gradlew souffle
 $(PACKAGE_PATH)/bin/slsa-verifier:
-	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.3.0
+	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.4.1
 	cd slsa-verifier/cli/slsa-verifier && go build -o $(PACKAGE_PATH)/bin/
 	cd $(REPO_PATH) && rm -rf slsa-verifier
 $(PACKAGE_PATH)/resources/mvnw:
