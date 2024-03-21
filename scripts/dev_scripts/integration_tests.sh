@@ -83,9 +83,10 @@ echo -e "=======================================================================
 echo -e "\n----------------------------------------------------------------------------------"
 echo "micronaut-projects/micronaut-core: Analyzing the repo path and the branch name when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/micronaut-core/micronaut-core.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-core/micronaut-core.json
-$RUN_MACARON analyze -rp https://github.com/micronaut-projects/micronaut-core -b 3.8.x -d 68f9bb0a78fa930865d37fca39252b9ec66e4a43 --skip-deps || log_fail
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/micronaut-core/micronaut-core.json
+JSON_RESULT=$WORKSPACE/output/reports/maven/io_micronaut/micronaut-core/micronaut-core.json
+DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/micronaut-core.ini
+$RUN_MACARON -dp $DEFAULTS_FILE analyze -purl pkg:maven/io.micronaut/micronaut-core@4.2.3 --skip-deps || log_fail
 
 check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 

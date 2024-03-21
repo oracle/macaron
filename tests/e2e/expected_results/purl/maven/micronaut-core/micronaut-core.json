@@ -1,0 +1,214 @@
+{
+    "metadata": {
+        "timestamps": "2024-03-22 11:00:59",
+        "has_passing_check": true,
+        "run_checks": [
+            "mcn_build_as_code_1",
+            "mcn_trusted_builder_level_three_1",
+            "mcn_build_script_1",
+            "mcn_build_service_1",
+            "mcn_version_control_system_1"
+        ],
+        "check_tree": {
+            "mcn_provenance_available_1": {
+                "mcn_provenance_witness_level_one_1": {},
+                "mcn_provenance_level_three_1": {},
+                "mcn_provenance_expectation_1": {}
+            },
+            "mcn_version_control_system_1": {
+                "mcn_trusted_builder_level_three_1": {
+                    "mcn_build_as_code_1": {
+                        "mcn_build_service_1": {
+                            "mcn_build_script_1": {}
+                        },
+                        "mcn_infer_artifact_pipeline_1": {}
+                    }
+                }
+            }
+        }
+    },
+    "target": {
+        "info": {
+            "full_name": "pkg:maven/io.micronaut/micronaut-core@4.2.3",
+            "local_cloned_path": "git_repos/github_com/micronaut-projects/micronaut-core",
+            "remote_path": "https://github.com/micronaut-projects/micronaut-core",
+            "branch": null,
+            "commit_hash": "36dcaf0539536dce5fc753677341609ff7f273ca",
+            "commit_date": "2024-01-04T22:05:18+00:00"
+        },
+        "provenances": {
+            "is_inferred": true,
+            "content": {
+                "github_actions": [
+                    {
+                        "_type": "https://in-toto.io/Statement/v0.1",
+                        "subject": [],
+                        "predicateType": "https://slsa.dev/provenance/v0.2",
+                        "predicate": {
+                            "builder": {
+                                "id": "https://github.com/micronaut-projects/micronaut-core/blob/36dcaf0539536dce5fc753677341609ff7f273ca/.github/workflows/central-sync.yml"
+                            },
+                            "buildType": "Custom github_actions",
+                            "invocation": {
+                                "configSource": {
+                                    "uri": "https://github.com/micronaut-projects/micronaut-core@refs/heads/None",
+                                    "digest": {
+                                        "sha1": "36dcaf0539536dce5fc753677341609ff7f273ca"
+                                    },
+                                    "entryPoint": "https://github.com/micronaut-projects/micronaut-core/blob/36dcaf0539536dce5fc753677341609ff7f273ca/.github/workflows/central-sync.yml"
+                                },
+                                "parameters": {},
+                                "environment": {}
+                            },
+                            "buildConfig": {
+                                "jobID": "central-sync",
+                                "stepID": "Publish to Sonatype OSSRH"
+                            },
+                            "metadata": {
+                                "buildInvocationId": "",
+                                "buildStartedOn": "<TIMESTAMP>",
+                                "buildFinishedOn": "<TIMESTAMP>",
+                                "completeness": {
+                                    "parameters": "false",
+                                    "environment": "false",
+                                    "materials": "false"
+                                },
+                                "reproducible": "false"
+                            },
+                            "materials": [
+                                {
+                                    "uri": "<URI>",
+                                    "digest": {}
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Maven Central Registry": []
+            }
+        },
+        "checks": {
+            "summary": {
+                "DISABLED": 0,
+                "FAILED": 1,
+                "PASSED": 4,
+                "SKIPPED": 0,
+                "UNKNOWN": 0
+            },
+            "results": [
+                {
+                    "check_id": "mcn_build_as_code_1",
+                    "check_description": "The build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.",
+                    "slsa_requirements": [
+                        "Build as code - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "build_tool_name: gradle",
+                        "ci_service_name: github_actions",
+                        "deploy_command: [\"./gradlew\", \"publishToSonatype\", \"docs\", \"--no-daemon\"]",
+                        {
+                            "build_trigger": "https://github.com/micronaut-projects/micronaut-core/blob/36dcaf0539536dce5fc753677341609ff7f273ca/.github/workflows/gradle.yml"
+                        }
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_build_script_1",
+                    "check_description": "Check if the target repo has a valid build script.",
+                    "slsa_requirements": [
+                        "Scripted Build - SLSA Level 1"
+                    ],
+                    "justification": [
+                        "Not Available."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_build_service_1",
+                    "check_description": "Check if the target repo has a valid build service.",
+                    "slsa_requirements": [
+                        "Build service - SLSA Level 2"
+                    ],
+                    "justification": [
+                        "Not Available."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_version_control_system_1",
+                    "check_description": "Check whether the target repo uses a version control system.",
+                    "slsa_requirements": [
+                        "Version controlled - SLSA Level 2"
+                    ],
+                    "justification": [
+                        {
+                            "git_repo": "https://github.com/micronaut-projects/micronaut-core"
+                        }
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_trusted_builder_level_three_1",
+                    "check_description": "Check whether the target uses a trusted SLSA level 3 builder.",
+                    "slsa_requirements": [
+                        "Hermetic - SLSA Level 4",
+                        "Isolated - SLSA Level 3",
+                        "Parameterless - SLSA Level 4",
+                        "Ephemeral environment - SLSA Level 3"
+                    ],
+                    "justification": [
+                        "Not Available."
+                    ],
+                    "result_type": "FAILED"
+                }
+            ]
+        }
+    },
+    "dependencies": {
+        "analyzed_deps": 0,
+        "unique_dep_repos": 0,
+        "checks_summary": [
+            {
+                "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_witness_level_one_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_available_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 0
+            }
+        ],
+        "dep_status": []
+    }
+}
