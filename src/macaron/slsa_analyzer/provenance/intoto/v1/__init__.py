@@ -11,32 +11,6 @@ from typing import TypedDict, TypeGuard
 from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
 from macaron.util import JsonType
 
-# The full list of cryptographic algorithms supported in in-toto v1 provenance.
-# These are used as keys within the digest set of the resource descriptors within the subject.
-# For v1 see: https://github.com/in-toto/attestation/blob/main/spec/v1/digest_set.md
-VALID_ALGORITHMS = [
-    "sha256",
-    "sha224",
-    "sha384",
-    "sha512",
-    "sha512_224",
-    "sha512_256",
-    "sha3_224",
-    "sha3_256",
-    "sha3_384",
-    "sha3_512",
-    "shake128",
-    "shake256",
-    "blake2b",
-    "blake2s",
-    "ripemd160",
-    "sm3",
-    "gost",
-    "sha1",
-    "md5",
-    "gitCommit",  # This special git value is equivalent to SHA-1 or SHA-256. See the v1 spec for more information.
-]
-
 
 class InTotoV1Statement(TypedDict):
     """An in-toto version 1 statement.
@@ -191,8 +165,6 @@ def is_valid_digest_set(digest: JsonType) -> bool:
     if not isinstance(digest, dict):
         return False
     for key in digest:
-        if key not in VALID_ALGORITHMS:
-            return False
         if not isinstance(digest[key], str):
             return False
     return True
