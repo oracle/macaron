@@ -24,8 +24,8 @@ from macaron.dependency_analyzer import DependencyAnalyzer, DependencyInfo
 from macaron.errors import (
     CloneError,
     DuplicateError,
+    InvalidAnalysisTargetError,
     InvalidPURLError,
-    MacaronError,
     ProvenanceError,
     PURLNotFoundError,
     RepoCheckOutError,
@@ -1000,7 +1000,3 @@ class DuplicateCmpError(DuplicateError):
         """
         super().__init__(*args, **kwargs)
         self.context: AnalyzeContext | None = context
-
-
-class InvalidAnalysisTargetError(MacaronError):
-    """When a valid Analysis Target cannot be constructed."""

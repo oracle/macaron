@@ -12,8 +12,8 @@ from hypothesis import given
 from packageurl import PackageURL
 
 from macaron.config.target_config import Configuration
-from macaron.errors import InvalidPURLError
-from macaron.slsa_analyzer.analyzer import Analyzer, InvalidAnalysisTargetError
+from macaron.errors import InvalidAnalysisTargetError, InvalidPURLError
+from macaron.slsa_analyzer.analyzer import Analyzer
 
 from ..macaron_testcase import MacaronTestCase
 

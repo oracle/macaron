@@ -66,3 +66,7 @@ class ProvenanceError(MacaronError):
 
 class JsonError(MacaronError):
     """When there is an error while extracting from JSON."""
+
+
+class InvalidAnalysisTargetError(MacaronError):
+    """When a valid Analysis Target cannot be constructed."""
