@@ -6,11 +6,9 @@ import json
 
 import pytest
 
-from macaron.repo_finder.provenance_extractor import (
-    ProvenanceExtractionException,
-    extract_repo_and_commit_from_provenance,
-    json_extract,
-)
+from macaron.errors import ProvenanceError
+from macaron.json_tools import json_extract
+from macaron.repo_finder.provenance_extractor import extract_repo_and_commit_from_provenance
 from macaron.slsa_analyzer.provenance.intoto import validate_intoto_payload
 from macaron.util import JsonType
 
@@ -262,7 +260,7 @@ def test_slsa_v1_gcb_1_is_invalid(
 ) -> None:
     """Test invalidly modified SLSA v1 provenance with build type gcb and sourceToBuild."""
     _json_modify(slsa_v1_gcb_1_provenance, keys, new_value)
-    with pytest.raises(ProvenanceExtractionException):
+    with pytest.raises(ProvenanceError):
         _test_extract_repo_and_commit_from_provenance(slsa_v1_gcb_1_provenance)
 
 
@@ -286,7 +284,7 @@ def test_slsa_v1_gcb_2_is_invalid(
 ) -> None:
     """Test invalidly modified SLSA v1 provenance with build type gcb and configSource."""
     _json_modify(slsa_v1_gcb_2_provenance, keys, new_value)
-    with pytest.raises(ProvenanceExtractionException):
+    with pytest.raises(ProvenanceError):
         _test_extract_repo_and_commit_from_provenance(slsa_v1_gcb_2_provenance)
 
 
@@ -310,7 +308,7 @@ def test_slsa_v1_github_is_invalid(
 ) -> None:
     """Test invalidly modified SLSA v1 provenance with build type GitHub."""
     _json_modify(slsa_v1_github_provenance, keys, new_value)
-    with pytest.raises(ProvenanceExtractionException):
+    with pytest.raises(ProvenanceError):
         _test_extract_repo_and_commit_from_provenance(slsa_v1_github_provenance)
 
 
@@ -334,7 +332,7 @@ def test_slsa_v02_is_valid(
 def test_slsa_v02_is_invalid(slsa_v02_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType) -> None:
     """Test invalidly modified SLSA v0.2 provenance."""
     _json_modify(slsa_v02_provenance, keys, new_value)
-    with pytest.raises(ProvenanceExtractionException):
+    with pytest.raises(ProvenanceError):
         _test_extract_repo_and_commit_from_provenance(slsa_v02_provenance)
 
 
@@ -357,14 +355,14 @@ def test_slsa_v01_is_invalid(slsa_v01_provenance: dict[str, JsonType], new_value
     materials = json_extract(slsa_v01_provenance, ["predicate", "materials"], list)
     material_index = json_extract(slsa_v01_provenance, ["predicate", "recipe", "definedInMaterial"], int)
     _json_modify(materials[material_index], ["uri"], new_value)
-    with pytest.raises(ProvenanceExtractionException):
+    with pytest.raises(ProvenanceError):
         _test_extract_repo_and_commit_from_provenance(slsa_v01_provenance)
 
 
 def test_slsa_v01_invalid_material_index(slsa_v01_provenance: dict[str, JsonType]) -> None:
     """Test the SLSA v0.1 provenance with an invalid materials index."""
     _json_modify(slsa_v01_provenance, ["predicate", "recipe", "definedInMaterial"], 10)
-    with pytest.raises(ProvenanceExtractionException):
+    with pytest.raises(ProvenanceError):
         _test_extract_repo_and_commit_from_provenance(slsa_v01_provenance)
 
 
@@ -399,7 +397,7 @@ def test_witness_github_is_invalid(
     """Test invalidly modified Witness v0.1 GitHub provenance."""
     attestations = json_extract(witness_github_provenance, ["predicate", "attestations"], list)
     _json_modify(attestations[attestation_index], keys, new_value)
-    with pytest.raises(ProvenanceExtractionException):
+    with pytest.raises(ProvenanceError):
         _test_extract_repo_and_commit_from_provenance(witness_github_provenance)
 
 
@@ -407,7 +405,7 @@ def test_witness_github_remove_attestation(witness_github_provenance: dict[str, 
     """Test removing Git attestation from Witness V0.1 GitHub provenance."""
     attestations = json_extract(witness_github_provenance, ["predicate", "attestations"], list)
     _json_modify(witness_github_provenance, ["predicate", "attestations"], attestations[:1])
-    with pytest.raises(ProvenanceExtractionException):
+    with pytest.raises(ProvenanceError):
         _test_extract_repo_and_commit_from_provenance(witness_github_provenance)
 
 
@@ -423,7 +421,7 @@ def test_witness_github_remove_attestation(witness_github_provenance: dict[str, 
 def test_invalid_type_payloads(type_: str, predicate_type: str) -> None:
     """Test payloads with invalid type combinations."""
     payload: dict[str, JsonType] = {"_type": type_, "predicateType": predicate_type, "subject": [], "predicate": {}}
-    with pytest.raises(ProvenanceExtractionException):
+    with pytest.raises(ProvenanceError):
         _test_extract_repo_and_commit_from_provenance(payload)
 
 

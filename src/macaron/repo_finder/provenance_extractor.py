@@ -3,17 +3,13 @@
 
 """This module contains methods for extracting repository and commit metadata from provenance files."""
 import logging
-from typing import TypeVar
 
-from macaron.errors import MacaronError
+from macaron.errors import JsonError, ProvenanceError
+from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV1Payload, InTotoV01Payload
 from macaron.util import JsonType
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-
-class ProvenanceExtractionException(MacaronError):
-    """When there is an error while extracting from provenance."""
 
 
 SLSA_V01_DIGEST_SET_GIT_ALGORITHMS = ["sha1"]
@@ -36,7 +32,7 @@ def extract_repo_and_commit_from_provenance(payload: InTotoPayload) -> tuple[str
 
     Raises
     ------
-    ProvenanceExtractionException
+    ProvenanceError
         If the extraction process fails for any reason.
     """
     repo = ""
@@ -53,9 +49,9 @@ def extract_repo_and_commit_from_provenance(payload: InTotoPayload) -> tuple[str
                 repo, commit = _extract_from_slsa_v01(payload)
             if predicate_type == "https://witness.testifysec.com/attestation-collection/v0.1":
                 repo, commit = _extract_from_witness_provenance(payload)
-    except JsonExtractionException as error:
+    except JsonError as error:
         logger.debug(error)
-        raise ProvenanceExtractionException("JSON exception while extracting from provenance.") from error
+        raise ProvenanceError("JSON exception while extracting from provenance.") from error
 
     if not repo or not commit:
         msg = (
@@ -63,7 +59,7 @@ def extract_repo_and_commit_from_provenance(payload: InTotoPayload) -> tuple[str
             f"predicate_type {predicate_type}, in-toto {str(type(payload))}."
         )
         logger.debug(msg)
-        raise ProvenanceExtractionException(msg)
+        raise ProvenanceError(msg)
 
     logger.debug("Extracted repo and commit from provenance: %s, %s", repo, commit)
     return repo, commit
@@ -73,17 +69,17 @@ def _extract_from_slsa_v01(payload: InTotoV01Payload) -> tuple[str, str]:
     """Extract the repository and commit metadata from the slsa v01 provenance payload."""
     predicate: dict[str, JsonType] | None = payload.statement.get("predicate")
     if not predicate:
-        raise ProvenanceExtractionException("No predicate in payload statement.")
+        raise ProvenanceError("No predicate in payload statement.")
 
     # The repository URL and commit are stored inside an entry in the list of predicate -> materials.
     # In predicate -> recipe -> definedInMaterial we find the list index that points to the correct entry.
     list_index = json_extract(predicate, ["recipe", "definedInMaterial"], int)
     material_list = json_extract(predicate, ["materials"], list)
     if list_index >= len(material_list):
-        raise ProvenanceExtractionException("Material list index outside of material list bounds.")
+        raise ProvenanceError("Material list index outside of material list bounds.")
     material = material_list[list_index]
     if not material or not isinstance(material, dict):
-        raise ProvenanceExtractionException("Indexed material list entry is invalid.")
+        raise ProvenanceError("Indexed material list entry is invalid.")
 
     uri = json_extract(material, ["uri"], str)
 
@@ -93,7 +89,7 @@ def _extract_from_slsa_v01(payload: InTotoV01Payload) -> tuple[str, str]:
     commit = _extract_commit_from_digest_set(digest_set, SLSA_V01_DIGEST_SET_GIT_ALGORITHMS)
 
     if not commit:
-        raise ProvenanceExtractionException("Failed to extract commit hash from provenance.")
+        raise ProvenanceError("Failed to extract commit hash from provenance.")
 
     return repo, commit
 
@@ -102,20 +98,20 @@ def _extract_from_slsa_v02(payload: InTotoV01Payload) -> tuple[str, str]:
     """Extract the repository and commit metadata from the slsa v02 provenance payload."""
     predicate: dict[str, JsonType] | None = payload.statement.get("predicate")
     if not predicate:
-        raise ProvenanceExtractionException("No predicate in payload statement.")
+        raise ProvenanceError("No predicate in payload statement.")
 
     # The repository URL and commit are stored within the predicate -> invocation -> configSource object.
     # See https://slsa.dev/spec/v0.2/provenance
     uri = json_extract(predicate, ["invocation", "configSource", "uri"], str)
     if not uri:
-        raise ProvenanceExtractionException("Failed to extract repository URL from provenance.")
+        raise ProvenanceError("Failed to extract repository URL from provenance.")
     repo = _clean_spdx(uri)
 
     digest_set = json_extract(predicate, ["invocation", "configSource", "digest"], dict)
     commit = _extract_commit_from_digest_set(digest_set, SLSA_V02_DIGEST_SET_GIT_ALGORITHMS)
 
     if not commit:
-        raise ProvenanceExtractionException("Failed to extract commit hash from provenance.")
+        raise ProvenanceError("Failed to extract commit hash from provenance.")
 
     return repo, commit
 
@@ -124,7 +120,7 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str, str]:
     """Extract the repository and commit metadata from the slsa v1 provenance payload."""
     predicate: dict[str, JsonType] | None = payload.statement.get("predicate")
     if not predicate:
-        raise ProvenanceExtractionException("No predicate in payload statement.")
+        raise ProvenanceError("No predicate in payload statement.")
 
     build_def = json_extract(predicate, ["buildDefinition"], dict)
     build_type = json_extract(build_def, ["buildType"], str)
@@ -134,13 +130,13 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str, str]:
     if build_type == "https://slsa-framework.github.io/gcb-buildtypes/triggered-build/v1":
         try:
             repo = json_extract(build_def, ["externalParameters", "sourceToBuild", "repository"], str)
-        except JsonExtractionException:
+        except JsonError:
             repo = json_extract(build_def, ["externalParameters", "configSource", "repository"], str)
     if build_type == "https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1":
         repo = json_extract(build_def, ["externalParameters", "workflow", "repository"], str)
 
     if not repo:
-        raise ProvenanceExtractionException("Failed to extract repository URL from provenance.")
+        raise ProvenanceError("Failed to extract repository URL from provenance.")
 
     # Extract the commit hash.
     commit = ""
@@ -156,7 +152,7 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str, str]:
         commit = _extract_commit_from_digest_set(digest_set, SLSA_V1_DIGEST_SET_GIT_ALGORITHMS)
 
     if not commit:
-        raise ProvenanceExtractionException("Failed to extract commit hash from provenance.")
+        raise ProvenanceError("Failed to extract commit hash from provenance.")
 
     return repo, commit
 
@@ -179,7 +175,7 @@ def _extract_from_witness_provenance(payload: InTotoV01Payload) -> tuple[str, st
     """
     predicate: dict[str, JsonType] | None = payload.statement.get("predicate")
     if not predicate:
-        raise ProvenanceExtractionException("No predicate in payload statement.")
+        raise ProvenanceError("No predicate in payload statement.")
 
     attestations = json_extract(predicate, ["attestations"], list)
     commit = ""
@@ -198,7 +194,7 @@ def _extract_from_witness_provenance(payload: InTotoV01Payload) -> tuple[str, st
             repo = json_extract(entry, ["attestation", "projecturl"], str)
 
     if not commit or not repo:
-        raise ProvenanceExtractionException("Could not extract repo and commit from provenance.")
+        raise ProvenanceError("Could not extract repo and commit from provenance.")
 
     return repo, commit
 
@@ -216,7 +212,7 @@ def _extract_commit_from_digest_set(digest_set: dict[str, JsonType], valid_algor
             value = digest_set.get(key)
             if isinstance(value, str):
                 return value
-    raise ProvenanceExtractionException(f"No valid digest in digest set: {digest_set.keys()} not in {valid_algorithms}")
+    raise ProvenanceError(f"No valid digest in digest set: {digest_set.keys()} not in {valid_algorithms}")
 
 
 def _clean_spdx(uri: str) -> str:
@@ -226,49 +222,3 @@ def _clean_spdx(uri: str) -> str:
     """
     url, _, _ = uri.lstrip("git+").rpartition("@")
     return url
-
-
-class JsonExtractionException(MacaronError):
-    """When there is an error while extracting from JSON."""
-
-
-T = TypeVar("T", bound=JsonType)
-
-
-def json_extract(entry: JsonType, keys: list[str], type_: type[T]) -> T:
-    """Return the value found by following the list of depth-sequential keys inside the passed JSON dictionary.
-
-    The value must be of the passed type.
-
-    Parameters
-    ----------
-    entry: JsonType
-        An entry point into a JSON structure.
-    keys: list[str]
-        The list of depth-sequential keys within the JSON.
-    type: type[T]
-        The type to check the value against and return it as.
-
-    Returns
-    -------
-    T:
-        The found value as the type of the type parameter.
-
-    Raises
-    ------
-    JsonExtractionException
-        Raised if an error occurs while searching for or validating the value.
-    """
-    target = entry
-
-    for index, key in enumerate(keys):
-        if not isinstance(target, dict):
-            raise JsonExtractionException(f"Expect the value .{'.'.join(keys[:index])} to be a dict.")
-        if key not in target:
-            raise JsonExtractionException(f"JSON key '{key}' not found in .{'.'.join(keys[:index])}.")
-        target = target[key]
-
-    if isinstance(target, type_):
-        return target
-
-    raise JsonExtractionException(f"Expect the value .{'.'.join(keys)} to be of type '{type_}'.")

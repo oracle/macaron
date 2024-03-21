@@ -58,3 +58,11 @@ class InvalidHTTPResponseError(MacaronError):
 
 class CheckRegistryError(MacaronError):
     """The Check Registry Error class."""
+
+
+class ProvenanceError(MacaronError):
+    """When there is an error while extracting from provenance."""
+
+
+class JsonError(MacaronError):
+    """When there is an error while extracting from JSON."""

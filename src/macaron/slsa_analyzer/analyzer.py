@@ -26,6 +26,7 @@ from macaron.errors import (
     DuplicateError,
     InvalidPURLError,
     MacaronError,
+    ProvenanceError,
     PURLNotFoundError,
     RepoCheckOutError,
 )
@@ -33,10 +34,7 @@ from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
 from macaron.repo_finder.commit_finder import find_commit
-from macaron.repo_finder.provenance_extractor import (
-    ProvenanceExtractionException,
-    extract_repo_and_commit_from_provenance,
-)
+from macaron.repo_finder.provenance_extractor import extract_repo_and_commit_from_provenance
 from macaron.repo_finder.provenance_finder import ProvenanceFinder
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -660,7 +658,7 @@ class Analyzer:
                         # Try to find repository and commit via provenance.
                         try:
                             repo, digest = extract_repo_and_commit_from_provenance(provenance_payload)
-                        except ProvenanceExtractionException as error:
+                        except ProvenanceError as error:
                             logger.debug("Failed to extract repo and commit from provenance: %s", error)
 
                     if repo and digest:
