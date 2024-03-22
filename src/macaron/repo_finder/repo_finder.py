@@ -74,7 +74,7 @@ def find_repo(purl: PackageURL) -> str:
         return ""
 
     # Call Repo Finder and return first valid URL
-    logger.debug("Analyzing %s with Repo Finder: %s", purl.to_string(), repo_finder.__class__)
+    logger.debug("Analyzing %s with Repo Finder: %s", purl.to_string(), str(type(repo_finder)))
     return repo_finder.find_repo(purl)
 
 

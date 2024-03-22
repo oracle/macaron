@@ -136,8 +136,6 @@ def extract_witness_provenance_subjects(witness_payload: InTotoPayload) -> set[W
     dict[str, str]
         A dictionary in which each key is a subject name and each value is the corresponding SHA256 digest.
     """
-    # TODO: add support for in-toto v1 provenances.
-
     if isinstance(witness_payload, InTotoV01Payload):
         subjects = witness_payload.statement["subject"]
         subject_digests = set()

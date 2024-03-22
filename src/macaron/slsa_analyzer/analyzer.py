@@ -21,11 +21,21 @@ from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.dependency_analyzer import DependencyAnalyzer, DependencyInfo
-from macaron.errors import CloneError, DuplicateError, InvalidPURLError, PURLNotFoundError, RepoCheckOutError
+from macaron.errors import (
+    CloneError,
+    DuplicateError,
+    InvalidAnalysisTargetError,
+    InvalidPURLError,
+    ProvenanceError,
+    PURLNotFoundError,
+    RepoCheckOutError,
+)
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
 from macaron.repo_finder.commit_finder import find_commit
+from macaron.repo_finder.provenance_extractor import extract_repo_and_commit_from_provenance
+from macaron.repo_finder.provenance_finder import ProvenanceFinder
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import VirtualReleaseAsset
@@ -116,7 +126,7 @@ class Analyzer:
         user_config: dict,
         sbom_path: str = "",
         skip_deps: bool = False,
-        prov_payload: InTotoPayload | None = None,
+        provenance_payload: InTotoPayload | None = None,
     ) -> int:
         """Run the analysis and write results to the output path.
 
@@ -131,7 +141,7 @@ class Analyzer:
             The path to the SBOM.
         skip_deps : bool
             Flag to skip dependency resolution.
-        prov_payload : InToToPayload | None
+        provenance_payload : InToToPayload | None
             The provenance intoto payload for the main software component.
 
         Returns
@@ -165,7 +175,7 @@ class Analyzer:
                 main_record = self.run_single(
                     main_config,
                     analysis,
-                    prov_payload=prov_payload,
+                    provenance_payload=provenance_payload,
                 )
 
                 if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
@@ -267,7 +277,7 @@ class Analyzer:
         config: Configuration,
         analysis: Analysis,
         existing_records: dict[str, Record] | None = None,
-        prov_payload: InTotoPayload | None = None,
+        provenance_payload: InTotoPayload | None = None,
     ) -> Record:
         """Run the checks for a single repository target.
 
@@ -282,7 +292,7 @@ class Analyzer:
             The current analysis instance.
         existing_records : dict[str, Record] | None
             The mapping of existing records that the analysis has run successfully.
-        prov_payload : InToToPayload | None
+        provenance_payload : InToToPayload | None
             The provenance intoto payload for the analyzed software component.
 
         Returns
@@ -290,10 +300,39 @@ class Analyzer:
         Record
             The record of the analysis for this repository.
         """
+        # Parse the PURL.
         repo_id = config.get_value("id")
+        try:
+            parsed_purl = Analyzer.parse_purl(config)
+        except InvalidPURLError as error:
+            logger.error(error)
+            return Record(
+                record_id=repo_id,
+                description=str(error),
+                pre_config=config,
+                status=SCMStatus.ANALYSIS_FAILED,
+            )
+
+        if not provenance_payload and parsed_purl and not config.get_value("path"):
+            # Try to find the provenance file for the parsed PURL.
+            provenance_payload = ProvenanceFinder().find_provenance(parsed_purl)
+
+        # Create the analysis target.
+        available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
+        try:
+            analysis_target = Analyzer.to_analysis_target(config, available_domains, parsed_purl, provenance_payload)
+        except InvalidAnalysisTargetError as error:
+            return Record(
+                record_id=repo_id,
+                description=str(error),
+                pre_config=config,
+                status=SCMStatus.ANALYSIS_FAILED,
+            )
+
+        # Create the component.
         component = None
         try:
-            component = self.add_component(config, analysis, existing_records)
+            component = self.add_component(analysis, analysis_target, existing_records)
         except PURLNotFoundError as error:
             logger.error(error)
             return Record(
@@ -321,7 +360,7 @@ class Analyzer:
         analyze_ctx.dynamic_data["expectation"] = self.expectations.get_expectation_for_target(
             analyze_ctx.component.purl.split("@")[0]
         )
-        analyze_ctx.dynamic_data["provenance"] = prov_payload
+        analyze_ctx.dynamic_data["provenance"] = provenance_payload
         analyze_ctx.check_results = self.perform_checks(analyze_ctx)
 
         return Record(
@@ -441,7 +480,10 @@ class Analyzer:
         digest: str
 
     def add_component(
-        self, config: Configuration, analysis: Analysis, existing_records: dict[str, Record] | None = None
+        self,
+        analysis: Analysis,
+        analysis_target: AnalysisTarget,
+        existing_records: dict[str, Record] | None = None,
     ) -> Component:
         """Add a software component if it does not exist in the DB already.
 
@@ -450,10 +492,10 @@ class Analyzer:
 
         Parameters
         ----------
-        config: Configuration
-            The configuration for running Macaron.
         analysis: Analysis
             The current analysis instance.
+        analysis_target: AnalysisTarget
+            The target of this analysis.
         existing_records : dict[str, Record] | None
             The mapping of existing records that the analysis has run successfully.
 
@@ -470,15 +512,6 @@ class Analyzer:
             The component is already analyzed in the same session.
         """
         # Note: the component created in this function will be added to the database.
-        available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
-        try:
-            analysis_target = Analyzer.to_analysis_target(config, available_domains)
-        except InvalidPURLError as error:
-            raise PURLNotFoundError("Invalid input PURL.") from error
-
-        if not analysis_target.parsed_purl and not analysis_target.repo_path:
-            raise PURLNotFoundError("Cannot determine the analysis as PURL and/or repository path is not provided.")
-
         repository = None
         if analysis_target.repo_path:
             git_obj = self._prepare_repo(
@@ -528,21 +561,18 @@ class Analyzer:
         return Component(purl=analysis_target.parsed_purl.to_string(), analysis=analysis, repository=repository)
 
     @staticmethod
-    def to_analysis_target(config: Configuration, available_domains: list[str]) -> AnalysisTarget:
-        """Resolve the details of a software component from user input.
+    def parse_purl(config: Configuration) -> PackageURL | None:
+        """Parse the PURL provided in the input.
 
         Parameters
         ----------
         config : Configuration
             The target configuration that stores the user input values for the software component.
-        available_domains : list[str]
-            The list of supported git service host domain. This is used to convert repo-based PURL to a repository path
-            of the corresponding software component.
 
         Returns
         -------
-        AnalysisTarget
-            The NamedTuple that contains the resolved details for the software component.
+        PackageURL | None
+            The parsed PURL, or None if one was not provided as input.
 
         Raises
         ------
@@ -554,26 +584,58 @@ class Analyzer:
         # Therefore, their true types are ``str``, and an empty string indicates that the input value is not provided.
         # The purl might be a PackageURL type, a string, or None, which should be reduced down to an optional
         # PackageURL type.
-        parsed_purl: PackageURL | None
-        if config.get_value("purl") is None or config.get_value("purl") == "":
-            parsed_purl = None
-        elif isinstance(config.get_value("purl"), PackageURL):
-            parsed_purl = config.get_value("purl")
-        else:
-            try:
-                # Note that PackageURL.from_string sanitizes the unsafe characters in the purl string,
-                # which is user-controllable, by calling urllib's `urlsplit` function.
-                parsed_purl = PackageURL.from_string(config.get_value("purl"))
-            except ValueError as error:
-                raise InvalidPURLError(f"Invalid input PURL: {config.get_value('purl')}") from error
+        purl = config.get_value("purl")
+        if purl is None or purl == "":
+            return None
+        if isinstance(purl, PackageURL):
+            return purl
+        try:
+            # Note that PackageURL.from_string sanitizes the unsafe characters in the purl string,
+            # which is user-controllable, by calling urllib's `urlsplit` function.
+            return PackageURL.from_string(purl)
+        except ValueError as error:
+            raise InvalidPURLError(f"Invalid input PURL: {purl}") from error
 
+    @staticmethod
+    def to_analysis_target(
+        config: Configuration,
+        available_domains: list[str],
+        parsed_purl: PackageURL | None,
+        provenance_payload: InTotoPayload | None = None,
+    ) -> AnalysisTarget:
+        """Resolve the details of a software component from user input.
+
+        Parameters
+        ----------
+        config : Configuration
+            The target configuration that stores the user input values for the software component.
+        available_domains : list[str]
+            The list of supported git service host domain. This is used to convert repo-based PURL to a repository path
+            of the corresponding software component.
+        parsed_purl: PackageURL | None
+            The PURL to use for the analysis target, or None if one has not been provided.
+        provenance_payload : InToToPayload | None
+            The provenance in-toto payload for the software component.
+
+        Returns
+        -------
+        AnalysisTarget
+            The NamedTuple that contains the resolved details for the software component.
+
+        Raises
+        ------
+        InvalidAnalysisTargetError
+            Raised if a valid Analysis Target cannot be created.
+        """
         repo_path_input: str = config.get_value("path")
         input_branch: str = config.get_value("branch")
         input_digest: str = config.get_value("digest")
 
         match (parsed_purl, repo_path_input):
             case (None, ""):
-                return Analyzer.AnalysisTarget(parsed_purl=None, repo_path="", branch="", digest="")
+                raise InvalidAnalysisTargetError(
+                    "Cannot determine the analysis target: PURL and repository path are missing."
+                )
 
             case (None, _):
                 # If only the repository path is provided, we will use the user-provided repository path to create the
@@ -587,10 +649,27 @@ class Analyzer:
             case (_, ""):
                 # If a PURL but no repository path is provided, we try to extract the repository path from the PURL.
                 # Note that we can't always extract the repository path from any provided PURL.
-                repo = ""
                 converted_repo_path = None
+                repo: str = ""
+                digest: str = ""
                 # parsed_purl cannot be None here, but mypy cannot detect that without some extra help.
                 if parsed_purl is not None:
+                    if provenance_payload:
+                        # Try to find repository and commit via provenance.
+                        try:
+                            repo, digest = extract_repo_and_commit_from_provenance(provenance_payload)
+                        except ProvenanceError as error:
+                            logger.debug("Failed to extract repo and commit from provenance: %s", error)
+
+                    if repo and digest:
+                        return Analyzer.AnalysisTarget(
+                            parsed_purl=parsed_purl,
+                            repo_path=repo,
+                            branch="",
+                            digest=digest,
+                        )
+
+                    # The commit was not found from provenance. Proceed with Repo Finder.
                     converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)
                     if converted_repo_path is None:
                         # Try to find repo from PURL
@@ -612,7 +691,9 @@ class Analyzer:
                 )
 
             case _:
-                return Analyzer.AnalysisTarget(parsed_purl=None, repo_path="", branch="", digest="")
+                raise InvalidAnalysisTargetError(
+                    "Cannot determine the analysis target: PURL and repository path are missing."
+                )
 
     def get_analyze_ctx(self, component: Component) -> AnalyzeContext:
         """Return the analyze context for a target component.
@@ -673,7 +754,6 @@ class Analyzer:
             The pydriller.Git object of the repository or None if error.
         """
         # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
-
         logger.info(
             "Preparing the repository for the analysis (path=%s, branch=%s, digest=%s)",
             repo_path,
