@@ -99,6 +99,15 @@ if [[ -z "$NO_NPM_TEST" ]]; then
     $RUN_MACARON analyze -purl pkg:npm/@sigstore/mock@0.1.0 -rp https://github.com/sigstore/sigstore-js -b main -d ebdcfdfbdfeb9c9aeee6df53674ef230613629f5 --skip-deps || log_fail
 
     check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
+    echo -e "\n----------------------------------------------------------------------------------"
+    echo "semver@7.6.0: Extracting repository URL and commit from provenance while Repo Finder is disabled."
+    echo -e "----------------------------------------------------------------------------------\n"
+    JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/npm/semver/semver.json
+    JSON_RESULT=$WORKSPACE/output/reports/npm/semver/semver.json
+    $RUN_MACARON -dp tests/e2e/defaults/disable_repo_finder.ini analyze -purl pkg:npm/semver@7.6.0 || log_fail
+
+    check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 fi
 
 echo -e "\n----------------------------------------------------------------------------------"

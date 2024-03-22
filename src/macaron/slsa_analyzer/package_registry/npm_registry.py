@@ -185,6 +185,8 @@ class NPMRegistry(PackageRegistry):
                 logger.debug("dsseEnvelope attribute in the bundle is missing. Skipping...")
                 continue
 
+            logger.debug("Found attestation with valid predicateType: %s", att.get("predicateType"))
+
             try:
                 with open(download_path, "w", encoding="utf-8") as file:
                     json.dump(dsse_env, file)
@@ -198,6 +200,44 @@ class NPMRegistry(PackageRegistry):
                 )
 
         return False
+
+    def get_latest_version(self, namespace: str | None, name: str) -> str | None:
+        """Try to retrieve the latest version of a package from the registry.
+
+        Parameters
+        ----------
+        namespace: str | None
+            The optional namespace of the package.
+        name: str
+            The name of the package.
+
+        Returns
+        -------
+        str | None
+            The latest version of the package, or None if one cannot be found.
+        """
+        if not name:
+            return None
+
+        url = f"https://{self.hostname}"
+        if namespace:
+            url = f"{url}/{namespace}"
+        url = f"{url}/{name}/latest"
+
+        response = send_get_http_raw(url, timeout=self.request_timeout)
+
+        if not response or not response.text:
+            logger.debug("No valid response from NPM server for latest version.")
+            return None
+
+        json_data = json.loads(response.text)
+        version: str | None = json_data.get("version")
+        if not version:
+            logger.debug("No version found in response from NPM server.")
+            return None
+
+        logger.debug("Found version for NPM artifact: %s", version)
+        return version
 
 
 class NPMAttestationAsset(NamedTuple):

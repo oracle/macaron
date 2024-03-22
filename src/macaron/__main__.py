@@ -142,7 +142,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         run_config,
         analyzer_single_args.sbom_path,
         analyzer_single_args.skip_deps,
-        prov_payload=prov_payload,
+        provenance_payload=prov_payload,
     )
     sys.exit(status_code)
 
