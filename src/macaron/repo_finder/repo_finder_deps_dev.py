@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the PythonRepoFinderDD class to be used for finding repositories using deps.dev."""
@@ -9,6 +9,8 @@ from urllib.parse import quote as encode
 
 from packageurl import PackageURL
 
+from macaron.errors import JsonError
+from macaron.repo_finder.provenance_extractor import json_extract
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 from macaron.util import send_get_http_raw
@@ -47,7 +49,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
         str :
             The URL of the found repository.
         """
-        request_urls = self._create_urls(purl.namespace or "", purl.name, purl.version or "", purl.type)
+        request_urls = self._create_urls(purl)
         if not request_urls:
             logger.debug("No urls found for: %s", purl)
             return ""
@@ -70,7 +72,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         return ""
 
-    def _create_urls(self, namespace: str, name: str, version: str, type_: str) -> list[str]:
+    def _create_urls(self, purl: PackageURL) -> list[str]:
         """
         Create the urls to search for the metadata relating to the passed artifact.
 
@@ -78,27 +80,22 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         Parameters
         ----------
-        namespace : str
-            The PURL namespace.
-        name: str
-            The PURL name.
-        version: str
-            The PURL version.
-        type : str
-            The PURL type.
+        purl : PackageURL
+            The PURL of an artifact.
 
         Returns
         -------
         list[str]
             The list of created URLs.
         """
-        base_url = self._create_type_specific_url(namespace, name, type_)
+        # See https://docs.deps.dev/api/v3alpha/
+        base_url = f"https://api.deps.dev/v3alpha/purl/{encode(purl.to_string()).replace('/', '%2F')}"
 
         if not base_url:
             return []
 
-        if version:
-            return [f"{base_url}/versions/{version}"]
+        if purl.version:
+            return [base_url]
 
         # Find the latest version.
         response = send_get_http_raw(base_url, {})
@@ -106,15 +103,22 @@ class DepsDevRepoFinder(BaseRepoFinder):
         if not response:
             return []
 
-        metadata = json.loads(response.text)
-        versions = metadata["versions"]
-        latest_version = versions[len(version) - 1]["versionKey"]["version"]
+        try:
+            metadata: dict = json.loads(response.text)
+        except ValueError as error:
+            logger.debug("Failed to parse response from deps.dev: %s", error)
+            return []
 
-        if latest_version:
-            logger.debug("Found latest version: %s", latest_version)
-            return [f"{base_url}/versions/{latest_version}"]
+        try:
+            versions_keys = ["package", "versions"] if "package" in metadata else ["version"]
+            versions = json_extract(metadata, versions_keys, list)
+            latest_version = json_extract(versions[:-1], ["versionKey", "version"], str)
+        except JsonError as error:
+            logger.debug("Could not extract 'version' from deps.dev response: %s", error)
+            return []
 
-        return []
+        logger.debug("Found latest version: %s", latest_version)
+        return [f"{base_url}%40{latest_version}"]
 
     def _retrieve_json(self, url: str) -> str:
         """
@@ -151,54 +155,21 @@ class DepsDevRepoFinder(BaseRepoFinder):
         list[str] :
             The extracted contents as a list of strings.
         """
-        parsed = json.loads(json_data)
+        try:
+            parsed = json.loads(json_data)
+        except ValueError as error:
+            logger.debug("Failed to parse response from deps.dev: %s", error)
+            return []
 
-        if not parsed["links"]:
-            logger.debug("Metadata had no URLs: %s", parsed["versionKey"])
+        try:
+            links_keys = ["version", "links"] if "version" in parsed else ["links"]
+            links = json_extract(parsed, links_keys, list)
+        except JsonError as error:
+            logger.debug("Could not extract 'links' from deps.dev response: %s", error)
             return []
 
         result = []
-        for item in parsed["links"]:
+        for item in links:
             result.append(item.get("url"))
 
         return result
-
-    def _create_type_specific_url(self, namespace: str, name: str, type_: str) -> str:
-        """Create a URL for the deps.dev API based on the package type.
-
-        Parameters
-        ----------
-        namespace : str
-            The PURL namespace element.
-        name : str
-            The PURL name element.
-        type : str
-            The PURL type.
-
-        Returns
-        -------
-        str :
-            The specific URL relating to the package.
-        """
-        namespace = encode(namespace)
-        name = encode(name)
-
-        # See https://docs.deps.dev/api/v3alpha/
-        match type_:
-            case "pypi":
-                package_name = name.lower().replace("_", "-")
-            case "npm":
-                if namespace:
-                    package_name = f"{namespace}%2F{name}"
-                else:
-                    package_name = name
-            case "nuget" | "cargo":
-                package_name = name
-            case "maven":
-                package_name = f"{namespace}%3A{name}"
-
-            case _:
-                logger.debug("PURL type not yet supported: %s", type_)
-                return ""
-
-        return f"https://api.deps.dev/v3alpha/systems/{type_}/packages/{package_name}"
