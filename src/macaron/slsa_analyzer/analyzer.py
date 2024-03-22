@@ -554,11 +554,11 @@ class Analyzer:
                 name=repository.name,
                 version=repository.commit_sha,
             )
-            return Component(purl=repo_snapshot_purl.to_string(), analysis=analysis, repository=repository)
+            return Component(purl=str(repo_snapshot_purl), analysis=analysis, repository=repository)
 
         # If the PURL is available, we always create the software component with it whether the repository is
         # available or not.
-        return Component(purl=analysis_target.parsed_purl.to_string(), analysis=analysis, repository=repository)
+        return Component(purl=str(analysis_target.parsed_purl), analysis=analysis, repository=repository)
 
     @staticmethod
     def parse_purl(config: Configuration) -> PackageURL | None:
