@@ -90,6 +90,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
         """
         # See https://docs.deps.dev/api/v3alpha/
         base_url = f"https://api.deps.dev/v3alpha/purl/{encode(purl.to_string()).replace('/', '%2F')}"
+        print(f"URL: {base_url} -- {purl}")
 
         if not base_url:
             return []
@@ -112,7 +113,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
         try:
             versions_keys = ["package", "versions"] if "package" in metadata else ["version"]
             versions = json_extract(metadata, versions_keys, list)
-            latest_version = json_extract(versions[:-1], ["versionKey", "version"], str)
+            latest_version = json_extract(versions[-1], ["versionKey", "version"], str)
         except JsonError as error:
             logger.debug("Could not extract 'version' from deps.dev response: %s", error)
             return []
