@@ -70,11 +70,11 @@ def find_repo(purl: PackageURL) -> str:
     ]:
         repo_finder = DepsDevRepoFinder()
     else:
-        logger.debug("No Repo Finder found for package type: %s of %s", purl.type, purl.to_string())
+        logger.debug("No Repo Finder found for package type: %s of %s", purl.type, purl)
         return ""
 
     # Call Repo Finder and return first valid URL
-    logger.debug("Analyzing %s with Repo Finder: %s", purl.to_string(), str(type(repo_finder)))
+    logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
     return repo_finder.find_repo(purl)
 
 
@@ -129,14 +129,12 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
     """
     domain = to_domain_from_known_purl_types(purl.type) or (purl.type if purl.type in available_domains else None)
     if not domain:
-        logger.info(
-            "The PURL type of %s is not valid as a repository type. Trying to find the repository...", purl.to_string()
-        )
+        logger.info("The PURL type of %s is not valid as a repository type. Trying to find the repository...", purl)
         # Try to find the repository
         return find_repo(purl)
 
     if not purl.namespace:
-        logger.error("Expecting a non-empty namespace from %s.", purl.to_string())
+        logger.error("Expecting a non-empty namespace from %s.", purl)
         return None
 
     # TODO: Handle the version tag and commit digest if they are given in the PURL.
