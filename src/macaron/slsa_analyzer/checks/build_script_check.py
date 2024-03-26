@@ -4,6 +4,7 @@
 """This module contains the BuildScriptCheck class."""
 
 import logging
+import os
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
@@ -32,6 +33,12 @@ class BuildScriptFacts(CheckFacts):
     #: The name of the tool used to build.
     build_tool_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
+    #: The CI service name used to build and deploy.
+    ci_service_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
+
+    #: The entrypoint script that triggers the build and deploy.
+    build_trigger: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
+
     #: The language of the artifact built by build tool command.
     language: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
@@ -54,8 +61,6 @@ class BuildScriptFacts(CheckFacts):
     build_tool_command: Mapped[str] = mapped_column(
         String, nullable=True, info={"justification": JustificationType.TEXT}
     )
-    #: The caller CI.
-    caller_ci: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
 
     __mapper_args__ = {
         "polymorphic_identity": "_build_script_check",
@@ -112,9 +117,18 @@ class BuildScriptCheck(BaseCheck):
                     for build_command in ci_service.get_build_tool_commands(
                         callgraph=ci_info["callgraph"], build_tool=tool
                     ):
+                        trigger_link = ci_service.api_client.get_file_link(
+                            ctx.component.repository.full_name,
+                            ctx.component.repository.commit_sha,
+                            ci_service.api_client.get_relative_path_of_workflow(
+                                os.path.basename(build_command["ci_path"])
+                            ),
+                        )
                         result_tables.append(
                             BuildScriptFacts(
                                 build_tool_name=tool.name,
+                                ci_service_name=ci_service.name,
+                                build_trigger=trigger_link,
                                 language=build_command["language"],
                                 language_distributions=tool.serialize_to_json(build_command["language_distributions"])
                                 if build_command["language_distributions"]
@@ -124,7 +138,6 @@ class BuildScriptCheck(BaseCheck):
                                 else None,
                                 language_url=build_command["language_url"],
                                 build_tool_command=tool.serialize_to_json(build_command["command"]),
-                                caller_ci=build_command["ci_path"],
                                 confidence=Confidence.HIGH,
                             )
                         )

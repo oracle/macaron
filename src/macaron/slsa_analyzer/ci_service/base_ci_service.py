@@ -185,7 +185,8 @@ class BaseCIService:
         repo_full_name: str,
         workflow: str,
         date_time: datetime,
-        step_name: str,
+        step_name: str | None,
+        step_id: str | None,
         time_range: int = 0,
     ) -> set[str]:
         """Check if the repository has a workflow run started before the date_time timestamp within the time_range.

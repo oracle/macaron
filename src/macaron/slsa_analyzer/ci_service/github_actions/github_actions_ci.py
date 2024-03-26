@@ -249,7 +249,8 @@ class GitHubActions(BaseCIService):
         repo_full_name: str,
         workflow: str,
         date_time: datetime,
-        step_name: str,
+        step_name: str | None,
+        step_id: str | None,
         time_range: int = 0,
     ) -> set[str]:
         """Check if the repository has a workflow run started before the date_time timestamp within the time_range.
@@ -267,8 +268,10 @@ class GitHubActions(BaseCIService):
             The workflow URL.
         date_time: datetime
             The datetime object to query.
-        step_name: str
-            The step in the GitHub Action workflow that needs to be checked.
+        step_name: str | None
+            The name of the step in the GitHub Action workflow that needs to be checked.
+        step_id: str | None
+            The ID of the step in the GitHub Action workflow that needs to be checked.
         time_range: int
             The date-time range in seconds. The default value is 0.
             For example a 30 seconds range for 2022-11-05T20:30 is 2022-11-05T20:15..2022-11-05T20:45.
@@ -321,7 +324,7 @@ class GitHubActions(BaseCIService):
                     # Find the matching step and check its `conclusion` and `started_at` attributes.
                     for job in run_jobs["jobs"]:
                         for step in job["steps"]:
-                            if step["name"] != step_name or step["conclusion"] != "success":
+                            if (step["name"] not in [step_name, step_id]) or step["conclusion"] != "success":
                                 continue
                             try:
                                 if datetime.fromisoformat(step["started_at"]) < date_time:
@@ -499,27 +502,8 @@ class GitHubActions(BaseCIService):
             root.add_callee(callee)
         return gh_cg
 
-    def get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
-        """
-        Traverse the callgraph and find all the reachable build tool commands.
-
-        Parameters
-        ----------
-        callgraph: CallGraph
-            The callgraph reachable from the CI workflows.
-        build_tool: BaseBuildTool
-            The corresponding build tool for which shell commands need to be detected.
-
-        Yields
-        ------
-        BuildToolCommand
-            The object that contains the build command as well useful contextual information.
-
-        Raises
-        ------
-        CallGraphError
-            Error raised when an error occurs while traversing the callgraph.
-        """
+    def _get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
+        """Traverse the callgraph and find all the reachable build tool commands."""
         for node in callgraph.bfs():
             # We are just interested in nodes that have bash commands.
             if isinstance(node, BashNode):
@@ -557,10 +541,8 @@ class GitHubActions(BaseCIService):
                             lang_distributions = lang_model.lang_distributions
                             lang_url = lang_model.lang_url
                         yield BuildToolCommand(
-                            caller_path=workflow_node.source_path,
                             ci_path=workflow_node.source_path,
                             command=cmd,
-                            job_name=job_node.name,
                             step_node=step_node,
                             language=build_tool.language,
                             language_versions=lang_versions,
@@ -569,6 +551,35 @@ class GitHubActions(BaseCIService):
                             reachable_secrets=get_reachable_secrets(step_node),
                             events=get_ci_events(workflow_node),
                         )
+
+    def get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
+        """
+        Traverse the callgraph and find all the reachable build tool commands.
+
+        This generator yields sorted build tool command objects to allow a deterministic behavior.
+        The objects are sorted based on the string representation of the build tool object.
+
+        Parameters
+        ----------
+        callgraph: CallGraph
+            The callgraph reachable from the CI workflows.
+        build_tool: BaseBuildTool
+            The corresponding build tool for which shell commands need to be detected.
+
+        Yields
+        ------
+        BuildToolCommand
+            The object that contains the build command as well useful contextual information.
+
+        Raises
+        ------
+        CallGraphError
+            Error raised when an error occurs while traversing the callgraph.
+        """
+        yield from sorted(
+            self._get_build_tool_commands(callgraph=callgraph, build_tool=build_tool),
+            key=str,
+        )
 
     def get_third_party_configurations(self) -> list[str]:
         """Get the list of third-party CI configuration files.

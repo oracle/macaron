@@ -40,14 +40,8 @@ class BuildToolCommand(TypedDict):
     #: The URL providing information about the language distributions and versions.
     language_url: str | None
 
-    #: The relative path to the file that calls the command.
-    caller_path: str
-
     #: The relative path to the root CI file that ultimately triggers the command.
     ci_path: str
-
-    #: The name of the CI job that calls the command.
-    job_name: str
 
     #: The CI step object that calls the command.
     step_node: BaseNode

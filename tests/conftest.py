@@ -436,6 +436,7 @@ def build_github_actions_call_graph_for_commands(commands: list[str]) -> CallGra
     job_node.add_callee(
         create_bash_node(
             name="run",
+            node_id=None,
             node_type=BashScriptType.INLINE,
             source_path="",
             parsed_obj=run_step,

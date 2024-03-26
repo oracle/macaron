@@ -13,7 +13,7 @@ from sqlalchemy.sql.sqltypes import String
 
 from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
-from macaron.slsa_analyzer.analyze_context import AnalyzeContext
+from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_provenance
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.github_actions.analyzer import GHWorkflowType, GitHubJobNode, GitHubWorkflowNode
@@ -126,7 +126,7 @@ class TrustedBuilderL3Check(BaseCheck):
                             ci_service.api_client.get_relative_path_of_workflow(os.path.basename(caller_path)),
                         )
 
-                        self.store_inferred_provenance(
+                        store_inferred_provenance(
                             ctx=ctx, ci_info=ci_info, ci_service=ci_service, trigger_link=caller_link
                         )
 

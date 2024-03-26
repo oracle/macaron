@@ -13,7 +13,7 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.database.table_definitions import CheckFacts
 from macaron.errors import CallGraphError
 from macaron.parsers.bashparser import BashNode
-from macaron.slsa_analyzer.analyze_context import AnalyzeContext
+from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_provenance
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
@@ -146,6 +146,7 @@ class BuildAsCodeCheck(BaseCheck):
                             if workflow_name in trusted_deploy_actions:
                                 job_id = ""
                                 step_id = ""
+                                step_name = ""
                                 caller_path = ""
                                 job = callee.caller
                                 if isinstance(job, GitHubJobNode):
@@ -153,8 +154,11 @@ class BuildAsCodeCheck(BaseCheck):
                                         job_id = job.parsed_obj["ID"]["Value"]
                                     caller_path = job.source_path
 
+                                if callee.parsed_obj.get("ID") and callee.parsed_obj["ID"].get("Value"):
+                                    step_id = callee.parsed_obj["ID"]["Value"]
+
                                 if callee.parsed_obj.get("Name") and callee.parsed_obj["Name"].get("Value"):
-                                    step_id = callee.parsed_obj["Name"]["Value"]
+                                    step_name = callee.parsed_obj["Name"]["Value"]
 
                                 trigger_link = ci_service.api_client.get_file_link(
                                     ctx.component.repository.full_name,
@@ -165,13 +169,14 @@ class BuildAsCodeCheck(BaseCheck):
                                     if caller_path
                                     else "",
                                 )
-                                self.store_inferred_provenance(
+                                store_inferred_provenance(
                                     ctx=ctx,
                                     ci_info=ci_info,
                                     ci_service=ci_service,
                                     trigger_link=trigger_link,
                                     job_id=job_id,
                                     step_id=step_id,
+                                    step_name=step_name,
                                 )
                                 result_tables.append(
                                     BuildAsCodeFacts(
@@ -206,13 +211,16 @@ class BuildAsCodeCheck(BaseCheck):
                                 not result_tables
                                 or confidence > max(result_tables, key=lambda item: item.confidence).confidence
                             ):
-                                self.store_inferred_provenance(
+                                store_inferred_provenance(
                                     ctx=ctx,
                                     ci_info=ci_info,
                                     ci_service=ci_service,
                                     trigger_link=trigger_link,
-                                    job_id=build_command["job_name"],
-                                    step_id=build_command["step_node"].name
+                                    job_id=build_command["step_node"].caller.name
+                                    if isinstance(build_command["step_node"].caller, GitHubJobNode)
+                                    else None,
+                                    step_id=build_command["step_node"].node_id,
+                                    step_name=build_command["step_node"].name
                                     if isinstance(build_command["step_node"], BashNode)
                                     else None,
                                 )
@@ -250,7 +258,7 @@ class BuildAsCodeCheck(BaseCheck):
                             if not config_name:
                                 break
 
-                            self.store_inferred_provenance(
+                            store_inferred_provenance(
                                 ctx=ctx, ci_info=ci_info, ci_service=ci_service, trigger_link=config_name
                             )
                             result_tables.append(

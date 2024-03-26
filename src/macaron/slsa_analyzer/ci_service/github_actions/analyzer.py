@@ -9,6 +9,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 from macaron.code_analyzer.call_graph import BaseNode
 from macaron.config.global_config import global_config
@@ -50,8 +51,8 @@ class GitHubWorkflowNode(BaseNode):
         node_type: GHWorkflowType,
         source_path: str,
         parsed_obj: dict,
-        caller: BaseNode | None = None,
         model: ThirdPartyAction | None = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize instance.
 
@@ -70,7 +71,7 @@ class GitHubWorkflowNode(BaseNode):
         model: ThirdPartyAction | None
             The static analysis abstraction for the third-party GitHub Action.
         """
-        super().__init__(caller=caller)
+        super().__init__(**kwargs)
         self.name = name
         self.node_type: GHWorkflowType = node_type
         self.source_path = source_path
@@ -84,7 +85,7 @@ class GitHubWorkflowNode(BaseNode):
 class GitHubJobNode(BaseNode):
     """This class is used to create a call graph node for GitHub Actions jobs."""
 
-    def __init__(self, name: str, source_path: str, parsed_obj: dict, caller: BaseNode) -> None:
+    def __init__(self, name: str, source_path: str, parsed_obj: dict, **kwargs: Any) -> None:
         """Initialize instance.
 
         Parameters
@@ -98,7 +99,7 @@ class GitHubJobNode(BaseNode):
         caller: BaseNode
             The caller node.
         """
-        super().__init__(caller=caller)
+        super().__init__(**kwargs)
         self.name = name
         self.source_path = source_path
         self.parsed_obj = parsed_obj
@@ -265,13 +266,15 @@ def build_call_graph_from_node(node: GitHubWorkflowNode, repo_path: str) -> None
             ):
                 try:
                     name = "UNKNOWN"
+                    node_id = None
                     if step.get("ID") and step["ID"].get("Value"):
-                        name = step["ID"]["Value"]
-                    elif step.get("Name") and step["Name"].get("Value"):
+                        node_id = step["ID"]["Value"]
+                    if step.get("Name") and step["Name"].get("Value"):
                         name = step["Name"]["Value"]
 
                     callee = create_bash_node(
                         name=name,
+                        node_id=node_id,
                         node_type=BashScriptType.INLINE,
                         source_path=node.source_path,
                         parsed_obj=step,
@@ -707,7 +710,7 @@ def create_third_party_action_model(external_node: GitHubWorkflowNode) -> ThirdP
     action_name = external_node.name
     action_version = None
     if "@" in external_node.name:
-        action_name, action_version = external_node.name.split("@")
+        action_name, action_version = external_node.name.split("@", maxsplit=1)
     match action_name:
         case "actions/setup-java":
             return SetupJava(external_node=external_node)

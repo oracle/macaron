@@ -21,19 +21,22 @@ Node = TypeVar("Node", bound="BaseNode")
 class BaseNode(Generic[Node]):
     """This is the generic class for call graph nodes."""
 
-    def __init__(self, caller: Node | None = None) -> None:
+    def __init__(self, caller: Node | None = None, node_id: str | None = None) -> None:
         """Initialize instance.
 
         Parameter
         ---------
         caller: Node | None
             The caller node.
+        node_id: str | None
+            The unique identifier of a node in the callgraph.
         """
         self.callee: list[Node] = []
         self.caller: Node | None = caller
         # Each node can have a model that summarizes certain properties for static analysis.
         # By default this model is set to None.
         self.model: Any = None
+        self.node_id = node_id
 
     def add_callee(self, node: Node) -> None:
         """Add a callee to the current node.

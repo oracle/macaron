@@ -14,6 +14,7 @@ import logging
 import os
 import subprocess  # nosec B404
 from enum import Enum
+from typing import Any
 
 from macaron.code_analyzer.call_graph import BaseNode
 from macaron.config.defaults import defaults
@@ -42,14 +43,14 @@ class BashNode(BaseNode):
         source_path: str,
         parsed_step_obj: dict | None,
         parsed_bash_obj: dict,
-        caller: BaseNode,
+        **kwargs: Any,
     ) -> None:
         """Initialize instance.
 
         Parameters
         ----------
         name : str
-            Name of the bash script file or the step ID if the script is inlined.
+            Name of the bash script file or the step name if the script is inlined.
         node_type : BashScriptType
             The type of the script.
         source_path : str
@@ -58,10 +59,8 @@ class BashNode(BaseNode):
             The parsed step object.
         parsed_bash_obj : dict
             The parsed bash script object.
-        caller : BaseNode
-            The caller node.
         """
-        super().__init__(caller=caller)
+        super().__init__(**kwargs)
         self.name = name
         self.node_type: BashScriptType = node_type
         self.source_path = source_path
@@ -150,6 +149,7 @@ def parse(bash_content: str, macaron_path: str | None = None) -> dict:
 
 def create_bash_node(
     name: str,
+    node_id: str | None,
     node_type: BashScriptType,
     source_path: str,
     parsed_obj: dict | None,
@@ -169,12 +169,14 @@ def create_bash_node(
     ----------
     name: str
         A name to be used as the identifier of the node.
+    node_id: str | None
+        The node ID if defined.
     node_type: BashScriptType
         The type of the node.
     source_path: str
         The file that contains the bash script.
     parsed_obj: dict | None
-        The parsed bash scrit object.
+        The parsed bash script object.
     repo_path: str
         The path to the target repo.
     caller: BaseNode
@@ -214,7 +216,13 @@ def create_bash_node(
         case BashScriptType.FILE:
             parsed_content = parse_file(source_path, macaron_path=macaron_path)
     bash_node = BashNode(
-        name, node_type, source_path, parsed_step_obj=parsed_obj, parsed_bash_obj=parsed_content, caller=caller
+        name,
+        node_type,
+        source_path,
+        parsed_step_obj=parsed_obj,
+        parsed_bash_obj=parsed_content,
+        node_id=node_id,
+        caller=caller,
     )
     caller_commands = parsed_content.get("commands", [])
 
@@ -222,12 +230,12 @@ def create_bash_node(
     if caller_commands and repo_path:
         for cmd in caller_commands:
             # Parse the scripts that end with `.sh`.
-            # We only parse recursively at depth 1, so don't set the recursive argument in parse_file().
             # TODO: parse Makefiles for bash commands.
             if cmd[0] and cmd[0].endswith(".sh") and os.path.exists(os.path.join(repo_path, working_dir or "", cmd[0])):
                 try:
                     callee = create_bash_node(
                         name=cmd[0],
+                        node_id=node_id,
                         node_type=BashScriptType.FILE,
                         source_path=os.path.join(repo_path, cmd[0]),
                         parsed_obj=None,

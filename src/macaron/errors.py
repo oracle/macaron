@@ -70,7 +70,8 @@ class JsonError(MacaronError):
 
 class InvalidAnalysisTargetError(MacaronError):
     """When a valid Analysis Target cannot be constructed."""
-    
+
+
 class ParseError(MacaronError):
     """The errors related to parsers."""
 

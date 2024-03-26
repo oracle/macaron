@@ -44,6 +44,7 @@ def test_create_bash_node_recursively() -> None:
     with pytest.raises(CallGraphError, match="The analysis has reached maximum recursion depth .*"):
         create_bash_node(
             name="run",
+            node_id=None,
             node_type=BashScriptType.FILE,
             source_path=os.path.join(resources_dir, "recursive.sh"),
             parsed_obj=None,
