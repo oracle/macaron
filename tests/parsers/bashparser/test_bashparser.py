@@ -53,3 +53,19 @@ def test_create_bash_node_recursively() -> None:
             recursion_depth=0,
             macaron_path=MACARON_PATH,
         )
+
+
+def test_create_bash_node_path_traversal_attack() -> None:
+    """Test creating bash nodes from a script that is vulnerable to path traversal attacks."""
+    resources_dir = Path(__file__).parent.joinpath("resources", "bash_files")
+    assert not create_bash_node(
+        name="run",
+        node_id=None,
+        node_type=BashScriptType.FILE,
+        source_path=os.path.join(resources_dir, "path_traversal.sh"),
+        parsed_obj=None,
+        repo_path=str(resources_dir),
+        caller=BaseNode(),
+        recursion_depth=0,
+        macaron_path=MACARON_PATH,
+    ).callee

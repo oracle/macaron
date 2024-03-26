@@ -231,13 +231,18 @@ def create_bash_node(
         for cmd in caller_commands:
             # Parse the scripts that end with `.sh`.
             # TODO: parse Makefiles for bash commands.
-            if cmd[0] and cmd[0].endswith(".sh") and os.path.exists(os.path.join(repo_path, working_dir or "", cmd[0])):
+            if not cmd[0] or not cmd[0].endswith(".sh"):
+                continue
+
+            # Check for path traversal patterns before analyzing a bash file.
+            bash_file_path = os.path.realpath(os.path.join(repo_path, working_dir or "", cmd[0]))
+            if os.path.exists(bash_file_path) and bash_file_path.startswith(repo_path):
                 try:
                     callee = create_bash_node(
                         name=cmd[0],
                         node_id=node_id,
                         node_type=BashScriptType.FILE,
-                        source_path=os.path.join(repo_path, cmd[0]),
+                        source_path=bash_file_path,
                         parsed_obj=None,
                         repo_path=repo_path,
                         caller=bash_node,
