@@ -168,6 +168,13 @@ class Component(PackageURLMixin, ORMBase):
         secondaryjoin=components_association_table.c.child_component == id,
     )
 
+    #: The optional one-to-one relationship with a provenance subject in case this
+    #: component represents a subject in a provenance.
+    provenance_subject: Mapped["ProvenanceSubject | None"] = relationship(
+        back_populates="component",
+        lazy="immediate",
+    )
+
     def __init__(self, purl: str, analysis: Analysis, repository: "Repository | None"):
         """
         Instantiate the software component using PURL identifier.
@@ -528,3 +535,31 @@ class HashDigest(ORMBase):
 
     #: The many-to-one relationship with artifacts.
     artifact: Mapped["ReleaseArtifact"] = relationship(back_populates="digests", lazy="immediate")
+
+
+class ProvenanceSubject(ORMBase):
+    """A subject in a provenance that matches the user-provided PackageURL.
+
+    This subject may be later populated in VSAs during policy verification.
+    """
+
+    __tablename__ = "_provenance_subject"
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+
+    #: The component id of the provenance subject.
+    component_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("_component.id"),
+        nullable=False,
+    )
+
+    #: The required one-to-one relationship with a component.
+    component: Mapped[Component] = relationship(
+        back_populates="provenance_subject",
+        lazy="immediate",
+    )
+
+    #: The SHA256 hash of the subject.
+    sha256: Mapped[str] = mapped_column(String, nullable=False)
