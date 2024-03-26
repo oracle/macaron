@@ -6,10 +6,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import NamedTuple, TypeVar
+from typing import NamedTuple, Protocol, TypeVar
+
+from packageurl import PackageURL
 
 from macaron.slsa_analyzer.provenance.intoto import v01, v1
 from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
+from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Subject
+from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1ResourceDescriptor
 from macaron.util import JsonType
 
 # Type of an in-toto statement.
@@ -119,3 +123,31 @@ def validate_intoto_payload(payload: dict[str, JsonType]) -> InTotoPayload:
             raise error
 
     raise ValidateInTotoPayloadError("Invalid value for the attribute '_type' of the provenance payload.")
+
+
+class ProvenanceSubjectPURLMatcher(Protocol):
+    """Interface for a matcher that matches a PURL to a subject in the provenance."""
+
+    @staticmethod
+    def get_subject_in_provenance_matching_purl(
+        provenance_payload: InTotoPayload,
+        purl: PackageURL,
+    ) -> InTotoV01Subject | InTotoV1ResourceDescriptor | None:
+        """Obtain the subject in the provenance payload matching the given PackageURL.
+
+        This function assumes there is only one such subject. If there are multiple
+        such subjects, the first matching subject is returned. However, this should not
+        happen since the PackageURL should be specific enough to identify a single subject.
+
+        Parameters
+        ----------
+        provenance_payload : InTotoPayload
+            The provenance payload.
+        purl : PackageURL
+            The PackageURL identifying the matching subject.
+
+        Returns
+        -------
+        InTotoV01Subject | InTotoV1ResourceDescriptor | None
+            The subject in the provenance matching the given PURL.
+        """

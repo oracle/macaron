@@ -6,8 +6,7 @@
 import pytest
 from packageurl import PackageURL
 
-from macaron.artifact.maven import MavenArtifact, MavenArtifactType
-# , MavenSubjectPURLMatcher
+from macaron.artifact.maven import MavenArtifact, MavenArtifactType, MavenSubjectPURLMatcher
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
 
 

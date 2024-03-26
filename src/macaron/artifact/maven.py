@@ -10,6 +10,15 @@ from typing import NamedTuple, Self
 
 from packageurl import PackageURL
 
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
+from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Subject
+from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1ResourceDescriptor
+from macaron.slsa_analyzer.provenance.witness import (
+    extract_build_artifacts_from_witness_subjects,
+    is_witness_provenance_payload,
+    load_witness_verifier_config,
+)
+
 
 class _MavenArtifactType(NamedTuple):
     filename_pattern: str
@@ -142,4 +151,53 @@ class MavenArtifact:
                 version=version,
                 artifact_type=maven_artifact_type,
             )
+        return None
+
+
+class MavenSubjectPURLMatcher:
+    """A matcher matching a PURL identifying a Maven artifact to a provenance subject."""
+
+    @staticmethod
+    def get_subject_in_provenance_matching_purl(
+        provenance_payload: InTotoPayload, purl: PackageURL
+    ) -> InTotoV01Subject | InTotoV1ResourceDescriptor | None:
+        """Get the subject in the provenance matching the PURL.
+
+        In this case where the provenance is assumed to be built from a Java project,
+        the subject must be a Maven artifact.
+
+        Parameters
+        ----------
+        provenance_payload : InTotoPayload
+            The provenance payload.
+        purl : PackageURL
+            The PackageURL identifying the matching subject.
+
+        Returns
+        -------
+        InTotoV01Subject | InTotoV1ResourceDescriptor | None
+            The subject in the provenance matching the given PURL.
+        """
+        if (maven_artifact := MavenArtifact.from_package_url(purl)) and is_witness_provenance_payload(
+            payload=provenance_payload,
+            predicate_types=load_witness_verifier_config().predicate_types,
+        ):
+            artifact_subjects = extract_build_artifacts_from_witness_subjects(provenance_payload)
+
+            maven_artifact_subject_pairs = []
+            for subject in artifact_subjects:
+                _, _, artifact_name = subject["name"].rpartition("/")
+                artifact = MavenArtifact.from_artifact_name(
+                    artifact_name=artifact_name,
+                    group_id=maven_artifact.group_id,
+                    version=maven_artifact.version,
+                )
+                if artifact is None:
+                    continue
+                maven_artifact_subject_pairs.append((artifact, subject))
+
+            for artifact, subject in maven_artifact_subject_pairs:
+                if artifact.package_url == purl:
+                    return subject
+
         return None
