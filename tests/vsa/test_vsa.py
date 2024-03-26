@@ -6,7 +6,7 @@
 
 import pytest
 
-from macaron.vsa.vsa import VerificationResult, get_subject_verification_result
+from macaron.vsa.vsa import get_components_passing_policy
 
 
 @pytest.mark.parametrize(
@@ -23,22 +23,8 @@ from macaron.vsa.vsa import VerificationResult, get_subject_verification_result
                 ],
                 "component_violates_policy": [],
             },
-            ("pkg:github.com/slsa-framework/slsa-verifier@v2.0.0", VerificationResult.PASSED),
+            {"pkg:github.com/slsa-framework/slsa-verifier@v2.0.0": 1},
             id="A single PURL satisfying policy",
-        ),
-        pytest.param(
-            {
-                "component_satisfies_policy": [],
-                "component_violates_policy": [
-                    [
-                        "1",
-                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
-                        "slsa_verifier_policy",
-                    ],
-                ],
-            },
-            ("pkg:github.com/slsa-framework/slsa-verifier@v2.0.0", VerificationResult.FAILED),
-            id="A single PURL violating policy",
         ),
         pytest.param(
             {
@@ -56,81 +42,9 @@ from macaron.vsa.vsa import VerificationResult, get_subject_verification_result
                 ],
                 "component_violates_policy": [],
             },
-            ("pkg:github.com/slsa-framework/slsa-verifier@v2.0.0", VerificationResult.PASSED),
+            {"pkg:github.com/slsa-framework/slsa-verifier@v2.0.0": 2},
             id="Two occurrences of the same PURL both satisfying a policy",
         ),
-        pytest.param(
-            {
-                "component_satisfies_policy": [],
-                "component_violates_policy": [
-                    [
-                        "1",
-                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
-                        "slsa_verifier_policy",
-                    ],
-                    [
-                        "2",
-                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
-                        "slsa_verifier_policy",
-                    ],
-                ],
-            },
-            ("pkg:github.com/slsa-framework/slsa-verifier@v2.0.0", VerificationResult.FAILED),
-            id="Two occurrences of the same PURL both violating a policy",
-        ),
-        pytest.param(
-            {
-                "component_satisfies_policy": [
-                    [
-                        "1000",
-                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
-                        "slsa_verifier_policy",
-                    ],
-                ],
-                "component_violates_policy": [
-                    [
-                        "9",
-                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
-                        "slsa_verifier_policy",
-                    ],
-                ],
-            },
-            ("pkg:github.com/slsa-framework/slsa-verifier@v2.0.0", VerificationResult.PASSED),
-            id="Two occurrences of the same PURL, the one satisfying the policy is latest",
-        ),
-        pytest.param(
-            {
-                "component_satisfies_policy": [
-                    [
-                        "9",
-                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
-                        "slsa_verifier_policy",
-                    ],
-                ],
-                "component_violates_policy": [
-                    [
-                        "1000",
-                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
-                        "slsa_verifier_policy",
-                    ],
-                ],
-            },
-            ("pkg:github.com/slsa-framework/slsa-verifier@v2.0.0", VerificationResult.FAILED),
-            id="Two occurrences of the same PURL, the one violating the policy is latest",
-        ),
-    ],
-)
-def test_valid_subject_verification_result(
-    policy_result: dict,
-    expected: tuple[str, VerificationResult],
-) -> None:
-    """Test the ``get_subject_verification_result`` in cases where there is a result."""
-    assert get_subject_verification_result(policy_result) == expected
-
-
-@pytest.mark.parametrize(
-    ("policy_result"),
-    [
         pytest.param(
             {
                 "component_satisfies_policy": [
@@ -147,7 +61,75 @@ def test_valid_subject_verification_result(
                 ],
                 "component_violates_policy": [],
             },
+            {
+                "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0": 1,
+                "pkg:github.com/slsa-framework/slsa-github-generator@v1.0.0": 2,
+            },
             id="Two different PURLs both satisfying a policy",
+        ),
+    ],
+)
+def test_valid_subject_verification_result(
+    policy_result: dict,
+    expected: dict[str, int],
+) -> None:
+    """Test the ``get_components_passing_policy`` in cases where there is a result."""
+    assert get_components_passing_policy(policy_result) == expected
+
+
+@pytest.mark.parametrize(
+    ("policy_result"),
+    [
+        pytest.param(
+            {
+                "component_satisfies_policy": [],
+                "component_violates_policy": [
+                    [
+                        "1",
+                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
+                        "slsa_verifier_policy",
+                    ],
+                ],
+            },
+            id="A single PURL violating policy",
+        ),
+        pytest.param(
+            {
+                "component_satisfies_policy": [
+                    [
+                        "9",
+                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
+                        "slsa_verifier_policy",
+                    ],
+                ],
+                "component_violates_policy": [
+                    [
+                        "1000",
+                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
+                        "slsa_verifier_policy",
+                    ],
+                ],
+            },
+            id="Two occurrences of the same PURL, the one violating the policy is latest",
+        ),
+        pytest.param(
+            {
+                "component_satisfies_policy": [
+                    [
+                        "1000",
+                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
+                        "slsa_verifier_policy",
+                    ],
+                ],
+                "component_violates_policy": [
+                    [
+                        "9",
+                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
+                        "slsa_verifier_policy",
+                    ],
+                ],
+            },
+            id="Two occurrences of the same PURL, the one satisfying the policy is latest",
         ),
         pytest.param(
             {
@@ -203,23 +185,10 @@ def test_valid_subject_verification_result(
             },
             id="Component id is not an auto-incremented number 1",
         ),
-        pytest.param(
-            {
-                "component_satisfies_policy": [],
-                "component_violates_policy": [
-                    [
-                        "foo",
-                        "pkg:github.com/slsa-framework/slsa-verifier@v2.0.0",
-                        "slsa_verifier_policy",
-                    ],
-                ],
-            },
-            id="Component id is not an auto-incremented number 2",
-        ),
     ],
 )
 def test_invalid_subject_verification_result(
     policy_result: dict,
 ) -> None:
-    """Test the ``get_subject_verification_result`` in cases where the result should be ``None``."""
-    assert get_subject_verification_result(policy_result) is None
+    """Test the ``get_components_passing_policy`` in cases where the result should be ``None``."""
+    assert get_components_passing_policy(policy_result) is None

@@ -9,9 +9,18 @@ import base64
 import datetime
 import json
 import logging
+from collections.abc import Iterable
 from enum import StrEnum
 from importlib import metadata as importlib_metadata
 from typing import TypedDict
+
+import sqlalchemy
+from packageurl import PackageURL
+from sqlalchemy.orm import Session
+
+from macaron.database.database_manager import get_db_manager
+from macaron.database.table_definitions import ProvenanceSubject
+from macaron.util import JsonType
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -135,11 +144,42 @@ class VerificationResult(StrEnum):
     PASSED = "PASSED"
 
 
+def get_common_purl_from_artifact_purls(purl_strs: Iterable[str]) -> str | None:
+    """Get a single common PackageURL given some artifact PackageURLs.
+
+    Assumption: A package may have more than one artifact. If each artifact is identified
+    by a PackageURL, these PackageURLs still share the type, namespace, name, and
+    version values. The common PackageURL contains these values.
+    """
+    try:
+        purls = [PackageURL.from_string(_) for _ in purl_strs]
+    except ValueError:
+        return None
+
+    purl_type = purls[0].type
+    namespace = purls[0].namespace
+    name = purls[0].name
+    version = purls[0].version
+
+    for purl in purls:
+        if any(
+            [
+                purl_type != purl.type,
+                namespace != purl.namespace,
+                name != purl.name,
+                version != purl.version,
+            ]
+        ):
+            return None
+
+    common_purl = PackageURL(type=purl_type, namespace=namespace, name=name, version=version)
+    return str(common_purl)
+
+
 def create_vsa_statement(
-    subject_purl: str,
+    passed_components: dict[str, int],
     policy_content: str,
-    verification_result: VerificationResult,
-) -> VsaStatement:
+) -> VsaStatement | None:
     """Construct the Statement layer of the VSA.
 
     Parameters
@@ -157,13 +197,49 @@ def create_vsa_statement(
     VsaStatement
         A Statement layer of the VSA.
     """
+    subjects = []
+
+    try:
+        with Session(get_db_manager().engine) as session, session.begin():
+            for purl, component_id in passed_components.items():
+                try:
+                    provenance_subject = (
+                        session.execute(
+                            sqlalchemy.select(ProvenanceSubject).where(ProvenanceSubject.component_id == component_id)
+                        )
+                        .scalars()
+                        .one()
+                    )
+                    sha256 = provenance_subject.sha256
+                except sqlalchemy.orm.exc.NoResultFound:
+                    sha256 = None
+                    logger.debug("No digest stored for software component '%s'.", purl)
+                except sqlalchemy.orm.exc.MultipleResultsFound as e:
+                    logger.debug(
+                        "Unexpected database query result. "
+                        "Expected no more than one result when retrieving SHA256 of a provenance subject. "
+                        "Error: %s",
+                        e,
+                    )
+                    continue
+
+                subject: dict[str, JsonType] = {
+                    "uri": purl,
+                }
+                if sha256:
+                    subject["digest"] = {
+                        "sha256": sha256,
+                    }
+
+                subjects.append(subject)
+
+    except sqlalchemy.exc.SQLAlchemyError as error:
+        logger.debug("Cannot retrieve hash digest of software components: %s.", error)
+        return None
+
     return VsaStatement(
         _type="https://in-toto.io/Statement/v1",
-        subject=[
-            {
-                "uri": subject_purl,
-            }
-        ],
+        subject=subjects,
         predicateType="https://slsa.dev/verification_summary/v1",
         predicate=VsaPredicate(
             verifier=Verifier(
@@ -173,34 +249,33 @@ def create_vsa_statement(
                 },
             ),
             timeVerified=datetime.datetime.now(tz=datetime.UTC).isoformat(),
-            resourceUri=subject_purl,
+            resourceUri=get_common_purl_from_artifact_purls(passed_components.keys()) or "",
             policy={
                 "content": policy_content,
             },
-            verificationResult=verification_result,
+            verificationResult=VerificationResult.PASSED,
             verifiedLevels=[],
         ),
     )
 
 
-def get_subject_verification_result(policy_result: dict) -> tuple[str, VerificationResult] | None:
-    """Get the PURL (string) and verification result of the single software component the policy applies to.
+def get_components_passing_policy(policy_result: dict) -> dict[str, int] | None:
+    """Get the verification result in the form of PURLs and component ids of software artifacts passing the policy.
 
     This is currently done by reading the facts of two relations:
     ``component_violates_policy``, and ``component_satisfies_policy``
     from the result of the policy engine.
 
-    We define two PURLs to be different if the two PURL strings are different.
+    The result of this function depends on the policy engine result.
 
-    The result of this function depends on the policy engine result:
+    If there exist any software component failing the policy, this function returns ``None``.
 
-    - If there exist multiple different PURLs, this function returns ``None``.
-    - If there exist multiple occurrences of the same PURL and it is the only unique
-      PURL in the policy engine result, this function returns the latest occurrence,
-      which is the PURL that goes with the highest component ID, taking advantage of
-      component IDs being auto-incremented.
-    - If there is no PURL in the result, i.e. the policy applies to no software component
-      in the database, this function also returns ``None``.
+    When all software components in the result pass the policy, if there exist multiple occurrences
+    of the same PURL, this function returns the latest occurrence, which is the one with the highest
+    component id, taking advantage of component ids being auto-incremented.
+
+    If there is no PURL in the result, i.e. the policy applies to no software component in the database,
+    this function also returns ``None``.
 
     Parameters
     ----------
@@ -210,53 +285,39 @@ def get_subject_verification_result(policy_result: dict) -> tuple[str, Verificat
 
     Returns
     -------
-    tuple[str, VerificationResult] | None
-        A pair of PURL and verification result of the only software component that
-        the policy applies to, or ``None`` according to the aforementioned conditions.
+    dict[str, int] | None
+        A dictionary of software components passing the policy, or ``None`` if there is any
+        component failing the policy or if there is no software component in the policy engine result.
+        Each key is a PackageURL of the software component, and each value is the corresponding
+        component id of that component.
     """
     component_violates_policy_facts = policy_result.get("component_violates_policy", [])
     component_satisfies_policy_facts = policy_result.get("component_satisfies_policy", [])
 
-    # key: PURL; value: result with the highest component id
-    component_results: dict[str, tuple[int, VerificationResult]] = {}
+    if len(component_violates_policy_facts) > 0:
+        logger.info("Encountered software component failing the policy. No VSA is generated.")
+        return None
 
-    for component_id_string, purl, _ in component_violates_policy_facts:
-        try:
-            component_id = int(component_id_string)
-        except ValueError:
-            logger.error("Expected component id %s to be an integer.", component_id_string)
-            return None
-        if purl not in component_results:
-            component_results[purl] = (component_id, VerificationResult.FAILED)
-        else:
-            current_component_id, _ = component_results[purl]
-            if component_id > current_component_id:
-                component_results[purl] = (component_id, VerificationResult.FAILED)
+    # key: PURL; value: result with the highest component id
+    passed_components: dict[str, int] = {}
+
     for component_id_string, purl, _ in component_satisfies_policy_facts:
         try:
             component_id = int(component_id_string)
         except ValueError:
             logger.error("Expected component id %s to be an integer.", component_id_string)
             return None
-        if purl not in component_results:
-            component_results[purl] = (component_id, VerificationResult.PASSED)
+        if purl not in passed_components:
+            passed_components[purl] = component_id
         else:
-            current_component_id, _ = component_results[purl]
+            current_component_id = passed_components[purl]
             if component_id > current_component_id:
-                component_results[purl] = (component_id, VerificationResult.PASSED)
+                passed_components[purl] = component_id
 
-    if len(component_results) != 1:
-        if len(component_results) == 0:
-            logger.info("The policy applies to no software components.")
-        if len(component_results) > 1:
-            logger.info("The policy applies to more than one software components.")
-        logger.info("No VSA will be generated.")
+    if len(passed_components) == 0:
         return None
 
-    subject_purl = next(iter(component_results.keys()))
-    _, verification_result = component_results[subject_purl]
-
-    return subject_purl, verification_result
+    return passed_components
 
 
 def generate_vsa(policy_content: str, policy_result: dict) -> Vsa | None:
@@ -275,17 +336,14 @@ def generate_vsa(policy_content: str, policy_result: dict) -> Vsa | None:
         The VSA, or ``None`` if generating a VSA is not appropriate according
         to the policy engine result.
     """
-    subject_verification_result = get_subject_verification_result(policy_result)
+    passed_components = get_components_passing_policy(policy_result)
 
-    if subject_verification_result is None:
+    if passed_components is None:
         return None
 
-    subject_purl, verification_result = subject_verification_result
-
     unencoded_payload = create_vsa_statement(
-        subject_purl=subject_purl,
+        passed_components,
         policy_content=policy_content,
-        verification_result=verification_result,
     )
 
     try:
