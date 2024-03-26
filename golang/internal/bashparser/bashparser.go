@@ -21,16 +21,17 @@ type CMDResult struct {
 // ParseCommands parses the bash script to find bash commands.
 // It returns the parsed commands in JSON format.
 func ParseCommands(data string) (string, error) {
-	// Remove GitHub Actions's expressions because the bash parser doesn't recognize it.
-	// We don't use greedy matching, so if we have `${{ $ {{ foo }} }}`, it will not be matched
-	// to `$MACARON_UNKNOWN`.
+	// Replace GitHub Actions's expressions with ``$MACARON_UNKNOWN``` variable because the bash parser
+	// doesn't recognize such expressions. For example: ``${{ foo }}`` will be replaced by ``$MACARON_UNKNOWN``.
+	// Note that we don't use greedy matching, so if we have `${{ ${{ foo }} }}`, it will not be replaced by
+	// `$MACARON_UNKNOWN`.
 	// See: https://docs.github.com/en/actions/learn-github-actions/expressions.
 	var re, reg_error = regexp.Compile(`\$\{\{.*?\}\}`)
 	if reg_error != nil {
 		return "", reg_error
 	}
 
-	// We replace the GH Actions variables with "UNKNOWN" for now.
+	// We replace the GH Actions variables with "$MACARON_UNKNOWN".
 	data = string(re.ReplaceAll([]byte(data), []byte("$$MACARON_UNKNOWN")))
 	data_str := strings.NewReader(data)
 	data_parsed, parse_err := syntax.NewParser().Parse(data_str, "")
