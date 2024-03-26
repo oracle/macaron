@@ -14,9 +14,9 @@ from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry
 from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAsset
+from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Subject
 from macaron.slsa_analyzer.provenance.witness import (
-    WitnessProvenanceSubject,
-    extract_witness_provenance_subjects,
+    extract_build_artifacts_from_witness_subjects,
     is_witness_provenance_payload,
     load_witness_verifier_config,
 )
@@ -51,7 +51,7 @@ class WitnessProvenanceAvailableFacts(CheckFacts):
 
 def verify_artifact_assets(
     artifact_assets: list[JFrogMavenAsset],
-    subjects: set[WitnessProvenanceSubject],
+    subjects: list[InTotoV01Subject],
 ) -> bool:
     """Verify artifact assets against subjects in the witness provenance payload.
 
@@ -59,7 +59,7 @@ def verify_artifact_assets(
     ----------
     artifact_assets : list[JFrogMavenAsset]
         List of artifact assets to verify.
-    subjects : list[WitnessProvenanceSubject]
+    subjects : list[InTotoV01Subject]
         List of subjects extracted from the in the witness provenance.
 
     Returns
@@ -70,12 +70,12 @@ def verify_artifact_assets(
     # A look-up table to verify:
     # 1. if the name of the artifact appears in any subject of the witness provenance, then
     # 2. if the digest of the artifact could be found
-    look_up: dict[str, dict[str, WitnessProvenanceSubject]] = {}
+    look_up: dict[str, dict[str, InTotoV01Subject]] = {}
 
     for subject in subjects:
-        if subject.artifact_name not in look_up:
-            look_up[subject.artifact_name] = {}
-        look_up[subject.artifact_name][subject.sha256_digest] = subject
+        if subject["name"] not in look_up:
+            look_up[subject["name"]] = {}
+        look_up[subject["name"]][subject["digest"]["sha256"]] = subject
 
     for asset in artifact_assets:
         if asset.name not in look_up:
@@ -93,7 +93,7 @@ def verify_artifact_assets(
         logger.info(
             "Successfully verified asset '%s' against the subject '%s' in the provenance.",
             asset.name,
-            subject.subject_name,
+            subject["name"],
         )
 
     return True
@@ -167,7 +167,7 @@ class ProvenanceWitnessL1Check(BaseCheck):
                             version=provenance.asset.version,
                             extensions=witness_verifier_config.artifact_extensions,
                         )
-                        subjects = extract_witness_provenance_subjects(provenance.payload)
+                        subjects = extract_build_artifacts_from_witness_subjects(provenance.payload)
 
                         if not verify_artifact_assets(artifact_assets, subjects):
                             return CheckResultData(

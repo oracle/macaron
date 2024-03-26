@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for witness provenance."""
@@ -12,9 +12,8 @@ import pytest
 from macaron.config.defaults import load_defaults
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload, v01
 from macaron.slsa_analyzer.provenance.witness import (
-    WitnessProvenanceSubject,
     WitnessVerifierConfig,
-    extract_witness_provenance_subjects,
+    extract_build_artifacts_from_witness_subjects,
     is_witness_provenance_payload,
     load_witness_verifier_config,
 )
@@ -124,18 +123,20 @@ def test_is_witness_provenance_payload(
 }
                 """
             ),
-            {
-                WitnessProvenanceSubject(
-                    subject_name=(
-                        "https://witness.dev/attestations/product/v0.1/file:target/jackson-annotations-2.9.9.jar"
-                    ),
-                    sha256_digest="6f97fe2094bd50435d6fbb7a2f6c2638fe44e6af17cfff98ce111d0abfffe17e",
-                ),
-                WitnessProvenanceSubject(
-                    subject_name="https://witness.dev/attestations/product/v0.1/file:foo/bar/baz.txt",
-                    sha256_digest="cbc8f554dbfa17e5c5873c425a09cb1488c2f784ac52340747a92b7ec0aaefba",
-                ),
-            },
+            [
+                {
+                    "name": "https://witness.dev/attestations/product/v0.1/file:target/jackson-annotations-2.9.9.jar",
+                    "digest": {
+                        "sha256": "6f97fe2094bd50435d6fbb7a2f6c2638fe44e6af17cfff98ce111d0abfffe17e",
+                    },
+                },
+                {
+                    "name": "https://witness.dev/attestations/product/v0.1/file:foo/bar/baz.txt",
+                    "digest": {
+                        "sha256": "cbc8f554dbfa17e5c5873c425a09cb1488c2f784ac52340747a92b7ec0aaefba",
+                    },
+                },
+            ],
             id="Valid payload",
         ),
         pytest.param(
@@ -159,22 +160,53 @@ def test_is_witness_provenance_payload(
 }
             """
             ),
-            {
-                WitnessProvenanceSubject(
-                    subject_name=(
-                        "https://witness.dev/attestations/product/v0.1/file:target/jackson-annotations-2.9.9.jar"
-                    ),
-                    sha256_digest="6f97fe2094bd50435d6fbb7a2f6c2638fe44e6af17cfff98ce111d0abfffe17e",
-                ),
-            },
+            [
+                {
+                    "name": "https://witness.dev/attestations/product/v0.1/file:target/jackson-annotations-2.9.9.jar",
+                    "digest": {
+                        "sha256": "6f97fe2094bd50435d6fbb7a2f6c2638fe44e6af17cfff98ce111d0abfffe17e",
+                    },
+                }
+            ],
             id="Missing sha256",
+        ),
+        pytest.param(
+            json.loads(
+                """
+{
+    "subject": [
+        {
+            "name": "https://witness.dev/attestations/git/v0.1/authoremail:foo.bar@oracle.com",
+            "digest": {
+                "sha256": "923e32b55b983525acfd0df3ad18bbb016623bdf33ba7706c7ab8318ff1284a1"
+            }
+        },
+        {
+            "name": "https://witness.dev/attestations/product/v0.1/file:target/jackson-annotations-2.9.9.jar",
+            "digest": {
+                "sha256": "6f97fe2094bd50435d6fbb7a2f6c2638fe44e6af17cfff98ce111d0abfffe17e"
+            }
+        }
+    ]
+}
+"""
+            ),
+            [
+                {
+                    "name": "https://witness.dev/attestations/product/v0.1/file:target/jackson-annotations-2.9.9.jar",
+                    "digest": {
+                        "sha256": "6f97fe2094bd50435d6fbb7a2f6c2638fe44e6af17cfff98ce111d0abfffe17e",
+                    },
+                }
+            ],
+            id="Not a subject attested by the product attestor",
         ),
     ],
 )
-def test_extract_witness_provenances_subjects(
+def test_extract_build_artifacts_from_witness_subjects(
     payload_json: v01.InTotoV01Statement,
-    expected_subjects: set[WitnessProvenanceSubject],
+    expected_subjects: list[v01.InTotoV01Subject],
 ) -> None:
     """Test the ``extract_witness_provenance_subjects`` function."""
     payload = InTotoV01Payload(statement=payload_json)
-    assert extract_witness_provenance_subjects(payload) == expected_subjects
+    assert extract_build_artifacts_from_witness_subjects(payload) == expected_subjects
