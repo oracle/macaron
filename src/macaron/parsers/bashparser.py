@@ -152,7 +152,7 @@ def create_bash_node(
     node_id: str | None,
     node_type: BashScriptType,
     source_path: str,
-    parsed_obj: dict | None,
+    ci_step_ast: dict | None,
     repo_path: str,
     caller: BaseNode,
     recursion_depth: int,
@@ -175,8 +175,8 @@ def create_bash_node(
         The type of the node.
     source_path: str
         The file that contains the bash script.
-    parsed_obj: dict | None
-        The parsed bash script object.
+    ci_step_ast: dict | None
+        The AST of the CI step that runs a bash script.
     repo_path: str
         The path to the target repo.
     caller: BaseNode
@@ -198,33 +198,33 @@ def create_bash_node(
     """
     if recursion_depth > defaults.getint("bashparser", "recursion_depth", fallback=3):
         raise CallGraphError(f"The analysis has reached maximum recursion depth {recursion_depth} at {source_path}.")
-    parsed_content = {}
+    parsed_bash_script = {}
     working_dir = None
     match node_type:
         case BashScriptType.INLINE:
-            if parsed_obj is None:
+            if ci_step_ast is None:
                 raise CallGraphError(f"Unable to find the parsed AST for the CI step at {source_path}.")
-            step_exec = validate_step(parsed_obj)
+            step_exec = validate_step(ci_step_ast)
             if step_exec is None:
                 raise CallGraphError(f"Unable to validate parsed AST for the CI step at {source_path}.")
 
             working_dir = step_exec.get("WorkingDirectory")
-            run_script = validate_run_step(parsed_obj)
+            run_script = validate_run_step(ci_step_ast)
             if run_script is None:
                 raise CallGraphError(f"Invalid run step at {source_path}.")
-            parsed_content = parse(run_script, macaron_path=macaron_path)
+            parsed_bash_script = parse(run_script, macaron_path=macaron_path)
         case BashScriptType.FILE:
-            parsed_content = parse_file(source_path, macaron_path=macaron_path)
+            parsed_bash_script = parse_file(source_path, macaron_path=macaron_path)
     bash_node = BashNode(
         name,
         node_type,
         source_path,
-        parsed_step_obj=parsed_obj,
-        parsed_bash_obj=parsed_content,
+        parsed_step_obj=ci_step_ast,
+        parsed_bash_obj=parsed_bash_script,
         node_id=node_id,
         caller=caller,
     )
-    caller_commands = parsed_content.get("commands", [])
+    caller_commands = parsed_bash_script.get("commands", [])
 
     # Parse the bash script files called from the current script.
     if caller_commands and repo_path:
@@ -243,7 +243,7 @@ def create_bash_node(
                         node_id=node_id,
                         node_type=BashScriptType.FILE,
                         source_path=bash_file_path,
-                        parsed_obj=None,
+                        ci_step_ast=None,
                         repo_path=repo_path,
                         caller=bash_node,
                         recursion_depth=recursion_depth + 1,

@@ -439,7 +439,7 @@ def build_github_actions_call_graph_for_commands(commands: list[str]) -> CallGra
             node_id=None,
             node_type=BashScriptType.INLINE,
             source_path="",
-            parsed_obj=run_step,
+            ci_step_ast=run_step,
             repo_path="",
             caller=job_node,
             recursion_depth=0,

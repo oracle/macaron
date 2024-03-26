@@ -277,7 +277,7 @@ def build_call_graph_from_node(node: GitHubWorkflowNode, repo_path: str) -> None
                         node_id=node_id,
                         node_type=BashScriptType.INLINE,
                         source_path=node.source_path,
-                        parsed_obj=step,
+                        ci_step_ast=step,
                         repo_path=repo_path,
                         caller=job_node,
                         recursion_depth=0,
