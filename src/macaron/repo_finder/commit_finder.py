@@ -100,7 +100,7 @@ validation_pattern = re.compile("^[0-9a-z]+$", flags=re.IGNORECASE)
 alphabetic_only_pattern = re.compile("^[a-z]+$", flags=re.IGNORECASE)
 hex_only_pattern = re.compile("^[0-9a-f]+$", flags=re.IGNORECASE)
 numeric_only_pattern = re.compile("^[0-9]+$")
-versioned_string = re.compile("^[a-z]+[0-9]+$", flags=re.IGNORECASE)  # e.g. RC1, M5, etc.
+versioned_string = re.compile("^([a-z]+)(0*)([1-9]+[0-9]*)$", flags=re.IGNORECASE)  # e.g. RC1, M5, etc.
 
 
 class AbstractPurlType(Enum):
@@ -473,40 +473,71 @@ def _compute_tag_version_similarity(tag_version: str, tag_suffix: str, version_p
     """
     count = len(version_parts)
     # Reduce count for each direct match between version parts and tag version.
-    tag_version_text = tag_version
+    tag_version_text = tag_version.lower()
     for part in version_parts:
+        part = part.lower()
         if part in tag_version_text:
             tag_version_text = tag_version_text.replace(part, "", 1)
             count = count - 1
 
     # Try to reduce the count further based on the tag suffix.
     if tag_suffix:
-        last_part = version_parts[-1]
+        last_part = version_parts[-1].lower()
         # The tag suffix might consist of multiple version parts, e.g. RC1.RELEASE
         suffix_split = split_pattern.split(tag_suffix)
+        # Try to match suffix parts to version.
+        versioned_string_match = False
         if len(suffix_split) > 1:
-            # Try to match suffix parts to version.
-            versioned_string_match = False
             for suffix_part in suffix_split:
+                suffix_part = suffix_part.lower()
                 if alphabetic_only_pattern.match(suffix_part) and suffix_part == last_part:
                     # If the suffix part only contains alphabetic characters, reduce the count if it
                     # matches the version.
                     count = count - 1
                     continue
-                if versioned_string.match(suffix_part):
-                    # If the suffix part contains alphabetic characters followed by numeric characters,
-                    # reduce the count if it matches the version (once only), otherwise increase the count.
-                    if not versioned_string_match and suffix_part == last_part:
-                        count = count - 1
-                        versioned_string_match = True
-                    else:
-                        count = count + 1
-        if tag_suffix != last_part:
-            count = count + 1
+
+                variable_suffix_pattern = _create_suffix_tag_comparison_pattern(suffix_part)
+                if not variable_suffix_pattern:
+                    continue
+
+                if versioned_string_match:
+                    count = count + 1
+                    continue
+
+                # If the suffix part contains alphabetic characters followed by numeric characters,
+                # reduce the count if it closely matches the version (once only), otherwise increase the count.
+                if re.match(variable_suffix_pattern, last_part):
+                    count = count - 1
+                    versioned_string_match = True
+                else:
+                    count = count + 1
+
+        variable_suffix_pattern = _create_suffix_tag_comparison_pattern(tag_suffix)
+        if variable_suffix_pattern:
+            if re.match(variable_suffix_pattern, last_part):
+                count = count - 1
+            else:
+                count = count + 1
         else:
-            count = count - 1
+            count = count + 1
 
     return count
+
+
+def _create_suffix_tag_comparison_pattern(tag_part: str) -> str | None:
+    """Create pattern to compare part of a tag with part of a version.
+
+    The created pattern allows for numeric parts within the tag to have a variable number of zeros for matching.
+    """
+    versioned_string_result = versioned_string.match(tag_part)
+    if not versioned_string_result:
+        return None
+
+    variable_suffix_pattern = f"{versioned_string_result.group(1)}"
+    if not versioned_string_result.group(2):
+        return f"{variable_suffix_pattern}{versioned_string_result.group(3)}"
+
+    return f"{variable_suffix_pattern}(0*){versioned_string_result.group(3)}"
 
 
 def _get_tag_commit(tag: TagReference) -> Commit | None:

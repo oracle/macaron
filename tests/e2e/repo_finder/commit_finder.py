@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module performs a regression test of the commit finder's tag matching functionality."""
@@ -18,7 +18,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 # Set logging debug level.
 logger.setLevel(logging.DEBUG)
 
-java_tags_file_path = Path(__file__).parent.joinpath("resources", "java_tags.json")
+java_tags_file_path = Path(__file__).parent.joinpath("resources", "tags.json")
 
 
 def test_commit_finder() -> int:
