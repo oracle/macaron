@@ -31,6 +31,13 @@ class MavenArtifactType(_MavenArtifactType, Enum):
     For reference, see:
     - https://maven.apache.org/ref/3.9.6/maven-core/artifact-handlers.html
     - https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst#maven
+
+    Note: For the time being, we are only supporting the ``"type"`` qualifier, although the
+    Maven section in the PackageURL docs also mention the ``"classifier"`` qualifier.
+    This is because not all artifact types has a unique value of ``"classifier"`` according
+    to the Artifact Handlers table in the Maven Core reference. In addition, not supporting
+    the ``"classifier"`` qualifier at the moment simplifies the implementation for PURL
+    decoding and generation until there is a concrete use case for this additional qualifier.
     """
 
     # Enum with custom value type.
@@ -49,7 +56,7 @@ class MavenArtifactType(_MavenArtifactType, Enum):
     )
     JAVA_SOURCE = _MavenArtifactType(
         filename_pattern="{artifact_id}-{version}-sources.jar",
-        purl_qualifiers={"type": "sources"},
+        purl_qualifiers={"type": "java-source"},
     )
 
 

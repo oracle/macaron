@@ -34,7 +34,7 @@ from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_into
             id="purl for javadoc artifact",
         ),
         pytest.param(
-            "pkg:maven/com.fasterxml.jackson/jackson-annotations@2.9.9?type=sources",
+            "pkg:maven/com.fasterxml.jackson/jackson-annotations@2.9.9?type=java-source",
             MavenArtifact(
                 group_id="com.fasterxml.jackson",
                 artifact_id="jackson-annotations",
@@ -140,7 +140,7 @@ def test_maven_artifact_from_artifact_name(params: dict, maven_artifact: MavenAr
             id="purl for javadoc artifact",
         ),
         pytest.param(
-            "pkg:maven/com.fasterxml.jackson/jackson-annotations@2.9.9?type=sources",
+            "pkg:maven/com.fasterxml.jackson/jackson-annotations@2.9.9?type=java-source",
             2,
             id="purl for java source artifact",
         ),
