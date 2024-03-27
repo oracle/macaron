@@ -20,7 +20,7 @@ from macaron.code_analyzer.call_graph import BaseNode
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.errors import CallGraphError, ParseError
-from macaron.parsers.actionparser import validate_run_step, validate_step
+from macaron.parsers.actionparser import get_run_step
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -213,12 +213,12 @@ def create_bash_node(
         case BashScriptType.INLINE:
             if ci_step_ast is None:
                 raise CallGraphError(f"Unable to find the parsed AST for the CI step at {source_path}.")
-            step_exec = validate_step(ci_step_ast)
+            step_exec = ci_step_ast.get("Exec")
             if step_exec is None:
                 raise CallGraphError(f"Unable to validate parsed AST for the CI step at {source_path}.")
 
             working_dir = step_exec.get("WorkingDirectory")
-            run_script = validate_run_step(ci_step_ast)
+            run_script = get_run_step(ci_step_ast)
             if run_script is None:
                 raise CallGraphError(f"Invalid run step at {source_path}.")
             try:

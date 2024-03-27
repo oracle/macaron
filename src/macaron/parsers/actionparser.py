@@ -13,11 +13,12 @@ import json
 import logging
 import os
 import subprocess  # nosec B404
-from typing import Any, cast
+from typing import Any
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.errors import ParseError
+from macaron.errors import JsonError, ParseError
+from macaron.json_tools import json_extract
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -74,28 +75,10 @@ def parse(workflow_path: str, macaron_path: str = "") -> dict:
         raise ParseError("Error while loading the parsed Actions workflow") from error
 
 
-def validate_step(step: dict[str, Any]) -> dict | None:
-    """Validate the parsed GitHub Action step.
+def get_run_step(step: dict[str, Any]) -> str | None:
+    """Get the parsed GitHub Action run step for inlined shell scripts.
 
-    Parameters
-    ----------
-    step: dict[str, Any]
-        The parsed step object.
-
-    Returns
-    -------
-    dict | None
-        The Exec object in the parsed step object..
-    """
-    # This validation function can be extended over time based on our use cases.
-    if "Exec" not in step:
-        return None
-
-    return cast(dict, step["Exec"])
-
-
-def validate_run_step(step: dict[str, Any]) -> str | None:
-    """Validate the parsed GitHub Action run step.
+    If the run step cannot be validated this function returns None.
 
     Parameters
     ----------
@@ -105,20 +88,20 @@ def validate_run_step(step: dict[str, Any]) -> str | None:
     Returns
     -------
     str | None
-        The inlined run script.
+        The inlined run script or None if the run step cannot be validated.
     """
-    if validate_step(step=step) is None:
+    try:
+        return json_extract(step, ["Exec", "Run", "Value"], str)
+    except JsonError as error:
+        logger.debug(error)
         return None
-    if step["Exec"].get("Run") is None:
-        return None
-    if step["Exec"]["Run"].get("Value") is None:
-        return None
-
-    return cast(str, step["Exec"]["Run"]["Value"])
 
 
 def get_step_input(step: dict[str, Any], key: str) -> str | None:
     """Get an input value from a GitHub Action step.
+
+    If the input value cannot be found or the step inputs cannot be validated this function
+    returns None.
 
     Parameters
     ----------
@@ -132,14 +115,8 @@ def get_step_input(step: dict[str, Any], key: str) -> str | None:
     str | None
         The input value or None if it doesn't exist or the parsed object validation fails.
     """
-    if validate_step(step=step) is None:
+    try:
+        return json_extract(step, ["Exec", "Inputs", key, "Value", "Value"], str)
+    except JsonError as error:
+        logger.debug(error)
         return None
-    if step["Exec"].get("Inputs") is None:
-        return None
-    if step["Exec"]["Inputs"].get(key) is None:
-        return None
-    if step["Exec"]["Inputs"][key].get("Value") is None:
-        return None
-    if (value := step["Exec"]["Inputs"][key]["Value"].get("Value")) is None:
-        return None
-    return cast(str, value)
