@@ -231,7 +231,7 @@ def create_bash_node(
         for cmd in caller_commands:
             # Parse the scripts that end with `.sh`.
             # TODO: parse Makefiles for bash commands.
-            if not cmd[0] or not cmd[0].endswith(".sh"):
+            if not cmd or not cmd[0] or not cmd[0].endswith(".sh"):
                 continue
 
             # Check for path traversal patterns before analyzing a bash file.
