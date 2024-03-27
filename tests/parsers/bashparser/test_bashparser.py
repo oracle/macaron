@@ -13,8 +13,8 @@ import pytest
 
 from macaron import MACARON_PATH
 from macaron.code_analyzer.call_graph import BaseNode
-from macaron.errors import CallGraphError
-from macaron.parsers.bashparser import BashScriptType, create_bash_node, parse
+from macaron.errors import CallGraphError, ParseError
+from macaron.parsers.bashparser import BashScriptType, create_bash_node, parse, parse_file
 
 
 @pytest.mark.parametrize(
@@ -22,7 +22,6 @@ from macaron.parsers.bashparser import BashScriptType, create_bash_node, parse
     [
         ("valid.sh", "valid.json"),
         ("valid_github_action_bash.sh", "valid_github_action_bash.json"),
-        ("invalid.sh", "invalid.json"),
     ],
 )
 def test_bashparser_parse(script_file_name: str, expected_json_file_name: str) -> None:
@@ -36,6 +35,15 @@ def test_bashparser_parse(script_file_name: str, expected_json_file_name: str) -
         result = parse(bash_file.read(), MACARON_PATH)
         expected_result = json.load(expected_file)
         assert result == expected_result
+
+
+def test_bashparser_parse_invalid() -> None:
+    """Test parsing invalid bash script."""
+    resources_dir = Path(__file__).parent.joinpath("resources")
+    file_path = os.path.join(resources_dir, "invalid.sh")
+    # Parse the bash script file.
+    with pytest.raises(ParseError):
+        parse_file(file_path=file_path, macaron_path=MACARON_PATH)
 
 
 def test_create_bash_node_recursively() -> None:

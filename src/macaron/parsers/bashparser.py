@@ -19,7 +19,7 @@ from typing import Any
 from macaron.code_analyzer.call_graph import BaseNode
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.errors import CallGraphError
+from macaron.errors import CallGraphError, ParseError
 from macaron.parsers.actionparser import validate_run_step, validate_step
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -85,6 +85,11 @@ def parse_file(file_path: str, macaron_path: str | None = None) -> dict:
     -------
     dict
         The parsed bash script in JSON (dict) format.
+
+    Raises
+    ------
+    ParseError
+        When parsing fails with errors.
     """
     if not macaron_path:
         macaron_path = global_config.macaron_path
@@ -93,8 +98,9 @@ def parse_file(file_path: str, macaron_path: str | None = None) -> dict:
             logger.info("Parsing %s.", file_path)
             return parse(file.read(), macaron_path)
     except OSError as error:
-        logger.error("Could not load the bash script %s: %s.", file_path, error)
-        return {}
+        raise ParseError(f"Could not load the bash script file: {file_path}.") from error
+    except ParseError as error:
+        raise error
 
 
 def parse(bash_content: str, macaron_path: str | None = None) -> dict:
@@ -111,6 +117,11 @@ def parse(bash_content: str, macaron_path: str | None = None) -> dict:
     -------
     dict
         The parsed bash script in JSON (dict) format.
+
+    Raises
+    ------
+    ParseError
+        When parsing fails with errors.
     """
     if not macaron_path:
         macaron_path = global_config.macaron_path
@@ -133,18 +144,16 @@ def parse(bash_content: str, macaron_path: str | None = None) -> dict:
         subprocess.TimeoutExpired,
         FileNotFoundError,
     ) as error:
-        logger.error("Error while parsing script: %s", error)
-        return {}
+        raise ParseError("Error while parsing bash script.") from error
 
     try:
         if result.returncode == 0:
             return dict(json.loads(result.stdout.decode("utf-8")))
 
-        logger.error("Bash script parser failed: %s", result.stderr)
-        return {}
+        raise ParseError(f"Bash script parser failed: {result.stderr.decode('utf-8')}")
+
     except json.JSONDecodeError as error:
-        logger.error("Error while loading the parsed bash script: %s", error)
-        return {}
+        raise ParseError("Error while loading the parsed bash script.") from error
 
 
 def create_bash_node(
@@ -212,9 +221,15 @@ def create_bash_node(
             run_script = validate_run_step(ci_step_ast)
             if run_script is None:
                 raise CallGraphError(f"Invalid run step at {source_path}.")
-            parsed_bash_script = parse(run_script, macaron_path=macaron_path)
+            try:
+                parsed_bash_script = parse(run_script, macaron_path=macaron_path)
+            except ParseError as error:
+                logger.debug(error)
         case BashScriptType.FILE:
-            parsed_bash_script = parse_file(source_path, macaron_path=macaron_path)
+            try:
+                parsed_bash_script = parse_file(source_path, macaron_path=macaron_path)
+            except ParseError as error:
+                logger.debug(error)
     bash_node = BashNode(
         name,
         node_type,
