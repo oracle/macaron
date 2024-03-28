@@ -298,7 +298,12 @@ def get_components_passing_policy(policy_result: dict) -> dict[str, int] | None:
         logger.info("Encountered software component failing the policy. No VSA is generated.")
         return None
 
-    # key: PURL; value: result with the highest component id
+    # This dictionary deduplicates multiple occurrences of the same PURL in the
+    # ``component_satisfies_policy_facts`` result, which may occur because the same PURL
+    # may appear multiple times in the ``_component`` table of the database.
+    # Here, we are only taking the latest result into consideration.
+    # Each key is a PURL and each value is the the highest component id of the
+    # corresponding PURL, taking advantage of the component id column being auto-incremented.
     passed_components: dict[str, int] = {}
 
     for component_id_string, purl, _ in component_satisfies_policy_facts:
