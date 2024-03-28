@@ -152,7 +152,7 @@ def get_common_purl_from_artifact_purls(purl_strs: Iterable[str]) -> str | None:
     version values. The common PackageURL contains these values.
     """
     try:
-        purls = [PackageURL.from_string(_) for _ in purl_strs]
+        purls = [PackageURL.from_string(purl_str) for purl_str in purl_strs]
     except ValueError:
         return None
 
