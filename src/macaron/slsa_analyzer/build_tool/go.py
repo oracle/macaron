@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Go class which inherits BaseBuildTool.
@@ -9,13 +9,14 @@ This module is used to work with repositories that have Go.
 from macaron.config.defaults import defaults
 from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
+from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 
 
 class Go(BaseBuildTool):
     """This class contains the information of the Go build tool."""
 
     def __init__(self) -> None:
-        super().__init__(name="go")
+        super().__init__(name="go", language=BuildLanguage.GO)
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""

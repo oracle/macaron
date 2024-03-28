@@ -1,0 +1,43 @@
+/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("test_deploy_info", component_id, "Tests that deploy commands have the correct information, such as confidence score.") :-
+    check_passed(component_id, "mcn_build_as_code_1"),
+    build_as_code_check(
+        id_release,
+        "gradle",
+        "github_actions",
+        build_trigger_release,
+        "java",
+        "[\"temurin\"]",
+        "[\"17\"]",
+        "https://github.com/actions/setup-java",
+        _
+    ),
+    build_as_code_check(
+        id_gradle,
+        "gradle",
+        "github_actions",
+        build_trigger_gradle,
+        "java",
+        "[\"graalvm\"]",
+        "[\"17\", \"21\"]",
+        "https://github.com/graalvm/setup-graalvm",
+        _
+    ),
+    check_facts(id_release, confidence_release, component_id,_,_),
+    check_facts(id_gradle, confidence_gradle, component_id,_,_),
+    match(
+        "https://github.com/micronaut-projects/micronaut-core/blob/.*/.github/workflows/release.yml",
+        build_trigger_release
+    ),
+    match(
+        "https://github.com/micronaut-projects/micronaut-core/blob/.*/.github/workflows/gradle.yml",
+        build_trigger_gradle
+        ),
+    confidence_release > confidence_gradle.
+
+apply_policy_to("test_deploy_info", component_id) :-
+    is_repo(_, "github.com/micronaut-projects/micronaut-core", component_id).

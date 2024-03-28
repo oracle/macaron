@@ -1,13 +1,11 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module analyze Circle CI."""
 
-from collections.abc import Iterable
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.config.defaults import defaults
-from macaron.parsers.bashparser import BashCommands
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 
 
@@ -60,23 +58,6 @@ class CircleCI(BaseCIService):
             The call graph built for the CI.
         """
         return CallGraph(BaseNode(), "")
-
-    def extract_all_bash(self, callgraph: CallGraph, macaron_path: str = "") -> Iterable[BashCommands]:
-        """Parse configurations to extract the bash scripts triggered by the CI service.
-
-        Parameters
-        ----------
-        callgraph : CallGraph
-            The call graph for this CI.
-        macaron_path : str
-            Macaron's root path (optional).
-
-        Yields
-        ------
-        BashCommands
-            The parsed bash script commands.
-        """
-        return []
 
     def has_latest_run_passed(
         self, repo_full_name: str, branch_name: str | None, commit_sha: str, commit_date: str, workflow: str

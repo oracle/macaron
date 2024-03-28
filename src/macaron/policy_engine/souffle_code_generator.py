@@ -82,7 +82,7 @@ def column_to_souffle_type(column: Column) -> str:
     elif isinstance(sql_type, Integer):
         souffle_type = "number"
     elif isinstance(sql_type, Float):
-        souffle_type = "number"
+        souffle_type = "float"
     elif isinstance(sql_type, Text):
         souffle_type = "symbol"
     elif isinstance(sql_type, Boolean):
@@ -272,6 +272,9 @@ def project_join_table_souffle_relation(
                 elif col_type == "number":
                     value_statement = "$Int(value)"
                     right_pattern.append("value")
+                elif col_type == "float":
+                    value_statement = "$Float(value)"
+                    right_pattern.append("value")
                 else:
                     logger.error("Unknown column type in codegen.")
                     value_statement = "$String(value)"
@@ -356,6 +359,9 @@ def get_table_rules_per_column(
                     pattern.append("value")
                 elif col_type == "number":
                     value_statement = "$Int(value)"
+                    pattern.append("value")
+                elif col_type == "float":
+                    value_statement = "$Float(value)"
                     pattern.append("value")
                 else:
                     logger.error("Unknown column type in codegen.")

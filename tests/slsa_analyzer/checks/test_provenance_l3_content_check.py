@@ -10,7 +10,7 @@ from macaron.slsa_analyzer.asset import VirtualReleaseAsset
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.provenance_l3_content_check import ProvenanceL3ContentCheck
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
-from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
+from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
@@ -80,7 +80,6 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
         # Test GitHub Actions.
         ci_info = CIInfo(
             service=github_actions,
-            bash_commands=[],
             callgraph=CallGraph(BaseNode(), ""),
             provenance_assets=[],
             latest_release={},

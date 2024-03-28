@@ -522,14 +522,6 @@
     'RunName': None,
   })
 # ---
-# name: test_actionparser_parse[file_does_not_exist.yml]
-  dict({
-  })
-# ---
-# name: test_actionparser_parse[invalid.yml]
-  dict({
-  })
-# ---
 # name: test_actionparser_parse[maven.yml]
   dict({
     'Concurrency': None,
@@ -1486,9 +1478,5 @@
     ]),
     'Permissions': None,
     'RunName': None,
-  })
-# ---
-# name: test_actionparser_parse[release.yml]
-  dict({
   })
 # ---

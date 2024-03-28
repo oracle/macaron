@@ -3,11 +3,19 @@
 
 """This module contains the tests for the check results."""
 
+import pytest
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.table_definitions import CheckFacts
-from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
+from macaron.slsa_analyzer.checks.check_result import (
+    CheckResultData,
+    CheckResultType,
+    Confidence,
+    Evidence,
+    EvidenceWeightMap,
+    JustificationType,
+)
 
 
 class MockFacts(CheckFacts):
@@ -42,3 +50,53 @@ def test_check_result_justification() -> None:
         (Confidence.MEDIUM, ["test_name: baz"]),
         (Confidence.LOW, ["test_name: foo"]),
     ]
+
+
+@pytest.mark.parametrize(
+    ("evidence_weight_map", "expected_result"),
+    [
+        (
+            EvidenceWeightMap(
+                {
+                    "foo": Evidence(name="foo", found=True, weight=5),
+                    "bar": Evidence(name="bar", found=True, weight=10),
+                    "baz": Evidence(name="baz", found=False, weight=20),
+                }
+            ),
+            Confidence.LOW,
+        ),
+        (
+            EvidenceWeightMap(
+                {
+                    "foo": Evidence(name="foo", found=True, weight=5),
+                    "bar": Evidence(name="bar", found=False, weight=10),
+                    "baz": Evidence(name="baz", found=True, weight=20),
+                }
+            ),
+            Confidence.MEDIUM,
+        ),
+        (
+            EvidenceWeightMap(
+                {
+                    "foo": Evidence(name="foo", found=False, weight=5),
+                    "bar": Evidence(name="bar", found=True, weight=10),
+                    "baz": Evidence(name="baz", found=True, weight=20),
+                }
+            ),
+            Confidence.HIGH,
+        ),
+        (
+            EvidenceWeightMap(
+                {
+                    "foo": Evidence(name="foo", found=True, weight=5),
+                    "bar": Evidence(name="bar", found=False, weight=10),
+                    "baz": Evidence(name="baz", found=False, weight=20),
+                }
+            ),
+            Confidence.LOW,
+        ),
+    ],
+)
+def test_confidence_normalization(evidence_weight_map: EvidenceWeightMap, expected_result: Confidence) -> None:
+    """Test that scores are normalized and mapped to the Confidence levels as expected."""
+    assert Confidence.normalize(evidence_weight_map) == expected_result

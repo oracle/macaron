@@ -155,6 +155,8 @@ class InferArtifactPipelineCheck(BaseCheck):
                         or not isinstance(predicate["buildConfig"]["jobID"], str)
                         or "stepID" not in predicate["buildConfig"]
                         or not isinstance(predicate["buildConfig"]["stepID"], str)
+                        or "stepName" not in predicate["buildConfig"]
+                        or not isinstance(predicate["buildConfig"]["stepName"], str)
                     ):
                         continue
                     try:
@@ -171,7 +173,8 @@ class InferArtifactPipelineCheck(BaseCheck):
                         repo_full_name=ctx.component.repository.full_name,
                         workflow=predicate["invocation"]["configSource"]["entryPoint"],
                         date_time=artifact_published_date,
-                        step_name=predicate["buildConfig"]["stepID"],
+                        step_name=predicate["buildConfig"]["stepName"],
+                        step_id=predicate["buildConfig"]["stepID"],
                         time_range=publish_time_range,
                     ):
                         result_tables: list[CheckFacts] = []
@@ -179,7 +182,8 @@ class InferArtifactPipelineCheck(BaseCheck):
                             result_tables.append(
                                 InferArtifactPipelineFacts(
                                     deploy_job=predicate["buildConfig"]["jobID"],
-                                    deploy_step=predicate["buildConfig"]["stepID"],
+                                    deploy_step=predicate["buildConfig"]["stepID"]
+                                    or predicate["buildConfig"]["stepName"],
                                     run_url=html_url,
                                     confidence=Confidence.MEDIUM,
                                 )

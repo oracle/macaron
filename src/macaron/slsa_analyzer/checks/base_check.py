@@ -100,7 +100,7 @@ class BaseCheck:
 
         if skipped_info:
             check_result_data = CheckResultData(result_tables=[], result_type=self.result_on_skip)
-            logger.info(
+            logger.debug(
                 "Check %s is skipped on target %s, comment: %s",
                 self.check_info.check_id,
                 target.component.purl,
@@ -109,12 +109,12 @@ class BaseCheck:
         else:
             check_result_data = self.run_check(target)
             logger.info(
-                "Check %s run %s on target %s, result: %s",
+                "Check %s run %s on target %s.",
                 self.check_info.check_id,
                 check_result_data.result_type.value,
                 target.component.purl,
-                check_result_data.justification_report,
             )
+            logger.debug("Check result: %s", check_result_data.justification_report)
 
         # This justification string will be stored in the feedback column of `SLSARequirement` table.
         # TODO: Storing the justification as feedback in the `SLSARequirement` table seems redundant and might need
