@@ -136,8 +136,9 @@ def find_expression_variables(value: str, exp_var: str) -> Iterable[str]:
     []
     """
     expressions = re.findall(r"\$\{\{.*?\}\}", value)
+    pattern = r"\$\{\{\s+" + exp_var + r"\.(?P<variable>(.*?))\s+\}\}"
     for exp in expressions:
-        match = re.match(r"\$\{\{\s+" + exp_var + r"\.(?P<variable>(.*?))\s+\}\}", exp)
+        match = re.match(pattern, exp)
         if match:
             yield match.group("variable")
 
@@ -159,6 +160,11 @@ def resolve_matrix_variable(job_node: GitHubJobNode, var: str) -> Iterable[str]:
     ------
     str
         The possible values of the matrix variable.
+
+    Raises
+    ------
+    GitHubActionsValueError
+        When the matrix variable cannot be found.
     """
     parsed_obj = job_node.parsed_obj
     if "Strategy" not in parsed_obj:
@@ -186,6 +192,7 @@ def is_expression(value: str) -> bool:
 
     Returns
     -------
+    bool
         True if the input value is a GitHub Actions expression.
 
     Examples
@@ -313,13 +320,17 @@ def build_call_graph_from_path(root: BaseNode, workflow_path: str, repo_path: st
     ----------
     repo_path : str
         The path to the repo.
+    workflow_path: str
+        The path to the CI workflow file.
+    repo_path: str
+        The path to the target repository.
     macaron_path: str
         Macaron's root path (optional).
 
     Returns
     -------
-    CallGraph: CallGraph
-        The call graph built for GitHub Actions.
+    BaseNode
+        The callgraph node for the GitHub Actions workflow.
 
     Raises
     ------

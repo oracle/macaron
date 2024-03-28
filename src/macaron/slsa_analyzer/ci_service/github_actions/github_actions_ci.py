@@ -517,6 +517,13 @@ class GitHubActions(BaseCIService):
                 step_node = node if node.node_type == BashScriptType.INLINE else None
 
                 # Walk up the grallgraph to find the relevant caller nodes.
+                # In GitHub Actions a `GitHubWorkflowNode` may call several `GitHubJobNode`s
+                # and a `GitHubJobNode` may call several steps, which can be external `GitHubWorkflowNode`
+                # or inlined run nodes. We currently support the run steps that call shell scripts as
+                # `BashNode`. An inlined `BashNode` can call `BashNode` as bash files.
+                # TODO: revisit this implementation if analysis of external workflows is supported in
+                # the future, and decide if setting the caller workflow and job nodes to the nodes in the
+                # main triggering workflow is still expected.
                 while caller_node is not None:
                     match caller_node:
                         case GitHubWorkflowNode():
@@ -553,8 +560,7 @@ class GitHubActions(BaseCIService):
                         )
 
     def get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
-        """
-        Traverse the callgraph and find all the reachable build tool commands.
+        """Traverse the callgraph and find all the reachable build tool commands.
 
         This generator yields sorted build tool command objects to allow a deterministic behavior.
         The objects are sorted based on the string representation of the build tool object.
