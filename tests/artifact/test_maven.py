@@ -65,7 +65,7 @@ def test_maven_artifact_from_purl(purl_str: str, maven_artifact: MavenArtifact) 
     [
         pytest.param(
             {
-                "artifact_name": "jackson-annotations-2.9.9.jar",
+                "artifact_filename": "jackson-annotations-2.9.9.jar",
                 "group_id": "com.fasterxml.jackson",
                 "version": "2.9.9",
             },
@@ -79,7 +79,7 @@ def test_maven_artifact_from_purl(purl_str: str, maven_artifact: MavenArtifact) 
         ),
         pytest.param(
             {
-                "artifact_name": "jackson-annotations-2.9.9-javadoc.jar",
+                "artifact_filename": "jackson-annotations-2.9.9-javadoc.jar",
                 "group_id": "com.fasterxml.jackson",
                 "version": "2.9.9",
             },
@@ -93,7 +93,7 @@ def test_maven_artifact_from_purl(purl_str: str, maven_artifact: MavenArtifact) 
         ),
         pytest.param(
             {
-                "artifact_name": "jackson-annotations-2.9.9-sources.jar",
+                "artifact_filename": "jackson-annotations-2.9.9-sources.jar",
                 "group_id": "com.fasterxml.jackson",
                 "version": "2.9.9",
             },
@@ -107,7 +107,7 @@ def test_maven_artifact_from_purl(purl_str: str, maven_artifact: MavenArtifact) 
         ),
         pytest.param(
             {
-                "artifact_name": "jackson-annotations-2.9.9.pom",
+                "artifact_filename": "jackson-annotations-2.9.9.pom",
                 "group_id": "com.fasterxml.jackson",
                 "version": "2.9.9",
             },
@@ -123,7 +123,7 @@ def test_maven_artifact_from_purl(purl_str: str, maven_artifact: MavenArtifact) 
 )
 def test_maven_artifact_from_artifact_name(params: dict, maven_artifact: MavenArtifact) -> None:
     """Test creating a ``MavenArtifact`` object given an artifact name."""
-    assert MavenArtifact.from_artifact_name(**params) == maven_artifact
+    assert MavenArtifact.from_artifact_filename(**params) == maven_artifact
 
 
 @pytest.mark.parametrize(

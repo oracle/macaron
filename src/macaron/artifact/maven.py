@@ -117,20 +117,20 @@ class MavenArtifact:
         )
 
     @classmethod
-    def from_artifact_name(
+    def from_artifact_filename(
         cls,
-        artifact_name: str,
+        artifact_filename: str,
         group_id: str,
         version: str,
     ) -> Self | None:
-        """Create a Maven artifact given an artifact name.
+        """Create a Maven artifact given an artifact filename.
 
         The artifact type is determined based on the naming pattern of the artifact.
 
         Parameters
         ----------
-        artifact_name : str
-            The artifact name.
+        artifact_filename : str
+            The filename of the artifact.
         group_id : str
             The group id.
         version : str
@@ -148,7 +148,7 @@ class MavenArtifact:
                 artifact_id="(.*)",
                 version=version,
             )
-            match_result = re.search(pattern, artifact_name)
+            match_result = re.search(pattern, artifact_filename)
             if not match_result:
                 continue
             artifact_id = match_result.group(1)
@@ -193,9 +193,9 @@ class MavenSubjectPURLMatcher:
 
             maven_artifact_subject_pairs = []
             for subject in artifact_subjects:
-                _, _, artifact_name = subject["name"].rpartition("/")
-                artifact = MavenArtifact.from_artifact_name(
-                    artifact_name=artifact_name,
+                _, _, artifact_filename = subject["name"].rpartition("/")
+                artifact = MavenArtifact.from_artifact_filename(
+                    artifact_filename=artifact_filename,
                     group_id=maven_artifact.group_id,
                     version=maven_artifact.version,
                 )
