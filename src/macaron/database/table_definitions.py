@@ -15,7 +15,7 @@ import os
 import string
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 from packageurl import PackageURL
 from sqlalchemy import (
@@ -32,9 +32,11 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from macaron.artifact.maven import MavenSubjectPURLMatcher
 from macaron.database.database_manager import ORMBase
 from macaron.database.rfc3339_datetime import RFC3339DateTime
 from macaron.errors import InvalidPURLError
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, ProvenanceSubjectPURLMatcher
 from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -166,6 +168,13 @@ class Component(PackageURLMixin, ORMBase):
         secondary=components_association_table,
         primaryjoin=components_association_table.c.parent_component == id,
         secondaryjoin=components_association_table.c.child_component == id,
+    )
+
+    #: The optional one-to-one relationship with a provenance subject in case this
+    #: component represents a subject in a provenance.
+    provenance_subject: Mapped["ProvenanceSubject | None"] = relationship(
+        back_populates="component",
+        lazy="immediate",
     )
 
     def __init__(self, purl: str, analysis: Analysis, repository: "Repository | None"):
@@ -528,3 +537,71 @@ class HashDigest(ORMBase):
 
     #: The many-to-one relationship with artifacts.
     artifact: Mapped["ReleaseArtifact"] = relationship(back_populates="digests", lazy="immediate")
+
+
+class ProvenanceSubject(ORMBase):
+    """A subject in a provenance that matches the user-provided PackageURL.
+
+    This subject may be later populated in VSAs during policy verification.
+    """
+
+    __tablename__ = "_provenance_subject"
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+
+    #: The component id of the provenance subject.
+    component_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("_component.id"),
+        nullable=False,
+    )
+
+    #: The required one-to-one relationship with a component.
+    component: Mapped[Component] = relationship(
+        back_populates="provenance_subject",
+        lazy="immediate",
+    )
+
+    #: The SHA256 hash of the subject.
+    sha256: Mapped[str] = mapped_column(String, nullable=False)
+
+    @classmethod
+    def from_purl_and_provenance(
+        cls,
+        purl: PackageURL,
+        provenance_payload: InTotoPayload,
+    ) -> Self | None:
+        """Create a ``ProvenanceSubject`` entry if there is a provenance subject matching the PURL.
+
+        Parameters
+        ----------
+        purl : PackageURL
+            The PackageURL identifying the software component being analyzed.
+        provenance_payload : InTotoPayload
+            The provenance payload.
+
+        Returns
+        -------
+        Self | None
+            A ``ProvenanceSubject`` entry with the SHA256 digest of the provenance subject
+            matching the given PURL.
+        """
+        subject_artifact_types: list[ProvenanceSubjectPURLMatcher] = [MavenSubjectPURLMatcher]
+
+        for subject_artifact_type in subject_artifact_types:
+            subject = subject_artifact_type.get_subject_in_provenance_matching_purl(
+                provenance_payload,
+                purl,
+            )
+            if subject is None:
+                return None
+            digest = subject["digest"]
+            if digest is None:
+                return None
+            sha256 = digest.get("sha256")
+            if not sha256:
+                return None
+            return cls(sha256=sha256)
+
+        return None

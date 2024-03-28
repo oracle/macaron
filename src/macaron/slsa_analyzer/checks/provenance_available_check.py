@@ -57,7 +57,7 @@ class ProvenanceAvailableFacts(CheckFacts):
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
     #: The provenance asset name.
-    asset_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
+    asset_name: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
 
     #: The URL for the provenance asset.
     asset_url: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
@@ -504,6 +504,12 @@ class ProvenanceAvailableCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
+        if ctx.dynamic_data["provenance"]:
+            return CheckResultData(
+                result_tables=[ProvenanceAvailableFacts(confidence=Confidence.HIGH)],
+                result_type=CheckResultType.PASSED,
+            )
+
         provenance_extensions = defaults.get_list(
             "slsa.verifier",
             "provenance_extensions",

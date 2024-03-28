@@ -19,7 +19,7 @@ from macaron import __version__
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
-from macaron.database.table_definitions import Analysis, Component, Repository
+from macaron.database.table_definitions import Analysis, Component, ProvenanceSubject, Repository
 from macaron.dependency_analyzer import DependencyAnalyzer, DependencyInfo
 from macaron.errors import (
     CloneError,
@@ -332,7 +332,12 @@ class Analyzer:
         # Create the component.
         component = None
         try:
-            component = self.add_component(analysis, analysis_target, existing_records)
+            component = self.add_component(
+                analysis,
+                analysis_target,
+                existing_records,
+                provenance_payload,
+            )
         except PURLNotFoundError as error:
             logger.error(error)
             return Record(
@@ -484,6 +489,7 @@ class Analyzer:
         analysis: Analysis,
         analysis_target: AnalysisTarget,
         existing_records: dict[str, Record] | None = None,
+        provenance_payload: InTotoPayload | None = None,
     ) -> Component:
         """Add a software component if it does not exist in the DB already.
 
@@ -547,18 +553,30 @@ class Analyzer:
                 raise PURLNotFoundError(
                     f"The repository {analysis_target.repo_path} is not available and no PURL is provided from the user."
                 )
-
-            repo_snapshot_purl = PackageURL(
+            purl = PackageURL(
                 type=repository.type,
                 namespace=repository.owner,
                 name=repository.name,
                 version=repository.commit_sha,
             )
-            return Component(purl=str(repo_snapshot_purl), analysis=analysis, repository=repository)
+        else:
+            # If the PURL is available, we always create the software component with it whether the repository is
+            # available or not.
+            purl = analysis_target.parsed_purl
 
-        # If the PURL is available, we always create the software component with it whether the repository is
-        # available or not.
-        return Component(purl=str(analysis_target.parsed_purl), analysis=analysis, repository=repository)
+        component = Component(
+            purl=str(purl),
+            analysis=analysis,
+            repository=repository,
+        )
+
+        if provenance_payload:
+            component.provenance_subject = ProvenanceSubject.from_purl_and_provenance(
+                purl=purl,
+                provenance_payload=provenance_payload,
+            )
+
+        return component
 
     @staticmethod
     def parse_purl(config: Configuration) -> PackageURL | None:

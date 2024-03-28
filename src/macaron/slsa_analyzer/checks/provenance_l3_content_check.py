@@ -58,6 +58,17 @@ class ProvenanceL3ContentCheck(BaseCheck):
             logger.info("%s check was unable to find any expectations.", self.check_info.check_id)
             return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
+        if ctx.dynamic_data["provenance"]:
+            if expectation.validate(ctx.dynamic_data["provenance"]):
+                return CheckResultData(
+                    result_tables=[expectation],
+                    result_type=CheckResultType.PASSED,
+                )
+            return CheckResultData(
+                result_tables=[expectation],
+                result_type=CheckResultType.FAILED,
+            )
+
         package_registry_info_entries = ctx.dynamic_data["package_registries"]
         ci_services = ctx.dynamic_data["ci_services"]
 
