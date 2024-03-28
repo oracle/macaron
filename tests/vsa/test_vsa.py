@@ -6,7 +6,7 @@
 
 import pytest
 
-from macaron.vsa.vsa import get_components_passing_policy
+from macaron.vsa.vsa import get_common_purl_from_artifact_purls, get_components_passing_policy
 
 
 @pytest.mark.parametrize(
@@ -192,3 +192,39 @@ def test_invalid_subject_verification_result(
 ) -> None:
     """Test the ``get_components_passing_policy`` in cases where the result should be ``None``."""
     assert get_components_passing_policy(policy_result) is None
+
+
+@pytest.mark.parametrize(
+    ("purl_strs", "expected_purl"),
+    [
+        pytest.param(
+            [
+                "pkg:maven/com.fasterxml.jackson/jackson-annotations@2.9.9?type=jar",
+                "pkg:maven/com.fasterxml.jackson/jackson-annotations@2.9.9?type=javadoc",
+                "pkg:maven/com.fasterxml.jackson/jackson-annotations@2.9.9?type=java-source",
+                "pkg:maven/com.fasterxml.jackson/jackson-annotations@2.9.9?type=pom",
+            ],
+            "pkg:maven/com.fasterxml.jackson/jackson-annotations@2.9.9",
+            id="Common PURL exists",
+        ),
+        pytest.param(
+            [
+                "pkg:maven/com.fasterxml.jackson/jackson-annotations@2.9.9?type=jar",
+                "pkg:maven/com.fasterxml.jackson/jackson-databind@2.9.9?type=jar",
+            ],
+            None,
+            id="Common PURL does not exist",
+        ),
+        pytest.param(
+            [],
+            None,
+            id="Common PURL does not exist",
+        ),
+    ],
+)
+def test_get_common_purl_from_artifact_purl(
+    purl_strs: list[str],
+    expected_purl: str | None,
+) -> None:
+    """Test the ``get_common_purl_from_artifact_purls`` function."""
+    assert get_common_purl_from_artifact_purls(purl_strs) == expected_purl

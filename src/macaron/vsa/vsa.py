@@ -156,6 +156,9 @@ def get_common_purl_from_artifact_purls(purl_strs: Iterable[str]) -> str | None:
     except ValueError:
         return None
 
+    if len(purls) == 0:
+        return None
+
     purl_type = purls[0].type
     namespace = purls[0].namespace
     name = purls[0].name
