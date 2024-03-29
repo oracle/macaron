@@ -3,7 +3,6 @@
 
 """This module analyzes GitHub Actions CI."""
 
-from __future__ import annotations
 
 import glob
 import logging

@@ -241,9 +241,6 @@ def build_call_graph_from_node(node: GitHubWorkflowNode, repo_path: str) -> None
     repo_path: str
         The file system path to the repo.
     """
-    if not node:
-        return
-
     for job_name, job in node.parsed_obj.get("Jobs", {}).items():
         job_node = GitHubJobNode(name=job_name, source_path=node.source_path, parsed_obj=job, caller=node)
         node.add_callee(job_node)
@@ -252,9 +249,13 @@ def build_call_graph_from_node(node: GitHubWorkflowNode, repo_path: str) -> None
         for step in steps:
             if step.get("Exec") and "Uses" in step.get("Exec"):
                 # TODO: change source_path for external workflows.
-                step_name = step["Exec"]["Uses"]["Value"]
+                action_name = step["Exec"]["Uses"]["Value"]
                 external_node = GitHubWorkflowNode(
-                    name=step_name, node_type=GHWorkflowType.EXTERNAL, source_path="", parsed_obj=step, caller=job_node
+                    name=action_name,
+                    node_type=GHWorkflowType.EXTERNAL,
+                    source_path="",
+                    parsed_obj=step,
+                    caller=job_node,
                 )
                 external_node.model = create_third_party_action_model(external_node)
                 job_node.add_callee(external_node)
@@ -299,7 +300,6 @@ def build_call_graph_from_node(node: GitHubWorkflowNode, repo_path: str) -> None
         if reusable:
             logger.debug("Found reusable workflow: %s.", reusable["Uses"]["Value"])
             # TODO: change source_path for reusable workflows.
-            step_name = reusable["Uses"]["Value"]
             reusable_node = GitHubWorkflowNode(
                 name=reusable["Uses"]["Value"],
                 node_type=GHWorkflowType.REUSABLE,
