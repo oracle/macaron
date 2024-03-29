@@ -41,15 +41,17 @@ class Evidence:
 class EvidenceWeightMap:
     """This class creates a map object for collected evidence."""
 
-    def __init__(self, map_obj: dict[str, Evidence] | None = None) -> None:
+    def __init__(self, evidence_list: list[Evidence]) -> None:
         """Initialize the class.
 
         Parameters
         ----------
-        map_obj: dict[str, Evidence] | None
-            The optional dictionary where keys are evidence names and values are the evidence objects.
+        evidence_list: list[Evidence]
+            The list of evidences.
         """
-        self.map_obj = map_obj if map_obj else {}
+        self.map_obj: dict[str, Evidence] = {}
+        for evidence in evidence_list:
+            self.add(evidence)
 
     def add(self, evidence: Evidence) -> None:
         """Add an evidence to the map.

@@ -53,50 +53,44 @@ def test_check_result_justification() -> None:
 
 
 @pytest.mark.parametrize(
-    ("evidence_weight_map", "expected_result"),
+    ("evidence_list", "expected_result"),
     [
         (
-            EvidenceWeightMap(
-                {
-                    "foo": Evidence(name="foo", found=True, weight=5),
-                    "bar": Evidence(name="bar", found=True, weight=10),
-                    "baz": Evidence(name="baz", found=False, weight=20),
-                }
-            ),
+            [
+                Evidence(name="foo", found=True, weight=5),
+                Evidence(name="bar", found=True, weight=10),
+                Evidence(name="baz", found=False, weight=20),
+            ],
             Confidence.LOW,
         ),
         (
-            EvidenceWeightMap(
-                {
-                    "foo": Evidence(name="foo", found=True, weight=5),
-                    "bar": Evidence(name="bar", found=False, weight=10),
-                    "baz": Evidence(name="baz", found=True, weight=20),
-                }
-            ),
+            [
+                Evidence(name="foo", found=True, weight=5),
+                Evidence(name="bar", found=False, weight=10),
+                Evidence(name="baz", found=True, weight=20),
+            ],
             Confidence.MEDIUM,
         ),
         (
-            EvidenceWeightMap(
-                {
-                    "foo": Evidence(name="foo", found=False, weight=5),
-                    "bar": Evidence(name="bar", found=True, weight=10),
-                    "baz": Evidence(name="baz", found=True, weight=20),
-                }
-            ),
+            [
+                Evidence(name="foo", found=False, weight=5),
+                Evidence(name="bar", found=True, weight=10),
+                Evidence(name="baz", found=True, weight=20),
+            ],
             Confidence.HIGH,
         ),
         (
-            EvidenceWeightMap(
-                {
-                    "foo": Evidence(name="foo", found=True, weight=5),
-                    "bar": Evidence(name="bar", found=False, weight=10),
-                    "baz": Evidence(name="baz", found=False, weight=20),
-                }
-            ),
+            [
+                Evidence(name="foo", found=True, weight=5),
+                Evidence(name="bar", found=False, weight=10),
+                Evidence(name="baz", found=False, weight=20),
+            ],
             Confidence.LOW,
         ),
     ],
 )
-def test_confidence_normalization(evidence_weight_map: EvidenceWeightMap, expected_result: Confidence) -> None:
+def test_confidence_normalization(evidence_list: list[Evidence], expected_result: Confidence) -> None:
     """Test that scores are normalized and mapped to the Confidence levels as expected."""
+    evidence_weight_map = EvidenceWeightMap(evidence_list=evidence_list)
+
     assert Confidence.normalize(evidence_weight_map) == expected_result

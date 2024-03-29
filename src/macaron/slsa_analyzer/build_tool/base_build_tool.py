@@ -278,10 +278,6 @@ class BaseBuildTool(ABC):
         If build command's first element, which is the program name matches any of the `tools` names and any of its arguments
         match any of the arguments in `args`, this function returns True.
 
-        If a build tool is called as a module, we parse the build command's args to extract the module name, then match
-        the subsequent arguments.
-
-
         Parameters
         ----------
         cmd: lis[str]
@@ -297,9 +293,8 @@ class BaseBuildTool(ABC):
             True if the provided command matches the tool and arguments.
         """
         cmd_program_name = os.path.basename(cmd[0])
-        check_build_commands = any(build_cmd for build_cmd in tools if build_cmd == cmd_program_name)
 
-        if check_build_commands:
+        if cmd_program_name in tools:
             # Check the arguments in the bash command.
             # If there are no args expected for this build tool, accept the command.
             if not args:
@@ -333,10 +328,13 @@ class BaseBuildTool(ABC):
         # Apply heuristics and assign weights and scores for the discovered evidence.
         # TODO: infer the scores based on existing data using probabilistic inference.
         # Initialize the map.
-        evidence_weight_map = EvidenceWeightMap()
-        evidence_weight_map.add(Evidence(name="reachable_secrets", found=False, weight=1))
-        evidence_weight_map.add(Evidence(name="ci_workflow_name", found=False, weight=2))
-        evidence_weight_map.add(Evidence(name="release_event", found=False, weight=2))
+        evidence_weight_map = EvidenceWeightMap(
+            [
+                Evidence(name="reachable_secrets", found=False, weight=1),
+                Evidence(name="ci_workflow_name", found=False, weight=2),
+                Evidence(name="release_event", found=False, weight=2),
+            ]
+        )
 
         # Check if secrets are present in the caller job.
         if list(cmd["reachable_secrets"]):
