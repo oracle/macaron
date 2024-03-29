@@ -47,10 +47,10 @@ class BuildToolCommand(TypedDict):
     step_node: BaseNode
 
     #: The list of name of reachable variables that contain secrets."""
-    reachable_secrets: Iterable[str]
+    reachable_secrets: list[str]
 
     #: The name of CI events that trigger the workflow running the build command.
-    events: Iterable[str] | None
+    events: list[str] | None
 
 
 def file_exists(path: str, file_name: str) -> bool:
@@ -337,7 +337,7 @@ class BaseBuildTool(ABC):
         )
 
         # Check if secrets are present in the caller job.
-        if list(cmd["reachable_secrets"]):
+        if cmd["reachable_secrets"]:
             evidence_weight_map.update_result(name="reachable_secrets", found=True)
 
         # Check workflow names.

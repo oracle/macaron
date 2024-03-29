@@ -555,7 +555,7 @@ class GitHubActions(BaseCIService):
                             language_versions=lang_versions,
                             language_distributions=lang_distributions,
                             language_url=lang_url,
-                            reachable_secrets=get_reachable_secrets(step_node),
+                            reachable_secrets=list(get_reachable_secrets(step_node)),
                             events=get_ci_events(workflow_node),
                         )
 
