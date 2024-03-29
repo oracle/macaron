@@ -82,9 +82,7 @@ class EvidenceWeightMap:
         float
             The maximum possible score or zero if the map is empty.
         """
-        if self.map_obj.values():
-            return sum(e.weight for e in self.map_obj.values())
-        return 0
+        return sum(e.weight for e in self.map_obj.values())
 
     def get_score(self) -> float:
         """Compute the score using the evidence result and weights.
@@ -94,9 +92,7 @@ class EvidenceWeightMap:
         float
             The aggregate score or zero if the map is empty.
         """
-        if self.map_obj.values():
-            return sum(e.weight * int(e.found) for e in self.map_obj.values())
-        return 0
+        return sum(e.weight * int(e.found) for e in self.map_obj.values())
 
 
 class Confidence(float, Enum):
