@@ -24,7 +24,11 @@ from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.build_tool.yarn import Yarn
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
-from macaron.slsa_analyzer.ci_service.github_actions.analyzer import GHWorkflowType, GitHubJobNode, GitHubWorkflowNode
+from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
+    GitHubJobNode,
+    GitHubWorkflowNode,
+    GitHubWorkflowType,
+)
 from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
@@ -422,7 +426,7 @@ def build_github_actions_call_graph_for_commands(commands: list[str]) -> CallGra
     }
     workflow_node = GitHubWorkflowNode(
         name="",
-        node_type=GHWorkflowType.INTERNAL,
+        node_type=GitHubWorkflowType.INTERNAL,
         source_path="",
         parsed_obj=workflow_obj,
         caller=root,

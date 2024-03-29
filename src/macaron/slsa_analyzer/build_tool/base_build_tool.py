@@ -280,7 +280,7 @@ class BaseBuildTool(ABC):
 
         Parameters
         ----------
-        cmd: lis[str]
+        cmd: list[str]
             The command-line arguments.
         tools: list[str]
             The name of tools that will be matched with the program name in the bash command.
@@ -317,8 +317,6 @@ class BaseBuildTool(ABC):
         ----------
         cmd: BuildToolCommand
             The build tool command object.
-        filter_configs: list[str]
-            List of the basename of configuration files that call the build command, but should be filtered.
 
         Returns
         -------
@@ -354,7 +352,7 @@ class BaseBuildTool(ABC):
         return Confidence.normalize(evidence_weight_map=evidence_weight_map)
 
     def is_deploy_command(
-        self, cmd: BuildToolCommand, filter_configs: list[str] | None = None
+        self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None
     ) -> tuple[bool, Confidence]:
         """
         Determine if the command is a deploy command.
@@ -366,8 +364,8 @@ class BaseBuildTool(ABC):
         ----------
         cmd: BuildToolCommand
             The build tool command object.
-        filter_configs: list[str]
-            List of the basename of configuration files that call the build command, but should be filtered.
+        excluded_configs: list[str] | None
+            Build tool commands that are called from these configuration files are excluded.
 
         Returns
         -------
@@ -384,13 +382,13 @@ class BaseBuildTool(ABC):
             return False, Confidence.HIGH
 
         # Check if the CI workflow is a configuration for a known tool.
-        if filter_configs and os.path.basename(cmd["ci_path"]) in filter_configs:
+        if excluded_configs and os.path.basename(cmd["ci_path"]) in excluded_configs:
             return False, Confidence.HIGH
 
         return True, self.infer_confidence_deploy_command(cmd=cmd)
 
     def is_package_command(
-        self, cmd: BuildToolCommand, filter_configs: list[str] | None = None
+        self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None
     ) -> tuple[bool, Confidence]:
         """
         Determine if the command is a packaging command.
@@ -402,8 +400,8 @@ class BaseBuildTool(ABC):
         ----------
         cmd: BuildToolCommand
             The build tool command object.
-        filter_configs: list[str]
-            List of the basename of configuration files that call the build command, but should be filtered.
+        excluded_configs: list[str] | None
+            Build tool commands that are called from these configuration files are excluded.
 
         Returns
         -------
@@ -420,7 +418,7 @@ class BaseBuildTool(ABC):
             return False, Confidence.HIGH
 
         # Check if the CI workflow is a configuration for a known tool.
-        if filter_configs and os.path.basename(cmd["ci_path"]) in filter_configs:
+        if excluded_configs and os.path.basename(cmd["ci_path"]) in excluded_configs:
             return False, Confidence.HIGH
 
         return True, Confidence.HIGH

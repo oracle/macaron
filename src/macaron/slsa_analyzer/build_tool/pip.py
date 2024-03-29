@@ -92,7 +92,7 @@ class Pip(BaseBuildTool):
         return NoneDependencyAnalyzer()
 
     def is_deploy_command(
-        self, cmd: BuildToolCommand, filter_configs: list[str] | None = None
+        self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None
     ) -> tuple[bool, Confidence]:
         """
         Determine if the command is a deploy command.
@@ -104,8 +104,8 @@ class Pip(BaseBuildTool):
         ----------
         cmd: BuildToolCommand
             The build tool command object.
-        filter_configs: list[str]
-            List of the basename of configuration files that call the build command, but should be filtered.
+        excluded_configs: list[str] | None
+            Build tool commands that are called from these configuration files are excluded.
 
         Returns
         -------
@@ -132,13 +132,13 @@ class Pip(BaseBuildTool):
             return False, Confidence.HIGH
 
         # Check if the CI workflow is a configuration for a known tool.
-        if filter_configs and os.path.basename(cmd["ci_path"]) in filter_configs:
+        if excluded_configs and os.path.basename(cmd["ci_path"]) in excluded_configs:
             return False, Confidence.HIGH
 
         return True, self.infer_confidence_deploy_command(cmd)
 
     def is_package_command(
-        self, cmd: BuildToolCommand, filter_configs: list[str] | None = None
+        self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None
     ) -> tuple[bool, Confidence]:
         """
         Determine if the command is a packaging command.
@@ -150,8 +150,8 @@ class Pip(BaseBuildTool):
         ----------
         cmd: BuildToolCommand
             The build tool command object.
-        filter_configs: list[str]
-            List of the basename of configuration files that call the build command, but should be filtered.
+        excluded_configs: list[str] | None
+            Build tool commands that are called from these configuration files are excluded.
 
         Returns
         -------
@@ -179,7 +179,7 @@ class Pip(BaseBuildTool):
             return False, Confidence.HIGH
 
         # Check if the CI workflow is a configuration for a known tool.
-        if filter_configs and os.path.basename(cmd["ci_path"]) in filter_configs:
+        if excluded_configs and os.path.basename(cmd["ci_path"]) in excluded_configs:
             return False, Confidence.HIGH
 
         return True, Confidence.HIGH

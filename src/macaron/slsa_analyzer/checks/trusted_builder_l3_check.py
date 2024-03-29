@@ -16,7 +16,11 @@ from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_provenance
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
-from macaron.slsa_analyzer.ci_service.github_actions.analyzer import GHWorkflowType, GitHubJobNode, GitHubWorkflowNode
+from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
+    GitHubJobNode,
+    GitHubWorkflowNode,
+    GitHubWorkflowType,
+)
 from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
@@ -115,7 +119,10 @@ class TrustedBuilderL3Check(BaseCheck):
                     workflow_name = callee.name.split("@")[0]
 
                     # Check if the action is called as a third-party or reusable workflow.
-                    if not workflow_name or callee.node_type not in [GHWorkflowType.EXTERNAL, GHWorkflowType.REUSABLE]:
+                    if not workflow_name or callee.node_type not in [
+                        GitHubWorkflowType.EXTERNAL,
+                        GitHubWorkflowType.REUSABLE,
+                    ]:
                         logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
                         continue
                     if workflow_name in trusted_builders:

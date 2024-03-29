@@ -515,7 +515,7 @@ class GitHubActions(BaseCIService):
                 # The step in GitHub Actions job that triggers the path in the callgraph.
                 step_node = node if node.node_type == BashScriptType.INLINE else None
 
-                # Walk up the grallgraph to find the relevant caller nodes.
+                # Walk up the callgraph to find the relevant caller nodes.
                 # In GitHub Actions a `GitHubWorkflowNode` may call several `GitHubJobNode`s
                 # and a `GitHubJobNode` may call several steps, which can be external `GitHubWorkflowNode`
                 # or inlined run nodes. We currently support the run steps that call shell scripts as

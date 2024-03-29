@@ -127,7 +127,7 @@ def test_get_group_ids_timeout(tmp_path: Path, gradle_tool: Gradle, timeout: str
         "ci_path",
         "reachable_secrets",
         "events",
-        "filter_configs",
+        "excluded_configs",
         "expected_result",
     ),
     [
@@ -241,7 +241,7 @@ def test_is_gradle_deploy_command(
     ci_path: str,
     reachable_secrets: list[str],
     events: list[str],
-    filter_configs: list[str],
+    excluded_configs: list[str] | None,
     expected_result: bool,
 ) -> None:
     """Test the deploy commend detection function."""
@@ -257,7 +257,7 @@ def test_is_gradle_deploy_command(
             reachable_secrets=reachable_secrets,
             events=events,
         ),
-        filter_configs=filter_configs,
+        excluded_configs=excluded_configs,
     )
     assert result == expected_result
 
@@ -271,7 +271,7 @@ def test_is_gradle_deploy_command(
         "ci_path",
         "reachable_secrets",
         "events",
-        "filter_configs",
+        "excluded_configs",
         "expected_result",
     ),
     [
@@ -396,7 +396,7 @@ def test_is_gradle_package_command(
     ci_path: str,
     reachable_secrets: list[str],
     events: list[str],
-    filter_configs: list[str],
+    excluded_configs: list[str] | None,
     expected_result: bool,
 ) -> None:
     """Test the packaging command detection function."""
@@ -412,6 +412,6 @@ def test_is_gradle_package_command(
             reachable_secrets=reachable_secrets,
             events=events,
         ),
-        filter_configs=filter_configs,
+        excluded_configs=excluded_configs,
     )
     assert result == expected_result

@@ -18,7 +18,11 @@ from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
-from macaron.slsa_analyzer.ci_service.github_actions.analyzer import GHWorkflowType, GitHubJobNode, GitHubWorkflowNode
+from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
+    GitHubJobNode,
+    GitHubWorkflowNode,
+    GitHubWorkflowType,
+)
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
@@ -135,8 +139,8 @@ class BuildAsCodeCheck(BaseCheck):
                 if trusted_deploy_actions:
                     for callee in ci_info["callgraph"].bfs():
                         if isinstance(callee, GitHubWorkflowNode) and callee.node_type in [
-                            GHWorkflowType.EXTERNAL,
-                            GHWorkflowType.REUSABLE,
+                            GitHubWorkflowType.EXTERNAL,
+                            GitHubWorkflowType.REUSABLE,
                         ]:
                             workflow_name = callee.name.split("@")[0]
 

@@ -33,8 +33,8 @@ class ThirdPartyAction:
     action_version: str | None
 
 
-class GHWorkflowType(Enum):
-    """This class represents different GitHub Actions types."""
+class GitHubWorkflowType(Enum):
+    """This class represents different GitHub Actions workflow types."""
 
     NONE = "None"
     INTERNAL = "internal"  # Workflows declared in the repo.
@@ -43,12 +43,12 @@ class GHWorkflowType(Enum):
 
 
 class GitHubWorkflowNode(BaseNode):
-    """This class is used to create a call graph node for GitHub Actions workflows."""
+    """This class represents a callgraph node for GitHub Actions workflows."""
 
     def __init__(
         self,
         name: str,
-        node_type: GHWorkflowType,
+        node_type: GitHubWorkflowType,
         source_path: str,
         parsed_obj: dict,
         model: ThirdPartyAction | None = None,
@@ -60,7 +60,7 @@ class GitHubWorkflowNode(BaseNode):
         ----------
         name : str
             Name of the workflow (or URL for reusable and external workflows).
-        node_type : GHWorkflowType
+        node_type : GitHubWorkflowType
             The type of workflow.
         source_path : str
             The path of the workflow.
@@ -73,7 +73,7 @@ class GitHubWorkflowNode(BaseNode):
         """
         super().__init__(**kwargs)
         self.name = name
-        self.node_type: GHWorkflowType = node_type
+        self.node_type: GitHubWorkflowType = node_type
         self.source_path = source_path
         self.parsed_obj = parsed_obj
         self.model = model
@@ -83,7 +83,7 @@ class GitHubWorkflowNode(BaseNode):
 
 
 class GitHubJobNode(BaseNode):
-    """This class is used to create a call graph node for GitHub Actions jobs."""
+    """This class represents a callgraph node for GitHub Actions jobs."""
 
     def __init__(self, name: str, source_path: str, parsed_obj: dict, **kwargs: Any) -> None:
         """Initialize instance.
@@ -252,7 +252,7 @@ def build_call_graph_from_node(node: GitHubWorkflowNode, repo_path: str) -> None
                 action_name = step["Exec"]["Uses"]["Value"]
                 external_node = GitHubWorkflowNode(
                     name=action_name,
-                    node_type=GHWorkflowType.EXTERNAL,
+                    node_type=GitHubWorkflowType.EXTERNAL,
                     source_path="",
                     parsed_obj=step,
                     caller=job_node,
@@ -302,7 +302,7 @@ def build_call_graph_from_node(node: GitHubWorkflowNode, repo_path: str) -> None
             # TODO: change source_path for reusable workflows.
             reusable_node = GitHubWorkflowNode(
                 name=reusable["Uses"]["Value"],
-                node_type=GHWorkflowType.REUSABLE,
+                node_type=GitHubWorkflowType.REUSABLE,
                 source_path="",
                 parsed_obj=reusable,
                 caller=job_node,
@@ -355,7 +355,7 @@ def build_call_graph_from_path(root: BaseNode, workflow_path: str, repo_path: st
     workflow_name = os.path.basename(workflow_path)
     workflow_node = GitHubWorkflowNode(
         name=workflow_name,
-        node_type=GHWorkflowType.INTERNAL,
+        node_type=GitHubWorkflowType.INTERNAL,
         source_path=workflow_path,
         parsed_obj=parsed_obj,
         caller=root,

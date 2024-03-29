@@ -20,8 +20,8 @@ from macaron.slsa_analyzer.checks.build_as_code_check import BuildAsCodeCheck, B
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
-    GHWorkflowType,
     GitHubWorkflowNode,
+    GitHubWorkflowType,
     build_call_graph_from_node,
 )
 from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
@@ -154,7 +154,7 @@ def test_gha_workflow_deployment(
     gha_deploy.dynamic_data["build_spec"]["tools"] = [pip_tool]
     gha_deploy.dynamic_data["ci_services"] = [ci_info]
 
-    root = GitHubWorkflowNode(name="root", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={})
+    root = GitHubWorkflowNode(name="root", node_type=GitHubWorkflowType.NONE, source_path="", parsed_obj={})
     gh_cg = CallGraph(root, "")
     workflow_path = os.path.join(workflows_dir, workflow_name)
     parsed_obj = None
@@ -164,7 +164,7 @@ def test_gha_workflow_deployment(
         parsed_obj = {}
     callee = GitHubWorkflowNode(
         name=os.path.basename(workflow_path),
-        node_type=GHWorkflowType.INTERNAL,
+        node_type=GitHubWorkflowType.INTERNAL,
         source_path=workflow_path,
         parsed_obj=parsed_obj,
         caller=root,

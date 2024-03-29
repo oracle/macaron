@@ -34,7 +34,7 @@ class BashScriptType(Enum):
 
 
 class BashNode(BaseNode):
-    """This class is used to create a call graph node for bash commands."""
+    """This class represents a callgraph node for bash commands."""
 
     def __init__(
         self,
