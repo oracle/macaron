@@ -6,7 +6,7 @@
     ],
     [
       "echo",
-      "\"hash=$MACARON_UNKNOWN\""
+      "\"hash=$MACARON_UNKNOWN }}\""
     ],
     [
       "echo",
@@ -23,6 +23,14 @@
     [
       "echo",
       "\"hash=$MACARON_UNKNOWN\""
+    ],
+    [
+      "git",
+      "tag",
+      "-m",
+      "\"Release milestone $MACARON_UNKNOWN\"",
+      "v$MACARON_UNKNOWN",
+      "$MACARON_UNKNOWN"
     ]
   ]
 }

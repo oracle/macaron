@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This modules contains tests for the provenance l3 check."""
@@ -8,7 +8,7 @@ from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.provenance_l3_check import ProvenanceL3Check
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
-from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
+from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
@@ -68,7 +68,6 @@ class TestProvL3Check(MacaronTestCase):
 
         ci_info = CIInfo(
             service=github_actions,
-            bash_commands=[],
             callgraph=CallGraph(BaseNode(), ""),
             provenance_assets=[],
             latest_release={},

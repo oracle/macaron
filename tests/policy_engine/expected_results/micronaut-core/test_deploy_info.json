@@ -1,0 +1,16 @@
+{
+    "passed_policies": [
+        [
+            "test_deploy_info"
+        ]
+    ],
+    "component_satisfies_policy": [
+        [
+            "1",
+            "pkg:maven/io.micronaut/micronaut-core@4.2.3",
+            "test_deploy_info"
+        ]
+    ],
+    "failed_policies": [],
+    "component_violates_policy": []
+}

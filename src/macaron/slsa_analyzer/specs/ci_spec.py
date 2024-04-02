@@ -7,7 +7,6 @@ from collections.abc import Sequence
 from typing import TypedDict
 
 from macaron.code_analyzer.call_graph import CallGraph
-from macaron.parsers.bashparser import BashCommands
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.provenance.provenance import DownloadedProvenanceData
@@ -18,9 +17,6 @@ class CIInfo(TypedDict):
 
     service: BaseCIService
     """The CI service data."""
-
-    bash_commands: list[BashCommands]
-    """List of bash commands triggered by this CI service."""
 
     callgraph: CallGraph
     """The call graph for this CI service."""

@@ -1,19 +1,56 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseBuildTool class to be inherited by other specific Build Tools."""
 
 import glob
+import itertools
+import json
 import logging
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TypedDict
 
+from macaron.code_analyzer.call_graph import BaseNode
 from macaron.dependency_analyzer import DependencyAnalyzer
+from macaron.slsa_analyzer.build_tool.language import BuildLanguage
+from macaron.slsa_analyzer.checks.check_result import Confidence, Evidence, EvidenceWeightMap
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+class BuildToolCommand(TypedDict):
+    """This class is an abstraction for build tool commands storing useful contextual data for analysis."""
+
+    #: The parsed build tool command. This command can be any bash command whose program name is the build tool.
+    command: list[str]
+
+    #: The name of the language to build the artifact.
+    language: str
+
+    #: The list of possible language version numbers.
+    language_versions: list[str] | None
+
+    #: The list of possible language distributions.
+    language_distributions: list[str] | None
+
+    #: The URL providing information about the language distributions and versions.
+    language_url: str | None
+
+    #: The relative path to the root CI file that ultimately triggers the command.
+    ci_path: str
+
+    #: The CI step object that calls the command.
+    step_node: BaseNode
+
+    #: The list of name of reachable variables that contain secrets."""
+    reachable_secrets: list[str]
+
+    #: The name of CI events that trigger the workflow running the build command.
+    events: list[str] | None
 
 
 def file_exists(path: str, file_name: str) -> bool:
@@ -56,15 +93,18 @@ class RuntimeOptions:
 class BaseBuildTool(ABC):
     """This abstract class is used to implement Build Tools."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, language: BuildLanguage) -> None:
         """Initialize instance.
 
         Parameters
         ----------
         name : str
             The name of this build tool.
+        language: BuildLanguage
+            The name of the language used by the programs built by the build tool.
         """
         self.name = name
+        self.language = language
         self.entry_conf: list[str] = []
         self.build_configs: list[str] = []
         self.package_lock: list[str] = []
@@ -184,3 +224,201 @@ class BaseBuildTool(ABC):
 
         except StopIteration:
             pass
+
+    def serialize_to_json(self, cmd: list[str]) -> str:
+        """Convert a list of values to a json-encoded string so that it is easily parsable by later consumers.
+
+        Parameters
+        ----------
+        cmd: list[str]
+            List of command-line arguments.
+
+        Returns
+        -------
+        str
+            The list of command-line arguments as a json-encoded string.
+        """
+        return json.dumps(cmd)
+
+    def is_build_command(self, cmd: list[str]) -> bool:
+        """
+        Determine if the command is a build tool command.
+
+        Parameters
+        ----------
+        cmd: list[str]
+            List of command-line arguments.
+
+        Returns
+        -------
+        bool
+            True if the command is a build tool command.
+        """
+        # Check for empty or invalid commands.
+        if not cmd or not cmd[0]:
+            return False
+        # The first argument in a bash command is the program name.
+        # So first check that the program name is a supported build tool name.
+        # We need to handle cases where the first argument is a path to the program.
+        cmd_program_name = os.path.basename(cmd[0])
+        if not cmd_program_name:
+            logger.debug("Found invalid program name %s.", cmd[0])
+            return False
+
+        build_tools = set(itertools.chain(self.builder, self.packager, self.publisher, self.interpreter))
+        if any(tool for tool in build_tools if tool == cmd_program_name):
+            return True
+
+        return False
+
+    def match_cmd_args(self, cmd: list[str], tools: list[str], args: list[str]) -> bool:
+        """
+        Check if the build command matches any of the tools and the command-line arguments.
+
+        If build command's first element, which is the program name matches any of the `tools` names and any of its arguments
+        match any of the arguments in `args`, this function returns True.
+
+        Parameters
+        ----------
+        cmd: list[str]
+            The command-line arguments.
+        tools: list[str]
+            The name of tools that will be matched with the program name in the bash command.
+        args: list[str]
+            The lit of arguments that should match with the bash command.
+
+        Returns
+        -------
+        bool
+            True if the provided command matches the tool and arguments.
+        """
+        cmd_program_name = os.path.basename(cmd[0])
+
+        if cmd_program_name in tools:
+            # Check the arguments in the bash command.
+            # If there are no args expected for this build tool, accept the command.
+            if not args:
+                logger.debug("No build arguments required. Accept the %s command.", self.serialize_to_json(cmd))
+                return True
+
+            for word in cmd[1:]:
+                # TODO: allow plugin versions in arguments, e.g., maven-plugin:1.6.8:deploy.
+                if word in args:
+                    logger.debug("Found the command %s.", self.serialize_to_json(cmd))
+                    return True
+
+        return False
+
+    def infer_confidence_deploy_command(self, cmd: BuildToolCommand) -> Confidence:
+        """
+        Infer the confidence level for the deploy command.
+
+        Parameters
+        ----------
+        cmd: BuildToolCommand
+            The build tool command object.
+
+        Returns
+        -------
+        Confidence
+            The confidence level for the deploy command.
+        """
+        # Apply heuristics and assign weights and scores for the discovered evidence.
+        # TODO: infer the scores based on existing data using probabilistic inference.
+        # Initialize the map.
+        evidence_weight_map = EvidenceWeightMap(
+            [
+                Evidence(name="reachable_secrets", found=False, weight=1),
+                Evidence(name="ci_workflow_name", found=False, weight=2),
+                Evidence(name="release_event", found=False, weight=2),
+            ]
+        )
+
+        # Check if secrets are present in the caller job.
+        if cmd["reachable_secrets"]:
+            evidence_weight_map.update_result(name="reachable_secrets", found=True)
+
+        # Check workflow names.
+        deploy_keywords = ["release", "deploy", "publish"]
+        for kw in deploy_keywords:
+            if kw in os.path.basename(cmd["ci_path"]).lower():
+                evidence_weight_map.update_result(name="ci_workflow_name", found=True)
+                break
+
+        # Check if the CI workflow is triggered by a release event.
+        if cmd["events"] and "release" in cmd["events"]:
+            evidence_weight_map.update_result(name="release_event", found=True)
+
+        return Confidence.normalize(evidence_weight_map=evidence_weight_map)
+
+    def is_deploy_command(
+        self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None
+    ) -> tuple[bool, Confidence]:
+        """
+        Determine if the command is a deploy command.
+
+        A deploy command usually performs multiple tasks, such as compilation, packaging, and publishing the artifact.
+        This function filters the build tool commands that are called from the configuration files provided as input.
+
+        Parameters
+        ----------
+        cmd: BuildToolCommand
+            The build tool command object.
+        excluded_configs: list[str] | None
+            Build tool commands that are called from these configuration files are excluded.
+
+        Returns
+        -------
+        tuple[bool, Confidence]
+            Return True along with the inferred confidence level if the command is a deploy tool command.
+        """
+        # Check the language.
+        if cmd["language"] is not self.language:
+            return False, Confidence.HIGH
+        # Some projects use a publisher tool and some use the build tool with deploy arguments.
+        deploy_tool = self.publisher if self.publisher else self.builder
+
+        if not self.match_cmd_args(cmd=cmd["command"], tools=deploy_tool, args=self.deploy_arg):
+            return False, Confidence.HIGH
+
+        # Check if the CI workflow is a configuration for a known tool.
+        if excluded_configs and os.path.basename(cmd["ci_path"]) in excluded_configs:
+            return False, Confidence.HIGH
+
+        return True, self.infer_confidence_deploy_command(cmd=cmd)
+
+    def is_package_command(
+        self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None
+    ) -> tuple[bool, Confidence]:
+        """
+        Determine if the command is a packaging command.
+
+        A packaging command usually performs multiple tasks, such as compilation and creating the artifact.
+        This function filters the build tool commands that are called from the configuration files provided as input.
+
+        Parameters
+        ----------
+        cmd: BuildToolCommand
+            The build tool command object.
+        excluded_configs: list[str] | None
+            Build tool commands that are called from these configuration files are excluded.
+
+        Returns
+        -------
+        tuple[bool, Confidence]
+            Return True along with the inferred confidence level if the command is a build tool command.
+        """
+        # Check the language.
+        if cmd["language"] is not self.language:
+            return False, Confidence.HIGH
+
+        builder = self.packager if self.packager else self.builder
+
+        if not self.match_cmd_args(cmd=cmd["command"], tools=builder, args=self.build_arg):
+            return False, Confidence.HIGH
+
+        # Check if the CI workflow is a configuration for a known tool.
+        if excluded_configs and os.path.basename(cmd["ci_path"]) in excluded_configs:
+            return False, Confidence.HIGH
+
+        return True, Confidence.HIGH

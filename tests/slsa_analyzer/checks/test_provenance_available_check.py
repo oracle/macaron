@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This modules contains tests for the provenance available check."""
@@ -16,7 +16,7 @@ from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.provenance_available_check import ProvenanceAvailableCheck
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
-from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
+from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
@@ -86,7 +86,6 @@ def test_provenance_available_check_with_repos(macaron_path: Path, repository: R
 
     ci_info = CIInfo(
         service=github_actions,
-        bash_commands=[],
         callgraph=CallGraph(BaseNode(), ""),
         provenance_assets=[],
         latest_release={},
@@ -118,7 +117,6 @@ def test_provenance_available_check_on_ci(macaron_path: Path) -> None:
 
     ci_info = CIInfo(
         service=github_actions,
-        bash_commands=[],
         callgraph=CallGraph(BaseNode(), ""),
         provenance_assets=[],
         latest_release={},

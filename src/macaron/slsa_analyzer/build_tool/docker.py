@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Docker class which inherits BaseBuildTool.
@@ -9,6 +9,7 @@ This module is used to work with repositories that use Docker as a build tool.
 from macaron.config.defaults import defaults
 from macaron.dependency_analyzer.dependency_resolver import NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
+from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 
 
 class Docker(BaseBuildTool):
@@ -16,7 +17,7 @@ class Docker(BaseBuildTool):
 
     def __init__(self) -> None:
         """Initialize instance."""
-        super().__init__(name="docker")
+        super().__init__(name="docker", language=BuildLanguage.DOCKER)
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""

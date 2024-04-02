@@ -953,11 +953,9 @@ class Analyzer:
                         analyze_ctx.component.repository.fs_path,
                         os.path.relpath(analyze_ctx.component.repository.fs_path, analyze_ctx.output_dir),
                     )
-                    bash_commands = list(ci_service.extract_all_bash(callgraph)) if callgraph else []
                     analyze_ctx.dynamic_data["ci_services"].append(
                         CIInfo(
                             service=ci_service,
-                            bash_commands=bash_commands,
                             callgraph=callgraph,
                             provenance_assets=[],
                             latest_release={},

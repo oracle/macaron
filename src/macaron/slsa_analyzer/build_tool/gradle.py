@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Gradle class which inherits BaseBuildTool.
@@ -16,6 +16,7 @@ from macaron.config.global_config import global_config
 from macaron.dependency_analyzer import DependencyAnalyzer, DependencyAnalyzerError, DependencyTools
 from macaron.dependency_analyzer.cyclonedx_gradle import CycloneDxGradle
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
+from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.util import copy_file_bulk
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class Gradle(BaseBuildTool):
 
     def __init__(self) -> None:
         """Initialize instance."""
-        super().__init__(name="gradle")
+        super().__init__(name="gradle", language=BuildLanguage.JAVA)
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""

@@ -1,11 +1,11 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains classes to generate build call graphs for the target repository."""
 
 from collections import deque
 from collections.abc import Iterable
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 Node = TypeVar("Node", bound="BaseNode")
 # The documentation below for `TypeVar` is commented out due to a breaking
@@ -21,9 +21,22 @@ Node = TypeVar("Node", bound="BaseNode")
 class BaseNode(Generic[Node]):
     """This is the generic class for call graph nodes."""
 
-    def __init__(self) -> None:
-        """Initialize instance."""
+    def __init__(self, caller: Node | None = None, node_id: str | None = None) -> None:
+        """Initialize instance.
+
+        Parameter
+        ---------
+        caller: Node | None
+            The caller node.
+        node_id: str | None
+            The unique identifier of a node in the callgraph.
+        """
         self.callee: list[Node] = []
+        self.caller: Node | None = caller
+        # Each node can have a model that summarizes certain properties for static analysis.
+        # By default this model is set to None.
+        self.model: Any = None
+        self.node_id = node_id
 
     def add_callee(self, node: Node) -> None:
         """Add a callee to the current node.

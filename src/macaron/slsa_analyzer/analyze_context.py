@@ -9,15 +9,16 @@ The AnalyzeContext is used to store the data of the repository being analyzed.
 import logging
 import os
 from collections import defaultdict
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from macaron.database.table_definitions import Component, SLSALevel
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
+from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.git_service import BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
-from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payload
 from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Statement
 from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1Statement
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus, create_requirement_status_dict
@@ -184,10 +185,9 @@ class AnalyzeContext:
         req = self.ctx_data.get(req_name)
         if req:
             logger.debug(
-                "Update requirement %s: set to %s (%s)",
+                "Update requirement %s: set to %s.",
                 req_name.value,
                 status,
-                feedback,
             )
             self.ctx_data[req_name].set_status(status, feedback)
         else:
@@ -296,3 +296,51 @@ class AnalyzeContext:
             output = "".join([output, f"{len(result_list)} checks {result_type.value}\n"])
 
         return output
+
+
+def store_inferred_provenance(
+    ctx: AnalyzeContext,
+    ci_info: CIInfo,
+    ci_service: BaseCIService,
+    trigger_link: str,
+    job_id: str | None = None,
+    step_id: str | None = None,
+    step_name: str | None = None,
+) -> None:
+    """Store the data related to the build provenance when the project does not generate provenances.
+
+    Parameters
+    ----------
+    ctx: AnalyzeContext
+        The analyze context object.
+    ci_info: CIInfo
+        The CI data representation.
+    ci_service: BaseCIService
+        The CI service representation.
+    trigger_link: str
+        The link to the CI workflow.
+    job_id: str | None
+        The CI job ID.
+    step_id: str | None
+        The CI step ID.
+    step_name: str | None
+        The CI step name.
+    """
+    # TODO: This data is potentially duplicated in the check result tables. Instead of storing the data
+    # in the context object, retrieve it from the result tables and remove this function.
+    if (
+        ctx.dynamic_data["is_inferred_prov"]
+        and ci_info["provenances"]
+        and isinstance(ci_info["provenances"][0].payload, InTotoV01Payload)
+    ):
+        predicate: Any = ci_info["provenances"][0].payload.statement["predicate"]
+        predicate["buildType"] = f"Custom {ci_service.name}"
+        predicate["builder"]["id"] = trigger_link
+        predicate["invocation"]["configSource"]["uri"] = (
+            f"{ctx.component.repository.remote_path}" f"@refs/heads/{ctx.component.repository.branch_name}"
+        )
+        predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.component.repository.commit_sha
+        predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
+        predicate["buildConfig"]["jobID"] = job_id or ""
+        predicate["buildConfig"]["stepID"] = step_id or ""
+        predicate["buildConfig"]["stepName"] = step_name or ""
