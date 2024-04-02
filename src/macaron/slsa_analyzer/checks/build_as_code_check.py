@@ -3,30 +3,31 @@
 
 """This module contains the BuildAsCodeCheck class."""
 
-import json
 import logging
 import os
-from typing import Any
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
 from macaron.database.table_definitions import CheckFacts
-from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
+from macaron.errors import CallGraphError
+from macaron.parsers.bashparser import BashNode
+from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_provenance
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
-from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
+from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
-from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType
+from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
+    GitHubJobNode,
+    GitHubWorkflowNode,
+    GitHubWorkflowType,
+)
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
-from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
-from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -48,11 +49,26 @@ class BuildAsCodeFacts(CheckFacts):
     #: The entrypoint script that triggers the build and deploy.
     build_trigger: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
+    #: The language of the artifact built by build tool command.
+    language: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
+
+    #: The possible language distributions.
+    language_distributions: Mapped[str | None] = mapped_column(
+        String, nullable=True, info={"justification": JustificationType.TEXT}
+    )
+
+    #: The possible language versions.
+    language_versions: Mapped[str | None] = mapped_column(
+        String, nullable=True, info={"justification": JustificationType.TEXT}
+    )
+
+    #: The URL that provides information about the language distributions and versions.
+    language_url: Mapped[str | None] = mapped_column(
+        String, nullable=True, info={"justification": JustificationType.HREF}
+    )
+
     #: The command used to deploy.
     deploy_command: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
-
-    #: The run status of the CI service for this build.
-    build_status_url: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
     __mapper_args__ = {
         "polymorphic_identity": "_build_as_code_check",
@@ -84,261 +100,6 @@ class BuildAsCodeCheck(BaseCheck):
             result_on_skip=CheckResultType.PASSED,
         )
 
-    def _serialize_command(self, cmd: list[str]) -> str:
-        """Convert a list of command-line arguments to a json-encoded string so that it is easily parsable by later consumers.
-
-        Parameters
-        ----------
-        cmd: list[str]
-            List of command-line arguments.
-
-        Returns
-        -------
-        str
-            The list of command-line arguments as a json-encoded string.
-        """
-        return json.dumps(cmd)
-
-    def _has_deploy_command(self, commands: list[list[str]], build_tool: BaseBuildTool) -> str:
-        """Check if the bash command is a build and deploy command."""
-        # Account for Python projects having separate tools for packaging and publishing.
-        deploy_tool = build_tool.publisher if build_tool.publisher else build_tool.builder
-        for com in commands:
-            # Check for empty or invalid commands.
-            if not com or not com[0]:
-                continue
-            # The first argument in a bash command is the program name.
-            # So first check that the program name is a supported build tool name.
-            # We need to handle cases where the first argument is a path to the program.
-            cmd_program_name = os.path.basename(com[0])
-            if not cmd_program_name:
-                logger.debug("Found invalid program name %s.", com[0])
-                continue
-
-            check_build_commands = any(build_cmd for build_cmd in deploy_tool if build_cmd == cmd_program_name)
-
-            # Support the use of interpreters like Python that load modules, i.e., 'python -m pip install'.
-            check_module_build_commands = any(
-                interpreter == cmd_program_name
-                and com[1]
-                and com[1] in build_tool.interpreter_flag
-                and com[2]
-                and com[2] in deploy_tool
-                for interpreter in build_tool.interpreter
-            )
-            prog_name_index = 2 if check_module_build_commands else 0
-
-            if check_build_commands or check_module_build_commands:
-                # Check the arguments in the bash command for the deploy goals.
-                # If there are no deploy args for this build tool, accept as deploy command.
-                # TODO: Support multi-argument build keywords, issue #493.
-                if not build_tool.deploy_arg:
-                    com_str = self._serialize_command(com)
-                    logger.info("No deploy arguments required. Accept %s as deploy command.", com_str)
-                    return com_str
-
-                for word in com[(prog_name_index + 1) :]:
-                    # TODO: allow plugin versions in arguments, e.g., maven-plugin:1.6.8:deploy.
-                    if word in build_tool.deploy_arg:
-                        com_str = self._serialize_command(com)
-                        logger.info("Found deploy command %s.", com_str)
-                        return com_str
-        return ""
-
-    def _check_build_tool(
-        self,
-        build_tool: BaseBuildTool,
-        ctx: AnalyzeContext,
-        ci_services: list[CIInfo],
-        result_tables: list[CheckFacts],
-    ) -> CheckResultType:
-        """Run the check for a single build tool to determine if "build as code" holds for it.
-
-        Parameters
-        ----------
-        build_tool: BaseBuildTool
-            The build tool to run the check for.
-        ctx : AnalyzeContext
-            The object containing processed data for the target repo.
-        ci_services: list[CIInfo]
-            List of CI services in use.
-        result_tables: ResultTables
-            List of result tables to add to.
-
-        Returns
-        -------
-        CheckResultType
-            The result type of the check (e.g. PASSED).
-        """
-        check_result = CheckResultType.FAILED
-        if build_tool:
-            for ci_info in ci_services:
-                ci_service = ci_info["service"]
-                # Checking if a CI service is discovered for this repo.
-                if isinstance(ci_service, NoneCIService):
-                    continue
-
-                trusted_deploy_actions = build_tool.ci_deploy_kws["github_actions"] or []
-
-                # Check for use of a trusted GitHub Actions workflow to publish/deploy.
-                # TODO: verify that deployment is legitimate and not a test
-                if trusted_deploy_actions:
-                    for callee in ci_info["callgraph"].bfs():
-                        workflow_name = callee.name.split("@")[0]
-
-                        if not workflow_name or callee.node_type not in [
-                            GHWorkflowType.EXTERNAL,
-                            GHWorkflowType.REUSABLE,
-                        ]:
-                            logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
-                            continue
-                        if workflow_name in trusted_deploy_actions:
-                            trigger_link = ci_service.api_client.get_file_link(
-                                ctx.component.repository.full_name,
-                                ctx.component.repository.commit_sha,
-                                ci_service.api_client.get_relative_path_of_workflow(
-                                    os.path.basename(callee.caller_path)
-                                ),
-                            )
-                            deploy_action_source_link = ci_service.api_client.get_file_link(
-                                ctx.component.repository.full_name,
-                                ctx.component.repository.commit_sha,
-                                callee.caller_path,
-                            )
-
-                            html_url = ci_service.has_latest_run_passed(
-                                ctx.component.repository.full_name,
-                                ctx.component.repository.branch_name,
-                                ctx.component.repository.commit_sha,
-                                ctx.component.repository.commit_date,
-                                callee.caller_path,
-                            )
-
-                            # TODO: include in the justification multiple cases of external action usage
-                            if (
-                                ctx.dynamic_data["is_inferred_prov"]
-                                and ci_info["provenances"]
-                                and isinstance(ci_info["provenances"][0].payload, InTotoV01Payload)
-                            ):
-                                predicate: Any = ci_info["provenances"][0].payload.statement["predicate"]
-                                predicate["buildType"] = f"Custom {ci_service.name}"
-                                predicate["builder"]["id"] = deploy_action_source_link
-                                predicate["invocation"]["configSource"]["uri"] = (
-                                    f"{ctx.component.repository.remote_path}"
-                                    f"@refs/heads/{ctx.component.repository.branch_name}"
-                                )
-                                predicate["invocation"]["configSource"]["digest"][
-                                    "sha1"
-                                ] = ctx.component.repository.commit_sha
-                                predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
-                                predicate["metadata"]["buildInvocationId"] = html_url
-                            result_tables.append(
-                                BuildAsCodeFacts(
-                                    build_tool_name=build_tool.name,
-                                    ci_service_name=ci_service.name,
-                                    build_trigger=trigger_link,
-                                    deploy_command=workflow_name,
-                                    build_status_url=html_url,
-                                    confidence=Confidence.HIGH,
-                                )
-                            )
-                            check_result = CheckResultType.PASSED
-
-                for bash_cmd in ci_info["bash_commands"]:
-                    deploy_cmd = self._has_deploy_command(bash_cmd["commands"], build_tool)
-                    if deploy_cmd:
-                        # Get the permalink and HTML hyperlink tag of the CI file that triggered the bash command.
-                        trigger_link = ci_service.api_client.get_file_link(
-                            ctx.component.repository.full_name,
-                            ctx.component.repository.commit_sha,
-                            ci_service.api_client.get_relative_path_of_workflow(os.path.basename(bash_cmd["CI_path"])),
-                        )
-                        # Get the permalink of the source file of the bash command.
-                        bash_source_link = ci_service.api_client.get_file_link(
-                            ctx.component.repository.full_name,
-                            ctx.component.repository.commit_sha,
-                            bash_cmd["caller_path"],
-                        )
-
-                        html_url = ci_service.has_latest_run_passed(
-                            ctx.component.repository.full_name,
-                            ctx.component.repository.branch_name,
-                            ctx.component.repository.commit_sha,
-                            ctx.component.repository.commit_date,
-                            bash_cmd["CI_path"],
-                        )
-
-                        if (
-                            ctx.dynamic_data["is_inferred_prov"]
-                            and ci_info["provenances"]
-                            and isinstance(ci_info["provenances"][0].payload, InTotoV01Payload)
-                        ):
-                            predicate = ci_info["provenances"][0].payload.statement["predicate"]
-                            predicate["buildType"] = f"Custom {ci_service.name}"
-                            predicate["builder"]["id"] = bash_source_link
-                            predicate["invocation"]["configSource"]["uri"] = (
-                                f"{ctx.component.repository.remote_path}"
-                                f"@refs/heads/{ctx.component.repository.branch_name}"
-                            )
-                            predicate["invocation"]["configSource"]["digest"][
-                                "sha1"
-                            ] = ctx.component.repository.commit_sha
-                            predicate["invocation"]["configSource"]["entryPoint"] = trigger_link
-                            predicate["buildConfig"]["jobID"] = bash_cmd["job_name"]
-                            predicate["buildConfig"]["stepID"] = bash_cmd["step_name"]
-                            predicate["metadata"]["buildInvocationId"] = html_url
-                        result_tables.append(
-                            BuildAsCodeFacts(
-                                build_tool_name=build_tool.name,
-                                ci_service_name=ci_service.name,
-                                build_trigger=trigger_link,
-                                deploy_command=deploy_cmd,
-                                build_status_url=html_url,
-                                confidence=Confidence.HIGH,
-                            )
-                        )
-                        check_result = CheckResultType.PASSED
-
-                # We currently don't parse these CI configuration files.
-                # We just look for a keyword for now.
-                for unparsed_ci in (Jenkins, Travis, CircleCI, GitLabCI):
-                    if isinstance(ci_service, unparsed_ci):
-                        if build_tool.ci_deploy_kws[ci_service.name]:
-                            deploy_kw, config_name = ci_service.has_kws_in_config(
-                                build_tool.ci_deploy_kws[ci_service.name], repo_path=ctx.component.repository.fs_path
-                            )
-                            if not config_name:
-                                break
-
-                            if (
-                                ctx.dynamic_data["is_inferred_prov"]
-                                and ci_info["provenances"]
-                                and isinstance(ci_info["provenances"][0].payload, InTotoV01Payload)
-                            ):
-                                predicate = ci_info["provenances"][0].payload.statement["predicate"]
-                                predicate["buildType"] = f"Custom {ci_service.name}"
-                                predicate["builder"]["id"] = config_name
-                                predicate["invocation"]["configSource"]["uri"] = (
-                                    f"{ctx.component.repository.remote_path}"
-                                    f"@refs/heads/{ctx.component.repository.branch_name}"
-                                )
-                                predicate["invocation"]["configSource"]["digest"][
-                                    "sha1"
-                                ] = ctx.component.repository.commit_sha
-                                predicate["invocation"]["configSource"]["entryPoint"] = config_name
-
-                            result_tables.append(
-                                BuildAsCodeFacts(
-                                    build_tool_name=build_tool.name,
-                                    ci_service_name=ci_service.name,
-                                    deploy_command=deploy_kw,
-                                    confidence=Confidence.MEDIUM,
-                                )
-                            )
-                            check_result = CheckResultType.PASSED
-
-        return check_result
-
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
 
@@ -365,17 +126,162 @@ class BuildAsCodeCheck(BaseCheck):
 
         result_tables: list[CheckFacts] = []
         for tool in build_tools:
-            res = self._check_build_tool(tool, ctx, ci_services, result_tables)
+            for ci_info in ci_services:
+                ci_service: BaseCIService = ci_info["service"]
+                # Checking if a CI service is discovered for this repo.
+                if isinstance(ci_service, NoneCIService):
+                    continue
 
-            if res == CheckResultType.PASSED:
-                # The check passing is contingent on at least one passing, if
-                # one passes treat whole check as passing. We do still need to
-                # run the others for justifications though to report multiple
-                # build tool usage.
-                # TODO: When more sophisticated build tool detection is
-                # implemented, consider whether this should be one fail = whole
-                # check fails instead
-                overall_res = CheckResultType.PASSED
+                trusted_deploy_actions = tool.ci_deploy_kws["github_actions"] or []
+
+                # Check for use of a trusted GitHub Actions workflow to publish/deploy.
+                # TODO: verify that deployment is legitimate and not a test
+                if trusted_deploy_actions:
+                    for callee in ci_info["callgraph"].bfs():
+                        if isinstance(callee, GitHubWorkflowNode) and callee.node_type in [
+                            GitHubWorkflowType.EXTERNAL,
+                            GitHubWorkflowType.REUSABLE,
+                        ]:
+                            workflow_name = callee.name.split("@")[0]
+
+                            if not workflow_name:
+                                logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
+                                continue
+                            if workflow_name in trusted_deploy_actions:
+                                job_id = ""
+                                step_id = ""
+                                step_name = ""
+                                caller_path = ""
+                                job = callee.caller
+                                if isinstance(job, GitHubJobNode):
+                                    if job.parsed_obj.get("ID") and job.parsed_obj["ID"].get("Value"):
+                                        job_id = job.parsed_obj["ID"]["Value"]
+                                    caller_path = job.source_path
+
+                                if callee.parsed_obj.get("ID") and callee.parsed_obj["ID"].get("Value"):
+                                    step_id = callee.parsed_obj["ID"]["Value"]
+
+                                if callee.parsed_obj.get("Name") and callee.parsed_obj["Name"].get("Value"):
+                                    step_name = callee.parsed_obj["Name"]["Value"]
+
+                                trigger_link = ci_service.api_client.get_file_link(
+                                    ctx.component.repository.full_name,
+                                    ctx.component.repository.commit_sha,
+                                    file_path=ci_service.api_client.get_relative_path_of_workflow(
+                                        os.path.basename(caller_path)
+                                    )
+                                    if caller_path
+                                    else "",
+                                )
+                                store_inferred_provenance(
+                                    ctx=ctx,
+                                    ci_info=ci_info,
+                                    ci_service=ci_service,
+                                    trigger_link=trigger_link,
+                                    job_id=job_id,
+                                    step_id=step_id,
+                                    step_name=step_name,
+                                )
+                                result_tables.append(
+                                    BuildAsCodeFacts(
+                                        build_tool_name=tool.name,
+                                        ci_service_name=ci_service.name,
+                                        build_trigger=trigger_link,
+                                        language=tool.language.value,
+                                        deploy_command=workflow_name,
+                                        confidence=Confidence.HIGH,
+                                    )
+                                )
+                                overall_res = CheckResultType.PASSED
+                try:
+                    for build_command in ci_service.get_build_tool_commands(
+                        callgraph=ci_info["callgraph"], build_tool=tool
+                    ):
+                        # Yes or no with a confidence score.
+                        result, confidence = tool.is_deploy_command(
+                            build_command, ci_service.get_third_party_configurations()
+                        )
+                        if result:
+                            trigger_link = ci_service.api_client.get_file_link(
+                                ctx.component.repository.full_name,
+                                ctx.component.repository.commit_sha,
+                                ci_service.api_client.get_relative_path_of_workflow(
+                                    os.path.basename(build_command["ci_path"])
+                                ),
+                            )
+                            # Store or update the inferred provenance if the confidence
+                            # for the current check fact is bigger than the maximum score.
+                            if (
+                                not result_tables
+                                or confidence > max(result_tables, key=lambda item: item.confidence).confidence
+                            ):
+                                store_inferred_provenance(
+                                    ctx=ctx,
+                                    ci_info=ci_info,
+                                    ci_service=ci_service,
+                                    trigger_link=trigger_link,
+                                    job_id=build_command["step_node"].caller.name
+                                    if isinstance(build_command["step_node"].caller, GitHubJobNode)
+                                    else None,
+                                    step_id=build_command["step_node"].node_id,
+                                    step_name=build_command["step_node"].name
+                                    if isinstance(build_command["step_node"], BashNode)
+                                    else None,
+                                )
+                            result_tables.append(
+                                BuildAsCodeFacts(
+                                    build_tool_name=tool.name,
+                                    ci_service_name=ci_service.name,
+                                    build_trigger=trigger_link,
+                                    language=build_command["language"],
+                                    language_distributions=tool.serialize_to_json(
+                                        build_command["language_distributions"]
+                                    )
+                                    if build_command["language_distributions"]
+                                    else None,
+                                    language_versions=tool.serialize_to_json(build_command["language_versions"])
+                                    if build_command["language_versions"]
+                                    else None,
+                                    language_url=build_command["language_url"],
+                                    deploy_command=tool.serialize_to_json(build_command["command"]),
+                                    confidence=confidence,
+                                )
+                            )
+                            overall_res = CheckResultType.PASSED
+                except CallGraphError as error:
+                    logger.debug(error)
+
+                # We currently don't parse these CI configuration files.
+                # We just look for a keyword for now.
+                for unparsed_ci in (Jenkins, Travis, CircleCI, GitLabCI):
+                    if isinstance(ci_service, unparsed_ci):
+                        if tool.ci_deploy_kws[ci_service.name]:
+                            deploy_kw, config_name = ci_service.has_kws_in_config(
+                                tool.ci_deploy_kws[ci_service.name], repo_path=ctx.component.repository.fs_path
+                            )
+                            if not config_name:
+                                break
+
+                            store_inferred_provenance(
+                                ctx=ctx, ci_info=ci_info, ci_service=ci_service, trigger_link=config_name
+                            )
+                            result_tables.append(
+                                BuildAsCodeFacts(
+                                    build_tool_name=tool.name,
+                                    ci_service_name=ci_service.name,
+                                    deploy_command=deploy_kw,
+                                    confidence=Confidence.LOW,
+                                )
+                            )
+                            overall_res = CheckResultType.PASSED
+
+        # The check passing is contingent on at least one passing, if
+        # one passes treat whole check as passing. We do still need to
+        # run the others for justifications though to report multiple
+        # build tool usage.
+        # TODO: When more sophisticated build tool detection is
+        # implemented, consider whether this should be one fail = whole
+        # check fails instead
 
         return CheckResultData(result_tables=result_tables, result_type=overall_res)
 

@@ -1,67 +1,35 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module analyzes GitHub Actions CI."""
+
 
 import glob
 import logging
 import os
 from collections.abc import Iterable
 from datetime import datetime, timedelta, timezone
-from enum import Enum
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.parsers.actionparser import parse as parse_action
-from macaron.parsers.bashparser import BashCommands, extract_bash_from_ci
+from macaron.errors import CallGraphError, ParseError
+from macaron.parsers.bashparser import BashNode, BashScriptType
+from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
+from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
+    GitHubJobNode,
+    GitHubWorkflowNode,
+    build_call_graph_from_path,
+    find_language_setup_action,
+    get_ci_events,
+    get_reachable_secrets,
+)
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient, get_default_gh_client
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
 from macaron.slsa_analyzer.git_service.github import GitHub
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-
-class GHWorkflowType(Enum):
-    """This class is used for different GitHub Actions types."""
-
-    NONE = "None"
-    INTERNAL = "internal"  # Workflows declared in the repo.
-    EXTERNAL = "external"  # Third-party workflows.
-    REUSABLE = "reusable"  # Reusable workflows.
-
-
-class GitHubNode(BaseNode):
-    """This class is used to create a call graph node for GitHub Actions."""
-
-    def __init__(
-        self, name: str, node_type: GHWorkflowType, source_path: str, parsed_obj: dict, caller_path: str
-    ) -> None:
-        """Initialize instance.
-
-        Parameters
-        ----------
-        name : str
-            Name of the workflow (or URL for reusable and external workflows).
-        node_type : GHWorkflowType
-            The type of workflow.
-        source_path : str
-            The path of the workflow.
-        parsed_obj : dict
-            The parsed Actions workflow object.
-        caller_path : str
-            The path to the caller workflow.
-        """
-        super().__init__()
-        self.name = name
-        self.node_type: GHWorkflowType = node_type
-        self.source_path = source_path
-        self.parsed_obj = parsed_obj
-        self.caller_path = caller_path
-
-    def __str__(self) -> str:
-        return f"GitHubNode({self.name},{self.node_type})"
 
 
 class GitHubActions(BaseCIService):
@@ -76,6 +44,7 @@ class GitHubActions(BaseCIService):
         self.max_items_num = 100
         self.entry_conf = [".github/workflows"]
         self.max_workflow_persist = 90
+        self.third_party_configurations: list[str] = []
 
     def set_api_client(self) -> None:
         """Set the GitHub client using the personal access token."""
@@ -96,6 +65,11 @@ class GitHubActions(BaseCIService):
             )
             setattr(  # noqa: B010
                 self, "max_workflow_persist", defaults.getint("ci.github_actions", "max_workflow_persist", fallback=90)
+            )
+            setattr(  # noqa: B010
+                self,
+                "third_party_configurations",
+                defaults.get_list("ci.github_actions", "third_party_configurations", fallback=[]),
             )
 
     def is_detected(self, repo_path: str, git_service: BaseGitService | None = None) -> bool:
@@ -155,143 +129,6 @@ class GitHubActions(BaseCIService):
                     logger.debug("Found GitHub Actions workflows.")
                     workflow_files.extend(workflows)
         return workflow_files
-
-    def build_call_graph_from_node(self, node: GitHubNode) -> None:
-        """Analyze the GitHub Actions node to build the call graph.
-
-        Parameters
-        ----------
-        node : GitHubNode
-            The node for a single GitHub Actions workflow.
-        """
-        if not node:
-            return
-
-        for _, job in node.parsed_obj.get("Jobs", {}).items():
-            # Add third-party workflows.
-            steps = job.get("Steps") or []
-            for step in steps:
-                if step.get("Exec") and "Uses" in step.get("Exec"):
-                    # TODO: change source_path for external workflows.
-                    node.add_callee(
-                        GitHubNode(
-                            name=step["Exec"]["Uses"]["Value"],
-                            node_type=GHWorkflowType.EXTERNAL,
-                            source_path="",
-                            parsed_obj={},
-                            caller_path=node.source_path,
-                        )
-                    )
-
-            # Add reusable workflows.
-            reusable = job.get("WorkflowCall")
-            if reusable:
-                logger.debug("Found reusable workflow: %s.", reusable["Uses"]["Value"])
-                # TODO: change source_path for reusable workflows.
-                node.add_callee(
-                    GitHubNode(
-                        name=reusable["Uses"]["Value"],
-                        node_type=GHWorkflowType.REUSABLE,
-                        source_path="",
-                        parsed_obj={},
-                        caller_path=node.source_path,
-                    )
-                )
-
-    def build_call_graph(self, repo_path: str, macaron_path: str = "") -> CallGraph:
-        """Build the call Graph for GitHub Actions workflows.
-
-        At the moment it does not analyze third-party workflows to include their callees.
-
-        Parameters
-        ----------
-        repo_path : str
-            The path to the repo.
-        macaron_path: str
-            Macaron's root path (optional).
-
-        Returns
-        -------
-        CallGraph: CallGraph
-            The call graph built for GitHub Actions.
-        """
-        if not macaron_path:
-            macaron_path = global_config.macaron_path
-
-        root = GitHubNode(name="", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
-        gh_cg = CallGraph(root, repo_path)
-
-        # Parse GitHub Actions workflows.
-        files = self.get_workflows(repo_path)
-        for workflow_path in files:
-            logger.debug(
-                "Parsing %s",
-                workflow_path,
-            )
-            parsed_obj: dict = parse_action(workflow_path)
-            if not parsed_obj:
-                logger.error("Could not parse Actions at the target %s.", repo_path)
-                continue
-
-            # Add internal workflows.
-            workflow_name = os.path.basename(workflow_path)
-            callee = GitHubNode(
-                name=workflow_name,
-                node_type=GHWorkflowType.INTERNAL,
-                source_path=self.api_client.get_relative_path_of_workflow(workflow_name),
-                parsed_obj=parsed_obj,
-                caller_path="",
-            )
-            root.add_callee(callee)
-            self.build_call_graph_from_node(callee)
-
-        return gh_cg
-
-    def extract_all_bash(self, callgraph: CallGraph, macaron_path: str = "") -> Iterable[BashCommands]:
-        """Extract the bash scripts triggered by the CI service from parsing the configurations.
-
-        Parameters
-        ----------
-        callgraph : CallGraph
-            The call graph for GitHub Actions.
-        macaron_path : str
-            Macaron's root path (optional).
-
-        Yields
-        ------
-        BashCommands
-            The parsed bash script commands.
-        """
-        if not macaron_path:
-            macaron_path = global_config.macaron_path
-
-        # Analyze GitHub Actions workflows.
-        # TODO: analyze reusable and external workflows.
-        for callee in callgraph.bfs():
-            if callee.node_type == GHWorkflowType.INTERNAL:
-                logger.debug(
-                    "Parsing %s",
-                    callee.source_path,
-                )
-
-                if not callee.parsed_obj:
-                    logger.error("Could not parse Actions at the target %s.", callgraph.repo_path)
-                    continue
-
-                for _, job in callee.parsed_obj.get("Jobs", {}).items():
-                    steps = job.get("Steps") or []
-                    for step in steps:
-                        if step.get("Exec") and "Run" in step.get("Exec"):
-                            yield from extract_bash_from_ci(
-                                step["Exec"]["Run"]["Value"],
-                                ci_file=self.api_client.get_relative_path_of_workflow(callee.name),
-                                ci_type="github_actions",
-                                recursive=True,
-                                repo_path=callgraph.repo_path,
-                                working_dir=step["Exec"]["WorkingDirectory"] or "",
-                                job_name=job.get("ID")["Value"] if job.get("ID") else "",
-                                step_name=step.get("Name")["Value"] if step.get("Name") else "",
-                            )
 
     def has_latest_run_passed(
         self, repo_full_name: str, branch_name: str | None, commit_sha: str, commit_date: str, workflow: str
@@ -411,7 +248,8 @@ class GitHubActions(BaseCIService):
         repo_full_name: str,
         workflow: str,
         date_time: datetime,
-        step_name: str,
+        step_name: str | None,
+        step_id: str | None,
         time_range: int = 0,
     ) -> set[str]:
         """Check if the repository has a workflow run started before the date_time timestamp within the time_range.
@@ -429,8 +267,10 @@ class GitHubActions(BaseCIService):
             The workflow URL.
         date_time: datetime
             The datetime object to query.
-        step_name: str
-            The step in the GitHub Action workflow that needs to be checked.
+        step_name: str | None
+            The name of the step in the GitHub Action workflow that needs to be checked.
+        step_id: str | None
+            The ID of the step in the GitHub Action workflow that needs to be checked.
         time_range: int
             The date-time range in seconds. The default value is 0.
             For example a 30 seconds range for 2022-11-05T20:30 is 2022-11-05T20:15..2022-11-05T20:45.
@@ -483,7 +323,7 @@ class GitHubActions(BaseCIService):
                     # Find the matching step and check its `conclusion` and `started_at` attributes.
                     for job in run_jobs["jobs"]:
                         for step in job["steps"]:
-                            if step["name"] != step_name or step["conclusion"] != "success":
+                            if (step["name"] not in [step_name, step_id]) or step["conclusion"] != "success":
                                 continue
                             try:
                                 if datetime.fromisoformat(step["started_at"]) < date_time:
@@ -624,3 +464,134 @@ class GitHubActions(BaseCIService):
 
         logger.info("No build kw in log file. Continue ...")
         return False
+
+    def build_call_graph(self, repo_path: str, macaron_path: str = "") -> CallGraph:
+        """Build the call Graph for GitHub Actions workflows.
+
+        At the moment it does not analyze third-party workflows to include their callees.
+
+        Parameters
+        ----------
+        repo_path : str
+            The path to the repo.
+        macaron_path: str
+            Macaron's root path (optional).
+
+        Returns
+        -------
+        CallGraph: CallGraph
+            The call graph built for GitHub Actions.
+        """
+        if not macaron_path:
+            macaron_path = global_config.macaron_path
+
+        root: BaseNode = BaseNode()
+        gh_cg = CallGraph(root, repo_path)
+
+        # Parse GitHub Actions workflows.
+        files = self.get_workflows(repo_path)
+        for workflow_path in files:
+            try:
+                callee = build_call_graph_from_path(
+                    root=root, workflow_path=workflow_path, repo_path=repo_path, macaron_path=macaron_path
+                )
+            except ParseError:
+                logger.debug("Skip adding workflow at %s to the callgraph.", workflow_path)
+                continue
+            root.add_callee(callee)
+        return gh_cg
+
+    def _get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
+        """Traverse the callgraph and find all the reachable build tool commands."""
+        for node in callgraph.bfs():
+            # We are just interested in nodes that have bash commands.
+            if isinstance(node, BashNode):
+                # We collect useful contextual information for the called BashNode.
+                caller_node = node.caller
+                # The GitHub Actions workflow that triggers the path in the callgraph.
+                workflow_node = None
+                # The GitHub Actions job that triggers the path in the callgraph.
+                job_node = None
+                # The step in GitHub Actions job that triggers the path in the callgraph.
+                step_node = node if node.node_type == BashScriptType.INLINE else None
+
+                # Walk up the callgraph to find the relevant caller nodes.
+                # In GitHub Actions a `GitHubWorkflowNode` may call several `GitHubJobNode`s
+                # and a `GitHubJobNode` may call several steps, which can be external `GitHubWorkflowNode`
+                # or inlined run nodes. We currently support the run steps that call shell scripts as
+                # `BashNode`. An inlined `BashNode` can call `BashNode` as bash files.
+                # TODO: revisit this implementation if analysis of external workflows is supported in
+                # the future, and decide if setting the caller workflow and job nodes to the nodes in the
+                # main triggering workflow is still expected.
+                while caller_node is not None:
+                    match caller_node:
+                        case GitHubWorkflowNode():
+                            workflow_node = caller_node
+                        case GitHubJobNode():
+                            job_node = caller_node
+                        case BashNode(node_type=BashScriptType.INLINE):
+                            step_node = caller_node
+
+                    caller_node = caller_node.caller
+
+                # Check if there was an issue in finding any of the caller nodes.
+                if workflow_node is None or job_node is None or step_node is None:
+                    raise CallGraphError("Unable to traverse the call graph to find build commands.")
+
+                # Find the bash commands that call the build tool.
+                for cmd in node.parsed_bash_obj.get("commands", []):
+                    if build_tool.is_build_command(cmd):
+                        lang_versions = lang_distributions = lang_url = None
+                        if lang_model := find_language_setup_action(job_node, build_tool.language):
+                            lang_versions = lang_model.lang_versions
+                            lang_distributions = lang_model.lang_distributions
+                            lang_url = lang_model.lang_url
+                        yield BuildToolCommand(
+                            ci_path=workflow_node.source_path,
+                            command=cmd,
+                            step_node=step_node,
+                            language=build_tool.language,
+                            language_versions=lang_versions,
+                            language_distributions=lang_distributions,
+                            language_url=lang_url,
+                            reachable_secrets=list(get_reachable_secrets(step_node)),
+                            events=get_ci_events(workflow_node),
+                        )
+
+    def get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
+        """Traverse the callgraph and find all the reachable build tool commands.
+
+        This generator yields sorted build tool command objects to allow a deterministic behavior.
+        The objects are sorted based on the string representation of the build tool object.
+
+        Parameters
+        ----------
+        callgraph: CallGraph
+            The callgraph reachable from the CI workflows.
+        build_tool: BaseBuildTool
+            The corresponding build tool for which shell commands need to be detected.
+
+        Yields
+        ------
+        BuildToolCommand
+            The object that contains the build command as well useful contextual information.
+
+        Raises
+        ------
+        CallGraphError
+            Error raised when an error occurs while traversing the callgraph.
+        """
+        yield from sorted(
+            self._get_build_tool_commands(callgraph=callgraph, build_tool=build_tool),
+            key=str,
+        )
+
+    def get_third_party_configurations(self) -> list[str]:
+        """Get the list of third-party CI configuration files.
+
+        Returns
+        -------
+        list[str]
+            The list of third-party CI configuration files
+        """
+        return self.third_party_configurations

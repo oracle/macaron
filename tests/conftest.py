@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Fixtures for tests."""
@@ -7,8 +7,11 @@ from typing import NoReturn
 
 import pytest
 
+import macaron
+from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.database.table_definitions import Analysis, Component, Repository
+from macaron.parsers.bashparser import BashScriptType, create_bash_node
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.docker import Docker
@@ -19,8 +22,14 @@ from macaron.slsa_analyzer.build_tool.npm import NPM
 from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.build_tool.yarn import Yarn
+from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
-from macaron.slsa_analyzer.ci_service.github_actions import GitHubActions
+from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
+    GitHubJobNode,
+    GitHubWorkflowNode,
+    GitHubWorkflowType,
+)
+from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
@@ -361,6 +370,28 @@ def gitlab_ci_service(setup_test):  # type: ignore # pylint: disable=unused-argu
     return gitlab_ci
 
 
+@pytest.fixture(name="ci_services")
+def get_git_services(
+    github_actions_service: BaseCIService,
+    jenkins_service: BaseCIService,
+    travis_service: BaseCIService,
+    circle_ci_service: BaseCIService,
+    gitlab_ci_service: BaseCIService,
+) -> dict[str, BaseCIService]:
+    """Create a dictionary to look up build service fixtures.
+
+    `pytest.mark.parametrize` does not accept fixtures as arguments. This fixture is created as
+    a workaround to parametrize tests with build service fixtures.
+    """
+    return {
+        "github_actions": github_actions_service,
+        "jenkins": jenkins_service,
+        "travis_ci": travis_service,
+        "circle_ci": circle_ci_service,
+        "gitlab_ci": gitlab_ci_service,
+    }
+
+
 class MockAnalyzeContext(AnalyzeContext):
     """This class initializes a Component for the AnalyzeContext."""
 
@@ -371,3 +402,53 @@ class MockAnalyzeContext(AnalyzeContext):
             repository=Repository(complete_name="github.com/package-url/purl-spec", fs_path=""),
         )
         super().__init__(component, *args, **kwargs)
+
+
+def build_github_actions_call_graph_for_commands(commands: list[str]) -> CallGraph:
+    """
+    Create a dummy callgraph that calls a list of bash commands for testing.
+
+    Parameters
+    ----------
+    commands: list[str]
+        The list of bash commands.
+    """
+    root: BaseNode = BaseNode()
+    gh_cg = CallGraph(root, "")
+    workflow_obj = {
+        "On": [
+            {
+                "Hook": {
+                    "Value": "release",
+                },
+            }
+        ]
+    }
+    workflow_node = GitHubWorkflowNode(
+        name="",
+        node_type=GitHubWorkflowType.INTERNAL,
+        source_path="",
+        parsed_obj=workflow_obj,
+        caller=root,
+    )
+    root.add_callee(workflow_node)
+    job_node = GitHubJobNode(name="", source_path="", parsed_obj={}, caller=workflow_node)
+    workflow_node.add_callee(job_node)
+
+    run_step = {"Exec": {"Run": {"Value": ";".join(commands)}}}
+
+    job_node.add_callee(
+        create_bash_node(
+            name="run",
+            node_id=None,
+            node_type=BashScriptType.INLINE,
+            source_path="",
+            ci_step_ast=run_step,
+            repo_path="",
+            caller=job_node,
+            recursion_depth=0,
+            macaron_path=macaron.MACARON_PATH,
+        )
+    )
+
+    return gh_cg

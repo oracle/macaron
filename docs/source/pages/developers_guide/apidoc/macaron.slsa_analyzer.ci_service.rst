@@ -6,6 +6,14 @@ macaron.slsa\_analyzer.ci\_service package
    :undoc-members:
    :show-inheritance:
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 1
+
+   macaron.slsa_analyzer.ci_service.github_actions
+
 Submodules
 ----------
 
@@ -21,14 +29,6 @@ macaron.slsa\_analyzer.ci\_service.circleci module
 --------------------------------------------------
 
 .. automodule:: macaron.slsa_analyzer.ci_service.circleci
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-macaron.slsa\_analyzer.ci\_service.github\_actions module
----------------------------------------------------------
-
-.. automodule:: macaron.slsa_analyzer.ci_service.github_actions
    :members:
    :undoc-members:
    :show-inheritance:

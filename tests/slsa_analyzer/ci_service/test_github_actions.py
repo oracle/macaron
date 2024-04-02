@@ -11,7 +11,12 @@ import pytest
 from macaron import MACARON_PATH
 from macaron.code_analyzer.call_graph import CallGraph
 from macaron.parsers.actionparser import parse as parse_action
-from macaron.slsa_analyzer.ci_service.github_actions import GHWorkflowType, GitHubActions, GitHubNode
+from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
+    GitHubWorkflowNode,
+    GitHubWorkflowType,
+    build_call_graph_from_node,
+)
+from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 
 mock_repos = Path(__file__).parent.joinpath("mock_repos")
 ga_has_build_kws = mock_repos.joinpath("has_build_gh_actions")
@@ -34,17 +39,20 @@ def github_actions_() -> GitHubActions:
         (
             "valid1.yaml",
             [
-                "GitHubNode(valid1.yaml,GHWorkflowType.INTERNAL)",
-                "GitHubNode(apache/maven-gh-actions-shared/.github/workflows/maven-verify.yml@v2,GHWorkflowType.REUSABLE)",
+                "GitHubWorkflowNode(valid1.yaml,GitHubWorkflowType.INTERNAL)",
+                "GitHubJobNode(build)",
+                "GitHubWorkflowNode(apache/maven-gh-actions-shared/.github/workflows/maven-verify.yml@v2,GitHubWorkflowType.REUSABLE)",
             ],
         ),
         (
             "valid2.yaml",
             [
-                "GitHubNode(valid2.yaml,GHWorkflowType.INTERNAL)",
-                "GitHubNode(actions/checkout@v3,GHWorkflowType.EXTERNAL)",
-                "GitHubNode(actions/cache@v3,GHWorkflowType.EXTERNAL)",
-                "GitHubNode(actions/setup-java@v3,GHWorkflowType.EXTERNAL)",
+                "GitHubWorkflowNode(valid2.yaml,GitHubWorkflowType.INTERNAL)",
+                "GitHubJobNode(build)",
+                "GitHubWorkflowNode(actions/checkout@v3,GitHubWorkflowType.EXTERNAL)",
+                "GitHubWorkflowNode(actions/cache@v3,GitHubWorkflowType.EXTERNAL)",
+                "GitHubWorkflowNode(actions/setup-java@v3,GitHubWorkflowType.EXTERNAL)",
+                "BashNode(Publish to Sonatype Snapshots,BashScriptType.INLINE)",
             ],
         ),
     ],
@@ -53,25 +61,25 @@ def github_actions_() -> GitHubActions:
         "Internal and external workflows",
     ],
 )
-def test_build_call_graph(github_actions: GitHubActions, workflow_name: str, expect: list[str]) -> None:
+def test_build_call_graph(workflow_name: str, expect: list[str]) -> None:
     """Test building call graphs for GitHub Actions workflows."""
     resources_dir = Path(__file__).parent.joinpath("resources", "github")
 
     # Parse GitHub Actions workflows.
-    root = GitHubNode(name="root", node_type=GHWorkflowType.NONE, source_path="", parsed_obj={}, caller_path="")
+    root = GitHubWorkflowNode(name="root", node_type=GitHubWorkflowType.NONE, source_path="", parsed_obj={})
     gh_cg = CallGraph(root, "")
     workflow_path = os.path.join(resources_dir, workflow_name)
     parsed_obj = parse_action(workflow_path, macaron_path=MACARON_PATH)
 
-    callee = GitHubNode(
+    callee = GitHubWorkflowNode(
         name=os.path.basename(workflow_path),
-        node_type=GHWorkflowType.INTERNAL,
+        node_type=GitHubWorkflowType.INTERNAL,
         source_path=workflow_path,
         parsed_obj=parsed_obj,
-        caller_path="",
+        caller=root,
     )
     root.add_callee(callee)
-    github_actions.build_call_graph_from_node(callee)
+    build_call_graph_from_node(callee, repo_path="")
     assert [str(node) for node in gh_cg.bfs()] == expect
 
 

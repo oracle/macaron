@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module is a Python wrapper for the compiled bashparser binary.
@@ -13,46 +13,83 @@ import json
 import logging
 import os
 import subprocess  # nosec B404
-from collections.abc import Iterable
-from typing import TypedDict
+from enum import Enum
+from typing import Any
 
+from macaron.code_analyzer.call_graph import BaseNode
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
+from macaron.errors import CallGraphError, ParseError
+from macaron.parsers.actionparser import get_run_step
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class BashCommands(TypedDict):
-    """This dictionary stores the data for parsed bash commands."""
+class BashScriptType(Enum):
+    """This class is used for different bash script types."""
 
-    caller_path: str
-    """The relative path to the file that calls the bash command."""
-    CI_path: str
-    """The relative path to the root CI file that triggers the bash command."""
-    CI_type: str
-    """CI service type."""
-    commands: list[list[str]]
-    """Parsed bash commands."""
-    job_name: str
-    """The name of the job where commands were called."""
-    step_name: str
-    """The name of the step where commands were called."""
+    NONE = "None"
+    INLINE = "inline"  # Inline bash script.
+    FILE = "file"  # Bash script file.
 
 
-def parse_file(file_path: str, macaron_path: str = "") -> dict:
+class BashNode(BaseNode):
+    """This class represents a callgraph node for bash commands."""
+
+    def __init__(
+        self,
+        name: str,
+        node_type: BashScriptType,
+        source_path: str,
+        parsed_step_obj: dict | None,
+        parsed_bash_obj: dict,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize instance.
+
+        Parameters
+        ----------
+        name : str
+            Name of the bash script file or the step name if the script is inlined.
+        node_type : BashScriptType
+            The type of the script.
+        source_path : str
+            The path of the script.
+        parsed_step_obj : dict | None
+            The parsed step object.
+        parsed_bash_obj : dict
+            The parsed bash script object.
+        """
+        super().__init__(**kwargs)
+        self.name = name
+        self.node_type: BashScriptType = node_type
+        self.source_path = source_path
+        self.parsed_step_obj = parsed_step_obj
+        self.parsed_bash_obj = parsed_bash_obj
+
+    def __str__(self) -> str:
+        return f"BashNode({self.name},{self.node_type})"
+
+
+def parse_file(file_path: str, macaron_path: str | None = None) -> dict:
     """Parse a bash script file.
 
     Parameters
     ----------
     file_path : str
         Bash script file path.
-    macaron_path : str
+    macaron_path : str | None
         Macaron's root path (optional).
 
     Returns
     -------
     dict
         The parsed bash script in JSON (dict) format.
+
+    Raises
+    ------
+    ParseError
+        When parsing fails with errors.
     """
     if not macaron_path:
         macaron_path = global_config.macaron_path
@@ -61,24 +98,30 @@ def parse_file(file_path: str, macaron_path: str = "") -> dict:
             logger.info("Parsing %s.", file_path)
             return parse(file.read(), macaron_path)
     except OSError as error:
-        logger.error("Could not load the bash script %s: %s.", file_path, error)
-        return {}
+        raise ParseError(f"Could not load the bash script file: {file_path}.") from error
+    except ParseError as error:
+        raise error
 
 
-def parse(bash_content: str, macaron_path: str = "") -> dict:
+def parse(bash_content: str, macaron_path: str | None = None) -> dict:
     """Parse a bash script's content.
 
     Parameters
     ----------
     bash_content : str
         Bash script content
-    macaron_path : str
+    macaron_path : str | None
         Macaron's root path (optional).
 
     Returns
     -------
     dict
         The parsed bash script in JSON (dict) format.
+
+    Raises
+    ------
+    ParseError
+        When parsing fails with errors.
     """
     if not macaron_path:
         macaron_path = global_config.macaron_path
@@ -101,92 +144,127 @@ def parse(bash_content: str, macaron_path: str = "") -> dict:
         subprocess.TimeoutExpired,
         FileNotFoundError,
     ) as error:
-        logger.error("Error while parsing bash script: %s", error)
-        return {}
+        raise ParseError("Error while parsing bash script.") from error
 
     try:
         if result.returncode == 0:
             return dict(json.loads(result.stdout.decode("utf-8")))
 
-        logger.error("Bash script parser failed: %s", result.stderr)
-        return {}
+        raise ParseError(f"Bash script parser failed: {result.stderr.decode('utf-8')}")
+
     except json.JSONDecodeError as error:
-        logger.error("Error while loading the parsed bash script: %s", error)
-        return {}
+        raise ParseError("Error while loading the parsed bash script.") from error
 
 
-def extract_bash_from_ci(
-    bash_content: str,
-    ci_file: str,
-    ci_type: str,
-    macaron_path: str = "",
-    recursive: bool = False,
-    repo_path: str = "",
-    working_dir: str = "",
-    job_name: str = "",
-    step_name: str = "",
-) -> Iterable[BashCommands]:
-    """Parse the bash scripts triggered from CI.
+def create_bash_node(
+    name: str,
+    node_id: str | None,
+    node_type: BashScriptType,
+    source_path: str,
+    ci_step_ast: dict | None,
+    repo_path: str,
+    caller: BaseNode,
+    recursion_depth: int,
+    macaron_path: str | None = None,
+) -> BashNode:
+    """Create a callgraph node for a bash script.
+
+    A bash node can have the following types:
+
+      * :class:`BashScriptType.INLINE` when it is inlined in a CI workflow.
+      * :class:`BashScriptType.FILE` when it is a bash script file.
 
     Parameters
     ----------
-    bash_content : str
-        Bash script content.
-    ci_file : str
-        The relative path to the entry point CI workflow.
-    ci_type : str
-        The CI service.
-    macaron_path : str
-        Macaron's root path (optional).
-    recursive : bool
-        Recursively parse bash scripts with depth 1.
-        Should specify repo_path too if set to True.
-    repo_path : str
+    name: str
+        A name to be used as the identifier of the node.
+    node_id: str | None
+        The node ID if defined.
+    node_type: BashScriptType
+        The type of the node.
+    source_path: str
+        The file that contains the bash script.
+    ci_step_ast: dict | None
+        The AST of the CI step that runs a bash script.
+    repo_path: str
         The path to the target repo.
-    working_dir : str
-        The working directory from which the bash script has run.
-        Empty value is considered as the root of the repo.
-    job_name: str
-        The name of the job where commands were called.
-    step_name: str
-        The name of the step where commands were called.
+    caller: BaseNode
+        The caller node.
+    recursion_depth: int
+        The number of times this function is called recursively.
+    macaron_path=None
+        The path to the Macaron module.
 
-    Yields
+    Returns
+    -------
+    BashNode
+        A bash node object.
+
+    Raises
     ------
-    BashCommands
-        The parsed bash script objects.
+    CallGraphError
+        When unable to create a bash node.
     """
-    if not macaron_path:
-        macaron_path = global_config.macaron_path
+    if recursion_depth > defaults.getint("bashparser", "recursion_depth", fallback=3):
+        raise CallGraphError(f"The analysis has reached maximum recursion depth {recursion_depth} at {source_path}.")
+    parsed_bash_script = {}
+    working_dir = None
+    match node_type:
+        case BashScriptType.INLINE:
+            if ci_step_ast is None:
+                raise CallGraphError(f"Unable to find the parsed AST for the CI step at {source_path}.")
+            step_exec = ci_step_ast.get("Exec")
+            if step_exec is None:
+                raise CallGraphError(f"Unable to validate parsed AST for the CI step at {source_path}.")
 
-    parsed_parent = parse(bash_content)
-    caller_commands = parsed_parent.get("commands", [])
-    if caller_commands:
-        yield BashCommands(
-            caller_path=ci_file,
-            CI_path=ci_file,
-            CI_type=ci_type,
-            commands=caller_commands,
-            job_name=job_name,
-            step_name=step_name,
-        )
+            working_dir = step_exec.get("WorkingDirectory")
+            run_script = get_run_step(ci_step_ast)
+            if run_script is None:
+                raise CallGraphError(f"Invalid run step at {source_path}.")
+            try:
+                parsed_bash_script = parse(run_script, macaron_path=macaron_path)
+            except ParseError as error:
+                logger.debug(error)
+        case BashScriptType.FILE:
+            try:
+                parsed_bash_script = parse_file(source_path, macaron_path=macaron_path)
+            except ParseError as error:
+                logger.debug(error)
+    bash_node = BashNode(
+        name,
+        node_type,
+        source_path,
+        parsed_step_obj=ci_step_ast,
+        parsed_bash_obj=parsed_bash_script,
+        node_id=node_id,
+        caller=caller,
+    )
+    caller_commands = parsed_bash_script.get("commands", [])
 
     # Parse the bash script files called from the current script.
-    if recursive and repo_path:
+    if caller_commands and repo_path:
         for cmd in caller_commands:
             # Parse the scripts that end with `.sh`.
-            # We only parse recursively at depth 1, so don't set the recursive argument in parse_file().
             # TODO: parse Makefiles for bash commands.
-            if cmd[0] and cmd[0].endswith(".sh") and os.path.exists(os.path.join(repo_path, cmd[0])):
-                callee_commands = parse_file(os.path.join(repo_path, cmd[0])).get("commands", [])
-                if not callee_commands:
-                    continue
+            if not cmd or not cmd[0] or not cmd[0].endswith(".sh"):
+                continue
 
-                yield BashCommands(
-                    caller_path=os.path.join(working_dir, cmd[0]),
-                    CI_path=ci_file,
-                    CI_type=ci_type,
-                    commands=callee_commands,
-                    job_name=job_name,
-                    step_name=step_name,
-                )
+            # Check for path traversal patterns before analyzing a bash file.
+            bash_file_path = os.path.realpath(os.path.join(repo_path, working_dir or "", cmd[0]))
+            if os.path.exists(bash_file_path) and bash_file_path.startswith(repo_path):
+                try:
+                    callee = create_bash_node(
+                        name=cmd[0],
+                        node_id=node_id,
+                        node_type=BashScriptType.FILE,
+                        source_path=bash_file_path,
+                        ci_step_ast=None,
+                        repo_path=repo_path,
+                        caller=bash_node,
+                        recursion_depth=recursion_depth + 1,
+                        macaron_path=macaron_path,
+                    )
+                except CallGraphError as error:
+                    raise error
+                bash_node.add_callee(callee)
+    return bash_node

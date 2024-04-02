@@ -81,7 +81,7 @@ echo "Run integration tests without configurations"
 echo -e "==================================================================================\n"
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "micronaut-projects/micronaut-core: Analyzing the repo path and the branch name when automatic dependency resolution is skipped."
+echo "micronaut-projects/micronaut-core: Analyzing the PURL when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
 JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/micronaut-core/micronaut-core.json
 JSON_RESULT=$WORKSPACE/output/reports/maven/io_micronaut/micronaut-core/micronaut-core.json
@@ -704,6 +704,17 @@ VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_scor
 $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Run policy CLI with micronaut-core results to test deploy command information."
+echo -e "----------------------------------------------------------------------------------\n"
+RUN_POLICY="macaron verify-policy"
+POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/micronaut-core/test_deploy_info.dl
+POLICY_RESULT=$WORKSPACE/output/policy_report.json
+POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/micronaut-core/test_deploy_info.json
+
+$RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
+check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 
 # Testing the Repo Finder's remote calls.
 # This requires the 'packageurl' Python module
