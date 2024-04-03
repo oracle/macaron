@@ -109,8 +109,8 @@ class DepsDevRepoFinder(BaseRepoFinder):
             logger.debug("Failed to parse response from deps.dev: %s", error)
             return []
 
+        versions_keys = ["package", "versions"] if "package" in metadata else ["version"]
         try:
-            versions_keys = ["package", "versions"] if "package" in metadata else ["version"]
             versions = json_extract(metadata, versions_keys, list)
             latest_version = json_extract(versions[-1], ["versionKey", "version"], str)
         except JsonError as error:
@@ -165,11 +165,13 @@ class DepsDevRepoFinder(BaseRepoFinder):
             links_keys = ["version", "links"] if "version" in parsed else ["links"]
             links = json_extract(parsed, links_keys, list)
         except JsonError as error:
-            logger.debug("Could not extract 'links' from deps.dev response: %s", error)
+            logger.debug("Could not extract 'version' or 'links' from deps.dev response: %s", error)
             return []
 
         result = []
         for item in links:
-            result.append(item.get("url"))
+            url = item.get("url")
+            if url and isinstance(url, str):
+                result.append(url)
 
         return result
