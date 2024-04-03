@@ -122,20 +122,20 @@ def extract_repo_url(witness_payload: InTotoPayload) -> str | None:
 
 
 def extract_build_artifacts_from_witness_subjects(witness_payload: InTotoPayload) -> list[InTotoV01Subject]:
-    """Read the ``"subjects"`` field of the provenance to obtain the hash digests of each subject.
+    """Extract subjects that are build artifacts from the ``"subject"`` field of the provenance.
+
+    Each artifact subject is assumed to have a sha256 digest. If a sha256 digest is not present for
+    a subject, that subject is ignored.
 
     Parameters
     ----------
     witness_payload : InTotoPayload
         The witness provenance payload.
-    extensions : list[str]
-        The allowed extensions of the subjects.
-        All subjects with names not ending in these extensions are ignored.
 
     Returns
     -------
     list[InTotoV01Subject]
-        A dictionary in which each key is a subject name and each value is the corresponding SHA256 digest.
+        A list subjects in the ``"subject"`` field of the provenance that are build artifacts.
     """
     if not isinstance(witness_payload, InTotoV01Payload):
         return []
