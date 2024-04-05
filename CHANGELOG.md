@@ -1,3 +1,14 @@
+## v0.9.0 (2024-04-05)
+
+### Feat
+
+- extend static analysis and compute confidence scores for deploy commands (#673)
+- use provenance to find commits for supported PURL types. (#653)
+
+### Fix
+
+- preserve the order of elements of lists extracted from defaults.ini (#660)
+
 ## v0.8.0 (2024-03-05)
 
 ### Feat
