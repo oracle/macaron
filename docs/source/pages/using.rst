@@ -314,7 +314,53 @@ Analyzing a locally cloned repository
 
 If you have a local repository that you want to analyze, Macaron also supports running the analysis against a local repository.
 
-Assume that the dir tree at the local repository has the following components:
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Analyzing a repository whose git service is not supported by Macaron
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+If the repository remote URL is from an unknown git service (see :ref:`Git Services <supported_git_services>` for a list of supported git services in Macaron), Macaron won't recognize it when analyzing the repository.
+
+You would need to tell Macaron about that git service through the ``defaults.ini`` config.
+For example, let's say you want to analyze the Bitbucket repository at ``https://bitbucket.org/snakeyaml/snakeyaml``. First, you need to create a ``defaults.ini`` file in the current workspace with the following content:
+
+.. code-block:: ini
+
+  [git_service.local_repo]
+  hostname = bitbucket.org
+
+In which ``hostname`` contains the domain of the git service URL. In this example it's ``bitbucket.org``.
+
+.. note::
+
+  This ``defaults.ini`` section must only be used for analyzing a locally cloned repository. If the domain name has already been supported in other services, it doesn't need to be defined again here.
+
+Assume that the dir tree at the current workspace has the following structure:
+
+.. code-block:: shell
+
+  boo
+  ├── foo
+  │   └── snakeyaml
+
+We can run Macaron against the local repository at ``snakeyaml`` by using this command:
+
+.. code-block:: shell
+
+  ./run_macaron.sh --local-repos-path ./boo/foo --defaults-path ./defaults.ini analyze -rp snakeyaml <rest_of_args>
+
+With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``-b``, ``-d`` or ``--skip-deps`` similar to two previous examples).
+
+The ``-lr`` flag tells Macaron to look into ``path/to/boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
+
+.. note:: If ``-lr`` is not provided, Macaron will looks inside ``<current_working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``-rp``.
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Analyzing a local repository with supported git service
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+If the local repository you want to analyze has remote origin hosted on a supported git service, you can run the analysis directly without having to prepare ``defaults.ini`` as above.
+
+Assume that the dir tree at the current workspace has the following structure:
 
 .. code-block:: shell
 
@@ -326,13 +372,13 @@ We can run Macaron against the local repository at ``target`` by using this comm
 
 .. code-block:: shell
 
-  ./run_macaron.sh -lr path/to/boo/foo analyze -rp target <rest_of_args>
+  ./run_macaron.sh --local-repos-path ./boo/foo analyze -rp target <rest_of_args>
 
-With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``-b``, ``-d`` or ``--skip-deps`` similar to two previous examples)
+With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``-b``, ``-d`` or ``--skip-deps`` similar to two previous examples).
 
-The ``-lr`` flag configure Macaron to looks into ``path/to/boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
+The ``-lr`` flag tells Macaron to look into ``path/to/boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
 
-.. note:: If ``-lr`` is not provided, Macaron will looks inside ``<working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``-rp``.
+.. note:: If ``-lr`` is not provided, Macaron will looks inside ``<current_working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``-rp``.
 
 -------------------------
 Running the policy engine
