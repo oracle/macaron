@@ -3,11 +3,6 @@
 
 """This module declares types and utilities for Maven artifacts."""
 
-import re
-from dataclasses import dataclass
-from enum import Enum
-from typing import NamedTuple, Self
-
 from packageurl import PackageURL
 
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
@@ -18,147 +13,6 @@ from macaron.slsa_analyzer.provenance.witness import (
     is_witness_provenance_payload,
     load_witness_verifier_config,
 )
-
-
-class _MavenArtifactType(NamedTuple):
-    filename_pattern: str
-    purl_qualifiers: dict[str, str]
-
-
-class MavenArtifactType(_MavenArtifactType, Enum):
-    """Maven artifact types that Macaron supports.
-
-    For reference, see:
-    - https://maven.apache.org/ref/3.9.6/maven-core/artifact-handlers.html
-    - https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst#maven
-
-    Note: For the time being, we are only supporting the ``"type"`` qualifier, although the
-    Maven section in the PackageURL docs also mention the ``"classifier"`` qualifier.
-    This is because not all artifact types has a unique value of ``"classifier"`` according
-    to the Artifact Handlers table in the Maven Core reference. In addition, not supporting
-    the ``"classifier"`` qualifier at the moment simplifies the implementation for PURL
-    decoding and generation until there is a concrete use case for this additional qualifier.
-    """
-
-    # Enum with custom value type.
-    # See https://docs.python.org/3.10/library/enum.html#others.
-    JAR = _MavenArtifactType(
-        filename_pattern="{artifact_id}-{version}.jar",
-        purl_qualifiers={"type": "jar"},
-    )
-    POM = _MavenArtifactType(
-        filename_pattern="{artifact_id}-{version}.pom",
-        purl_qualifiers={"type": "pom"},
-    )
-    JAVADOC = _MavenArtifactType(
-        filename_pattern="{artifact_id}-{version}-javadoc.jar",
-        purl_qualifiers={"type": "javadoc"},
-    )
-    JAVA_SOURCE = _MavenArtifactType(
-        filename_pattern="{artifact_id}-{version}-sources.jar",
-        purl_qualifiers={"type": "java-source"},
-    )
-
-
-@dataclass
-class MavenArtifact:
-    """A Maven artifact."""
-
-    group_id: str
-    artifact_id: str
-    version: str
-    artifact_type: MavenArtifactType
-
-    @property
-    def package_url(self) -> PackageURL:
-        """Get the PackageURL of this Maven artifact."""
-        return PackageURL(
-            type="maven",
-            namespace=self.group_id,
-            name=self.artifact_id,
-            version=self.version,
-            qualifiers=self.artifact_type.purl_qualifiers,
-        )
-
-    @classmethod
-    def from_package_url(cls, package_url: PackageURL) -> Self | None:
-        """Create a Maven artifact from a PackageURL.
-
-        Parameters
-        ----------
-        package_url : PackageURL
-            The PackageURL identifying a Maven artifact.
-
-        Returns
-        -------
-        Self | None
-            A Maven artifact, or ``None`` if the PURL is not a valid Maven artifact PURL, or if
-            the artifact type is not supported.
-            For supported artifact types, see :class:`MavenArtifactType`.
-        """
-        if not package_url.namespace:
-            return None
-        if not package_url.version:
-            return None
-        if package_url.type != "maven":
-            return None
-        maven_artifact_type = None
-        for artifact_type in MavenArtifactType:
-            if artifact_type.purl_qualifiers == package_url.qualifiers:
-                maven_artifact_type = artifact_type
-                break
-        if not maven_artifact_type:
-            return None
-        return cls(
-            group_id=package_url.namespace,
-            artifact_id=package_url.name,
-            version=package_url.version,
-            artifact_type=maven_artifact_type,
-        )
-
-    @classmethod
-    def from_artifact_filename(
-        cls,
-        artifact_filename: str,
-        group_id: str,
-        version: str,
-    ) -> Self | None:
-        """Create a Maven artifact given an artifact filename.
-
-        The artifact type is determined based on the naming pattern of the artifact.
-
-        Parameters
-        ----------
-        artifact_filename : str
-            The filename of the artifact.
-        group_id : str
-            The group id.
-        version : str
-            The version
-
-        Returns
-        -------
-        Self | None
-            A Maven artifact, or ``None`` if the PURL is not a valid Maven artifact PURL, or if
-            the artifact type is not supported.
-            For supported artifact types, see :class:`MavenArtifactType`.
-        """
-        for maven_artifact_type in MavenArtifactType:
-            pattern = maven_artifact_type.filename_pattern.format(
-                artifact_id="(.*)",
-                version=version,
-            )
-            match_result = re.search(pattern, artifact_filename)
-            if not match_result:
-                continue
-            artifact_id = match_result.group(1)
-            return cls(
-                group_id=group_id,
-                artifact_id=artifact_id,
-                version=version,
-                artifact_type=maven_artifact_type,
-            )
-        return None
 
 
 class MavenSubjectPURLMatcher:
@@ -185,26 +39,86 @@ class MavenSubjectPURLMatcher:
         InTotoV01Subject | InTotoV1ResourceDescriptor | None
             The subject in the provenance matching the given PURL.
         """
-        if (maven_artifact := MavenArtifact.from_package_url(purl)) and is_witness_provenance_payload(
+        if not purl.namespace:
+            return None
+        if not purl.version:
+            return None
+        if purl.type != "maven":
+            return None
+
+        if not is_witness_provenance_payload(
             payload=provenance_payload,
             predicate_types=load_witness_verifier_config().predicate_types,
         ):
-            artifact_subjects = extract_build_artifacts_from_witness_subjects(provenance_payload)
+            return None
+        artifact_subjects = extract_build_artifacts_from_witness_subjects(provenance_payload)
 
-            maven_artifact_subject_pairs = []
-            for subject in artifact_subjects:
-                _, _, artifact_filename = subject["name"].rpartition("/")
-                artifact = MavenArtifact.from_artifact_filename(
-                    artifact_filename=artifact_filename,
-                    group_id=maven_artifact.group_id,
-                    version=maven_artifact.version,
-                )
-                if artifact is None:
-                    continue
-                maven_artifact_subject_pairs.append((artifact, subject))
-
-            for artifact, subject in maven_artifact_subject_pairs:
-                if artifact.package_url == purl:
-                    return subject
+        for subject in artifact_subjects:
+            _, _, artifact_filename = subject["name"].rpartition("/")
+            subject_purl = create_maven_purl_from_artifact_filename(
+                artifact_filename=artifact_filename,
+                group_id=purl.namespace,
+                version=purl.version,
+            )
+            if subject_purl == purl:
+                return subject
 
         return None
+
+
+def create_maven_purl_from_artifact_filename(
+    artifact_filename: str,
+    group_id: str,
+    version: str,
+) -> PackageURL | None:
+    """Create a Maven PackageURL given an artifact filename, a group id, and a version.
+
+    For reference, see:
+    - https://maven.apache.org/ref/3.9.6/maven-core/artifact-handlers.html
+    - https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst#maven
+    Notes:
+    - For the time being, we are only supporting the ``"type"`` qualifier, although the
+    Maven section in the PackageURL docs also mention the ``"classifier"`` qualifier.
+    This is because not all artifact types has a unique value of ``"classifier"``
+    according to the Artifact Handlers table in the Maven Core reference. In addition,
+    not supporting the ``"classifier"`` qualifier at the moment simplifies the
+    implementation for PURL decoding and generation until there is a concrete use
+    case for this additional qualifier.
+    - We are only supporting only 4 artifact types: jar, pom, javadoc, and java-source.
+
+    Parameters
+    ----------
+    artifact_filename : str
+        The filename of the artifact.
+    group_id : str
+        The group id of the artifact.
+    version : str
+        The version of the artifact.
+
+    Returns
+    -------
+    PackageURL | None
+        A Maven artifact PackageURL, or `None` if the filename does not follow any
+        of the supported artifact name patters.
+    """
+    # Each artifact name should follow the pattern "<artifact-id>-<suffix>"
+    # where "<suffix>" is one of the following.
+    suffix_to_purl_qualifiers = {
+        f"-{version}.jar": {"type": "jar"},
+        f"-{version}.pom": {"type": "pom"},
+        f"-{version}-javadoc.jar": {"type": "javadoc"},
+        f"-{version}-sources.jar": {"type": "java-source"},
+    }
+
+    for suffix, purl_qualifiers in suffix_to_purl_qualifiers.items():
+        if artifact_filename.endswith(suffix):
+            artifact_id = artifact_filename[: -len(suffix)]
+            return PackageURL(
+                type="maven",
+                namespace=group_id,
+                name=artifact_id,
+                version=version,
+                qualifiers=purl_qualifiers,
+            )
+
+    return None
