@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the CycloneDX helper functions."""
@@ -69,6 +69,7 @@ def test_convert_components_to_artifacts(snapshot: dict[str, DependencyInfo]) ->
     # Disable repo finding to prevent remote calls during testing
     load_defaults(os.path.join(os.path.dirname(os.path.abspath(__file__)), "defaults.ini"))
     assert defaults.getboolean("repofinder.java", "find_repos") is False
+    assert defaults.get_list("repofinder", "redirect_urls") == []
 
     # Path to the sub-project bom.json files.
     child_bom_paths = [Path(RESOURCES_DIR, child) for child in ["child_bom_1.json", "child_bom_2.json"]]
