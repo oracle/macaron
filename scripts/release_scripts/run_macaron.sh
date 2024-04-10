@@ -315,6 +315,10 @@ if [[ $command == "analyze" ]]; then
                 arg_prov_exp="$2"
                 shift
                 ;;
+            -pf|--provenance-file)
+                arg_prov_file="$2"
+                shift
+                ;;
             -c|--config-path)
                 arg_config_path="$2"
                 shift
@@ -438,6 +442,17 @@ if [[ -n "${arg_prov_exp:-}" ]]; then
     elif [ -f "$prov_exp_path" ]; then
         mount_file "-pe/--provenance-expectation" "$prov_exp_path" "$prov_exp_path_in_container" "ro,Z"
     fi
+fi
+
+# Determine the provenance expectation path to be mounted into ${MACARON_WORKSPACE}/prov_files/${pf_name} where pf_name is a file name.
+if [[ -n "${arg_prov_file:-}" ]]; then
+    prov_file_path="${arg_prov_file}"
+    assert_path_exists "${prov_file_path}" "-pf/--provenance-expectation"
+    prov_file_name="$(basename "${prov_file_path}")"
+    prov_file_path_in_container=${MACARON_WORKSPACE}/prov_files/${prov_file_name}
+    argv_command+=("--provenance-file" "$prov_file_path_in_container")
+
+    mount_file "-pf/--provenance-file" "$prov_file_path" "$prov_file_path_in_container" "ro,Z"
 fi
 
 # MACARON entrypoint - verify-policy command argvs
