@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Witness provenance (https://github.com/testifysec/witness)."""
@@ -9,6 +9,7 @@ from typing import NamedTuple
 from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payload
+from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Subject
 from macaron.slsa_analyzer.provenance.witness.attestor import GitLabWitnessAttestor, RepoAttestor
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -120,41 +121,38 @@ def extract_repo_url(witness_payload: InTotoPayload) -> str | None:
     return None
 
 
-def extract_witness_provenance_subjects(witness_payload: InTotoPayload) -> set[WitnessProvenanceSubject]:
-    """Read the ``"subjects"`` field of the provenance to obtain the hash digests of each subject.
+def extract_build_artifacts_from_witness_subjects(witness_payload: InTotoPayload) -> list[InTotoV01Subject]:
+    """Extract subjects that are build artifacts from the ``"subject"`` field of the provenance.
+
+    Each artifact subject is assumed to have a sha256 digest. If a sha256 digest is not present for
+    a subject, that subject is ignored.
 
     Parameters
     ----------
     witness_payload : InTotoPayload
         The witness provenance payload.
-    extensions : list[str]
-        The allowed extensions of the subjects.
-        All subjects with names not ending in these extensions are ignored.
 
     Returns
     -------
-    dict[str, str]
-        A dictionary in which each key is a subject name and each value is the corresponding SHA256 digest.
+    list[InTotoV01Subject]
+        A list subjects in the ``"subject"`` field of the provenance that are build artifacts.
     """
-    if isinstance(witness_payload, InTotoV01Payload):
-        subjects = witness_payload.statement["subject"]
-        subject_digests = set()
+    if not isinstance(witness_payload, InTotoV01Payload):
+        return []
 
-        for subject in subjects:
-            name = subject["name"]
-            digest = subject["digest"]
+    subjects = witness_payload.statement["subject"]
+    artifact_subjects = []
+    for subject in subjects:
+        # Filter all subjects attested by the product attestor, which records all changed and
+        # created files in the build process.
+        # Documentation: https://github.com/in-toto/witness/blob/main/docs/attestors/product.md
+        if not subject["name"].startswith("https://witness.dev/attestations/product/v0.1/file:"):
+            continue
 
-            sha256 = digest.get("sha256")
-            if not sha256 or not isinstance(sha256, str):
-                continue
+        digest = subject["digest"]
+        sha256 = digest.get("sha256")
+        if not sha256 or not isinstance(sha256, str):
+            continue
+        artifact_subjects.append(subject)
 
-            subject_digests.add(
-                WitnessProvenanceSubject(
-                    subject_name=name,
-                    sha256_digest=sha256,
-                )
-            )
-
-        return subject_digests
-
-    return set()
+    return artifact_subjects
