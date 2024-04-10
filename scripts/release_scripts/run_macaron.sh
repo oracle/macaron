@@ -447,7 +447,6 @@ fi
 # Determine the provenance expectation path to be mounted into ${MACARON_WORKSPACE}/prov_files/${pf_name} where pf_name is a file name.
 if [[ -n "${arg_prov_file:-}" ]]; then
     prov_file_path="${arg_prov_file}"
-    assert_path_exists "${prov_file_path}" "-pf/--provenance-expectation"
     prov_file_name="$(basename "${prov_file_path}")"
     prov_file_path_in_container=${MACARON_WORKSPACE}/prov_files/${prov_file_name}
     argv_command+=("--provenance-file" "$prov_file_path_in_container")
