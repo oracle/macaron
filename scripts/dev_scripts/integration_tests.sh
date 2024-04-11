@@ -268,6 +268,15 @@ $RUN_MACARON analyze -purl pkg:private_domain.com/apache/maven -sbom "$SBOM_FILE
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
+echo -e "\n----------------------------------------------------------------------------------"
+echo "com.example/nonexistent: Analyzing purl of nonexistent artifact."
+echo -e "----------------------------------------------------------------------------------\n"
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/com_example_nonexistent/nonexistent.json
+JSON_RESULT=$WORKSPACE/output/reports/maven/com_example/nonexistent/nonexistent.json
+$RUN_MACARON analyze -purl pkg:maven/com.example/nonexistent@1.0.0 --skip-deps || log_fail
+
+check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+
 # Analyze micronaut-projects/micronaut-test.
 echo -e "\n=================================================================================="
 echo "Run integration tests with configurations for micronaut-projects/micronaut-test..."
