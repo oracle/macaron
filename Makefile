@@ -353,7 +353,7 @@ dist-clean:
 	rm -fr dist/*
 	rm -f requirements.txt
 bin-clean:
-	rm -fr bin/*
+	rm -fr $(PACKAGE_PATH)/bin/*
 docs-clean:
 	rm -fr docs/_build/
 clean: dist-clean bin-clean docs-clean
