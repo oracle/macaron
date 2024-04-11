@@ -81,7 +81,7 @@ class BuildScriptCheck(BaseCheck):
             description=description,
             depends_on=depends_on,
             eval_reqs=eval_reqs,
-            result_on_skip=CheckResultType.PASSED,
+            result_on_skip=CheckResultType.FAILED,
         )
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
