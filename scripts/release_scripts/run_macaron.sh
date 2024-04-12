@@ -444,7 +444,7 @@ if [[ -n "${arg_prov_exp:-}" ]]; then
     fi
 fi
 
-# Determine the provenance expectation path to be mounted into ${MACARON_WORKSPACE}/prov_files/${pf_name} where pf_name is a file name.
+# Mount the provenance file into ${MACARON_WORKSPACE}/prov_files/${pf_name} where pf_name is a file name.
 if [[ -n "${arg_prov_file:-}" ]]; then
     prov_file_path="${arg_prov_file}"
     prov_file_name="$(basename "${prov_file_path}")"
