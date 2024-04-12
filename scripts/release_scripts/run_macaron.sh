@@ -156,7 +156,8 @@ function assert_path_exists() {
 function create_dir_if_not_exists() {
     dir=$1
     if [ ! -d "$dir" ]; then
-        mkdir --parents "$dir"
+        # Use the `-p` option for `mkdir` intead of `--parents` to be compatible with macOS.
+        mkdir -p "$dir"
     fi
 }
 
