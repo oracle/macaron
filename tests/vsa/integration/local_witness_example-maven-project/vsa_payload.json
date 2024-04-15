@@ -1,0 +1,27 @@
+{
+    "_type": "https://in-toto.io/Statement/v1",
+    "subject": [
+        {
+            "uri": "pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar",
+            "digest": {
+                "sha256": "b3310866791ac7aecd67f6d7653f7aac6e697f4b8707e3f40d7bb58e98f2af67"
+            }
+        }
+    ],
+    "predicateType": "https://slsa.dev/verification_summary/v1",
+    "predicate": {
+        "verifier": {
+            "id": "https://github.com/oracle/macaron",
+            "version": {
+                "macaron": "0.9.0"
+            }
+        },
+        "timeVerified": "2024-04-15T02:40:56.370630+00:00",
+        "resourceUri": "pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT",
+        "policy": {
+            "content": "#include \"prelude.dl\"\n \nPolicy(\"gh_witness_provenance_policy\", component_id, \"Policy for github Maven project with witness provenances\") :-\n    check_passed(component_id, \"mcn_provenance_expectation_1\").\n \napply_policy_to(\"gh_witness_provenance_policy\", component_id) :-\n    is_repo(\n      _,  // repo_id\n      \"github.com/behnazh-w/example-maven-app\",  // http URL to the repo but without the \"http://\"\n      component_id\n    )."
+        },
+        "verificationResult": "PASSED",
+        "verifiedLevels": []
+    }
+}
