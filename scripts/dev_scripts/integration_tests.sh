@@ -774,7 +774,7 @@ EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/reso
 PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/example-maven-project.json
 
 # Cloning the repository locally
-git clone https://github.com/behnazh-w/example-maven-app.git $WORKSPACE/git_repos/local_repos/example-maven-app || log_fail
+git clone https://github.com/behnazh-w/example-maven-app.git $WORKSPACE/output/git_repos/local_repos/example-maven-app || log_fail
 
 macaron analyze -pf $PROVENANCE_FILE -pe $EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar --repo-path example-maven-app --digest 34c06e8ae3811885c57f8bd42db61f37ac57eb6c --skip-deps || log_fail
 
