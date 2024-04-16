@@ -677,9 +677,9 @@ class Analyzer:
                         try:
                             repo, digest = extract_repo_and_commit_from_provenance(provenance_payload)
                         except ProvenanceError as error:
-                            logger.debug("Failed to extract repo and commit from provenance: %s", error)
+                            logger.debug("Failed to extract repo or commit from provenance: %s", error)
 
-                    if repo and digest:
+                    if repo or digest:
                         return Analyzer.AnalysisTarget(
                             parsed_purl=parsed_purl,
                             repo_path=repo,

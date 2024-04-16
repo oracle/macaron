@@ -320,18 +320,34 @@ def test_slsa_v02_is_valid(
 
 
 @pytest.mark.parametrize(
-    ("keys", "new_value"),
+    ("keys", "new_value", "expected_repo", "expected_commit"),
     [
-        (["predicate", "invocation", "configSource", "uri"], ""),
-        (["predicate", "invocation", "configSource", "uri"], None),
-        (["predicate", "invocation", "configSource", "uri"], "bad_url"),
-        (["predicate", "invocation", "configSource", "digest", "sha1"], ""),
-        (["predicate", "invocation", "configSource", "digest", "sha1"], None),
+        (["predicate", "invocation", "configSource", "uri"], "", "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
+        (["predicate", "invocation", "configSource", "uri"], None, "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
+        (["predicate", "invocation", "configSource", "digest", "sha1"], "", "https://github.com/oracle/macaron", ""),
+        (["predicate", "invocation", "configSource", "digest", "sha1"], None, "https://github.com/oracle/macaron", ""),
     ],
 )
-def test_slsa_v02_is_invalid(slsa_v02_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType) -> None:
-    """Test invalidly modified SLSA v0.2 provenance."""
+def test_slsa_v02_is_partially_valid(
+    slsa_v02_provenance: dict[str, JsonType],
+    keys: list[str],
+    new_value: JsonType,
+    expected_repo: str,
+    expected_commit: str,
+) -> None:
+    """Test partially modified SLSA v0.2 provenance."""
     _json_modify(slsa_v02_provenance, keys, new_value)
+    _test_extract_repo_and_commit_from_provenance(slsa_v02_provenance, expected_repo, expected_commit)
+
+
+@pytest.mark.parametrize(
+    "new_value",
+    ["", None],
+)
+def test_slsa_v02_is_invalid(slsa_v02_provenance: dict[str, JsonType], new_value: JsonType) -> None:
+    """Test invalidly modified SLSA v0.2 provenance."""
+    _json_modify(slsa_v02_provenance, ["predicate", "invocation", "configSource", "uri"], new_value)
+    _json_modify(slsa_v02_provenance, ["predicate", "invocation", "configSource", "digest", "sha1"], new_value)
     with pytest.raises(ProvenanceError):
         _test_extract_repo_and_commit_from_provenance(slsa_v02_provenance)
 
@@ -341,6 +357,29 @@ def test_slsa_v01_is_valid(
 ) -> None:
     """Test valid SLSA v0.1 provenance."""
     _test_extract_repo_and_commit_from_provenance(slsa_v01_provenance, target_repository, target_commit)
+
+
+@pytest.mark.parametrize(
+    ("keys", "new_value", "expected_repo", "expected_commit"),
+    [
+        (["uri"], "", "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
+        (["uri"], None, "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
+        (["digest", "sha1"], "", "https://github.com/oracle/macaron", ""),
+        (["digest"], None, "https://github.com/oracle/macaron", ""),
+    ],
+)
+def test_slsa_v01_is_partially_valid(
+    slsa_v01_provenance: dict[str, JsonType],
+    keys: list[str],
+    new_value: JsonType,
+    expected_repo: str,
+    expected_commit: str,
+) -> None:
+    """Test partially modified SLSA v0.1 provenance."""
+    materials = json_extract(slsa_v01_provenance, ["predicate", "materials"], list)
+    material_index = json_extract(slsa_v01_provenance, ["predicate", "recipe", "definedInMaterial"], int)
+    _json_modify(materials[material_index], keys, new_value)
+    _test_extract_repo_and_commit_from_provenance(slsa_v01_provenance, expected_repo, expected_commit)
 
 
 @pytest.mark.parametrize(
@@ -355,6 +394,7 @@ def test_slsa_v01_is_invalid(slsa_v01_provenance: dict[str, JsonType], new_value
     materials = json_extract(slsa_v01_provenance, ["predicate", "materials"], list)
     material_index = json_extract(slsa_v01_provenance, ["predicate", "recipe", "definedInMaterial"], int)
     _json_modify(materials[material_index], ["uri"], new_value)
+    _json_modify(materials[material_index], ["digest", "sha1"], new_value)
     with pytest.raises(ProvenanceError):
         _test_extract_repo_and_commit_from_provenance(slsa_v01_provenance)
 
@@ -383,30 +423,43 @@ def test_witness_github_is_valid(
 
 
 @pytest.mark.parametrize(
-    ("keys", "new_value", "attestation_index"),
+    ("keys", "new_value", "attestation_index", "expected_repo", "expected_commit"),
     [
-        (["attestation", "projecturl"], "", 0),
-        (["attestation", "projecturl"], None, 0),
-        (["attestation", "commithash"], "", 1),
-        (["attestation", "commithash"], None, 1),
+        (["attestation", "projecturl"], "", 0, "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
+        (["attestation", "projecturl"], None, 0, "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
+        (["attestation", "commithash"], "", 1, "https://github.com/oracle/macaron", ""),
+        (["attestation", "commithash"], None, 1, "https://github.com/oracle/macaron", ""),
     ],
 )
-def test_witness_github_is_invalid(
-    witness_github_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType, attestation_index: int
+def test_witness_github_is_partially_valid(
+    witness_github_provenance: dict[str, JsonType],
+    keys: list[str],
+    new_value: JsonType,
+    attestation_index: int,
+    expected_repo: str,
+    expected_commit: str,
 ) -> None:
     """Test invalidly modified Witness v0.1 GitHub provenance."""
     attestations = json_extract(witness_github_provenance, ["predicate", "attestations"], list)
     _json_modify(attestations[attestation_index], keys, new_value)
-    with pytest.raises(ProvenanceError):
-        _test_extract_repo_and_commit_from_provenance(witness_github_provenance)
+    _test_extract_repo_and_commit_from_provenance(witness_github_provenance, expected_repo, expected_commit)
 
 
-def test_witness_github_remove_attestation(witness_github_provenance: dict[str, JsonType]) -> None:
+@pytest.mark.parametrize(
+    ("attestation_index", "expected_repo", "expected_commit"),
+    [(0, "https://github.com/oracle/macaron", ""), (1, "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0")],
+)
+def test_witness_github_remove_attestation(
+    witness_github_provenance: dict[str, JsonType], attestation_index: int, expected_repo: str, expected_commit: str
+) -> None:
     """Test removing Git attestation from Witness V0.1 GitHub provenance."""
     attestations = json_extract(witness_github_provenance, ["predicate", "attestations"], list)
-    _json_modify(witness_github_provenance, ["predicate", "attestations"], attestations[:1])
-    with pytest.raises(ProvenanceError):
-        _test_extract_repo_and_commit_from_provenance(witness_github_provenance)
+    _json_modify(
+        witness_github_provenance,
+        ["predicate", "attestations"],
+        attestations[attestation_index : attestation_index + 1],
+    )
+    _test_extract_repo_and_commit_from_provenance(witness_github_provenance, expected_repo, expected_commit)
 
 
 @pytest.mark.parametrize(

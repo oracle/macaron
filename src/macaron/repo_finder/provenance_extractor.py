@@ -53,7 +53,7 @@ def extract_repo_and_commit_from_provenance(payload: InTotoPayload) -> tuple[str
         logger.debug(error)
         raise ProvenanceError("JSON exception while extracting from provenance.") from error
 
-    if not repo or not commit:
+    if not (repo or commit):
         msg = (
             f"Extraction from provenance not supported for versions: "
             f"predicate_type {predicate_type}, in-toto {str(type(payload))}."
@@ -81,15 +81,24 @@ def _extract_from_slsa_v01(payload: InTotoV01Payload) -> tuple[str, str]:
     if not material or not isinstance(material, dict):
         raise ProvenanceError("Indexed material list entry is invalid.")
 
-    uri = json_extract(material, ["uri"], str)
+    repo = ""
+    try:
+        uri = json_extract(material, ["uri"], str)
+        if uri:
+            repo = _clean_spdx(uri)
+    except JsonError as error:
+        logger.debug("No repo found in provenance: %s", error)
 
-    repo = _clean_spdx(uri)
+    commit = ""
+    try:
+        digest_set = json_extract(material, ["digest"], dict)
+        if digest_set:
+            commit = _extract_commit_from_digest_set(digest_set, SLSA_V01_DIGEST_SET_GIT_ALGORITHMS)
+    except JsonError as error:
+        logger.debug("No commit found in provenance: %s", error)
 
-    digest_set = json_extract(material, ["digest"], dict)
-    commit = _extract_commit_from_digest_set(digest_set, SLSA_V01_DIGEST_SET_GIT_ALGORITHMS)
-
-    if not commit:
-        raise ProvenanceError("Failed to extract commit hash from provenance.")
+    if not (repo or commit):
+        raise ProvenanceError("Failed to extract repo or commit from provenance.")
 
     return repo, commit
 
@@ -102,15 +111,26 @@ def _extract_from_slsa_v02(payload: InTotoV01Payload) -> tuple[str, str]:
 
     # The repository URL and commit are stored within the predicate -> invocation -> configSource object.
     # See https://slsa.dev/spec/v0.2/provenance
-    uri = json_extract(predicate, ["invocation", "configSource", "uri"], str)
-    if not uri:
-        raise ProvenanceError("Failed to extract repository URL from provenance.")
-    repo = _clean_spdx(uri)
+    repo = ""
+    try:
+        uri = json_extract(predicate, ["invocation", "configSource", "uri"], str)
+        if uri:
+            repo = _clean_spdx(uri)
+    except JsonError as error:
+        logger.debug("No repo found in provenance: %s", error)
 
-    digest_set = json_extract(predicate, ["invocation", "configSource", "digest"], dict)
-    commit = _extract_commit_from_digest_set(digest_set, SLSA_V02_DIGEST_SET_GIT_ALGORITHMS)
+    commit = ""
+    try:
+        digest_set = json_extract(predicate, ["invocation", "configSource", "digest"], dict)
+        if digest_set:
+            commit = _extract_commit_from_digest_set(digest_set, SLSA_V02_DIGEST_SET_GIT_ALGORITHMS)
+    except JsonError as error:
+        logger.debug("No commit found in provenance: %s", error)
 
     if not commit:
+        logger.debug("No commit found in provenance.")
+
+    if not (repo or commit):
         raise ProvenanceError("Failed to extract commit hash from provenance.")
 
     return repo, commit
@@ -136,7 +156,7 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str, str]:
         repo = json_extract(build_def, ["externalParameters", "workflow", "repository"], str)
 
     if not repo:
-        raise ProvenanceError("Failed to extract repository URL from provenance.")
+        raise ProvenanceError("Failed to extract repo from provenance.")
 
     # Extract the commit hash.
     commit = ""
@@ -187,14 +207,20 @@ def _extract_from_witness_provenance(payload: InTotoV01Payload) -> tuple[str, st
         if not entry_type:
             continue
         if entry_type.startswith("https://witness.dev/attestations/git/"):
-            commit = json_extract(entry, ["attestation", "commithash"], str)
+            try:
+                commit = json_extract(entry, ["attestation", "commithash"], str)
+            except JsonError as error:
+                logger.debug("No commit found in provenance: %s", error)
         elif entry_type.startswith("https://witness.dev/attestations/gitlab/") or entry_type.startswith(
             "https://witness.dev/attestations/github/"
         ):
-            repo = json_extract(entry, ["attestation", "projecturl"], str)
+            try:
+                repo = json_extract(entry, ["attestation", "projecturl"], str)
+            except JsonError as error:
+                logger.debug("No repo found in provenance: %s", error)
 
-    if not commit or not repo:
-        raise ProvenanceError("Could not extract repo and commit from provenance.")
+    if not (repo or commit):
+        raise ProvenanceError("Could not extract repo or commit from provenance.")
 
     return repo, commit
 
@@ -212,7 +238,8 @@ def _extract_commit_from_digest_set(digest_set: dict[str, JsonType], valid_algor
             value = digest_set.get(key)
             if isinstance(value, str):
                 return value
-    raise ProvenanceError(f"No valid digest in digest set: {digest_set.keys()} not in {valid_algorithms}")
+    logger.debug("No valid digest in digest set: %s not in %s", digest_set.keys(), valid_algorithms)
+    return ""
 
 
 def _clean_spdx(uri: str) -> str:
