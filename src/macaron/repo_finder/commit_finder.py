@@ -341,8 +341,10 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
             # - 3.1.test.2 -> 'test' and '2' become optional.
             has_non_numeric_suffix = True
 
-        if count == len(split) - 1 and has_trailing_zero or has_non_numeric_suffix:
-            # This part will be made optional in the regex, hence the grouping bracket.
+        # This part will be made optional in the regex if it matches the correct requirements.
+        optional = len(split) > 1 and ((count == len(split) - 1 and has_trailing_zero) or has_non_numeric_suffix)
+
+        if optional:
             this_version_pattern = this_version_pattern + "("
 
         if count == 1:
@@ -353,7 +355,7 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
         # Add the current part to the pattern.
         this_version_pattern = this_version_pattern + part
 
-        if count == len(split) - 1 and has_trailing_zero or has_non_numeric_suffix:
+        if optional:
             # Complete the optional capture group.
             this_version_pattern = this_version_pattern + ")?"
 
