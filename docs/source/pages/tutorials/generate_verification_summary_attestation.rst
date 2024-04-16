@@ -23,7 +23,7 @@ For more information about VSAs, please refer to the :ref:`Verification Summary 
 Use case
 --------
 
-Imagine you are the producer of an artifact. You want consumers of this artifact to be able to verify it. In order to simplify the verification process, you can use Macaron to verify the artifact prior to publishing it to consumers and generate a Verification Summary Attestation (VSA), thus allowing for delegated verification on consumers' side if they trust you as a verifier.
+Imagine you are the producer of an artifact. You want consumers of this artifact to be able to verify it. In order to simplify the verification process, you can use Macaron to verify the artifact prior to publishing it to consumers and generate a Verification Summary Attestation (VSA), thus allowing for delegated verification on consumers' side if they trust you as a verifier. For easy access to the generated VSA on consumers' side, it can be published alongside the artifact, for example.
 
 As you are the producer of the artifact, you also have access to the provenance attesting to the build.
 
