@@ -34,17 +34,18 @@ As a tool, Macaron can support this particular use case quite well. Given a prov
 Example
 -------
 
-Let's say you are the author of the Maven artifact `<https://repo1.maven.org/maven2/io/micronaut/openapi/micronaut-openapi/6.8.0/micronaut-openapi-6.8.0-javadoc.jar>`_, which can be identified with the PackageURL ``pkg:maven/io.micronaut.openapi/micronaut-openapi@6.8.0?type=jar``. In addition, you also used `Witness <https://github.com/in-toto/witness>`_ to generate a build provenance file ``multiple.intoto.jsonl``.
+Let's say you are the author of the Maven artifact `<https://repo1.maven.org/maven2/io/micronaut/openapi/micronaut-openapi/6.8.0/micronaut-openapi-6.8.0-javadoc.jar>`_, which can be identified with the PackageURL ``pkg:maven/io.micronaut.openapi/micronaut-openapi@6.8.0?type=jar``. You used `Witness <https://github.com/in-toto/witness>`_ to generate a build provenance file ``multiple.intoto.jsonl``. In addition, for security purposes, you also want to enforce certain properties of the build based on the content of the provenance through :ref:`CUE expectation <pages/using:Verifying provenance expectations in CUE language>`, specified in a ``expectation.cue`` file.
 
 In order to verify the artifact with Macaron, you can follow the following steps:
 
-- **Step 1**: Provide Macaron with the provenance file and the PackageURL identifying the artifact.
+- **Step 1**: Provide Macaron with the provenance file, the PackageURL identifying the artifact, and the CUE expectation file.
 
 .. code-block:: shell
 
   ./run_macaron.sh analyze \
         --package-url pkg:maven/io.micronaut.openapi/micronaut-openapi@6.8.0?type=jar \
         --provenance-file multiple.intoto.jsonl \
+        --provenance-expectation expectation.cue \
         --skip-deps
 
 .. note::
@@ -52,7 +53,7 @@ In order to verify the artifact with Macaron, you can follow the following steps
     If your build produces more than one artifact, you can use the same command once for each artifact and substitute in the appropriate PURL for the respective artifact.
 
 
-- **Step 2**: Compose a policy to verify the artifact against. The following is a sample policy enforcing the two checks ``mcn_version_control_system_1`` and ``mcn_provenance_available_1`` passing for the artifact. Let's put this policy in a file ``policy.dl``.
+- **Step 2**: Compose a policy to verify the artifact against. The following is a sample policy enforcing the two checks ``mcn_version_control_system_1`` and ``mcn_provenance_expectation_1`` passing for the artifact. Let's put this policy in a file ``policy.dl``.
 
 .. code-block:: c++
 
@@ -60,7 +61,7 @@ In order to verify the artifact with Macaron, you can follow the following steps
 
     Policy("producer-policy", component_id, "Poducer policy for micronaut-openapi.") :-
         check_passed(component_id, "mcn_version_control_system_1"),
-        check_passed(component_id, "mcn_provenance_available_1").
+        check_passed(component_id, "mcn_provenance_expectation_1").
 
     apply_policy_to("has-hosted-build", component_id) :-
         is_component(component_id, "pkg:maven/io.micronaut.openapi/micronaut-openapi@6.8.0?type=jar").
