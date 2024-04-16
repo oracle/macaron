@@ -16,7 +16,7 @@ For more information about VSAs, please refer to the :ref:`Verification Summary 
 
 .. note::
 
-    At the moment, this feature only supports a limited number of artifact types and provenance types. Please refer to the :ref:`notes-on-using-the-feature` section for more information.
+    At the moment, this feature only supports a limited number of artifact and provenance types. Please refer to the :ref:`notes-on-using-the-feature` section for more information.
 
 
 --------
