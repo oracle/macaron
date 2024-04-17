@@ -341,7 +341,11 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
             # - 3.1.test.2 -> 'test' and '2' become optional.
             has_non_numeric_suffix = True
 
-        # This part will be made optional in the regex if it matches the correct requirements.
+        # This part will be made optional in the regex if it matches the correct requirements:
+        # - There is more than one version part, e.g. 1.2 (2), 1.2.3 (3)
+        # - AND either of:
+        #   - This is the last version part and it has a trailing zero, e.g. 10
+        #   - OR has_non_numeric_suffix is True (See its comments above for more details)
         optional = len(split) > 1 and ((count == len(split) - 1 and has_trailing_zero) or has_non_numeric_suffix)
 
         if optional:
