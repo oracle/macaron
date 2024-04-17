@@ -346,13 +346,13 @@ We can run Macaron against the local repository at ``target`` by using this comm
 
 .. code-block:: shell
 
-  ./run_macaron.sh --local-repos-path ./boo/foo --defaults-path ./defaults.ini analyze -rp target <rest_of_args>
+  ./run_macaron.sh --local-repos-path ./boo/foo --defaults-path ./defaults.ini analyze --repo-path target <rest_of_args>
 
-With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``-b``, ``-d`` or ``--skip-deps`` similar to two previous examples).
+With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``--branch/-b``, ``--digest/-d`` or ``--skip-deps`` similar to two previous examples).
 
-The ``-lr`` flag tells Macaron to look into ``./boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
+The ``--local-repos-path/-lr`` flag tells Macaron to look into ``./boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
 
-.. note:: If ``-lr`` is not provided, Macaron will looks inside ``<current_working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``-rp``.
+.. note:: If ``--local-repos-path/-lr`` is not provided, Macaron will looks inside ``<current_working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``--repo-path/-rp``.
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Analyzing a local repository with supported git service
@@ -372,13 +372,13 @@ We can run Macaron against the local repository at ``target`` by using this comm
 
 .. code-block:: shell
 
-  ./run_macaron.sh --local-repos-path ./boo/foo analyze -rp target <rest_of_args>
+  ./run_macaron.sh --local-repos-path ./boo/foo analyze --repo-path target <rest_of_args>
 
-With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``-b``, ``-d`` or ``--skip-deps`` similar to two previous examples).
+With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``--branch/-b``, ``--digest/-d`` or ``--skip-deps`` similar to two previous examples).
 
-The ``-lr`` flag tells Macaron to look into ``./boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
+The ``--local-repos-path/-lr`` flag tells Macaron to look into ``./boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
 
-.. note:: If ``-lr`` is not provided, Macaron will looks inside ``<current_working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``-rp``.
+.. note:: If ``--local-repos-path/-lr`` is not provided, Macaron will looks inside ``<current_working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``--repo-path/-rp``.
 
 -------------------------
 Running the policy engine
