@@ -238,7 +238,7 @@ With the example above, the generated output reports can be seen here:
 Analyzing dependencies in the SBOM without the main software component
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-In the case where the repository URL of the main software component is not available (e.g. the repository is in a private domain where Macaron cannot access),
+In the case where the repository URL of the main software component is not available (e.g. the repository is in a self-hosted git service instance where Macaron cannot access),
 Macaron can still run the analysis on the dependencies listed in the SBOM.
 To do that, you must first create a PURL to present the main software component. This is so that this software component could be referenced later in the :ref:`verify-policy <verify-policy-command-cli>` command.
 For example: ``pkg:private_domain.com/org/name``.
@@ -332,7 +332,7 @@ In which ``hostname`` contains the hostname of the git service URL. In this exam
 
 .. note::
 
-  This ``defaults.ini`` section must only be used for analyzing a repository on the local file system. If the domain name has already been supported in other services, it doesn't need to be defined again here.
+  This ``defaults.ini`` section must only be used for analyzing a repository on the local file system. If the hostname has already been supported in other services, it doesn't need to be defined again here.
 
 Assume that the dir tree at the current working directory has the following structure:
 
