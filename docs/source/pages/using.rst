@@ -180,7 +180,7 @@ For more detailed information on converting a given artifact into a PURL, see `P
 Verifying provenance expectations in CUE language
 -------------------------------------------------
 
-When a project generates SLSA provenances, you can add a build expectation in the form of a
+When a project generates provenances, you can add a build expectation in the form of a
 `Configure Unify Execute (CUE) <https://cuelang.org/>`_ policy to check the content of provenances. For instance, the expectation
 can specify the accepted GitHub Actions workflows that trigger a build, which can prevent using artifacts built from attackers
 workflows.
