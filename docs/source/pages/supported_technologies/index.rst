@@ -24,6 +24,8 @@ such as GitHub Actions workflows.
 * Docker
 
 
+.. _supported_git_services:
+
 ------------
 Git Services
 ------------
