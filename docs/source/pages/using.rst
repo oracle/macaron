@@ -321,14 +321,14 @@ Analyzing a repository whose git service is not supported by Macaron
 If the repository remote URL is from an unknown git service (see :ref:`Git Services <supported_git_services>` for a list of supported git services in Macaron), Macaron won't recognize it when analyzing the repository.
 
 You would need to tell Macaron about that git service through the ``defaults.ini`` config.
-For example, let's say you want to analyze the Bitbucket repository at ``https://bitbucket.org/snakeyaml/snakeyaml``. First, you need to create a ``defaults.ini`` file in the current workspace with the following content:
+For example, let's say you want to analyze a repository hosted at ``https://git.example.com/foo/target``. First, you need to create a ``defaults.ini`` file in the current workspace with the following content:
 
 .. code-block:: ini
 
   [git_service.local_repo]
-  hostname = bitbucket.org
+  hostname = git.example.com
 
-In which ``hostname`` contains the domain of the git service URL. In this example it's ``bitbucket.org``.
+In which ``hostname`` contains the domain of the git service URL. In this example it's ``git.example.com``.
 
 .. note::
 
@@ -340,17 +340,17 @@ Assume that the dir tree at the current workspace has the following structure:
 
   boo
   ├── foo
-  │   └── snakeyaml
+  │   └── target
 
-We can run Macaron against the local repository at ``snakeyaml`` by using this command:
+We can run Macaron against the local repository at ``target`` by using this command:
 
 .. code-block:: shell
 
-  ./run_macaron.sh --local-repos-path ./boo/foo --defaults-path ./defaults.ini analyze -rp snakeyaml <rest_of_args>
+  ./run_macaron.sh --local-repos-path ./boo/foo --defaults-path ./defaults.ini analyze -rp target <rest_of_args>
 
 With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``-b``, ``-d`` or ``--skip-deps`` similar to two previous examples).
 
-The ``-lr`` flag tells Macaron to look into ``path/to/boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
+The ``-lr`` flag tells Macaron to look into ``./boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
 
 .. note:: If ``-lr`` is not provided, Macaron will looks inside ``<current_working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``-rp``.
 
@@ -376,7 +376,7 @@ We can run Macaron against the local repository at ``target`` by using this comm
 
 With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``-b``, ``-d`` or ``--skip-deps`` similar to two previous examples).
 
-The ``-lr`` flag tells Macaron to look into ``path/to/boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
+The ``-lr`` flag tells Macaron to look into ``./boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
 
 .. note:: If ``-lr`` is not provided, Macaron will looks inside ``<current_working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``-rp``.
 
