@@ -19,7 +19,7 @@ class LocalRepoGitService(BaseGitService):
 
     def __init__(self) -> None:
         """Initialize instance."""
-        super().__init__("generic")
+        super().__init__("local_repo")
 
     def load_defaults(self) -> None:
         """Load the values for this git service from the ini configuration."""
