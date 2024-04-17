@@ -1,11 +1,11 @@
 .. Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
 .. Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
+.. _vsa:
+
 =================================
 Verification Summary Attestations
 =================================
-
-.. _vsa:
 
 Macaron generates Verification Summary Attestations (VSAs) as part of its verification to communicate the fact that "some software component has been verified against a policy".
 
@@ -73,9 +73,7 @@ The following is the schema of the Statement layer:
     Identifier for the schema of the Statement layer. This follows `in-toto v1 Statement layer schema <https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md>`_ and is always ``https://in-toto.io/Statement/v1``.
 
 * ``subject``: array of `ResourceDescriptor`_ objects
-    Subjects of the VSA. Each entry is a software component being verified by Macaron.
-
-    *Note: In the current version of Macaron, this field only contains one single software component, identified by a* `PackageURL`_.
+    Subjects of the VSA. Each entry is a software component being verified by Macaron. If the software component is also an artifact, a SHA256 digest is also recorded.
 
 * ``predicateType``: string (`TypeURI`_)
     Identifier for the type of the Predicate. For Macaron-generated VSAs, this is always ``https://slsa.dev/verification_summary/v1``.
