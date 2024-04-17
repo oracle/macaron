@@ -131,7 +131,7 @@ to the directory:
     └── git_repos
         └── local_repos
 
-.. note:: Please see :ref:`pages/using:analyzing a locally cloned repository` to know how to set the directory for analyzing local repositories.
+.. note:: Please see :ref:`pages/using:analyzing a repository on the local file system` to know how to set the directory for analyzing local repositories.
 
 .. _output_files_macaron_verify_policy:
 
