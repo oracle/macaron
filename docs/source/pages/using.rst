@@ -300,9 +300,9 @@ An example configuration file for utilising this feature:
 
 
 
--------------------------------------
-Analyzing a locally cloned repository
--------------------------------------
+-----------------------------------------------
+Analyzing a repository on the local file system
+-----------------------------------------------
 
 .. warning::
   During the analysis, Macaron can check out different commits, which can reset the index and working tree of the repository.
@@ -312,7 +312,7 @@ Analyzing a locally cloned repository
 .. note::
   We assume that the ``origin`` remote exists in the cloned repository and checkout the relevant commits from ``origin`` only.
 
-If you have a local repository that you want to analyze, Macaron also supports running the analysis against a local repository.
+Macaron supports analyzing a repository on the local file system.
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Analyzing a repository whose git service is not supported by Macaron
@@ -328,11 +328,11 @@ For example, let's say you want to analyze a repository hosted at ``https://git.
   [git_service.local_repo]
   hostname = git.example.com
 
-In which ``hostname`` contains the domain of the git service URL. In this example it's ``git.example.com``.
+In which ``hostname`` contains the hostname of the git service URL. In this example it is ``git.example.com``.
 
 .. note::
 
-  This ``defaults.ini`` section must only be used for analyzing a locally cloned repository. If the domain name has already been supported in other services, it doesn't need to be defined again here.
+  This ``defaults.ini`` section must only be used for analyzing a repository on the local file system. If the domain name has already been supported in other services, it doesn't need to be defined again here.
 
 Assume that the dir tree at the current working directory has the following structure:
 
