@@ -358,7 +358,7 @@ The ``-lr`` flag tells Macaron to look into ``./boo/foo`` for local repositories
 Analyzing a local repository with supported git service
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-If the local repository you want to analyze has remote origin hosted on a supported git service, you can run the analysis directly without having to prepare ``defaults.ini`` as above.
+If the local repository you want to analyze has a remote origin hosted on a supported git service, you can run the analysis directly without having to prepare ``defaults.ini`` as above.
 
 Assume that the dir tree at the current workspace has the following structure:
 
