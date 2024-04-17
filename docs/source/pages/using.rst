@@ -51,7 +51,7 @@ Take the same example as above, to disable analyzing `micronaut-core <https://gi
 
   ./run_macaron.sh analyze -rp https://github.com/micronaut-projects/micronaut-core -b 4.0.x -d 82d115b4901d10226552ac67b0a10978cd5bc603 --skip-deps
 
-.. note:: By default, Macaron would generate report files into the ``output`` directory in the current workspace. To understand the structure of this directory please see :ref:`Output Files Guide <output_files_guide>`.
+.. note:: By default, Macaron would generate report files into the ``output`` directory in the current working directory. To understand the structure of this directory please see :ref:`Output Files Guide <output_files_guide>`.
 
 With the example above, the generated output reports can be seen here:
 
@@ -321,7 +321,7 @@ Analyzing a repository whose git service is not supported by Macaron
 If the repository remote URL is from an unknown git service (see :ref:`Git Services <supported_git_services>` for a list of supported git services in Macaron), Macaron won't recognize it when analyzing the repository.
 
 You would need to tell Macaron about that git service through the ``defaults.ini`` config.
-For example, let's say you want to analyze a repository hosted at ``https://git.example.com/foo/target``. First, you need to create a ``defaults.ini`` file in the current workspace with the following content:
+For example, let's say you want to analyze a repository hosted at ``https://git.example.com/foo/target``. First, you need to create a ``defaults.ini`` file in the current working directory with the following content:
 
 .. code-block:: ini
 
@@ -334,7 +334,7 @@ In which ``hostname`` contains the domain of the git service URL. In this exampl
 
   This ``defaults.ini`` section must only be used for analyzing a locally cloned repository. If the domain name has already been supported in other services, it doesn't need to be defined again here.
 
-Assume that the dir tree at the current workspace has the following structure:
+Assume that the dir tree at the current working directory has the following structure:
 
 .. code-block:: shell
 
@@ -360,7 +360,7 @@ Analyzing a local repository with supported git service
 
 If the local repository you want to analyze has a remote origin hosted on a supported git service, you can run the analysis directly without having to prepare ``defaults.ini`` as above.
 
-Assume that the dir tree at the current workspace has the following structure:
+Assume that the dir tree at the current working directory has the following structure:
 
 .. code-block:: shell
 
