@@ -679,12 +679,12 @@ class Analyzer:
                         except ProvenanceError as error:
                             logger.debug("Failed to extract repo or commit from provenance: %s", error)
 
-                            return Analyzer.AnalysisTarget(
-                                parsed_purl=parsed_purl,
-                                repo_path=repo or "",
-                                branch="",
-                                digest=digest or "",
-                            )
+                        return Analyzer.AnalysisTarget(
+                            parsed_purl=parsed_purl,
+                            repo_path=repo or "",
+                            branch="",
+                            digest=digest or "",
+                        )
 
                     # As there is no provenance, use the Repo Finder to find the repo.
                     converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)
