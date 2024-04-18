@@ -9,7 +9,6 @@ from urllib.parse import quote as encode
 
 from packageurl import PackageURL
 
-from macaron.errors import JsonError
 from macaron.repo_finder.provenance_extractor import json_extract
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_validator import find_valid_repository_url
@@ -110,11 +109,11 @@ class DepsDevRepoFinder(BaseRepoFinder):
             return []
 
         versions_keys = ["package", "versions"] if "package" in metadata else ["version"]
-        try:
-            versions = json_extract(metadata, versions_keys, list)
-            latest_version = json_extract(versions[-1], ["versionKey", "version"], str)
-        except JsonError as error:
-            logger.debug("Could not extract 'version' from deps.dev response: %s", error)
+        versions = json_extract(metadata, versions_keys, list)
+        if not versions:
+            return []
+        latest_version = json_extract(versions[-1], ["versionKey", "version"], str)
+        if not latest_version:
             return []
 
         logger.debug("Found latest version: %s", latest_version)
@@ -161,11 +160,10 @@ class DepsDevRepoFinder(BaseRepoFinder):
             logger.debug("Failed to parse response from deps.dev: %s", error)
             return []
 
-        try:
-            links_keys = ["version", "links"] if "version" in parsed else ["links"]
-            links = json_extract(parsed, links_keys, list)
-        except JsonError as error:
-            logger.debug("Could not extract 'version' or 'links' from deps.dev response: %s", error)
+        links_keys = ["version", "links"] if "version" in parsed else ["links"]
+        links = json_extract(parsed, links_keys, list)
+        if not links:
+            logger.debug("Could not extract 'version' or 'links' from deps.dev response.")
             return []
 
         result = []

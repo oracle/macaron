@@ -248,11 +248,23 @@ def test_slsa_v1_gcb_1_is_valid(
 @pytest.mark.parametrize(
     ("keys", "new_value"),
     [
-        (["predicate", "buildDefinition", "externalParameters", "sourceToBuild", "repository"], ""),
-        (["predicate", "buildDefinition", "externalParameters", "sourceToBuild", "repository"], None),
-        (["predicate", "buildDefinition", "externalParameters", "sourceToBuild", "repository"], "bad_url"),
         (["predicate", "buildDefinition", "resolvedDependencies"], ""),
         (["predicate", "buildDefinition", "resolvedDependencies"], None),
+    ],
+)
+def test_slsa_v1_gcb_is_partially_valid(
+    slsa_v1_gcb_1_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType
+) -> None:
+    """Test partially modified SLSA v1 provenance with build type gbc and sourceToBuild."""
+    _json_modify(slsa_v1_gcb_1_provenance, keys, new_value)
+    _test_extract_repo_and_commit_from_provenance(slsa_v1_gcb_1_provenance, "https://github.com/oracle/macaron", None)
+
+
+@pytest.mark.parametrize(
+    ("keys", "new_value"),
+    [
+        (["predicate", "buildDefinition", "externalParameters", "sourceToBuild", "repository"], ""),
+        (["predicate", "buildDefinition", "externalParameters", "sourceToBuild", "repository"], None),
     ],
 )
 def test_slsa_v1_gcb_1_is_invalid(
@@ -260,8 +272,7 @@ def test_slsa_v1_gcb_1_is_invalid(
 ) -> None:
     """Test invalidly modified SLSA v1 provenance with build type gcb and sourceToBuild."""
     _json_modify(slsa_v1_gcb_1_provenance, keys, new_value)
-    with pytest.raises(ProvenanceError):
-        _test_extract_repo_and_commit_from_provenance(slsa_v1_gcb_1_provenance)
+    _test_extract_repo_and_commit_from_provenance(slsa_v1_gcb_1_provenance)
 
 
 def test_slsa_v1_gcb_2_is_valid(
@@ -276,7 +287,6 @@ def test_slsa_v1_gcb_2_is_valid(
     [
         (["predicate", "buildDefinition", "externalParameters", "configSource", "repository"], ""),
         (["predicate", "buildDefinition", "externalParameters", "configSource", "repository"], None),
-        (["predicate", "buildDefinition", "externalParameters", "configSource", "repository"], "bad_url"),
     ],
 )
 def test_slsa_v1_gcb_2_is_invalid(
@@ -284,8 +294,7 @@ def test_slsa_v1_gcb_2_is_invalid(
 ) -> None:
     """Test invalidly modified SLSA v1 provenance with build type gcb and configSource."""
     _json_modify(slsa_v1_gcb_2_provenance, keys, new_value)
-    with pytest.raises(ProvenanceError):
-        _test_extract_repo_and_commit_from_provenance(slsa_v1_gcb_2_provenance)
+    _test_extract_repo_and_commit_from_provenance(slsa_v1_gcb_2_provenance)
 
 
 def test_slsa_v1_github_is_valid(
@@ -300,7 +309,6 @@ def test_slsa_v1_github_is_valid(
     [
         (["predicate", "buildDefinition", "externalParameters", "workflow", "repository"], ""),
         (["predicate", "buildDefinition", "externalParameters", "workflow", "repository"], None),
-        (["predicate", "buildDefinition", "externalParameters", "workflow", "repository"], "bad_url"),
     ],
 )
 def test_slsa_v1_github_is_invalid(
@@ -308,8 +316,7 @@ def test_slsa_v1_github_is_invalid(
 ) -> None:
     """Test invalidly modified SLSA v1 provenance with build type GitHub."""
     _json_modify(slsa_v1_github_provenance, keys, new_value)
-    with pytest.raises(ProvenanceError):
-        _test_extract_repo_and_commit_from_provenance(slsa_v1_github_provenance)
+    _test_extract_repo_and_commit_from_provenance(slsa_v1_github_provenance)
 
 
 def test_slsa_v02_is_valid(
@@ -322,18 +329,23 @@ def test_slsa_v02_is_valid(
 @pytest.mark.parametrize(
     ("keys", "new_value", "expected_repo", "expected_commit"),
     [
-        (["predicate", "invocation", "configSource", "uri"], "", "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
-        (["predicate", "invocation", "configSource", "uri"], None, "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
-        (["predicate", "invocation", "configSource", "digest", "sha1"], "", "https://github.com/oracle/macaron", ""),
-        (["predicate", "invocation", "configSource", "digest", "sha1"], None, "https://github.com/oracle/macaron", ""),
+        (["predicate", "invocation", "configSource", "uri"], "", None, "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
+        (["predicate", "invocation", "configSource", "uri"], None, None, "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
+        (["predicate", "invocation", "configSource", "digest", "sha1"], "", "https://github.com/oracle/macaron", None),
+        (
+            ["predicate", "invocation", "configSource", "digest", "sha1"],
+            None,
+            "https://github.com/oracle/macaron",
+            None,
+        ),
     ],
 )
 def test_slsa_v02_is_partially_valid(
     slsa_v02_provenance: dict[str, JsonType],
     keys: list[str],
     new_value: JsonType,
-    expected_repo: str,
-    expected_commit: str,
+    expected_repo: str | None,
+    expected_commit: str | None,
 ) -> None:
     """Test partially modified SLSA v0.2 provenance."""
     _json_modify(slsa_v02_provenance, keys, new_value)
@@ -348,8 +360,7 @@ def test_slsa_v02_is_invalid(slsa_v02_provenance: dict[str, JsonType], new_value
     """Test invalidly modified SLSA v0.2 provenance."""
     _json_modify(slsa_v02_provenance, ["predicate", "invocation", "configSource", "uri"], new_value)
     _json_modify(slsa_v02_provenance, ["predicate", "invocation", "configSource", "digest", "sha1"], new_value)
-    with pytest.raises(ProvenanceError):
-        _test_extract_repo_and_commit_from_provenance(slsa_v02_provenance)
+    _test_extract_repo_and_commit_from_provenance(slsa_v02_provenance)
 
 
 def test_slsa_v01_is_valid(
@@ -362,22 +373,24 @@ def test_slsa_v01_is_valid(
 @pytest.mark.parametrize(
     ("keys", "new_value", "expected_repo", "expected_commit"),
     [
-        (["uri"], "", "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
-        (["uri"], None, "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
-        (["digest", "sha1"], "", "https://github.com/oracle/macaron", ""),
-        (["digest"], None, "https://github.com/oracle/macaron", ""),
+        (["uri"], "", None, "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
+        (["uri"], None, None, "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
+        (["digest", "sha1"], "", "https://github.com/oracle/macaron", None),
+        (["digest"], None, "https://github.com/oracle/macaron", None),
     ],
 )
 def test_slsa_v01_is_partially_valid(
     slsa_v01_provenance: dict[str, JsonType],
     keys: list[str],
     new_value: JsonType,
-    expected_repo: str,
-    expected_commit: str,
+    expected_repo: str | None,
+    expected_commit: str | None,
 ) -> None:
     """Test partially modified SLSA v0.1 provenance."""
     materials = json_extract(slsa_v01_provenance, ["predicate", "materials"], list)
+    assert materials
     material_index = json_extract(slsa_v01_provenance, ["predicate", "recipe", "definedInMaterial"], int)
+    assert material_index is not None
     _json_modify(materials[material_index], keys, new_value)
     _test_extract_repo_and_commit_from_provenance(slsa_v01_provenance, expected_repo, expected_commit)
 
@@ -392,18 +405,18 @@ def test_slsa_v01_is_partially_valid(
 def test_slsa_v01_is_invalid(slsa_v01_provenance: dict[str, JsonType], new_value: JsonType) -> None:
     """Test invalidly modified SLSA v0.1 provenance."""
     materials = json_extract(slsa_v01_provenance, ["predicate", "materials"], list)
+    assert materials
     material_index = json_extract(slsa_v01_provenance, ["predicate", "recipe", "definedInMaterial"], int)
+    assert material_index is not None
     _json_modify(materials[material_index], ["uri"], new_value)
     _json_modify(materials[material_index], ["digest", "sha1"], new_value)
-    with pytest.raises(ProvenanceError):
-        _test_extract_repo_and_commit_from_provenance(slsa_v01_provenance)
+    _test_extract_repo_and_commit_from_provenance(slsa_v01_provenance)
 
 
 def test_slsa_v01_invalid_material_index(slsa_v01_provenance: dict[str, JsonType]) -> None:
     """Test the SLSA v0.1 provenance with an invalid materials index."""
     _json_modify(slsa_v01_provenance, ["predicate", "recipe", "definedInMaterial"], 10)
-    with pytest.raises(ProvenanceError):
-        _test_extract_repo_and_commit_from_provenance(slsa_v01_provenance)
+    _test_extract_repo_and_commit_from_provenance(slsa_v01_provenance)
 
 
 def test_witness_gitlab_is_valid(witness_gitlab_provenance: dict[str, JsonType]) -> None:
@@ -425,10 +438,10 @@ def test_witness_github_is_valid(
 @pytest.mark.parametrize(
     ("keys", "new_value", "attestation_index", "expected_repo", "expected_commit"),
     [
-        (["attestation", "projecturl"], "", 0, "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
-        (["attestation", "projecturl"], None, 0, "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
-        (["attestation", "commithash"], "", 1, "https://github.com/oracle/macaron", ""),
-        (["attestation", "commithash"], None, 1, "https://github.com/oracle/macaron", ""),
+        (["attestation", "projecturl"], "", 0, None, "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
+        (["attestation", "projecturl"], None, 0, None, "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"),
+        (["attestation", "commithash"], "", 1, "https://github.com/oracle/macaron", None),
+        (["attestation", "commithash"], None, 1, "https://github.com/oracle/macaron", None),
     ],
 )
 def test_witness_github_is_partially_valid(
@@ -436,24 +449,29 @@ def test_witness_github_is_partially_valid(
     keys: list[str],
     new_value: JsonType,
     attestation_index: int,
-    expected_repo: str,
-    expected_commit: str,
+    expected_repo: str | None,
+    expected_commit: str | None,
 ) -> None:
     """Test invalidly modified Witness v0.1 GitHub provenance."""
     attestations = json_extract(witness_github_provenance, ["predicate", "attestations"], list)
+    assert attestations
     _json_modify(attestations[attestation_index], keys, new_value)
     _test_extract_repo_and_commit_from_provenance(witness_github_provenance, expected_repo, expected_commit)
 
 
 @pytest.mark.parametrize(
     ("attestation_index", "expected_repo", "expected_commit"),
-    [(0, "https://github.com/oracle/macaron", ""), (1, "", "51aa22a42ec1bffa71518041a6a6d42d40bf50f0")],
+    [(0, "https://github.com/oracle/macaron", None), (1, None, "51aa22a42ec1bffa71518041a6a6d42d40bf50f0")],
 )
 def test_witness_github_remove_attestation(
-    witness_github_provenance: dict[str, JsonType], attestation_index: int, expected_repo: str, expected_commit: str
+    witness_github_provenance: dict[str, JsonType],
+    attestation_index: int,
+    expected_repo: str | None,
+    expected_commit: str | None,
 ) -> None:
     """Test removing Git attestation from Witness V0.1 GitHub provenance."""
     attestations = json_extract(witness_github_provenance, ["predicate", "attestations"], list)
+    assert attestations
     _json_modify(
         witness_github_provenance,
         ["predicate", "attestations"],
@@ -479,7 +497,7 @@ def test_invalid_type_payloads(type_: str, predicate_type: str) -> None:
 
 
 def _test_extract_repo_and_commit_from_provenance(
-    payload: dict[str, JsonType], expected_repo: str = "", expected_commit: str = ""
+    payload: dict[str, JsonType], expected_repo: str | None = None, expected_commit: str | None = None
 ) -> None:
     """Accept a provenance and extraction function, assert the extracted values match the expected ones."""
     provenance = validate_intoto_payload(payload)
@@ -495,7 +513,9 @@ def _json_modify(entry: JsonType, keys: list[str], new_value: JsonType) -> None:
     If `new_value` is `None`, the value will be removed.
     If the final key does not exist, it will be created as `new_value`.
     """
-    target: dict[str, JsonType] = json_extract(entry, keys[:-1], dict)
+    target: dict[str, JsonType] | None = json_extract(entry, keys[:-1], dict)
+    if not target:
+        return
 
     if new_value is None:
         del target[keys[-1]]
