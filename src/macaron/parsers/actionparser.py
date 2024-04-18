@@ -17,7 +17,7 @@ from typing import Any
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.errors import JsonError, ParseError
+from macaron.errors import ParseError
 from macaron.json_tools import json_extract
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -90,11 +90,7 @@ def get_run_step(step: dict[str, Any]) -> str | None:
     str | None
         The inlined run script or None if the run step cannot be validated.
     """
-    try:
-        return json_extract(step, ["Exec", "Run", "Value"], str)
-    except JsonError as error:
-        logger.debug(error)
-        return None
+    return json_extract(step, ["Exec", "Run", "Value"], str)
 
 
 def get_step_input(step: dict[str, Any], key: str) -> str | None:
@@ -115,8 +111,4 @@ def get_step_input(step: dict[str, Any], key: str) -> str | None:
     str | None
         The input value or None if it doesn't exist or the parsed object validation fails.
     """
-    try:
-        return json_extract(step, ["Exec", "Inputs", key, "Value", "Value"], str)
-    except JsonError as error:
-        logger.debug(error)
-        return None
+    return json_extract(step, ["Exec", "Inputs", key, "Value", "Value"], str)
