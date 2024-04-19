@@ -175,7 +175,7 @@ PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_proven
 # Cloning the repository locally
 git clone https://github.com/behnazh-w/example-maven-app.git $WORKSPACE/output/git_repos/local_repos/example-maven-app || log_fail
 
-$RUN_MACARON_SCRIPT analyze -pf $PROVENANCE_FILE -pe $EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar --repo-path example-maven-app --digest 34c06e8ae3811885c57f8bd42db61f37ac57eb6c --skip-deps || log_fail
+$RUN_MACARON_SCRIPT analyze -pf $PROVENANCE_FILE -pe $EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar --repo-path example-maven-app --skip-deps || log_fail
 
 $RUN_MACARON_SCRIPT verify-policy -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 
