@@ -63,9 +63,9 @@ def _load_provenance_file_content(
         try:
             decompressed_file_content = gzip.decompress(file_content)
             provenance = json.loads(decompressed_file_content.decode())
-        except (gzip.BadGzipFile, EOFError, zlib.error, configparser.NoOptionError):
+        except (gzip.BadGzipFile, EOFError, zlib.error):
             provenance = json.loads(file_content.decode())
-    except (json.JSONDecodeError, TypeError) as error:
+    except (json.JSONDecodeError, TypeError, UnicodeDecodeError) as error:
         raise LoadIntotoAttestationError(
             "Cannot deserialize the file content as JSON.",
         ) from error
