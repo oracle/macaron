@@ -4,6 +4,9 @@
 #include "prelude.dl"
 
 Policy("gh_witness_provenance_policy", component_id, "Policy for github Maven project with witness provenances") :-
+    check_passed(component_id, "mcn_build_service_1"),
+    check_passed(component_id, "mcn_build_script_1"),
+    check_passed(component_id, "mcn_provenance_available_1"),
     check_passed(component_id, "mcn_provenance_expectation_1").
 
 apply_policy_to("gh_witness_provenance_policy", component_id) :-
