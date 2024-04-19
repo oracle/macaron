@@ -6,23 +6,20 @@
 import base64
 import configparser
 import gzip
-import io
 import json
 import zlib
 from urllib.parse import urlparse
 
-import requests
-
 from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
 from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError, ValidateInTotoPayloadError
-from macaron.util import JsonType
+from macaron.util import JsonType, send_get_http_raw
 
 
 def _try_read_url_link_file(file_content: bytes) -> str | None:
     parser = configparser.ConfigParser()
     try:
-        parser.read_file(io.TextIOWrapper(io.BytesIO(file_content), encoding="utf-8"))
+        parser.read_string(file_content.decode())
         return parser.get("InternetShortcut", "url", fallback=None)
     except (configparser.Error, UnicodeDecodeError):
         return None
@@ -37,17 +34,16 @@ def _download_url_file_content(url: str, url_link_hostname_allowlist: list[str])
             "Cannot resolve URL link file: target hostname '" + hostname + "' is not in allowed hostnames."
         )
 
-    try:
-        # TODO download size limit?
-        timeout = defaults.getint("downloads", "timeout", fallback=120)
-        response = requests.get(url=url, timeout=timeout)
-        if response.status_code != 200:
-            raise LoadIntotoAttestationError(
-                "Cannot resolve URL link file: Failed to download file, error " + str(response.status_code)
-            )
-        return response.content
-    except requests.exceptions.RequestException as error:
-        raise LoadIntotoAttestationError("Cannot resolve URL link file: Failed to download file") from error
+    # TODO download size limit?
+    timeout = defaults.getint("downloads", "timeout", fallback=120)
+    response = send_get_http_raw(url=url, headers=None, timeout=timeout)
+    if response is None:
+        raise LoadIntotoAttestationError("Cannot resolve URL link file: Failed to download file")
+    if response.status_code != 200:
+        raise LoadIntotoAttestationError(
+            "Cannot resolve URL link file: Failed to download file, error " + str(response.status_code)
+        )
+    return response.content
 
 
 def _load_provenance_file_content(
@@ -66,9 +62,9 @@ def _load_provenance_file_content(
     try:
         try:
             decompressed_file_content = gzip.decompress(file_content)
-            provenance = json.load(io.TextIOWrapper(io.BytesIO(decompressed_file_content), encoding="utf-8"))
+            provenance = json.loads(decompressed_file_content.decode())
         except (gzip.BadGzipFile, EOFError, zlib.error, configparser.NoOptionError):
-            provenance = json.load(io.TextIOWrapper(io.BytesIO(file_content), encoding="utf-8"))
+            provenance = json.loads(file_content.decode())
     except (json.JSONDecodeError, TypeError) as error:
         raise LoadIntotoAttestationError(
             "Cannot deserialize the file content as JSON.",
