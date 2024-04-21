@@ -655,15 +655,6 @@ class Analyzer:
                     "Cannot determine the analysis target: PURL and repository path are missing."
                 )
 
-            case (None, _):
-                # If only the repository path is provided, we will use the user-provided repository path to create the
-                # ``Repository`` instance. Note that if this case happen, the software component will be initialized
-                # with the PURL generated from the ``Repository`` instance (i.e. as a PURL pointing to a git repository
-                # at a specific commit). For example: ``pkg:github.com/org/name@<commit_digest>``.
-                return Analyzer.AnalysisTarget(
-                    parsed_purl=None, repo_path=repo_path_input, branch=input_branch, digest=input_digest
-                )
-
             case (_, ""):
                 # If a PURL but no repository path is provided, we try to extract the repository path from the PURL.
                 # Note that we can't always extract the repository path from any provided PURL.
@@ -699,15 +690,41 @@ class Analyzer:
                     digest=input_digest,
                 )
 
-            case (_, _):
-                # If both the PURL and the repository are provided, we will use the user-provided repository path to
+            case (_, _) | (None, _):
+                # 1. If only the repository path is provided, we will use the user-provided repository path to create the
+                # ``Repository`` instance. Note that if this case happen, the software component will be initialized
+                # with the PURL generated from the ``Repository`` instance (i.e. as a PURL pointing to a git repository
+                # at a specific commit). For example: ``pkg:github.com/org/name@<commit_digest>``.
+                # 2. If both the PURL and the repository are provided, we will use the user-provided repository path to
                 # create the ``Repository`` instance later on. This ``Repository`` instance is attached to the
                 # software component initialized from the user-provided PURL.
+                # For both cases, the digest will be the user input digest if it is provided. If not, it will be taken
+                # from the provenance if the provenance is available.
+                if input_digest:
+                    return Analyzer.AnalysisTarget(
+                        parsed_purl=parsed_purl,
+                        repo_path=repo_path_input,
+                        branch=input_branch,
+                        digest=input_digest,
+                    )
+
+                prov_digest = None
+                if provenance_payload:
+                    try:
+                        _, prov_digest = extract_repo_and_commit_from_provenance(provenance_payload)
+                    except ProvenanceError as error:
+                        logger.debug("Failed to extract commit from provenance: %s", error)
+
                 return Analyzer.AnalysisTarget(
-                    parsed_purl=parsed_purl, repo_path=repo_path_input, branch=input_branch, digest=input_digest
+                    parsed_purl=parsed_purl,
+                    repo_path=repo_path_input,
+                    branch=input_branch,
+                    digest=prov_digest or "",
                 )
 
             case _:
+                # Even though this case is unecessary, it is still put here because mypy cannot type-narrow tuples
+                # correctly (see https://github.com/python/mypy/pull/16905, which was fixed, but not released).
                 raise InvalidAnalysisTargetError(
                     "Cannot determine the analysis target: PURL and repository path are missing."
                 )
