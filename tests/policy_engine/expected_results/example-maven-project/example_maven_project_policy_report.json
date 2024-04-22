@@ -1,0 +1,16 @@
+{
+    "component_satisfies_policy": [
+        [
+            "1",
+            "pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar",
+            "gh_witness_provenance_policy"
+        ]
+    ],
+    "passed_policies": [
+        [
+            "gh_witness_provenance_policy"
+        ]
+    ],
+    "component_violates_policy": [],
+    "failed_policies": []
+}

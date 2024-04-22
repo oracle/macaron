@@ -161,6 +161,28 @@ python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 python "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
+echo "behnazh-w/example-maven-app as a local repository"
+echo "Test Witness provenance as an input, Cue expectation validation, Policy CLI and VSA generation."
+echo -e "----------------------------------------------------------------------------------\n"
+POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/example-maven-project/policy.dl
+POLICY_RESULT=$WORKSPACE/output/policy_report.json
+POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/example-maven-project/example_maven_project_policy_report.json
+VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
+VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/local_witness_example-maven-project/vsa_payload.json
+EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/example-maven-project.cue
+PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/example-maven-project.json
+
+# Cloning the repository locally
+git clone https://github.com/behnazh-w/example-maven-app.git $WORKSPACE/output/git_repos/local_repos/example-maven-app || log_fail
+
+$RUN_MACARON_SCRIPT analyze -pf $PROVENANCE_FILE -pe $EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar --repo-path example-maven-app --skip-deps || log_fail
+
+$RUN_MACARON_SCRIPT verify-policy -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
+
+python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
+python "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
 echo "Test running the analysis without setting the GITHUB_TOKEN environment variables."
 echo -e "----------------------------------------------------------------------------------\n"
 temp="$GITHUB_TOKEN"
