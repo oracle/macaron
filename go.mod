@@ -6,7 +6,7 @@ module github.com/oracle/macaron
 go 1.18
 
 require (
-	cuelang.org/go v0.7.1
+	cuelang.org/go v0.8.1
 	github.com/rhysd/actionlint v1.6.27
 	mvdan.cc/sh/v3 v3.7.0
 )
@@ -18,7 +18,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	golang.org/x/net v0.23.0 // indirect
