@@ -268,6 +268,7 @@ class BuildAsCodeCheck(BaseCheck):
                             result_tables.append(
                                 BuildAsCodeFacts(
                                     build_tool_name=tool.name,
+                                    language=tool.language.value,
                                     ci_service_name=ci_service.name,
                                     deploy_command=deploy_kw,
                                     confidence=Confidence.LOW,
