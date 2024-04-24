@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the base CI service."""
@@ -46,4 +46,4 @@ def test_has_kws_in_config(entry_conf: list[str], kws: list[str], repo_path: str
     """Test has keywords in config check."""
     base_ci_service = BaseCIService("base")  # type: ignore
     base_ci_service.entry_conf = entry_conf
-    assert base_ci_service.has_kws_in_config(kws=kws, repo_path=repo_path) == expect
+    assert base_ci_service.has_kws_in_config(kws=kws, build_tool_name="foo", repo_path=repo_path) == expect
