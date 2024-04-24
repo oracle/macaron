@@ -524,6 +524,11 @@ fi
 USER_UID="$(id -u)"
 USER_GID="$(id -g)"
 
+# Disable unset variable errors from here on to support older bash versions
+# where "${array[*]}" and "${array[@]}" expressions throw errors (in set -u mode)
+# when the array is empty despite otherwise having the correct behaviour.
+set +u
+
 if [[ -z "${entrypoint[*]}" ]];
 then
     entrypoint=("macaron")
@@ -564,8 +569,22 @@ fi
 # Reference: https://docs.podman.io/en/v4.4/markdown/options/userns.container.html.
 export PODMAN_USERNS=keep-id
 
+# Pull image based on DOCKER_PULL setting, emulating behaviour of
+# docker run --pull ${DOCKER_PULL} ...
+# to support older versions of docker that do not support the "--pull" argument.
+if [[ "${DOCKER_PULL}" == "always" ]]; then
+    docker image pull "${IMAGE}:${MACARON_IMAGE_TAG}"
+elif [[ "${DOCKER_PULL}" == "missing" ]]; then
+    docker image inspect "${IMAGE}:${MACARON_IMAGE_TAG}" &> /dev/null || docker image pull "${IMAGE}:${MACARON_IMAGE_TAG}"
+else
+    # "${DOCKER_PULL}" == "never"
+    if ! docker image inspect "${IMAGE}:${MACARON_IMAGE_TAG}" &> /dev/null; then
+        echo "Docker image '${IMAGE}:${MACARON_IMAGE_TAG}' not found locally and DOCKER_PULL == never, aborting"
+        exit 1
+    fi
+fi
+
 docker run \
-    --pull "${DOCKER_PULL}" \
     --network=host \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" \
