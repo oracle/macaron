@@ -257,7 +257,9 @@ class BuildAsCodeCheck(BaseCheck):
                     if isinstance(ci_service, unparsed_ci):
                         if tool.ci_deploy_kws[ci_service.name]:
                             deploy_kw, config_name = ci_service.has_kws_in_config(
-                                tool.ci_deploy_kws[ci_service.name], repo_path=ctx.component.repository.fs_path
+                                tool.ci_deploy_kws[ci_service.name],
+                                build_tool_name=tool.name,
+                                repo_path=ctx.component.repository.fs_path,
                             )
                             if not config_name:
                                 break
