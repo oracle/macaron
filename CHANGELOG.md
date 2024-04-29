@@ -1,3 +1,19 @@
+## v0.10.0 (2024-04-29)
+
+### Feat
+
+- allow provenance files to be files containing a URL pointing to the actual provenance file which will be transparently downloaded (#710)
+- allow defining a git service from defaults.ini   (#694)
+- improve VSA generation with digest for each subject (#685)
+
+### Fix
+
+- improve run_macaron.sh bash and docker version compatibility (#717)
+- store language in build as code check for non-GitHub CI services (#716)
+- extract digest from provenance when repo path is provided but digest is not provided from the user (#711)
+- fix a compatibility issue in run_macaron.sh for macOS (#701)
+- make build script check fail when no repo is found (#699)
+
 ## v0.9.0 (2024-04-05)
 
 ### Feat
