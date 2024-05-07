@@ -366,6 +366,8 @@ class Analyzer:
             analyze_ctx.component.purl.split("@")[0]
         )
         analyze_ctx.dynamic_data["provenance"] = provenance_payload
+        if provenance_payload:
+            analyze_ctx.dynamic_data["is_inferred_prov"] = False
         analyze_ctx.check_results = self.perform_checks(analyze_ctx)
 
         return Record(
