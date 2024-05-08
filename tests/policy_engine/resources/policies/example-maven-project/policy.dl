@@ -3,13 +3,13 @@
 
 #include "prelude.dl"
 
-Policy("gh_witness_provenance_policy", component_id, "Policy for github Maven project with witness provenances") :-
+Policy("example_maven_app_policy", component_id, "Policy for github Maven project with Witness and GitHub provenances") :-
     check_passed(component_id, "mcn_build_service_1"),
     check_passed(component_id, "mcn_build_script_1"),
     check_passed(component_id, "mcn_provenance_available_1"),
     check_passed(component_id, "mcn_provenance_expectation_1").
 
-apply_policy_to("gh_witness_provenance_policy", component_id) :-
+apply_policy_to("example_maven_app_policy", component_id) :-
     is_repo(
       _,  // repo_id
       "github.com/behnazh-w/example-maven-app",  // http URL to the repo but without the "http://"

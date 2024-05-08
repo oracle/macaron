@@ -161,25 +161,37 @@ python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 python "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "behnazh-w/example-maven-app as a local repository"
-echo "Test Witness provenance as an input, Cue expectation validation, Policy CLI and VSA generation."
+echo "behnazh-w/example-maven-app as a local and remote repository"
+echo "Test the Witness and GitHub provenances as an input, Cue expectation validation, Policy CLI and VSA generation."
 echo -e "----------------------------------------------------------------------------------\n"
+RUN_POLICY="macaron verify-policy"
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/example-maven-project/policy.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/example-maven-project/example_maven_project_policy_report.json
 VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
-VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/local_witness_example-maven-project/vsa_payload.json
-EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/example-maven-project.cue
-PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/example-maven-project.json
+VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/example-maven-project/vsa_payload.json
+
+# Test the local repo with Witness provenance.
+WITNESS_EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/witness-example-maven-project.cue
+WITNESS_PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/witness-example-maven-project.json
 
 # Cloning the repository locally
 git clone https://github.com/behnazh-w/example-maven-app.git $WORKSPACE/output/git_repos/local_repos/example-maven-app || log_fail
 
-$RUN_MACARON_SCRIPT analyze -pf $PROVENANCE_FILE -pe $EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar --repo-path example-maven-app --skip-deps || log_fail
+# Check the Witness provenance.
+$RUN_MACARON_SCRIPT analyze -pf $WITNESS_PROVENANCE_FILE -pe $WITNESS_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar --repo-path example-maven-app --skip-deps || log_fail
 
+# Test the remote repo with GitHub provenance.
+GITHUB_EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/github-example-maven-project.cue
+GITHUB_PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/github-example-maven-project.json
+
+# Check the GitHub provenance.
+$RUN_MACARON_SCRIPT analyze -pf $GITHUB_PROVENANCE_FILE -pe $GITHUB_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar --skip-deps || log_fail
+
+# Verify the policy and VSA for all the software components generated from behnazh-w/example-maven-app repo.
 $RUN_MACARON_SCRIPT verify-policy -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 
-python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
+python "$COMPARE_POLICIES" "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
 python "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
