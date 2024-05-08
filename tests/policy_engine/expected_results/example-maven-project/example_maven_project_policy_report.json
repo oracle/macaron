@@ -3,12 +3,17 @@
         [
             "1",
             "pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar",
-            "gh_witness_provenance_policy"
+            "example_maven_app_policy"
+        ],
+        [
+            "2",
+            "pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar",
+            "example_maven_app_policy"
         ]
     ],
     "passed_policies": [
         [
-            "gh_witness_provenance_policy"
+            "example_maven_app_policy"
         ]
     ],
     "component_violates_policy": [],

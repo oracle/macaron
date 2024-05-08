@@ -3,11 +3,15 @@
 
 """This module declares types and utilities for Maven artifacts."""
 
+from collections.abc import Sequence
+
 from packageurl import PackageURL
 
+from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Subject
 from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1ResourceDescriptor
+from macaron.slsa_analyzer.provenance.slsa import extract_build_artifacts_from_slsa_subjects, is_slsa_provenance_payload
 from macaron.slsa_analyzer.provenance.witness import (
     extract_build_artifacts_from_witness_subjects,
     is_witness_provenance_payload,
@@ -46,15 +50,29 @@ class MavenSubjectPURLMatcher:
         if purl.type != "maven":
             return None
 
-        if not is_witness_provenance_payload(
+        artifact_subjects: Sequence[InTotoV01Subject | InTotoV1ResourceDescriptor] = []
+        if is_witness_provenance_payload(
             payload=provenance_payload,
             predicate_types=load_witness_verifier_config().predicate_types,
         ):
+            artifact_subjects = extract_build_artifacts_from_witness_subjects(provenance_payload)
+        elif is_slsa_provenance_payload(
+            payload=provenance_payload,
+            predicate_types=defaults.get_list(
+                "slsa.verifier",
+                "predicate_types",
+                fallback=[],
+            ),
+        ):
+            artifact_subjects = extract_build_artifacts_from_slsa_subjects(provenance_payload)
+        else:
             return None
-        artifact_subjects = extract_build_artifacts_from_witness_subjects(provenance_payload)
 
         for subject in artifact_subjects:
-            _, _, artifact_filename = subject["name"].rpartition("/")
+            subject_name = subject["name"]
+            if not subject_name:
+                continue
+            _, _, artifact_filename = subject_name.rpartition("/")
             subject_purl = create_maven_purl_from_artifact_filename(
                 artifact_filename=artifact_filename,
                 group_id=purl.namespace,
