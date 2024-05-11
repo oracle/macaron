@@ -123,8 +123,9 @@ def check_out_repo_target(
     will prune and update all references (e.g. tags, branches) to make sure that the local repository is up-to-date
     with the repository specified by origin remote.
 
-    If ``branch_name`` and a commit are not provided, this function will checkout the latest commit of the
-    default branch (i.e. origin/HEAD).
+    If ``branch_name`` and a commit are not provided, this function will not do anything and the latest local commit
+    will be analyzed. If there are uncommitted local changes, the latest commit will appear in the report but the repo
+    with local changes will be analyzed. We leave it up to the user to decide whether to commit the changes or not.
 
     If ``branch_name`` is provided and a commit is not provided, this function will checkout that branch from origin
     remote (i.e. origin/<branch_name).
@@ -179,13 +180,6 @@ def check_out_repo_target(
             )
         except GitCommandError:
             logger.error("Unable to fetch from the origin remote of the repository.")
-            return False
-
-    if not branch_name and not digest:
-        try:
-            git_obj.repo.git.checkout("--force", "origin/HEAD")
-        except GitCommandError:
-            logger.debug("Cannot checkout the default branch at origin/HEAD")
             return False
 
     if branch_name and not digest:
