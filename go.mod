@@ -7,7 +7,7 @@ go 1.18
 
 require (
 	cuelang.org/go v0.7.1
-	github.com/rhysd/actionlint v1.6.27
+	github.com/rhysd/actionlint v1.7.0
 	mvdan.cc/sh/v3 v3.7.0
 )
 
@@ -22,8 +22,8 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
