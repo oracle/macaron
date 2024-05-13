@@ -64,14 +64,23 @@ class ProvenanceDerivedRepoCheck(BaseCheck):
             The result of the check.
         """
         if ctx.dynamic_data["provenance_repo"]:
-            return CheckResultData(
-                result_tables=[
-                    ProvenanceDerivedRepoFacts(
-                        repository_info="The repository URL was found from provenance.", confidence=Confidence.HIGH
-                    )
-                ],
-                result_type=CheckResultType.PASSED,
-            )
+            if not ctx.component.repository:
+                return CheckResultData(
+                    result_tables=[],
+                    result_type=CheckResultType.FAILED,
+                )
+
+            current_repository = ctx.component.repository.remote_path
+
+            if current_repository == ctx.dynamic_data["provenance_repo"]:
+                return CheckResultData(
+                    result_tables=[
+                        ProvenanceDerivedRepoFacts(
+                            repository_info="The repository URL was found from provenance.", confidence=Confidence.HIGH
+                        )
+                    ],
+                    result_type=CheckResultType.PASSED,
+                )
 
         return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
 

@@ -634,8 +634,8 @@ class Analyzer:
         config: Configuration,
         available_domains: list[str],
         parsed_purl: PackageURL | None,
-        provenance_repo: str | None,
-        provenance_commit: str | None,
+        provenance_repo: str | None = None,
+        provenance_commit: str | None = None,
     ) -> AnalysisTarget:
         """Resolve the details of a software component from user input.
 
