@@ -1,7 +1,39 @@
 {
     "metadata": {
-        "timestamps": "2023-12-22 01:32:17",
-        "has_passing_check": true
+        "timestamps": "2024-05-07 15:12:39",
+        "has_passing_check": true,
+        "run_checks": [
+            "mcn_provenance_available_1",
+            "mcn_provenance_witness_level_one_1",
+            "mcn_build_as_code_1",
+            "mcn_provenance_derived_commit_1",
+            "mcn_provenance_level_three_1",
+            "mcn_version_control_system_1",
+            "mcn_infer_artifact_pipeline_1",
+            "mcn_trusted_builder_level_three_1",
+            "mcn_build_script_1",
+            "mcn_build_service_1",
+            "mcn_provenance_expectation_1",
+            "mcn_provenance_derived_repo_1"
+        ],
+        "check_tree": {
+            "mcn_provenance_available_1": {
+                "mcn_provenance_witness_level_one_1": {},
+                "mcn_provenance_expectation_1": {},
+                "mcn_provenance_level_three_1": {}
+            },
+            "mcn_provenance_derived_commit_1": {},
+            "mcn_version_control_system_1": {
+                "mcn_build_script_1": {},
+                "mcn_trusted_builder_level_three_1": {
+                    "mcn_build_as_code_1": {
+                        "mcn_infer_artifact_pipeline_1": {},
+                        "mcn_build_service_1": {}
+                    }
+                }
+            },
+            "mcn_provenance_derived_repo_1": {}
+        }
     },
     "target": {
         "info": {
@@ -21,82 +53,82 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "subject": [
                             {
-                                "name": "build/repo/io/micronaut/test/micronaut-test-bom/4.1.1/micronaut-test-bom-4.1.1.pom",
+                                "name": "build/repo/io/micronaut/test/micronaut-test-bom/4.3.0/micronaut-test-bom-4.3.0.pom",
                                 "digest": {
-                                    "sha256": "df0ac294009fb49a90d3b43eb6866b118d4e63f1e41f43b85ef472278835171e"
+                                    "sha256": "901fb8c7adaf5938d7f066d44caa796a1eeadb55424c5370a16ac82c8c122501"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/test/micronaut-test-core/4.1.1/micronaut-test-core-4.1.1.jar",
+                                "name": "build/repo/io/micronaut/test/micronaut-test-core/4.3.0/micronaut-test-core-4.3.0.jar",
                                 "digest": {
-                                    "sha256": "374a135cd10f5dc3affb7c69129f51907260d5d09c40fe1c612a3f2967c1db82"
+                                    "sha256": "4875038a3c7f012952217866ad8bea95241d10679881c465e71d249885d7c282"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/test/micronaut-test-core/4.1.1/micronaut-test-core-4.1.1.pom",
+                                "name": "build/repo/io/micronaut/test/micronaut-test-core/4.3.0/micronaut-test-core-4.3.0.pom",
                                 "digest": {
-                                    "sha256": "de4735ef53a4019584c4f16cc17e476cecdd9e44efc37c3ba9c9cedeafe23e43"
+                                    "sha256": "f81ebf05a0043b96103b83cd899d599373fb12ba31bbefdac73f995510d5d48e"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/test/micronaut-test-junit5/4.1.1/micronaut-test-junit5-4.1.1.jar",
+                                "name": "build/repo/io/micronaut/test/micronaut-test-junit5/4.3.0/micronaut-test-junit5-4.3.0.jar",
                                 "digest": {
-                                    "sha256": "655a851b405ed4fa8d86927591f0860fe600458b5e311f5074096f6cfa8ac596"
+                                    "sha256": "cabca491d9af7c64931ee09d08f017b2c90547e6358f96b331215f65fe582788"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/test/micronaut-test-junit5/4.1.1/micronaut-test-junit5-4.1.1.pom",
+                                "name": "build/repo/io/micronaut/test/micronaut-test-junit5/4.3.0/micronaut-test-junit5-4.3.0.pom",
                                 "digest": {
-                                    "sha256": "9210cec65c1050305497f4c7751d951964cfb1f1f60c1e21434f74d60345a487"
+                                    "sha256": "dd30cade14531f235e5eef9aa4e38291b6e767833db2da338cdf41ddcec781a0"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/test/micronaut-test-kotest5/4.1.1/micronaut-test-kotest5-4.1.1.jar",
+                                "name": "build/repo/io/micronaut/test/micronaut-test-kotest5/4.3.0/micronaut-test-kotest5-4.3.0.jar",
                                 "digest": {
-                                    "sha256": "b80e3b51b9a5af5ceab3c4e424069081872107d5fdd1e005811b204ea497e399"
+                                    "sha256": "3e56d9d03588a83c7664a134aa0b3a71023db6fc5213b2632dc11cb88c8a0932"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/test/micronaut-test-kotest5/4.1.1/micronaut-test-kotest5-4.1.1.pom",
+                                "name": "build/repo/io/micronaut/test/micronaut-test-kotest5/4.3.0/micronaut-test-kotest5-4.3.0.pom",
                                 "digest": {
-                                    "sha256": "f9146d727be9811ff4dac12b0a96c60849cda063b51d534d2c4415766b438c45"
+                                    "sha256": "8db9148ce33e90b6c09246a78d9856a1cab4a56a65915fe551cb4dbcc988a663"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/test/micronaut-test-rest-assured/4.1.1/micronaut-test-rest-assured-4.1.1.jar",
+                                "name": "build/repo/io/micronaut/test/micronaut-test-rest-assured/4.3.0/micronaut-test-rest-assured-4.3.0.jar",
                                 "digest": {
-                                    "sha256": "39aaef0081f064468125446a1fab1da68e49f1af4cd396445dab6b89ec9f778c"
+                                    "sha256": "fc41bcfbc1ac6818b01f695dfc3e7b668ee48778c3233221465a843aaa71b619"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/test/micronaut-test-rest-assured/4.1.1/micronaut-test-rest-assured-4.1.1.pom",
+                                "name": "build/repo/io/micronaut/test/micronaut-test-rest-assured/4.3.0/micronaut-test-rest-assured-4.3.0.pom",
                                 "digest": {
-                                    "sha256": "9fc1c1f0c4824d990310234e223acba57cb7c3dbbcebbb194382989f5bd4145b"
+                                    "sha256": "099b25513c7637733f63106dffa59fe7dc1f7a9ef8f047737ff227824a824e77"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/test/micronaut-test-spock/4.1.1/micronaut-test-spock-4.1.1.jar",
+                                "name": "build/repo/io/micronaut/test/micronaut-test-spock/4.3.0/micronaut-test-spock-4.3.0.jar",
                                 "digest": {
-                                    "sha256": "ba34b2238565a5d5737aabcc4e96dde1d328348b7fcbbc123c3f37cb3884c7fc"
+                                    "sha256": "7f25e6fedb7d02c05389dacf62c6a7ea19282e2e46f9ec9bde3a56a58dab7720"
                                 }
                             },
                             {
-                                "name": "build/repo/io/micronaut/test/micronaut-test-spock/4.1.1/micronaut-test-spock-4.1.1.pom",
+                                "name": "build/repo/io/micronaut/test/micronaut-test-spock/4.3.0/micronaut-test-spock-4.3.0.pom",
                                 "digest": {
-                                    "sha256": "6ad7b0bc411fa8e0dcd3de9fb27aa8f1f23c5c946f738c607ecb873314ba86b4"
+                                    "sha256": "3f6de3130f30d9867302fa397936a80b62a3768683e279777e8f7c2c2789f80d"
                                 }
                             }
                         ],
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.9.0"
+                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.10.0"
                             },
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/micronaut-projects/micronaut-test@refs/tags/v4.1.1",
+                                    "uri": "git+https://github.com/micronaut-projects/micronaut-test@refs/tags/v4.3.0",
                                     "digest": {
-                                        "sha1": "0ad6b0e87e695e90ab9f0c8df28a49101cd00d70"
+                                        "sha1": "f241676bbf3f6072d18f1efd92060f51cb1c0d9b"
                                     },
                                     "entryPoint": ".github/workflows/release.yml"
                                 },
@@ -124,7 +156,7 @@
                                         },
                                         "release": {
                                             "assets": [],
-                                            "assets_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/releases/132296768/assets",
+                                            "assets_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/releases/150098778/assets",
                                             "author": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/864788?v=4",
                                                 "events_url": "https://api.github.com/users/sdelamo/events{/privacy}",
@@ -145,22 +177,22 @@
                                                 "type": "User",
                                                 "url": "https://api.github.com/users/sdelamo"
                                             },
-                                            "body": "<!-- Release notes generated using configuration in .github/release.yml at 4.1.x -->\r\n\r\n## What's Changed\r\n### Improvements \u2b50\r\n* check if bean of type ResourceLoader exists by @sdelamo in https://github.com/micronaut-projects/micronaut-test/pull/906\r\n### Dependency updates \ud83d\ude80\r\n* fix(deps): update junit5 monorepo to v5.10.1 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/885\r\n* chore(deps): update graalvm/setup-graalvm action to v1.1.5 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/884\r\n\r\n\r\n**Full Changelog**: https://github.com/micronaut-projects/micronaut-test/compare/v4.1.0...v4.1.1",
-                                            "created_at": "2023-12-01T14:49:53Z",
+                                            "body": "<!-- Release notes generated using configuration in .github/release.yml at 4.3.x -->\r\n\r\n## What's Changed\r\n### Bug Fixes \ud83d\udc1e\r\n* fix: TestSqlAnnotationHandler fails if context stopped in test by @timyates in https://github.com/micronaut-projects/micronaut-test/pull/951\r\n* fix: add interceptor around parameterized features by @timyates in https://github.com/micronaut-projects/micronaut-test/pull/953\r\n### Docs \ud83d\udcd6\r\n* Mention the annotation config when misconfigured by @timyates in https://github.com/micronaut-projects/micronaut-test/pull/957\r\n* Update settingUpJUnit5.adoc by @goodnic in https://github.com/micronaut-projects/micronaut-test/pull/970\r\n### Dependency updates \ud83d\ude80\r\n\r\n#### Mock\r\n* fix(deps): update dependency io.mockk:mockk to v1.13.10 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/963\r\n#### Mockito\r\n* fix(deps): update mockito monorepo to v5.10.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/942\r\n* fix(deps): update mockito monorepo to v5.11.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/966\r\n#### JUnit 5\r\n* fix(deps): update junit5 monorepo to v5.10.2 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/944\r\n#### AssertJ\r\n* fix(deps): update dependency org.assertj:assertj-core to v3.25.3 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/934\r\n\r\n#### KoTest\r\n* fix(deps): update managed.kotest to v5.8.1 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/977\r\n#### Kotlin \r\n* fix(deps): update kotlin monorepo to v1.9.23 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/969\r\n#### Micronaut Modules\r\n\r\n##### Micronaut Core\r\n* fix(deps): update dependency io.micronaut:micronaut-core-bom to v4.3.5 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/941\r\n* fix(deps): update dependency io.micronaut:micronaut-core-bom to v4.3.7 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/956\r\n* fix(deps): update dependency io.micronaut:micronaut-core-bom to v4.3.10 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/962\r\n* fix(deps): update dependency io.micronaut:micronaut-core-bom to v4.4.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/980\r\n##### Micronaut Serialization\r\n* fix(deps): update dependency io.micronaut.serde:micronaut-serde-bom to v2.8.1 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/931\r\n* fix(deps): update dependency io.micronaut.serde:micronaut-serde-bom to v2.8.2 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/976\r\n* fix(deps): update dependency io.micronaut.serde:micronaut-serde-bom to v2.9.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/995\r\n##### Micronaut Test resources\r\n* fix(deps): update dependency io.micronaut.testresources:micronaut-test-resources-bom to v2.4.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/965\r\n##### Micronaut Platform\r\n* fix(deps): update dependency io.micronaut.platform:micronaut-platform to v4.3.1 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/932\r\n* fix(deps): update dependency io.micronaut.platform:micronaut-platform to v4.3.2 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/952\r\n* fix(deps): update dependency io.micronaut.platform:micronaut-platform to v4.3.5 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/961\r\n* fix(deps): update dependency io.micronaut.platform:micronaut-platform to v4.3.7 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/979\r\n##### Micronaut sql\r\n* fix(deps): update dependency io.micronaut.sql:micronaut-sql-bom to v5.5.1 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/929\r\n* fix(deps): update dependency io.micronaut.sql:micronaut-sql-bom to v5.5.2 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/985\r\n##### Micronaut hibernate-validator\r\n* fix(deps): update dependency io.micronaut.beanvalidation:micronaut-hibernate-validator to v4.2.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/925\r\n* fix(deps): update dependency io.micronaut.beanvalidation:micronaut-hibernate-validator to v4.2.1 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/958\r\n* fix(deps): update dependency io.micronaut.beanvalidation:micronaut-hibernate-validator to v4.3.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/992\r\n##### Micronaut Test\r\n* fix(deps): update dependency io.micronaut.test:micronaut-test-bom to v4.2.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/928\r\n* fix(deps): update dependency io.micronaut.test:micronaut-test-bom to v4.2.1 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/955\r\n\r\n##### Micronaut Spring \r\n* fix(deps): update dependency io.micronaut.spring:micronaut-spring-bom to v5.4.1 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/949\r\n* fix(deps): update dependency io.micronaut.spring:micronaut-spring-bom to v5.5.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/971\r\n##### Micronaut R2DBC\r\n* fix(deps): update dependency io.micronaut.r2dbc:micronaut-r2dbc-bom to v5.3.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/939\r\n* fix(deps): update dependency io.micronaut.r2dbc:micronaut-r2dbc-bom to v5.4.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/991\r\n\r\n##### Micronaut Data\r\n* fix(deps): update dependency io.micronaut.data:micronaut-data-bom to v4.6.2 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/930\r\n##### Micronaut Reactor\r\n* fix(deps): update dependency io.micronaut.reactor:micronaut-reactor-bom to v3.3.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/989\r\n### CI \u2699\ufe0fBuild \ud83d\udc18\r\n* chore(deps): update dependency gradle to v8.7 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/986\r\n* chore(deps): update gradle/gradle-build-action action to v3.2.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/993\r\n* chore(deps): update gradle/gradle-build-action action to v3.1.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/946\r\n\r\n\r\n### GraalVM\r\n* chore(deps): update graalvm/setup-graalvm action to v1.1.8 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/940\r\n#### Junit Report\r\n\r\n#### SLSA\r\n* chore(deps): update slsa-framework/slsa-github-generator action to v1.10.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/987\r\n\r\n#### Micronaut Build Plugin\r\n* chore(deps): update plugin io.micronaut.build.shared.settings to v6.6.2 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/924\r\n* chore(deps): update plugin io.micronaut.build.shared.settings to v6.6.4 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/964\r\n* chore(deps): update plugin io.micronaut.build.shared.settings to v6.7.0 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/981\r\n#### Micronaut Gradle Plugin\r\n* fix(deps): update dependency io.micronaut.library:io.micronaut.library.gradle.plugin to v4.3.2 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/945\r\n* fix(deps): update dependency io.micronaut.library:io.micronaut.library.gradle.plugin to v4.3.4 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/959\r\n* fix(deps): update dependency io.micronaut.library:io.micronaut.library.gradle.plugin to v4.3.5 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/984\r\n* fix(deps): update dependency io.micronaut.library:io.micronaut.library.gradle.plugin to v4.3.6 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/994\r\n#### SVM\r\n* fix(deps): update dependency org.graalvm.nativeimage:svm to v23.1.2 by @renovate in https://github.com/micronaut-projects/micronaut-test/pull/927\r\n\r\n### Other Changes \ud83d\udca1\r\n* Move junit libs to managed block. by @altro3 in https://github.com/micronaut-projects/micronaut-test/pull/936\r\n\r\n## New Contributors\r\n* @goodnic made their first contribution in https://github.com/micronaut-projects/micronaut-test/pull/970\r\n\r\n**Full Changelog**: https://github.com/micronaut-projects/micronaut-test/compare/v4.2.1...v4.3.0",
+                                            "created_at": "2024-04-07T07:31:30Z",
                                             "draft": false,
-                                            "html_url": "https://github.com/micronaut-projects/micronaut-test/releases/tag/v4.1.1",
-                                            "id": 132296768,
-                                            "mentions_count": 2,
-                                            "name": "Micronaut Test 4.1.1",
-                                            "node_id": "RE_kwDOCPx9Ys4H4rBA",
+                                            "html_url": "https://github.com/micronaut-projects/micronaut-test/releases/tag/v4.3.0",
+                                            "id": 150098778,
+                                            "mentions_count": 4,
+                                            "name": "Micronaut Test 4.3.0",
+                                            "node_id": "RE_kwDOCPx9Ys4I8lNa",
                                             "prerelease": false,
-                                            "published_at": "2023-12-01T14:50:40Z",
-                                            "tag_name": "v4.1.1",
-                                            "tarball_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/tarball/v4.1.1",
-                                            "target_commitish": "4.1.x",
-                                            "upload_url": "https://uploads.github.com/repos/micronaut-projects/micronaut-test/releases/132296768/assets{?name,label}",
-                                            "url": "https://api.github.com/repos/micronaut-projects/micronaut-test/releases/132296768",
-                                            "zipball_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/zipball/v4.1.1"
+                                            "published_at": "2024-04-07T07:36:17Z",
+                                            "tag_name": "v4.3.0",
+                                            "tarball_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/tarball/v4.3.0",
+                                            "target_commitish": "4.3.x",
+                                            "upload_url": "https://uploads.github.com/repos/micronaut-projects/micronaut-test/releases/150098778/assets{?name,label}",
+                                            "url": "https://api.github.com/repos/micronaut-projects/micronaut-test/releases/150098778",
+                                            "zipball_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/zipball/v4.3.0"
                                         },
                                         "repository": {
                                             "allow_forking": true,
@@ -178,15 +210,15 @@
                                             "contributors_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/contributors",
                                             "created_at": "2018-09-28T16:07:55Z",
                                             "custom_properties": {},
-                                            "default_branch": "master",
+                                            "default_branch": "4.3.x",
                                             "deployments_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/deployments",
                                             "description": "Repository for Test Related Utilities for Micronaut",
                                             "disabled": false,
                                             "downloads_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/downloads",
                                             "events_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/events",
                                             "fork": false,
-                                            "forks": 58,
-                                            "forks_count": 58,
+                                            "forks": 61,
+                                            "forks_count": 61,
                                             "forks_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/forks",
                                             "full_name": "micronaut-projects/micronaut-test",
                                             "git_commits_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/git/commits{/sha}",
@@ -224,8 +256,8 @@
                                             "name": "micronaut-test",
                                             "node_id": "MDEwOlJlcG9zaXRvcnkxNTA3NjQ4OTg=",
                                             "notifications_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/notifications{?since,all,participating}",
-                                            "open_issues": 44,
-                                            "open_issues_count": 44,
+                                            "open_issues": 42,
+                                            "open_issues_count": 42,
                                             "owner": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/36880643?v=4",
                                                 "events_url": "https://api.github.com/users/micronaut-projects/events{/privacy}",
@@ -248,11 +280,11 @@
                                             },
                                             "private": false,
                                             "pulls_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/pulls{/number}",
-                                            "pushed_at": "2023-12-01T14:50:39Z",
+                                            "pushed_at": "2024-04-07T07:31:30Z",
                                             "releases_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/releases{/id}",
-                                            "size": 23465,
+                                            "size": 23749,
                                             "ssh_url": "git@github.com:micronaut-projects/micronaut-test.git",
-                                            "stargazers_count": 78,
+                                            "stargazers_count": 76,
                                             "stargazers_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/stargazers",
                                             "statuses_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/statuses/{sha}",
                                             "subscribers_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/subscribers",
@@ -262,11 +294,11 @@
                                             "teams_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/teams",
                                             "topics": [],
                                             "trees_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/git/trees{/sha}",
-                                            "updated_at": "2023-11-26T20:02:46Z",
+                                            "updated_at": "2024-03-31T14:21:35Z",
                                             "url": "https://api.github.com/repos/micronaut-projects/micronaut-test",
                                             "visibility": "public",
-                                            "watchers": 78,
-                                            "watchers_count": 78,
+                                            "watchers": 76,
+                                            "watchers_count": 76,
                                             "web_commit_signoff_required": false
                                         },
                                         "sender": {
@@ -291,19 +323,19 @@
                                         }
                                     },
                                     "github_head_ref": "",
-                                    "github_ref": "refs/tags/v4.1.1",
+                                    "github_ref": "refs/tags/v4.3.0",
                                     "github_ref_type": "tag",
                                     "github_repository_id": "150764898",
                                     "github_repository_owner": "micronaut-projects",
                                     "github_repository_owner_id": "36880643",
                                     "github_run_attempt": "1",
-                                    "github_run_id": "7061527707",
-                                    "github_run_number": "74",
-                                    "github_sha1": "0ad6b0e87e695e90ab9f0c8df28a49101cd00d70"
+                                    "github_run_id": "8587137858",
+                                    "github_run_number": "77",
+                                    "github_sha1": "f241676bbf3f6072d18f1efd92060f51cb1c0d9b"
                                 }
                             },
                             "metadata": {
-                                "buildInvocationID": "7061527707-1",
+                                "buildInvocationID": "8587137858-1",
                                 "completeness": {
                                     "parameters": true,
                                     "environment": false,
@@ -313,9 +345,9 @@
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/micronaut-projects/micronaut-test@refs/tags/v4.1.1",
+                                    "uri": "git+https://github.com/micronaut-projects/micronaut-test@refs/tags/v4.3.0",
                                     "digest": {
-                                        "sha1": "0ad6b0e87e695e90ab9f0c8df28a49101cd00d70"
+                                        "sha1": "f241676bbf3f6072d18f1efd92060f51cb1c0d9b"
                                     }
                                 }
                             ]
@@ -328,7 +360,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 3,
+                "FAILED": 5,
                 "PASSED": 6,
                 "SKIPPED": 0,
                 "UNKNOWN": 1
@@ -341,7 +373,7 @@
                         "Provenance conforms with expectations - SLSA Level 3"
                     ],
                     "justification": [
-                        "No expectation defined for this repository."
+                        "Not Available."
                     ],
                     "result_type": "UNKNOWN"
                 },
@@ -352,12 +384,16 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
+                        "build_tool_name: gradle",
+                        "ci_service_name: github_actions",
+                        "language: BuildLanguage.JAVA",
+                        "language_distributions: [\"temurin\"]",
+                        "language_versions: [\"17\"]",
+                        "deploy_command: [\"./gradlew\", \"publishAllPublicationsToBuildRepository\", \"publishToSonatype\", \"closeAndReleaseSonatypeStagingRepository\"]",
                         {
-                            "The target repository uses build tool gradle to deploy": "https://github.com/micronaut-projects/micronaut-test/blob/7679d10b4073a3b842b6c56877c35fa8cd10acff/.github/workflows/gradle.yml",
-                            "The build is triggered by": "https://github.com/micronaut-projects/micronaut-test/blob/7679d10b4073a3b842b6c56877c35fa8cd10acff/.github/workflows/gradle.yml"
-                        },
-                        "Deploy command: ['./gradlew', 'publishToSonatype', 'docs', '--no-daemon']",
-                        "However, could not find a passing workflow run."
+                            "build_trigger": "https://github.com/micronaut-projects/micronaut-test/blob/7679d10b4073a3b842b6c56877c35fa8cd10acff/.github/workflows/release.yml",
+                            "language_url": "https://github.com/actions/setup-java"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -368,7 +404,16 @@
                         "Scripted Build - SLSA Level 1"
                     ],
                     "justification": [
-                        "Check mcn_build_script_1 is set to PASSED because mcn_build_service_1 PASSED."
+                        "build_tool_name: gradle",
+                        "ci_service_name: github_actions",
+                        "language: BuildLanguage.JAVA",
+                        "language_distributions: [\"temurin\"]",
+                        "language_versions: [\"17\"]",
+                        "build_tool_command: [\"./gradlew\", \"publishToSonatype\", \"closeAndReleaseSonatypeStagingRepository\"]",
+                        {
+                            "build_trigger": "https://github.com/micronaut-projects/micronaut-test/blob/7679d10b4073a3b842b6c56877c35fa8cd10acff/.github/workflows/central-sync.yml",
+                            "language_url": "https://github.com/actions/setup-java"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -379,7 +424,7 @@
                         "Build service - SLSA Level 2"
                     ],
                     "justification": [
-                        "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
+                        "Not Available."
                     ],
                     "result_type": "PASSED"
                 },
@@ -393,8 +438,10 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Found provenance in release assets:",
-                        "https://api.github.com/repos/micronaut-projects/micronaut-test/releases/assets/138429786"
+                        "asset_name: multiple.intoto.jsonl",
+                        {
+                            "asset_url": "https://api.github.com/repos/micronaut-projects/micronaut-test/releases/assets/160750342"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -408,8 +455,7 @@
                         "Provenance content - Identifies source code - SLSA Level 2"
                     ],
                     "justification": [
-                        "Successfully verified level 3: ",
-                        "verify passed : build/repo/micronaut-test-bom/4.1.1/micronaut-test-bom-4.1.1.pom,verify passed : build/repo/micronaut-test-core/4.1.1/micronaut-test-core-4.1.1.jar,verify passed : build/repo/micronaut-test-core/4.1.1/micronaut-test-core-4.1.1.pom,verify passed : build/repo/micronaut-test-junit5/4.1.1/micronaut-test-junit5-4.1.1.jar,verify passed : build/repo/micronaut-test-junit5/4.1.1/micronaut-test-junit5-4.1.1.pom,verify passed : build/repo/micronaut-test-kotest5/4.1.1/micronaut-test-kotest5-4.1.1.jar,verify passed : build/repo/micronaut-test-kotest5/4.1.1/micronaut-test-kotest5-4.1.1.pom,verify passed : build/repo/micronaut-test-rest-assured/4.1.1/micronaut-test-rest-assured-4.1.1.jar,verify passed : build/repo/micronaut-test-rest-assured/4.1.1/micronaut-test-rest-assured-4.1.1.pom,verify passed : build/repo/micronaut-test-spock/4.1.1/micronaut-test-spock-4.1.1.jar,verify passed : build/repo/micronaut-test-spock/4.1.1/micronaut-test-spock-4.1.1.pom"
+                        "Not Available."
                     ],
                     "result_type": "PASSED"
                 },
@@ -421,7 +467,7 @@
                     ],
                     "justification": [
                         {
-                            "This is a Git repository": "https://github.com/micronaut-projects/micronaut-test"
+                            "git_repo": "https://github.com/micronaut-projects/micronaut-test"
                         }
                     ],
                     "result_type": "PASSED"
@@ -433,7 +479,29 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "Unable to find a publishing timestamp for the artifact."
+                        "Not Available."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_commit_1",
+                    "check_description": "Check whether the commit came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "commit_digest: No provenance found."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_repo_1",
+                    "check_description": "Check whether the repo came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "repository_url: No provenance found."
                     ],
                     "result_type": "FAILED"
                 },
@@ -447,7 +515,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Failed to discover any witness provenance."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -461,7 +529,7 @@
                         "Ephemeral environment - SLSA Level 3"
                     ],
                     "justification": [
-                        "Could not find a trusted level 3 builder as a GitHub Actions workflow."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 }
@@ -473,8 +541,8 @@
         "unique_dep_repos": 2,
         "checks_summary": [
             {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 2
+                "check_id": "mcn_provenance_available_1",
+                "num_deps_pass": 0
             },
             {
                 "check_id": "mcn_provenance_witness_level_one_1",
@@ -485,6 +553,18 @@
                 "num_deps_pass": 1
             },
             {
+                "check_id": "mcn_provenance_derived_commit_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 2
+            },
+            {
                 "check_id": "mcn_infer_artifact_pipeline_1",
                 "num_deps_pass": 0
             },
@@ -493,11 +573,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_level_three_1",
-                "num_deps_pass": 0
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 2
             },
             {
-                "check_id": "mcn_build_script_1",
+                "check_id": "mcn_build_service_1",
                 "num_deps_pass": 2
             },
             {
@@ -505,12 +585,8 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_provenance_derived_repo_1",
                 "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
-                "num_deps_pass": 2
             }
         ],
         "dep_status": [

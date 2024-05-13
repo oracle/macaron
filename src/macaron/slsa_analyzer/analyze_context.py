@@ -46,6 +46,10 @@ class ChecksOutputs(TypedDict):
     """The package registries for the target software component."""
     provenance: InTotoPayload | None
     """The provenance payload for the target software component."""
+    provenance_repo: str | None
+    """The repository URL extracted from provenance, if applicable."""
+    provenance_commit: str | None
+    """The commit digest extracted from provenance, if applicable."""
 
 
 class AnalyzeContext:
@@ -97,6 +101,8 @@ class AnalyzeContext:
             is_inferred_prov=True,
             expectation=None,
             provenance=None,
+            provenance_repo=None,
+            provenance_commit=None,
         )
 
     @property

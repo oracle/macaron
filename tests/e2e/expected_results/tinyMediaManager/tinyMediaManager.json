@@ -1,6 +1,39 @@
 {
     "metadata": {
-        "timestamps": "2023-09-12 17:07:11"
+        "timestamps": "2024-05-07 15:09:37",
+        "has_passing_check": true,
+        "run_checks": [
+            "mcn_provenance_available_1",
+            "mcn_provenance_witness_level_one_1",
+            "mcn_build_as_code_1",
+            "mcn_provenance_derived_commit_1",
+            "mcn_provenance_level_three_1",
+            "mcn_version_control_system_1",
+            "mcn_infer_artifact_pipeline_1",
+            "mcn_trusted_builder_level_three_1",
+            "mcn_build_script_1",
+            "mcn_build_service_1",
+            "mcn_provenance_expectation_1",
+            "mcn_provenance_derived_repo_1"
+        ],
+        "check_tree": {
+            "mcn_provenance_available_1": {
+                "mcn_provenance_level_three_1": {},
+                "mcn_provenance_witness_level_one_1": {},
+                "mcn_provenance_expectation_1": {}
+            },
+            "mcn_provenance_derived_commit_1": {},
+            "mcn_version_control_system_1": {
+                "mcn_trusted_builder_level_three_1": {
+                    "mcn_build_as_code_1": {
+                        "mcn_infer_artifact_pipeline_1": {},
+                        "mcn_build_service_1": {}
+                    }
+                },
+                "mcn_build_script_1": {}
+            },
+            "mcn_provenance_derived_repo_1": {}
+        }
     },
     "target": {
         "info": {
@@ -65,7 +98,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 8,
+                "FAILED": 10,
                 "PASSED": 2,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -78,8 +111,7 @@
                         "Scripted Build - SLSA Level 1"
                     ],
                     "justification": [
-                        "The target repository uses build tool maven.",
-                        "The target repository uses build tool docker."
+                        "Not Available."
                     ],
                     "result_type": "PASSED"
                 },
@@ -91,7 +123,7 @@
                     ],
                     "justification": [
                         {
-                            "This is a Git repository": "https://gitlab.com/tinyMediaManager/tinyMediaManager"
+                            "git_repo": "https://gitlab.com/tinyMediaManager/tinyMediaManager"
                         }
                     ],
                     "result_type": "PASSED"
@@ -103,8 +135,7 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "The target repository does not use maven to deploy.",
-                        "The target repository does not use docker to deploy."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -115,9 +146,7 @@
                         "Build service - SLSA Level 2"
                     ],
                     "justification": [
-                        "The target repository does not have a build service for maven.",
-                        "The target repository does not have a build service for docker.",
-                        "The target repository does not have a build service for at least one build tool."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -128,7 +157,7 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "Check mcn_infer_artifact_pipeline_1 is set to FAILED because mcn_build_as_code_1 FAILED."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -142,7 +171,29 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Could not find any SLSA provenances."
+                        "Not Available."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_commit_1",
+                    "check_description": "Check whether the commit came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "commit_digest: No provenance found."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_repo_1",
+                    "check_description": "Check whether the repo came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "repository_url: No provenance found."
                     ],
                     "result_type": "FAILED"
                 },
@@ -153,7 +204,7 @@
                         "Provenance conforms with expectations - SLSA Level 3"
                     ],
                     "justification": [
-                        "Check mcn_provenance_expectation_1 is set to FAILED because mcn_provenance_available_1 FAILED."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -167,7 +218,7 @@
                         "Provenance content - Identifies source code - SLSA Level 2"
                     ],
                     "justification": [
-                        "Check mcn_provenance_level_three_1 is set to FAILED because mcn_provenance_available_1 FAILED."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -181,7 +232,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Check mcn_provenance_witness_level_one_1 is set to FAILED because mcn_provenance_available_1 FAILED."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -195,7 +246,7 @@
                         "Ephemeral environment - SLSA Level 3"
                     ],
                     "justification": [
-                        "Could not find a trusted level 3 builder as a GitHub Actions workflow."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 }
@@ -207,7 +258,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
             {
@@ -215,19 +266,23 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_infer_artifact_pipeline_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_provenance_derived_commit_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
                 "num_deps_pass": 0
             },
             {
@@ -239,11 +294,15 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_level_three_1",
+                "check_id": "mcn_build_service_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_service_1",
+                "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_derived_repo_1",
                 "num_deps_pass": 0
             }
         ],
