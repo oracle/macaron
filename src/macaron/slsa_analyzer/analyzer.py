@@ -318,10 +318,12 @@ class Analyzer:
             provenance_payload = ProvenanceFinder().find_provenance(parsed_purl)
 
         # Try to extract the repository URL and commit digest from the Provenance, if it exists.
-        provenance_repo = provenance_commit = None
+        provenance_repo_url = provenance_commit_digest = None
         if provenance_payload:
             try:
-                provenance_repo, provenance_commit = extract_repo_and_commit_from_provenance(provenance_payload)
+                provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
+                    provenance_payload
+                )
             except ProvenanceError as error:
                 logger.debug("Failed to extract repo or commit from provenance: %s", error)
 
@@ -329,7 +331,7 @@ class Analyzer:
         available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
         try:
             analysis_target = Analyzer.to_analysis_target(
-                config, available_domains, parsed_purl, provenance_repo, provenance_commit
+                config, available_domains, parsed_purl, provenance_repo_url, provenance_commit_digest
             )
         except InvalidAnalysisTargetError as error:
             return Record(
@@ -377,8 +379,8 @@ class Analyzer:
         analyze_ctx.dynamic_data["provenance"] = provenance_payload
         if provenance_payload:
             analyze_ctx.dynamic_data["is_inferred_prov"] = False
-        analyze_ctx.dynamic_data["provenance_repo"] = provenance_repo
-        analyze_ctx.dynamic_data["provenance_commit"] = provenance_commit
+        analyze_ctx.dynamic_data["provenance_repo_url"] = provenance_repo_url
+        analyze_ctx.dynamic_data["provenance_commit_digest"] = provenance_commit_digest
         analyze_ctx.check_results = self.perform_checks(analyze_ctx)
 
         return Record(
@@ -634,8 +636,8 @@ class Analyzer:
         config: Configuration,
         available_domains: list[str],
         parsed_purl: PackageURL | None,
-        provenance_repo: str | None = None,
-        provenance_commit: str | None = None,
+        provenance_repo_url: str | None = None,
+        provenance_commit_digest: str | None = None,
     ) -> AnalysisTarget:
         """Resolve the details of a software component from user input.
 
@@ -648,9 +650,9 @@ class Analyzer:
             of the corresponding software component.
         parsed_purl: PackageURL | None
             The PURL to use for the analysis target, or None if one has not been provided.
-        provenance_repo: str | None
+        provenance_repo_url: str | None
             The repository URL extracted from provenance, or None if not found or no provenance.
-        provenance_commit: str | None
+        provenance_commit_digest: str | None
             The commit extracted from provenance, or None if not found or no provenance.
 
         Returns
@@ -680,12 +682,12 @@ class Analyzer:
                 repo: str | None = None
                 # parsed_purl cannot be None here, but mypy cannot detect that without some extra help.
                 if parsed_purl is not None:
-                    if provenance_repo or provenance_commit:
+                    if provenance_repo_url or provenance_commit_digest:
                         return Analyzer.AnalysisTarget(
                             parsed_purl=parsed_purl,
-                            repo_path=provenance_repo or "",
+                            repo_path=provenance_repo_url or "",
                             branch="",
-                            digest=provenance_commit or "",
+                            digest=provenance_commit_digest or "",
                         )
 
                     # As there is no repo or commit from provenance, use the Repo Finder to find the repo.
@@ -723,7 +725,7 @@ class Analyzer:
                     parsed_purl=parsed_purl,
                     repo_path=repo_path_input,
                     branch=input_branch,
-                    digest=provenance_commit or "",
+                    digest=provenance_commit_digest or "",
                 )
 
             case _:
