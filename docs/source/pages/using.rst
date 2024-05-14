@@ -304,11 +304,6 @@ An example configuration file for utilising this feature:
 Analyzing a repository on the local file system
 -----------------------------------------------
 
-.. warning::
-  During the analysis, Macaron can check out different commits, which can reset the index and working tree of the repository.
-  Therefore, any uncommitted changes in the repository need to be backed up to prevent loss (these include unstaged changes, staged changes and untracked files).
-  However, Macaron will not modify the history of the repository.
-
 .. note::
   We assume that the ``origin`` remote exists in the cloned repository and checkout the relevant commits from ``origin`` only.
 
@@ -378,7 +373,12 @@ With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``--b
 
 The ``--local-repos-path/-lr`` flag tells Macaron to look into ``./boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
 
-.. note:: If ``--local-repos-path/-lr`` is not provided, Macaron will looks inside ``<current_working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``--repo-path/-rp``.
+.. note:: If ``--local-repos-path/-lr`` is not provided, Macaron will look inside ``<current_working_directory>/output/git_repos/local_repos/`` whenever you provide a local path to ``--repo-path/-rp``.
+
+.. warning::
+  Macaron by default analyzes the current state of the local repository. However, if the user provides a branch or commit hash as input, Macaron may reset the index and working tree of the repository to check out a specific commit.
+  Therefore, any uncommitted changes in the repository need to be backed up to prevent loss (these include unstaged changes, staged changes and untracked files).
+  However, Macaron will not modify the history of the repository.
 
 -------------------------
 Running the policy engine
