@@ -123,8 +123,10 @@ def check_out_repo_target(
     will prune and update all references (e.g. tags, branches) to make sure that the local repository is up-to-date
     with the repository specified by origin remote.
 
-    If ``branch_name`` and a commit are not provided, this function will checkout the latest commit of the
-    default branch (i.e. origin/HEAD).
+    If ``offline_mode`` is True and neither ``branch_name`` nor commit are provided, this function will not do anything
+    and the HEAD commit will be analyzed. If there are uncommitted local changes, the HEAD commit will
+    appear in the report but the repo with local changes will be analyzed. We leave it up to the user to decide
+    whether to commit the changes or not.
 
     If ``branch_name`` is provided and a commit is not provided, this function will checkout that branch from origin
     remote (i.e. origin/<branch_name).
@@ -181,13 +183,15 @@ def check_out_repo_target(
             logger.error("Unable to fetch from the origin remote of the repository.")
             return False
 
-    if not branch_name and not digest:
-        try:
-            git_obj.repo.git.checkout("--force", "origin/HEAD")
-        except GitCommandError:
-            logger.debug("Cannot checkout the default branch at origin/HEAD")
-            return False
+        # By default check out the commit at origin/HEAD only when offline_mode is False.
+        if not branch_name and not digest:
+            try:
+                git_obj.repo.git.checkout("--force", "origin/HEAD")
+            except GitCommandError:
+                logger.debug("Cannot checkout the default branch at origin/HEAD")
+                return False
 
+    # The following checkout operations will be done whether offline_mode is False or not.
     if branch_name and not digest:
         try:
             git_obj.repo.git.checkout("--force", f"origin/{branch_name}")
@@ -229,7 +233,7 @@ def check_out_repo_target(
         logger.critical("The current HEAD at %s. Expect %s.", final_head_commit.hexsha, digest)
         return False
 
-    logger.info("Successfully checked out commit %s.", final_head_commit.hexsha)
+    logger.info("The HEAD commit is %s.", final_head_commit.hexsha)
     return True
 
 
