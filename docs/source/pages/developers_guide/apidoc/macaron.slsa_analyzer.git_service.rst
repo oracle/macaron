@@ -48,3 +48,11 @@ macaron.slsa\_analyzer.git\_service.gitlab module
    :members:
    :undoc-members:
    :show-inheritance:
+
+macaron.slsa\_analyzer.git\_service.local\_repo\_git\_service module
+--------------------------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.git_service.local_repo_git_service
+   :members:
+   :undoc-members:
+   :show-inheritance:

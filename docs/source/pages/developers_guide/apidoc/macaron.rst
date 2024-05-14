@@ -42,6 +42,14 @@ macaron.errors module
    :undoc-members:
    :show-inheritance:
 
+macaron.json\_tools module
+--------------------------
+
+.. automodule:: macaron.json_tools
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.util module
 -------------------
 
