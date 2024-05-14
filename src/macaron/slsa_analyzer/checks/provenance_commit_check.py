@@ -63,7 +63,7 @@ class ProvenanceDerivedCommitCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        if ctx.dynamic_data["provenance_commit"]:
+        if ctx.dynamic_data["provenance_commit_digest"]:
             if not ctx.component.repository:
                 return CheckResultData(
                     result_tables=[],
@@ -72,7 +72,7 @@ class ProvenanceDerivedCommitCheck(BaseCheck):
 
             current_commit = ctx.component.repository.commit_sha
 
-            if current_commit == ctx.dynamic_data["provenance_commit"]:
+            if current_commit == ctx.dynamic_data["provenance_commit_digest"]:
                 return CheckResultData(
                     result_tables=[
                         ProvenanceDerivedCommitFacts(

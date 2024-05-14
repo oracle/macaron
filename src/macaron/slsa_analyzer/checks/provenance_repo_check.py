@@ -63,7 +63,7 @@ class ProvenanceDerivedRepoCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        if ctx.dynamic_data["provenance_repo"]:
+        if ctx.dynamic_data["provenance_repo_url"]:
             if not ctx.component.repository:
                 return CheckResultData(
                     result_tables=[],
@@ -72,7 +72,7 @@ class ProvenanceDerivedRepoCheck(BaseCheck):
 
             current_repository = ctx.component.repository.remote_path
 
-            if current_repository == ctx.dynamic_data["provenance_repo"]:
+            if current_repository == ctx.dynamic_data["provenance_repo_url"]:
                 return CheckResultData(
                     result_tables=[
                         ProvenanceDerivedRepoFacts(
