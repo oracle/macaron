@@ -124,7 +124,7 @@ def check_out_repo_target(
     with the repository specified by origin remote.
 
     If ``offline_mode`` is True and neither ``branch_name`` nor commit are provided, this function will not do anything
-    and the latest local commit will be analyzed. If there are uncommitted local changes, the latest commit will
+    and the HEAD commit will be analyzed. If there are uncommitted local changes, the HEAD commit will
     appear in the report but the repo with local changes will be analyzed. We leave it up to the user to decide
     whether to commit the changes or not.
 
@@ -233,7 +233,7 @@ def check_out_repo_target(
         logger.critical("The current HEAD at %s. Expect %s.", final_head_commit.hexsha, digest)
         return False
 
-    logger.info("The latest commit is %s.", final_head_commit.hexsha)
+    logger.info("The HEAD commit is %s.", final_head_commit.hexsha)
     return True
 
 
