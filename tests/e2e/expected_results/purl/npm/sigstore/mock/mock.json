@@ -1,7 +1,39 @@
 {
     "metadata": {
-        "timestamps": "2023-11-14 13:14:10",
-        "has_passing_check": true
+        "timestamps": "2024-05-07 15:27:41",
+        "has_passing_check": true,
+        "run_checks": [
+            "mcn_provenance_available_1",
+            "mcn_provenance_witness_level_one_1",
+            "mcn_build_as_code_1",
+            "mcn_provenance_derived_commit_1",
+            "mcn_provenance_level_three_1",
+            "mcn_version_control_system_1",
+            "mcn_infer_artifact_pipeline_1",
+            "mcn_trusted_builder_level_three_1",
+            "mcn_build_script_1",
+            "mcn_build_service_1",
+            "mcn_provenance_expectation_1",
+            "mcn_provenance_derived_repo_1"
+        ],
+        "check_tree": {
+            "mcn_provenance_available_1": {
+                "mcn_provenance_witness_level_one_1": {},
+                "mcn_provenance_level_three_1": {},
+                "mcn_provenance_expectation_1": {}
+            },
+            "mcn_provenance_derived_commit_1": {},
+            "mcn_version_control_system_1": {
+                "mcn_build_script_1": {},
+                "mcn_trusted_builder_level_three_1": {
+                    "mcn_build_as_code_1": {
+                        "mcn_infer_artifact_pipeline_1": {},
+                        "mcn_build_service_1": {}
+                    }
+                }
+            },
+            "mcn_provenance_derived_repo_1": {}
+        }
     },
     "target": {
         "info": {
@@ -124,7 +156,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 4,
+                "FAILED": 6,
                 "PASSED": 5,
                 "SKIPPED": 0,
                 "UNKNOWN": 1
@@ -137,7 +169,7 @@
                         "Provenance conforms with expectations - SLSA Level 3"
                     ],
                     "justification": [
-                        "No expectation defined for this repository."
+                        "Not Available."
                     ],
                     "result_type": "UNKNOWN"
                 },
@@ -148,13 +180,13 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
+                        "build_tool_name: npm",
+                        "ci_service_name: github_actions",
+                        "language: javascript",
+                        "deploy_command: changesets/action",
                         {
-                            "The target repository uses build tool npm to deploy": "https://github.com/sigstore/sigstore-js/blob/ebdcfdfbdfeb9c9aeee6df53674ef230613629f5/.github/workflows/release.yml",
-                            "The build is triggered by": "https://github.com/sigstore/sigstore-js/blob/ebdcfdfbdfeb9c9aeee6df53674ef230613629f5/.github/workflows/release.yml"
-                        },
-                        "Deploy action: changesets/action",
-                        "However, could not find a passing workflow run.",
-                        "The target repository does not use yarn to deploy."
+                            "build_trigger": "https://github.com/sigstore/sigstore-js/blob/ebdcfdfbdfeb9c9aeee6df53674ef230613629f5/.github/workflows/release.yml"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -165,7 +197,13 @@
                         "Scripted Build - SLSA Level 1"
                     ],
                     "justification": [
-                        "Check mcn_build_script_1 is set to PASSED because mcn_build_service_1 PASSED."
+                        "build_tool_name: npm",
+                        "ci_service_name: github_actions",
+                        "language: BuildLanguage.JAVASCRIPT",
+                        "build_tool_command: [\"npm\", \"ci\"]",
+                        {
+                            "build_trigger": "https://github.com/sigstore/sigstore-js/blob/ebdcfdfbdfeb9c9aeee6df53674ef230613629f5/.github/workflows/ci.yml"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -176,7 +214,7 @@
                         "Build service - SLSA Level 2"
                     ],
                     "justification": [
-                        "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
+                        "Not Available."
                     ],
                     "result_type": "PASSED"
                 },
@@ -190,8 +228,10 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Found provenance in release assets:",
-                        "https://registry.npmjs.org/-/npm/v1/attestations/@sigstore/mock@0.1.0"
+                        "asset_name: mock",
+                        {
+                            "asset_url": "https://registry.npmjs.org/-/npm/v1/attestations/@sigstore/mock@0.1.0"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -203,7 +243,7 @@
                     ],
                     "justification": [
                         {
-                            "This is a Git repository": "https://github.com/sigstore/sigstore-js"
+                            "git_repo": "https://github.com/sigstore/sigstore-js"
                         }
                     ],
                     "result_type": "PASSED"
@@ -215,7 +255,29 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "Unable to find a publishing timestamp for the artifact."
+                        "Not Available."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_commit_1",
+                    "check_description": "Check whether the commit came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "commit_digest: No provenance found."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_repo_1",
+                    "check_description": "Check whether the repo came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "repository_url: No provenance found."
                     ],
                     "result_type": "FAILED"
                 },
@@ -229,7 +291,7 @@
                         "Provenance content - Identifies source code - SLSA Level 2"
                     ],
                     "justification": [
-                        "Could not verify level 3 provenance."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -243,7 +305,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Failed to discover any witness provenance."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -257,7 +319,7 @@
                         "Ephemeral environment - SLSA Level 3"
                     ],
                     "justification": [
-                        "Could not find a trusted level 3 builder as a GitHub Actions workflow."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 }
@@ -269,7 +331,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_provenance_expectation_1",
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
             {
@@ -277,19 +339,23 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_infer_artifact_pipeline_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_provenance_derived_commit_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
                 "num_deps_pass": 0
             },
             {
@@ -301,11 +367,15 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_level_three_1",
+                "check_id": "mcn_build_service_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_service_1",
+                "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_derived_repo_1",
                 "num_deps_pass": 0
             }
         ],

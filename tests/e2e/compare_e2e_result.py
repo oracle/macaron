@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module checks the result JSON files against the expected outputs."""
@@ -54,6 +54,7 @@ def compare_check_results(result: dict, expected: dict) -> int:
         # For each requirement the "justification" can be nondeterministic
         # if it contains a path to a file, so we remove it.
         res_req["justification"] = exp_req["justification"] = ""
+        res_req["slsa_requirements"] = exp_req["slsa_requirements"] = ""
 
         if res_req["check_id"] == exp_req["check_id"]:
             for key, value in exp_req.items():

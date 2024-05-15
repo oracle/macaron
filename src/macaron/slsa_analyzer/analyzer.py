@@ -317,10 +317,22 @@ class Analyzer:
             # Try to find the provenance file for the parsed PURL.
             provenance_payload = ProvenanceFinder().find_provenance(parsed_purl)
 
+        # Try to extract the repository URL and commit digest from the Provenance, if it exists.
+        provenance_repo_url = provenance_commit_digest = None
+        if provenance_payload:
+            try:
+                provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
+                    provenance_payload
+                )
+            except ProvenanceError as error:
+                logger.debug("Failed to extract repo or commit from provenance: %s", error)
+
         # Create the analysis target.
         available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
         try:
-            analysis_target = Analyzer.to_analysis_target(config, available_domains, parsed_purl, provenance_payload)
+            analysis_target = Analyzer.to_analysis_target(
+                config, available_domains, parsed_purl, provenance_repo_url, provenance_commit_digest
+            )
         except InvalidAnalysisTargetError as error:
             return Record(
                 record_id=repo_id,
@@ -330,7 +342,6 @@ class Analyzer:
             )
 
         # Create the component.
-        component = None
         try:
             component = self.add_component(
                 analysis,
@@ -368,6 +379,8 @@ class Analyzer:
         analyze_ctx.dynamic_data["provenance"] = provenance_payload
         if provenance_payload:
             analyze_ctx.dynamic_data["is_inferred_prov"] = False
+        analyze_ctx.dynamic_data["provenance_repo_url"] = provenance_repo_url
+        analyze_ctx.dynamic_data["provenance_commit_digest"] = provenance_commit_digest
         analyze_ctx.check_results = self.perform_checks(analyze_ctx)
 
         return Record(
@@ -506,6 +519,8 @@ class Analyzer:
             The target of this analysis.
         existing_records : dict[str, Record] | None
             The mapping of existing records that the analysis has run successfully.
+        provenance_payload: InTotoVPayload | None
+            The provenance intoto payload for the analyzed software component.
 
         Returns
         -------
@@ -621,7 +636,8 @@ class Analyzer:
         config: Configuration,
         available_domains: list[str],
         parsed_purl: PackageURL | None,
-        provenance_payload: InTotoPayload | None = None,
+        provenance_repo_url: str | None = None,
+        provenance_commit_digest: str | None = None,
     ) -> AnalysisTarget:
         """Resolve the details of a software component from user input.
 
@@ -634,8 +650,10 @@ class Analyzer:
             of the corresponding software component.
         parsed_purl: PackageURL | None
             The PURL to use for the analysis target, or None if one has not been provided.
-        provenance_payload : InToToPayload | None
-            The provenance in-toto payload for the software component.
+        provenance_repo_url: str | None
+            The repository URL extracted from provenance, or None if not found or no provenance.
+        provenance_commit_digest: str | None
+            The commit extracted from provenance, or None if not found or no provenance.
 
         Returns
         -------
@@ -662,24 +680,17 @@ class Analyzer:
                 # Note that we can't always extract the repository path from any provided PURL.
                 converted_repo_path = None
                 repo: str | None = None
-                digest: str | None = None
                 # parsed_purl cannot be None here, but mypy cannot detect that without some extra help.
                 if parsed_purl is not None:
-                    if provenance_payload:
-                        # Try to find repository and commit via provenance.
-                        try:
-                            repo, digest = extract_repo_and_commit_from_provenance(provenance_payload)
-                        except ProvenanceError as error:
-                            logger.debug("Failed to extract repo or commit from provenance: %s", error)
-
+                    if provenance_repo_url or provenance_commit_digest:
                         return Analyzer.AnalysisTarget(
                             parsed_purl=parsed_purl,
-                            repo_path=repo or "",
+                            repo_path=provenance_repo_url or "",
                             branch="",
-                            digest=digest or "",
+                            digest=provenance_commit_digest or "",
                         )
 
-                    # As there is no provenance, use the Repo Finder to find the repo.
+                    # As there is no repo or commit from provenance, use the Repo Finder to find the repo.
                     converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)
                     if converted_repo_path is None:
                         # Try to find repo from PURL
@@ -693,8 +704,8 @@ class Analyzer:
                 )
 
             case (_, _) | (None, _):
-                # 1. If only the repository path is provided, we will use the user-provided repository path to create the
-                # ``Repository`` instance. Note that if this case happen, the software component will be initialized
+                # 1. If only the repository path is provided, we will use the user-provided repository path to create
+                # the``Repository`` instance. Note that if this case happen, the software component will be initialized
                 # with the PURL generated from the ``Repository`` instance (i.e. as a PURL pointing to a git repository
                 # at a specific commit). For example: ``pkg:github.com/org/name@<commit_digest>``.
                 # 2. If both the PURL and the repository are provided, we will use the user-provided repository path to
@@ -710,22 +721,15 @@ class Analyzer:
                         digest=input_digest,
                     )
 
-                prov_digest = None
-                if provenance_payload:
-                    try:
-                        _, prov_digest = extract_repo_and_commit_from_provenance(provenance_payload)
-                    except ProvenanceError as error:
-                        logger.debug("Failed to extract commit from provenance: %s", error)
-
                 return Analyzer.AnalysisTarget(
                     parsed_purl=parsed_purl,
                     repo_path=repo_path_input,
                     branch=input_branch,
-                    digest=prov_digest or "",
+                    digest=provenance_commit_digest or "",
                 )
 
             case _:
-                # Even though this case is unecessary, it is still put here because mypy cannot type-narrow tuples
+                # Even though this case is unnecessary, it is still put here because mypy cannot type-narrow tuples
                 # correctly (see https://github.com/python/mypy/pull/16905, which was fixed, but not released).
                 raise InvalidAnalysisTargetError(
                     "Cannot determine the analysis target: PURL and repository path are missing."

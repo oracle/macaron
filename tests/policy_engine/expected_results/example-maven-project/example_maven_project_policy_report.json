@@ -1,7 +1,7 @@
 {
     "component_satisfies_policy": [
         [
-            "1",
+            "176",
             "pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar",
             "example_maven_app_policy"
         ],
@@ -11,11 +11,11 @@
             "example_maven_app_policy"
         ]
     ],
+    "component_violates_policy": [],
+    "failed_policies": [],
     "passed_policies": [
         [
             "example_maven_app_policy"
         ]
-    ],
-    "component_violates_policy": [],
-    "failed_policies": []
+    ]
 }

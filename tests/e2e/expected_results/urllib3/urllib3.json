@@ -1,6 +1,39 @@
 {
     "metadata": {
-        "timestamps": "2023-09-22 14:22:34"
+        "timestamps": "2024-05-07 15:09:58",
+        "has_passing_check": true,
+        "run_checks": [
+            "mcn_provenance_available_1",
+            "mcn_provenance_witness_level_one_1",
+            "mcn_build_as_code_1",
+            "mcn_provenance_derived_commit_1",
+            "mcn_provenance_level_three_1",
+            "mcn_version_control_system_1",
+            "mcn_infer_artifact_pipeline_1",
+            "mcn_trusted_builder_level_three_1",
+            "mcn_build_script_1",
+            "mcn_build_service_1",
+            "mcn_provenance_expectation_1",
+            "mcn_provenance_derived_repo_1"
+        ],
+        "check_tree": {
+            "mcn_provenance_available_1": {
+                "mcn_provenance_expectation_1": {},
+                "mcn_provenance_level_three_1": {},
+                "mcn_provenance_witness_level_one_1": {}
+            },
+            "mcn_provenance_derived_commit_1": {},
+            "mcn_version_control_system_1": {
+                "mcn_build_script_1": {},
+                "mcn_trusted_builder_level_three_1": {
+                    "mcn_build_as_code_1": {
+                        "mcn_infer_artifact_pipeline_1": {},
+                        "mcn_build_service_1": {}
+                    }
+                }
+            },
+            "mcn_provenance_derived_repo_1": {}
+        }
     },
     "target": {
         "info": {
@@ -20,15 +53,15 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "subject": [
                             {
-                                "name": "urllib3-2.0.5-py3-none-any.whl",
+                                "name": "urllib3-2.2.1-py3-none-any.whl",
                                 "digest": {
-                                    "sha256": "ef16afa8ba34a1f989db38e1dbbe0c302e4289a47856990d0682e374563ce35e"
+                                    "sha256": "450b20ec296a467077128bff42b73080516e71b56ff59a60a02bef2232c4fa9d"
                                 }
                             },
                             {
-                                "name": "urllib3-2.0.5.tar.gz",
+                                "name": "urllib3-2.2.1.tar.gz",
                                 "digest": {
-                                    "sha256": "13abf37382ea2ce6fb744d4dad67838eec857c9f4f57009891805e0b5e123594"
+                                    "sha256": "d0570876c61ab9e520d776c38acbbb5b05a776d3f9ff98a5c8fd5162a444cf19"
                                 }
                             }
                         ],
@@ -39,9 +72,9 @@
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/v2.0.5",
+                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/2.2.1",
                                     "digest": {
-                                        "sha1": "d9f85a749488188c286cd50606d159874db94d5f"
+                                        "sha1": "54d6edf2a671510a5c029d3b76ffe71a5b07147a"
                                     },
                                     "entryPoint": ".github/workflows/publish.yml"
                                 },
@@ -52,11 +85,11 @@
                                     "github_base_ref": "",
                                     "github_event_name": "push",
                                     "github_event_payload": {
-                                        "after": "d4e424a471c79f245740a3734567e7402c036620",
+                                        "after": "0b4566e65ca046823dd92a490ae33c17bbb88fcb",
                                         "base_ref": null,
                                         "before": "0000000000000000000000000000000000000000",
                                         "commits": [],
-                                        "compare": "https://github.com/urllib3/urllib3/compare/v2.0.5",
+                                        "compare": "https://github.com/urllib3/urllib3/compare/2.2.1",
                                         "created": true,
                                         "deleted": false,
                                         "forced": false,
@@ -72,11 +105,11 @@
                                                 "username": "web-flow"
                                             },
                                             "distinct": true,
-                                            "id": "d9f85a749488188c286cd50606d159874db94d5f",
-                                            "message": "Release 2.0.5",
-                                            "timestamp": "2023-09-20T08:59:31+02:00",
-                                            "tree_id": "842632ede50bc641555c90779642ab521e0c1401",
-                                            "url": "https://github.com/urllib3/urllib3/commit/d9f85a749488188c286cd50606d159874db94d5f"
+                                            "id": "54d6edf2a671510a5c029d3b76ffe71a5b07147a",
+                                            "message": "Release 2.2.1",
+                                            "timestamp": "2024-02-18T07:44:08+04:00",
+                                            "tree_id": "a702e15d622eccc7cf18243e6a4a62d19e19579d",
+                                            "url": "https://github.com/urllib3/urllib3/commit/54d6edf2a671510a5c029d3b76ffe71a5b07147a"
                                         },
                                         "organization": {
                                             "avatar_url": "https://avatars.githubusercontent.com/u/26825299?v=4",
@@ -96,7 +129,7 @@
                                             "email": "quentin.pradet@gmail.com",
                                             "name": "pquentin"
                                         },
-                                        "ref": "refs/tags/v2.0.5",
+                                        "ref": "refs/tags/2.2.1",
                                         "repository": {
                                             "allow_forking": true,
                                             "archive_url": "https://api.github.com/repos/urllib3/urllib3/{archive_format}{/ref}",
@@ -112,6 +145,7 @@
                                             "contents_url": "https://api.github.com/repos/urllib3/urllib3/contents/{+path}",
                                             "contributors_url": "https://api.github.com/repos/urllib3/urllib3/contributors",
                                             "created_at": 1316369308,
+                                            "custom_properties": {},
                                             "default_branch": "main",
                                             "deployments_url": "https://api.github.com/repos/urllib3/urllib3/deployments",
                                             "description": "urllib3 is a user-friendly HTTP client library for Python",
@@ -119,8 +153,8 @@
                                             "downloads_url": "https://api.github.com/repos/urllib3/urllib3/downloads",
                                             "events_url": "https://api.github.com/repos/urllib3/urllib3/events",
                                             "fork": false,
-                                            "forks": 1092,
-                                            "forks_count": 1092,
+                                            "forks": 1134,
+                                            "forks_count": 1134,
                                             "forks_url": "https://api.github.com/repos/urllib3/urllib3/forks",
                                             "full_name": "urllib3/urllib3",
                                             "git_commits_url": "https://api.github.com/repos/urllib3/urllib3/git/commits{/sha}",
@@ -159,8 +193,8 @@
                                             "name": "urllib3",
                                             "node_id": "MDEwOlJlcG9zaXRvcnkyNDEwNjc2",
                                             "notifications_url": "https://api.github.com/repos/urllib3/urllib3/notifications{?since,all,participating}",
-                                            "open_issues": 130,
-                                            "open_issues_count": 130,
+                                            "open_issues": 137,
+                                            "open_issues_count": 137,
                                             "organization": "urllib3",
                                             "owner": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/26825299?v=4",
@@ -186,12 +220,12 @@
                                             },
                                             "private": false,
                                             "pulls_url": "https://api.github.com/repos/urllib3/urllib3/pulls{/number}",
-                                            "pushed_at": 1695193235,
+                                            "pushed_at": 1708227973,
                                             "releases_url": "https://api.github.com/repos/urllib3/urllib3/releases{/id}",
-                                            "size": 6839,
+                                            "size": 7144,
                                             "ssh_url": "git@github.com:urllib3/urllib3.git",
-                                            "stargazers": 3485,
-                                            "stargazers_count": 3485,
+                                            "stargazers": 3625,
+                                            "stargazers_count": 3625,
                                             "stargazers_url": "https://api.github.com/repos/urllib3/urllib3/stargazers",
                                             "statuses_url": "https://api.github.com/repos/urllib3/urllib3/statuses/{sha}",
                                             "subscribers_url": "https://api.github.com/repos/urllib3/urllib3/subscribers",
@@ -206,11 +240,11 @@
                                                 "urllib3"
                                             ],
                                             "trees_url": "https://api.github.com/repos/urllib3/urllib3/git/trees{/sha}",
-                                            "updated_at": "2023-09-19T20:11:25Z",
+                                            "updated_at": "2024-02-16T15:03:16Z",
                                             "url": "https://github.com/urllib3/urllib3",
                                             "visibility": "public",
-                                            "watchers": 3485,
-                                            "watchers_count": 3485,
+                                            "watchers": 3625,
+                                            "watchers_count": 3625,
                                             "web_commit_signoff_required": false
                                         },
                                         "sender": {
@@ -235,19 +269,19 @@
                                         }
                                     },
                                     "github_head_ref": "",
-                                    "github_ref": "refs/tags/v2.0.5",
+                                    "github_ref": "refs/tags/2.2.1",
                                     "github_ref_type": "tag",
                                     "github_repository_id": "2410676",
                                     "github_repository_owner": "urllib3",
                                     "github_repository_owner_id": "26825299",
                                     "github_run_attempt": "1",
-                                    "github_run_id": "6245105149",
-                                    "github_run_number": "22",
-                                    "github_sha1": "d9f85a749488188c286cd50606d159874db94d5f"
+                                    "github_run_id": "7946373606",
+                                    "github_run_number": "29",
+                                    "github_sha1": "54d6edf2a671510a5c029d3b76ffe71a5b07147a"
                                 }
                             },
                             "metadata": {
-                                "buildInvocationID": "6245105149-1",
+                                "buildInvocationID": "7946373606-1",
                                 "completeness": {
                                     "parameters": true,
                                     "environment": false,
@@ -257,9 +291,9 @@
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/v2.0.5",
+                                    "uri": "git+https://github.com/urllib3/urllib3@refs/tags/2.2.1",
                                     "digest": {
-                                        "sha1": "d9f85a749488188c286cd50606d159874db94d5f"
+                                        "sha1": "54d6edf2a671510a5c029d3b76ffe71a5b07147a"
                                     }
                                 }
                             ]
@@ -271,7 +305,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 3,
+                "FAILED": 5,
                 "PASSED": 7,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -284,12 +318,13 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
+                        "build_tool_name: pip",
+                        "ci_service_name: github_actions",
+                        "language: python",
+                        "deploy_command: pypa/gh-action-pypi-publish",
                         {
-                            "The target repository uses build tool pip to deploy": "https://github.com/urllib3/urllib3/blob/87a0ecee6e691fe5ff93cd000c0158deebef763b/.github/workflows/publish.yml",
-                            "The build is triggered by": "https://github.com/urllib3/urllib3/blob/87a0ecee6e691fe5ff93cd000c0158deebef763b/.github/workflows/publish.yml"
-                        },
-                        "Deploy action: pypa/gh-action-pypi-publish",
-                        "However, could not find a passing workflow run."
+                            "build_trigger": "https://github.com/urllib3/urllib3/blob/87a0ecee6e691fe5ff93cd000c0158deebef763b/.github/workflows/publish.yml"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -300,7 +335,13 @@
                         "Scripted Build - SLSA Level 1"
                     ],
                     "justification": [
-                        "Check mcn_build_script_1 is set to PASSED because mcn_build_service_1 PASSED."
+                        "build_tool_name: pip",
+                        "ci_service_name: github_actions",
+                        "language: BuildLanguage.PYTHON",
+                        "build_tool_command: [\"python\", \"-m\", \"build\"]",
+                        {
+                            "build_trigger": "https://github.com/urllib3/urllib3/blob/87a0ecee6e691fe5ff93cd000c0158deebef763b/.github/workflows/ci.yml"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -311,7 +352,7 @@
                         "Build service - SLSA Level 2"
                     ],
                     "justification": [
-                        "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
+                        "Not Available."
                     ],
                     "result_type": "PASSED"
                 },
@@ -325,8 +366,10 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Found provenance in release assets:",
-                        "multiple.intoto.jsonl"
+                        "asset_name: multiple.intoto.jsonl",
+                        {
+                            "asset_url": "https://api.github.com/repos/urllib3/urllib3/releases/assets/152179165"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -337,7 +380,9 @@
                         "Provenance conforms with expectations - SLSA Level 3"
                     ],
                     "justification": [
-                        "Successfully verified the expectation against provenance."
+                        {
+                            "asset_url": "https://api.github.com/repos/urllib3/urllib3/releases/assets/152179165"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -351,8 +396,7 @@
                         "Provenance content - Identifies source code - SLSA Level 2"
                     ],
                     "justification": [
-                        "Successfully verified level 3: ",
-                        "verify passed : urllib3-2.0.5-py3-none-any.whl,verify passed : urllib3-2.0.5.tar.gz"
+                        "Not Available."
                     ],
                     "result_type": "PASSED"
                 },
@@ -364,7 +408,7 @@
                     ],
                     "justification": [
                         {
-                            "This is a Git repository": "https://github.com/urllib3/urllib3"
+                            "git_repo": "https://github.com/urllib3/urllib3"
                         }
                     ],
                     "result_type": "PASSED"
@@ -376,7 +420,29 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "Unable to find a publishing timestamp for the artifact."
+                        "Not Available."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_commit_1",
+                    "check_description": "Check whether the commit came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "commit_digest: No provenance found."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_repo_1",
+                    "check_description": "Check whether the repo came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "repository_url: No provenance found."
                     ],
                     "result_type": "FAILED"
                 },
@@ -390,7 +456,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Failed to discover any witness provenance."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -404,7 +470,7 @@
                         "Ephemeral environment - SLSA Level 3"
                     ],
                     "justification": [
-                        "Could not find a trusted level 3 builder as a GitHub Actions workflow."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 }
@@ -416,23 +482,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_infer_artifact_pipeline_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_script_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_trusted_builder_level_three_1",
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
             {
@@ -440,11 +490,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
+                "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_as_code_1",
+                "check_id": "mcn_provenance_derived_commit_1",
                 "num_deps_pass": 0
             },
             {
@@ -452,7 +502,31 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_derived_repo_1",
                 "num_deps_pass": 0
             }
         ],

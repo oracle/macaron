@@ -1,34 +1,38 @@
 {
     "metadata": {
-        "timestamps": "2024-04-10 11:28:34",
+        "timestamps": "2024-05-07 15:14:26",
         "has_passing_check": true,
         "run_checks": [
             "mcn_provenance_available_1",
-            "mcn_version_control_system_1",
             "mcn_provenance_witness_level_one_1",
             "mcn_build_as_code_1",
+            "mcn_provenance_derived_commit_1",
+            "mcn_provenance_level_three_1",
+            "mcn_version_control_system_1",
             "mcn_infer_artifact_pipeline_1",
             "mcn_trusted_builder_level_three_1",
-            "mcn_provenance_level_three_1",
             "mcn_build_script_1",
+            "mcn_build_service_1",
             "mcn_provenance_expectation_1",
-            "mcn_build_service_1"
+            "mcn_provenance_derived_repo_1"
         ],
         "check_tree": {
             "mcn_provenance_available_1": {
                 "mcn_provenance_level_three_1": {},
-                "mcn_provenance_expectation_1": {},
-                "mcn_provenance_witness_level_one_1": {}
+                "mcn_provenance_witness_level_one_1": {},
+                "mcn_provenance_expectation_1": {}
             },
+            "mcn_provenance_derived_commit_1": {},
             "mcn_version_control_system_1": {
+                "mcn_build_script_1": {},
                 "mcn_trusted_builder_level_three_1": {
                     "mcn_build_as_code_1": {
-                        "mcn_build_service_1": {},
-                        "mcn_infer_artifact_pipeline_1": {}
+                        "mcn_infer_artifact_pipeline_1": {},
+                        "mcn_build_service_1": {}
                     }
-                },
-                "mcn_build_script_1": {}
-            }
+                }
+            },
+            "mcn_provenance_derived_repo_1": {}
         }
     },
     "target": {
@@ -49,7 +53,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 8,
+                "FAILED": 10,
                 "PASSED": 2,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -127,6 +131,28 @@
                     "result_type": "FAILED"
                 },
                 {
+                    "check_id": "mcn_provenance_derived_commit_1",
+                    "check_description": "Check whether the commit came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "commit_digest: No provenance found."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_repo_1",
+                    "check_description": "Check whether the repo came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "repository_url: No provenance found."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
                     "check_id": "mcn_provenance_expectation_1",
                     "check_description": "Check whether the SLSA provenance for the produced artifact conforms to the expected value.",
                     "slsa_requirements": [
@@ -191,15 +217,23 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_version_control_system_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {
                 "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_derived_commit_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
                 "num_deps_pass": 0
             },
             {
@@ -211,11 +245,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_level_three_1",
+                "check_id": "mcn_build_script_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_script_1",
+                "check_id": "mcn_build_service_1",
                 "num_deps_pass": 0
             },
             {
@@ -223,7 +257,7 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_service_1",
+                "check_id": "mcn_provenance_derived_repo_1",
                 "num_deps_pass": 0
             }
         ],
