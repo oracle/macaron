@@ -82,10 +82,10 @@ the requirements that are currently supported by Macaron.
    * - 3
      - **Provenance expectation** - Check if the provenance meets an expectation.
      - The user can provide an expectation for the provenance as a CUE policy, which will be compared against the SLSA provenance.
-   * - 4
+   * - 3
      - **Provenance derived repo** - Check if the analysis target's repository matches the repository in the provenance.
      - If there is no provenance, this check will fail.
-   * - 4
+   * - 3
      - **Provenance derived commit** - Check if the analysis target's commit matches the commit in the provenance.
      - If there is no commit, this check will fail.
 

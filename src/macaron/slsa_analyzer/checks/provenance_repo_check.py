@@ -41,7 +41,7 @@ class ProvenanceDerivedRepoCheck(BaseCheck):
         check_id = "mcn_provenance_derived_repo_1"
         description = "Check whether the repo came from provenance."
         depends_on: list[tuple[str, CheckResultType]] = []
-        eval_reqs = [ReqName.SECURITY]
+        eval_reqs = [ReqName.EXPECTATION]
         super().__init__(
             check_id=check_id,
             description=description,

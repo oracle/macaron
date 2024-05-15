@@ -41,7 +41,7 @@ class ProvenanceDerivedCommitCheck(BaseCheck):
         check_id = "mcn_provenance_derived_commit_1"
         description = "Check whether the commit came from provenance."
         depends_on: list[tuple[str, CheckResultType]] = []
-        eval_reqs = [ReqName.SECURITY]
+        eval_reqs = [ReqName.EXPECTATION]
         super().__init__(
             check_id=check_id,
             description=description,
