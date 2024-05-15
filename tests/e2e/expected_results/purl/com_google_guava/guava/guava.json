@@ -1,7 +1,39 @@
 {
     "metadata": {
-        "timestamps": "2024-01-03 15:57:20",
-        "has_passing_check": true
+        "timestamps": "2024-05-07 15:14:23",
+        "has_passing_check": true,
+        "run_checks": [
+            "mcn_provenance_available_1",
+            "mcn_provenance_witness_level_one_1",
+            "mcn_build_as_code_1",
+            "mcn_provenance_derived_commit_1",
+            "mcn_provenance_level_three_1",
+            "mcn_version_control_system_1",
+            "mcn_infer_artifact_pipeline_1",
+            "mcn_trusted_builder_level_three_1",
+            "mcn_build_script_1",
+            "mcn_build_service_1",
+            "mcn_provenance_expectation_1",
+            "mcn_provenance_derived_repo_1"
+        ],
+        "check_tree": {
+            "mcn_provenance_available_1": {
+                "mcn_provenance_witness_level_one_1": {},
+                "mcn_provenance_expectation_1": {},
+                "mcn_provenance_level_three_1": {}
+            },
+            "mcn_provenance_derived_commit_1": {},
+            "mcn_version_control_system_1": {
+                "mcn_build_script_1": {},
+                "mcn_trusted_builder_level_three_1": {
+                    "mcn_build_as_code_1": {
+                        "mcn_infer_artifact_pipeline_1": {},
+                        "mcn_build_service_1": {}
+                    }
+                }
+            },
+            "mcn_provenance_derived_repo_1": {}
+        }
     },
     "target": {
         "info": {
@@ -22,7 +54,7 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/google/guava/blob/db74bd2fdac443223d45e6fc5c66548542be1081/./util/deploy_snapshot.sh"
+                                "id": "https://github.com/google/guava/blob/db74bd2fdac443223d45e6fc5c66548542be1081/.github/workflows/ci.yml"
                             },
                             "buildType": "Custom github_actions",
                             "invocation": {
@@ -38,10 +70,11 @@
                             },
                             "buildConfig": {
                                 "jobID": "publish_snapshot",
-                                "stepID": "Publish"
+                                "stepID": "",
+                                "stepName": "Publish"
                             },
                             "metadata": {
-                                "buildInvocationId": "",
+                                "buildInvocationId": "<STRING>",
                                 "buildStartedOn": "<TIMESTAMP>",
                                 "buildFinishedOn": "<TIMESTAMP>",
                                 "completeness": {
@@ -66,7 +99,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 5,
+                "FAILED": 7,
                 "PASSED": 5,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -79,13 +112,16 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "The target repository does not use gradle to deploy.",
+                        "build_tool_name: maven",
+                        "ci_service_name: github_actions",
+                        "language: BuildLanguage.JAVA",
+                        "language_distributions: [\"zulu\"]",
+                        "language_versions: [\"11\"]",
+                        "deploy_command: [\"mvn\", \"clean\", \"source:jar\", \"javadoc:jar\", \"deploy\", \"-DskipTests=true\", \"\\\"$@\\\"\"]",
                         {
-                            "The target repository uses build tool maven to deploy": "https://github.com/google/guava/blob/db74bd2fdac443223d45e6fc5c66548542be1081/./util/deploy_snapshot.sh",
-                            "The build is triggered by": "https://github.com/google/guava/blob/db74bd2fdac443223d45e6fc5c66548542be1081/.github/workflows/ci.yml"
-                        },
-                        "Deploy command: ['mvn', 'clean', 'source:jar', 'javadoc:jar', 'deploy', '-DskipTests=true', '\"$@\"']",
-                        "However, could not find a passing workflow run."
+                            "build_trigger": "https://github.com/google/guava/blob/db74bd2fdac443223d45e6fc5c66548542be1081/.github/workflows/ci.yml",
+                            "language_url": "https://github.com/actions/setup-java"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -96,7 +132,16 @@
                         "Scripted Build - SLSA Level 1"
                     ],
                     "justification": [
-                        "Check mcn_build_script_1 is set to PASSED because mcn_build_service_1 PASSED."
+                        "build_tool_name: gradle",
+                        "ci_service_name: github_actions",
+                        "language: BuildLanguage.JAVA",
+                        "language_distributions: [\"zulu\"]",
+                        "language_versions: [\"8\", \"11\", \"17\"]",
+                        "build_tool_command: [\"./gradlew\", \"testClasspath\"]",
+                        {
+                            "build_trigger": "https://github.com/google/guava/blob/db74bd2fdac443223d45e6fc5c66548542be1081/.github/workflows/ci.yml",
+                            "language_url": "https://github.com/actions/setup-java"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -107,7 +152,7 @@
                         "Build service - SLSA Level 2"
                     ],
                     "justification": [
-                        "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
+                        "Not Available."
                     ],
                     "result_type": "PASSED"
                 },
@@ -118,8 +163,10 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
+                        "deploy_job: publish_snapshot",
+                        "deploy_step: Publish",
                         {
-                            "The artifact is potentially published by workflow job 'publish_snapshot' at step 'Publish' triggered by": "https://github.com/google/guava/actions/runs/5719444145"
+                            "run_url": "https://github.com/google/guava/actions/runs/5719444145"
                         }
                     ],
                     "result_type": "PASSED"
@@ -132,7 +179,7 @@
                     ],
                     "justification": [
                         {
-                            "This is a Git repository": "https://github.com/google/guava"
+                            "git_repo": "https://github.com/google/guava"
                         }
                     ],
                     "result_type": "PASSED"
@@ -147,7 +194,29 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Could not find any SLSA or Witness provenances."
+                        "Not Available."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_commit_1",
+                    "check_description": "Check whether the commit came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "commit_digest: No provenance found."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_repo_1",
+                    "check_description": "Check whether the repo came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "repository_url: No provenance found."
                     ],
                     "result_type": "FAILED"
                 },
@@ -158,7 +227,7 @@
                         "Provenance conforms with expectations - SLSA Level 3"
                     ],
                     "justification": [
-                        "Check mcn_provenance_expectation_1 is set to FAILED because mcn_provenance_available_1 FAILED."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -172,7 +241,7 @@
                         "Provenance content - Identifies source code - SLSA Level 2"
                     ],
                     "justification": [
-                        "Check mcn_provenance_level_three_1 is set to FAILED because mcn_provenance_available_1 FAILED."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -186,7 +255,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Check mcn_provenance_witness_level_one_1 is set to FAILED because mcn_provenance_available_1 FAILED."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 },
@@ -200,7 +269,7 @@
                         "Ephemeral environment - SLSA Level 3"
                     ],
                     "justification": [
-                        "Could not find a trusted level 3 builder as a GitHub Actions workflow."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 }
@@ -212,31 +281,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_build_script_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_trusted_builder_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_provenance_available_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_as_code_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_infer_artifact_pipeline_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_provenance_level_three_1",
                 "num_deps_pass": 0
             },
             {
@@ -244,11 +289,43 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_build_as_code_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_derived_commit_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_version_control_system_1",
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_script_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_build_service_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_provenance_expectation_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_derived_repo_1",
                 "num_deps_pass": 0
             }
         ],

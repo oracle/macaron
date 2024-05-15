@@ -17,6 +17,22 @@ macaron.repo\_finder.commit\_finder module
    :undoc-members:
    :show-inheritance:
 
+macaron.repo\_finder.provenance\_extractor module
+-------------------------------------------------
+
+.. automodule:: macaron.repo_finder.provenance_extractor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+macaron.repo\_finder.provenance\_finder module
+----------------------------------------------
+
+.. automodule:: macaron.repo_finder.provenance_finder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.repo\_finder.repo\_finder module
 ----------------------------------------
 

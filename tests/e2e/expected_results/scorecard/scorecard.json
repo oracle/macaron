@@ -1,30 +1,31 @@
 {
     "metadata": {
-        "timestamps": "2024-02-16 14:41:29",
+        "timestamps": "2024-05-07 15:16:22",
         "has_passing_check": true,
         "run_checks": [
+            "mcn_provenance_available_1",
             "mcn_provenance_level_three_1",
-            "mcn_trusted_builder_level_three_1",
-            "mcn_version_control_system_1",
             "mcn_provenance_expectation_1",
-            "mcn_provenance_available_1"
+            "mcn_version_control_system_1",
+            "mcn_trusted_builder_level_three_1"
         ],
         "check_tree": {
+            "mcn_provenance_available_1": {
+                "mcn_provenance_expectation_1": {},
+                "mcn_provenance_level_three_1": {},
+                "mcn_provenance_witness_level_one_1": {}
+            },
+            "mcn_provenance_derived_commit_1": {},
             "mcn_version_control_system_1": {
+                "mcn_build_script_1": {},
                 "mcn_trusted_builder_level_three_1": {
                     "mcn_build_as_code_1": {
-                        "mcn_infer_artifact_pipeline_1": {},
-                        "mcn_build_service_1": {
-                            "mcn_build_script_1": {}
-                        }
+                        "mcn_build_service_1": {},
+                        "mcn_infer_artifact_pipeline_1": {}
                     }
                 }
             },
-            "mcn_provenance_available_1": {
-                "mcn_provenance_level_three_1": {},
-                "mcn_provenance_witness_level_one_1": {},
-                "mcn_provenance_expectation_1": {}
-            }
+            "mcn_provenance_derived_repo_1": {}
         }
     },
     "target": {
@@ -334,8 +335,10 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Found provenance in release assets:",
-                        "https://api.github.com/repos/ossf/scorecard/releases/assets/131611370"
+                        "asset_name: multiple.intoto.jsonl",
+                        {
+                            "asset_url": "https://api.github.com/repos/ossf/scorecard/releases/assets/131611370"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -346,7 +349,9 @@
                         "Provenance conforms with expectations - SLSA Level 3"
                     ],
                     "justification": [
-                        "Successfully verified the expectation against provenance."
+                        {
+                            "asset_url": "https://api.github.com/repos/ossf/scorecard/releases/assets/131611370"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -360,8 +365,7 @@
                         "Provenance content - Identifies source code - SLSA Level 2"
                     ],
                     "justification": [
-                        "Successfully verified level 3: ",
-                        "verify passed : scorecard_4.13.1_linux_amd64.tar.gz,verify passed : scorecard_4.13.1_darwin_arm64.tar.gz,verify passed : scorecard_4.13.1_darwin_amd64.tar.gz,verify passed : scorecard_4.13.1_windows_arm64.tar.gz,verify passed : scorecard_4.13.1_windows_amd64.tar.gz,verify passed : scorecard_4.13.1_linux_arm64.tar.gz"
+                        "Not Available."
                     ],
                     "result_type": "PASSED"
                 },
@@ -375,10 +379,11 @@
                         "Ephemeral environment - SLSA Level 3"
                     ],
                     "justification": [
+                        "build_tool_name: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.9.0",
+                        "ci_service_name: github_actions",
                         {
-                            "Found trusted builder GitHub Actions: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.9.0 triggered by": "https://github.com/ossf/scorecard/blob/49c0eed3a423f00c872b5c3c9f1bbca9e8aae799/.github/workflows/slsa-goreleaser.yml"
-                        },
-                        "However, could not find a passing workflow run."
+                            "build_trigger": "https://github.com/ossf/scorecard/blob/49c0eed3a423f00c872b5c3c9f1bbca9e8aae799/.github/workflows/slsa-goreleaser.yml"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -390,7 +395,7 @@
                     ],
                     "justification": [
                         {
-                            "This is a Git repository": "https://github.com/ossf/scorecard"
+                            "git_repo": "https://github.com/ossf/scorecard"
                         }
                     ],
                     "result_type": "PASSED"
@@ -403,7 +408,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_version_control_system_1",
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
             {
@@ -415,6 +420,18 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_provenance_derived_commit_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_infer_artifact_pipeline_1",
                 "num_deps_pass": 0
             },
@@ -423,11 +440,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_level_three_1",
+                "check_id": "mcn_build_script_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_script_1",
+                "check_id": "mcn_build_service_1",
                 "num_deps_pass": 0
             },
             {
@@ -435,11 +452,7 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
+                "check_id": "mcn_provenance_derived_repo_1",
                 "num_deps_pass": 0
             }
         ],

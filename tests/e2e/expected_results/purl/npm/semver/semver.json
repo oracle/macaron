@@ -1,35 +1,38 @@
 {
     "metadata": {
-        "timestamps": "2024-03-22 09:02:56",
+        "timestamps": "2024-05-07 15:27:34",
         "has_passing_check": true,
         "run_checks": [
             "mcn_provenance_available_1",
-            "mcn_provenance_expectation_1",
             "mcn_provenance_witness_level_one_1",
-            "mcn_trusted_builder_level_three_1",
             "mcn_build_as_code_1",
+            "mcn_provenance_derived_commit_1",
+            "mcn_provenance_level_three_1",
+            "mcn_version_control_system_1",
+            "mcn_infer_artifact_pipeline_1",
+            "mcn_trusted_builder_level_three_1",
             "mcn_build_script_1",
             "mcn_build_service_1",
-            "mcn_infer_artifact_pipeline_1",
-            "mcn_provenance_level_three_1",
-            "mcn_version_control_system_1"
+            "mcn_provenance_expectation_1",
+            "mcn_provenance_derived_repo_1"
         ],
         "check_tree": {
             "mcn_provenance_available_1": {
-                "mcn_provenance_level_three_1": {},
+                "mcn_provenance_witness_level_one_1": {},
                 "mcn_provenance_expectation_1": {},
-                "mcn_provenance_witness_level_one_1": {}
+                "mcn_provenance_level_three_1": {}
             },
+            "mcn_provenance_derived_commit_1": {},
             "mcn_version_control_system_1": {
+                "mcn_build_script_1": {},
                 "mcn_trusted_builder_level_three_1": {
                     "mcn_build_as_code_1": {
-                        "mcn_build_service_1": {
-                            "mcn_build_script_1": {}
-                        },
-                        "mcn_infer_artifact_pipeline_1": {}
+                        "mcn_infer_artifact_pipeline_1": {},
+                        "mcn_build_service_1": {}
                     }
                 }
-            }
+            },
+            "mcn_provenance_derived_repo_1": {}
         }
     },
     "target": {
@@ -42,7 +45,7 @@
             "commit_date": "2024-02-05T09:03:38-08:00"
         },
         "provenances": {
-            "is_inferred": false,
+            "is_inferred": true,
             "content": {
                 "github_actions": [
                     {
@@ -51,23 +54,24 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "predicate": {
                             "builder": {
-                                "id": "<URI>"
+                                "id": "https://github.com/npm/node-semver/blob/377f709718053a477ed717089c4403c4fec332a1/.github/workflows/release-integration.yml"
                             },
-                            "buildType": "<URI>",
+                            "buildType": "Custom github_actions",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "<URI>",
+                                    "uri": "https://github.com/npm/node-semver@refs/heads/None",
                                     "digest": {
-                                        "sha1": "<STING>"
+                                        "sha1": "377f709718053a477ed717089c4403c4fec332a1"
                                     },
-                                    "entryPoint": "<STRING>"
+                                    "entryPoint": "https://github.com/npm/node-semver/blob/377f709718053a477ed717089c4403c4fec332a1/.github/workflows/release-integration.yml"
                                 },
                                 "parameters": {},
                                 "environment": {}
                             },
                             "buildConfig": {
-                                "jobID": "<STRING>",
-                                "stepID": "<STRING>"
+                                "jobID": "publish",
+                                "stepID": "",
+                                "stepName": "Publish"
                             },
                             "metadata": {
                                 "buildInvocationId": "<STRING>",
@@ -89,62 +93,14 @@
                         }
                     }
                 ],
-                "npm Registry": [
-                    {
-                        "_type": "https://in-toto.io/Statement/v1",
-                        "subject": [
-                            {
-                                "name": "pkg:npm/semver@7.6.0",
-                                "digest": {
-                                    "sha512": "127c1786b9705cc93d80abb9fdf971e6cbff6a7e7b024469946de14caebc5bb1510cdfa4f8e5818fae4cefbd7d3a403cd972c1c6b717d0a4878fe5f908e84e56"
-                                }
-                            }
-                        ],
-                        "predicateType": "https://slsa.dev/provenance/v1",
-                        "predicate": {
-                            "buildDefinition": {
-                                "buildType": "https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1",
-                                "externalParameters": {
-                                    "workflow": {
-                                        "ref": "refs/heads/main",
-                                        "repository": "https://github.com/npm/node-semver",
-                                        "path": ".github/workflows/release.yml"
-                                    }
-                                },
-                                "internalParameters": {
-                                    "github": {
-                                        "event_name": "push",
-                                        "repository_id": "1357199",
-                                        "repository_owner_id": "6078720"
-                                    }
-                                },
-                                "resolvedDependencies": [
-                                    {
-                                        "uri": "git+https://github.com/npm/node-semver@refs/heads/main",
-                                        "digest": {
-                                            "gitCommit": "377f709718053a477ed717089c4403c4fec332a1"
-                                        }
-                                    }
-                                ]
-                            },
-                            "runDetails": {
-                                "builder": {
-                                    "id": "https://github.com/actions/runner/github-hosted"
-                                },
-                                "metadata": {
-                                    "invocationId": "https://github.com/npm/node-semver/actions/runs/7788106733/attempts/1"
-                                }
-                            }
-                        }
-                    }
-                ]
+                "npm Registry": []
             }
         },
         "checks": {
             "summary": {
                 "DISABLED": 0,
                 "FAILED": 4,
-                "PASSED": 5,
+                "PASSED": 7,
                 "SKIPPED": 0,
                 "UNKNOWN": 1
             },
@@ -169,6 +125,7 @@
                     "justification": [
                         "build_tool_name: npm",
                         "ci_service_name: github_actions",
+                        "language: BuildLanguage.JAVASCRIPT",
                         "deploy_command: [\"npm\", \"publish\", \"--provenance\", \"--tag=\\\"$1\\\"\"]",
                         {
                             "build_trigger": "https://github.com/npm/node-semver/blob/377f709718053a477ed717089c4403c4fec332a1/.github/workflows/release-integration.yml"
@@ -183,7 +140,13 @@
                         "Scripted Build - SLSA Level 1"
                     ],
                     "justification": [
-                        "Not Available."
+                        "build_tool_name: npm",
+                        "ci_service_name: github_actions",
+                        "language: BuildLanguage.JAVASCRIPT",
+                        "build_tool_command: [\"npm\", \"audit\", \"--audit-level=none\"]",
+                        {
+                            "build_trigger": "https://github.com/npm/node-semver/blob/377f709718053a477ed717089c4403c4fec332a1/.github/workflows/audit.yml"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -208,10 +171,29 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "asset_name: semver",
-                        {
-                            "asset_url": "https://registry.npmjs.org/-/npm/v1/attestations/semver@7.6.0"
-                        }
+                        "Not Available."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_commit_1",
+                    "check_description": "Check whether the commit came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "commit_digest: The commit was found from provenance."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_repo_1",
+                    "check_description": "Check whether the repo came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "repository_url: The repository URL was found from provenance."
                     ],
                     "result_type": "PASSED"
                 },
@@ -293,19 +275,31 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_expectation_1",
-                "num_deps_pass": 0
-            },
-            {
                 "check_id": "mcn_provenance_witness_level_one_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_trusted_builder_level_three_1",
+                "check_id": "mcn_build_as_code_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_as_code_1",
+                "check_id": "mcn_provenance_derived_commit_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_infer_artifact_pipeline_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_trusted_builder_level_three_1",
                 "num_deps_pass": 0
             },
             {
@@ -317,15 +311,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_infer_artifact_pipeline_1",
+                "check_id": "mcn_provenance_expectation_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_level_three_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_version_control_system_1",
+                "check_id": "mcn_provenance_derived_repo_1",
                 "num_deps_pass": 0
             }
         ],

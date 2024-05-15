@@ -1,34 +1,37 @@
 {
     "metadata": {
-        "timestamps": "2024-02-16 16:19:18",
+        "timestamps": "2024-05-07 15:16:35",
         "has_passing_check": true,
         "run_checks": [
-            "mcn_trusted_builder_level_three_1",
-            "mcn_provenance_expectation_1",
             "mcn_provenance_witness_level_one_1",
             "mcn_version_control_system_1",
             "mcn_build_script_1",
-            "mcn_build_as_code_1",
             "mcn_build_service_1",
+            "mcn_provenance_derived_commit_1",
+            "mcn_provenance_expectation_1",
             "mcn_infer_artifact_pipeline_1",
+            "mcn_provenance_derived_repo_1",
+            "mcn_build_as_code_1",
+            "mcn_trusted_builder_level_three_1",
             "mcn_provenance_available_1"
         ],
         "check_tree": {
+            "mcn_provenance_available_1": {
+                "mcn_provenance_level_three_1": {},
+                "mcn_provenance_witness_level_one_1": {},
+                "mcn_provenance_expectation_1": {}
+            },
+            "mcn_provenance_derived_commit_1": {},
             "mcn_version_control_system_1": {
+                "mcn_build_script_1": {},
                 "mcn_trusted_builder_level_three_1": {
                     "mcn_build_as_code_1": {
-                        "mcn_infer_artifact_pipeline_1": {},
-                        "mcn_build_service_1": {
-                            "mcn_build_script_1": {}
-                        }
+                        "mcn_build_service_1": {},
+                        "mcn_infer_artifact_pipeline_1": {}
                     }
                 }
             },
-            "mcn_provenance_available_1": {
-                "mcn_provenance_expectation_1": {},
-                "mcn_provenance_witness_level_one_1": {},
-                "mcn_provenance_level_three_1": {}
-            }
+            "mcn_provenance_derived_repo_1": {}
         }
     },
     "target": {
@@ -51,20 +54,20 @@
                             {
                                 "name": "slsa-verifier-darwin-amd64",
                                 "digest": {
-                                    "sha256": "69fa1ea5bb734e765aae1fa855f50e823c2b90b019994610960b7eb3c83feeb3"
+                                    "sha256": "6246ff80cbd3d272bf843d72d1562cafb7c59b45b5b555fbee92df90547b4256"
                                 }
                             }
                         ],
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.8.0"
+                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.10.0"
                             },
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.4.1",
+                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.5.1",
                                     "digest": {
-                                        "sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                        "sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86"
                                     },
                                     "entryPoint": ".github/workflows/release.yml"
                                 },
@@ -76,13 +79,25 @@
                                     "github_base_ref": "",
                                     "github_event_name": "push",
                                     "github_event_payload": {
-                                        "after": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+                                        "after": "eb7007070baa04976cb9e25a0d8034f8db030a86",
                                         "base_ref": "refs/heads/main",
                                         "before": "0000000000000000000000000000000000000000",
                                         "commits": [],
-                                        "compare": "https://github.com/slsa-framework/slsa-verifier/compare/v2.4.1",
+                                        "compare": "https://github.com/slsa-framework/slsa-verifier/compare/v2.5.1",
                                         "created": true,
                                         "deleted": false,
+                                        "enterprise": {
+                                            "avatar_url": "https://avatars.githubusercontent.com/b/102459?v=4",
+                                            "created_at": "2023-12-08T05:54:26Z",
+                                            "description": "Open Source Security Foundation (OpenSSF)",
+                                            "html_url": "https://github.com/enterprises/openssf",
+                                            "id": 102459,
+                                            "name": "Open Source Security Foundation",
+                                            "node_id": "E_kgDOAAGQOw",
+                                            "slug": "openssf",
+                                            "updated_at": "2024-01-06T00:47:02Z",
+                                            "website_url": "https://openssf.org/"
+                                        },
                                         "forced": false,
                                         "head_commit": {
                                             "author": {
@@ -96,11 +111,11 @@
                                                 "username": "web-flow"
                                             },
                                             "distinct": true,
-                                            "id": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
-                                            "message": "docs: update release doc and rm binary (#716)\n\nSigned-off-by: laurentsimon <laurentsimon@google.com>",
-                                            "timestamp": "2023-10-16T13:44:13-07:00",
-                                            "tree_id": "b70b194feb7247be9885bfff95f9640c84d0b8f5",
-                                            "url": "https://github.com/slsa-framework/slsa-verifier/commit/7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                            "id": "eb7007070baa04976cb9e25a0d8034f8db030a86",
+                                            "message": "feat: Update verifier version in GHA installer (#747)\n\nThis is part of the release tests in\r\nhttps://github.com/slsa-framework/slsa-verifier/blob/main/RELEASE.md#dry-run\r\nto verify that the Action installer works.\r\n\r\nA follow up PR will be sent prior to release to update to `v2.5.0`\r\n\r\n---------\r\n\r\nSigned-off-by: laurentsimon <laurentsimon@google.com>",
+                                            "timestamp": "2024-03-25T14:54:53Z",
+                                            "tree_id": "821166b47987861864888c07fde313b8be8ffc4c",
+                                            "url": "https://github.com/slsa-framework/slsa-verifier/commit/eb7007070baa04976cb9e25a0d8034f8db030a86"
                                         },
                                         "organization": {
                                             "avatar_url": "https://avatars.githubusercontent.com/u/80431187?v=4",
@@ -120,7 +135,7 @@
                                             "email": "64505099+laurentsimon@users.noreply.github.com",
                                             "name": "laurentsimon"
                                         },
-                                        "ref": "refs/tags/v2.4.1",
+                                        "ref": "refs/tags/v2.5.1",
                                         "repository": {
                                             "allow_forking": true,
                                             "archive_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/{archive_format}{/ref}",
@@ -144,8 +159,8 @@
                                             "downloads_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/downloads",
                                             "events_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/events",
                                             "fork": false,
-                                            "forks": 35,
-                                            "forks_count": 35,
+                                            "forks": 40,
+                                            "forks_count": 40,
                                             "forks_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/forks",
                                             "full_name": "slsa-framework/slsa-verifier",
                                             "git_commits_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/git/commits{/sha}",
@@ -184,8 +199,8 @@
                                             "name": "slsa-verifier",
                                             "node_id": "R_kgDOHEMl0g",
                                             "notifications_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/notifications{?since,all,participating}",
-                                            "open_issues": 123,
-                                            "open_issues_count": 123,
+                                            "open_issues": 129,
+                                            "open_issues_count": 129,
                                             "organization": "slsa-framework",
                                             "owner": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/80431187?v=4",
@@ -211,12 +226,12 @@
                                             },
                                             "private": false,
                                             "pulls_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/pulls{/number}",
-                                            "pushed_at": 1699396985,
+                                            "pushed_at": 1711379651,
                                             "releases_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/releases{/id}",
-                                            "size": 88467,
+                                            "size": 91684,
                                             "ssh_url": "git@github.com:slsa-framework/slsa-verifier.git",
-                                            "stargazers": 170,
-                                            "stargazers_count": 170,
+                                            "stargazers": 198,
+                                            "stargazers_count": 198,
                                             "stargazers_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/stargazers",
                                             "statuses_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/statuses/{sha}",
                                             "subscribers_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/subscribers",
@@ -226,11 +241,11 @@
                                             "teams_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/teams",
                                             "topics": [],
                                             "trees_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/git/trees{/sha}",
-                                            "updated_at": "2023-10-17T17:58:10Z",
+                                            "updated_at": "2024-03-12T15:03:34Z",
                                             "url": "https://github.com/slsa-framework/slsa-verifier",
                                             "visibility": "public",
-                                            "watchers": 170,
-                                            "watchers_count": 170,
+                                            "watchers": 198,
+                                            "watchers_count": 198,
                                             "web_commit_signoff_required": true
                                         },
                                         "sender": {
@@ -255,15 +270,15 @@
                                         }
                                     },
                                     "github_head_ref": "",
-                                    "github_ref": "refs/tags/v2.4.1",
+                                    "github_ref": "refs/tags/v2.5.1",
                                     "github_ref_type": "tag",
                                     "github_repository_id": "474162642",
                                     "github_repository_owner": "slsa-framework",
                                     "github_repository_owner_id": "80431187",
                                     "github_run_attempt": "1",
-                                    "github_run_id": "6791195934",
-                                    "github_run_number": "511",
-                                    "github_sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+                                    "github_run_id": "8422431506",
+                                    "github_run_number": "655",
+                                    "github_sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86",
                                     "os": "ubuntu22"
                                 }
                             },
@@ -272,7 +287,7 @@
                                     {
                                         "workingDir": "/home/runner/work/slsa-verifier/slsa-verifier/__PROJECT_CHECKOUT_DIR__/cli/slsa-verifier",
                                         "command": [
-                                            "/opt/hostedtoolcache/go/1.20.10/x64/bin/go",
+                                            "/opt/hostedtoolcache/go/1.21.8/x64/bin/go",
                                             "mod",
                                             "vendor"
                                         ],
@@ -281,27 +296,27 @@
                                     {
                                         "workingDir": "/home/runner/work/slsa-verifier/slsa-verifier/__PROJECT_CHECKOUT_DIR__/cli/slsa-verifier",
                                         "command": [
-                                            "/opt/hostedtoolcache/go/1.20.10/x64/bin/go",
+                                            "/opt/hostedtoolcache/go/1.21.8/x64/bin/go",
                                             "build",
                                             "-mod=vendor",
                                             "-trimpath",
                                             "-tags=netgo",
-                                            "-ldflags=-X sigs.k8s.io/release-utils/version.gitVersion=2.4.1",
+                                            "-ldflags=-X sigs.k8s.io/release-utils/version.gitVersion=2.5.1",
                                             "-o",
                                             "slsa-verifier-darwin-amd64"
                                         ],
                                         "env": [
                                             "GOOS=darwin",
                                             "GOARCH=amd64",
-                                            "GO111MODULE=on",
-                                            "CGO_ENABLED=0"
+                                            "CGO_ENABLED=0",
+                                            "GO111MODULE=on"
                                         ]
                                     }
                                 ],
                                 "version": 1
                             },
                             "metadata": {
-                                "buildInvocationID": "6791195934-1",
+                                "buildInvocationID": "8422431506-1",
                                 "completeness": {
                                     "parameters": true,
                                     "environment": false,
@@ -311,13 +326,13 @@
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.4.1",
+                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.5.1",
                                     "digest": {
-                                        "sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                        "sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86"
                                     }
                                 },
                                 {
-                                    "uri": "https://github.com/actions/virtual-environments/releases/tag/ubuntu22/20231030.2.0"
+                                    "uri": "https://github.com/actions/virtual-environments/releases/tag/ubuntu22/20240317.1.0"
                                 }
                             ]
                         }
@@ -329,20 +344,20 @@
                             {
                                 "name": "slsa-verifier-darwin-arm64",
                                 "digest": {
-                                    "sha256": "ce1de214cb5ae24dfafce18640a0e7c4d2fbbd014bf4b2944a0c1b7b3cfa803a"
+                                    "sha256": "a4da3c85025f31f8a6de09c8261ec1c0793299fd82bc225c9608b0413083354f"
                                 }
                             }
                         ],
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.8.0"
+                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.10.0"
                             },
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.4.1",
+                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.5.1",
                                     "digest": {
-                                        "sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                        "sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86"
                                     },
                                     "entryPoint": ".github/workflows/release.yml"
                                 },
@@ -354,13 +369,25 @@
                                     "github_base_ref": "",
                                     "github_event_name": "push",
                                     "github_event_payload": {
-                                        "after": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+                                        "after": "eb7007070baa04976cb9e25a0d8034f8db030a86",
                                         "base_ref": "refs/heads/main",
                                         "before": "0000000000000000000000000000000000000000",
                                         "commits": [],
-                                        "compare": "https://github.com/slsa-framework/slsa-verifier/compare/v2.4.1",
+                                        "compare": "https://github.com/slsa-framework/slsa-verifier/compare/v2.5.1",
                                         "created": true,
                                         "deleted": false,
+                                        "enterprise": {
+                                            "avatar_url": "https://avatars.githubusercontent.com/b/102459?v=4",
+                                            "created_at": "2023-12-08T05:54:26Z",
+                                            "description": "Open Source Security Foundation (OpenSSF)",
+                                            "html_url": "https://github.com/enterprises/openssf",
+                                            "id": 102459,
+                                            "name": "Open Source Security Foundation",
+                                            "node_id": "E_kgDOAAGQOw",
+                                            "slug": "openssf",
+                                            "updated_at": "2024-01-06T00:47:02Z",
+                                            "website_url": "https://openssf.org/"
+                                        },
                                         "forced": false,
                                         "head_commit": {
                                             "author": {
@@ -374,11 +401,11 @@
                                                 "username": "web-flow"
                                             },
                                             "distinct": true,
-                                            "id": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
-                                            "message": "docs: update release doc and rm binary (#716)\n\nSigned-off-by: laurentsimon <laurentsimon@google.com>",
-                                            "timestamp": "2023-10-16T13:44:13-07:00",
-                                            "tree_id": "b70b194feb7247be9885bfff95f9640c84d0b8f5",
-                                            "url": "https://github.com/slsa-framework/slsa-verifier/commit/7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                            "id": "eb7007070baa04976cb9e25a0d8034f8db030a86",
+                                            "message": "feat: Update verifier version in GHA installer (#747)\n\nThis is part of the release tests in\r\nhttps://github.com/slsa-framework/slsa-verifier/blob/main/RELEASE.md#dry-run\r\nto verify that the Action installer works.\r\n\r\nA follow up PR will be sent prior to release to update to `v2.5.0`\r\n\r\n---------\r\n\r\nSigned-off-by: laurentsimon <laurentsimon@google.com>",
+                                            "timestamp": "2024-03-25T14:54:53Z",
+                                            "tree_id": "821166b47987861864888c07fde313b8be8ffc4c",
+                                            "url": "https://github.com/slsa-framework/slsa-verifier/commit/eb7007070baa04976cb9e25a0d8034f8db030a86"
                                         },
                                         "organization": {
                                             "avatar_url": "https://avatars.githubusercontent.com/u/80431187?v=4",
@@ -398,7 +425,7 @@
                                             "email": "64505099+laurentsimon@users.noreply.github.com",
                                             "name": "laurentsimon"
                                         },
-                                        "ref": "refs/tags/v2.4.1",
+                                        "ref": "refs/tags/v2.5.1",
                                         "repository": {
                                             "allow_forking": true,
                                             "archive_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/{archive_format}{/ref}",
@@ -422,8 +449,8 @@
                                             "downloads_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/downloads",
                                             "events_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/events",
                                             "fork": false,
-                                            "forks": 35,
-                                            "forks_count": 35,
+                                            "forks": 40,
+                                            "forks_count": 40,
                                             "forks_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/forks",
                                             "full_name": "slsa-framework/slsa-verifier",
                                             "git_commits_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/git/commits{/sha}",
@@ -462,8 +489,8 @@
                                             "name": "slsa-verifier",
                                             "node_id": "R_kgDOHEMl0g",
                                             "notifications_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/notifications{?since,all,participating}",
-                                            "open_issues": 123,
-                                            "open_issues_count": 123,
+                                            "open_issues": 129,
+                                            "open_issues_count": 129,
                                             "organization": "slsa-framework",
                                             "owner": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/80431187?v=4",
@@ -489,12 +516,12 @@
                                             },
                                             "private": false,
                                             "pulls_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/pulls{/number}",
-                                            "pushed_at": 1699396985,
+                                            "pushed_at": 1711379651,
                                             "releases_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/releases{/id}",
-                                            "size": 88467,
+                                            "size": 91684,
                                             "ssh_url": "git@github.com:slsa-framework/slsa-verifier.git",
-                                            "stargazers": 170,
-                                            "stargazers_count": 170,
+                                            "stargazers": 198,
+                                            "stargazers_count": 198,
                                             "stargazers_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/stargazers",
                                             "statuses_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/statuses/{sha}",
                                             "subscribers_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/subscribers",
@@ -504,11 +531,11 @@
                                             "teams_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/teams",
                                             "topics": [],
                                             "trees_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/git/trees{/sha}",
-                                            "updated_at": "2023-10-17T17:58:10Z",
+                                            "updated_at": "2024-03-12T15:03:34Z",
                                             "url": "https://github.com/slsa-framework/slsa-verifier",
                                             "visibility": "public",
-                                            "watchers": 170,
-                                            "watchers_count": 170,
+                                            "watchers": 198,
+                                            "watchers_count": 198,
                                             "web_commit_signoff_required": true
                                         },
                                         "sender": {
@@ -533,15 +560,15 @@
                                         }
                                     },
                                     "github_head_ref": "",
-                                    "github_ref": "refs/tags/v2.4.1",
+                                    "github_ref": "refs/tags/v2.5.1",
                                     "github_ref_type": "tag",
                                     "github_repository_id": "474162642",
                                     "github_repository_owner": "slsa-framework",
                                     "github_repository_owner_id": "80431187",
                                     "github_run_attempt": "1",
-                                    "github_run_id": "6791195934",
-                                    "github_run_number": "511",
-                                    "github_sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+                                    "github_run_id": "8422431506",
+                                    "github_run_number": "655",
+                                    "github_sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86",
                                     "os": "ubuntu22"
                                 }
                             },
@@ -550,7 +577,7 @@
                                     {
                                         "workingDir": "/home/runner/work/slsa-verifier/slsa-verifier/__PROJECT_CHECKOUT_DIR__/cli/slsa-verifier",
                                         "command": [
-                                            "/opt/hostedtoolcache/go/1.20.10/x64/bin/go",
+                                            "/opt/hostedtoolcache/go/1.21.8/x64/bin/go",
                                             "mod",
                                             "vendor"
                                         ],
@@ -559,27 +586,27 @@
                                     {
                                         "workingDir": "/home/runner/work/slsa-verifier/slsa-verifier/__PROJECT_CHECKOUT_DIR__/cli/slsa-verifier",
                                         "command": [
-                                            "/opt/hostedtoolcache/go/1.20.10/x64/bin/go",
+                                            "/opt/hostedtoolcache/go/1.21.8/x64/bin/go",
                                             "build",
                                             "-mod=vendor",
                                             "-trimpath",
                                             "-tags=netgo",
-                                            "-ldflags=-X sigs.k8s.io/release-utils/version.gitVersion=2.4.1",
+                                            "-ldflags=-X sigs.k8s.io/release-utils/version.gitVersion=2.5.1",
                                             "-o",
                                             "slsa-verifier-darwin-arm64"
                                         ],
                                         "env": [
                                             "GOOS=darwin",
                                             "GOARCH=arm64",
-                                            "CGO_ENABLED=0",
-                                            "GO111MODULE=on"
+                                            "GO111MODULE=on",
+                                            "CGO_ENABLED=0"
                                         ]
                                     }
                                 ],
                                 "version": 1
                             },
                             "metadata": {
-                                "buildInvocationID": "6791195934-1",
+                                "buildInvocationID": "8422431506-1",
                                 "completeness": {
                                     "parameters": true,
                                     "environment": false,
@@ -589,13 +616,13 @@
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.4.1",
+                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.5.1",
                                     "digest": {
-                                        "sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                        "sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86"
                                     }
                                 },
                                 {
-                                    "uri": "https://github.com/actions/virtual-environments/releases/tag/ubuntu22/20231030.2.0"
+                                    "uri": "https://github.com/actions/virtual-environments/releases/tag/ubuntu22/20240317.1.0"
                                 }
                             ]
                         }
@@ -607,20 +634,20 @@
                             {
                                 "name": "slsa-verifier-linux-amd64",
                                 "digest": {
-                                    "sha256": "e81900c9f11a44276e1552afb7c1f6ea7b13ad9c6efdb920d97f23a76659e25f"
+                                    "sha256": "54e4f40bf120bce1cef1ff123fef3456e8c526f315c47e22ed6acfe02a06b9a8"
                                 }
                             }
                         ],
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.8.0"
+                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.10.0"
                             },
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.4.1",
+                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.5.1",
                                     "digest": {
-                                        "sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                        "sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86"
                                     },
                                     "entryPoint": ".github/workflows/release.yml"
                                 },
@@ -632,13 +659,25 @@
                                     "github_base_ref": "",
                                     "github_event_name": "push",
                                     "github_event_payload": {
-                                        "after": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+                                        "after": "eb7007070baa04976cb9e25a0d8034f8db030a86",
                                         "base_ref": "refs/heads/main",
                                         "before": "0000000000000000000000000000000000000000",
                                         "commits": [],
-                                        "compare": "https://github.com/slsa-framework/slsa-verifier/compare/v2.4.1",
+                                        "compare": "https://github.com/slsa-framework/slsa-verifier/compare/v2.5.1",
                                         "created": true,
                                         "deleted": false,
+                                        "enterprise": {
+                                            "avatar_url": "https://avatars.githubusercontent.com/b/102459?v=4",
+                                            "created_at": "2023-12-08T05:54:26Z",
+                                            "description": "Open Source Security Foundation (OpenSSF)",
+                                            "html_url": "https://github.com/enterprises/openssf",
+                                            "id": 102459,
+                                            "name": "Open Source Security Foundation",
+                                            "node_id": "E_kgDOAAGQOw",
+                                            "slug": "openssf",
+                                            "updated_at": "2024-01-06T00:47:02Z",
+                                            "website_url": "https://openssf.org/"
+                                        },
                                         "forced": false,
                                         "head_commit": {
                                             "author": {
@@ -652,11 +691,11 @@
                                                 "username": "web-flow"
                                             },
                                             "distinct": true,
-                                            "id": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
-                                            "message": "docs: update release doc and rm binary (#716)\n\nSigned-off-by: laurentsimon <laurentsimon@google.com>",
-                                            "timestamp": "2023-10-16T13:44:13-07:00",
-                                            "tree_id": "b70b194feb7247be9885bfff95f9640c84d0b8f5",
-                                            "url": "https://github.com/slsa-framework/slsa-verifier/commit/7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                            "id": "eb7007070baa04976cb9e25a0d8034f8db030a86",
+                                            "message": "feat: Update verifier version in GHA installer (#747)\n\nThis is part of the release tests in\r\nhttps://github.com/slsa-framework/slsa-verifier/blob/main/RELEASE.md#dry-run\r\nto verify that the Action installer works.\r\n\r\nA follow up PR will be sent prior to release to update to `v2.5.0`\r\n\r\n---------\r\n\r\nSigned-off-by: laurentsimon <laurentsimon@google.com>",
+                                            "timestamp": "2024-03-25T14:54:53Z",
+                                            "tree_id": "821166b47987861864888c07fde313b8be8ffc4c",
+                                            "url": "https://github.com/slsa-framework/slsa-verifier/commit/eb7007070baa04976cb9e25a0d8034f8db030a86"
                                         },
                                         "organization": {
                                             "avatar_url": "https://avatars.githubusercontent.com/u/80431187?v=4",
@@ -676,7 +715,7 @@
                                             "email": "64505099+laurentsimon@users.noreply.github.com",
                                             "name": "laurentsimon"
                                         },
-                                        "ref": "refs/tags/v2.4.1",
+                                        "ref": "refs/tags/v2.5.1",
                                         "repository": {
                                             "allow_forking": true,
                                             "archive_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/{archive_format}{/ref}",
@@ -700,8 +739,8 @@
                                             "downloads_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/downloads",
                                             "events_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/events",
                                             "fork": false,
-                                            "forks": 35,
-                                            "forks_count": 35,
+                                            "forks": 40,
+                                            "forks_count": 40,
                                             "forks_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/forks",
                                             "full_name": "slsa-framework/slsa-verifier",
                                             "git_commits_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/git/commits{/sha}",
@@ -740,8 +779,8 @@
                                             "name": "slsa-verifier",
                                             "node_id": "R_kgDOHEMl0g",
                                             "notifications_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/notifications{?since,all,participating}",
-                                            "open_issues": 123,
-                                            "open_issues_count": 123,
+                                            "open_issues": 129,
+                                            "open_issues_count": 129,
                                             "organization": "slsa-framework",
                                             "owner": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/80431187?v=4",
@@ -767,12 +806,12 @@
                                             },
                                             "private": false,
                                             "pulls_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/pulls{/number}",
-                                            "pushed_at": 1699396985,
+                                            "pushed_at": 1711379651,
                                             "releases_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/releases{/id}",
-                                            "size": 88467,
+                                            "size": 91684,
                                             "ssh_url": "git@github.com:slsa-framework/slsa-verifier.git",
-                                            "stargazers": 170,
-                                            "stargazers_count": 170,
+                                            "stargazers": 198,
+                                            "stargazers_count": 198,
                                             "stargazers_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/stargazers",
                                             "statuses_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/statuses/{sha}",
                                             "subscribers_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/subscribers",
@@ -782,11 +821,11 @@
                                             "teams_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/teams",
                                             "topics": [],
                                             "trees_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/git/trees{/sha}",
-                                            "updated_at": "2023-10-17T17:58:10Z",
+                                            "updated_at": "2024-03-12T15:03:34Z",
                                             "url": "https://github.com/slsa-framework/slsa-verifier",
                                             "visibility": "public",
-                                            "watchers": 170,
-                                            "watchers_count": 170,
+                                            "watchers": 198,
+                                            "watchers_count": 198,
                                             "web_commit_signoff_required": true
                                         },
                                         "sender": {
@@ -811,15 +850,15 @@
                                         }
                                     },
                                     "github_head_ref": "",
-                                    "github_ref": "refs/tags/v2.4.1",
+                                    "github_ref": "refs/tags/v2.5.1",
                                     "github_ref_type": "tag",
                                     "github_repository_id": "474162642",
                                     "github_repository_owner": "slsa-framework",
                                     "github_repository_owner_id": "80431187",
                                     "github_run_attempt": "1",
-                                    "github_run_id": "6791195934",
-                                    "github_run_number": "511",
-                                    "github_sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+                                    "github_run_id": "8422431506",
+                                    "github_run_number": "655",
+                                    "github_sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86",
                                     "os": "ubuntu22"
                                 }
                             },
@@ -828,7 +867,7 @@
                                     {
                                         "workingDir": "/home/runner/work/slsa-verifier/slsa-verifier/__PROJECT_CHECKOUT_DIR__/cli/slsa-verifier",
                                         "command": [
-                                            "/opt/hostedtoolcache/go/1.20.10/x64/bin/go",
+                                            "/opt/hostedtoolcache/go/1.21.8/x64/bin/go",
                                             "mod",
                                             "vendor"
                                         ],
@@ -837,12 +876,12 @@
                                     {
                                         "workingDir": "/home/runner/work/slsa-verifier/slsa-verifier/__PROJECT_CHECKOUT_DIR__/cli/slsa-verifier",
                                         "command": [
-                                            "/opt/hostedtoolcache/go/1.20.10/x64/bin/go",
+                                            "/opt/hostedtoolcache/go/1.21.8/x64/bin/go",
                                             "build",
                                             "-mod=vendor",
                                             "-trimpath",
                                             "-tags=netgo",
-                                            "-ldflags=-X sigs.k8s.io/release-utils/version.gitVersion=2.4.1",
+                                            "-ldflags=-X sigs.k8s.io/release-utils/version.gitVersion=2.5.1",
                                             "-o",
                                             "slsa-verifier-linux-amd64"
                                         ],
@@ -857,7 +896,7 @@
                                 "version": 1
                             },
                             "metadata": {
-                                "buildInvocationID": "6791195934-1",
+                                "buildInvocationID": "8422431506-1",
                                 "completeness": {
                                     "parameters": true,
                                     "environment": false,
@@ -867,13 +906,13 @@
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.4.1",
+                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.5.1",
                                     "digest": {
-                                        "sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                        "sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86"
                                     }
                                 },
                                 {
-                                    "uri": "https://github.com/actions/virtual-environments/releases/tag/ubuntu22/20231030.2.0"
+                                    "uri": "https://github.com/actions/virtual-environments/releases/tag/ubuntu22/20240317.1.0"
                                 }
                             ]
                         }
@@ -885,20 +924,20 @@
                             {
                                 "name": "slsa-verifier-linux-arm64",
                                 "digest": {
-                                    "sha256": "8b9bcc51576a8f962a0f91f50bed8ca769563ef568a2e9997ca4cd59dc2e341a"
+                                    "sha256": "5dd8a396c285c4d0d66dcb4eff82c12cd388049106aacd4f2552546f85100064"
                                 }
                             }
                         ],
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.8.0"
+                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.10.0"
                             },
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.4.1",
+                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.5.1",
                                     "digest": {
-                                        "sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                        "sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86"
                                     },
                                     "entryPoint": ".github/workflows/release.yml"
                                 },
@@ -910,13 +949,25 @@
                                     "github_base_ref": "",
                                     "github_event_name": "push",
                                     "github_event_payload": {
-                                        "after": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+                                        "after": "eb7007070baa04976cb9e25a0d8034f8db030a86",
                                         "base_ref": "refs/heads/main",
                                         "before": "0000000000000000000000000000000000000000",
                                         "commits": [],
-                                        "compare": "https://github.com/slsa-framework/slsa-verifier/compare/v2.4.1",
+                                        "compare": "https://github.com/slsa-framework/slsa-verifier/compare/v2.5.1",
                                         "created": true,
                                         "deleted": false,
+                                        "enterprise": {
+                                            "avatar_url": "https://avatars.githubusercontent.com/b/102459?v=4",
+                                            "created_at": "2023-12-08T05:54:26Z",
+                                            "description": "Open Source Security Foundation (OpenSSF)",
+                                            "html_url": "https://github.com/enterprises/openssf",
+                                            "id": 102459,
+                                            "name": "Open Source Security Foundation",
+                                            "node_id": "E_kgDOAAGQOw",
+                                            "slug": "openssf",
+                                            "updated_at": "2024-01-06T00:47:02Z",
+                                            "website_url": "https://openssf.org/"
+                                        },
                                         "forced": false,
                                         "head_commit": {
                                             "author": {
@@ -930,11 +981,11 @@
                                                 "username": "web-flow"
                                             },
                                             "distinct": true,
-                                            "id": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
-                                            "message": "docs: update release doc and rm binary (#716)\n\nSigned-off-by: laurentsimon <laurentsimon@google.com>",
-                                            "timestamp": "2023-10-16T13:44:13-07:00",
-                                            "tree_id": "b70b194feb7247be9885bfff95f9640c84d0b8f5",
-                                            "url": "https://github.com/slsa-framework/slsa-verifier/commit/7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                            "id": "eb7007070baa04976cb9e25a0d8034f8db030a86",
+                                            "message": "feat: Update verifier version in GHA installer (#747)\n\nThis is part of the release tests in\r\nhttps://github.com/slsa-framework/slsa-verifier/blob/main/RELEASE.md#dry-run\r\nto verify that the Action installer works.\r\n\r\nA follow up PR will be sent prior to release to update to `v2.5.0`\r\n\r\n---------\r\n\r\nSigned-off-by: laurentsimon <laurentsimon@google.com>",
+                                            "timestamp": "2024-03-25T14:54:53Z",
+                                            "tree_id": "821166b47987861864888c07fde313b8be8ffc4c",
+                                            "url": "https://github.com/slsa-framework/slsa-verifier/commit/eb7007070baa04976cb9e25a0d8034f8db030a86"
                                         },
                                         "organization": {
                                             "avatar_url": "https://avatars.githubusercontent.com/u/80431187?v=4",
@@ -954,7 +1005,7 @@
                                             "email": "64505099+laurentsimon@users.noreply.github.com",
                                             "name": "laurentsimon"
                                         },
-                                        "ref": "refs/tags/v2.4.1",
+                                        "ref": "refs/tags/v2.5.1",
                                         "repository": {
                                             "allow_forking": true,
                                             "archive_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/{archive_format}{/ref}",
@@ -978,8 +1029,8 @@
                                             "downloads_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/downloads",
                                             "events_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/events",
                                             "fork": false,
-                                            "forks": 35,
-                                            "forks_count": 35,
+                                            "forks": 40,
+                                            "forks_count": 40,
                                             "forks_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/forks",
                                             "full_name": "slsa-framework/slsa-verifier",
                                             "git_commits_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/git/commits{/sha}",
@@ -1018,8 +1069,8 @@
                                             "name": "slsa-verifier",
                                             "node_id": "R_kgDOHEMl0g",
                                             "notifications_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/notifications{?since,all,participating}",
-                                            "open_issues": 123,
-                                            "open_issues_count": 123,
+                                            "open_issues": 129,
+                                            "open_issues_count": 129,
                                             "organization": "slsa-framework",
                                             "owner": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/80431187?v=4",
@@ -1045,12 +1096,12 @@
                                             },
                                             "private": false,
                                             "pulls_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/pulls{/number}",
-                                            "pushed_at": 1699396985,
+                                            "pushed_at": 1711379651,
                                             "releases_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/releases{/id}",
-                                            "size": 88467,
+                                            "size": 91684,
                                             "ssh_url": "git@github.com:slsa-framework/slsa-verifier.git",
-                                            "stargazers": 170,
-                                            "stargazers_count": 170,
+                                            "stargazers": 198,
+                                            "stargazers_count": 198,
                                             "stargazers_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/stargazers",
                                             "statuses_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/statuses/{sha}",
                                             "subscribers_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/subscribers",
@@ -1060,11 +1111,11 @@
                                             "teams_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/teams",
                                             "topics": [],
                                             "trees_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/git/trees{/sha}",
-                                            "updated_at": "2023-10-17T17:58:10Z",
+                                            "updated_at": "2024-03-12T15:03:34Z",
                                             "url": "https://github.com/slsa-framework/slsa-verifier",
                                             "visibility": "public",
-                                            "watchers": 170,
-                                            "watchers_count": 170,
+                                            "watchers": 198,
+                                            "watchers_count": 198,
                                             "web_commit_signoff_required": true
                                         },
                                         "sender": {
@@ -1089,15 +1140,15 @@
                                         }
                                     },
                                     "github_head_ref": "",
-                                    "github_ref": "refs/tags/v2.4.1",
+                                    "github_ref": "refs/tags/v2.5.1",
                                     "github_ref_type": "tag",
                                     "github_repository_id": "474162642",
                                     "github_repository_owner": "slsa-framework",
                                     "github_repository_owner_id": "80431187",
                                     "github_run_attempt": "1",
-                                    "github_run_id": "6791195934",
-                                    "github_run_number": "511",
-                                    "github_sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+                                    "github_run_id": "8422431506",
+                                    "github_run_number": "655",
+                                    "github_sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86",
                                     "os": "ubuntu22"
                                 }
                             },
@@ -1106,7 +1157,7 @@
                                     {
                                         "workingDir": "/home/runner/work/slsa-verifier/slsa-verifier/__PROJECT_CHECKOUT_DIR__/cli/slsa-verifier",
                                         "command": [
-                                            "/opt/hostedtoolcache/go/1.20.10/x64/bin/go",
+                                            "/opt/hostedtoolcache/go/1.21.8/x64/bin/go",
                                             "mod",
                                             "vendor"
                                         ],
@@ -1115,12 +1166,12 @@
                                     {
                                         "workingDir": "/home/runner/work/slsa-verifier/slsa-verifier/__PROJECT_CHECKOUT_DIR__/cli/slsa-verifier",
                                         "command": [
-                                            "/opt/hostedtoolcache/go/1.20.10/x64/bin/go",
+                                            "/opt/hostedtoolcache/go/1.21.8/x64/bin/go",
                                             "build",
                                             "-mod=vendor",
                                             "-trimpath",
                                             "-tags=netgo",
-                                            "-ldflags=-X sigs.k8s.io/release-utils/version.gitVersion=2.4.1",
+                                            "-ldflags=-X sigs.k8s.io/release-utils/version.gitVersion=2.5.1",
                                             "-o",
                                             "slsa-verifier-linux-arm64"
                                         ],
@@ -1135,7 +1186,7 @@
                                 "version": 1
                             },
                             "metadata": {
-                                "buildInvocationID": "6791195934-1",
+                                "buildInvocationID": "8422431506-1",
                                 "completeness": {
                                     "parameters": true,
                                     "environment": false,
@@ -1145,13 +1196,13 @@
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.4.1",
+                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.5.1",
                                     "digest": {
-                                        "sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                        "sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86"
                                     }
                                 },
                                 {
-                                    "uri": "https://github.com/actions/virtual-environments/releases/tag/ubuntu22/20231030.2.0"
+                                    "uri": "https://github.com/actions/virtual-environments/releases/tag/ubuntu22/20240317.1.0"
                                 }
                             ]
                         }
@@ -1163,20 +1214,20 @@
                             {
                                 "name": "slsa-verifier-windows-amd64.exe",
                                 "digest": {
-                                    "sha256": "cda4a71f6e6fbfb32aa5b461b650d807503ad509145dc0df9b68adb9e23e674f"
+                                    "sha256": "e635c8f27d9a485cae3c9846550511fef78ed2b57902ef62ad49d37e1df22e98"
                                 }
                             }
                         ],
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.8.0"
+                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.10.0"
                             },
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.4.1",
+                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.5.1",
                                     "digest": {
-                                        "sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                        "sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86"
                                     },
                                     "entryPoint": ".github/workflows/release.yml"
                                 },
@@ -1188,13 +1239,25 @@
                                     "github_base_ref": "",
                                     "github_event_name": "push",
                                     "github_event_payload": {
-                                        "after": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+                                        "after": "eb7007070baa04976cb9e25a0d8034f8db030a86",
                                         "base_ref": "refs/heads/main",
                                         "before": "0000000000000000000000000000000000000000",
                                         "commits": [],
-                                        "compare": "https://github.com/slsa-framework/slsa-verifier/compare/v2.4.1",
+                                        "compare": "https://github.com/slsa-framework/slsa-verifier/compare/v2.5.1",
                                         "created": true,
                                         "deleted": false,
+                                        "enterprise": {
+                                            "avatar_url": "https://avatars.githubusercontent.com/b/102459?v=4",
+                                            "created_at": "2023-12-08T05:54:26Z",
+                                            "description": "Open Source Security Foundation (OpenSSF)",
+                                            "html_url": "https://github.com/enterprises/openssf",
+                                            "id": 102459,
+                                            "name": "Open Source Security Foundation",
+                                            "node_id": "E_kgDOAAGQOw",
+                                            "slug": "openssf",
+                                            "updated_at": "2024-01-06T00:47:02Z",
+                                            "website_url": "https://openssf.org/"
+                                        },
                                         "forced": false,
                                         "head_commit": {
                                             "author": {
@@ -1208,11 +1271,11 @@
                                                 "username": "web-flow"
                                             },
                                             "distinct": true,
-                                            "id": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
-                                            "message": "docs: update release doc and rm binary (#716)\n\nSigned-off-by: laurentsimon <laurentsimon@google.com>",
-                                            "timestamp": "2023-10-16T13:44:13-07:00",
-                                            "tree_id": "b70b194feb7247be9885bfff95f9640c84d0b8f5",
-                                            "url": "https://github.com/slsa-framework/slsa-verifier/commit/7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                            "id": "eb7007070baa04976cb9e25a0d8034f8db030a86",
+                                            "message": "feat: Update verifier version in GHA installer (#747)\n\nThis is part of the release tests in\r\nhttps://github.com/slsa-framework/slsa-verifier/blob/main/RELEASE.md#dry-run\r\nto verify that the Action installer works.\r\n\r\nA follow up PR will be sent prior to release to update to `v2.5.0`\r\n\r\n---------\r\n\r\nSigned-off-by: laurentsimon <laurentsimon@google.com>",
+                                            "timestamp": "2024-03-25T14:54:53Z",
+                                            "tree_id": "821166b47987861864888c07fde313b8be8ffc4c",
+                                            "url": "https://github.com/slsa-framework/slsa-verifier/commit/eb7007070baa04976cb9e25a0d8034f8db030a86"
                                         },
                                         "organization": {
                                             "avatar_url": "https://avatars.githubusercontent.com/u/80431187?v=4",
@@ -1232,7 +1295,7 @@
                                             "email": "64505099+laurentsimon@users.noreply.github.com",
                                             "name": "laurentsimon"
                                         },
-                                        "ref": "refs/tags/v2.4.1",
+                                        "ref": "refs/tags/v2.5.1",
                                         "repository": {
                                             "allow_forking": true,
                                             "archive_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/{archive_format}{/ref}",
@@ -1256,8 +1319,8 @@
                                             "downloads_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/downloads",
                                             "events_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/events",
                                             "fork": false,
-                                            "forks": 35,
-                                            "forks_count": 35,
+                                            "forks": 40,
+                                            "forks_count": 40,
                                             "forks_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/forks",
                                             "full_name": "slsa-framework/slsa-verifier",
                                             "git_commits_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/git/commits{/sha}",
@@ -1296,8 +1359,8 @@
                                             "name": "slsa-verifier",
                                             "node_id": "R_kgDOHEMl0g",
                                             "notifications_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/notifications{?since,all,participating}",
-                                            "open_issues": 123,
-                                            "open_issues_count": 123,
+                                            "open_issues": 129,
+                                            "open_issues_count": 129,
                                             "organization": "slsa-framework",
                                             "owner": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/80431187?v=4",
@@ -1323,12 +1386,12 @@
                                             },
                                             "private": false,
                                             "pulls_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/pulls{/number}",
-                                            "pushed_at": 1699396985,
+                                            "pushed_at": 1711379651,
                                             "releases_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/releases{/id}",
-                                            "size": 88467,
+                                            "size": 91684,
                                             "ssh_url": "git@github.com:slsa-framework/slsa-verifier.git",
-                                            "stargazers": 170,
-                                            "stargazers_count": 170,
+                                            "stargazers": 198,
+                                            "stargazers_count": 198,
                                             "stargazers_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/stargazers",
                                             "statuses_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/statuses/{sha}",
                                             "subscribers_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/subscribers",
@@ -1338,11 +1401,11 @@
                                             "teams_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/teams",
                                             "topics": [],
                                             "trees_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/git/trees{/sha}",
-                                            "updated_at": "2023-10-17T17:58:10Z",
+                                            "updated_at": "2024-03-12T15:03:34Z",
                                             "url": "https://github.com/slsa-framework/slsa-verifier",
                                             "visibility": "public",
-                                            "watchers": 170,
-                                            "watchers_count": 170,
+                                            "watchers": 198,
+                                            "watchers_count": 198,
                                             "web_commit_signoff_required": true
                                         },
                                         "sender": {
@@ -1367,15 +1430,15 @@
                                         }
                                     },
                                     "github_head_ref": "",
-                                    "github_ref": "refs/tags/v2.4.1",
+                                    "github_ref": "refs/tags/v2.5.1",
                                     "github_ref_type": "tag",
                                     "github_repository_id": "474162642",
                                     "github_repository_owner": "slsa-framework",
                                     "github_repository_owner_id": "80431187",
                                     "github_run_attempt": "1",
-                                    "github_run_id": "6791195934",
-                                    "github_run_number": "511",
-                                    "github_sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+                                    "github_run_id": "8422431506",
+                                    "github_run_number": "655",
+                                    "github_sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86",
                                     "os": "ubuntu22"
                                 }
                             },
@@ -1384,7 +1447,7 @@
                                     {
                                         "workingDir": "/home/runner/work/slsa-verifier/slsa-verifier/__PROJECT_CHECKOUT_DIR__/cli/slsa-verifier",
                                         "command": [
-                                            "/opt/hostedtoolcache/go/1.20.10/x64/bin/go",
+                                            "/opt/hostedtoolcache/go/1.21.8/x64/bin/go",
                                             "mod",
                                             "vendor"
                                         ],
@@ -1393,12 +1456,12 @@
                                     {
                                         "workingDir": "/home/runner/work/slsa-verifier/slsa-verifier/__PROJECT_CHECKOUT_DIR__/cli/slsa-verifier",
                                         "command": [
-                                            "/opt/hostedtoolcache/go/1.20.10/x64/bin/go",
+                                            "/opt/hostedtoolcache/go/1.21.8/x64/bin/go",
                                             "build",
                                             "-mod=vendor",
                                             "-trimpath",
                                             "-tags=netgo",
-                                            "-ldflags=-X sigs.k8s.io/release-utils/version.gitVersion=2.4.1",
+                                            "-ldflags=-X sigs.k8s.io/release-utils/version.gitVersion=2.5.1",
                                             "-o",
                                             "slsa-verifier-windows-amd64.exe"
                                         ],
@@ -1413,7 +1476,7 @@
                                 "version": 1
                             },
                             "metadata": {
-                                "buildInvocationID": "6791195934-1",
+                                "buildInvocationID": "8422431506-1",
                                 "completeness": {
                                     "parameters": true,
                                     "environment": false,
@@ -1423,13 +1486,13 @@
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.4.1",
+                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.5.1",
                                     "digest": {
-                                        "sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                        "sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86"
                                     }
                                 },
                                 {
-                                    "uri": "https://github.com/actions/virtual-environments/releases/tag/ubuntu22/20231030.2.0"
+                                    "uri": "https://github.com/actions/virtual-environments/releases/tag/ubuntu22/20240317.1.0"
                                 }
                             ]
                         }
@@ -1441,20 +1504,20 @@
                             {
                                 "name": "slsa-verifier-windows-arm64.exe",
                                 "digest": {
-                                    "sha256": "8f0b03c01271c7228e99f21c89b99c0b02dc0cc7bdce0fe842af1dc7554d644f"
+                                    "sha256": "9b08bc2ba25a84e06ecfeecdcabc7e8339da15d272cfd647aa7e3f7f09cb55d5"
                                 }
                             }
                         ],
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.8.0"
+                                "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.10.0"
                             },
                             "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.4.1",
+                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.5.1",
                                     "digest": {
-                                        "sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                        "sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86"
                                     },
                                     "entryPoint": ".github/workflows/release.yml"
                                 },
@@ -1466,13 +1529,25 @@
                                     "github_base_ref": "",
                                     "github_event_name": "push",
                                     "github_event_payload": {
-                                        "after": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+                                        "after": "eb7007070baa04976cb9e25a0d8034f8db030a86",
                                         "base_ref": "refs/heads/main",
                                         "before": "0000000000000000000000000000000000000000",
                                         "commits": [],
-                                        "compare": "https://github.com/slsa-framework/slsa-verifier/compare/v2.4.1",
+                                        "compare": "https://github.com/slsa-framework/slsa-verifier/compare/v2.5.1",
                                         "created": true,
                                         "deleted": false,
+                                        "enterprise": {
+                                            "avatar_url": "https://avatars.githubusercontent.com/b/102459?v=4",
+                                            "created_at": "2023-12-08T05:54:26Z",
+                                            "description": "Open Source Security Foundation (OpenSSF)",
+                                            "html_url": "https://github.com/enterprises/openssf",
+                                            "id": 102459,
+                                            "name": "Open Source Security Foundation",
+                                            "node_id": "E_kgDOAAGQOw",
+                                            "slug": "openssf",
+                                            "updated_at": "2024-01-06T00:47:02Z",
+                                            "website_url": "https://openssf.org/"
+                                        },
                                         "forced": false,
                                         "head_commit": {
                                             "author": {
@@ -1486,11 +1561,11 @@
                                                 "username": "web-flow"
                                             },
                                             "distinct": true,
-                                            "id": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
-                                            "message": "docs: update release doc and rm binary (#716)\n\nSigned-off-by: laurentsimon <laurentsimon@google.com>",
-                                            "timestamp": "2023-10-16T13:44:13-07:00",
-                                            "tree_id": "b70b194feb7247be9885bfff95f9640c84d0b8f5",
-                                            "url": "https://github.com/slsa-framework/slsa-verifier/commit/7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                            "id": "eb7007070baa04976cb9e25a0d8034f8db030a86",
+                                            "message": "feat: Update verifier version in GHA installer (#747)\n\nThis is part of the release tests in\r\nhttps://github.com/slsa-framework/slsa-verifier/blob/main/RELEASE.md#dry-run\r\nto verify that the Action installer works.\r\n\r\nA follow up PR will be sent prior to release to update to `v2.5.0`\r\n\r\n---------\r\n\r\nSigned-off-by: laurentsimon <laurentsimon@google.com>",
+                                            "timestamp": "2024-03-25T14:54:53Z",
+                                            "tree_id": "821166b47987861864888c07fde313b8be8ffc4c",
+                                            "url": "https://github.com/slsa-framework/slsa-verifier/commit/eb7007070baa04976cb9e25a0d8034f8db030a86"
                                         },
                                         "organization": {
                                             "avatar_url": "https://avatars.githubusercontent.com/u/80431187?v=4",
@@ -1510,7 +1585,7 @@
                                             "email": "64505099+laurentsimon@users.noreply.github.com",
                                             "name": "laurentsimon"
                                         },
-                                        "ref": "refs/tags/v2.4.1",
+                                        "ref": "refs/tags/v2.5.1",
                                         "repository": {
                                             "allow_forking": true,
                                             "archive_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/{archive_format}{/ref}",
@@ -1534,8 +1609,8 @@
                                             "downloads_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/downloads",
                                             "events_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/events",
                                             "fork": false,
-                                            "forks": 35,
-                                            "forks_count": 35,
+                                            "forks": 40,
+                                            "forks_count": 40,
                                             "forks_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/forks",
                                             "full_name": "slsa-framework/slsa-verifier",
                                             "git_commits_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/git/commits{/sha}",
@@ -1574,8 +1649,8 @@
                                             "name": "slsa-verifier",
                                             "node_id": "R_kgDOHEMl0g",
                                             "notifications_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/notifications{?since,all,participating}",
-                                            "open_issues": 123,
-                                            "open_issues_count": 123,
+                                            "open_issues": 129,
+                                            "open_issues_count": 129,
                                             "organization": "slsa-framework",
                                             "owner": {
                                                 "avatar_url": "https://avatars.githubusercontent.com/u/80431187?v=4",
@@ -1601,12 +1676,12 @@
                                             },
                                             "private": false,
                                             "pulls_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/pulls{/number}",
-                                            "pushed_at": 1699396985,
+                                            "pushed_at": 1711379651,
                                             "releases_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/releases{/id}",
-                                            "size": 88467,
+                                            "size": 91684,
                                             "ssh_url": "git@github.com:slsa-framework/slsa-verifier.git",
-                                            "stargazers": 170,
-                                            "stargazers_count": 170,
+                                            "stargazers": 198,
+                                            "stargazers_count": 198,
                                             "stargazers_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/stargazers",
                                             "statuses_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/statuses/{sha}",
                                             "subscribers_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/subscribers",
@@ -1616,11 +1691,11 @@
                                             "teams_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/teams",
                                             "topics": [],
                                             "trees_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/git/trees{/sha}",
-                                            "updated_at": "2023-10-17T17:58:10Z",
+                                            "updated_at": "2024-03-12T15:03:34Z",
                                             "url": "https://github.com/slsa-framework/slsa-verifier",
                                             "visibility": "public",
-                                            "watchers": 170,
-                                            "watchers_count": 170,
+                                            "watchers": 198,
+                                            "watchers_count": 198,
                                             "web_commit_signoff_required": true
                                         },
                                         "sender": {
@@ -1645,15 +1720,15 @@
                                         }
                                     },
                                     "github_head_ref": "",
-                                    "github_ref": "refs/tags/v2.4.1",
+                                    "github_ref": "refs/tags/v2.5.1",
                                     "github_ref_type": "tag",
                                     "github_repository_id": "474162642",
                                     "github_repository_owner": "slsa-framework",
                                     "github_repository_owner_id": "80431187",
                                     "github_run_attempt": "1",
-                                    "github_run_id": "6791195934",
-                                    "github_run_number": "511",
-                                    "github_sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95",
+                                    "github_run_id": "8422431506",
+                                    "github_run_number": "655",
+                                    "github_sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86",
                                     "os": "ubuntu22"
                                 }
                             },
@@ -1662,7 +1737,7 @@
                                     {
                                         "workingDir": "/home/runner/work/slsa-verifier/slsa-verifier/__PROJECT_CHECKOUT_DIR__/cli/slsa-verifier",
                                         "command": [
-                                            "/opt/hostedtoolcache/go/1.20.10/x64/bin/go",
+                                            "/opt/hostedtoolcache/go/1.21.8/x64/bin/go",
                                             "mod",
                                             "vendor"
                                         ],
@@ -1671,27 +1746,27 @@
                                     {
                                         "workingDir": "/home/runner/work/slsa-verifier/slsa-verifier/__PROJECT_CHECKOUT_DIR__/cli/slsa-verifier",
                                         "command": [
-                                            "/opt/hostedtoolcache/go/1.20.10/x64/bin/go",
+                                            "/opt/hostedtoolcache/go/1.21.8/x64/bin/go",
                                             "build",
                                             "-mod=vendor",
                                             "-trimpath",
                                             "-tags=netgo",
-                                            "-ldflags=-X sigs.k8s.io/release-utils/version.gitVersion=2.4.1",
+                                            "-ldflags=-X sigs.k8s.io/release-utils/version.gitVersion=2.5.1",
                                             "-o",
                                             "slsa-verifier-windows-arm64.exe"
                                         ],
                                         "env": [
                                             "GOOS=windows",
                                             "GOARCH=arm64",
-                                            "CGO_ENABLED=0",
-                                            "GO111MODULE=on"
+                                            "GO111MODULE=on",
+                                            "CGO_ENABLED=0"
                                         ]
                                     }
                                 ],
                                 "version": 1
                             },
                             "metadata": {
-                                "buildInvocationID": "6791195934-1",
+                                "buildInvocationID": "8422431506-1",
                                 "completeness": {
                                     "parameters": true,
                                     "environment": false,
@@ -1701,13 +1776,13 @@
                             },
                             "materials": [
                                 {
-                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.4.1",
+                                    "uri": "git+https://github.com/slsa-framework/slsa-verifier@refs/tags/v2.5.1",
                                     "digest": {
-                                        "sha1": "7e1e47d7d793930ab0082c15c2b971fdb53a3c95"
+                                        "sha1": "eb7007070baa04976cb9e25a0d8034f8db030a86"
                                     }
                                 },
                                 {
-                                    "uri": "https://github.com/actions/virtual-environments/releases/tag/ubuntu22/20231030.2.0"
+                                    "uri": "https://github.com/actions/virtual-environments/releases/tag/ubuntu22/20240317.1.0"
                                 }
                             ]
                         }
@@ -1719,7 +1794,7 @@
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 2,
+                "FAILED": 4,
                 "PASSED": 7,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
@@ -1732,7 +1807,7 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "Check mcn_build_as_code_1 is set to PASSED because mcn_trusted_builder_level_three_1 PASSED."
+                        "Not Available."
                     ],
                     "result_type": "PASSED"
                 },
@@ -1743,7 +1818,13 @@
                         "Scripted Build - SLSA Level 1"
                     ],
                     "justification": [
-                        "Check mcn_build_script_1 is set to PASSED because mcn_build_service_1 PASSED."
+                        "build_tool_name: go",
+                        "ci_service_name: github_actions",
+                        "language: BuildLanguage.GO",
+                        "build_tool_command: [\"go\", \"build\", \"-mod=vendor\", \"-o\", \"service\", \"./cli/experimental/service/\"]",
+                        {
+                            "build_trigger": "https://github.com/slsa-framework/slsa-verifier/blob/fc50b662fcfeeeb0e97243554b47d9b20b14efac/.github/workflows/pre-submit.cli.yml"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -1754,7 +1835,7 @@
                         "Build service - SLSA Level 2"
                     ],
                     "justification": [
-                        "Check mcn_build_service_1 is set to PASSED because mcn_build_as_code_1 PASSED."
+                        "Not Available."
                     ],
                     "result_type": "PASSED"
                 },
@@ -1768,13 +1849,10 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Found provenance in release assets:",
-                        "https://api.github.com/repos/slsa-framework/slsa-verifier/releases/assets/134437052",
-                        "https://api.github.com/repos/slsa-framework/slsa-verifier/releases/assets/134437111",
-                        "https://api.github.com/repos/slsa-framework/slsa-verifier/releases/assets/134437099",
-                        "https://api.github.com/repos/slsa-framework/slsa-verifier/releases/assets/134437059",
-                        "https://api.github.com/repos/slsa-framework/slsa-verifier/releases/assets/134437166",
-                        "https://api.github.com/repos/slsa-framework/slsa-verifier/releases/assets/134437048"
+                        "asset_name: slsa-verifier-darwin-amd64.intoto.jsonl",
+                        {
+                            "asset_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/releases/assets/158521660"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -1785,7 +1863,9 @@
                         "Provenance conforms with expectations - SLSA Level 3"
                     ],
                     "justification": [
-                        "Successfully verified the expectation against provenance."
+                        {
+                            "asset_url": "https://api.github.com/repos/slsa-framework/slsa-verifier/releases/assets/158521660"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -1799,10 +1879,11 @@
                         "Ephemeral environment - SLSA Level 3"
                     ],
                     "justification": [
+                        "build_tool_name: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.2.0",
+                        "ci_service_name: github_actions",
                         {
-                            "Found trusted builder GitHub Actions: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.2.0 triggered by": "https://github.com/slsa-framework/slsa-verifier/blob/fc50b662fcfeeeb0e97243554b47d9b20b14efac/.github/workflows/release.yml"
-                        },
-                        "However, could not find a passing workflow run."
+                            "build_trigger": "https://github.com/slsa-framework/slsa-verifier/blob/fc50b662fcfeeeb0e97243554b47d9b20b14efac/.github/workflows/release.yml"
+                        }
                     ],
                     "result_type": "PASSED"
                 },
@@ -1814,7 +1895,7 @@
                     ],
                     "justification": [
                         {
-                            "This is a Git repository": "https://github.com/slsa-framework/slsa-verifier"
+                            "git_repo": "https://github.com/slsa-framework/slsa-verifier"
                         }
                     ],
                     "result_type": "PASSED"
@@ -1826,7 +1907,29 @@
                         "Build as code - SLSA Level 3"
                     ],
                     "justification": [
-                        "Unable to find a publishing timestamp for the artifact."
+                        "Not Available."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_commit_1",
+                    "check_description": "Check whether the commit came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "commit_digest: No provenance found."
+                    ],
+                    "result_type": "FAILED"
+                },
+                {
+                    "check_id": "mcn_provenance_derived_repo_1",
+                    "check_description": "Check whether the repo came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "repository_url: No provenance found."
                     ],
                     "result_type": "FAILED"
                 },
@@ -1840,7 +1943,7 @@
                         "Provenance content - Identifies builder - SLSA Level 1"
                     ],
                     "justification": [
-                        "Failed to discover any witness provenance."
+                        "Not Available."
                     ],
                     "result_type": "FAILED"
                 }
@@ -1852,7 +1955,7 @@
         "unique_dep_repos": 0,
         "checks_summary": [
             {
-                "check_id": "mcn_version_control_system_1",
+                "check_id": "mcn_provenance_available_1",
                 "num_deps_pass": 0
             },
             {
@@ -1864,6 +1967,18 @@
                 "num_deps_pass": 0
             },
             {
+                "check_id": "mcn_provenance_derived_commit_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_provenance_level_three_1",
+                "num_deps_pass": 0
+            },
+            {
+                "check_id": "mcn_version_control_system_1",
+                "num_deps_pass": 0
+            },
+            {
                 "check_id": "mcn_infer_artifact_pipeline_1",
                 "num_deps_pass": 0
             },
@@ -1872,11 +1987,11 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_level_three_1",
+                "check_id": "mcn_build_script_1",
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_build_script_1",
+                "check_id": "mcn_build_service_1",
                 "num_deps_pass": 0
             },
             {
@@ -1884,11 +1999,7 @@
                 "num_deps_pass": 0
             },
             {
-                "check_id": "mcn_provenance_available_1",
-                "num_deps_pass": 0
-            },
-            {
-                "check_id": "mcn_build_service_1",
+                "check_id": "mcn_provenance_derived_repo_1",
                 "num_deps_pass": 0
             }
         ],
