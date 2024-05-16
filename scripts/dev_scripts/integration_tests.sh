@@ -707,7 +707,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/sl
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
 DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/slsa_verifier.ini
 PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/slsa-verifier-linux-amd64.intoto.jsonl
-$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -pf $PROVENANCE_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -pf $PROVENANCE_FILE -rp https://github.com/slsa-framework/slsa-verifier -d 6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6 --skip-deps || log_fail
 
 check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
@@ -719,7 +719,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/sl
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
 DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/allow_url_link_github.ini
 PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/slsa-verifier-linux-amd64.intoto.jsonl
-$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -pf $PROVENANCE_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -pf $PROVENANCE_FILE -rp https://github.com/slsa-framework/slsa-verifier -d 6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6 --skip-deps || log_fail
 
 check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 

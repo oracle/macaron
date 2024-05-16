@@ -324,6 +324,19 @@ class Analyzer:
                 provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
                     provenance_payload
                 )
+                # Check the provenance repo commit match the input repo commit
+                repo_path_input: str = config.get_value("path")
+                digest_input: str = config.get_value("digest")
+                if (repo_path_input and provenance_repo_url and repo_path_input != provenance_repo_url) or (
+                    digest_input and provenance_commit_digest and digest_input != provenance_commit_digest
+                ):
+                    return Record(
+                        record_id=repo_id,
+                        description="The repository URL or commit digest provided as input do not match what exists "
+                        "in the provenance.",
+                        pre_config=config,
+                        status=SCMStatus.ANALYSIS_FAILED,
+                    )
             except ProvenanceError as error:
                 logger.debug("Failed to extract repo or commit from provenance: %s", error)
 
