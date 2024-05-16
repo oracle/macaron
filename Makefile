@@ -87,7 +87,7 @@ venv:
 # We also install cyclonedx-go to generate SBOM for Go, compile the Go modules,
 # install SLSA verifier binary, download mvnw, and gradlew.
 .PHONY: setup
-setup: force-upgrade setup-go setup-binaries
+setup: force-upgrade setup-go setup-binaries setup-schemastore
 	pre-commit install
 	mkdir -p dist
 	go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.3.0
@@ -113,6 +113,25 @@ $(PACKAGE_PATH)/resources/gradlew:
 		&& unzip -o gradle-$$GRADLE_VERSION-bin.zip \
 		&& rm -r gradle-$$GRADLE_VERSION-bin.zip \
 		&& gradle-$$GRADLE_VERSION/bin/gradle wrapper \
+		&& cd $(REPO_PATH)
+setup-schemastore: $(PACKAGE_PATH)/resources/schemastore/github-workflow.json $(PACKAGE_PATH)/resources/schemastore/LICENSE $(PACKAGE_PATH)/resources/schemastore/NOTICE
+$(PACKAGE_PATH)/resources/schemastore/github-workflow.json:
+	cd $(PACKAGE_PATH)/resources \
+		&& mkdir -p schemastore \
+		&& cd schemastore \
+		&& wget https://raw.githubusercontent.com/SchemaStore/schemastore/a1689388470d1997f2e5ebd8b430e99587b8d354/src/schemas/json/github-workflow.json \
+		&& cd $(REPO_PATH)
+$(PACKAGE_PATH)/resources/schemastore/LICENSE:
+	cd $(PACKAGE_PATH)/resources \
+		&& mkdir -p schemastore \
+		&& cd schemastore \
+		&& wget https://raw.githubusercontent.com/SchemaStore/schemastore/a1689388470d1997f2e5ebd8b430e99587b8d354/LICENSE \
+		&& cd $(REPO_PATH)
+$(PACKAGE_PATH)/resources/schemastore/NOTICE:
+	cd $(PACKAGE_PATH)/resources \
+		&& mkdir -p schemastore \
+		&& cd schemastore \
+		&& wget https://raw.githubusercontent.com/SchemaStore/schemastore/a1689388470d1997f2e5ebd8b430e99587b8d354/NOTICE \
 		&& cd $(REPO_PATH)
 
 # Supports OL8+, Fedora 34+, Ubuntu 20.04+, and macOS.

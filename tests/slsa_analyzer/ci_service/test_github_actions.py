@@ -8,8 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from macaron import MACARON_PATH
-from macaron.code_analyzer.call_graph import CallGraph
+from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.parsers.actionparser import parse as parse_action
 from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
     GitHubWorkflowNode,
@@ -66,10 +65,10 @@ def test_build_call_graph(workflow_name: str, expect: list[str]) -> None:
     resources_dir = Path(__file__).parent.joinpath("resources", "github")
 
     # Parse GitHub Actions workflows.
-    root = GitHubWorkflowNode(name="root", node_type=GitHubWorkflowType.NONE, source_path="", parsed_obj={})
+    root: BaseNode = BaseNode()
     gh_cg = CallGraph(root, "")
     workflow_path = os.path.join(resources_dir, workflow_name)
-    parsed_obj = parse_action(workflow_path, macaron_path=MACARON_PATH)
+    parsed_obj = parse_action(workflow_path)
 
     callee = GitHubWorkflowNode(
         name=os.path.basename(workflow_path),

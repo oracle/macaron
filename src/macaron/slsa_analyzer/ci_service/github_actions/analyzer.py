@@ -9,7 +9,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from macaron.code_analyzer.call_graph import BaseNode
 from macaron.config.global_config import global_config
@@ -17,6 +17,16 @@ from macaron.errors import CallGraphError, GitHubActionsValueError, ParseError
 from macaron.parsers.actionparser import get_step_input
 from macaron.parsers.actionparser import parse as parse_action
 from macaron.parsers.bashparser import BashNode, BashScriptType, create_bash_node
+from macaron.parsers.github_workflow_model import (
+    ActionStep,
+    Identified,
+    Job,
+    NormalJob,
+    ReusableWorkflowCallJob,
+    Step,
+    Workflow,
+    as_action_step,
+)
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage, Language
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -36,7 +46,6 @@ class ThirdPartyAction:
 class GitHubWorkflowType(Enum):
     """This class represents different GitHub Actions workflow types."""
 
-    NONE = "None"
     INTERNAL = "internal"  # Workflows declared in the repo.
     EXTERNAL = "external"  # Third-party workflows.
     REUSABLE = "reusable"  # Reusable workflows.
@@ -50,7 +59,7 @@ class GitHubWorkflowNode(BaseNode):
         name: str,
         node_type: GitHubWorkflowType,
         source_path: str,
-        parsed_obj: dict,
+        parsed_obj: Workflow | Identified[ReusableWorkflowCallJob] | ActionStep,
         model: ThirdPartyAction | None = None,
         **kwargs: Any,
     ) -> None:
@@ -64,8 +73,9 @@ class GitHubWorkflowNode(BaseNode):
             The type of workflow.
         source_path : str
             The path of the workflow.
-        parsed_obj : dict
-            The parsed Actions workflow object.
+        parsed_obj : Workflow | Identified[ReusableWorkflowCallJob] | ActionStep
+            The parsed Actions workflow object. Actual type must correspond to node type.
+            (INTERNAL -> Workflow, REUSABLE -> Identified[ReusableWorkflowCallJob], EXTERNAL -> ActionStep)
         caller: BaseNode | None
             The caller node.
         model: ThirdPartyAction | None
@@ -85,7 +95,7 @@ class GitHubWorkflowNode(BaseNode):
 class GitHubJobNode(BaseNode):
     """This class represents a callgraph node for GitHub Actions jobs."""
 
-    def __init__(self, name: str, source_path: str, parsed_obj: dict, **kwargs: Any) -> None:
+    def __init__(self, name: str, source_path: str, parsed_obj: Identified[Job], **kwargs: Any) -> None:
         """Initialize instance.
 
         Parameters
@@ -94,7 +104,7 @@ class GitHubJobNode(BaseNode):
             Name of the workflow (or URL for reusable and external workflows).
         source_path : str
             The path of the workflow.
-        parsed_obj : dict
+        parsed_obj : Identified[Job]
             The parsed Actions workflow object.
         caller: BaseNode
             The caller node.
@@ -166,20 +176,31 @@ def resolve_matrix_variable(job_node: GitHubJobNode, var: str) -> Iterable[str]:
     GitHubActionsValueError
         When the matrix variable cannot be found.
     """
-    parsed_obj = job_node.parsed_obj
-    if "Strategy" not in parsed_obj:
-        raise GitHubActionsValueError(f"Unable to find `Strategy` in {job_node.source_path} GitHub Action.")
-    if "Matrix" not in parsed_obj["Strategy"]:
-        raise GitHubActionsValueError(f"Unable to find `Matrix` in {job_node.source_path} GitHub Action.")
-    if "Rows" not in parsed_obj["Strategy"]["Matrix"]:
-        raise GitHubActionsValueError(f"Unable to find `Rows` in {job_node.source_path} GitHub Action.")
-    rows = parsed_obj["Strategy"]["Matrix"]["Rows"]
-    value = rows.get(var)
-    if not value:
+    job_obj = job_node.parsed_obj.obj
+    if "strategy" not in job_obj:
+        raise GitHubActionsValueError(f"Unable to find `strategy` in {job_node.source_path} GitHub Action.")
+    if "matrix" not in job_obj["strategy"]:
+        raise GitHubActionsValueError(f"Unable to find `matrix` in {job_node.source_path} GitHub Action.")
+    matrix = job_obj["strategy"]["matrix"]
+    if not isinstance(matrix, dict):
+        raise GitHubActionsValueError(f"Unable to resolve matrix in {job_node.source_path} GitHub Action.")
+
+    matrix_vals = matrix.get(var)
+    if matrix_vals is None:
         raise GitHubActionsValueError(f"Unable to find variable {var} in {job_node.source_path} GitHub Action.")
 
-    for item in value["Values"]:
-        yield item["Value"]
+    if isinstance(matrix_vals, list):
+        for val in matrix_vals:
+            # TODO: type of val permits dict/list, how to handle it? Just return Configuration instead of str
+            # and let the caller handle it?
+            if isinstance(val, str):
+                yield val
+            if isinstance(val, float):
+                yield str(float)
+            if isinstance(val, bool):
+                yield "true" if val else "false"
+    else:
+        raise GitHubActionsValueError(f"Unable to resolve matrix in {job_node.source_path} GitHub Action.")
 
 
 def is_expression(value: str) -> bool:
@@ -241,70 +262,77 @@ def build_call_graph_from_node(node: GitHubWorkflowNode, repo_path: str) -> None
     repo_path: str
         The file system path to the repo.
     """
-    for job_name, job in node.parsed_obj.get("Jobs", {}).items():
-        job_node = GitHubJobNode(name=job_name, source_path=node.source_path, parsed_obj=job, caller=node)
+    if not isinstance(node.parsed_obj, dict) or "jobs" not in node.parsed_obj:
+        return
+    jobs = cast(Workflow, node.parsed_obj)["jobs"]
+    for job_name, job in jobs.items():
+        job_with_id = Identified[Job](job_name, job)
+        job_node = GitHubJobNode(name=job_name, source_path=node.source_path, parsed_obj=job_with_id, caller=node)
         node.add_callee(job_node)
-        # Add third-party workflows.
-        steps = job.get("Steps") or []
-        for step in steps:
-            if step.get("Exec") and "Uses" in step.get("Exec"):
-                # TODO: change source_path for external workflows.
-                action_name = step["Exec"]["Uses"]["Value"]
-                external_node = GitHubWorkflowNode(
-                    name=action_name,
-                    node_type=GitHubWorkflowType.EXTERNAL,
-                    source_path="",
-                    parsed_obj=step,
-                    caller=job_node,
-                )
-                external_node.model = create_third_party_action_model(external_node)
-                job_node.add_callee(external_node)
 
-            # Check the shell type configuration. We currently can support `bash`` and `sh`.
-            # By default `bash`` is used on non-Windows runners, which we support.
-            # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#defaultsrunshell
-            # TODO: support Powershell for Windows runners, which is the default shell in GitHub Actions.
-            # Right now, the script with the default shell is passed to the parser, which will fail
-            # if the runner is Windows and Powershell is used. But there is no easy way to avoid passing
-            # the script because that means we need to accurately determine the runner's OS.
-            if (
-                step.get("Exec")
-                and step["Exec"].get("Run")
-                and (step["Exec"].get("Shell") is None or step["Exec"]["Shell"].get("Value") in ["bash", "sh"])
-            ):
-                try:
-                    name = "UNKNOWN"
-                    node_id = None
-                    if step.get("ID") and step["ID"].get("Value"):
-                        node_id = step["ID"]["Value"]
-                    if step.get("Name") and step["Name"].get("Value"):
-                        name = step["Name"]["Value"]
-
-                    callee = create_bash_node(
-                        name=name,
-                        node_id=node_id,
-                        node_type=BashScriptType.INLINE,
-                        source_path=node.source_path,
-                        ci_step_ast=step,
-                        repo_path=repo_path,
+        if "uses" not in job:
+            normal_job = cast(NormalJob, job)
+            # Add third-party workflows.
+            steps = normal_job.get("steps")
+            if steps is None:
+                continue
+            for step in steps:
+                action_step = as_action_step(step)
+                if action_step is not None:
+                    # TODO: change source_path for external workflows.
+                    action_name = action_step["uses"]
+                    external_node = GitHubWorkflowNode(
+                        name=action_name,
+                        node_type=GitHubWorkflowType.EXTERNAL,
+                        source_path="",
+                        parsed_obj=action_step,
                         caller=job_node,
-                        recursion_depth=0,
                     )
-                except CallGraphError as error:
-                    logger.debug(error)
-                    continue
-                job_node.add_callee(callee)
+                    external_node.model = create_third_party_action_model(external_node)
+                    job_node.add_callee(external_node)
+                else:
+                    # Check the shell type configuration. We currently can support `bash`` and `sh`.
+                    # By default `bash`` is used on non-Windows runners, which we support.
+                    # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#defaultsrunshell
+                    # TODO: support Powershell for Windows runners, which is the default shell in GitHub Actions.
+                    # Right now, the script with the default shell is passed to the parser, which will fail
+                    # if the runner is Windows and Powershell is used. But there is no easy way to avoid passing
+                    # the script because that means we need to accurately determine the runner's OS.
+                    if step.get("run") and ("shell" not in step or step["shell"] in ["bash", "sh"]):
+                        try:
+                            name = "UNKNOWN"
+                            node_id = None
+                            if "id" in step:
+                                node_id = step["id"]
+                            if "name" in step:
+                                name = step["name"]
 
-        # Add reusable workflows.
-        reusable = job.get("WorkflowCall")
-        if reusable:
-            logger.debug("Found reusable workflow: %s.", reusable["Uses"]["Value"])
+                            callee = create_bash_node(
+                                name=name,
+                                node_id=node_id,
+                                node_type=BashScriptType.INLINE,
+                                source_path=node.source_path,
+                                ci_step_ast=step,
+                                repo_path=repo_path,
+                                caller=job_node,
+                                recursion_depth=0,
+                            )
+                        except CallGraphError as error:
+                            logger.debug(error)
+                            continue
+                        job_node.add_callee(callee)
+
+        else:
+            workflow_call_job = cast(ReusableWorkflowCallJob, job)
+            workflow_call_job_with_id = Identified[ReusableWorkflowCallJob](job_name, workflow_call_job)
+            # Add reusable workflows.
+            logger.debug("Found reusable workflow: %s.", workflow_call_job["uses"])
             # TODO: change source_path for reusable workflows.
             reusable_node = GitHubWorkflowNode(
-                name=reusable["Uses"]["Value"],
+                name=workflow_call_job["uses"],
                 node_type=GitHubWorkflowType.REUSABLE,
                 source_path="",
-                parsed_obj=reusable,
+                parsed_obj=workflow_call_job_with_id,
                 caller=job_node,
             )
             reusable_node.model = create_third_party_action_model(reusable_node)
@@ -346,7 +374,7 @@ def build_call_graph_from_path(root: BaseNode, workflow_path: str, repo_path: st
         workflow_path,
     )
     try:
-        parsed_obj: dict = parse_action(workflow_path)
+        parsed_obj: Workflow = parse_action(workflow_path)
     except ParseError as error:
         logger.error("Unable to parse GitHub Actions at the target %s: %s", repo_path, error)
         raise ParseError from error
@@ -382,19 +410,22 @@ def get_reachable_secrets(step_node: BashNode) -> Iterable[str]:
     if not isinstance(job_node, GitHubJobNode):
         return
 
-    def _find_secret_keys(ast: dict | None) -> Iterable[str]:
+    def _find_secret_keys(ast: NormalJob | ReusableWorkflowCallJob | Step | None) -> Iterable[str]:
         if ast is None:
             return
-        if ast.get("Env") and ast["Env"].get("Vars"):
-            for key, val in ast["Env"]["Vars"].items():
-                if val.get("Value") is None or val["Value"].get("Value") is None:
-                    continue
-                resolved_val = val["Value"]["Value"]
-                if list(find_expression_variables(value=resolved_val, exp_var="secrets")):
-                    yield key
+        if "uses" in ast:
+            return
+        normal_job = cast(NormalJob, ast)
+        if "env" in normal_job:
+            env = normal_job["env"]
+            if isinstance(env, dict):
+                for key, val in env.items():
+                    if isinstance(val, str):
+                        if list(find_expression_variables(value=val, exp_var="secrets")):
+                            yield key
 
     # Get reachable secrets set as environment variables in the job.
-    yield from _find_secret_keys(job_node.parsed_obj)
+    yield from _find_secret_keys(job_node.parsed_obj.obj)
 
     # Get reachable secrets set as environment variables in the step.
     if step_node.node_type == BashScriptType.INLINE:
@@ -414,15 +445,22 @@ def get_ci_events(workflow_node: GitHubWorkflowNode) -> list[str] | None:
     list[str] | None
         The list of event names or None.
     """
-    result = []
+    result: list[str] = []
     ast = workflow_node.parsed_obj
-    if ast.get("On") is None:
-        raise GitHubActionsValueError(f"Unable to find `On` event in {workflow_node.source_path} GitHub Action.")
-    for hook in ast["On"]:
-        if hook.get("Hook") is None or hook["Hook"].get("Value") is None:
-            logger.debug("Unable to find event hooks in %s GitHub Action.", workflow_node.source_path)
-            return None
-        result.append(hook["Hook"]["Value"])
+    if not isinstance(ast, dict) or "on" not in ast:
+        raise GitHubActionsValueError(f"Unable to find `on` event in {workflow_node.source_path} GitHub Action.")
+
+    on = cast(Workflow, ast)["on"]
+
+    if isinstance(on, str):
+        result.append(on)
+    elif isinstance(on, list):
+        for hook in on:
+            result.append(hook)
+    else:
+        for key in on:
+            result.append(key)
+
     return result
 
 
@@ -447,7 +485,8 @@ class SetupJava(Language, ThirdPartyAction):
         external_node: GitHubWorkflowNode
             The external GitHub Action workflow node.
         """
-        step = external_node.parsed_obj
+        # external_node is assumed to be an EXTERNAL node with ActionStep parsed_obj
+        step = cast(ActionStep, external_node.parsed_obj)
         self._lang_name = BuildLanguage.JAVA
         self._lang_distributions = None
         self._lang_versions = None
@@ -540,7 +579,8 @@ class OracleSetupJava(Language, ThirdPartyAction):
         external_node: GitHubWorkflowNode
             The external GitHub Action workflow node.
         """
-        step = external_node.parsed_obj
+        # external_node is assumed to be an EXTERNAL node with ActionStep parsed_obj
+        step = cast(ActionStep, external_node.parsed_obj)
         self._lang_name = BuildLanguage.JAVA
         self._lang_distributions = None
         self._lang_versions = None
@@ -633,7 +673,8 @@ class GraalVMSetup(Language, ThirdPartyAction):
         external_node: GitHubWorkflowNode
             The external GitHub Action workflow node.
         """
-        step = external_node.parsed_obj
+        # external_node is assumed to be an EXTERNAL node with ActionStep parsed_obj
+        step = cast(ActionStep, external_node.parsed_obj)
         self._lang_name = BuildLanguage.JAVA
         self._lang_distributions = None
         self._lang_versions = None
