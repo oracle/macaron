@@ -7,7 +7,7 @@ This module is used to work with repositories that use Docker as a build tool.
 """
 
 from macaron.config.defaults import defaults
-from macaron.dependency_analyzer.dependency_resolver import NoneDependencyAnalyzer
+from macaron.dependency_analyzer.cyclonedx import NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 
@@ -17,7 +17,7 @@ class Docker(BaseBuildTool):
 
     def __init__(self) -> None:
         """Initialize instance."""
-        super().__init__(name="docker", language=BuildLanguage.DOCKER)
+        super().__init__(name="docker", language=BuildLanguage.DOCKER, purl_type="docker")
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""

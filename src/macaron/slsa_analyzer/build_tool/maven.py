@@ -11,7 +11,7 @@ import os
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.dependency_analyzer import DependencyAnalyzer, DependencyAnalyzerError, DependencyTools
+from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, DependencyAnalyzerError, DependencyTools
 from macaron.dependency_analyzer.cyclonedx_mvn import CycloneDxMaven
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
@@ -25,7 +25,7 @@ class Maven(BaseBuildTool):
 
     def __init__(self) -> None:
         """Initialize instance."""
-        super().__init__(name="maven", language=BuildLanguage.JAVA)
+        super().__init__(name="maven", language=BuildLanguage.JAVA, purl_type="maven")
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""

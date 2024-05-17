@@ -15,6 +15,7 @@ DB=$WORKSPACE/output/macaron.db
 RUN_MACARON="python -m macaron -o $WORKSPACE/output"
 ANALYZE="analyze"
 RUN_POLICY="python -m macaron verify-policy"
+MAKE_VENV="python -m venv"
 RESULT_CODE=0
 UPDATE=0
 
@@ -250,9 +251,9 @@ echo "apache/maven: Analyzing using a CycloneDx SBOM file of a software componen
 echo -e "----------------------------------------------------------------------------------\n"
 SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/private_mirror_apache_maven.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/private_mirror_apache_maven.json
-DEP_RESULT=$WORKSPACE/output/reports/private-domain_com/apache/maven/dependencies.json
+DEP_RESULT=$WORKSPACE/output/reports/maven/private_apache_maven/maven/dependencies.json
 
-run_macaron_clean $ANALYZE -purl pkg:private-domain.com/apache/maven -sbom "$SBOM_FILE" || log_fail
+run_macaron_clean $ANALYZE -purl pkg:maven/private.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom -sbom "$SBOM_FILE" || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
@@ -435,6 +436,27 @@ run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com $ANALYZE -rp apache
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "pkg:pypi/django@5.0.6: Analyzing the dependencies with virtual env provided as input."
+echo -e "----------------------------------------------------------------------------------\n"
+# Prepare the virtual environment.
+VIRTUAL_ENV_PATH=$WORKSPACE/.django_venv
+$MAKE_VENV "$VIRTUAL_ENV_PATH"
+"$VIRTUAL_ENV_PATH"/bin/pip install django==5.0.6
+$RUN_MACARON analyze -purl pkg:pypi/django@5.0.6 --python-venv "$VIRTUAL_ENV_PATH" || log_fail
+
+# Check the dependencies using the policy engine.
+RUN_POLICY="macaron verify-policy"
+POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/django/test_dependencies.dl
+POLICY_RESULT=$WORKSPACE/output/policy_report.json
+POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/django/test_dependencies.json
+
+$RUN_POLICY -f "$POLICY_FILE" -d "$WORKSPACE/output/macaron.db" || log_fail
+check_or_update_expected_output $COMPARE_POLICIES "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
+
+# Clean up and remove the virtual environment.
+rm -rf "$VIRTUAL_ENV_PATH"
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with local paths in configuration and without dependency resolution."

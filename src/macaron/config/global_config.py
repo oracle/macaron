@@ -13,16 +13,38 @@ logger: logging.Logger = logging.getLogger(__name__)
 class GlobalConfig:
     """Class for keeping track of global configurations."""
 
+    #: The provenance expectation paths.
     expectation_paths: list[str] = field(default_factory=list)
+
+    #: The path to the Macaron Python package.
     macaron_path: str = ""
+
+    #: The path to the output files.
     output_path: str = ""
+
+    #: The path to build logs directory.
     build_log_path: str = ""
+
+    #: The path to the local clone of the target repository.
     local_repos_path: str = ""
+
+    #: The GitHub token.
     gh_token: str = ""
+
+    #: The GitLab public token.
     gl_token: str = ""
+
+    #: The GitLab self-hosted token.
     gl_self_host_token: str = ""
+
+    #: The debug level.
     debug_level: int = logging.DEBUG
+
+    #: The path to resources directory.
     resources_path: str = ""
+
+    #: The path to Python virtual environment.
+    python_venv_path: str = ""
 
     def load(
         self,
@@ -78,6 +100,20 @@ class GlobalConfig:
             logger.info("Added provenance expectation file %s", exp_path)
 
         self.expectation_paths = exp_files
+
+    def load_python_venv(self, venv_path: str) -> None:
+        """
+        Load Python virtual environment.
+
+        Parameters
+        ----------
+        venv_path : str
+            The path to the Python virtual environment of the target software component.
+        """
+        if os.path.isdir(venv_path):
+            logger.info("Successfully loaded %s", venv_path)
+
+        self.python_venv_path = str(os.path.abspath(venv_path))
 
 
 global_config = GlobalConfig()

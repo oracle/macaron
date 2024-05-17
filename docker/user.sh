@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # We update the GID and UID of the existing macaron user in the container
@@ -50,6 +50,28 @@ fi
 if [[ ! -d "$HOME/output" ]];
 then
     mkdir --parents "$HOME"/output
+fi
+
+# Prepare the python virtual environment. We copy the mounted directory if it exists to `.python_venv` to fix the symbolic
+# links to the Python interpreter in the container without affecting the files on host.
+if [[ -d "$HOME/python_venv" ]];
+then
+    cp -r "$HOME/python_venv" "$HOME/.python_venv"
+fi
+
+if [[ -d "$HOME/.python_venv/bin" ]];
+then
+    python_binaries=(
+        "python"
+        "python3"
+        "python3.11"
+    )
+    for p in "${python_binaries[@]}"; do
+        if [[ -f "$HOME/.venv/bin/${p}" ]];
+        then
+            ln -sf "$HOME/.venv/bin/${p}" "$HOME/.python_venv/bin/${p}"
+        fi
+    done
 fi
 
 # The directory that could be mounted to the host machine file systems should

@@ -10,7 +10,7 @@ from pathlib import Path
 from packageurl import PackageURL
 
 from macaron.config.target_config import TARGET_CONFIG_SCHEMA, Configuration
-from macaron.dependency_analyzer import DependencyAnalyzer, DependencyInfo
+from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, DependencyInfo
 from macaron.output_reporter.scm import SCMStatus
 from macaron.parsers.yaml.loader import YamlLoader
 from tests.macaron_testcase import MacaronTestCase

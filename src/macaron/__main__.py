@@ -57,6 +57,15 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
             sys.exit(os.EX_OSFILE)
         global_config.load_expectation_files(analyzer_single_args.provenance_expectation)
 
+    # Set Python virtual environment path.
+    if analyzer_single_args.python_venv is not None:
+        if not os.path.exists(analyzer_single_args.python_venv):
+            logger.critical(
+                'The Python virtual environment path "%s" does not exist.', analyzer_single_args.python_venv
+            )
+            sys.exit(os.EX_OSFILE)
+        global_config.load_python_venv(analyzer_single_args.python_venv)
+
     analyzer = Analyzer(global_config.output_path, global_config.build_log_path)
 
     # Initiate reporters.
@@ -413,6 +422,12 @@ def main(argv: list[str] | None = None) -> None:
         type=str,
         default="",
         help=("The path to the Jinja2 html template (please make sure to use .html or .j2 extensions)."),
+    )
+
+    single_analyze_parser.add_argument(
+        "--python-venv",
+        required=False,
+        help=("The path to the Python virtual environment of the target software component."),
     )
 
     # Dump the default values.

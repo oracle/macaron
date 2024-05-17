@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import TypedDict
 
 from macaron.code_analyzer.call_graph import BaseNode
-from macaron.dependency_analyzer import DependencyAnalyzer
+from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence, Evidence, EvidenceWeightMap
 
@@ -93,7 +93,7 @@ class RuntimeOptions:
 class BaseBuildTool(ABC):
     """This abstract class is used to implement Build Tools."""
 
-    def __init__(self, name: str, language: BuildLanguage) -> None:
+    def __init__(self, name: str, language: BuildLanguage, purl_type: str) -> None:
         """Initialize instance.
 
         Parameters
@@ -102,9 +102,12 @@ class BaseBuildTool(ABC):
             The name of this build tool.
         language: BuildLanguage
             The name of the language used by the programs built by the build tool.
+        purl_type: str
+            The type field of a PackageURL.
         """
         self.name = name
         self.language = language
+        self.purl_type = purl_type
         self.entry_conf: list[str] = []
         self.build_configs: list[str] = []
         self.package_lock: list[str] = []

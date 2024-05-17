@@ -12,8 +12,13 @@ import os
 import tomllib
 from pathlib import Path
 
+from cyclonedx_py import __version__ as cyclonedx_version
+
 from macaron.config.defaults import defaults
-from macaron.dependency_analyzer import DependencyAnalyzer, NoneDependencyAnalyzer
+from macaron.config.global_config import global_config
+from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer
+from macaron.dependency_analyzer.cyclonedx_python import CycloneDxPython
+from macaron.errors import DependencyAnalyzerError
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence
@@ -26,7 +31,7 @@ class Poetry(BaseBuildTool):
 
     def __init__(self) -> None:
         """Initialize instance."""
-        super().__init__(name="poetry", language=BuildLanguage.PYTHON)
+        super().__init__(name="poetry", language=BuildLanguage.PYTHON, purl_type="pypi")
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
@@ -123,8 +128,18 @@ class Poetry(BaseBuildTool):
         DependencyAnalyzer
             The DependencyAnalyzer object.
         """
-        # TODO: Implement this method.
-        return NoneDependencyAnalyzer()
+        tool_name = "cyclonedx_py"
+        if not DependencyAnalyzer.tool_valid(f"{tool_name}:{cyclonedx_version}"):
+            raise DependencyAnalyzerError(
+                f"Dependency analyzer {defaults.get('dependency.resolver','dep_tool_gradle')} is not valid.",
+            )
+        return CycloneDxPython(
+            resources_path=global_config.resources_path,
+            file_name="python_sbom.json",
+            tool_name=tool_name,
+            tool_version=cyclonedx_version,
+            repo_path=repo_path,
+        )
 
     def is_deploy_command(
         self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None

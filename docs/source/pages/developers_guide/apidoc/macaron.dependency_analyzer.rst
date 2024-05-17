@@ -33,10 +33,10 @@ macaron.dependency\_analyzer.cyclonedx\_mvn module
    :undoc-members:
    :show-inheritance:
 
-macaron.dependency\_analyzer.dependency\_resolver module
---------------------------------------------------------
+macaron.dependency\_analyzer.cyclonedx\_python module
+-----------------------------------------------------
 
-.. automodule:: macaron.dependency_analyzer.dependency_resolver
+.. automodule:: macaron.dependency_analyzer.cyclonedx_python
    :members:
    :undoc-members:
    :show-inheritance:

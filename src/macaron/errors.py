@@ -78,3 +78,11 @@ class CallGraphError(MacaronError):
 
 class GitHubActionsValueError(MacaronError):
     """The errors related to GitHub Actions value errors."""
+
+
+class CycloneDXParserError(MacaronError):
+    """The CycloneDX error class."""
+
+
+class DependencyAnalyzerError(MacaronError):
+    """The DependencyAnalyzer error class."""

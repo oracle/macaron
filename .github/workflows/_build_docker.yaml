@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This is a reuseable workflow to build and test the Docker image. Note that this workflow does not
@@ -30,6 +30,12 @@ jobs:
       uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         fetch-depth: 0
+
+    # The Docker integration tests require Python 3.11.
+    - name: Set up Python
+      uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+      with:
+        python-version: '3.11'
 
     - name: Download artifact
       uses: actions/download-artifact@7a1cd3216ca9260cd8022db641d960b1db4d1be4 # v4.0.0

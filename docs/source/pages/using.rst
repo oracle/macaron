@@ -208,6 +208,8 @@ where ``micronaut-core.cue`` file can contain:
 .. note::
   The provenance expectation is verified via the ``provenance_expectation`` check in Macaron. You can see the result of this check in the HTML or JSON report and see if the provenance found by Macaron meets the expectation CUE file.
 
+.. _with-sbom:
+
 ----------------------
 Analyzing with an SBOM
 ----------------------
@@ -234,6 +236,20 @@ With the example above, the generated output reports can be seen here:
 - `micronaut-core.html <../_static/examples/micronaut-projects/micronaut-core/analyze_with_sbom/micronaut-core.html>`__
 - `micronaut-core.json <../_static/examples/micronaut-projects/micronaut-core/analyze_with_sbom/micronaut-core.json>`__
 
+For Python projects, you can use `cyclonedx-py <https://github.com/CycloneDX/cyclonedx-python>`_ to generate the SBOM. First install the package in a virtual environment, and then use ``cyclonedx-py`` to generate an SBOM for it:
+
+.. code-block:: shell
+
+    python -m venv .django_venv # Create a virtual environment called .django_venv
+    .django_venv/bin/pip install django==5.0.6 # Install the package in the virtual environment
+    cyclonedx-py environment .django_venv --output-format json --outfile django_sbom.json # Generate the SBOM
+
+Then run Macaron and pass the SBOM file as input:
+
+.. code-block:: shell
+
+  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 -sbom <path_to_django_sbom.json>
+
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Analyzing dependencies in the SBOM without the main software component
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -250,6 +266,32 @@ Then the analysis can be run with:
   ./run_macaron.sh analyze -purl pkg:private_domain.com/org/name -sbom <path_to_sbom>
 
 With ``path_to_sbom`` is the path to the SBOM you want to use.
+
+-------------------------------------------------------
+Analyzing dependencies using Python virtual environment
+-------------------------------------------------------
+
+Macaron can automatically identify and analyze the dependencies of a Python package if you provide the path to the virtual environment where the package is installed.
+
+Let's say you want to analyze ``django@5.0.6`` and its dependencies. First create a virtual environment and install ``django@5.0.6``:
+
+.. code-block:: shell
+
+  python3.11 -m venv /tmp/.django_venv
+  /tmp/.django_venv/bin/pip install django==5.0.6
+
+
+Then run Macaron as follows:
+
+.. code-block:: shell
+
+  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 --python-venv "/tmp/.django_venv"
+
+Where ``--python-venv`` is the path to virtual environment.
+
+Alternatively, you can create an SBOM for the python package and provide it to Macaron as input as explained :ref:`here <with-sbom>`.
+
+.. note:: We only support Python 3.11 for this feature of Macaron. Please make sure to install the package using this version of Python.
 
 .. _more-deps:
 
