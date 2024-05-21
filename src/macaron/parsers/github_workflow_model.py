@@ -384,7 +384,7 @@ Workflow = TypedDict(
 from dataclasses import dataclass
 
 # MODIFIED: Extensions to add convenience types and cast operators
-from typing import Generic, TypeVar, cast
+from typing import Generic, TypeGuard, TypeVar
 
 Job = NormalJob | ReusableWorkflowCallJob
 RunStep = Step5
@@ -399,28 +399,20 @@ class Identified(Generic[T]):
     obj: T
 
 
-def as_normal_job(job: Job) -> NormalJob | None:
-    if "uses" in job:
-        return None
-    return cast(NormalJob, job)
+def is_normal_job(job: Job) -> TypeGuard[NormalJob]:
+    return "uses" not in job
 
 
-def as_reusable_workflow_call_job(job: Job) -> ReusableWorkflowCallJob | None:
-    if "uses" in job:
-        return cast(ReusableWorkflowCallJob, job)
-    return None
+def is_reusable_workflow_call_job(job: Job) -> TypeGuard[ReusableWorkflowCallJob]:
+    return "uses" in job
 
 
-def as_run_step(step: Step) -> RunStep | None:
-    if "run" in step:
-        return cast(RunStep, step)
-    return None
+def is_run_step(step: Step) -> TypeGuard[RunStep]:
+    return "run" in step
 
 
-def as_action_step(step: Step) -> ActionStep | None:
-    if "uses" in step:
-        return cast(ActionStep, step)
-    return None
+def is_action_step(step: Step) -> TypeGuard[ActionStep]:
+    return "uses" in step
 
 
 # END MODIFIED

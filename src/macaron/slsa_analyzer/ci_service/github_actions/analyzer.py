@@ -9,7 +9,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, cast
+from typing import Any, TypeGuard, cast
 
 from macaron.code_analyzer.call_graph import BaseNode
 from macaron.config.global_config import global_config
@@ -25,7 +25,9 @@ from macaron.parsers.github_workflow_model import (
     ReusableWorkflowCallJob,
     Step,
     Workflow,
-    as_action_step,
+    is_action_step,
+    is_normal_job,
+    is_reusable_workflow_call_job,
 )
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage, Language
 
@@ -116,6 +118,27 @@ class GitHubJobNode(BaseNode):
 
     def __str__(self) -> str:
         return f"GitHubJobNode({self.name})"
+
+
+def is_parsed_obj_workflow(
+    parsed_obj: Workflow | Identified[ReusableWorkflowCallJob] | ActionStep,
+) -> TypeGuard[Workflow]:
+    """Type guard for Workflow parsed_obj."""
+    return not isinstance(parsed_obj, Identified) and "jobs" in parsed_obj
+
+
+def is_parsed_obj_reusable_workflow_call_job(
+    obj: Workflow | Identified[ReusableWorkflowCallJob] | ActionStep,
+) -> TypeGuard[Identified[ReusableWorkflowCallJob]]:
+    """Type guard for ReusableWorkflowCallJob parsed_obj."""
+    return isinstance(obj, Identified)
+
+
+def is_parsed_obj_action_step(
+    parsed_obj: Workflow | Identified[ReusableWorkflowCallJob] | ActionStep,
+) -> TypeGuard[ActionStep]:
+    """Type guard for ActionStep parsed_obj."""
+    return not isinstance(parsed_obj, Identified) and "uses" in parsed_obj
 
 
 def find_expression_variables(value: str, exp_var: str) -> Iterable[str]:
@@ -262,30 +285,28 @@ def build_call_graph_from_node(node: GitHubWorkflowNode, repo_path: str) -> None
     repo_path: str
         The file system path to the repo.
     """
-    if not isinstance(node.parsed_obj, dict) or "jobs" not in node.parsed_obj:
+    if not is_parsed_obj_workflow(node.parsed_obj):
         return
-    jobs = cast(Workflow, node.parsed_obj)["jobs"]
+    jobs = node.parsed_obj["jobs"]
     for job_name, job in jobs.items():
         job_with_id = Identified[Job](job_name, job)
         job_node = GitHubJobNode(name=job_name, source_path=node.source_path, parsed_obj=job_with_id, caller=node)
         node.add_callee(job_node)
 
-        if "uses" not in job:
-            normal_job = cast(NormalJob, job)
+        if is_normal_job(job):
             # Add third-party workflows.
-            steps = normal_job.get("steps")
+            steps = job.get("steps")
             if steps is None:
                 continue
             for step in steps:
-                action_step = as_action_step(step)
-                if action_step is not None:
+                if is_action_step(step):
                     # TODO: change source_path for external workflows.
-                    action_name = action_step["uses"]
+                    action_name = step["uses"]
                     external_node = GitHubWorkflowNode(
                         name=action_name,
                         node_type=GitHubWorkflowType.EXTERNAL,
                         source_path="",
-                        parsed_obj=action_step,
+                        parsed_obj=step,
                         caller=job_node,
                     )
                     external_node.model = create_third_party_action_model(external_node)
@@ -322,14 +343,13 @@ def build_call_graph_from_node(node: GitHubWorkflowNode, repo_path: str) -> None
                             continue
                         job_node.add_callee(callee)
 
-        else:
-            workflow_call_job = cast(ReusableWorkflowCallJob, job)
-            workflow_call_job_with_id = Identified[ReusableWorkflowCallJob](job_name, workflow_call_job)
+        elif is_reusable_workflow_call_job(job):
+            workflow_call_job_with_id = Identified[ReusableWorkflowCallJob](job_name, job)
             # Add reusable workflows.
-            logger.debug("Found reusable workflow: %s.", workflow_call_job["uses"])
+            logger.debug("Found reusable workflow: %s.", job["uses"])
             # TODO: change source_path for reusable workflows.
             reusable_node = GitHubWorkflowNode(
-                name=workflow_call_job["uses"],
+                name=job["uses"],
                 node_type=GitHubWorkflowType.REUSABLE,
                 source_path="",
                 parsed_obj=workflow_call_job_with_id,
@@ -486,7 +506,9 @@ class SetupJava(Language, ThirdPartyAction):
             The external GitHub Action workflow node.
         """
         # external_node is assumed to be an EXTERNAL node with ActionStep parsed_obj
-        step = cast(ActionStep, external_node.parsed_obj)
+        step = external_node.parsed_obj
+        if not is_parsed_obj_action_step(step):
+            raise ValueError("Expected an action step node")
         self._lang_name = BuildLanguage.JAVA
         self._lang_distributions = None
         self._lang_versions = None
@@ -580,7 +602,9 @@ class OracleSetupJava(Language, ThirdPartyAction):
             The external GitHub Action workflow node.
         """
         # external_node is assumed to be an EXTERNAL node with ActionStep parsed_obj
-        step = cast(ActionStep, external_node.parsed_obj)
+        step = external_node.parsed_obj
+        if not is_parsed_obj_action_step(step):
+            raise ValueError("Expected an action step node")
         self._lang_name = BuildLanguage.JAVA
         self._lang_distributions = None
         self._lang_versions = None
@@ -674,7 +698,9 @@ class GraalVMSetup(Language, ThirdPartyAction):
             The external GitHub Action workflow node.
         """
         # external_node is assumed to be an EXTERNAL node with ActionStep parsed_obj
-        step = cast(ActionStep, external_node.parsed_obj)
+        step = external_node.parsed_obj
+        if not is_parsed_obj_action_step(step):
+            raise ValueError("Expected an action step node")
         self._lang_name = BuildLanguage.JAVA
         self._lang_distributions = None
         self._lang_versions = None

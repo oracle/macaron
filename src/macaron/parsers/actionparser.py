@@ -13,7 +13,7 @@ import yamale
 
 from macaron import MACARON_PATH
 from macaron.errors import ParseError
-from macaron.parsers.github_workflow_model import Step, Workflow, as_run_step
+from macaron.parsers.github_workflow_model import Step, Workflow, is_run_step
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -72,9 +72,8 @@ def get_run_step(step: Step) -> str | None:
     str | None
         The inlined run script or None if the run step cannot be validated.
     """
-    run_step = as_run_step(step)
-    if run_step is not None:
-        return run_step["run"]
+    if is_run_step(step):
+        return step["run"]
     return None
 
 
