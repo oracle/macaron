@@ -7,10 +7,9 @@ import json
 import pytest
 
 from macaron.errors import ProvenanceError
-from macaron.json_tools import json_extract
+from macaron.json_tools import JsonType, json_extract
 from macaron.repo_finder.provenance_extractor import extract_repo_and_commit_from_provenance
 from macaron.slsa_analyzer.provenance.intoto import validate_intoto_payload
-from macaron.util import JsonType
 
 
 @pytest.fixture(name="slsa_v1_gcb_1_provenance")

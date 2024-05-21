@@ -262,17 +262,8 @@ def copy_file_bulk(file_list: list, src_path: str, target_path: str) -> bool:
     return True
 
 
-JsonType = int | float | str | None | bool | list["JsonType"] | dict[str, "JsonType"]
-
-
-def get_if_exists(doc: JsonType, path: list[str | int]) -> JsonType | None:
-    """Get a json dict value if it exists."""
-    while len(path) > 0:
-        this = path.pop(0)
-        if isinstance(this, str) and isinstance(doc, dict) and this in doc:
-            doc = doc[this]
-        elif isinstance(this, int) and isinstance(doc, list) and 0 <= this < len(doc):
-            doc = doc[this]
-        else:
-            return None
-    return doc
+def compare_urls_for_domain_path_equality(url_a: str, url_b: str) -> bool:
+    """Compare two URLs for equality based on the netloc/domain/hostname and path."""
+    parsed_a = urllib.parse.urlparse(url_a)
+    parsed_b = urllib.parse.urlparse(url_b)
+    return parsed_a.netloc == parsed_b.netloc and parsed_a.path == parsed_b.path

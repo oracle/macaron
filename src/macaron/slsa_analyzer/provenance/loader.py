@@ -12,9 +12,10 @@ import zlib
 from urllib.parse import urlparse
 
 from macaron.config.defaults import defaults
+from macaron.json_tools import JsonType
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
 from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError, ValidateInTotoPayloadError
-from macaron.util import JsonType, send_get_http_raw
+from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 

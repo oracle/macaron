@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from macaron.database.database_manager import get_db_manager
 from macaron.database.table_definitions import ProvenanceSubject
-from macaron.util import JsonType
+from macaron.json_tools import JsonType
 
 logger: logging.Logger = logging.getLogger(__name__)
 

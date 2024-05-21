@@ -5,6 +5,7 @@
 import logging
 import os
 import sys
+import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -16,6 +17,7 @@ from pydriller.git import Git
 from sqlalchemy.orm import Session
 
 from macaron import __version__
+from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
@@ -33,7 +35,12 @@ from macaron.errors import (
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
-from macaron.repo_finder.commit_finder import find_commit
+from macaron.repo_finder.commit_finder import (
+    AbstractPurlType,
+    determine_abstract_purl_type,
+    extract_commit_from_version,
+    find_commit,
+)
 from macaron.repo_finder.provenance_extractor import extract_repo_and_commit_from_provenance
 from macaron.repo_finder.provenance_finder import ProvenanceFinder
 from macaron.slsa_analyzer import git_url
@@ -318,6 +325,8 @@ class Analyzer:
             provenance_payload = ProvenanceFinder().find_provenance(parsed_purl)
 
         # Try to extract the repository URL and commit digest from the Provenance, if it exists.
+        repo_path_input: str = config.get_value("path")
+        digest_input: str | None = config.get_value("digest")
         provenance_repo_url = provenance_commit_digest = None
         if provenance_payload:
             try:
@@ -325,15 +334,14 @@ class Analyzer:
                     provenance_payload
                 )
                 # Check the provenance repo commit match the input repo commit
-                repo_path_input: str = config.get_value("path")
-                digest_input: str = config.get_value("digest")
                 if (repo_path_input and provenance_repo_url and repo_path_input != provenance_repo_url) or (
                     digest_input and provenance_commit_digest and digest_input != provenance_commit_digest
                 ):
                     return Record(
                         record_id=repo_id,
                         description="The repository URL or commit digest provided as input do not match what exists "
-                        "in the provenance.",
+                        f"in the provenance. Input Repo: {repo_path_input}, Provenance Repo: {provenance_repo_url}."
+                        f" Input Commit: {digest_input}, Provenance Commit: {provenance_commit_digest}. ",
                         pre_config=config,
                         status=SCMStatus.ANALYSIS_FAILED,
                     )
@@ -354,11 +362,66 @@ class Analyzer:
                 status=SCMStatus.ANALYSIS_FAILED,
             )
 
+        # Prepare the repo.
+        git_obj = None
+        if analysis_target.repo_path:
+            git_obj = self._prepare_repo(
+                os.path.join(self.output_path, self.GIT_REPOS_DIR),
+                analysis_target.repo_path,
+                analysis_target.branch,
+                analysis_target.digest,
+                analysis_target.parsed_purl,
+            )
+
+        # Check if only one of the repo or digest came from direct input, and a versioned purl exists for the other.
+        if (provenance_repo_url or provenance_commit_digest) and parsed_purl and parsed_purl.version:
+            if determine_abstract_purl_type(parsed_purl) == AbstractPurlType.REPOSITORY:
+                if not repo_path_input and provenance_repo_url:
+                    # Check the repo from purl.
+                    possibly_expanded_type = parsed_purl.type
+                    if defaults.has_section("package_url"):
+                        possibly_expanded_type = defaults.get(
+                            "package_url", parsed_purl.type, fallback=parsed_purl.type
+                        )
+                    repo_url_input = urllib.parse.urlparse(repo_path_input)
+                    purl_path = parsed_purl.name
+                    if parsed_purl.namespace:
+                        purl_path = f"{parsed_purl.namespace}/{purl_path}"
+                    if repo_url_input.netloc != possibly_expanded_type or repo_url_input.path != purl_path:
+                        msg = (
+                            f"The repo url passed via purl input does not match what exists in the provenance. "
+                            f"Purl Repo: {possibly_expanded_type}/{purl_path}, Provenance Repo: "
+                            f"{provenance_repo_url}."
+                        )
+                        logger.debug(msg)
+                        return Record(
+                            record_id=repo_id,
+                            description=msg,
+                            pre_config=config,
+                            status=SCMStatus.ANALYSIS_FAILED,
+                        )
+                if not digest_input and provenance_commit_digest:
+                    # Check the commit from purl.
+                    digest_input = extract_commit_from_version(git_obj, parsed_purl.version)
+                    if digest_input and digest_input != provenance_commit_digest:
+                        msg = (
+                            f"The commit digest passed via purl input does not match what exists in the "
+                            f"provenance. Purl Commit: {digest_input}, Provenance Commit: {provenance_commit_digest}."
+                        )
+                        logger.debug(msg)
+                        return Record(
+                            record_id=repo_id,
+                            description=msg,
+                            pre_config=config,
+                            status=SCMStatus.ANALYSIS_FAILED,
+                        )
+
         # Create the component.
         try:
             component = self.add_component(
                 analysis,
                 analysis_target,
+                git_obj,
                 existing_records,
                 provenance_payload,
             )
@@ -516,6 +579,7 @@ class Analyzer:
         self,
         analysis: Analysis,
         analysis_target: AnalysisTarget,
+        git_obj: Git,
         existing_records: dict[str, Record] | None = None,
         provenance_payload: InTotoPayload | None = None,
     ) -> Component:
@@ -530,6 +594,8 @@ class Analyzer:
             The current analysis instance.
         analysis_target: AnalysisTarget
             The target of this analysis.
+        git_obj: Git
+            The pydriller.Git object of the repository.
         existing_records : dict[str, Record] | None
             The mapping of existing records that the analysis has run successfully.
         provenance_payload: InTotoVPayload | None
@@ -549,31 +615,23 @@ class Analyzer:
         """
         # Note: the component created in this function will be added to the database.
         repository = None
-        if analysis_target.repo_path:
-            git_obj = self._prepare_repo(
-                os.path.join(self.output_path, self.GIT_REPOS_DIR),
-                analysis_target.repo_path,
-                analysis_target.branch,
-                analysis_target.digest,
-                analysis_target.parsed_purl,
-            )
-            if git_obj:
-                # TODO: use both the repo URL and the commit hash to check.
-                if (
-                    existing_records
-                    and (existing_record := existing_records.get(git_url.get_remote_origin_of_local_repo(git_obj)))
-                    is not None
-                ):
-                    raise DuplicateCmpError(
-                        f"{analysis_target.repo_path} is already analyzed.", context=existing_record.context
-                    )
+        if git_obj:
+            # TODO: use both the repo URL and the commit hash to check.
+            if (
+                existing_records
+                and (existing_record := existing_records.get(git_url.get_remote_origin_of_local_repo(git_obj)))
+                is not None
+            ):
+                raise DuplicateCmpError(
+                    f"{analysis_target.repo_path} is already analyzed.", context=existing_record.context
+                )
 
-                repository = self.add_repository(analysis_target.branch, git_obj)
-            else:
-                # We cannot prepare the repository even though we have successfully resolved the repository path for the
-                # software component. If this happens, we don't raise error and treat the software component as if it
-                # does not have any ``Repository`` attached to it.
-                repository = None
+            repository = self.add_repository(analysis_target.branch, git_obj)
+        else:
+            # We cannot prepare the repository even though we have successfully resolved the repository path for the
+            # software component. If this happens, we don't raise error and treat the software component as if it
+            # does not have any ``Repository`` attached to it.
+            repository = None
 
         if not analysis_target.parsed_purl:
             # If the PURL is not available. This will only mean that the user don't provide PURL but only provide the
@@ -932,7 +990,7 @@ class Analyzer:
             The resolved path in canonical form or an empty string if errors.
         """
         # Resolve the path by joining dir and path.
-        # Because strict mode is enabled, if a path doesn’t exist or a symlink loop
+        # Because strict mode is enabled, if a path doesn't exist or a symlink loop
         # is encountered, OSError is raised.
         # ValueError is raised if we use both relative and absolute paths in os.path.commonpath.
         try:

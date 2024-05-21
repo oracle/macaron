@@ -5,9 +5,8 @@
 import logging
 
 from macaron.errors import ProvenanceError
-from macaron.json_tools import json_extract
+from macaron.json_tools import JsonType, json_extract
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV1Payload, InTotoV01Payload
-from macaron.util import JsonType
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -67,16 +66,8 @@ def _extract_from_slsa_v01(payload: InTotoV01Payload) -> tuple[str | None, str |
     if not list_index:
         return None, None
 
-    material_list = json_extract(predicate, ["materials"], list)
-    if not material_list:
-        return None, None
-
-    if list_index >= len(material_list):
-        logger.debug("Material list index outside of material list bounds.")
-        return None, None
-
-    material = material_list[list_index]
-    if not material or not isinstance(material, dict):
+    material = json_extract(predicate, ["materials", list_index], dict)
+    if not material:
         logger.debug("Indexed material list entry is invalid.")
         return None, None
 

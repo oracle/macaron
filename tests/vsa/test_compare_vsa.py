@@ -5,7 +5,7 @@
 
 import pytest
 
-from macaron.util import JsonType
+from macaron.json_tools import JsonType
 from tests.vsa.compare_vsa import compare_json, skip_compare
 
 
