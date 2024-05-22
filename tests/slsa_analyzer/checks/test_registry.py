@@ -190,8 +190,7 @@ class TestRegistry(TestCase):
         self.REGISTRY.register(MockCheck("mcn_correct_check_1", "This check is a correct Check."))
         # For the prepare method to complete successfully,
         # the registry must have at least one check registered,
-        # at least one runner initialized and no check circular
-        # dependencies.
+        # and no circular check dependencies.
         assert Registry._all_checks_mapping
         assert self.REGISTRY.prepare()
 
