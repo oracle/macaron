@@ -505,7 +505,7 @@ def _test_extract_repo_and_commit_from_provenance(
     assert expected_commit == commit
 
 
-def _json_modify(entry: JsonType, keys: list[str], new_value: JsonType) -> None:
+def _json_modify(entry: dict | list, keys: list[str], new_value: JsonType) -> None:
     """Modify the value found by following the list of depth-sequential keys inside the passed JSON dictionary.
 
     The found value will be overwritten by the `new_value` parameter.
