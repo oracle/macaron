@@ -260,10 +260,3 @@ def copy_file_bulk(file_list: list, src_path: str, target_path: str) -> bool:
                 return False
 
     return True
-
-
-def compare_urls_for_domain_path_equality(url_a: str, url_b: str) -> bool:
-    """Compare two URLs for equality based on the netloc/domain/hostname and path."""
-    parsed_a = urllib.parse.urlparse(url_a)
-    parsed_b = urllib.parse.urlparse(url_b)
-    return parsed_a.netloc == parsed_b.netloc and parsed_a.path == parsed_b.path
