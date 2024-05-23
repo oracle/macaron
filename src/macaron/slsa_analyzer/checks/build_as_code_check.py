@@ -5,6 +5,7 @@
 
 import logging
 import os
+from typing import cast
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
@@ -13,6 +14,7 @@ from sqlalchemy.sql.sqltypes import String
 from macaron.database.table_definitions import CheckFacts
 from macaron.errors import CallGraphError
 from macaron.parsers.bashparser import BashNode
+from macaron.parsers.github_workflow_model import ActionStep, Identified, ReusableWorkflowCallJob
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_provenance
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
@@ -154,15 +156,21 @@ class BuildAsCodeCheck(BaseCheck):
                                 caller_path = ""
                                 job = callee.caller
                                 if isinstance(job, GitHubJobNode):
-                                    if job.parsed_obj.get("ID") and job.parsed_obj["ID"].get("Value"):
-                                        job_id = job.parsed_obj["ID"]["Value"]
+                                    job_id = job.parsed_obj.id
                                     caller_path = job.source_path
 
-                                if callee.parsed_obj.get("ID") and callee.parsed_obj["ID"].get("Value"):
-                                    step_id = callee.parsed_obj["ID"]["Value"]
-
-                                if callee.parsed_obj.get("Name") and callee.parsed_obj["Name"].get("Value"):
-                                    step_name = callee.parsed_obj["Name"]["Value"]
+                                if callee.node_type == GitHubWorkflowType.EXTERNAL:
+                                    callee_step_obj = cast(ActionStep, callee.parsed_obj)
+                                    if "id" in callee_step_obj:
+                                        step_id = callee_step_obj["id"]
+                                    if "name" in callee_step_obj:
+                                        step_name = callee_step_obj["name"]
+                                else:
+                                    callee_reusable = cast(Identified[ReusableWorkflowCallJob], callee.parsed_obj)
+                                    step_id = callee_reusable.id
+                                    callee_reusable_job = callee_reusable.obj
+                                    if "name" in callee_reusable_job:
+                                        step_name = callee_reusable_job["name"]
 
                                 trigger_link = ci_service.api_client.get_file_link(
                                     ctx.component.repository.full_name,

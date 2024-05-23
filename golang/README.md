@@ -16,9 +16,10 @@ This go module follows the Golang project layout as specified in [golang-standar
 macaron
 ├── golang
 │   ├── cmd
-│   │   └── actionparser
+│   │   └── bashparser
 │   ├── internal
-│   │   ├── actionparser
+│   │   ├── bashparser
+│   │   ├── cue_validator
 │   │   └── filewriter
 │   ├── pkg
 │   └── README.md
@@ -63,11 +64,4 @@ go build ./golang/cmd/<app_name>/<app_name>.go
 This will generate an executable `app_name` in the current directory. We can also change the path of the output executable by using:
 ```
 go build -o <output_path> ./golang/cmd/<app_name>/<app_name>.go
-```
-
-For example, to build and run an executable for the actionparser application in the current directory:
-```
-go build -o ./actionparser ./golang/cmd/actionparser/actionparser.go
-
-./actionparser -file ./golang/internal/actionparser/resources/valid.yaml
 ```

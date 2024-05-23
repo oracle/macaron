@@ -12,6 +12,7 @@ from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.parsers.bashparser import BashScriptType, create_bash_node
+from macaron.parsers.github_workflow_model import Identified, Job, NormalJob, RunStep, Workflow
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.docker import Docker
@@ -415,15 +416,9 @@ def build_github_actions_call_graph_for_commands(commands: list[str]) -> CallGra
     """
     root: BaseNode = BaseNode()
     gh_cg = CallGraph(root, "")
-    workflow_obj = {
-        "On": [
-            {
-                "Hook": {
-                    "Value": "release",
-                },
-            }
-        ]
-    }
+    run_step: RunStep = {"run": ";".join(commands)}
+    job_obj: NormalJob = {"runs-on": "", "steps": [run_step]}
+    workflow_obj: Workflow = {"on": "release", "jobs": {"release": job_obj}}
     workflow_node = GitHubWorkflowNode(
         name="",
         node_type=GitHubWorkflowType.INTERNAL,
@@ -432,10 +427,9 @@ def build_github_actions_call_graph_for_commands(commands: list[str]) -> CallGra
         caller=root,
     )
     root.add_callee(workflow_node)
-    job_node = GitHubJobNode(name="", source_path="", parsed_obj={}, caller=workflow_node)
+    job_obj_with_id: Identified[Job] = Identified("release", job_obj)
+    job_node = GitHubJobNode(name="", source_path="", parsed_obj=job_obj_with_id, caller=workflow_node)
     workflow_node.add_callee(job_node)
-
-    run_step = {"Exec": {"Run": {"Value": ";".join(commands)}}}
 
     job_node.add_callee(
         create_bash_node(
