@@ -762,7 +762,7 @@ check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTE
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "behnazh-w/example-maven-app as a local and remote repository"
-echo "Test the Witness and GitHub provenances as an input, Cue expectation validation, Policy CLI and VSA generation."
+echo "Test the Witness and GitHub provenances as an input, Cue expectation validation, Policy CLI and VSA generation, User input vs. provenance."
 echo -e "----------------------------------------------------------------------------------\n"
 RUN_POLICY="macaron verify-policy"
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/example-maven-project/policy.dl
@@ -787,6 +787,15 @@ GITHUB_PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid
 
 # Check the GitHub provenance.
 $RUN_MACARON analyze -pf $GITHUB_PROVENANCE_FILE -pe $GITHUB_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar --skip-deps || log_fail
+
+# Validate user input of repo and commit vs provenance.
+$RUN_MACARON analyze -pf $GITHUB_EXPECTATION_FILE -rp https://github.com/behnazh-w/example-maven-app -d 2deca75 --skip-deps || log_fail
+
+# Validate user input of repo and commit (via purl) vs provenance.
+$RUN_MACARON analyze -pf $GITHUB_EXPECTATION_FILE -purl pkg:github/behnazh-w/example-maven-app@2deca75ed5dd365eaf1558a82347b1f11306135f --skip-deps || log_fail
+
+# Validate user input of repo and commit (via purl with tag) vs provenance.
+$RUN_MACARON analyze -pf $GITHUB_EXPECTATION_FILE -purl pkg:github/behnazh-w/example-maven-app@1.0 --skip-deps || log_fail
 
 # Verify the policy and VSA for all the software components generated from behnazh-w/example-maven-app repo.
 $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
