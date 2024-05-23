@@ -785,15 +785,6 @@ $RUN_MACARON analyze -pf $WITNESS_PROVENANCE_FILE -pe $WITNESS_EXPECTATION_FILE 
 GITHUB_EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/github-example-maven-project.cue
 GITHUB_PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/github-example-maven-project.json
 
-# Validate user input of repo and commit vs provenance.
-$RUN_MACARON analyze -pf GITHUB_PROVENANCE_FILE -rp https://github.com/behnazh-w/example-maven-app -d 2deca75ed5dd365eaf1558a82347b1f11306135f --skip-deps || log_fail
-
-# Validate user input of repo and commit (via purl) vs provenance.
-$RUN_MACARON analyze -pf GITHUB_PROVENANCE_FILE -purl pkg:github/behnazh-w/example-maven-app@2deca75 --skip-deps || log_fail
-
-# Validate user input of repo and commit (via purl with tag) vs provenance.
-$RUN_MACARON analyze -pf GITHUB_PROVENANCE_FILE -purl pkg:github/behnazh-w/example-maven-app@1.0 --skip-deps || log_fail
-
 # Check the GitHub provenance.
 $RUN_MACARON analyze -pf $GITHUB_PROVENANCE_FILE -pe $GITHUB_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar --skip-deps || log_fail
 
@@ -803,6 +794,14 @@ $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 check_or_update_expected_output "$COMPARE_POLICIES" "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
 check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
+# Validate user input of repo and commit vs provenance.
+$RUN_MACARON analyze -pf $GITHUB_PROVENANCE_FILE -rp https://github.com/behnazh-w/example-maven-app -d 2deca75ed5dd365eaf1558a82347b1f11306135f --skip-deps || log_fail
+
+# Validate user input of repo and commit (via purl) vs provenance.
+$RUN_MACARON analyze -pf $GITHUB_PROVENANCE_FILE -purl pkg:github/behnazh-w/example-maven-app@2deca75 --skip-deps || log_fail
+
+# Validate user input of repo and commit (via purl with tag) vs provenance.
+$RUN_MACARON analyze -pf $GITHUB_PROVENANCE_FILE -purl pkg:github/behnazh-w/example-maven-app@1.0 --skip-deps || log_fail
 
 # Testing the Repo Finder's remote calls.
 # This requires the 'packageurl' Python module
