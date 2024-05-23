@@ -498,7 +498,7 @@ class Analyzer:
         provenance_commit_digest: str | None,
         purl: PackageURL,
     ) -> bool:
-        """Test if the input repo and commit match the contents of the provenance.
+        """Test if the input PURL's repo and commit match the contents of the provenance.
 
         Parameters
         ----------
@@ -512,6 +512,8 @@ class Analyzer:
             The repo url from provenance.
         provenance_commit_digest: str | None
             The commit digest from provenance.
+        purl: PackageURL
+            The input repository PURL.
 
         Returns
         -------
