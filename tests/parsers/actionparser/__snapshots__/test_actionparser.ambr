@@ -1,1482 +1,226 @@
 # serializer version: 1
 # name: test_actionparser_parse[codeql-analysis.yml]
   dict({
-    'Concurrency': None,
-    'Defaults': None,
-    'Env': None,
-    'Jobs': dict({
+    'jobs': dict({
       'analyze': dict({
-        'Concurrency': None,
-        'Container': None,
-        'ContinueOnError': None,
-        'Defaults': None,
-        'Env': None,
-        'Environment': None,
-        'ID': dict({
-          'Pos': dict({
-            'Col': 3,
-            'Line': 29,
-          }),
-          'Quoted': False,
-          'Value': 'analyze',
+        'name': 'Analyze',
+        'permissions': dict({
+          'actions': 'read',
+          'contents': 'read',
+          'security-events': 'write',
         }),
-        'If': None,
-        'Name': dict({
-          'Pos': dict({
-            'Col': 11,
-            'Line': 30,
-          }),
-          'Quoted': False,
-          'Value': 'Analyze',
-        }),
-        'Needs': None,
-        'Outputs': None,
-        'Permissions': dict({
-          'All': None,
-          'Pos': dict({
-            'Col': 5,
-            'Line': 32,
-          }),
-          'Scopes': dict({
-            'actions': dict({
-              'Name': dict({
-                'Pos': dict({
-                  'Col': 7,
-                  'Line': 33,
-                }),
-                'Quoted': False,
-                'Value': 'actions',
-              }),
-              'Value': dict({
-                'Pos': dict({
-                  'Col': 16,
-                  'Line': 33,
-                }),
-                'Quoted': False,
-                'Value': 'read',
-              }),
-            }),
-            'contents': dict({
-              'Name': dict({
-                'Pos': dict({
-                  'Col': 7,
-                  'Line': 34,
-                }),
-                'Quoted': False,
-                'Value': 'contents',
-              }),
-              'Value': dict({
-                'Pos': dict({
-                  'Col': 17,
-                  'Line': 34,
-                }),
-                'Quoted': False,
-                'Value': 'read',
-              }),
-            }),
-            'security-events': dict({
-              'Name': dict({
-                'Pos': dict({
-                  'Col': 7,
-                  'Line': 35,
-                }),
-                'Quoted': False,
-                'Value': 'security-events',
-              }),
-              'Value': dict({
-                'Pos': dict({
-                  'Col': 24,
-                  'Line': 35,
-                }),
-                'Quoted': False,
-                'Value': 'write',
-              }),
-            }),
-          }),
-        }),
-        'Pos': dict({
-          'Col': 3,
-          'Line': 29,
-        }),
-        'RunsOn': dict({
-          'Group': None,
-          'Labels': list([
-            dict({
-              'Pos': dict({
-                'Col': 14,
-                'Line': 31,
-              }),
-              'Quoted': False,
-              'Value': 'ubuntu-latest',
-            }),
-          ]),
-          'LabelsExpr': None,
-        }),
-        'Services': None,
-        'Steps': list([
+        'runs-on': 'ubuntu-latest',
+        'steps': list([
           dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Args': None,
-              'Entrypoint': None,
-              'Inputs': None,
-              'Uses': dict({
-                'Pos': dict({
-                  'Col': 13,
-                  'Line': 44,
-                }),
-                'Quoted': False,
-                'Value': 'actions/checkout@v2',
-              }),
-            }),
-            'ID': None,
-            'If': None,
-            'Name': dict({
-              'Pos': dict({
-                'Col': 13,
-                'Line': 43,
-              }),
-              'Quoted': False,
-              'Value': 'Checkout repository',
-            }),
-            'Pos': dict({
-              'Col': 7,
-              'Line': 43,
-            }),
-            'TimeoutMinutes': None,
+            'name': 'Checkout repository',
+            'uses': 'actions/checkout@v2',
           }),
           dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Args': None,
-              'Entrypoint': None,
-              'Inputs': dict({
-                'languages': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 50,
-                    }),
-                    'Quoted': False,
-                    'Value': 'languages',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 20,
-                      'Line': 50,
-                    }),
-                    'Quoted': False,
-                    'Value': '${{ matrix.language }}',
-                  }),
-                }),
-              }),
-              'Uses': dict({
-                'Pos': dict({
-                  'Col': 13,
-                  'Line': 48,
-                }),
-                'Quoted': False,
-                'Value': 'github/codeql-action/init@v2',
-              }),
+            'name': 'Initialize CodeQL',
+            'uses': 'github/codeql-action/init@v2',
+            'with': dict({
+              'languages': '${{ matrix.language }}',
             }),
-            'ID': None,
-            'If': None,
-            'Name': dict({
-              'Pos': dict({
-                'Col': 13,
-                'Line': 47,
-              }),
-              'Quoted': False,
-              'Value': 'Initialize CodeQL',
-            }),
-            'Pos': dict({
-              'Col': 7,
-              'Line': 47,
-            }),
-            'TimeoutMinutes': None,
           }),
           dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Args': None,
-              'Entrypoint': None,
-              'Inputs': None,
-              'Uses': dict({
-                'Pos': dict({
-                  'Col': 13,
-                  'Line': 53,
-                }),
-                'Quoted': False,
-                'Value': 'github/codeql-action/autobuild@v2',
-              }),
-            }),
-            'ID': None,
-            'If': None,
-            'Name': dict({
-              'Pos': dict({
-                'Col': 13,
-                'Line': 52,
-              }),
-              'Quoted': False,
-              'Value': 'Autobuild',
-            }),
-            'Pos': dict({
-              'Col': 7,
-              'Line': 52,
-            }),
-            'TimeoutMinutes': None,
+            'name': 'Autobuild',
+            'uses': 'github/codeql-action/autobuild@v2',
           }),
           dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Args': None,
-              'Entrypoint': None,
-              'Inputs': None,
-              'Uses': dict({
-                'Pos': dict({
-                  'Col': 13,
-                  'Line': 56,
-                }),
-                'Quoted': False,
-                'Value': 'github/codeql-action/analyze@v2',
-              }),
-            }),
-            'ID': None,
-            'If': None,
-            'Name': dict({
-              'Pos': dict({
-                'Col': 13,
-                'Line': 55,
-              }),
-              'Quoted': False,
-              'Value': 'Perform CodeQL Analysis',
-            }),
-            'Pos': dict({
-              'Col': 7,
-              'Line': 55,
-            }),
-            'TimeoutMinutes': None,
+            'name': 'Perform CodeQL Analysis',
+            'uses': 'github/codeql-action/analyze@v2',
           }),
         ]),
-        'Strategy': dict({
-          'FailFast': dict({
-            'Expression': None,
-            'Pos': dict({
-              'Col': 18,
-              'Line': 38,
-            }),
-            'Value': False,
-          }),
-          'Matrix': dict({
-            'Exclude': None,
-            'Expression': None,
-            'Include': None,
-            'Pos': dict({
-              'Col': 7,
-              'Line': 39,
-            }),
-            'Rows': dict({
-              'language': dict({
-                'Expression': None,
-                'Name': dict({
-                  'Pos': dict({
-                    'Col': 9,
-                    'Line': 40,
-                  }),
-                  'Quoted': False,
-                  'Value': 'language',
-                }),
-                'Values': list([
-                  dict({
-                    'Value': 'java',
-                  }),
-                ]),
-              }),
-            }),
-          }),
-          'MaxParallel': None,
-          'Pos': dict({
-            'Col': 5,
-            'Line': 37,
+        'strategy': dict({
+          'fail-fast': False,
+          'matrix': dict({
+            'language': list([
+              'java',
+            ]),
           }),
         }),
-        'TimeoutMinutes': None,
-        'WorkflowCall': None,
       }),
     }),
-    'Name': dict({
-      'Pos': dict({
-        'Col': 7,
-        'Line': 4,
-      }),
-      'Quoted': False,
-      'Value': 'CodeQL',
-    }),
-    'On': list([
-      dict({
-        'Cron': list([
-          dict({
-            'Pos': dict({
-              'Col': 11,
-              'Line': 8,
-            }),
-            'Quoted': False,
-            'Value': '40 21 * * 2',
-          }),
+    'name': 'CodeQL',
+    'on': dict({
+      'pull_request': dict({
+        'branches': list([
+          'master',
+          '3.0',
+          '2.14',
+          '2.13',
         ]),
-        'Pos': dict({
-          'Col': 3,
-          'Line': 7,
-        }),
+        'paths-ignore': list([
+          'README.md',
+          'release-notes/*',
+        ]),
       }),
-      dict({
-        'Branches': dict({
-          'Name': dict({
-            'Pos': dict({
-              'Col': 5,
-              'Line': 10,
-            }),
-            'Quoted': False,
-            'Value': 'branches',
-          }),
-          'Values': list([
-            dict({
-              'Pos': dict({
-                'Col': 7,
-                'Line': 11,
-              }),
-              'Quoted': False,
-              'Value': 'master',
-            }),
-            dict({
-              'Pos': dict({
-                'Col': 7,
-                'Line': 12,
-              }),
-              'Quoted': True,
-              'Value': '3.0',
-            }),
-            dict({
-              'Pos': dict({
-                'Col': 7,
-                'Line': 13,
-              }),
-              'Quoted': True,
-              'Value': '2.14',
-            }),
-            dict({
-              'Pos': dict({
-                'Col': 7,
-                'Line': 14,
-              }),
-              'Quoted': True,
-              'Value': '2.13',
-            }),
-          ]),
-        }),
-        'BranchesIgnore': None,
-        'Hook': dict({
-          'Pos': dict({
-            'Col': 3,
-            'Line': 9,
-          }),
-          'Quoted': False,
-          'Value': 'push',
-        }),
-        'Paths': None,
-        'PathsIgnore': dict({
-          'Name': dict({
-            'Pos': dict({
-              'Col': 5,
-              'Line': 15,
-            }),
-            'Quoted': False,
-            'Value': 'paths-ignore',
-          }),
-          'Values': list([
-            dict({
-              'Pos': dict({
-                'Col': 7,
-                'Line': 16,
-              }),
-              'Quoted': False,
-              'Value': 'README.md',
-            }),
-            dict({
-              'Pos': dict({
-                'Col': 7,
-                'Line': 17,
-              }),
-              'Quoted': False,
-              'Value': 'release-notes/*',
-            }),
-          ]),
-        }),
-        'Pos': dict({
-          'Col': 3,
-          'Line': 9,
-        }),
-        'Tags': None,
-        'TagsIgnore': None,
-        'Types': None,
-        'Workflows': None,
+      'push': dict({
+        'branches': list([
+          'master',
+          '3.0',
+          '2.14',
+          '2.13',
+        ]),
+        'paths-ignore': list([
+          'README.md',
+          'release-notes/*',
+        ]),
       }),
-      dict({
-        'Branches': dict({
-          'Name': dict({
-            'Pos': dict({
-              'Col': 5,
-              'Line': 19,
-            }),
-            'Quoted': False,
-            'Value': 'branches',
-          }),
-          'Values': list([
-            dict({
-              'Pos': dict({
-                'Col': 7,
-                'Line': 20,
-              }),
-              'Quoted': False,
-              'Value': 'master',
-            }),
-            dict({
-              'Pos': dict({
-                'Col': 7,
-                'Line': 21,
-              }),
-              'Quoted': True,
-              'Value': '3.0',
-            }),
-            dict({
-              'Pos': dict({
-                'Col': 7,
-                'Line': 22,
-              }),
-              'Quoted': True,
-              'Value': '2.14',
-            }),
-            dict({
-              'Pos': dict({
-                'Col': 7,
-                'Line': 23,
-              }),
-              'Quoted': True,
-              'Value': '2.13',
-            }),
-          ]),
+      'schedule': list([
+        dict({
+          'cron': '40 21 * * 2',
         }),
-        'BranchesIgnore': None,
-        'Hook': dict({
-          'Pos': dict({
-            'Col': 3,
-            'Line': 18,
-          }),
-          'Quoted': False,
-          'Value': 'pull_request',
-        }),
-        'Paths': None,
-        'PathsIgnore': dict({
-          'Name': dict({
-            'Pos': dict({
-              'Col': 5,
-              'Line': 24,
-            }),
-            'Quoted': False,
-            'Value': 'paths-ignore',
-          }),
-          'Values': list([
-            dict({
-              'Pos': dict({
-                'Col': 7,
-                'Line': 25,
-              }),
-              'Quoted': False,
-              'Value': 'README.md',
-            }),
-            dict({
-              'Pos': dict({
-                'Col': 7,
-                'Line': 26,
-              }),
-              'Quoted': False,
-              'Value': 'release-notes/*',
-            }),
-          ]),
-        }),
-        'Pos': dict({
-          'Col': 3,
-          'Line': 18,
-        }),
-        'Tags': None,
-        'TagsIgnore': None,
-        'Types': None,
-        'Workflows': None,
-      }),
-    ]),
-    'Permissions': None,
-    'RunName': None,
+      ]),
+    }),
   })
 # ---
 # name: test_actionparser_parse[maven.yml]
   dict({
-    'Concurrency': None,
-    'Defaults': None,
-    'Env': None,
-    'Jobs': dict({
+    'jobs': dict({
       'build': dict({
-        'Concurrency': None,
-        'Container': None,
-        'ContinueOnError': None,
-        'Defaults': None,
-        'Env': None,
-        'Environment': None,
-        'ID': dict({
-          'Pos': dict({
-            'Col': 3,
-            'Line': 9,
-          }),
-          'Quoted': False,
-          'Value': 'build',
-        }),
-        'If': None,
-        'Name': None,
-        'Needs': None,
-        'Outputs': None,
-        'Permissions': None,
-        'Pos': dict({
-          'Col': 3,
-          'Line': 9,
-        }),
-        'RunsOn': dict({
-          'Group': None,
-          'Labels': None,
-          'LabelsExpr': dict({
-            'Pos': dict({
-              'Col': 14,
-              'Line': 15,
-            }),
-            'Quoted': False,
-            'Value': '${{ matrix.os }}',
-          }),
-        }),
-        'Services': None,
-        'Steps': list([
+        'runs-on': '${{ matrix.os }}',
+        'steps': list([
           dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Args': None,
-              'Entrypoint': None,
-              'Inputs': None,
-              'Uses': dict({
-                'Pos': dict({
-                  'Col': 13,
-                  'Line': 18,
-                }),
-                'Quoted': False,
-                'Value': 'actions/checkout@v2',
-              }),
-            }),
-            'ID': None,
-            'If': None,
-            'Name': None,
-            'Pos': dict({
-              'Col': 7,
-              'Line': 18,
-            }),
-            'TimeoutMinutes': None,
+            'uses': 'actions/checkout@v2',
           }),
           dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Args': None,
-              'Entrypoint': None,
-              'Inputs': dict({
-                'cache': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 23,
-                    }),
-                    'Quoted': False,
-                    'Value': 'cache',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 16,
-                      'Line': 23,
-                    }),
-                    'Quoted': False,
-                    'Value': 'maven',
-                  }),
-                }),
-                'distribution': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 22,
-                    }),
-                    'Quoted': False,
-                    'Value': 'distribution',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 23,
-                      'Line': 22,
-                    }),
-                    'Quoted': False,
-                    'Value': 'temurin',
-                  }),
-                }),
-                'java-version': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 21,
-                    }),
-                    'Quoted': False,
-                    'Value': 'java-version',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 23,
-                      'Line': 21,
-                    }),
-                    'Quoted': False,
-                    'Value': '8',
-                  }),
-                }),
-              }),
-              'Uses': dict({
-                'Pos': dict({
-                  'Col': 13,
-                  'Line': 19,
-                }),
-                'Quoted': False,
-                'Value': 'actions/setup-java@v2',
-              }),
+            'uses': 'actions/setup-java@v2',
+            'with': dict({
+              'cache': 'maven',
+              'distribution': 'temurin',
+              'java-version': 8,
             }),
-            'ID': None,
-            'If': None,
-            'Name': None,
-            'Pos': dict({
-              'Col': 7,
-              'Line': 19,
-            }),
-            'TimeoutMinutes': None,
           }),
           dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Run': dict({
-                'Pos': dict({
-                  'Col': 12,
-                  'Line': 26,
-                }),
-                'Quoted': False,
-                'Value': 'mvn verify -e -B -V -DdistributionFileName=apache-maven',
-              }),
-              'RunPos': dict({
-                'Col': 7,
-                'Line': 26,
-              }),
-              'Shell': None,
-              'WorkingDirectory': None,
-            }),
-            'ID': None,
-            'If': None,
-            'Name': dict({
-              'Pos': dict({
-                'Col': 13,
-                'Line': 25,
-              }),
-              'Quoted': False,
-              'Value': 'Build with Maven',
-            }),
-            'Pos': dict({
-              'Col': 7,
-              'Line': 25,
-            }),
-            'TimeoutMinutes': None,
+            'name': 'Build with Maven',
+            'run': 'mvn verify -e -B -V -DdistributionFileName=apache-maven',
           }),
           dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Args': None,
-              'Entrypoint': None,
-              'Inputs': dict({
-                'name': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 32,
-                    }),
-                    'Quoted': False,
-                    'Value': 'name',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 15,
-                      'Line': 32,
-                    }),
-                    'Quoted': False,
-                    'Value': 'built-maven',
-                  }),
-                }),
-                'path': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 33,
-                    }),
-                    'Quoted': False,
-                    'Value': 'path',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 15,
-                      'Line': 33,
-                    }),
-                    'Quoted': False,
-                    'Value': 'apache-maven/target/',
-                  }),
-                }),
-              }),
-              'Uses': dict({
-                'Pos': dict({
-                  'Col': 13,
-                  'Line': 29,
-                }),
-                'Quoted': False,
-                'Value': 'actions/upload-artifact@v2',
-              }),
+            'if': "${{ matrix.os == 'ubuntu-latest' }}",
+            'name': 'Upload built Maven',
+            'uses': 'actions/upload-artifact@v2',
+            'with': dict({
+              'name': 'built-maven',
+              'path': 'apache-maven/target/',
             }),
-            'ID': None,
-            'If': dict({
-              'Pos': dict({
-                'Col': 11,
-                'Line': 30,
-              }),
-              'Quoted': False,
-              'Value': "${{ matrix.os == 'ubuntu-latest' }}",
-            }),
-            'Name': dict({
-              'Pos': dict({
-                'Col': 13,
-                'Line': 28,
-              }),
-              'Quoted': False,
-              'Value': 'Upload built Maven',
-            }),
-            'Pos': dict({
-              'Col': 7,
-              'Line': 28,
-            }),
-            'TimeoutMinutes': None,
           }),
         ]),
-        'Strategy': dict({
-          'FailFast': dict({
-            'Expression': None,
-            'Pos': dict({
-              'Col': 18,
-              'Line': 13,
-            }),
-            'Value': False,
-          }),
-          'Matrix': dict({
-            'Exclude': None,
-            'Expression': None,
-            'Include': None,
-            'Pos': dict({
-              'Col': 7,
-              'Line': 11,
-            }),
-            'Rows': dict({
-              'os': dict({
-                'Expression': None,
-                'Name': dict({
-                  'Pos': dict({
-                    'Col': 9,
-                    'Line': 12,
-                  }),
-                  'Quoted': False,
-                  'Value': 'os',
-                }),
-                'Values': list([
-                  dict({
-                    'Value': 'ubuntu-latest',
-                  }),
-                  dict({
-                    'Value': 'windows-latest',
-                  }),
-                  dict({
-                    'Value': 'macOS-latest',
-                  }),
-                ]),
-              }),
-            }),
-          }),
-          'MaxParallel': None,
-          'Pos': dict({
-            'Col': 5,
-            'Line': 10,
+        'strategy': dict({
+          'fail-fast': False,
+          'matrix': dict({
+            'os': list([
+              'ubuntu-latest',
+              'windows-latest',
+              'macOS-latest',
+            ]),
           }),
         }),
-        'TimeoutMinutes': None,
-        'WorkflowCall': None,
       }),
       'integration-test': dict({
-        'Concurrency': None,
-        'Container': None,
-        'ContinueOnError': None,
-        'Defaults': None,
-        'Env': None,
-        'Environment': None,
-        'ID': dict({
-          'Pos': dict({
-            'Col': 3,
-            'Line': 35,
-          }),
-          'Quoted': False,
-          'Value': 'integration-test',
-        }),
-        'If': None,
-        'Name': None,
-        'Needs': list([
+        'needs': 'build',
+        'runs-on': '${{ matrix.os }}',
+        'steps': list([
           dict({
-            'Pos': dict({
-              'Col': 12,
-              'Line': 36,
+            'env': dict({
+              'PR_HEAD_LABEL': '${{ github.event.pull_request.head.label }}',
             }),
-            'Quoted': False,
-            'Value': 'build',
+            'name': 'Collect environment context variables',
+            'run': '''
+              set +e
+              repo=maven-integration-testing
+              target_branch=master
+              target_user=apache
+              if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
+                user=${PR_HEAD_LABEL%:*}
+                branch=${PR_HEAD_LABEL#*:}
+              else
+                user=${GITHUB_REPOSITORY%/*}
+                branch=${GITHUB_REF#refs/heads/}
+              fi
+              if [ $branch != "master" ]; then
+                git ls-remote https://github.com/$user/$repo.git | grep "refs/heads/${branch}$" > /dev/null
+                if [ $? -eq 0 ]; then
+                  echo "Found a branch \"$branch\" in fork \"$user/$repo\", configuring this for the integration tests to be run against."
+                  target_branch=$branch
+                  target_user=$user
+                else
+                  echo "Could not find fork \"$user/$repo\" or a branch \"$branch\" in this fork. Falling back to \"$target_branch\" in \"$target_user/$repo\"."
+                fi
+              else
+                echo "Integration tests will run against $target_user/$repo for master builds."
+              fi
+              echo "REPO_BRANCH=$target_branch" >> $GITHUB_ENV
+              echo "REPO_USER=$target_user" >> $GITHUB_ENV
+  
+            ''',
+            'shell': 'bash',
+          }),
+          dict({
+            'name': 'Checkout maven-integration-testing',
+            'uses': 'actions/checkout@v2',
+            'with': dict({
+              'path': 'maven-integration-testing/',
+              'ref': '${{ env.REPO_BRANCH }}',
+              'repository': '${{ env.REPO_USER }}/maven-integration-testing',
+            }),
+          }),
+          dict({
+            'name': 'Set up cache for ~/.m2/repository',
+            'uses': 'actions/cache@v2',
+            'with': dict({
+              'key': "it-m2-repo-${{ matrix.os }}-${{ hashFiles('maven-integration-testing/**/pom.xml') }}",
+              'path': '~/.m2/repository',
+              'restore-keys': '''
+                it-m2-repo-${{ matrix.os }}-
+  
+              ''',
+            }),
+          }),
+          dict({
+            'name': 'Download built Maven',
+            'uses': 'actions/download-artifact@v2',
+            'with': dict({
+              'name': 'built-maven',
+              'path': 'built-maven/',
+            }),
+          }),
+          dict({
+            'name': 'Set up JDK',
+            'uses': 'actions/setup-java@v2',
+            'with': dict({
+              'cache': 'maven',
+              'distribution': 'temurin',
+              'java-version': '${{ matrix.java }}',
+            }),
+          }),
+          dict({
+            'name': 'Running integration tests',
+            'run': 'mvn install -e -B -V -Prun-its,embedded -Dmaven.repo.local="$HOME/.m2/repository" -DmavenDistro="$GITHUB_WORKSPACE/built-maven/apache-maven-bin.zip" -f maven-integration-testing/pom.xml',
+            'shell': 'bash',
           }),
         ]),
-        'Outputs': None,
-        'Permissions': None,
-        'Pos': dict({
-          'Col': 3,
-          'Line': 35,
-        }),
-        'RunsOn': dict({
-          'Group': None,
-          'Labels': None,
-          'LabelsExpr': dict({
-            'Pos': dict({
-              'Col': 14,
-              'Line': 43,
-            }),
-            'Quoted': False,
-            'Value': '${{ matrix.os }}',
+        'strategy': dict({
+          'fail-fast': False,
+          'matrix': dict({
+            'java': list([
+              8,
+              11,
+              17,
+            ]),
+            'os': list([
+              'ubuntu-latest',
+              'windows-latest',
+              'macOS-latest',
+            ]),
           }),
         }),
-        'Services': None,
-        'Steps': list([
-          dict({
-            'ContinueOnError': None,
-            'Env': dict({
-              'Expression': None,
-              'Vars': dict({
-                'pr_head_label': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 49,
-                    }),
-                    'Quoted': False,
-                    'Value': 'PR_HEAD_LABEL',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 24,
-                      'Line': 49,
-                    }),
-                    'Quoted': False,
-                    'Value': '${{ github.event.pull_request.head.label }}',
-                  }),
-                }),
-              }),
-            }),
-            'Exec': dict({
-              'Run': dict({
-                'Pos': dict({
-                  'Col': 12,
-                  'Line': 50,
-                }),
-                'Quoted': False,
-                'Value': '''
-                  set +e
-                  repo=maven-integration-testing
-                  target_branch=master
-                  target_user=apache
-                  if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
-                    user=${PR_HEAD_LABEL%:*}
-                    branch=${PR_HEAD_LABEL#*:}
-                  else
-                    user=${GITHUB_REPOSITORY%/*}
-                    branch=${GITHUB_REF#refs/heads/}
-                  fi
-                  if [ $branch != "master" ]; then
-                    git ls-remote https://github.com/$user/$repo.git | grep "refs/heads/${branch}$" > /dev/null
-                    if [ $? -eq 0 ]; then
-                      echo "Found a branch \"$branch\" in fork \"$user/$repo\", configuring this for the integration tests to be run against."
-                      target_branch=$branch
-                      target_user=$user
-                    else
-                      echo "Could not find fork \"$user/$repo\" or a branch \"$branch\" in this fork. Falling back to \"$target_branch\" in \"$target_user/$repo\"."
-                    fi
-                  else
-                    echo "Integration tests will run against $target_user/$repo for master builds."
-                  fi
-                  echo "REPO_BRANCH=$target_branch" >> $GITHUB_ENV
-                  echo "REPO_USER=$target_user" >> $GITHUB_ENV
-  
-                ''',
-              }),
-              'RunPos': dict({
-                'Col': 7,
-                'Line': 50,
-              }),
-              'Shell': dict({
-                'Pos': dict({
-                  'Col': 14,
-                  'Line': 47,
-                }),
-                'Quoted': False,
-                'Value': 'bash',
-              }),
-              'WorkingDirectory': None,
-            }),
-            'ID': None,
-            'If': None,
-            'Name': dict({
-              'Pos': dict({
-                'Col': 13,
-                'Line': 46,
-              }),
-              'Quoted': False,
-              'Value': 'Collect environment context variables',
-            }),
-            'Pos': dict({
-              'Col': 7,
-              'Line': 46,
-            }),
-            'TimeoutMinutes': None,
-          }),
-          dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Args': None,
-              'Entrypoint': None,
-              'Inputs': dict({
-                'path': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 81,
-                    }),
-                    'Quoted': False,
-                    'Value': 'path',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 15,
-                      'Line': 81,
-                    }),
-                    'Quoted': False,
-                    'Value': 'maven-integration-testing/',
-                  }),
-                }),
-                'ref': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 82,
-                    }),
-                    'Quoted': False,
-                    'Value': 'ref',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 14,
-                      'Line': 82,
-                    }),
-                    'Quoted': False,
-                    'Value': '${{ env.REPO_BRANCH }}',
-                  }),
-                }),
-                'repository': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 80,
-                    }),
-                    'Quoted': False,
-                    'Value': 'repository',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 21,
-                      'Line': 80,
-                    }),
-                    'Quoted': False,
-                    'Value': '${{ env.REPO_USER }}/maven-integration-testing',
-                  }),
-                }),
-              }),
-              'Uses': dict({
-                'Pos': dict({
-                  'Col': 13,
-                  'Line': 78,
-                }),
-                'Quoted': False,
-                'Value': 'actions/checkout@v2',
-              }),
-            }),
-            'ID': None,
-            'If': None,
-            'Name': dict({
-              'Pos': dict({
-                'Col': 13,
-                'Line': 77,
-              }),
-              'Quoted': False,
-              'Value': 'Checkout maven-integration-testing',
-            }),
-            'Pos': dict({
-              'Col': 7,
-              'Line': 77,
-            }),
-            'TimeoutMinutes': None,
-          }),
-          dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Args': None,
-              'Entrypoint': None,
-              'Inputs': dict({
-                'key': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 88,
-                    }),
-                    'Quoted': False,
-                    'Value': 'key',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 14,
-                      'Line': 88,
-                    }),
-                    'Quoted': False,
-                    'Value': "it-m2-repo-${{ matrix.os }}-${{ hashFiles('maven-integration-testing/**/pom.xml') }}",
-                  }),
-                }),
-                'path': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 87,
-                    }),
-                    'Quoted': False,
-                    'Value': 'path',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 15,
-                      'Line': 87,
-                    }),
-                    'Quoted': False,
-                    'Value': '~/.m2/repository',
-                  }),
-                }),
-                'restore-keys': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 89,
-                    }),
-                    'Quoted': False,
-                    'Value': 'restore-keys',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 23,
-                      'Line': 89,
-                    }),
-                    'Quoted': False,
-                    'Value': '''
-                      it-m2-repo-${{ matrix.os }}-
-  
-                    ''',
-                  }),
-                }),
-              }),
-              'Uses': dict({
-                'Pos': dict({
-                  'Col': 13,
-                  'Line': 85,
-                }),
-                'Quoted': False,
-                'Value': 'actions/cache@v2',
-              }),
-            }),
-            'ID': None,
-            'If': None,
-            'Name': dict({
-              'Pos': dict({
-                'Col': 13,
-                'Line': 84,
-              }),
-              'Quoted': False,
-              'Value': 'Set up cache for ~/.m2/repository',
-            }),
-            'Pos': dict({
-              'Col': 7,
-              'Line': 84,
-            }),
-            'TimeoutMinutes': None,
-          }),
-          dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Args': None,
-              'Entrypoint': None,
-              'Inputs': dict({
-                'name': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 95,
-                    }),
-                    'Quoted': False,
-                    'Value': 'name',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 15,
-                      'Line': 95,
-                    }),
-                    'Quoted': False,
-                    'Value': 'built-maven',
-                  }),
-                }),
-                'path': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 96,
-                    }),
-                    'Quoted': False,
-                    'Value': 'path',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 15,
-                      'Line': 96,
-                    }),
-                    'Quoted': False,
-                    'Value': 'built-maven/',
-                  }),
-                }),
-              }),
-              'Uses': dict({
-                'Pos': dict({
-                  'Col': 13,
-                  'Line': 93,
-                }),
-                'Quoted': False,
-                'Value': 'actions/download-artifact@v2',
-              }),
-            }),
-            'ID': None,
-            'If': None,
-            'Name': dict({
-              'Pos': dict({
-                'Col': 13,
-                'Line': 92,
-              }),
-              'Quoted': False,
-              'Value': 'Download built Maven',
-            }),
-            'Pos': dict({
-              'Col': 7,
-              'Line': 92,
-            }),
-            'TimeoutMinutes': None,
-          }),
-          dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Args': None,
-              'Entrypoint': None,
-              'Inputs': dict({
-                'cache': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 103,
-                    }),
-                    'Quoted': False,
-                    'Value': 'cache',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 16,
-                      'Line': 103,
-                    }),
-                    'Quoted': False,
-                    'Value': 'maven',
-                  }),
-                }),
-                'distribution': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 102,
-                    }),
-                    'Quoted': False,
-                    'Value': 'distribution',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 23,
-                      'Line': 102,
-                    }),
-                    'Quoted': False,
-                    'Value': 'temurin',
-                  }),
-                }),
-                'java-version': dict({
-                  'Name': dict({
-                    'Pos': dict({
-                      'Col': 9,
-                      'Line': 101,
-                    }),
-                    'Quoted': False,
-                    'Value': 'java-version',
-                  }),
-                  'Value': dict({
-                    'Pos': dict({
-                      'Col': 23,
-                      'Line': 101,
-                    }),
-                    'Quoted': False,
-                    'Value': '${{ matrix.java }}',
-                  }),
-                }),
-              }),
-              'Uses': dict({
-                'Pos': dict({
-                  'Col': 13,
-                  'Line': 99,
-                }),
-                'Quoted': False,
-                'Value': 'actions/setup-java@v2',
-              }),
-            }),
-            'ID': None,
-            'If': None,
-            'Name': dict({
-              'Pos': dict({
-                'Col': 13,
-                'Line': 98,
-              }),
-              'Quoted': False,
-              'Value': 'Set up JDK',
-            }),
-            'Pos': dict({
-              'Col': 7,
-              'Line': 98,
-            }),
-            'TimeoutMinutes': None,
-          }),
-          dict({
-            'ContinueOnError': None,
-            'Env': None,
-            'Exec': dict({
-              'Run': dict({
-                'Pos': dict({
-                  'Col': 12,
-                  'Line': 107,
-                }),
-                'Quoted': False,
-                'Value': 'mvn install -e -B -V -Prun-its,embedded -Dmaven.repo.local="$HOME/.m2/repository" -DmavenDistro="$GITHUB_WORKSPACE/built-maven/apache-maven-bin.zip" -f maven-integration-testing/pom.xml',
-              }),
-              'RunPos': dict({
-                'Col': 7,
-                'Line': 107,
-              }),
-              'Shell': dict({
-                'Pos': dict({
-                  'Col': 14,
-                  'Line': 106,
-                }),
-                'Quoted': False,
-                'Value': 'bash',
-              }),
-              'WorkingDirectory': None,
-            }),
-            'ID': None,
-            'If': None,
-            'Name': dict({
-              'Pos': dict({
-                'Col': 13,
-                'Line': 105,
-              }),
-              'Quoted': False,
-              'Value': 'Running integration tests',
-            }),
-            'Pos': dict({
-              'Col': 7,
-              'Line': 105,
-            }),
-            'TimeoutMinutes': None,
-          }),
-        ]),
-        'Strategy': dict({
-          'FailFast': dict({
-            'Expression': None,
-            'Pos': dict({
-              'Col': 18,
-              'Line': 42,
-            }),
-            'Value': False,
-          }),
-          'Matrix': dict({
-            'Exclude': None,
-            'Expression': None,
-            'Include': None,
-            'Pos': dict({
-              'Col': 7,
-              'Line': 38,
-            }),
-            'Rows': dict({
-              'java': dict({
-                'Expression': None,
-                'Name': dict({
-                  'Pos': dict({
-                    'Col': 9,
-                    'Line': 40,
-                  }),
-                  'Quoted': False,
-                  'Value': 'java',
-                }),
-                'Values': list([
-                  dict({
-                    'Value': '8',
-                  }),
-                  dict({
-                    'Value': '11',
-                  }),
-                  dict({
-                    'Value': '17',
-                  }),
-                ]),
-              }),
-              'os': dict({
-                'Expression': None,
-                'Name': dict({
-                  'Pos': dict({
-                    'Col': 9,
-                    'Line': 39,
-                  }),
-                  'Quoted': False,
-                  'Value': 'os',
-                }),
-                'Values': list([
-                  dict({
-                    'Value': 'ubuntu-latest',
-                  }),
-                  dict({
-                    'Value': 'windows-latest',
-                  }),
-                  dict({
-                    'Value': 'macOS-latest',
-                  }),
-                ]),
-              }),
-            }),
-          }),
-          'MaxParallel': None,
-          'Pos': dict({
-            'Col': 5,
-            'Line': 37,
-          }),
-        }),
-        'TimeoutMinutes': None,
-        'WorkflowCall': None,
       }),
     }),
-    'Name': dict({
-      'Pos': dict({
-        'Col': 7,
-        'Line': 4,
-      }),
-      'Quoted': False,
-      'Value': 'Java CI',
-    }),
-    'On': list([
-      dict({
-        'Branches': None,
-        'BranchesIgnore': None,
-        'Hook': dict({
-          'Pos': dict({
-            'Col': 6,
-            'Line': 6,
-          }),
-          'Quoted': False,
-          'Value': 'push',
-        }),
-        'Paths': None,
-        'PathsIgnore': None,
-        'Pos': dict({
-          'Col': 6,
-          'Line': 6,
-        }),
-        'Tags': None,
-        'TagsIgnore': None,
-        'Types': None,
-        'Workflows': None,
-      }),
-      dict({
-        'Branches': None,
-        'BranchesIgnore': None,
-        'Hook': dict({
-          'Pos': dict({
-            'Col': 12,
-            'Line': 6,
-          }),
-          'Quoted': False,
-          'Value': 'pull_request',
-        }),
-        'Paths': None,
-        'PathsIgnore': None,
-        'Pos': dict({
-          'Col': 12,
-          'Line': 6,
-        }),
-        'Tags': None,
-        'TagsIgnore': None,
-        'Types': None,
-        'Workflows': None,
-      }),
+    'name': 'Java CI',
+    'on': list([
+      'push',
+      'pull_request',
     ]),
-    'Permissions': None,
-    'RunName': None,
   })
 # ---

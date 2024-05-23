@@ -30,6 +30,8 @@ dependencies = [
     "SQLAlchemy >=2.0.0,<3.0.0",
     "defusedxml >=0.7.1,<1.0.0",
     "packageurl-python >= 0.11.1,<1.0.0",
+    "ruamel.yaml >= 0.18.6,<1.0.0",
+    "jsonschema >= 4.22.0,<5.0.0"
 ]
 keywords = []
 # https://pypi.org/classifiers/
@@ -66,6 +68,7 @@ dev = [
     "mypy >=0.921,<1.10",
     "types-pyyaml >=6.0.4,<7.0.0",
     "types-requests >=2.25.6,<3.0.0",
+    "types-jsonschema >=4.22.0,<5.0.0",
     "pip-audit >=2.5.6,<3.0.0",
     "pylint >=3.0.3,<4.0.0",
     "cyclonedx-bom >=4.0.0,<5.0.0",

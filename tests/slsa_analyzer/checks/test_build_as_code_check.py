@@ -9,9 +9,7 @@ from typing import cast
 
 import pytest
 
-import macaron
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.errors import ParseError
 from macaron.parsers.actionparser import parse as parse_action
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
@@ -154,14 +152,10 @@ def test_gha_workflow_deployment(
     gha_deploy.dynamic_data["build_spec"]["tools"] = [pip_tool]
     gha_deploy.dynamic_data["ci_services"] = [ci_info]
 
-    root = GitHubWorkflowNode(name="root", node_type=GitHubWorkflowType.NONE, source_path="", parsed_obj={})
+    root: BaseNode = BaseNode()
     gh_cg = CallGraph(root, "")
     workflow_path = os.path.join(workflows_dir, workflow_name)
-    parsed_obj = None
-    try:
-        parsed_obj = parse_action(workflow_path, macaron_path=macaron.MACARON_PATH)
-    except ParseError:
-        parsed_obj = {}
+    parsed_obj = parse_action(workflow_path)
     callee = GitHubWorkflowNode(
         name=os.path.basename(workflow_path),
         node_type=GitHubWorkflowType.INTERNAL,

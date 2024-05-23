@@ -1,7 +1,7 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-name: Publish to PyPI
+name: Don't publish to PyPI
 
 on:
   # For manual tests.
@@ -20,7 +20,7 @@ jobs:
       id-token: write   # For signing.
       contents: write   # For asset uploads.
     steps:
-    - uses: pypa/gh-action-pypi-publish@37f50c210e3d2f9450da2cd423303d6a14a6e29f
+    - uses: pypa/gh-action-pypi-dont-publish@37f50c210e3d2f9450da2cd423303d6a14a6e29f
       with:
         user: __token__
         password: ${{ secrets.PYPI_TOKEN }}

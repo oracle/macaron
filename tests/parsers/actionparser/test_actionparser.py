@@ -10,7 +10,6 @@ from pathlib import Path
 
 import pytest
 
-from macaron import MACARON_PATH
 from macaron.errors import ParseError
 from macaron.parsers.actionparser import parse
 
@@ -26,7 +25,7 @@ RESOURCES_DIR = Path(__file__).parent.joinpath("resources")
 )
 def test_actionparser_parse(snapshot: dict, workflow_path: str) -> None:
     """Test parsing GH Actions workflows."""
-    assert parse(os.path.join(RESOURCES_DIR, "workflow_files", workflow_path), MACARON_PATH) == snapshot
+    assert parse(os.path.join(RESOURCES_DIR, "workflow_files", workflow_path)) == snapshot
 
 
 @pytest.mark.parametrize(
@@ -40,4 +39,4 @@ def test_actionparser_parse(snapshot: dict, workflow_path: str) -> None:
 def test_actionparser_parse_invalid(workflow_path: str) -> None:
     """Test parsing GH Actions workflows."""
     with pytest.raises(ParseError):
-        parse(os.path.join(RESOURCES_DIR, "workflow_files", workflow_path), MACARON_PATH)
+        parse(os.path.join(RESOURCES_DIR, "workflow_files", workflow_path))

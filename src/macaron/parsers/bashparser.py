@@ -21,6 +21,7 @@ from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.errors import CallGraphError, ParseError
 from macaron.parsers.actionparser import get_run_step
+from macaron.parsers.github_workflow_model import Step
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ class BashNode(BaseNode):
         name: str,
         node_type: BashScriptType,
         source_path: str,
-        parsed_step_obj: dict | None,
+        parsed_step_obj: Step | None,
         parsed_bash_obj: dict,
         **kwargs: Any,
     ) -> None:
@@ -55,7 +56,7 @@ class BashNode(BaseNode):
             The type of the script.
         source_path : str
             The path of the script.
-        parsed_step_obj : dict | None
+        parsed_step_obj : Step | None
             The parsed step object.
         parsed_bash_obj : dict
             The parsed bash script object.
@@ -161,7 +162,7 @@ def create_bash_node(
     node_id: str | None,
     node_type: BashScriptType,
     source_path: str,
-    ci_step_ast: dict | None,
+    ci_step_ast: Step | None,
     repo_path: str,
     caller: BaseNode,
     recursion_depth: int,
@@ -184,7 +185,7 @@ def create_bash_node(
         The type of the node.
     source_path: str
         The file that contains the bash script.
-    ci_step_ast: dict | None
+    ci_step_ast: Step | None
         The AST of the CI step that runs a bash script.
     repo_path: str
         The path to the target repo.
@@ -213,11 +214,7 @@ def create_bash_node(
         case BashScriptType.INLINE:
             if ci_step_ast is None:
                 raise CallGraphError(f"Unable to find the parsed AST for the CI step at {source_path}.")
-            step_exec = ci_step_ast.get("Exec")
-            if step_exec is None:
-                raise CallGraphError(f"Unable to validate parsed AST for the CI step at {source_path}.")
-
-            working_dir = step_exec.get("WorkingDirectory")
+            working_dir = ci_step_ast.get("working-directory")
             run_script = get_run_step(ci_step_ast)
             if run_script is None:
                 raise CallGraphError(f"Invalid run step at {source_path}.")
