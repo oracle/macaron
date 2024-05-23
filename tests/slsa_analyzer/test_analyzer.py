@@ -155,3 +155,18 @@ def test_resolve_analysis_target_no_purl_or_repository() -> None:
     """Test creation of an Analysis Target when no PURL or repository path is provided."""
     with pytest.raises(InvalidAnalysisTargetError):
         Analyzer.to_analysis_target(Configuration(), [], None)
+
+
+@pytest.mark.parametrize(
+    ("url", "purl_string", "expected"),
+    [
+        ("https://github.com:9000/oracle/macaron", "pkg:github/oracle/macaron", True),
+        ("http://user:pass@github.com/oracle/macaron", "pkg:github.com/oracle/macaron", True),
+        ("https://bitbucket.org:9000/example/test", "pkg:bitbucket/example/test", True),
+        ("http://bitbucket.org/example;key1=1?key2=2#key3=3", "pkg:bitbucket.org/example", True),
+    ],
+)
+def test_compare_purl_and_url(url: str, purl_string: str, expected: bool) -> None:
+    """Test comparison of repository type PURLs against matching URLs."""
+    purl = PackageURL.from_string(purl_string)
+    assert expected == Analyzer.check_if_repository_purl_and_url_match(url, purl)
