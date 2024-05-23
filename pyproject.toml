@@ -144,7 +144,7 @@ omit = [
 # https://flit.pypa.io/en/latest/pyproject_toml.html#sdist-section
 # See also: https://github.com/pypa/flit/issues/565
 [tool.flit.sdist]
-include = ["src/macaron/resources/schemastore/*"]
+include = []
 exclude = [
     ".github/",
     "docs/",
