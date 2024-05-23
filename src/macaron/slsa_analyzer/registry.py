@@ -8,6 +8,7 @@ import inspect
 import logging
 import re
 import sys
+import traceback
 from collections.abc import Callable, Iterable
 from graphlib import CycleError, TopologicalSorter
 from typing import Any, TypeVar
@@ -497,7 +498,8 @@ class Registry:
             try:
                 results[check_id] = check.run(target, skipped_info)
             except Exception as exc:  # pylint: disable=broad-exception-caught
-                logger.error("Exception in check %s: %s.", check_id, exc)
+                logger.error("Exception in check %s: %s. Run in verbose mode to get more information.", check_id, exc)
+                logger.debug(traceback.format_exc())
                 logger.info("Check %s has failed.", check_id)
                 return results
 
