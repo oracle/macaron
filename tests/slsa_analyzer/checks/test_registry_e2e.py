@@ -1,9 +1,7 @@
 # Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module contains the tests for the Runner module."""
-
-from graphlib import TopologicalSorter
+"""This module contains an end-to-end test for the check registry."""
 
 from macaron.database.table_definitions import Analysis, Component, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -15,7 +13,7 @@ from ...macaron_testcase import MacaronTestCase
 
 
 class EmptyCheck(BaseCheck):
-    """An empty check to test the runners."""
+    """An empty check to test the check registry running end-to-end."""
 
     def __init__(
         self,
@@ -43,12 +41,12 @@ class EmptyCheck(BaseCheck):
         return CheckResultData(result_tables=[], result_type=self.should_return)
 
 
-class TestRunner(MacaronTestCase):
-    """Test the check runner."""
+class TestRegistryE2E(MacaronTestCase):
+    """Test the check registry end-to-end."""
 
     # pylint: disable=protected-access
-    def test_runner(self) -> None:
-        """Test the running process of Registry.
+    def test_registry_e2e(self) -> None:
+        """Test the running process of Registry end-to-end on an analysis target.
 
         This test uses EmptyCheck with pre-defined return value.
         """
@@ -56,8 +54,6 @@ class TestRunner(MacaronTestCase):
         registry = Registry()
         Registry._all_checks_mapping = {}
         Registry._check_relationships_mapping = {}
-        Registry._graph = TopologicalSorter()
-        Registry._is_graph_ready = False
 
         # Register checks
         # The final graph should be:

@@ -4,8 +4,6 @@
 """This module contains the tests for the Registry class."""
 
 import os
-import queue
-from graphlib import TopologicalSorter
 from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch
@@ -41,8 +39,6 @@ def check_registry_fixture() -> Registry:
     # Refresh Registry static variables before each test case
     Registry._all_checks_mapping = {}
     Registry._check_relationships_mapping = {}
-    Registry._graph = TopologicalSorter()
-    Registry._is_graph_ready = False
 
     registry = Registry()
     registry.register(BaseCheck("mcn_a_1", "Depend on b", [("mcn_b_1", CheckResultType.PASSED)]))  # type: ignore
@@ -67,8 +63,6 @@ class TestRegistry(TestCase):
         # Refresh Registry static variables before each test case
         Registry._all_checks_mapping = {}
         Registry._check_relationships_mapping = {}
-        Registry._graph = TopologicalSorter()
-        Registry._is_graph_ready = False
 
     def test_exit_on_duplicated(self) -> None:
         """Test registering a duplicated check_id Check."""
@@ -175,14 +169,6 @@ class TestRegistry(TestCase):
             )
             self.REGISTRY.register(check)
 
-    def test_add_graph_node_after_prepare(self) -> None:
-        """Test calling Registry._add_node after calling prepare on the graph."""
-        assert self.REGISTRY._add_node(MockCheck("mcn_before_1", "Check_registered_before_prepare", [], []))
-
-        Registry._graph.prepare()
-        Registry._is_graph_ready = True
-        assert not self.REGISTRY._add_node(MockCheck("mcn_after_1", "Check_registered_after_prepare", [], []))
-
     def test_circular_dependencies(self) -> None:
         """Test registering checks with circular dependencies."""
         self.REGISTRY.register(MockCheck("mcn_a_1", "Depend_on_b", [("mcn_b_1", CheckResultType.PASSED)], []))
@@ -199,21 +185,13 @@ class TestRegistry(TestCase):
         # the setUp method.
         assert not self.REGISTRY.prepare()
 
-    def test_running_with_no_runners(self) -> None:
-        """Test running the analysis with no runners in the Registry."""
-        self.REGISTRY.runners = []
-        self.REGISTRY.runner_queue = queue.Queue()
-        assert not self.REGISTRY.prepare()
-
     def test_prepare_successfully(self) -> None:
         """Test registry is prepared successfully and ready for the analysis."""
         self.REGISTRY.register(MockCheck("mcn_correct_check_1", "This check is a correct Check."))
         # For the prepare method to complete successfully,
         # the registry must have at least one check registered,
-        # at least one runner initialized and no check circular
-        # dependencies.
+        # and no circular check dependencies.
         assert Registry._all_checks_mapping
-        assert self.REGISTRY.runners
         assert self.REGISTRY.prepare()
 
     def test_validate_check_id_format(self) -> None:
