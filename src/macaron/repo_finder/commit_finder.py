@@ -101,6 +101,7 @@ alphabetic_only_pattern = re.compile("^[a-z]+$", flags=re.IGNORECASE)
 hex_only_pattern = re.compile("^[0-9a-f]+$", flags=re.IGNORECASE)
 numeric_only_pattern = re.compile("^[0-9]+$")
 versioned_string = re.compile("^([a-z]+)(0*)([1-9]+[0-9]*)$", flags=re.IGNORECASE)  # e.g. RC1, M5, etc.
+multiple_zero_pattern = re.compile("^0+$")
 
 
 class AbstractPurlType(Enum):
@@ -307,6 +308,7 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
     if not version:
         return None, []
 
+    # Escape input to prevent it being treated as regex.
     name = re.escape(name)
 
     # The version is split on non-alphanumeric characters to separate the version parts from the non-version parts.
@@ -328,8 +330,8 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
 
     this_version_pattern = ""
     has_non_numeric_suffix = False
-    # Detect versions that end with a zero, so the zero can be made optional.
-    has_trailing_zero = len(split) > 2 and split[-1] == "0"
+    # Detect versions that end with a zero number (0, 00, 000, etc.), so that part can be made optional.
+    has_trailing_zero = len(split) > 2 and multiple_zero_pattern.match(split[-1])
     for count, part in enumerate(parts):
         numeric_only = numeric_only_pattern.match(part)
 
@@ -344,7 +346,7 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
         # This part will be made optional in the regex if it matches the correct requirements:
         # - There is more than one version part, e.g. 1.2 (2), 1.2.3 (3)
         # - AND either of:
-        #   - This is the last version part and it has a trailing zero, e.g. 10
+        #   - This is the last version part, and it has a trailing zero, e.g. 10
         #   - OR has_non_numeric_suffix is True (See its comments above for more details)
         optional = len(split) > 1 and ((count == len(split) - 1 and has_trailing_zero) or has_non_numeric_suffix)
 
@@ -355,6 +357,10 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
             this_version_pattern = this_version_pattern + INFIX_1
         elif count > 1:
             this_version_pattern = this_version_pattern + INFIX_3
+
+        if numeric_only:
+            # Allow for any number of preceding zeros when the part is numeric only. E.g. 000 + 1, 0 + 20
+            this_version_pattern = this_version_pattern + "0*"
 
         # Add the current part to the pattern.
         this_version_pattern = this_version_pattern + part
