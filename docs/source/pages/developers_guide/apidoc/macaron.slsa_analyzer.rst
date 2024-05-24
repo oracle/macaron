@@ -72,14 +72,6 @@ macaron.slsa\_analyzer.registry module
    :undoc-members:
    :show-inheritance:
 
-macaron.slsa\_analyzer.runner module
-------------------------------------
-
-.. automodule:: macaron.slsa_analyzer.runner
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 macaron.slsa\_analyzer.slsa\_req module
 ---------------------------------------
 
