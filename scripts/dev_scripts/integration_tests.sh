@@ -262,9 +262,9 @@ echo "apache/maven: Analyzing using a CycloneDx SBOM file of a software componen
 echo -e "----------------------------------------------------------------------------------\n"
 SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/private_mirror_apache_maven.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/private_mirror_apache_maven.json
-DEP_RESULT=$WORKSPACE/output/reports/private_domain_com/apache/maven/dependencies.json
+DEP_RESULT=$WORKSPACE/output/reports/private-domain_com/apache/maven/dependencies.json
 
-$RUN_MACARON analyze -purl pkg:private_domain.com/apache/maven -sbom "$SBOM_FILE" || log_fail
+$RUN_MACARON analyze -purl pkg:private-domain.com/apache/maven -sbom "$SBOM_FILE" || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 

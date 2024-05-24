@@ -4,6 +4,7 @@
 """This module handles the cloning and analyzing a Git repo."""
 import logging
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -304,6 +305,9 @@ class Analyzer:
         repo_id = config.get_value("id")
         try:
             parsed_purl = Analyzer.parse_purl(config)
+            # Validate PURL type as per https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst
+            if parsed_purl and not re.match(r"^[a-z.+-][a-z0-9.+-]*$", parsed_purl.type):
+                raise InvalidPURLError(f"Invalid purl type: {parsed_purl.type}")
         except InvalidPURLError as error:
             logger.error(error)
             return Record(
