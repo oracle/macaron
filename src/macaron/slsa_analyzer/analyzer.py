@@ -825,7 +825,7 @@ class Analyzer:
                 logger.error("Cannot clone %s: %s", resolved_remote_path, str(error))
                 return None
         else:
-            logger.info("The path to repo %s is a local path.", repo_path)
+            logger.info("Checking if the path to repo %s is a local path.", repo_path)
             resolved_local_path = self._resolve_local_path(self.local_repos_path, repo_path)
 
         if resolved_local_path:
