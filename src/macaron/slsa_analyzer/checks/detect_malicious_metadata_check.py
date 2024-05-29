@@ -5,7 +5,7 @@
 
 import logging
 
-from sqlalchemy import JSON, ForeignKey, String
+from sqlalchemy import JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.table_definitions import CheckFacts
@@ -13,7 +13,7 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
-from macaron.slsa_analyzer.pypi_heuristics.analysis_result import Analysis
+from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT, Analysis
 from macaron.slsa_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
@@ -34,10 +34,14 @@ class HeuristicAnalysisResultFacts(CheckFacts):
     #: The primary key.
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
-    #: The provenance asset name.
-    package_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
+    #: List of heuristic names that failed.
+    # heuristics_fail: Mapped[list[str]] = mapped_column(JSON, nullable=False, info={"justification": JustificationType.TEXT})
 
-    result: Mapped[dict] = mapped_column(JSON, nullable=False)
+    #: Detailed information about the analysis.
+    # detail_information: Mapped[dict] = mapped_column(JSON, nullable=False, info={"justification": JustificationType.TEXT})
+
+    #: The result of heuristic analysis.
+    heuristic_result: Mapped[dict] = mapped_column(JSON, nullable=False, info={"justification": JustificationType.TEXT})
 
     __mapper_args__ = {
         "polymorphic_identity": "_detect_malicious_metadata_check",
@@ -54,13 +58,54 @@ ANALYZERS = [
     SuspiciousSetupAnalyzer,
 ]
 
+SUSPICIOUS_COMBO = {
+    (RESULT.FAIL, RESULT.SKIP, RESULT.FAIL, RESULT.SKIP, RESULT.SKIP, RESULT.FAIL, RESULT.FAIL): Confidence.HIGH,
+    (RESULT.FAIL, RESULT.SKIP, RESULT.FAIL, RESULT.SKIP, RESULT.SKIP, RESULT.FAIL, RESULT.PASS): Confidence.MEDIUM,
+    (
+        RESULT.FAIL,
+        RESULT.SKIP,
+        RESULT.PASS,
+        RESULT.FAIL,
+        RESULT.FAIL,
+        RESULT.FAIL,
+        RESULT.FAIL,
+    ): Confidence.HIGH,  # The content changed and no-changed
+    (
+        RESULT.FAIL,
+        RESULT.SKIP,
+        RESULT.PASS,
+        RESULT.FAIL,
+        RESULT.PASS,
+        RESULT.FAIL,
+        RESULT.FAIL,
+    ): Confidence.HIGH,  # The content changed and no-changed
+    (
+        RESULT.FAIL,
+        RESULT.SKIP,
+        RESULT.PASS,
+        RESULT.FAIL,
+        RESULT.FAIL,
+        RESULT.FAIL,
+        RESULT.PASS,
+    ): Confidence.MEDIUM,  # The content changed and no-changed
+    (
+        RESULT.FAIL,
+        RESULT.SKIP,
+        RESULT.PASS,
+        RESULT.FAIL,
+        RESULT.PASS,
+        RESULT.FAIL,
+        RESULT.PASS,
+    ): Confidence.MEDIUM,  # The content changed and no-changed
+}
+
 
 class DetectMaliciousMetadataCheck(BaseCheck):
-    """This check analyzes the metadata of the PyPI package based on seven heuristics."""
+    """This check analyzes the metadata of the package based on seven heuristics."""
 
     def __init__(self) -> None:
         """Initialize a check instance."""
-        check_id = "mcn_pypi_package_heuristic_1"
+        check_id = "mcn_detect_malicious_metadata_1"
         description = "Check whether the features of package adhere to the heurisic."
         super().__init__(
             check_id=check_id,
@@ -76,15 +121,12 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
             if depends_on and any(analysis.get_result(heuristic[0]) is not heuristic[1] for heuristic in depends_on):
                 continue
-            result, confidence = analyzer.analyze()
+            result, _ = analyzer.analyze()
             if analyzer.heuristic:
                 analysis.set_result(analyzer.heuristic, result)
                 heuristic = analyzer.name[: -len("_analyzer")]
-                results[heuristic] = (result.value, confidence)
+                results[heuristic] = result.value
         return results
-
-    def _aggregate_confidence(self, confidences: list[Confidence]) -> Confidence:
-        return confidences[0]
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
@@ -99,35 +141,23 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        dependencies = ["requests", "tqdm", "tttt1923"]
-        # dependencies = ctx.component.dependencies
-        results: list = []
+        # https://www.imperva.com/learn/application-security/cve-cvss-vulnerability/
+        package = "requests"
         result_tables: list[CheckFacts] = []
 
-        for pypi_package in dependencies:
-            api_client = PyPIApiClient(pypi_package)
-            result_and_confidence: dict = self._analyze(api_client)
-            results.append(result_and_confidence)
-            result_tables.append(
-                HeuristicAnalysisResultFacts(
-                    package_name=pypi_package, result=result_and_confidence, confidence=Confidence.LOW
-                )
-            )
-        logger.info("[RESULT]  %s", results)
-        # result_tables: list[CheckFacts] = [
-        #         ProvenanceAvailableFacts(asset_name=asset.name, asset_url=asset.url, confidence=Confidence.HIGH)
-        #         for asset in provenance_assets
-        #     ]
-        #     return CheckResultData(result_tables=result_tables, result_type=CheckResultType.PASSED)
-        # if ctx.dynamic_data["provenance"]:
-        #     return CheckResultData(
-        #         result_tables=[ProvenanceAvailableFacts(confidence=Confidence.HIGH)],
-        #         result_type=CheckResultType.PASSED,
-        #     )
+        api_client = PyPIApiClient(package)
+        result: dict = self._analyze(api_client)
+        confidence = SUSPICIOUS_COMBO.get(tuple(result.values()), None)
+        result_type = CheckResultType.FAILED
+        if confidence is None:
+            confidence = Confidence.HIGH
+            result_type = CheckResultType.PASSED
+
+        result_tables.append(HeuristicAnalysisResultFacts(heuristic_result=result, confidence=confidence))
 
         return CheckResultData(
             result_tables=result_tables,
-            result_type=CheckResultType.FAILED,
+            result_type=result_type,
         )
 
 
