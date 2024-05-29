@@ -29,7 +29,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 class HeuristicAnalysisResultFacts(CheckFacts):
     """The ORM mapping for justifications in pypi heuristic check."""
 
-    __tablename__ = "_pypi_heuristic_check"
+    __tablename__ = "_detect_malicious_metadata_check"
 
     #: The primary key.
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
@@ -40,7 +40,7 @@ class HeuristicAnalysisResultFacts(CheckFacts):
     result: Mapped[dict] = mapped_column(JSON, nullable=False)
 
     __mapper_args__ = {
-        "polymorphic_identity": "_pypi_heuristic_check",
+        "polymorphic_identity": "_detect_malicious_metadata_check",
     }
 
 
@@ -55,7 +55,7 @@ ANALYZERS = [
 ]
 
 
-class PyPIHeuristicCheck(BaseCheck):
+class DetectMaliciousMetadataCheck(BaseCheck):
     """This check analyzes the metadata of the PyPI package based on seven heuristics."""
 
     def __init__(self) -> None:
@@ -131,4 +131,4 @@ class PyPIHeuristicCheck(BaseCheck):
         )
 
 
-registry.register(PyPIHeuristicCheck())
+registry.register(DetectMaliciousMetadataCheck())
