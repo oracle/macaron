@@ -3,7 +3,6 @@
 
 """Analyzer checks there is no project link of the package."""
 
-from macaron.slsa_analyzer.checks.check_result import Confidence
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
@@ -17,7 +16,7 @@ class EmptyProjectLinkAnalyzer(BaseAnalyzer):
         super().__init__(name="empty_project_link_analyzer", heuristic=HEURISTIC.EMPTY_PROJECT_LINK)
         self.api_client = api_client
 
-    def _get_links_total(self) -> int | None:
+    def _get_links_total(self) -> tuple[int, dict] | None:
         """Get total number of links.
 
         Returns
@@ -26,21 +25,21 @@ class EmptyProjectLinkAnalyzer(BaseAnalyzer):
         """
         project_links: dict | None = self.api_client.get_project_links()
         if project_links is None:
-            return 0
-        return len(project_links)
+            return None
+        return len(project_links), project_links
 
-    def analyze(self) -> tuple[RESULT, Confidence | None]:
+    def analyze(self) -> tuple[RESULT, dict]:
         """Check whether the package contains one link.
 
         Returns
         -------
-            tuple[RESULT, Confidence | None]: Result and confidence.
+            tuple[RESULT, dict]: Result and confidence.
         """
-        links_total: int | None = self._get_links_total()
+        result: tuple[int, dict] | None = self._get_links_total()
 
-        if links_total is None:
-            return RESULT.SKIP, None
+        if result is None:
+            return RESULT.SKIP, {}
 
-        if links_total == 0:
-            return RESULT.FAIL, Confidence.LOW
-        return RESULT.PASS, Confidence.HIGH
+        if result[0] == 0:  # total
+            return RESULT.FAIL, {}
+        return RESULT.PASS, result[1]

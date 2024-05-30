@@ -4,7 +4,6 @@
 
 """Analyzer checks the packages contain one release."""
 
-from macaron.slsa_analyzer.checks.check_result import Confidence
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
@@ -18,27 +17,29 @@ class OneReleaseAnalyzer(BaseAnalyzer):
         super().__init__(name="one_release_analyzer", heuristic=HEURISTIC.ONE_RELEASE)
         self.api_client = api_client
 
-    def _get_releases_total(self) -> int | None:
+    def _get_releases_total(self) -> tuple[int, dict] | None:
         """Get total releases number.
 
         Returns
         -------
-            int | None: Releases' total.
+            tuple[int, dict] | None: Releases' total.
         """
         releases: dict | None = self.api_client.get_releases()
-        return len(releases) if releases else None
+        if releases:
+            return len(releases), releases
+        return None
 
-    def analyze(self) -> tuple[RESULT, Confidence | None]:
+    def analyze(self) -> tuple[RESULT, dict]:
         """Check the releases' total is one.
 
         Returns
         -------
-            tuple[RESULT, Confidence | None]: Result and confidence.
+            tuple[RESULT, dict]: Result and confidence.
         """
-        releases_total: int | None = self._get_releases_total()
-        if releases_total is None:
-            return RESULT.SKIP, None
+        result: tuple[int, dict] | None = self._get_releases_total()
+        if result is None:
+            return RESULT.SKIP, {"releases": {}}
 
-        if releases_total == 1:
-            return RESULT.FAIL, Confidence.MEDIUM  # Higher false positive, so we keep it MEDIUM
-        return RESULT.PASS, Confidence.MEDIUM
+        if result[0] == 1:
+            return RESULT.FAIL, {"releases": result[1]}  # Higher false positive, so we keep it MEDIUM
+        return RESULT.PASS, {"releases": result[1]}

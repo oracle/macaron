@@ -6,7 +6,6 @@
 import logging
 from datetime import datetime, timedelta
 
-from macaron.slsa_analyzer.checks.check_result import Confidence
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
@@ -56,19 +55,28 @@ class CloserReleaseJoinDateAnalyzer(BaseAnalyzer):
             datetime | None: Package's latest release date.
         """
         upload_time: str | None = self.api_client.get_latest_release_upload_time()
-        return datetime.strptime(upload_time, "%Y-%m-%dT%H:%M:%S") if upload_time else None
+        if upload_time:
+            return datetime.strptime(upload_time, "%Y-%m-%dT%H:%M:%S")
+        return None
 
-    def analyze(self) -> tuple[RESULT, Confidence | None]:
+    def analyze(self) -> tuple[RESULT, dict]:
         """Check whether the maintainers' join date closer to package's latest release date.
 
         Returns
         -------
-            tuple[RESULT, Confidence | None]: Result and confidence.
+            tuple[RESULT, dict]: Result and confidence.
         """
         maintainers_join_date: list[datetime | None] | None = self._get_maintainers_join_date()
         latest_release_date: datetime | None = self._get_latest_release_date()
+        detail_info = {
+            "maintainers_join_date": [date.strftime("%Y-%m-%d %H:%M:%S") for date in maintainers_join_date if date]
+            if maintainers_join_date
+            else [],
+            "latest_release_date": latest_release_date.strftime("%Y-%m-%d %H:%M:%S") if latest_release_date else "",
+        }
+
         if maintainers_join_date is None or latest_release_date is None:
-            return RESULT.SKIP, None
+            return RESULT.SKIP, detail_info
 
         for date in maintainers_join_date:
             if date is None:
@@ -78,5 +86,5 @@ class CloserReleaseJoinDateAnalyzer(BaseAnalyzer):
             threshold_delta = timedelta(days=self.gap_threshold)
 
             if difference >= threshold_delta:
-                return RESULT.PASS, Confidence.MEDIUM
-        return RESULT.FAIL, Confidence.LOW
+                return RESULT.PASS, detail_info
+        return RESULT.FAIL, detail_info

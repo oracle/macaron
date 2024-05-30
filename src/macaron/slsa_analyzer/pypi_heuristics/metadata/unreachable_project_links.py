@@ -7,7 +7,6 @@ import logging
 
 import requests
 
-from macaron.slsa_analyzer.checks.check_result import Confidence
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
@@ -37,7 +36,7 @@ class UnreachableProjectLinksAnalyzer(BaseAnalyzer):
         project_links: dict | None = self.api_client.get_project_links()
         return project_links
 
-    def analyze(self) -> tuple[RESULT, Confidence | None]:
+    def analyze(self) -> tuple[RESULT, dict]:
         """Analyze the package.
 
         Returns
@@ -47,14 +46,14 @@ class UnreachableProjectLinksAnalyzer(BaseAnalyzer):
         project_links: dict | None = self._get_project_links()
 
         if project_links is None:
-            return RESULT.SKIP, None
+            return RESULT.SKIP, {}
 
         for link in project_links.values():
             try:
                 response = requests.head(link, timeout=3)
                 if response.status_code < 400:
-                    return RESULT.PASS, Confidence.HIGH
+                    return RESULT.PASS, {"project_links": link}
             except requests.exceptions.RequestException as error:
                 logger.debug(error)
-                return RESULT.SKIP, None
-        return RESULT.FAIL, Confidence.MEDIUM  # The source code might be moved to another repository
+                continue
+        return RESULT.FAIL, {}

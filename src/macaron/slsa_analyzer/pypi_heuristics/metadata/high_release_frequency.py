@@ -6,7 +6,6 @@
 import logging
 from datetime import datetime
 
-from macaron.slsa_analyzer.checks.check_result import Confidence
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
@@ -37,7 +36,7 @@ class HighReleaseFrequencyAnalyzer(BaseAnalyzer):
         releases: dict | None = self.api_client.get_releases()
         return releases
 
-    def analyze(self) -> tuple[RESULT, Confidence | None]:
+    def analyze(self) -> tuple[RESULT, dict]:
         """Check whether the release frequency is high.
 
         Returns
@@ -46,7 +45,7 @@ class HighReleaseFrequencyAnalyzer(BaseAnalyzer):
         """
         version_to_releases: dict | None = self._get_releases()
         if version_to_releases is None:
-            return RESULT.SKIP, None
+            return RESULT.SKIP, {}
         releases_amount = len(version_to_releases)
         extract_data: dict = {
             version: datetime.strptime(metadata[0].get("upload_time"), "%Y-%m-%dT%H:%M:%S")
@@ -60,6 +59,8 @@ class HighReleaseFrequencyAnalyzer(BaseAnalyzer):
         for timestamp in releases:
             diff_timestamp = abs(timestamp - prev_timestamp)
             days_sum += diff_timestamp.days
-        if days_sum // (releases_amount - 1) <= self.average_gap_threshold:
-            return RESULT.FAIL, Confidence.LOW
-        return RESULT.PASS, Confidence.HIGH
+        frequency = days_sum // (releases_amount - 1)
+
+        if frequency <= self.average_gap_threshold:
+            return RESULT.FAIL, {"frequency": frequency}
+        return RESULT.PASS, {"frequency": frequency}

@@ -38,7 +38,9 @@ class HeuristicAnalysisResultFacts(CheckFacts):
     # heuristics_fail: Mapped[list[str]] = mapped_column(JSON, nullable=False, info={"justification": JustificationType.TEXT})
 
     #: Detailed information about the analysis.
-    # detail_information: Mapped[dict] = mapped_column(JSON, nullable=False, info={"justification": JustificationType.TEXT})
+    detail_information: Mapped[dict] = mapped_column(
+        JSON, nullable=False, info={"justification": JustificationType.TEXT}
+    )
 
     #: The result of heuristic analysis.
     heuristic_result: Mapped[dict] = mapped_column(JSON, nullable=False, info={"justification": JustificationType.TEXT})
@@ -115,17 +117,20 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     def _analyze(self, api_client: PyPIApiClient) -> dict:
         analysis = Analysis()
         results: dict = {}
+        detail_infos = {}
         for _analyzer in ANALYZERS:
             analyzer = _analyzer(api_client)
             depends_on = analyzer.depends_on
 
             if depends_on and any(analysis.get_result(heuristic[0]) is not heuristic[1] for heuristic in depends_on):
                 continue
-            result, _ = analyzer.analyze()
+            result, detail_info = analyzer.analyze()
             if analyzer.heuristic:
                 analysis.set_result(analyzer.heuristic, result)
                 heuristic = analyzer.name[: -len("_analyzer")]
                 results[heuristic] = result.value
+                detail_infos.update(detail_info)
+        results["detail_infos"] = detail_infos
         return results
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
@@ -147,13 +152,19 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         api_client = PyPIApiClient(package)
         result: dict = self._analyze(api_client)
+        details_infos = result.get("detail_infos", {})
+        result.pop("detail_infos")
         confidence = SUSPICIOUS_COMBO.get(tuple(result.values()), None)
         result_type = CheckResultType.FAILED
         if confidence is None:
             confidence = Confidence.HIGH
             result_type = CheckResultType.PASSED
 
-        result_tables.append(HeuristicAnalysisResultFacts(heuristic_result=result, confidence=confidence))
+        result_tables.append(
+            HeuristicAnalysisResultFacts(
+                heuristic_result=result, detail_information=details_infos, confidence=confidence
+            )
+        )
 
         return CheckResultData(
             result_tables=result_tables,
