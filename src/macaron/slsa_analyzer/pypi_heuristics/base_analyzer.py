@@ -3,7 +3,6 @@
 
 """Define and initialize the base analyzer."""
 
-from macaron.slsa_analyzer.checks.check_result import Confidence
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
@@ -21,6 +20,6 @@ class BaseAnalyzer:
         self.heuristic: HEURISTIC | None = heuristic
         self.depends_on: list[tuple] | None = depends_on
 
-    def analyze(self) -> tuple[RESULT, Confidence | None]:
+    def analyze(self) -> tuple[RESULT, dict]:
         """Implement the base analyze method for seven analyzers."""
-        return RESULT.SKIP, None
+        return RESULT.SKIP, {}

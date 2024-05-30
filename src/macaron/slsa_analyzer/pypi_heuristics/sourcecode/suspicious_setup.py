@@ -14,7 +14,6 @@ import zipfile
 
 import requests
 
-from macaron.slsa_analyzer.checks.check_result import Confidence
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
@@ -89,7 +88,7 @@ class SuspiciousSetupAnalyzer(BaseAnalyzer):
             # Clean up the temporary directory
             shutil.rmtree(temp_dir)
 
-    def analyze(self) -> tuple[RESULT, Confidence | None]:
+    def analyze(self) -> tuple[RESULT, dict]:
         """Analyze suspicious packages are imported in setup.py.
 
         Returns
@@ -98,7 +97,7 @@ class SuspiciousSetupAnalyzer(BaseAnalyzer):
         """
         content: str | None = self._get_setup_source_code()
         if content is None:
-            return RESULT.SKIP, None
+            return RESULT.SKIP, {}
 
         imports = set()
         try:
@@ -124,5 +123,5 @@ class SuspiciousSetupAnalyzer(BaseAnalyzer):
                     imports.update(filter(None, match.groups()))
         suspicious_setup = any(suspicious_keyword in imp for imp in imports for suspicious_keyword in self.blacklist)
         if suspicious_setup:
-            return RESULT.FAIL, Confidence.LOW
-        return RESULT.PASS, Confidence.MEDIUM  # The malicious code might placed in other script, so not HIGH
+            return RESULT.FAIL, {"import_module": imports}
+        return RESULT.PASS, {"import_module": imports}

@@ -5,7 +5,6 @@
 
 from collections import Counter
 
-from macaron.slsa_analyzer.checks.check_result import Confidence
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
@@ -41,7 +40,7 @@ class UnchangedReleaseAnalyzer(BaseAnalyzer):
         ]
         return digests
 
-    def analyze(self) -> tuple[RESULT, Confidence | None]:
+    def analyze(self) -> tuple[RESULT, dict]:
         """Check the content of releases keep updating.
 
         Returns
@@ -50,10 +49,10 @@ class UnchangedReleaseAnalyzer(BaseAnalyzer):
         """
         digests: list | None = self._get_digests()
         if digests is None:
-            return RESULT.SKIP, None
+            return RESULT.SKIP, {}
 
         frequency = Counter(digests)
         highest_frequency = max(frequency.values())
         if highest_frequency > 1:  # Any two release are same
-            return RESULT.FAIL, Confidence.LOW
-        return RESULT.PASS, Confidence.HIGH
+            return RESULT.FAIL, {}
+        return RESULT.PASS, {}
