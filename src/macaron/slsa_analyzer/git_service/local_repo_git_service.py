@@ -30,7 +30,7 @@ class LocalRepoGitService(BaseGitService):
 
     def clone_repo(self, _clone_dir: str, _url: str) -> None:
         """Cloning from a local repo git service is not supported."""
-        raise NotImplementedError
+        raise NotImplementedError(f"Cloning the local git repository {_url} is not supported.")
 
     def check_out_repo(self, git_obj: Git, branch: str, digest: str, offline_mode: bool) -> Git:
         """Checkout the branch and commit specified by the user of a repository."""
