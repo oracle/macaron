@@ -35,7 +35,9 @@ class HeuristicAnalysisResultFacts(CheckFacts):
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
     #: List of heuristic names that failed.
-    # heuristics_fail: Mapped[list[str]] = mapped_column(JSON, nullable=False, info={"justification": JustificationType.TEXT})
+    heuristics_fail: Mapped[list[str]] = mapped_column(
+        JSON, nullable=False, info={"justification": JustificationType.TEXT}
+    )
 
     #: Detailed information about the analysis.
     detail_information: Mapped[dict] = mapped_column(
@@ -152,8 +154,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         api_client = PyPIApiClient(package)
         result: dict = self._analyze(api_client)
-        details_infos = result.get("detail_infos", {})
+        detail_infos = result.get("detail_infos", {})
         result.pop("detail_infos")
+        heuristics_fail = [heuristic for heuristic, result in result.items() if result == "FAIL"]
         confidence = SUSPICIOUS_COMBO.get(tuple(result.values()), None)
         result_type = CheckResultType.FAILED
         if confidence is None:
@@ -162,7 +165,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         result_tables.append(
             HeuristicAnalysisResultFacts(
-                heuristic_result=result, detail_information=details_infos, confidence=confidence
+                heuristics_fail=heuristics_fail,
+                heuristic_result=result,
+                detail_information=detail_infos,
+                confidence=confidence,
             )
         )
 
