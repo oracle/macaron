@@ -7,7 +7,6 @@ import ast
 import logging
 import os
 import re
-import shutil
 import tarfile
 import tempfile
 import zipfile
@@ -44,49 +43,41 @@ class SuspiciousSetupAnalyzer(BaseAnalyzer):
             str | None: Source code.
         """
         # Create a temporary directory to store the downloaded source
-        temp_dir = tempfile.mkdtemp()
-
-        try:
-            sourcecode_url = self.api_client.get_sourcecode_url()
-            if sourcecode_url is None:
-                return None
-            response = requests.get(sourcecode_url, stream=True, timeout=40)
-            response.raise_for_status()
-            filename = sourcecode_url.split("/")[-1]
-            with open(os.path.join(temp_dir, filename), "wb") as f:
-                f.write(response.content)
-
-            files = os.listdir(temp_dir)
+        with tempfile.TemporaryDirectory() as temp_dir:
             try:
-                with tarfile.open(os.path.join(temp_dir, files[0]), "r:gz") as tar:
-                    tar.extractall(temp_dir)  # nosec B202
-            except tarfile.ReadError as exception:
-                # Handle the ReadError
-                logger.debug("Error reading tar file: %s", exception)
+                sourcecode_url = self.api_client.get_sourcecode_url()
+                if sourcecode_url is None:
+                    return None
+                response = requests.get(sourcecode_url, stream=True, timeout=40)
+                response.raise_for_status()
+                filename = sourcecode_url.split("/")[-1]
+                with open(os.path.join(temp_dir, filename), "wb") as f:
+                    f.write(response.content)
 
+                files = os.listdir(temp_dir)
                 try:
-                    # Open the zip file
-                    with zipfile.ZipFile(os.path.join(temp_dir, files[0]), "r") as zip_ref:
-                        # Extract all contents of the zip file
-                        zip_ref.extractall(temp_dir)  # nosec B202
-                except zipfile.BadZipFile as bad_zip_exception:
-                    # Handle the BadZipFile exception
-                    logger.debug("Error reading zip file: %s", bad_zip_exception)
-                    # You can add more specific handling if needed
-                except zipfile.LargeZipFile as large_zip_exception:
-                    # Handle the LargeZipFile exception
-                    logger.debug("Zip file too large to read: %s", large_zip_exception)
+                    with tarfile.open(os.path.join(temp_dir, files[0]), "r:gz") as tar:
+                        tar.extractall(temp_dir)  # nosec B202
+                except tarfile.ReadError as exception:
+                    logger.debug("Error reading tar file: %s", exception)
 
-            for root, _, files in os.walk(temp_dir):
-                for file in files:
-                    if file == "setup.py":
-                        file_path = os.path.join(root, file)
-                        with open(file_path, encoding="utf-8") as py_file:
-                            return py_file.read()
-            return None
-        finally:
-            # Clean up the temporary directory
-            shutil.rmtree(temp_dir)
+                    try:
+                        with zipfile.ZipFile(os.path.join(temp_dir, files[0]), "r") as zip_ref:
+                            zip_ref.extractall(temp_dir)  # nosec B202
+                    except zipfile.BadZipFile as bad_zip_exception:
+                        logger.debug("Error reading zip file: %s", bad_zip_exception)
+                    except zipfile.LargeZipFile as large_zip_exception:
+                        logger.debug("Zip file too large to read: %s", large_zip_exception)
+
+                for root, _, files in os.walk(temp_dir):
+                    for file in files:
+                        if file == "setup.py":
+                            file_path = os.path.join(root, file)
+                            with open(file_path, encoding="utf-8") as py_file:
+                                return py_file.read()
+                return None
+            except requests.exceptions.RequestException:
+                return None
 
     def analyze(self) -> tuple[RESULT, dict]:
         """Analyze suspicious packages are imported in setup.py.
