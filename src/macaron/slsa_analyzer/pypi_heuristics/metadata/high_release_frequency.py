@@ -26,16 +26,6 @@ class HighReleaseFrequencyAnalyzer(BaseAnalyzer):
         self.average_gap_threshold: int = 2  # Days
         self.api_client = api_client
 
-    def _get_releases(self) -> dict | None:
-        """Get all releases of the package.
-
-        Returns
-        -------
-            dict | None: Version to metadata.
-        """
-        releases: dict | None = self.api_client.get_releases()
-        return releases
-
     def analyze(self) -> tuple[RESULT, dict]:
         """Check whether the release frequency is high.
 
@@ -43,7 +33,7 @@ class HighReleaseFrequencyAnalyzer(BaseAnalyzer):
         -------
             tuple[RESULT, Confidence | None]: Confidence and result.
         """
-        version_to_releases: dict | None = self._get_releases()
+        version_to_releases: dict | None = self.api_client.get_releases()
         if version_to_releases is None:
             return RESULT.SKIP, {}
         releases_amount = len(version_to_releases)
