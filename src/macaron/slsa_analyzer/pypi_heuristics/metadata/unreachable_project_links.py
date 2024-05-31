@@ -26,16 +26,6 @@ class UnreachableProjectLinksAnalyzer(BaseAnalyzer):
         )
         self.api_client = api_client
 
-    def _get_project_links(self) -> dict | None:
-        """Implement the method to get the project links.
-
-        Returns
-        -------
-            dict | None: Link name to url.
-        """
-        project_links: dict | None = self.api_client.get_project_links()
-        return project_links
-
     def analyze(self) -> tuple[RESULT, dict]:
         """Analyze the package.
 
@@ -43,7 +33,7 @@ class UnreachableProjectLinksAnalyzer(BaseAnalyzer):
         -------
             tuple[RESULT, Confidence | None]: Result type and confidence type.
         """
-        project_links: dict | None = self._get_project_links()
+        project_links: dict | None = self.api_client.get_project_links()
 
         if project_links is None:
             return RESULT.SKIP, {}
