@@ -5,7 +5,7 @@
 
 import logging
 
-from sqlalchemy import JSON, ForeignKey
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.table_definitions import CheckFacts
@@ -35,17 +35,17 @@ class HeuristicAnalysisResultFacts(CheckFacts):
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
     #: List of heuristic names that failed.
-    heuristics_fail: Mapped[list[str]] = mapped_column(
-        JSON, nullable=False, info={"justification": JustificationType.TEXT}
-    )
+    heuristics_fail: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     #: Detailed information about the analysis.
-    detail_information: Mapped[dict] = mapped_column(
-        JSON, nullable=False, info={"justification": JustificationType.TEXT}
+    detail_information: Mapped[str] = mapped_column(
+        String, nullable=False, info={"justification": JustificationType.TEXT}
     )
 
     #: The result of heuristic analysis.
-    heuristic_result: Mapped[dict] = mapped_column(JSON, nullable=False, info={"justification": JustificationType.TEXT})
+    heuristic_result: Mapped[str] = mapped_column(
+        String, nullable=False, info={"justification": JustificationType.TEXT}
+    )
 
     __mapper_args__ = {
         "polymorphic_identity": "_detect_malicious_metadata_check",
@@ -148,7 +148,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        # https://www.imperva.com/learn/application-security/cve-cvss-vulnerability/
         package = "requests"
         result_tables: list[CheckFacts] = []
 
@@ -165,9 +164,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         result_tables.append(
             HeuristicAnalysisResultFacts(
-                heuristics_fail=heuristics_fail,
-                heuristic_result=result,
-                detail_information=detail_infos,
+                heuristics_fail=str(heuristics_fail),
+                heuristic_result=str(result),
+                detail_information=str(detail_infos),
                 confidence=confidence,
             )
         )
