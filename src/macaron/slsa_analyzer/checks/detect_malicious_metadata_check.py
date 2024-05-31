@@ -13,7 +13,8 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
-from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT, Analysis
+from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
+from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 from macaron.slsa_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
@@ -116,23 +117,30 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             description=description,
         )
 
+    def _should_skip(self, results: dict, dependency_heuristic: tuple[HEURISTIC, RESULT]) -> bool:
+        if results.get(dependency_heuristic[0], None) is not dependency_heuristic[1]:
+            return True
+        return False
+
     def _analyze(self, api_client: PyPIApiClient) -> dict:
-        analysis = Analysis()
         results: dict = {}
         detail_infos = {}
         for _analyzer in ANALYZERS:
             analyzer = _analyzer(api_client)
             depends_on = analyzer.depends_on
 
-            if depends_on and any(analysis.get_result(heuristic[0]) is not heuristic[1] for heuristic in depends_on):
-                continue
+            if depends_on:
+                for heuristic in depends_on:  # e.g. heuristic = (HEURISTIC.ONE_RELEASE, RESULT.PASS)
+                    if self._should_skip(results, heuristic):
+                        continue
+
             result, detail_info = analyzer.analyze()
             if analyzer.heuristic:
-                analysis.set_result(analyzer.heuristic, result)
-                heuristic = analyzer.name[: -len("_analyzer")]
-                results[heuristic] = result.value
+                results[analyzer.heuristic] = result
                 detail_infos.update(detail_info)
-        results["detail_infos"] = detail_infos
+
+        results = {heuristic.value: result.value for heuristic, result in results.items()}
+        results["detail_infos"] = detail_infos  # Package metadata
         return results
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
