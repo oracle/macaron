@@ -5,10 +5,14 @@
 import json
 
 import pytest
+from packageurl import PackageURL
 
 from macaron.errors import ProvenanceError
 from macaron.json_tools import JsonType, json_extract
-from macaron.repo_finder.provenance_extractor import extract_repo_and_commit_from_provenance
+from macaron.repo_finder.provenance_extractor import (
+    check_if_repository_purl_and_url_match,
+    extract_repo_and_commit_from_provenance,
+)
 from macaron.slsa_analyzer.provenance.intoto import validate_intoto_payload
 
 
@@ -493,6 +497,21 @@ def test_invalid_type_payloads(type_: str, predicate_type: str) -> None:
     payload: dict[str, JsonType] = {"_type": type_, "predicateType": predicate_type, "subject": [], "predicate": {}}
     with pytest.raises(ProvenanceError):
         _test_extract_repo_and_commit_from_provenance(payload)
+
+
+@pytest.mark.parametrize(
+    ("url", "purl_string", "expected"),
+    [
+        ("https://github.com:9000/oracle/macaron", "pkg:github/oracle/macaron", True),
+        ("http://user:pass@github.com/oracle/macaron", "pkg:github.com/oracle/macaron", True),
+        ("https://bitbucket.org:9000/example/test", "pkg:bitbucket/example/test", True),
+        ("http://bitbucket.org/example;key1=1?key2=2#key3=3", "pkg:bitbucket.org/example", True),
+    ],
+)
+def test_compare_purl_and_url(url: str, purl_string: str, expected: bool) -> None:
+    """Test comparison of repository type PURLs against matching URLs."""
+    purl = PackageURL.from_string(purl_string)
+    assert expected == check_if_repository_purl_and_url_match(url, purl)
 
 
 def _test_extract_repo_and_commit_from_provenance(

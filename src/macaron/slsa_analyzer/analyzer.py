@@ -5,7 +5,6 @@
 import logging
 import os
 import sys
-import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -34,15 +33,13 @@ from macaron.errors import (
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
-from macaron.repo_finder.commit_finder import (
-    AbstractPurlType,
-    determine_abstract_purl_type,
-    extract_commit_from_version,
-    find_commit,
+from macaron.repo_finder.commit_finder import find_commit
+from macaron.repo_finder.provenance_extractor import (
+    _check_if_input_purl_provenance_conflict,
+    _check_if_input_repo_commit_provenance_conflict,
+    extract_repo_and_commit_from_provenance,
 )
-from macaron.repo_finder.provenance_extractor import extract_repo_and_commit_from_provenance
 from macaron.repo_finder.provenance_finder import ProvenanceFinder
-from macaron.repo_finder.repo_finder import to_domain_from_known_purl_types
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import VirtualReleaseAsset
@@ -337,9 +334,7 @@ class Analyzer:
                 logger.debug("Failed to extract repo or commit from provenance: %s", error)
 
             # Try to validate the input repo and/or commit against provenance contents.
-            if (
-                provenance_repo_url or provenance_commit_digest
-            ) and Analyzer._check_if_input_repo_commit_provenance_conflict(
+            if (provenance_repo_url or provenance_commit_digest) and _check_if_input_repo_commit_provenance_conflict(
                 repo_path_input, digest_input, provenance_repo_url, provenance_commit_digest
             ):
                 return Record(
@@ -374,9 +369,9 @@ class Analyzer:
                 analysis_target.parsed_purl,
             )
 
-        # Check if only one of the repo or digest came from direct input, and a versioned purl exists for the other.
-        if git_obj and (provenance_repo_url or provenance_commit_digest) and parsed_purl and parsed_purl.version:
-            if Analyzer._check_if_input_purl_provenance_conflict(
+        # Check if only one of the repo or digest came from direct input.
+        if git_obj and (provenance_repo_url or provenance_commit_digest) and parsed_purl:
+            if _check_if_input_purl_provenance_conflict(
                 git_obj,
                 bool(repo_path_input),
                 bool(digest_input),
@@ -440,138 +435,6 @@ class Analyzer:
             pre_config=config,
             status=SCMStatus.AVAILABLE,
             context=analyze_ctx,
-        )
-
-    @staticmethod
-    def _check_if_input_repo_commit_provenance_conflict(
-        repo_path_input: str | None,
-        digest_input: str | None,
-        provenance_repo_url: str | None,
-        provenance_commit_digest: str | None,
-    ) -> bool:
-        """Test if the input repo and commit match the contents of the provenance.
-
-        Parameters
-        ----------
-        repo_path_input: str | None
-            The repo URL from input.
-        digest_input: str | None
-            The digest from input.
-        provenance_repo_url: str | None
-            The repo URL from provenance.
-        provenance_commit_digest: str | None
-            The commit digest from provenance.
-
-        Returns
-        -------
-        bool
-            True if there is a conflict between the inputs, False otherwise, or if the comparison cannot be performed.
-        """
-        # Check the provenance repo against the input repo.
-        if repo_path_input and provenance_repo_url and repo_path_input != provenance_repo_url:
-            logger.debug(
-                "The repository URL from input does not match what exists in the provenance. "
-                "Input Repo: %s, Provenance Repo: %s.",
-                repo_path_input,
-                provenance_repo_url,
-            )
-            return True
-
-        # Check the provenance commit against the input commit.
-        if digest_input and provenance_commit_digest and digest_input != provenance_commit_digest:
-            logger.debug(
-                "The commit digest from input does not match what exists in the provenance. "
-                "Input Commit: %s, Provenance Commit: %s.",
-                digest_input,
-                provenance_commit_digest,
-            )
-            return True
-
-        return False
-
-    @staticmethod
-    def _check_if_input_purl_provenance_conflict(
-        git_obj: Git,
-        repo_path_input: bool,
-        digest_input: bool,
-        provenance_repo_url: str | None,
-        provenance_commit_digest: str | None,
-        purl: PackageURL,
-    ) -> bool:
-        """Test if the input repository type PURL's repo and commit match the contents of the provenance.
-
-        Parameters
-        ----------
-        git_obj: Git
-            The Git object.
-        repo_path_input: bool
-            True if there is a repo as input.
-        digest_input: str
-            True if there is a commit as input.
-        provenance_repo_url: str | None
-            The repo url from provenance.
-        provenance_commit_digest: str | None
-            The commit digest from provenance.
-        purl: PackageURL
-            The input repository PURL.
-
-        Returns
-        -------
-        bool
-            True if there is a conflict between the inputs, False otherwise, or if the comparison cannot be performed.
-        """
-        if determine_abstract_purl_type(purl) != AbstractPurlType.REPOSITORY:
-            return False
-
-        # Check the PURL repo against the provenance.
-        if not repo_path_input and provenance_repo_url:
-            if not Analyzer.check_if_repository_purl_and_url_match(provenance_repo_url, purl):
-                logger.debug(
-                    "The repo url passed via purl input does not match what exists in the provenance. "
-                    "Purl: %s, Provenance: %s.",
-                    purl,
-                    provenance_repo_url,
-                )
-                return True
-
-        # Check the PURL commit against the provenance.
-        if not digest_input and provenance_commit_digest and purl.version:
-            purl_commit = extract_commit_from_version(git_obj, purl.version)
-            if purl_commit and purl_commit != provenance_commit_digest:
-                logger.debug(
-                    "The commit digest passed via purl input does not match what exists in the "
-                    "provenance. Purl Commit: %s, Provenance Commit: %s.",
-                    purl_commit,
-                    provenance_commit_digest,
-                )
-                return True
-
-        return False
-
-    @staticmethod
-    def check_if_repository_purl_and_url_match(url: str, repo_purl: PackageURL) -> bool:
-        """Compare a repository PURL and URL for equality.
-
-        Parameters
-        ----------
-        url: str
-            The URL.
-        repo_purl: PackageURL
-            A PURL that is of the repository abstract type. E.g. GitHub.
-
-        Returns
-        -------
-        bool
-            True if the two inputs match in terms of URL netloc/domain and path.
-        """
-        expanded_purl_type = to_domain_from_known_purl_types(repo_purl.type)
-        parsed_url = urllib.parse.urlparse(url)
-        purl_path = repo_purl.name
-        if repo_purl.namespace:
-            purl_path = f"{repo_purl.namespace}/{purl_path}"
-        # Note that the urllib method includes the "/" before path while the PURL method does not.
-        return (
-            f"{parsed_url.hostname}{parsed_url.path}".lower() == f"{expanded_purl_type or repo_purl.type}/{purl_path}"
         )
 
     def add_repository(self, branch_name: str | None, git_obj: Git) -> Repository | None:

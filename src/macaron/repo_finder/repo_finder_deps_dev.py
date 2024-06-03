@@ -9,7 +9,7 @@ from urllib.parse import quote as encode
 
 from packageurl import PackageURL
 
-from macaron.repo_finder.provenance_extractor import json_extract
+from macaron.json_tools import json_extract
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 from macaron.util import send_get_http_raw
