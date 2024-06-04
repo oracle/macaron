@@ -235,7 +235,7 @@ def _clean_spdx(uri: str) -> str:
     return url
 
 
-def _check_if_input_repo_commit_provenance_conflict(
+def check_if_input_repo_commit_provenance_conflict(
     repo_path_input: str | None,
     digest_input: str | None,
     provenance_repo_url: str | None,
@@ -282,7 +282,7 @@ def _check_if_input_repo_commit_provenance_conflict(
     return False
 
 
-def _check_if_input_purl_provenance_conflict(
+def check_if_input_purl_provenance_conflict(
     git_obj: Git,
     repo_path_input: bool,
     digest_input: bool,
