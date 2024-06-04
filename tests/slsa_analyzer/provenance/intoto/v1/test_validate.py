@@ -5,9 +5,9 @@
 
 import pytest
 
+from macaron.json_tools import JsonType
 from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
 from macaron.slsa_analyzer.provenance.intoto.v1 import validate_intoto_statement
-from macaron.util import JsonType
 
 
 @pytest.mark.parametrize(

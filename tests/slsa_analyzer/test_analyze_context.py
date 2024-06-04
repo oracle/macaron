@@ -9,13 +9,13 @@ from unittest import TestCase
 from unittest.mock import MagicMock
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from macaron.json_tools import JsonType
 from macaron.slsa_analyzer.asset import VirtualReleaseAsset
 from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.provenance.intoto import validate_intoto_payload
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.util import JsonType
 from tests.conftest import MockAnalyzeContext
 
 

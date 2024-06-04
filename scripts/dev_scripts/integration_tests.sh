@@ -707,7 +707,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/sl
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
 DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/slsa_verifier.ini
 PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/slsa-verifier-linux-amd64.intoto.jsonl
-$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -pf $PROVENANCE_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -pf $PROVENANCE_FILE -rp https://github.com/slsa-framework/slsa-verifier -d 6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6 --skip-deps || log_fail
 
 check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
@@ -719,7 +719,7 @@ JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/sl
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
 DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/allow_url_link_github.ini
 PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/slsa-verifier-linux-amd64.intoto.jsonl
-$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -pf $PROVENANCE_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -pf $PROVENANCE_FILE -rp https://github.com/slsa-framework/slsa-verifier -d 6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6 --skip-deps || log_fail
 
 check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
 
@@ -762,7 +762,7 @@ check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTE
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "behnazh-w/example-maven-app as a local and remote repository"
-echo "Test the Witness and GitHub provenances as an input, Cue expectation validation, Policy CLI and VSA generation."
+echo "Test the Witness and GitHub provenances as an input, Cue expectation validation, Policy CLI and VSA generation, User input vs. provenance."
 echo -e "----------------------------------------------------------------------------------\n"
 RUN_POLICY="macaron verify-policy"
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/example-maven-project/policy.dl
@@ -794,6 +794,14 @@ $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 check_or_update_expected_output "$COMPARE_POLICIES" "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
 check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
+# Validate user input of repo and commit vs provenance.
+$RUN_MACARON analyze -pf $GITHUB_PROVENANCE_FILE -rp https://github.com/behnazh-w/example-maven-app -d 2deca75ed5dd365eaf1558a82347b1f11306135f --skip-deps || log_fail
+
+# Validate user input of repo and commit (via purl) vs provenance.
+$RUN_MACARON analyze -pf $GITHUB_PROVENANCE_FILE -purl pkg:github/behnazh-w/example-maven-app@2deca75 --skip-deps || log_fail
+
+# Validate user input of repo and commit (via purl with tag) vs provenance.
+$RUN_MACARON analyze -pf $GITHUB_PROVENANCE_FILE -purl pkg:github/behnazh-w/example-maven-app@1.0 --skip-deps || log_fail
 
 # Testing the Repo Finder's remote calls.
 # This requires the 'packageurl' Python module
