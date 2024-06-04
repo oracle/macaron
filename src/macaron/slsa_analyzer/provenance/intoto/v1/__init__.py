@@ -8,8 +8,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TypedDict, TypeGuard
 
+from macaron.json_tools import JsonType
 from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
-from macaron.util import JsonType
 
 
 class InTotoV1Statement(TypedDict):

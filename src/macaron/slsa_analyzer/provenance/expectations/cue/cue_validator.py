@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The cue module invokes the CUE schema validator."""
@@ -10,7 +10,7 @@ from collections.abc import Callable
 
 from macaron import MACARON_PATH
 from macaron.errors import CUEExpectationError, CUERuntimeError
-from macaron.util import JsonType
+from macaron.json_tools import JsonType
 
 # Load the CUE shared library.
 cue = ctypes.CDLL(os.path.join(MACARON_PATH, "bin", "cuevalidate.so"))

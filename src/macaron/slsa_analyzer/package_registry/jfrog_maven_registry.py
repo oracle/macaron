@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Assets on a package registry."""
@@ -14,11 +14,11 @@ import requests
 
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError
+from macaron.json_tools import JsonType
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
-from macaron.util import JsonType
 
 logger: logging.Logger = logging.getLogger(__name__)
 

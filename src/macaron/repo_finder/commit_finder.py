@@ -199,7 +199,7 @@ def extract_commit_from_version(git_obj: Git, version: str) -> str | None:
     if 7 <= len(version) <= 40 and re.match(hex_only_pattern, version):
         try:
             commit = git_obj.get_commit(version)
-        except BadName as error:
+        except (BadName, ValueError) as error:
             logger.debug("Failed to retrieve commit: %s", error)
 
     if not commit:

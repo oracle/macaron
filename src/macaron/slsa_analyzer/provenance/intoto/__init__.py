@@ -10,11 +10,11 @@ from typing import NamedTuple, Protocol, TypeVar
 
 from packageurl import PackageURL
 
+from macaron.json_tools import JsonType
 from macaron.slsa_analyzer.provenance.intoto import v01, v1
 from macaron.slsa_analyzer.provenance.intoto.errors import ValidateInTotoPayloadError
 from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Subject
 from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1ResourceDescriptor
-from macaron.util import JsonType
 
 # Type of an in-toto statement.
 # This is currently either a v0.1 statement or v1 statement.

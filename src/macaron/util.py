@@ -260,19 +260,3 @@ def copy_file_bulk(file_list: list, src_path: str, target_path: str) -> bool:
                 return False
 
     return True
-
-
-JsonType = int | float | str | None | bool | list["JsonType"] | dict[str, "JsonType"]
-
-
-def get_if_exists(doc: JsonType, path: list[str | int]) -> JsonType | None:
-    """Get a json dict value if it exists."""
-    while len(path) > 0:
-        this = path.pop(0)
-        if isinstance(this, str) and isinstance(doc, dict) and this in doc:
-            doc = doc[this]
-        elif isinstance(this, int) and isinstance(doc, list) and 0 <= this < len(doc):
-            doc = doc[this]
-        else:
-            return None
-    return doc

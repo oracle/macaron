@@ -1,50 +1,50 @@
 {
     "metadata": {
-        "timestamps": "2024-05-07 15:16:38",
+        "timestamps": "2024-05-14 13:23:14",
         "has_passing_check": true,
         "run_checks": [
-            "mcn_build_script_1",
-            "mcn_build_service_1",
-            "mcn_provenance_derived_commit_1",
-            "mcn_trusted_builder_level_three_1",
+            "mcn_provenance_witness_level_one_1",
             "mcn_provenance_derived_repo_1",
             "mcn_build_as_code_1",
             "mcn_provenance_available_1",
-            "mcn_infer_artifact_pipeline_1",
-            "mcn_provenance_expectation_1",
             "mcn_version_control_system_1",
-            "mcn_provenance_witness_level_one_1"
+            "mcn_provenance_expectation_1",
+            "mcn_trusted_builder_level_three_1",
+            "mcn_infer_artifact_pipeline_1",
+            "mcn_provenance_derived_commit_1",
+            "mcn_build_script_1",
+            "mcn_build_service_1"
         ],
         "check_tree": {
             "mcn_provenance_available_1": {
-                "mcn_provenance_expectation_1": {},
+                "mcn_provenance_level_three_1": {},
                 "mcn_provenance_witness_level_one_1": {},
-                "mcn_provenance_level_three_1": {}
+                "mcn_provenance_expectation_1": {}
             },
             "mcn_provenance_derived_commit_1": {},
             "mcn_version_control_system_1": {
-                "mcn_build_script_1": {},
                 "mcn_trusted_builder_level_three_1": {
                     "mcn_build_as_code_1": {
-                        "mcn_build_service_1": {},
-                        "mcn_infer_artifact_pipeline_1": {}
+                        "mcn_infer_artifact_pipeline_1": {},
+                        "mcn_build_service_1": {}
                     }
-                }
+                },
+                "mcn_build_script_1": {}
             },
             "mcn_provenance_derived_repo_1": {}
         }
     },
     "target": {
         "info": {
-            "full_name": "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac",
+            "full_name": "pkg:github.com/slsa-framework/slsa-verifier@6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6",
             "local_cloned_path": "git_repos/github_com/slsa-framework/slsa-verifier",
             "remote_path": "https://github.com/slsa-framework/slsa-verifier",
-            "branch": "main",
-            "commit_hash": "fc50b662fcfeeeb0e97243554b47d9b20b14efac",
-            "commit_date": "2022-10-04T01:00:02+00:00"
+            "branch": null,
+            "commit_hash": "6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6",
+            "commit_date": "2022-08-25T11:37:20-05:00"
         },
         "provenances": {
-            "is_inferred": true,
+            "is_inferred": false,
             "content": {
                 "github_actions": [
                     {
@@ -53,24 +53,23 @@
                         "predicateType": "https://slsa.dev/provenance/v0.2",
                         "predicate": {
                             "builder": {
-                                "id": "https://github.com/slsa-framework/slsa-verifier/blob/fc50b662fcfeeeb0e97243554b47d9b20b14efac/.github/workflows/release.yml"
+                                "id": "<URI>"
                             },
-                            "buildType": "Custom github_actions",
+                            "buildType": "<URI>",
                             "invocation": {
                                 "configSource": {
-                                    "uri": "https://github.com/slsa-framework/slsa-verifier@refs/heads/main",
+                                    "uri": "<URI>",
                                     "digest": {
-                                        "sha1": "fc50b662fcfeeeb0e97243554b47d9b20b14efac"
+                                        "sha1": "<STING>"
                                     },
-                                    "entryPoint": "https://github.com/slsa-framework/slsa-verifier/blob/fc50b662fcfeeeb0e97243554b47d9b20b14efac/.github/workflows/release.yml"
+                                    "entryPoint": "<STRING>"
                                 },
                                 "parameters": {},
                                 "environment": {}
                             },
                             "buildConfig": {
-                                "jobID": "",
-                                "stepID": "",
-                                "stepName": ""
+                                "jobID": "<STRING>",
+                                "stepID": "<STRING>"
                             },
                             "metadata": {
                                 "buildInvocationId": "<STRING>",
@@ -91,15 +90,14 @@
                             ]
                         }
                     }
-                ],
-                "npm Registry": []
+                ]
             }
         },
         "checks": {
             "summary": {
                 "DISABLED": 0,
-                "FAILED": 3,
-                "PASSED": 8,
+                "FAILED": 2,
+                "PASSED": 9,
                 "SKIPPED": 0,
                 "UNKNOWN": 0
             },
@@ -125,9 +123,9 @@
                         "build_tool_name: go",
                         "ci_service_name: github_actions",
                         "language: BuildLanguage.GO",
-                        "build_tool_command: [\"go\", \"build\", \"-mod=vendor\", \"-o\", \"service\", \"./cli/experimental/service/\"]",
+                        "build_tool_command: [\"go\", \"build\", \"-mod=vendor\"]",
                         {
-                            "build_trigger": "https://github.com/slsa-framework/slsa-verifier/blob/fc50b662fcfeeeb0e97243554b47d9b20b14efac/.github/workflows/pre-submit.cli.yml"
+                            "build_trigger": "https://github.com/slsa-framework/slsa-verifier/blob/6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6/.github/workflows/pre-submit.yml"
                         }
                     ],
                     "result_type": "PASSED"
@@ -158,13 +156,24 @@
                     "result_type": "PASSED"
                 },
                 {
+                    "check_id": "mcn_provenance_derived_commit_1",
+                    "check_description": "Check whether the commit came from provenance.",
+                    "slsa_requirements": [
+                        "Security - SLSA Level 4"
+                    ],
+                    "justification": [
+                        "commit_info: The commit digest was found from provenance."
+                    ],
+                    "result_type": "PASSED"
+                },
+                {
                     "check_id": "mcn_provenance_derived_repo_1",
                     "check_description": "Check whether the repo came from provenance.",
                     "slsa_requirements": [
                         "Security - SLSA Level 4"
                     ],
                     "justification": [
-                        "repository_url: The repository URL was found from provenance."
+                        "repository_info: The repository URL was found from provenance."
                     ],
                     "result_type": "PASSED"
                 },
@@ -192,7 +201,7 @@
                         "build_tool_name: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.2.0",
                         "ci_service_name: github_actions",
                         {
-                            "build_trigger": "https://github.com/slsa-framework/slsa-verifier/blob/fc50b662fcfeeeb0e97243554b47d9b20b14efac/.github/workflows/release.yml"
+                            "build_trigger": "https://github.com/slsa-framework/slsa-verifier/blob/6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6/.github/workflows/release.yml"
                         }
                     ],
                     "result_type": "PASSED"
@@ -218,17 +227,6 @@
                     ],
                     "justification": [
                         "Not Available."
-                    ],
-                    "result_type": "FAILED"
-                },
-                {
-                    "check_id": "mcn_provenance_derived_commit_1",
-                    "check_description": "Check whether the commit came from provenance.",
-                    "slsa_requirements": [
-                        "Security - SLSA Level 4"
-                    ],
-                    "justification": [
-                        "commit_digest: The analysis commit did not match the provenance commit."
                     ],
                     "result_type": "FAILED"
                 },

@@ -3,11 +3,20 @@
 
 """This module contains methods for extracting repository and commit metadata from provenance files."""
 import logging
+import urllib.parse
+
+from packageurl import PackageURL
+from pydriller import Git
 
 from macaron.errors import ProvenanceError
-from macaron.json_tools import json_extract
+from macaron.json_tools import JsonType, json_extract
+from macaron.repo_finder.commit_finder import (
+    AbstractPurlType,
+    determine_abstract_purl_type,
+    extract_commit_from_version,
+)
+from macaron.repo_finder.repo_finder import to_domain_from_known_purl_types
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV1Payload, InTotoV01Payload
-from macaron.util import JsonType
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -67,16 +76,8 @@ def _extract_from_slsa_v01(payload: InTotoV01Payload) -> tuple[str | None, str |
     if not list_index:
         return None, None
 
-    material_list = json_extract(predicate, ["materials"], list)
-    if not material_list:
-        return None, None
-
-    if list_index >= len(material_list):
-        logger.debug("Material list index outside of material list bounds.")
-        return None, None
-
-    material = material_list[list_index]
-    if not material or not isinstance(material, dict):
+    material = json_extract(predicate, ["materials", list_index], dict)
+    if not material:
         logger.debug("Indexed material list entry is invalid.")
         return None, None
 
@@ -232,3 +233,133 @@ def _clean_spdx(uri: str) -> str:
     """
     url, _, _ = uri.lstrip("git+").rpartition("@")
     return url
+
+
+def check_if_input_repo_commit_provenance_conflict(
+    repo_path_input: str | None,
+    digest_input: str | None,
+    provenance_repo_url: str | None,
+    provenance_commit_digest: str | None,
+) -> bool:
+    """Test if the input repo and commit match the contents of the provenance.
+
+    Parameters
+    ----------
+    repo_path_input: str | None
+        The repo URL from input.
+    digest_input: str | None
+        The digest from input.
+    provenance_repo_url: str | None
+        The repo URL from provenance.
+    provenance_commit_digest: str | None
+        The commit digest from provenance.
+
+    Returns
+    -------
+    bool
+        True if there is a conflict between the inputs, False otherwise, or if the comparison cannot be performed.
+    """
+    # Check the provenance repo against the input repo.
+    if repo_path_input and provenance_repo_url and repo_path_input != provenance_repo_url:
+        logger.debug(
+            "The repository URL from input does not match what exists in the provenance. "
+            "Input Repo: %s, Provenance Repo: %s.",
+            repo_path_input,
+            provenance_repo_url,
+        )
+        return True
+
+    # Check the provenance commit against the input commit.
+    if digest_input and provenance_commit_digest and digest_input != provenance_commit_digest:
+        logger.debug(
+            "The commit digest from input does not match what exists in the provenance. "
+            "Input Commit: %s, Provenance Commit: %s.",
+            digest_input,
+            provenance_commit_digest,
+        )
+        return True
+
+    return False
+
+
+def check_if_input_purl_provenance_conflict(
+    git_obj: Git,
+    repo_path_input: bool,
+    digest_input: bool,
+    provenance_repo_url: str | None,
+    provenance_commit_digest: str | None,
+    purl: PackageURL,
+) -> bool:
+    """Test if the input repository type PURL's repo and commit match the contents of the provenance.
+
+    Parameters
+    ----------
+    git_obj: Git
+        The Git object.
+    repo_path_input: bool
+        True if there is a repo as input.
+    digest_input: str
+        True if there is a commit as input.
+    provenance_repo_url: str | None
+        The repo url from provenance.
+    provenance_commit_digest: str | None
+        The commit digest from provenance.
+    purl: PackageURL
+        The input repository PURL.
+
+    Returns
+    -------
+    bool
+        True if there is a conflict between the inputs, False otherwise, or if the comparison cannot be performed.
+    """
+    if determine_abstract_purl_type(purl) != AbstractPurlType.REPOSITORY:
+        return False
+
+    # Check the PURL repo against the provenance.
+    if not repo_path_input and provenance_repo_url:
+        if not check_if_repository_purl_and_url_match(provenance_repo_url, purl):
+            logger.debug(
+                "The repo url passed via purl input does not match what exists in the provenance. "
+                "Purl: %s, Provenance: %s.",
+                purl,
+                provenance_repo_url,
+            )
+            return True
+
+    # Check the PURL commit against the provenance.
+    if not digest_input and provenance_commit_digest and purl.version:
+        purl_commit = extract_commit_from_version(git_obj, purl.version)
+        if purl_commit and purl_commit != provenance_commit_digest:
+            logger.debug(
+                "The commit digest passed via purl input does not match what exists in the "
+                "provenance. Purl Commit: %s, Provenance Commit: %s.",
+                purl_commit,
+                provenance_commit_digest,
+            )
+            return True
+
+    return False
+
+
+def check_if_repository_purl_and_url_match(url: str, repo_purl: PackageURL) -> bool:
+    """Compare a repository PURL and URL for equality.
+
+    Parameters
+    ----------
+    url: str
+        The URL.
+    repo_purl: PackageURL
+        A PURL that is of the repository abstract type. E.g. GitHub.
+
+    Returns
+    -------
+    bool
+        True if the two inputs match in terms of URL netloc/domain and path.
+    """
+    expanded_purl_type = to_domain_from_known_purl_types(repo_purl.type)
+    parsed_url = urllib.parse.urlparse(url)
+    purl_path = repo_purl.name
+    if repo_purl.namespace:
+        purl_path = f"{repo_purl.namespace}/{purl_path}"
+    # Note that the urllib method includes the "/" before path while the PURL method does not.
+    return f"{parsed_url.hostname}{parsed_url.path}".lower() == f"{expanded_purl_type or repo_purl.type}/{purl_path}"

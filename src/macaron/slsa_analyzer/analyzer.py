@@ -35,7 +35,11 @@ from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
 from macaron.repo_finder.commit_finder import find_commit
-from macaron.repo_finder.provenance_extractor import extract_repo_and_commit_from_provenance
+from macaron.repo_finder.provenance_extractor import (
+    check_if_input_purl_provenance_conflict,
+    check_if_input_repo_commit_provenance_conflict,
+    extract_repo_and_commit_from_provenance,
+)
 from macaron.repo_finder.provenance_finder import ProvenanceFinder
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -322,6 +326,8 @@ class Analyzer:
             provenance_payload = ProvenanceFinder().find_provenance(parsed_purl)
 
         # Try to extract the repository URL and commit digest from the Provenance, if it exists.
+        repo_path_input: str | None = config.get_value("path")
+        digest_input: str | None = config.get_value("digest")
         provenance_repo_url = provenance_commit_digest = None
         if provenance_payload:
             try:
@@ -330,6 +336,17 @@ class Analyzer:
                 )
             except ProvenanceError as error:
                 logger.debug("Failed to extract repo or commit from provenance: %s", error)
+
+            # Try to validate the input repo and/or commit against provenance contents.
+            if (provenance_repo_url or provenance_commit_digest) and check_if_input_repo_commit_provenance_conflict(
+                repo_path_input, digest_input, provenance_repo_url, provenance_commit_digest
+            ):
+                return Record(
+                    record_id=repo_id,
+                    description="Input mismatch between repo/commit and provenance.",
+                    pre_config=config,
+                    status=SCMStatus.ANALYSIS_FAILED,
+                )
 
         # Create the analysis target.
         available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
@@ -345,11 +362,40 @@ class Analyzer:
                 status=SCMStatus.ANALYSIS_FAILED,
             )
 
+        # Prepare the repo.
+        git_obj = None
+        if analysis_target.repo_path:
+            git_obj = self._prepare_repo(
+                os.path.join(self.output_path, self.GIT_REPOS_DIR),
+                analysis_target.repo_path,
+                analysis_target.branch,
+                analysis_target.digest,
+                analysis_target.parsed_purl,
+            )
+
+        # Check if only one of the repo or digest came from direct input.
+        if git_obj and (provenance_repo_url or provenance_commit_digest) and parsed_purl:
+            if check_if_input_purl_provenance_conflict(
+                git_obj,
+                bool(repo_path_input),
+                bool(digest_input),
+                provenance_repo_url,
+                provenance_commit_digest,
+                parsed_purl,
+            ):
+                return Record(
+                    record_id=repo_id,
+                    description="Input mismatch between repo/commit (purl) and provenance.",
+                    pre_config=config,
+                    status=SCMStatus.ANALYSIS_FAILED,
+                )
+
         # Create the component.
         try:
             component = self.add_component(
                 analysis,
                 analysis_target,
+                git_obj,
                 existing_records,
                 provenance_payload,
             )
@@ -507,6 +553,7 @@ class Analyzer:
         self,
         analysis: Analysis,
         analysis_target: AnalysisTarget,
+        git_obj: Git | None,
         existing_records: dict[str, Record] | None = None,
         provenance_payload: InTotoPayload | None = None,
     ) -> Component:
@@ -521,6 +568,8 @@ class Analyzer:
             The current analysis instance.
         analysis_target: AnalysisTarget
             The target of this analysis.
+        git_obj: Git | None
+            The pydriller.Git object of the repository.
         existing_records : dict[str, Record] | None
             The mapping of existing records that the analysis has run successfully.
         provenance_payload: InTotoVPayload | None
@@ -539,32 +588,23 @@ class Analyzer:
             The component is already analyzed in the same session.
         """
         # Note: the component created in this function will be added to the database.
-        repository = None
-        if analysis_target.repo_path:
-            git_obj = self._prepare_repo(
-                os.path.join(self.output_path, self.GIT_REPOS_DIR),
-                analysis_target.repo_path,
-                analysis_target.branch,
-                analysis_target.digest,
-                analysis_target.parsed_purl,
-            )
-            if git_obj:
-                # TODO: use both the repo URL and the commit hash to check.
-                if (
-                    existing_records
-                    and (existing_record := existing_records.get(git_url.get_remote_origin_of_local_repo(git_obj)))
-                    is not None
-                ):
-                    raise DuplicateCmpError(
-                        f"{analysis_target.repo_path} is already analyzed.", context=existing_record.context
-                    )
+        if git_obj:
+            # TODO: use both the repo URL and the commit hash to check.
+            if (
+                existing_records
+                and (existing_record := existing_records.get(git_url.get_remote_origin_of_local_repo(git_obj)))
+                is not None
+            ):
+                raise DuplicateCmpError(
+                    f"{analysis_target.repo_path} is already analyzed.", context=existing_record.context
+                )
 
-                repository = self.add_repository(analysis_target.branch, git_obj)
-            else:
-                # We cannot prepare the repository even though we have successfully resolved the repository path for the
-                # software component. If this happens, we don't raise error and treat the software component as if it
-                # does not have any ``Repository`` attached to it.
-                repository = None
+            repository = self.add_repository(analysis_target.branch, git_obj)
+        else:
+            # We cannot prepare the repository even though we have successfully resolved the repository path for the
+            # software component. If this happens, we don't raise error and treat the software component as if it
+            # does not have any ``Repository`` attached to it.
+            repository = None
 
         if not analysis_target.parsed_purl:
             # If the PURL is not available. This will only mean that the user don't provide PURL but only provide the
@@ -923,7 +963,7 @@ class Analyzer:
             The resolved path in canonical form or an empty string if errors.
         """
         # Resolve the path by joining dir and path.
-        # Because strict mode is enabled, if a path doesn’t exist or a symlink loop
+        # Because strict mode is enabled, if a path doesn't exist or a symlink loop
         # is encountered, OSError is raised.
         # ValueError is raised if we use both relative and absolute paths in os.path.commonpath.
         try:
