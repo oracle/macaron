@@ -1,4 +1,4 @@
-/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 /* Souffle datalog rules to assist in policy authoring */
@@ -8,6 +8,9 @@
  */
 .decl check_passed(component_id: number, check_name: symbol)
 check_passed(component_id, check_name) :- check_result(_, check_name, 1, component_id).
+
+.decl check_failed(component_id: number, check_name: symbol)
+check_failed(component_id, check_name) :- check_result(_, check_name, 0, component_id).
 
 /**
  * Check name is valid.

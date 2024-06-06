@@ -1,0 +1,43 @@
+/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("check-dependencies", component_id, "Check the dependencies of pkg:github.com/apache/maven@3fc399318edef0d5ba593723a24fff64291d6f9b") :-
+    transitive_dependency(component_id, dep_0),
+    is_component(dep_0, "pkg:maven/org.junit.jupiter/junit-jupiter-api@5.10.0?type=jar"),transitive_dependency(component_id, dep_1),
+    is_component(dep_1, "pkg:maven/org.hamcrest/hamcrest-core@2.2?type=jar"),transitive_dependency(component_id, dep_2),
+    is_component(dep_2, "pkg:maven/org.eclipse.sisu/org.eclipse.sisu.plexus@0.9.0.M2?type=jar"),transitive_dependency(component_id, dep_3),
+    is_component(dep_3, "pkg:maven/commons-cli/commons-cli@1.5.0?type=jar"),transitive_dependency(component_id, dep_4),
+    is_component(dep_4, "pkg:maven/org.apache.maven.wagon/wagon-http@3.5.3?type=jar"),transitive_dependency(component_id, dep_5),
+    is_component(dep_5, "pkg:maven/org.apache.maven.wagon/wagon-file@3.5.3?type=jar"),transitive_dependency(component_id, dep_6),
+    is_component(dep_6, "pkg:maven/org.slf4j/jcl-over-slf4j@1.7.36?type=jar"),transitive_dependency(component_id, dep_7),
+    is_component(dep_7, "pkg:maven/org.apache.maven.resolver/maven-resolver-connector-basic@1.9.16?type=jar"),transitive_dependency(component_id, dep_8),
+    is_component(dep_8, "pkg:maven/org.apache.maven.resolver/maven-resolver-transport-file@1.9.16?type=jar"),transitive_dependency(component_id, dep_9),
+    is_component(dep_9, "pkg:maven/org.apache.maven.resolver/maven-resolver-transport-http@1.9.16?type=jar"),transitive_dependency(component_id, dep_10),
+    is_component(dep_10, "pkg:maven/org.apache.maven.resolver/maven-resolver-transport-wagon@1.9.16?type=jar"),transitive_dependency(component_id, dep_11),
+    is_component(dep_11, "pkg:maven/org.fusesource.jansi/jansi@2.4.1?type=jar"),transitive_dependency(component_id, dep_13),
+    is_component(dep_13, "pkg:maven/org.apache.maven.resolver/maven-resolver-api@1.9.16?type=jar"),transitive_dependency(component_id, dep_14),
+    is_component(dep_14, "pkg:maven/org.apache.maven.resolver/maven-resolver-util@1.9.16?type=jar"),transitive_dependency(component_id, dep_15),
+    is_component(dep_15, "pkg:maven/org.apache.maven.resolver/maven-resolver-impl@1.9.16?type=jar"),transitive_dependency(component_id, dep_17),
+    is_component(dep_17, "pkg:maven/org.codehaus.plexus/plexus-interpolation@1.26?type=jar"),transitive_dependency(component_id, dep_18),
+    is_component(dep_18, "pkg:maven/org.apache.maven.wagon/wagon-provider-api@3.5.3?type=jar"),transitive_dependency(component_id, dep_19),
+    is_component(dep_19, "pkg:maven/org.codehaus.plexus/plexus-testing@1.0.0?type=jar"),transitive_dependency(component_id, dep_20),
+    is_component(dep_20, "pkg:maven/org.mockito/mockito-core@5.2.0?type=jar"),transitive_dependency(component_id, dep_21),
+    is_component(dep_21, "pkg:maven/org.apache.maven.resolver/maven-resolver-spi@1.9.16?type=jar"),transitive_dependency(component_id, dep_22),
+    is_component(dep_22, "pkg:maven/commons-io/commons-io@2.11.0?type=jar"),transitive_dependency(component_id, dep_23),
+    is_component(dep_23, "pkg:maven/org.eclipse.sisu/org.eclipse.sisu.inject@0.9.0.M2?classifier=no_asm&type=jar"),transitive_dependency(component_id, dep_24),
+    is_component(dep_24, "pkg:maven/com.google.inject/guice@5.1.0?classifier=classes&type=jar"),transitive_dependency(component_id, dep_25),
+    is_component(dep_25, "pkg:maven/com.google.guava/guava@32.0.1-jre?type=jar"),transitive_dependency(component_id, dep_27),
+    is_component(dep_27, "pkg:maven/org.codehaus.plexus/plexus-classworlds@2.6.0?type=jar"),transitive_dependency(component_id, dep_33),
+    is_component(dep_33, "pkg:maven/org.xmlunit/xmlunit-assertj@2.6.4?type=jar"),transitive_dependency(component_id, dep_35),
+    is_component(dep_35, "pkg:maven/javax.annotation/javax.annotation-api@1.3.2?type=jar"),transitive_dependency(component_id, dep_36),
+    is_component(dep_36, "pkg:maven/org.codehaus.plexus/plexus-sec-dispatcher@2.0?type=jar"),transitive_dependency(component_id, dep_37),
+    is_component(dep_37, "pkg:maven/org.codehaus.plexus/plexus-cipher@2.0?type=jar"),transitive_dependency(component_id, dep_38),
+    is_component(dep_38, "pkg:maven/ch.qos.logback/logback-classic@1.2.11?type=jar"),transitive_dependency(component_id, dep_41),
+    is_component(dep_41, "pkg:maven/org.codehaus.plexus/plexus-xml@4.0.1?type=jar"),transitive_dependency(component_id, dep_42),
+    is_component(dep_42, "pkg:maven/org.openjdk.jmh/jmh-core@1.36?type=jar"),transitive_dependency(component_id, dep_44),
+    is_component(dep_44, "pkg:maven/com.fasterxml.woodstox/woodstox-core@6.5.1?type=jar").
+
+apply_policy_to("check-dependencies", component_id) :-
+    is_component(component_id, "pkg:github.com/apache/maven@3fc399318edef0d5ba593723a24fff64291d6f9b").

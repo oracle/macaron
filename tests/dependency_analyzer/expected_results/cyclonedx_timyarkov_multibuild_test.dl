@@ -1,0 +1,12 @@
+/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("check-dependencies", component_id, "Check the dependencies of pkg:github.com/timyarkov/multibuild_test@a8b0efe24298bc81f63217aaa84776c3d48976c5") :-
+    transitive_dependency(component_id, dep_0),
+    is_component(dep_0, "pkg:maven/org.springframework.boot/spring-boot-starter-thymeleaf@3.0.0?type=jar"),transitive_dependency(component_id, dep_2),
+    is_component(dep_2, "pkg:maven/com.google.code.gson/gson@2.10.1?type=jar").
+
+apply_policy_to("check-dependencies", component_id) :-
+    is_component(component_id, "pkg:github.com/timyarkov/multibuild_test@a8b0efe24298bc81f63217aaa84776c3d48976c5").
