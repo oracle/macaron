@@ -37,6 +37,7 @@ class OneReleaseAnalyzer(BaseAnalyzer):
             tuple[RESULT, dict]: Result and confidence.
         """
         result: tuple[int, dict] | None = self._get_releases_total()
+        # if result is None:
         if result is None:
             return RESULT.SKIP, {"releases": {}}
 

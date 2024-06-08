@@ -136,6 +136,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
             result, detail_info = analyzer.analyze()
             if analyzer.heuristic:
+                # logger.info(f"{analyzer.heuristic}:  {detail_info}")
                 results[analyzer.heuristic] = result
                 detail_infos.update(detail_info)
 
@@ -162,6 +163,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         api_client = PyPIApiClient(package)
         result: dict = self._analyze(api_client)
         detail_infos = result.get("detail_infos", {})
+        logger.info(detail_infos)
         result.pop("detail_infos")
         heuristics_fail = [heuristic for heuristic, result in result.items() if result == "FAIL"]
         confidence = SUSPICIOUS_COMBO.get(tuple(result.values()), None)
