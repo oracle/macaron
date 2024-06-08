@@ -129,11 +129,14 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             analyzer = _analyzer(api_client)
             depends_on = analyzer.depends_on
 
+            skip_analyzer = False
             if depends_on:
                 for heuristic in depends_on:  # e.g. heuristic = (HEURISTIC.ONE_RELEASE, RESULT.PASS)
                     if self._should_skip(results, heuristic):
-                        continue
-
+                        skip_analyzer = True
+                        break
+            if skip_analyzer:
+                continue
             result, detail_info = analyzer.analyze()
             if analyzer.heuristic:
                 # logger.info(f"{analyzer.heuristic}:  {detail_info}")
@@ -157,7 +160,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        package = "requests"
+        package = "ttttttttest-nester.py"
         result_tables: list[CheckFacts] = []
 
         api_client = PyPIApiClient(package)
