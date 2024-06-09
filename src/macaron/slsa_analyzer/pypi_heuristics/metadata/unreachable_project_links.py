@@ -42,7 +42,7 @@ class UnreachableProjectLinksAnalyzer(BaseAnalyzer):
             try:
                 response = requests.head(link, timeout=3)
                 if response.status_code < 400:
-                    return RESULT.PASS, {"project_links": link}
+                    return RESULT.PASS, {"project_links": project_links}
             except requests.exceptions.RequestException as error:
                 logger.debug(error)
                 continue
