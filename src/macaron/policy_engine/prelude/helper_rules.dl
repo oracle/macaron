@@ -45,6 +45,12 @@ transitive_dependency(parent, dependency) :-
 .decl is_repo(repo_id: number, repo_complete_name: symbol, component_id: number)
  is_repo(repo_id, repo_complete_name, component_id) :- repository(repo_id, component_id, repo_complete_name, _, _, _, _, _, _, _, _, _, _).
 
+/**
+ *  Extract the id and PURL from the repository relation.
+ */
+.decl is_repo_purl(repo_id: number, purl: symbol)
+ is_repo_purl(repo_id, purl) :- repository(_, repo_id, _, _, _, _, _, purl, _, _, _, _, _).
+
 
 /**
  * A convenience relation to find analyses conducted on a specific repository.

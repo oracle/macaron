@@ -5,13 +5,13 @@
 
 Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_build_as_code_1"),
-        check_passed(component_id, "mcn_build_script_1"),
-        check_passed(component_id, "mcn_build_service_1"),
-        check_passed(component_id, "mcn_version_control_system_1"),
-        check_failed(component_id, "mcn_provenance_derived_commit_1"),
-        check_failed(component_id, "mcn_provenance_derived_repo_1"),
-        check_failed(component_id, "mcn_trusted_builder_level_three_1"),
-    is_repo(component_id, "https://github.com/micronaut-projects/micronaut-core", _).
+    check_passed(component_id, "mcn_build_script_1"),
+    check_passed(component_id, "mcn_build_service_1"),
+    check_passed(component_id, "mcn_version_control_system_1"),
+    check_failed(component_id, "mcn_provenance_derived_commit_1"),
+    check_failed(component_id, "mcn_provenance_derived_repo_1"),
+    check_failed(component_id, "mcn_trusted_builder_level_three_1"),
+    is_repo_purl(component_id, "https://github.com/micronaut-projects/micronaut-core").
 
 apply_policy_to("test_policy", component_id) :-
     is_component(component_id, "pkg:maven/io.micronaut/micronaut-core@4.2.3").

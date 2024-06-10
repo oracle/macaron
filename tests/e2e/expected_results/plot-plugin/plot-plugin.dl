@@ -5,18 +5,18 @@
 
 Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_build_script_1"),
-        check_passed(component_id, "mcn_build_service_1"),
-        check_passed(component_id, "mcn_version_control_system_1"),
-        check_failed(component_id, "mcn_build_as_code_1"),
-        check_failed(component_id, "mcn_infer_artifact_pipeline_1"),
-        check_failed(component_id, "mcn_provenance_available_1"),
-        check_failed(component_id, "mcn_provenance_derived_commit_1"),
-        check_failed(component_id, "mcn_provenance_derived_repo_1"),
-        check_failed(component_id, "mcn_provenance_expectation_1"),
-        check_failed(component_id, "mcn_provenance_level_three_1"),
-        check_failed(component_id, "mcn_provenance_witness_level_one_1"),
-        check_failed(component_id, "mcn_trusted_builder_level_three_1"),
-    is_repo(component_id, "https://github.com/jenkinsci/plot-plugin", _).
+    check_passed(component_id, "mcn_build_service_1"),
+    check_passed(component_id, "mcn_version_control_system_1"),
+    check_failed(component_id, "mcn_build_as_code_1"),
+    check_failed(component_id, "mcn_infer_artifact_pipeline_1"),
+    check_failed(component_id, "mcn_provenance_available_1"),
+    check_failed(component_id, "mcn_provenance_derived_commit_1"),
+    check_failed(component_id, "mcn_provenance_derived_repo_1"),
+    check_failed(component_id, "mcn_provenance_expectation_1"),
+    check_failed(component_id, "mcn_provenance_level_three_1"),
+    check_failed(component_id, "mcn_provenance_witness_level_one_1"),
+    check_failed(component_id, "mcn_trusted_builder_level_three_1"),
+    is_repo_purl(component_id, "https://github.com/jenkinsci/plot-plugin").
 
 apply_policy_to("test_policy", component_id) :-
     is_component(component_id, "pkg:github.com/jenkinsci/plot-plugin@55b059187e252b35ac0d6cb52268833ee1bb7380").

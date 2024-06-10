@@ -5,11 +5,11 @@
 
 Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_provenance_available_1"),
-        check_passed(component_id, "mcn_provenance_expectation_1"),
-        check_passed(component_id, "mcn_provenance_level_three_1"),
-        check_passed(component_id, "mcn_trusted_builder_level_three_1"),
-        check_passed(component_id, "mcn_version_control_system_1"),
-    is_repo(component_id, "https://github.com/ossf/scorecard", _).
+    check_passed(component_id, "mcn_provenance_expectation_1"),
+    check_passed(component_id, "mcn_provenance_level_three_1"),
+    check_passed(component_id, "mcn_trusted_builder_level_three_1"),
+    check_passed(component_id, "mcn_version_control_system_1"),
+    is_repo_purl(component_id, "https://github.com/ossf/scorecard").
 
 apply_policy_to("test_policy", component_id) :-
     is_component(component_id, "pkg:github/ossf/scorecard@v4.13.1").
