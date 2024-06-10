@@ -137,7 +137,7 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
         logger.error("Expecting a non-empty namespace from %s.", purl)
         return None
 
-    # TODO: Handle the version tag and commit digest if they are given in the PURL.
+    # If the PURL contains a commit digest or version tag, they will be used after the repository has been resolved.
     return urlunparse(
         ParseResult(
             scheme="https",
