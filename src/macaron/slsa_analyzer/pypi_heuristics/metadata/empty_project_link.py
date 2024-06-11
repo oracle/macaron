@@ -29,7 +29,7 @@ class EmptyProjectLinkAnalyzer(BaseAnalyzer):
         return len(project_links), project_links
 
     def analyze(self) -> tuple[RESULT, dict]:
-        """Check whether the package contains one link.
+        """Check whether the PyPI package has no project link.
 
         Returns
         -------
