@@ -66,7 +66,6 @@ if [[ "$NO_NPM" == "TRUE" ]]; then
 fi
 NO_NPM_TEST=$NO_NPM
 
-
 function log_fail() {
     printf "Error: FAILED integration test (line ${BASH_LINENO}) %s\n" $@
     RESULT_CODE=1
@@ -656,13 +655,25 @@ fi
 
 # Testing the CUE provenance expectation verifier.
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Test verifying CUE provenance expectation for ossf/scorecard"
+echo "Test verifying CUE provenance expectation for ossf/scorecard and run policy CLI"
 echo -e "----------------------------------------------------------------------------------\n"
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/scorecard/scorecard.dl
 DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/scorecard.ini
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/scorecard_PASS.cue
 run_macaron_clean -dp $DEFAULTS_FILE $ANALYZE -pe $EXPECTATION_FILE -purl pkg:github/ossf/scorecard@v4.13.1 --skip-deps || log_fail
 
+# Run CLI policy
+POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/scorecard/scorecard.dl
+POLICY_RESULT=$WORKSPACE/output/policy_report.json
+POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/scorecard/scorecard_policy_report.json
+VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
+VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_scorecard/vsa_payload.json
+
+$RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
+check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
+check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
+
+# Finish verifying CUE provenance
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -707,27 +718,16 @@ run_macaron_clean $ANALYZE -pe $EXPECTATION_FILE -rp https://github.com/urllib3/
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
-# Testing the Souffle policy engine.
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Run policy CLI with scorecard results."
-echo -e "----------------------------------------------------------------------------------\n"
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/scorecard/scorecard.dl
-POLICY_RESULT=$WORKSPACE/output/policy_report.json
-POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/scorecard/scorecard_policy_report.json
-VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
-VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_scorecard/vsa_payload.json
-
-$RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
-check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
-check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
-
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Run policy CLI with micronaut-core results to test deploy command information."
 echo -e "----------------------------------------------------------------------------------\n"
-RUN_POLICY="macaron verify-policy"
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/micronaut-core/test_deploy_info.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/micronaut-core/test_deploy_info.json
+JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/micronaut-core/micronaut-core.json
+JSON_RESULT=$WORKSPACE/output/reports/maven/io_micronaut/micronaut-core/micronaut-core.json
+DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/micronaut-core.ini
+$RUN_MACARON -dp $DEFAULTS_FILE analyze -purl pkg:maven/io.micronaut/micronaut-core@4.2.3 --skip-deps || log_fail
 
 $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
@@ -736,7 +736,6 @@ echo -e "\n---------------------------------------------------------------------
 echo "behnazh-w/example-maven-app as a local and remote repository"
 echo "Test the Witness and GitHub provenances as an input, Cue expectation validation, Policy CLI and VSA generation, User input vs. provenance."
 echo -e "----------------------------------------------------------------------------------\n"
-RUN_POLICY="macaron verify-policy"
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/example-maven-project/policy.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/example-maven-project/example_maven_project_policy_report.json
@@ -757,8 +756,8 @@ run_macaron_clean $ANALYZE -pf $WITNESS_PROVENANCE_FILE -pe $WITNESS_EXPECTATION
 GITHUB_EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/github-example-maven-project.cue
 GITHUB_PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/github-example-maven-project.json
 
-# Check the GitHub provenance.
-run_macaron_clean $ANALYZE -pf $GITHUB_PROVENANCE_FILE -pe $GITHUB_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar --skip-deps || log_fail
+# Check the GitHub provenance (Do not clean).
+$RUN_MACARON $ANALYZE -pf $GITHUB_PROVENANCE_FILE -pe $GITHUB_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar --skip-deps || log_fail
 
 # Verify the policy and VSA for all the software components generated from behnazh-w/example-maven-app repo.
 $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
