@@ -6,6 +6,7 @@
 import logging
 from datetime import datetime
 
+from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
@@ -37,12 +38,22 @@ class HighReleaseFrequencyAnalyzer(BaseAnalyzer):
         if version_to_releases is None:
             return RESULT.SKIP, {}
         releases_amount = len(version_to_releases)
-        extract_data: dict = {
-            version: datetime.strptime(metadata[0].get("upload_time"), "%Y-%m-%dT%H:%M:%S")
-            for version, metadata in version_to_releases.items()
-            if metadata and "upload_time" in metadata[0]
-        }
-        prev_timestamp: str = next(iter(extract_data.values()))
+
+        extract_data: dict[str, datetime] = {}
+        for version, metadata in version_to_releases.items():
+            if not metadata:
+                continue
+            upload_time: str | None = json_extract(metadata[0], ["upload_time"], str)
+            if upload_time is None:
+                continue
+            try:
+                upload_datetime: datetime = datetime.strptime(upload_time, "%Y-%m-%dT%H:%M:%S")
+                extract_data[version] = upload_datetime
+            except ValueError as e:
+                logger.debug("Failed to parse upload_time for %s - %s", upload_datetime, e)
+                continue
+
+        prev_timestamp: datetime = next(iter(extract_data.values()))
 
         days_sum = 0
         releases = list(extract_data.values())[1:]
