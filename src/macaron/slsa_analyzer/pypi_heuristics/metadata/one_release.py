@@ -6,28 +6,16 @@
 
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
-from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
+from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
 
-class OneReleaseAnalyzer(BaseAnalyzer):
+class OneReleaseAnalyzer(BaseHeuristicAnalyzer):
     """Analyzer checks heuristic."""
 
     def __init__(self, api_client: PyPIApiClient) -> None:
-        super().__init__(name="one_release_analyzer", heuristic=HEURISTIC.ONE_RELEASE)
+        super().__init__(name="one_release_analyzer", heuristic=HEURISTIC.ONE_RELEASE, depends_on=None)
         self.api_client = api_client
-
-    def _get_releases_total(self) -> tuple[int, dict] | None:
-        """Get total releases number.
-
-        Returns
-        -------
-            tuple[int, dict] | None: Releases' total.
-        """
-        releases: dict | None = self.api_client.get_releases()
-        if releases:
-            return len(releases), releases
-        return None
 
     def analyze(self) -> tuple[HeuristicResult, dict]:
         """Check the releases' total is one.
@@ -36,10 +24,10 @@ class OneReleaseAnalyzer(BaseAnalyzer):
         -------
             tuple[HeuristicResult, dict]: Result and confidence.
         """
-        result: tuple[int, dict] | None = self._get_releases_total()
-        if result is None:
+        releases: dict | None = self.api_client.get_releases()
+        if releases is None:
             return HeuristicResult.SKIP, {"releases": {}}
 
-        if result[0] == 1:
-            return HeuristicResult.FAIL, {"releases": result[1]}  # Higher false positive, so we keep it MEDIUM
-        return HeuristicResult.PASS, {"releases": result[1]}
+        if len(releases) == 1:
+            return HeuristicResult.FAIL, {"releases": releases}  # Higher false positive, so we keep it MEDIUM
+        return HeuristicResult.PASS, {"releases": releases}

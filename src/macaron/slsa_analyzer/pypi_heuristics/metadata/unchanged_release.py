@@ -7,11 +7,11 @@ from collections import Counter
 
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
-from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
+from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
 
-class UnchangedReleaseAnalyzer(BaseAnalyzer):
+class UnchangedReleaseAnalyzer(BaseHeuristicAnalyzer):
     """Analyzer checks heuristic."""
 
     def __init__(self, api_client: PyPIApiClient) -> None:
