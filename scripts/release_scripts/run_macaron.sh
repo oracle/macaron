@@ -460,10 +460,10 @@ fi
 
 # Mount the Python virtual environment into ${MACARON_WORKSPACE}/python_venv.
 if [[ -n "${python_venv_path:-}" ]]; then
-    python_venv_in_container="${MACARON_WORKSPACE}/python_venv"
-    # We copy the mounted directory to `.python_venv` once the container starts running to
+    python_venv_in_container="${MACARON_WORKSPACE}/analyze_python_venv_readonly"
+    # We copy the mounted directory to `analyze_python_venv_editable` once the container starts running to
     # be able to make changes to the mounted files without affecting the files on host.
-    argv_command+=("--python-venv" "${MACARON_WORKSPACE}/.python_venv")
+    argv_command+=("--python-venv" "${MACARON_WORKSPACE}/analyze_python_venv_editable")
 
     mount_dir_ro "--python-venv" "$python_venv_path" "$python_venv_in_container"
 fi

@@ -111,7 +111,7 @@ class GlobalConfig:
             The path to the Python virtual environment of the target software component.
         """
         if os.path.isdir(venv_path):
-            logger.info("Successfully loaded %s", venv_path)
+            logger.info("Found Python virtual environment for the analysis target at %s", venv_path)
 
         self.python_venv_path = str(os.path.abspath(venv_path))
 

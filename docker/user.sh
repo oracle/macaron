@@ -52,14 +52,18 @@ then
     mkdir --parents "$HOME"/output
 fi
 
-# Prepare the python virtual environment. We copy the mounted directory if it exists to `.python_venv` to fix the symbolic
+# Prepare the python virtual environment for the target software component if provided as input.
+# We copy the mounted directory if it exists to `analyze_python_venv_editable` to fix the symbolic
 # links to the Python interpreter in the container without affecting the files on host.
-if [[ -d "$HOME/python_venv" ]];
+# That's because cylonedx-py needs to access Python in the virtual environment where it generates
+# the SBOM from and the original files will be symbolic links to Python on the host system that
+# are not reachable from the container.
+if [[ -d "$HOME/analyze_python_venv_readonly" ]];
 then
-    cp -r "$HOME/python_venv" "$HOME/.python_venv"
+    cp -r "$HOME/analyze_python_venv_readonly" "$HOME/analyze_python_venv_editable"
 fi
 
-if [[ -d "$HOME/.python_venv/bin" ]];
+if [[ -d "$HOME/analyze_python_venv_editable/bin" ]];
 then
     python_binaries=(
         "python"
@@ -69,7 +73,7 @@ then
     for p in "${python_binaries[@]}"; do
         if [[ -f "$HOME/.venv/bin/${p}" ]];
         then
-            ln -sf "$HOME/.venv/bin/${p}" "$HOME/.python_venv/bin/${p}"
+            ln -sf "$HOME/.venv/bin/${p}" "$HOME/analyze_python_venv_editable/bin/${p}"
         fi
     done
 fi

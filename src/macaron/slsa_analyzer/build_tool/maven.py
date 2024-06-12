@@ -103,14 +103,9 @@ class Maven(BaseBuildTool):
 
         return False
 
-    def get_dep_analyzer(self, repo_path: str) -> CycloneDxMaven:
+    def get_dep_analyzer(self) -> CycloneDxMaven:
         """
         Create a DependencyAnalyzer for the Maven build tool.
-
-        Parameters
-        ----------
-        repo_path: str
-            The path to the target repo.
 
         Returns
         -------
@@ -141,7 +136,6 @@ class Maven(BaseBuildTool):
                 file_name="bom.json",
                 tool_name=tool_name,
                 tool_version=tool_version,
-                repo_path=repo_path,
             )
 
         raise DependencyAnalyzerError(f"Unsupported SBOM generator for Maven: {tool_name}.")

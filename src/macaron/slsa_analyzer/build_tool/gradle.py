@@ -110,13 +110,8 @@ class Gradle(BaseBuildTool):
 
         return False
 
-    def get_dep_analyzer(self, repo_path: str) -> CycloneDxGradle:
+    def get_dep_analyzer(self) -> CycloneDxGradle:
         """Create a DependencyAnalyzer for the Gradle build tool.
-
-        Parameters
-        ----------
-        repo_path: str
-            The path to the target repo.
 
         Returns
         -------
@@ -147,7 +142,6 @@ class Gradle(BaseBuildTool):
                 file_name="bom.json",
                 tool_name=tool_name,
                 tool_version=tool_version,
-                repo_path=repo_path,
             )
 
         raise DependencyAnalyzerError(f"Unsupported SBOM generator for Gradle: {tool_name}.")

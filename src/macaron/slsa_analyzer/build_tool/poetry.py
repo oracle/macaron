@@ -115,13 +115,8 @@ class Poetry(BaseBuildTool):
         """
         return True
 
-    def get_dep_analyzer(self, repo_path: str) -> DependencyAnalyzer:
+    def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.
-
-        Parameters
-        ----------
-        repo_path: str
-            The path to the target repo.
 
         Returns
         -------
@@ -138,7 +133,6 @@ class Poetry(BaseBuildTool):
             file_name="python_sbom.json",
             tool_name=tool_name,
             tool_version=cyclonedx_version,
-            repo_path=repo_path,
         )
 
     def is_deploy_command(

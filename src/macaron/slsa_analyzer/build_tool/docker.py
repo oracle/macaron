@@ -71,13 +71,8 @@ class Docker(BaseBuildTool):
 
         return False
 
-    def get_dep_analyzer(self, repo_path: str) -> NoneDependencyAnalyzer:
+    def get_dep_analyzer(self) -> NoneDependencyAnalyzer:
         """Create a DependencyAnalyzer for the Docker build tool. Currently unimplemented.
-
-        Parameters
-        ----------
-        repo_path: str
-            The path to the target repo.
 
         Returns
         -------

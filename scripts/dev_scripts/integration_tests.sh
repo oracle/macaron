@@ -458,6 +458,17 @@ check_or_update_expected_output $COMPARE_POLICIES "$POLICY_RESULT" "$POLICY_EXPE
 # Clean up and remove the virtual environment.
 rm -rf "$VIRTUAL_ENV_PATH"
 
+echo -e "\n-----------------------------------------------------------------------------------------"
+echo "pkg:pypi/django@5.0.6: Analyzing the dependencies with an invalid path to the virtual env dir."
+echo -e "-----------------------------------------------------------------------------------------\n"
+$RUN_MACARON analyze -purl pkg:pypi/django@5.0.6 --python-venv invalid-path
+
+if [ $? -eq 0 ];
+then
+    echo -e "Expect non-zero status code but got $?."
+    log_fail
+fi
+
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with local paths in configuration and without dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"

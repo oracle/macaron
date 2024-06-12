@@ -32,6 +32,10 @@ def test_deserialize_bom_json(snapshot: list[str]) -> None:
     with pytest.raises(CycloneDXParserError):
         deserialize_bom_json(Path(RESOURCES_DIR, "invalid_bom.json"))
 
+    # Deserialize an invalid JSON file.
+    with pytest.raises(CycloneDXParserError):
+        deserialize_bom_json(Path(RESOURCES_DIR, "invalid_json.json"))
+
 
 @pytest.mark.parametrize(
     ("build_tool_name", "child_boms", "recursive"),
@@ -53,9 +57,9 @@ def test_get_dep_components_java(
     # Path to the root bom.json.
     root_bom_path = Path(RESOURCES_DIR, "bom_aws_parent.json")
 
-    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer(repo_path="")
+    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer()
     component = Component(
-        purl="pkg:maven/io.micronaut.aws/aws-parent@4.0.0-SNAPSHOT",
+        purl="pkg:maven/io.micronaut.aws/aws-parent@4.0.0-SNAPSHOT?type=pom",
         analysis=Analysis(),
         repository=Repository(complete_name="github.com/micronaut-projects/micronaut-aws", fs_path=""),
     )
@@ -95,7 +99,7 @@ def test_get_dep_components_python(
     # Path to the root bom.json.
     root_bom_path = Path(RESOURCES_DIR, "bom_requests.json")
 
-    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer(repo_path="")
+    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer()
     component = Component(
         purl="pkg:pypi/requests@2.31.0",
         analysis=Analysis(),
@@ -132,7 +136,7 @@ def test_convert_components_to_artifacts_java(
     assert defaults.getboolean("repofinder.java", "find_repos") is False
     assert defaults.get_list("repofinder", "redirect_urls") == []
 
-    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer(repo_path="")
+    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer()
     component = Component(
         purl="pkg:maven/io.micronaut.aws/aws-parent@4.0.0-SNAPSHOT",
         analysis=Analysis(),
@@ -165,7 +169,7 @@ def test_convert_components_to_artifacts_python(
     # Path to the root bom.json.
     root_bom_path = Path(RESOURCES_DIR, "bom_requests.json")
 
-    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer(repo_path="")
+    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer()
     component = Component(
         purl="pkg:pypi/requests@2.31.0",
         analysis=Analysis(),
@@ -198,9 +202,9 @@ def test_low_quality_bom(
     # Path to the BOM file.
     bom_path = Path(RESOURCES_DIR, name)
 
-    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer(repo_path="")
+    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer()
     component = Component(
-        purl="pkg:maven/com.amazonaws/aws-lambda-java-events@3.11.0",
+        purl="pkg:maven/com.amazonaws/aws-lambda-java-events@3.11.0?type=jar",
         analysis=Analysis(),
         repository=Repository(complete_name="github.com/aws/aws-lambda-java-libs", fs_path=""),
     )
@@ -224,9 +228,9 @@ def test_multiple_versions(
     """
     # Path to the BOM file.
     bom_path = Path(RESOURCES_DIR, "bom_multi_versions.json")
-    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer(repo_path="")
+    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer()
     component = Component(
-        purl="pkg:maven/com.amazonaws/aws-lambda-java-events@3.11.0",
+        purl="pkg:maven/com.amazonaws/aws-lambda-java-events@3.11.0?type=jar",
         analysis=Analysis(),
         repository=Repository(complete_name="github.com/aws/aws-lambda-java-libs", fs_path=""),
     )
@@ -237,7 +241,7 @@ def test_multiple_versions(
 def test_custom_sbom_name_with_maven() -> None:
     """Test reading cyclonedx maven sbom that was created using a custom name."""
     cyclonedx: CycloneDxMaven = CycloneDxMaven(
-        "", "bom.json", "", defaults.get("dependency.resolver", "dep_tool_maven"), ""
+        "", "bom.json", "", defaults.get("dependency.resolver", "dep_tool_maven")
     )
     component = Component(
         purl="pkg:maven/com.example/cyclonedx-test@1.0-SNAPSHOT?type=jar",
@@ -275,6 +279,6 @@ def test_get_purl_from_cdx_component(
     expected_purl: str,
 ) -> None:
     """Test constructing a PackageURL from a CycloneDX component."""
-    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer(repo_path="")
+    dep_analyzer = build_tools[build_tool_name].get_dep_analyzer()
     component = CDXComponent(group=group, name=name, version=version)
     assert str(dep_analyzer.get_purl_from_cdx_component(component=component)) == expected_purl

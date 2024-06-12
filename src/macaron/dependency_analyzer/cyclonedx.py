@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains helper functions to process CycloneDX SBOM."""
@@ -62,8 +62,8 @@ def deserialize_bom_json(file_path: Path) -> Bom:
     with open(file_path, encoding="utf8") as file:
         json_data = file.read()
         if defaults.getboolean("dependency.resolver", "validate", fallback=True):
+            schema_version = defaults.get("dependency.resolver", "schema", fallback="1.6")
             try:
-                schema_version = defaults.get("dependency.resolver", "schema", fallback="1.6")
                 my_json_validator = JsonStrictValidator(SchemaVersion.from_version(schema_version))
             except ValueError as error:
                 raise CycloneDXParserError(f"Unable to find schema validator for {schema_version}: {error}") from error
@@ -117,7 +117,7 @@ class DependencyInfo(TypedDict):
 class DependencyAnalyzer(ABC):
     """This abstract class is used to implement dependency analyzers."""
 
-    def __init__(self, resources_path: str, file_name: str, tool_name: str, tool_version: str, repo_path: str) -> None:
+    def __init__(self, resources_path: str, file_name: str, tool_name: str, tool_version: str) -> None:
         """Initialize the dependency analyzer instance.
 
         Parameters
@@ -130,14 +130,11 @@ class DependencyAnalyzer(ABC):
             The name of the dependency analyzer.
         tool_version : str
             The version of the dependency analyzer.
-        repo_path: str
-            The path to the target repo.
         """
         self.resources_path: str = resources_path
         self.file_name: str = file_name
         self.tool_name: str = tool_name
         self.tool_version: str = tool_version
-        self.repo_path: str = repo_path
         self.visited_deps: set = set()
 
     @abstractmethod
@@ -385,8 +382,7 @@ class DependencyAnalyzer(ABC):
         for build_tool in build_tools:
             try:
                 # We allow dependency analysis if SBOM is provided but no repository is found.
-                repo_path = main_ctx.component.repository.fs_path if main_ctx.component.repository else ""
-                dep_analyzer = build_tool.get_dep_analyzer(repo_path)
+                dep_analyzer = build_tool.get_dep_analyzer()
             except DependencyAnalyzerError as error:
                 logger.error("Unable to find a dependency analyzer for %s: %s", build_tool.name, error)
                 return {}
@@ -518,14 +514,23 @@ class DependencyAnalyzer(ABC):
         CDXComponent | None
             The CycloneDX component or None if it cannot be found.
         """
-        for cmp in root_bom.components:
-            if not isinstance(cmp, CDXComponent):
-                continue
+
+        def _is_target_cmp(cmp: CDXComponent | None) -> bool:
+            if cmp is None:
+                return False
             cmp_purl = self.get_purl_from_cdx_component(cmp)
             if str(cmp_purl) == target_component.purl:
                 logger.debug("Found the target CycloneDX component: %s", cmp.bom_ref.value)
+                return True
+            return False
+
+        for cmp in root_bom.components:
+            if not isinstance(cmp, CDXComponent):
+                continue
+            if _is_target_cmp(cmp):
                 return cmp
-        if root_bom.metadata:
+
+        if root_bom.metadata and _is_target_cmp(root_bom.metadata.component):
             return root_bom.metadata.component
         return None
 
@@ -567,18 +572,15 @@ class DependencyAnalyzer(ABC):
         dependencies: list[CDXDependency] = []
 
         # Find dependencies in the root BOM file.
-        try:
-            target_cdx_component = self.get_target_cdx_component(root_bom=root_bom, target_component=target_component)
-            for node in root_bom.dependencies:
-                if not isinstance(node, CDXDependency):
-                    continue
-                if recursive or (
-                    target_cdx_component and target_cdx_component.bom_ref and node.ref == target_cdx_component.bom_ref
-                ):
-                    if dep_on := node.dependencies:
-                        dependencies.extend(dep_on)
-        except AttributeError as error:
-            logger.debug(error)
+        target_cdx_component = self.get_target_cdx_component(root_bom=root_bom, target_component=target_component)
+        for node in root_bom.dependencies:
+            if not isinstance(node, CDXDependency):
+                continue
+            if recursive or (
+                target_cdx_component and target_cdx_component.bom_ref and node.ref == target_cdx_component.bom_ref
+            ):
+                if dep_on := node.dependencies:
+                    dependencies.extend(dep_on)
 
         # Find dependencies in child BOMs if they exist. Multi-module Java projects need this resolution.
         child_bom_objects: list[Bom] = []
@@ -684,8 +686,6 @@ class DependencyAnalyzer(ABC):
             DependencyAnalyzer.add_latest_version(
                 item=item, key=key, all_versions=all_versions, latest_deps=latest_deps, url_to_artifact=url_to_artifact
             )
-            # except (KeyError, AttributeError) as error:
-            #     logger.debug(error)
 
         try:
             with open(os.path.join(global_config.output_path, "sbom_debug.json"), "w", encoding="utf8") as debug_file:
@@ -727,7 +727,7 @@ class NoneDependencyAnalyzer(DependencyAnalyzer):
 
     def __init__(self) -> None:
         """Initialize the dependency analyzer instance."""
-        super().__init__(resources_path="", file_name="", tool_name="", tool_version="", repo_path="")
+        super().__init__(resources_path="", file_name="", tool_name="", tool_version="")
 
     def collect_dependencies(self, dir_path: str, target_component: Component) -> dict[str, DependencyInfo]:
         """Process the dependency JSON files and collect direct dependencies.
