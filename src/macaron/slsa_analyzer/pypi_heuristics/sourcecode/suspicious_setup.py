@@ -14,7 +14,7 @@ import zipfile
 import requests
 
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
-from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
+from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
@@ -79,16 +79,16 @@ class SuspiciousSetupAnalyzer(BaseAnalyzer):
             except requests.exceptions.RequestException:
                 return None
 
-    def analyze(self) -> tuple[RESULT, dict]:
+    def analyze(self) -> tuple[HeuristicResult, dict]:
         """Analyze suspicious packages are imported in setup.py.
 
         Returns
         -------
-            tuple[RESULT, Confidence | None]: Result and confidence.
+            tuple[HeuristicResult, Confidence | None]: Result and confidence.
         """
         content: str | None = self._get_setup_source_code()
         if content is None:
-            return RESULT.SKIP, {}
+            return HeuristicResult.SKIP, {}
 
         imports = set()
         try:
@@ -114,5 +114,5 @@ class SuspiciousSetupAnalyzer(BaseAnalyzer):
                     imports.update(filter(None, match.groups()))
         suspicious_setup = any(suspicious_keyword in imp for imp in imports for suspicious_keyword in self.blacklist)
         if suspicious_setup:
-            return RESULT.FAIL, {"import_module": imports}
-        return RESULT.PASS, {"import_module": imports}
+            return HeuristicResult.FAIL, {"import_module": imports}
+        return HeuristicResult.PASS, {"import_module": imports}

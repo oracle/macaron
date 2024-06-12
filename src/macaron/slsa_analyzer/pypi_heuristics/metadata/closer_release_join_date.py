@@ -7,7 +7,7 @@ import logging
 from datetime import datetime, timedelta
 
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
-from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
+from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
@@ -59,12 +59,12 @@ class CloserReleaseJoinDateAnalyzer(BaseAnalyzer):
             return datetime.strptime(upload_time, "%Y-%m-%dT%H:%M:%S")
         return None
 
-    def analyze(self) -> tuple[RESULT, dict]:
+    def analyze(self) -> tuple[HeuristicResult, dict]:
         """Check whether the maintainers' join date closer to package's latest release date.
 
         Returns
         -------
-            tuple[RESULT, dict]: Result and confidence.
+            tuple[HeuristicResult, dict]: Result and confidence.
         """
         maintainers_join_date: list[datetime | None] | None = self._get_maintainers_join_date()
         latest_release_date: datetime | None = self._get_latest_release_date()
@@ -76,7 +76,7 @@ class CloserReleaseJoinDateAnalyzer(BaseAnalyzer):
         }
 
         if maintainers_join_date is None or latest_release_date is None:
-            return RESULT.SKIP, detail_info
+            return HeuristicResult.SKIP, detail_info
 
         for date in maintainers_join_date:
             if date is None:
@@ -86,5 +86,5 @@ class CloserReleaseJoinDateAnalyzer(BaseAnalyzer):
             threshold_delta = timedelta(days=self.gap_threshold)
 
             if difference >= threshold_delta:
-                return RESULT.PASS, detail_info
-        return RESULT.FAIL, detail_info
+                return HeuristicResult.PASS, detail_info
+        return HeuristicResult.FAIL, detail_info

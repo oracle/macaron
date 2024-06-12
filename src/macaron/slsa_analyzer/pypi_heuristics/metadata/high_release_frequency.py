@@ -8,7 +8,7 @@ from datetime import datetime
 
 from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
-from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
+from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
@@ -22,21 +22,21 @@ class HighReleaseFrequencyAnalyzer(BaseAnalyzer):
         super().__init__(
             name="high_release_frequency_analyzer",
             heuristic=HEURISTIC.HIGH_RELEASE_FREQUENCY,
-            depends_on=[(HEURISTIC.ONE_RELEASE, RESULT.PASS)],  # Analyzing when this heuristic pass
+            depends_on=[(HEURISTIC.ONE_RELEASE, HeuristicResult.PASS)],  # Analyzing when this heuristic pass
         )
         self.average_gap_threshold: int = 2  # Days
         self.api_client = api_client
 
-    def analyze(self) -> tuple[RESULT, dict]:
+    def analyze(self) -> tuple[HeuristicResult, dict]:
         """Check whether the release frequency is high.
 
         Returns
         -------
-            tuple[RESULT, Confidence | None]: Confidence and result.
+            tuple[HeuristicResult, Confidence | None]: Confidence and result.
         """
         version_to_releases: dict | None = self.api_client.get_releases()
         if version_to_releases is None:
-            return RESULT.SKIP, {}
+            return HeuristicResult.SKIP, {}
         releases_amount = len(version_to_releases)
 
         extract_data: dict[str, datetime] = {}
@@ -63,5 +63,5 @@ class HighReleaseFrequencyAnalyzer(BaseAnalyzer):
         frequency = days_sum // (releases_amount - 1)
 
         if frequency <= self.average_gap_threshold:
-            return RESULT.FAIL, {"frequency": frequency}
-        return RESULT.PASS, {"frequency": frequency}
+            return HeuristicResult.FAIL, {"frequency": frequency}
+        return HeuristicResult.PASS, {"frequency": frequency}

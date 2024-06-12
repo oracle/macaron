@@ -6,7 +6,7 @@
 from enum import Enum
 
 
-class RESULT(Enum):
+class HeuristicResult(Enum):
     """Result type.
 
     PASS: Not suspicious

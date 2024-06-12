@@ -6,7 +6,7 @@
 from collections import Counter
 
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
-from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
+from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
@@ -18,7 +18,7 @@ class UnchangedReleaseAnalyzer(BaseAnalyzer):
         super().__init__(
             name="unchanged_release_analyzer",
             heuristic=HEURISTIC.UNCHANGED_RELEASE,
-            depends_on=[(HEURISTIC.HIGH_RELEASE_FREQUENCY, RESULT.FAIL)],  # Analyzing when this heuristic fail
+            depends_on=[(HEURISTIC.HIGH_RELEASE_FREQUENCY, HeuristicResult.FAIL)],  # Analyzing when this heuristic fail
         )
         self.hash: str = "sha256"
         self.api_client = api_client
@@ -40,19 +40,19 @@ class UnchangedReleaseAnalyzer(BaseAnalyzer):
         ]
         return digests
 
-    def analyze(self) -> tuple[RESULT, dict]:
+    def analyze(self) -> tuple[HeuristicResult, dict]:
         """Check the content of releases keep updating.
 
         Returns
         -------
-            tuple[RESULT, Confidence | None]: Result and confidence.
+            tuple[HeuristicResult, Confidence | None]: Result and confidence.
         """
         digests: list | None = self._get_digests()
         if digests is None:
-            return RESULT.SKIP, {}
+            return HeuristicResult.SKIP, {}
 
         frequency = Counter(digests)
         highest_frequency = max(frequency.values())
         if highest_frequency > 1:  # Any two release are same
-            return RESULT.FAIL, {}
-        return RESULT.PASS, {}
+            return HeuristicResult.FAIL, {}
+        return HeuristicResult.PASS, {}
