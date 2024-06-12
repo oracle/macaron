@@ -28,7 +28,7 @@ class CloserReleaseJoinDateAnalyzer(BaseAnalyzer):
         self.gap_threshold: int = 5
         self.api_client = api_client
 
-    def _get_maintainers_join_date(self) -> list[datetime | None] | None:
+    def _get_maintainers_join_date(self) -> list[datetime] | None:
         """Get the join date of the maintainers.
 
         Returns
@@ -40,12 +40,15 @@ class CloserReleaseJoinDateAnalyzer(BaseAnalyzer):
             Each package might have multiple maintainers.
         """
         maintainers: list | None = self.api_client.get_maintainer_of_package()
-        if maintainers:
-            join_date: list[datetime | None] = [
-                self.api_client.get_maintainer_join_date(maintainer) for maintainer in maintainers
-            ]
-            return join_date
-        return None
+        if maintainers is None:
+            return None
+
+        join_dates: list[datetime] = []
+        for maintainer in maintainers:
+            maintainer_join_date = self.api_client.get_maintainer_join_date(maintainer)
+            if maintainer_join_date is not None:
+                join_dates.append(maintainer_join_date)
+        return join_dates
 
     def _get_latest_release_date(self) -> datetime | None:
         """Get package's latest release date.
@@ -66,7 +69,7 @@ class CloserReleaseJoinDateAnalyzer(BaseAnalyzer):
         -------
             tuple[HeuristicResult, dict]: Result and confidence.
         """
-        maintainers_join_date: list[datetime | None] | None = self._get_maintainers_join_date()
+        maintainers_join_date: list[datetime] | None = self._get_maintainers_join_date()
         latest_release_date: datetime | None = self._get_latest_release_date()
         detail_info = {
             "maintainers_join_date": [date.strftime("%Y-%m-%d %H:%M:%S") for date in maintainers_join_date if date]
@@ -79,10 +82,7 @@ class CloserReleaseJoinDateAnalyzer(BaseAnalyzer):
             return HeuristicResult.SKIP, detail_info
 
         for date in maintainers_join_date:
-            if date is None:
-                continue
             difference = abs(latest_release_date - date)
-            # Define a timedelta representing one day
             threshold_delta = timedelta(days=self.gap_threshold)
 
             if difference >= threshold_delta:
