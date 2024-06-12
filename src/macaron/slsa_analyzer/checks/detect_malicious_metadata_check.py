@@ -4,6 +4,7 @@
 """This check examines the metadata of pypi packages with seven heuristics."""
 
 import logging
+from typing import Any
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -63,7 +64,7 @@ ANALYZERS = [
     SuspiciousSetupAnalyzer,
 ]
 
-SUSPICIOUS_COMBO = {
+SUSPICIOUS_COMBO: dict[tuple[RESULT, RESULT, RESULT, RESULT, RESULT, RESULT, RESULT], float] = {
     (RESULT.FAIL, RESULT.SKIP, RESULT.FAIL, RESULT.SKIP, RESULT.SKIP, RESULT.FAIL, RESULT.FAIL): Confidence.HIGH,
     (RESULT.FAIL, RESULT.SKIP, RESULT.FAIL, RESULT.SKIP, RESULT.SKIP, RESULT.FAIL, RESULT.PASS): Confidence.MEDIUM,
     (
@@ -117,35 +118,56 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             description=description,
         )
 
-    def _should_skip(self, results: dict, dependency_heuristic: tuple[HEURISTIC, RESULT]) -> bool:
-        if results.get(dependency_heuristic[0], None) is not dependency_heuristic[1]:
-            return True
+    def _should_skip(self, results: dict[HEURISTIC, RESULT], depends_on: list[tuple[HEURISTIC, RESULT]]) -> bool:
+        """Determine whether a particular heuristic result should be skipped based on the provided dependency heuristics.
+
+        Args
+        ----
+            results (dict[HEURISTIC, RESULT]): Containing all heuristic results, where the key is the heuristic and the value
+            is the result associated with that heuristic.
+            depends_on (list[tuple[HEURISTIC, RESULT]]): containing heuristics that the current heuristic depends on,
+            along with their expected results.
+
+        Returns
+        -------
+            bool: Returns True if any result of the dependency heuristic does not match the expected result.
+            Otherwise, returns False.
+        """
+        for heuristic, expected_result in depends_on:
+            dep_heuristic_result: RESULT | None = results.get(heuristic, None)
+            if dep_heuristic_result is not expected_result:
+                return True
         return False
 
-    def _analyze(self, api_client: PyPIApiClient) -> dict:
-        results: dict = {}
-        detail_infos = {}
+    def run_heuristics(self, api_client: PyPIApiClient) -> tuple[dict[HEURISTIC, RESULT], dict[str, Any]]:
+        """Run the main logic of heuristics analysis.
+
+        Args
+        ----
+            api_client (PyPIApiClient): The PyPI API client object used to interact with the official PyPI API.
+
+        Returns
+        -------
+            Tuple[Dict[HEURISTIC, RESULT], Dict[str, Any]]: Containing the heuristic results and relevant metadata.
+        """
+        results: dict[HEURISTIC, RESULT] = {}
+        detail_infos: dict[str, Any] = {}
         for _analyzer in ANALYZERS:
             analyzer = _analyzer(api_client)
             depends_on = analyzer.depends_on
 
-            skip_analyzer = False
             if depends_on:
-                for heuristic in depends_on:  # e.g. heuristic = (HEURISTIC.ONE_RELEASE, RESULT.PASS)
-                    if self._should_skip(results, heuristic):
-                        skip_analyzer = True
-                        break
-            if skip_analyzer:
-                continue
+                should_skip: bool = self._should_skip(results, depends_on)
+                if should_skip and isinstance(analyzer.heuristic, HEURISTIC):
+                    results[analyzer.heuristic] = RESULT.SKIP
+                    continue
             result, detail_info = analyzer.analyze()
             if analyzer.heuristic:
                 # logger.info(f"{analyzer.heuristic}:  {detail_info}")
                 results[analyzer.heuristic] = result
                 detail_infos.update(detail_info)
 
-        results = {heuristic.value: result.value for heuristic, result in results.items()}
-        results["detail_infos"] = detail_infos  # Package metadata
-        return results
+        return results, detail_info
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
@@ -164,11 +186,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         result_tables: list[CheckFacts] = []
 
         api_client = PyPIApiClient(package)
-        result: dict = self._analyze(api_client)
-        detail_infos = result.get("detail_infos", {})
-        result.pop("detail_infos")
-        heuristics_fail = [heuristic for heuristic, result in result.items() if result == "FAIL"]
-        confidence = SUSPICIOUS_COMBO.get(tuple(result.values()), None)
+        result, detail_infos = self.run_heuristics(api_client)
+        heuristics_fail = [heuristic.value for heuristic, result in result.items() if result is RESULT.FAIL]
+        result_combo: tuple = tuple(result.values())
+        confidence = SUSPICIOUS_COMBO.get(result_combo, None)
         result_type = CheckResultType.FAILED
         if confidence is None:
             confidence = Confidence.HIGH
