@@ -150,17 +150,27 @@ run_macaron_clean $ANALYZE -pe $EXPECTATION_DIR -rp https://github.com/urllib3/u
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "timyarkov/multibuild_test: Analyzing the repo path, the branch name and the commit digest"
-echo "with dependency resolution using cyclonedx Gradle and Maven plugins (defaults)."
+echo "timyarkov/multibuild_test: Analyzing Maven artifact with the repo path, the branch name and the commit digest"
+echo "with dependency resolution using cyclonedx Maven plugins (defaults)."
 echo -e "----------------------------------------------------------------------------------\n"
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_timyarkov_multibuild_test_maven.json
+DEP_RESULT=$WORKSPACE/output/reports/maven/org_example/mock_maven_proj/dependencies.json
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/multibuild_test/multibuild_test.dl
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_timyarkov_multibuild_test.json
-DEP_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/multibuild_test/dependencies.json
-run_macaron_clean $ANALYZE -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
+run_macaron_clean $ANALYZE -purl pkg:maven/org.example/mock_maven_proj@1.0-SNAPSHOT?type=jar -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "timyarkov/multibuild_test: Analyzing Gradle artifact with the repo path, the branch name and the commit digest"
+echo "with dependency resolution using cyclonedx Gradle plugins (defaults)."
+echo -e "----------------------------------------------------------------------------------\n"
+DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_timyarkov_multibuild_test_gradle.json
+DEP_RESULT=$WORKSPACE/output/reports/maven/org_example/mock_gradle_proj/dependencies.json
+run_macaron_clean $ANALYZE -purl pkg:maven/org.example/mock_gradle_proj@1.0?type=jar -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
+
+check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo "timyarkov/docker_test: Analyzing the repo path, the branch name and the commit digest"
 echo "when automatic dependency resolution is skipped, for a project using docker as a build tool."
@@ -228,8 +238,8 @@ echo "apache/maven: Analyzing the repo path, the branch name and the commit dige
 echo -e "----------------------------------------------------------------------------------\n"
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/maven.dl
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
-DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
-run_macaron_clean $ANALYZE -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
+DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
+run_macaron_clean $ANALYZE -purl pkg:maven/org.apache.maven/maven@4.0.0-alpha-9-SNAPSHOT?type=pom -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
@@ -240,9 +250,8 @@ echo "apache/maven: Analyzing using a CycloneDx SBOM with target repo path"
 echo -e "----------------------------------------------------------------------------------\n"
 SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/apache_maven_root_sbom.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/apache_maven_with_sbom_provided.json
-DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
-
-run_macaron_clean $ANALYZE -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b -sbom "$SBOM_FILE" || log_fail
+DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
+run_macaron_clean $ANALYZE -purl pkg:maven/org.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b -sbom "$SBOM_FILE" || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
@@ -252,7 +261,6 @@ echo -e "-----------------------------------------------------------------------
 SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/private_mirror_apache_maven.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/private_mirror_apache_maven.json
 DEP_RESULT=$WORKSPACE/output/reports/maven/private_apache_maven/maven/dependencies.json
-
 run_macaron_clean $ANALYZE -purl pkg:maven/private.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom -sbom "$SBOM_FILE" || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
@@ -308,18 +316,18 @@ done
 echo -e "\n=================================================================================="
 echo "Run integration tests with configurations for apache/maven..."
 echo -e "==================================================================================\n"
-DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check the resolved dependency output when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
+DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/skipdep_apache_maven.json
 run_macaron_clean $ANALYZE -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml --skip-deps || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the e2e output JSON file with config and no dependency analyzing."
+echo "apache/maven: Check the e2e results with config and no dependency analyzing."
 echo -e "----------------------------------------------------------------------------------\n"
 EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
 
@@ -339,6 +347,7 @@ done
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check the resolved dependency output with config for cyclonedx maven plugin."
 echo -e "----------------------------------------------------------------------------------\n"
+DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 run_macaron_clean $ANALYZE -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || log_fail
 
@@ -390,7 +399,7 @@ $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 # echo -e "----------------------------------------------------------------------------------\n"
 # DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_FasterXML_jackson-databind.json
 # DEP_RESULT=$WORKSPACE/output/reports/github_com/FasterXML/jackson-databind/dependencies.json
-# $RUN_MACARON analyze -purl pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.0-rc1 || log_fail
+# run_macaron_clean $ANALYZE -purl pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.0-rc1 || log_fail
 
 # check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
@@ -427,12 +436,12 @@ run_macaron_clean -dp $DEFAULTS_FILE -lr $WORKSPACE/output/local_repos $ANALYZE 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing with the branch name, the commit digest and dependency resolution using cyclonedx maven plugin (default)."
+echo "apache/maven: Analyzing local clone with the branch name, the commit digest and dependency resolution using cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/maven.dl
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
-DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
-run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com $ANALYZE -rp apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
+DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
+run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com $ANALYZE -purl pkg:maven/org.apache.maven/maven@4.0.0-alpha-9-SNAPSHOT?type=pom -rp apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
@@ -444,7 +453,7 @@ echo -e "-----------------------------------------------------------------------
 VIRTUAL_ENV_PATH=$WORKSPACE/.django_venv
 $MAKE_VENV "$VIRTUAL_ENV_PATH"
 "$VIRTUAL_ENV_PATH"/bin/pip install django==5.0.6
-$RUN_MACARON analyze -purl pkg:pypi/django@5.0.6 --python-venv "$VIRTUAL_ENV_PATH" || log_fail
+run_macaron_clean $ANALYZE -purl pkg:pypi/django@5.0.6 --python-venv "$VIRTUAL_ENV_PATH" || log_fail
 
 # Check the dependencies using the policy engine.
 RUN_POLICY="macaron verify-policy"
@@ -461,7 +470,7 @@ rm -rf "$VIRTUAL_ENV_PATH"
 echo -e "\n-----------------------------------------------------------------------------------------"
 echo "pkg:pypi/django@5.0.6: Analyzing the dependencies with an invalid path to the virtual env dir."
 echo -e "-----------------------------------------------------------------------------------------\n"
-$RUN_MACARON analyze -purl pkg:pypi/django@5.0.6 --python-venv invalid-path
+run_macaron_clean $ANALYZE -purl pkg:pypi/django@5.0.6 --python-venv invalid-path
 
 if [ $? -eq 0 ];
 then

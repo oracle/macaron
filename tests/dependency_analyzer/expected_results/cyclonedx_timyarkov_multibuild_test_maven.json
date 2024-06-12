@@ -1,0 +1,11 @@
+[
+    {
+        "id": "com.google.code.gson:gson",
+        "purl": "pkg:maven/com.google.code.gson/gson@2.10.1?type=jar",
+        "path": "https://github.com/google/gson",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    }
+]

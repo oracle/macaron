@@ -138,7 +138,7 @@ def test_convert_components_to_artifacts_java(
 
     dep_analyzer = build_tools[build_tool_name].get_dep_analyzer()
     component = Component(
-        purl="pkg:maven/io.micronaut.aws/aws-parent@4.0.0-SNAPSHOT",
+        purl="pkg:maven/io.micronaut.aws/aws-parent@4.0.0-SNAPSHOT?type=pom",
         analysis=Analysis(),
         repository=Repository(complete_name="github.com/micronaut-projects/micronaut-aws", fs_path=""),
     )

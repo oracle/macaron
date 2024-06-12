@@ -530,8 +530,24 @@ class DependencyAnalyzer(ABC):
             if _is_target_cmp(cmp):
                 return cmp
 
-        if root_bom.metadata and _is_target_cmp(root_bom.metadata.component):
-            return root_bom.metadata.component
+        if root_bom.metadata:
+            if _is_target_cmp(root_bom.metadata.component):
+                return root_bom.metadata.component
+            if root_bom.metadata.component:
+                logger.error(
+                    (
+                        "The analysis target %s and the metadata component %s in the BOM file do not match."
+                        " Please fix the PURL input and try again."
+                    ),
+                    target_component.purl,
+                    self.get_purl_from_cdx_component(root_bom.metadata.component),
+                )
+                return None
+
+        logger.error(
+            "Unable to find the analysis target %s in the BOM file. Please fix the PURL input and try again.",
+            target_component.purl,
+        )
         return None
 
     def get_dep_components(
@@ -573,12 +589,13 @@ class DependencyAnalyzer(ABC):
 
         # Find dependencies in the root BOM file.
         target_cdx_component = self.get_target_cdx_component(root_bom=root_bom, target_component=target_component)
+        if target_cdx_component is None:
+            return
+
         for node in root_bom.dependencies:
             if not isinstance(node, CDXDependency):
                 continue
-            if recursive or (
-                target_cdx_component and target_cdx_component.bom_ref and node.ref == target_cdx_component.bom_ref
-            ):
+            if recursive or (target_cdx_component.bom_ref and node.ref == target_cdx_component.bom_ref):
                 if dep_on := node.dependencies:
                     dependencies.extend(dep_on)
 
