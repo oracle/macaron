@@ -8,13 +8,13 @@ from datetime import datetime, timedelta
 
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
-from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
+from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class CloserReleaseJoinDateAnalyzer(BaseAnalyzer):
+class CloserReleaseJoinDateAnalyzer(BaseHeuristicAnalyzer):
     """Analyzer checks the heuristic.
 
     Note
@@ -24,7 +24,9 @@ class CloserReleaseJoinDateAnalyzer(BaseAnalyzer):
     """
 
     def __init__(self, api_client: PyPIApiClient) -> None:
-        super().__init__(name="closer_release_join_date_analyzer", heuristic=HEURISTIC.CLOSER_RELEASE_JOIN_DATE)
+        super().__init__(
+            name="closer_release_join_date_analyzer", heuristic=HEURISTIC.CLOSER_RELEASE_JOIN_DATE, depends_on=None
+        )
         self.gap_threshold: int = 5
         self.api_client = api_client
 
@@ -72,7 +74,7 @@ class CloserReleaseJoinDateAnalyzer(BaseAnalyzer):
         maintainers_join_date: list[datetime] | None = self._get_maintainers_join_date()
         latest_release_date: datetime | None = self._get_latest_release_date()
         detail_info = {
-            "maintainers_join_date": [date.strftime("%Y-%m-%d %H:%M:%S") for date in maintainers_join_date if date]
+            "maintainers_join_date": [date.strftime("%Y-%m-%d %H:%M:%S") for date in maintainers_join_date]
             if maintainers_join_date
             else [],
             "latest_release_date": latest_release_date.strftime("%Y-%m-%d %H:%M:%S") if latest_release_date else "",

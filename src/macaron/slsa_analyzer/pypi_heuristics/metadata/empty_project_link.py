@@ -5,15 +5,15 @@
 
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
-from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
+from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
 
-class EmptyProjectLinkAnalyzer(BaseAnalyzer):
+class EmptyProjectLinkAnalyzer(BaseHeuristicAnalyzer):
     """Analyzer checks heuristic."""
 
     def __init__(self, api_client: PyPIApiClient) -> None:
-        super().__init__(name="empty_project_link_analyzer", heuristic=HEURISTIC.EMPTY_PROJECT_LINK)
+        super().__init__(name="empty_project_link_analyzer", heuristic=HEURISTIC.EMPTY_PROJECT_LINK, depends_on=None)
         self.api_client = api_client
 
     def analyze(self) -> tuple[HeuristicResult, dict]:

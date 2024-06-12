@@ -9,13 +9,13 @@ import requests
 
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
-from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
+from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class UnreachableProjectLinksAnalyzer(BaseAnalyzer):
+class UnreachableProjectLinksAnalyzer(BaseHeuristicAnalyzer):
     """If >= 1 project links are reachable, the analyzer consider the package as benign."""
 
     def __init__(self, api_client: PyPIApiClient) -> None:

@@ -9,13 +9,13 @@ from datetime import datetime
 from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
-from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
+from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class HighReleaseFrequencyAnalyzer(BaseAnalyzer):
+class HighReleaseFrequencyAnalyzer(BaseHeuristicAnalyzer):
     """Analyzer checks heuristic."""
 
     def __init__(self, api_client: PyPIApiClient) -> None:

@@ -15,17 +15,17 @@ import requests
 
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
-from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
+from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class SuspiciousSetupAnalyzer(BaseAnalyzer):
+class SuspiciousSetupAnalyzer(BaseHeuristicAnalyzer):
     """Analyzer checks heuristic."""
 
     def __init__(self, api_client: PyPIApiClient) -> None:
-        super().__init__(name="suspicious_setup_analyzer", heuristic=HEURISTIC.SUSPICIOUS_SETUP)
+        super().__init__(name="suspicious_setup_analyzer", heuristic=HEURISTIC.SUSPICIOUS_SETUP, depends_on=None)
         self.blacklist: list = ["base64", "request"]
         self.api_client = api_client
 
