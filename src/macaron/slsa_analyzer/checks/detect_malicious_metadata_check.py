@@ -4,7 +4,6 @@
 """This check examines the metadata of pypi packages with seven heuristics."""
 
 import logging
-from typing import Any
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -139,7 +138,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 return True
         return False
 
-    def run_heuristics(self, api_client: PyPIApiClient) -> tuple[dict[HEURISTIC, RESULT], dict[str, Any]]:
+    def run_heuristics(self, api_client: PyPIApiClient) -> tuple[dict[HEURISTIC, RESULT], dict[str, int | dict]]:
         """Run the main logic of heuristics analysis.
 
         Args
@@ -148,10 +147,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         Returns
         -------
-            Tuple[Dict[HEURISTIC, RESULT], Dict[str, Any]]: Containing the heuristic results and relevant metadata.
+            tuple[dict[HEURISTIC, RESULT], dict[str, Any]]: Containing the heuristic results and relevant metadata.
         """
         results: dict[HEURISTIC, RESULT] = {}
-        detail_infos: dict[str, Any] = {}
+        detail_infos: dict[str, int | dict] = {}
         for _analyzer in ANALYZERS:
             analyzer = _analyzer(api_client)
             depends_on = analyzer.depends_on
