@@ -5,6 +5,7 @@
 
 from collections import Counter
 
+from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
@@ -20,10 +21,10 @@ class UnchangedReleaseAnalyzer(BaseHeuristicAnalyzer):
             heuristic=HEURISTIC.UNCHANGED_RELEASE,
             depends_on=[(HEURISTIC.HIGH_RELEASE_FREQUENCY, HeuristicResult.FAIL)],  # Analyzing when this heuristic fail
         )
-        self.hash: str = "sha256"
+        self.hash_algo: str = "sha256"
         self.api_client = api_client
 
-    def _get_digests(self) -> list | None:
+    def _get_digests(self) -> list[str] | None:
         """Get all digests of the releases.
 
         Returns
@@ -33,11 +34,17 @@ class UnchangedReleaseAnalyzer(BaseHeuristicAnalyzer):
         releases: dict | None = self.api_client.get_releases()
         if releases is None:
             return None
-        digests: list = [
-            metadata[0].get("digests").get(self.hash)
-            for _, metadata in releases.items()
-            if metadata and "digests" in metadata[0]
-        ]
+
+        digests: list[str] = []
+        for _, metadata in releases.items():
+            if metadata:
+                _digests: dict | None = json_extract(metadata[0], ["digests"], dict)
+                if _digests is None:
+                    continue
+                target_digest: str | None = json_extract(_digests, [self.hash_algo], str)
+                if target_digest is None:
+                    continue
+                digests.append(target_digest)
         return digests
 
     def analyze(self) -> tuple[HeuristicResult, dict]:
@@ -47,7 +54,7 @@ class UnchangedReleaseAnalyzer(BaseHeuristicAnalyzer):
         -------
             tuple[HeuristicResult, Confidence | None]: Result and confidence.
         """
-        digests: list | None = self._get_digests()
+        digests: list[str] | None = self._get_digests()
         if digests is None:
             return HeuristicResult.SKIP, {}
 
