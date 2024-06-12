@@ -15,7 +15,7 @@ Policy("test_policy", component_id, "") :-
     check_failed(component_id, "mcn_provenance_level_three_1"),
     check_failed(component_id, "mcn_provenance_witness_level_one_1"),
     check_failed(component_id, "mcn_trusted_builder_level_three_1"),
-    is_repo_purl(component_id, "https://github.com/npm/node-semver").
+    is_repo_url(component_id, "https://github.com/npm/node-semver").
 
 apply_policy_to("test_policy", component_id) :-
     is_component(component_id, "pkg:npm/semver@7.6.0").

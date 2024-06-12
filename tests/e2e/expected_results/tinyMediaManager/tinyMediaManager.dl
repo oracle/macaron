@@ -16,7 +16,7 @@ Policy("test_policy", component_id, "") :-
     check_failed(component_id, "mcn_provenance_level_three_1"),
     check_failed(component_id, "mcn_provenance_witness_level_one_1"),
     check_failed(component_id, "mcn_trusted_builder_level_three_1"),
-    is_repo_purl(component_id, "https://gitlab.com/tinyMediaManager/tinyMediaManager").
+    is_repo_url(component_id, "https://gitlab.com/tinyMediaManager/tinyMediaManager").
 
 apply_policy_to("test_policy", component_id) :-
     is_component(component_id, "pkg:gitlab.com/tinyMediaManager/tinyMediaManager@cca6b67a335074eca42136556f0a321f75dc4f48").

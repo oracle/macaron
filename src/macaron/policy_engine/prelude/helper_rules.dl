@@ -46,10 +46,10 @@ transitive_dependency(parent, dependency) :-
  is_repo(repo_id, repo_complete_name, component_id) :- repository(repo_id, component_id, repo_complete_name, _, _, _, _, _, _, _, _, _, _).
 
 /**
- *  Extract the id and PURL from the repository relation.
+ *  Extract the id and URL from the repository relation.
  */
-.decl is_repo_purl(repo_id: number, purl: symbol)
- is_repo_purl(repo_id, purl) :- repository(_, repo_id, _, _, _, _, _, purl, _, _, _, _, _).
+.decl is_repo_url(repo_id: number, url: symbol)
+ is_repo_url(repo_id, url) :- repository(_, repo_id, _, _, _, _, _, url, _, _, _, _, _).
 
 
 /**
