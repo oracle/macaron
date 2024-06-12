@@ -18,7 +18,9 @@ class BaseAnalyzer:
     ) -> None:
         self.name: str = name
         self.heuristic: HEURISTIC | None = heuristic
-        self.depends_on: list[tuple] | None = depends_on
+        self.depends_on: list[
+            tuple[HEURISTIC, RESULT]
+        ] | None = depends_on  # Contains the dependent heuristics and the expected result of each heuristic
 
     def analyze(self) -> tuple[RESULT, dict]:
         """Implement the base analyze method for seven analyzers."""
