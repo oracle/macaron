@@ -3,25 +3,35 @@
 
 """Define and initialize the base analyzer."""
 
+from abc import abstractmethod
+
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
 
-class BaseAnalyzer:
+class BaseHeuristicAnalyzer:
     """The base analyzer initialization."""
 
     def __init__(
         self,
-        name: str = "",
-        heuristic: HEURISTIC | None = None,
-        depends_on: list[tuple] | None = None,
+        name: str,
+        heuristic: HEURISTIC,
+        depends_on: list[tuple[HEURISTIC, HeuristicResult]] | None,
     ) -> None:
         self.name: str = name
-        self.heuristic: HEURISTIC | None = heuristic
+        self.heuristic: HEURISTIC = heuristic
         self.depends_on: list[
             tuple[HEURISTIC, HeuristicResult]
         ] | None = depends_on  # Contains the dependent heuristics and the expected result of each heuristic
 
-    def analyze(self) -> tuple[HeuristicResult, dict]:
-        """Implement the base analyze method for seven analyzers."""
-        return HeuristicResult.SKIP, {}
+    @abstractmethod
+    def analyze(self) -> tuple[HeuristicResult, int | dict]:
+        """
+        Implement the base analyze method for seven analyzers.
+
+        Returns
+        -------
+            tuple[HeuristicResult, int | dict]: Contain the heuristic result and the metadata of the package.
+            E.g. (1) The release frequency (2) {"maintainers_join_date": datetime}
+        """
+        raise NotImplementedError
