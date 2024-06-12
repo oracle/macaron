@@ -8,7 +8,7 @@ import logging
 import requests
 
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
-from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
+from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
@@ -22,28 +22,28 @@ class UnreachableProjectLinksAnalyzer(BaseAnalyzer):
         super().__init__(
             name="unreachable_project_links_analyzer",
             heuristic=HEURISTIC.UNREACHABLE_PROJECT_LINKS,
-            depends_on=[(HEURISTIC.EMPTY_PROJECT_LINK, RESULT.PASS)],  # Analyzing when this heuristic pass
+            depends_on=[(HEURISTIC.EMPTY_PROJECT_LINK, HeuristicResult.PASS)],  # Analyzing when this heuristic pass
         )
         self.api_client = api_client
 
-    def analyze(self) -> tuple[RESULT, dict]:
+    def analyze(self) -> tuple[HeuristicResult, dict]:
         """Analyze the package.
 
         Returns
         -------
-            tuple[RESULT, Confidence | None]: Result type and confidence type.
+            tuple[HeuristicResult, Confidence | None]: Result type and confidence type.
         """
         project_links: dict | None = self.api_client.get_project_links()
 
         if project_links is None:
-            return RESULT.SKIP, {}
+            return HeuristicResult.SKIP, {}
 
         for link in project_links.values():
             try:
                 response = requests.head(link, timeout=3)
                 if response.status_code < 400:
-                    return RESULT.PASS, {"project_links": project_links}
+                    return HeuristicResult.PASS, {"project_links": project_links}
             except requests.exceptions.RequestException as error:
                 logger.debug(error)
                 continue
-        return RESULT.FAIL, {}
+        return HeuristicResult.FAIL, {}

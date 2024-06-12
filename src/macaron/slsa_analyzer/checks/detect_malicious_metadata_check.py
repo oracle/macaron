@@ -13,7 +13,7 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
-from macaron.slsa_analyzer.pypi_heuristics.analysis_result import RESULT
+from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 from macaron.slsa_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
@@ -63,44 +63,71 @@ ANALYZERS = [
     SuspiciousSetupAnalyzer,
 ]
 
-SUSPICIOUS_COMBO: dict[tuple[RESULT, RESULT, RESULT, RESULT, RESULT, RESULT, RESULT], float] = {
-    (RESULT.FAIL, RESULT.SKIP, RESULT.FAIL, RESULT.SKIP, RESULT.SKIP, RESULT.FAIL, RESULT.FAIL): Confidence.HIGH,
-    (RESULT.FAIL, RESULT.SKIP, RESULT.FAIL, RESULT.SKIP, RESULT.SKIP, RESULT.FAIL, RESULT.PASS): Confidence.MEDIUM,
+SUSPICIOUS_COMBO: dict[
+    tuple[
+        HeuristicResult,
+        HeuristicResult,
+        HeuristicResult,
+        HeuristicResult,
+        HeuristicResult,
+        HeuristicResult,
+        HeuristicResult,
+    ],
+    float,
+] = {
     (
-        RESULT.FAIL,
-        RESULT.SKIP,
-        RESULT.PASS,
-        RESULT.FAIL,
-        RESULT.FAIL,
-        RESULT.FAIL,
-        RESULT.FAIL,
+        HeuristicResult.FAIL,
+        HeuristicResult.SKIP,
+        HeuristicResult.FAIL,
+        HeuristicResult.SKIP,
+        HeuristicResult.SKIP,
+        HeuristicResult.FAIL,
+        HeuristicResult.FAIL,
+    ): Confidence.HIGH,
+    (
+        HeuristicResult.FAIL,
+        HeuristicResult.SKIP,
+        HeuristicResult.FAIL,
+        HeuristicResult.SKIP,
+        HeuristicResult.SKIP,
+        HeuristicResult.FAIL,
+        HeuristicResult.PASS,
+    ): Confidence.MEDIUM,
+    (
+        HeuristicResult.FAIL,
+        HeuristicResult.SKIP,
+        HeuristicResult.PASS,
+        HeuristicResult.FAIL,
+        HeuristicResult.FAIL,
+        HeuristicResult.FAIL,
+        HeuristicResult.FAIL,
     ): Confidence.HIGH,  # The content changed and no-changed
     (
-        RESULT.FAIL,
-        RESULT.SKIP,
-        RESULT.PASS,
-        RESULT.FAIL,
-        RESULT.PASS,
-        RESULT.FAIL,
-        RESULT.FAIL,
+        HeuristicResult.FAIL,
+        HeuristicResult.SKIP,
+        HeuristicResult.PASS,
+        HeuristicResult.FAIL,
+        HeuristicResult.PASS,
+        HeuristicResult.FAIL,
+        HeuristicResult.FAIL,
     ): Confidence.HIGH,  # The content changed and no-changed
     (
-        RESULT.FAIL,
-        RESULT.SKIP,
-        RESULT.PASS,
-        RESULT.FAIL,
-        RESULT.FAIL,
-        RESULT.FAIL,
-        RESULT.PASS,
+        HeuristicResult.FAIL,
+        HeuristicResult.SKIP,
+        HeuristicResult.PASS,
+        HeuristicResult.FAIL,
+        HeuristicResult.FAIL,
+        HeuristicResult.FAIL,
+        HeuristicResult.PASS,
     ): Confidence.MEDIUM,  # The content changed and no-changed
     (
-        RESULT.FAIL,
-        RESULT.SKIP,
-        RESULT.PASS,
-        RESULT.FAIL,
-        RESULT.PASS,
-        RESULT.FAIL,
-        RESULT.PASS,
+        HeuristicResult.FAIL,
+        HeuristicResult.SKIP,
+        HeuristicResult.PASS,
+        HeuristicResult.FAIL,
+        HeuristicResult.PASS,
+        HeuristicResult.FAIL,
+        HeuristicResult.PASS,
     ): Confidence.MEDIUM,  # The content changed and no-changed
 }
 
@@ -117,14 +144,16 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             description=description,
         )
 
-    def _should_skip(self, results: dict[HEURISTIC, RESULT], depends_on: list[tuple[HEURISTIC, RESULT]]) -> bool:
+    def _should_skip(
+        self, results: dict[HEURISTIC, HeuristicResult], depends_on: list[tuple[HEURISTIC, HeuristicResult]]
+    ) -> bool:
         """Determine whether a particular heuristic result should be skipped based on the provided dependency heuristics.
 
         Args
         ----
-            results (dict[HEURISTIC, RESULT]): Containing all heuristic results, where the key is the heuristic and the value
-            is the result associated with that heuristic.
-            depends_on (list[tuple[HEURISTIC, RESULT]]): containing heuristics that the current heuristic depends on,
+            results (dict[HEURISTIC, HeuristicResult]): Containing all heuristic results, where the key is the heuristic and the
+            value is the result associated with that heuristic.
+            depends_on (list[tuple[HEURISTIC, HeuristicResult]]): containing heuristics that the current heuristic depends on,
             along with their expected results.
 
         Returns
@@ -133,12 +162,14 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             Otherwise, returns False.
         """
         for heuristic, expected_result in depends_on:
-            dep_heuristic_result: RESULT | None = results.get(heuristic, None)
+            dep_heuristic_result: HeuristicResult | None = results.get(heuristic, None)
             if dep_heuristic_result is not expected_result:
                 return True
         return False
 
-    def run_heuristics(self, api_client: PyPIApiClient) -> tuple[dict[HEURISTIC, RESULT], dict[str, int | dict]]:
+    def run_heuristics(
+        self, api_client: PyPIApiClient
+    ) -> tuple[dict[HEURISTIC, HeuristicResult], dict[str, int | dict]]:
         """Run the main logic of heuristics analysis.
 
         Args
@@ -147,9 +178,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         Returns
         -------
-            tuple[dict[HEURISTIC, RESULT], dict[str, Any]]: Containing the heuristic results and relevant metadata.
+            tuple[dict[HEURISTIC, HeuristicResult], dict[str, Any]]: Containing the heuristic results and relevant metadata.
         """
-        results: dict[HEURISTIC, RESULT] = {}
+        results: dict[HEURISTIC, HeuristicResult] = {}
         detail_infos: dict[str, int | dict] = {}
         for _analyzer in ANALYZERS:
             analyzer = _analyzer(api_client)
@@ -158,7 +189,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             if depends_on:
                 should_skip: bool = self._should_skip(results, depends_on)
                 if should_skip and isinstance(analyzer.heuristic, HEURISTIC):
-                    results[analyzer.heuristic] = RESULT.SKIP
+                    results[analyzer.heuristic] = HeuristicResult.SKIP
                     continue
             result, detail_info = analyzer.analyze()
             if analyzer.heuristic:
@@ -186,7 +217,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         api_client = PyPIApiClient(package)
         result, detail_infos = self.run_heuristics(api_client)
-        heuristics_fail = [heuristic.value for heuristic, result in result.items() if result is RESULT.FAIL]
+        heuristics_fail = [heuristic.value for heuristic, result in result.items() if result is HeuristicResult.FAIL]
         result_combo: tuple = tuple(result.values())
         confidence = SUSPICIOUS_COMBO.get(result_combo, None)
         result_type = CheckResultType.FAILED
