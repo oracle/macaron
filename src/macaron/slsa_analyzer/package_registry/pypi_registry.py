@@ -82,14 +82,19 @@ class PyPIApiClient:
         releases: dict | None = self.base_metadata.get("releases", None)
         return releases
 
-    def get_project_links(self) -> dict | None:
-        """Get all project links.
+    def get_project_links(self) -> dict[str, str] | None:
+        """Retrieve the project links from the base metadata.
+
+        This method accesses the "info" section of the base metadata to extract the "project_urls" dictionary,
+        which contains various links related to the project.
 
         Returns
         -------
-            dict | None: All link's name to link.
+            dict[str, str] | None: Containing project URLs where the keys are the names of the links
+                               and the values are the corresponding URLs. Returns None if the "project_urls"
+                               section is not found in the base metadata.
         """
-        project_urls: dict | None = self.base_metadata.get("info", None).get("project_urls", None)
+        project_urls: dict[str, str] | None = self.base_metadata.get("info", None).get("project_urls", None)
         return project_urls
 
     def get_latest_version(self) -> str | None:

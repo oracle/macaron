@@ -16,30 +16,18 @@ class EmptyProjectLinkAnalyzer(BaseAnalyzer):
         super().__init__(name="empty_project_link_analyzer", heuristic=HEURISTIC.EMPTY_PROJECT_LINK)
         self.api_client = api_client
 
-    def _get_links_total(self) -> tuple[int, dict] | None:
-        """Get total number of links.
-
-        Returns
-        -------
-            int | None: Total number of links.
-        """
-        project_links: dict | None = self.api_client.get_project_links()
-        if project_links is None:
-            return None
-        return len(project_links), project_links
-
     def analyze(self) -> tuple[RESULT, dict]:
         """Check whether the PyPI package has no project link.
 
         Returns
         -------
-            tuple[RESULT, dict]: Result and confidence.
+            tuple[RESULT, dict]: Result and project links if they exist. Otherwise, return an empty dictionary
         """
-        result: tuple[int, dict] | None = self._get_links_total()
+        project_links: dict[str, str] | None = self.api_client.get_project_links()
 
-        if result is None:
+        if project_links is None:
             return RESULT.SKIP, {}
 
-        if result[0] == 0:  # total
+        if len(project_links) == 0:  # total
             return RESULT.FAIL, {}
-        return RESULT.PASS, result[1]
+        return RESULT.PASS, project_links
