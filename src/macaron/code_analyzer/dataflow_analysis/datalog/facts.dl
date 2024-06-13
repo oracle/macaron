@@ -1,0 +1,157 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+// 
+// @file facts.dl
+//
+// Defines the input fact representation for the abstract represesentation of a CI pipeline.
+//
+
+#ifndef _FACTS_DL_
+#define _FACTS_DL_
+
+.type WriteStmt <: symbol
+.type ScopeId <: symbol
+.type Block <: symbol
+.type OperationId <: symbol
+.type DataSourceId <: symbol
+
+// Representation of a write/read location, consisting of a representation of the kind
+// of location and its identity, further distinguished by its containing scope.
+.type Location = [ scope: ScopeId, loc: LocationSpecifier ]
+
+// Representation of various kinds of write/read locations and their identity.
+.type LocationSpecifier =
+    // Filesystem location, identified by file path.
+    Filesystem { path: Value }
+
+    // Variable location, identified by name.
+    | Variable { name: Value }
+
+    // Artifact location, identified by artifact name and
+    // the file path of the specific file contained within.
+    | Artifact { name: Value, file: Value }
+
+// Representation of a value or expression.
+.type Value =
+    // A concrete, literal string.
+    StringLiteral { str: symbol }
+
+    // A value read from some location.
+    | Read { loc: Location }
+
+    // A representation of arbitrary data, with no information on its content,
+    // only the identity of where/when it originated.
+    | ArbitraryNewData { at: WriteStmt }
+
+    // A unary operator on another value, semantics vary by operator used.
+    | UnaryStringOp { operator: UnaryStringOperator, operand: Value }
+
+    // A binary operator on two other values, semantics vary by operator used.
+    | BinaryStringOp { operator: BinaryStringOperator, operand1: Value, operand2: Value }
+
+    // An induction var, this is valid only in WriteForEach statements, and
+    // represents a placeholder to be replaced with each successive element value.
+    | InductionVar { }
+
+    // A unary operator that produces some value from/about a location, semantics
+    // vary by operator.
+    | UnaryLocationReadOp { operator: UnaryLocationReadOperator, operand: Location }
+
+// Operators available for unary operator expressions.
+.type UnaryStringOperator = 
+    // Extracts the base name of a file path string.
+    BaseName { }
+
+// Operators available for binary operator expressions.
+.type BinaryStringOperator = 
+    // Concatenates the two string operands.
+    StringConcat { }
+
+// Operators available for unary location operators.
+.type UnaryLocationReadOperator = 
+    // Extracts all the file names contained within the given location.
+    // (currently only supports getting the files contained within an artifact)
+    FileList { }
+
+    // Represents any file path that is under/within a given directory.
+    | AnyFileUnderDirectory { }
+
+// A node of the control flow graph, either a write or a block.
+.type CFGElement = CFGWrite { writeStmt: WriteStmt }
+                | CFGBlock { block: Block }
+
+.type YamlSpecType = GitHubAction { }
+
+.type OperationType = 
+    YamlSpec { type: YamlSpecType }
+    | ShellCommand { }
+
+
+.type YamlFieldAccessPath = [ field: symbol, rest: OptionalYamlFieldAccessPath ]
+
+.type OptionalYamlFieldAccessPath =
+    NoYamlFields { }
+    | SomeYamlFields { list: YamlFieldAccessPath }
+
+.type OptionalValue = NoValue { }
+                    | SomeValue { value: Value }
+
+// A write statement, which writes a value to a location.
+.decl Write(writeStmt:WriteStmt, to:Location, value:Value)
+
+// A composite write statement, which, for each element of a collection, performs a
+// write to a location with a value, where both have any InductionVar subexprs replaced
+// with each successive element value.
+.decl WriteForEach(writeStmt:WriteStmt, collection:Value, to:Location, value:Value)
+
+// Inheritance relation between scopes, such that everything in fromScope is also
+// accessible in toScope, but not the reverse.
+.decl ScopeDirectlyInheritsFrom(fromScope:ScopeId, toScope:ScopeId)
+
+
+.decl Operation(operation:OperationId, operationType:OperationType)
+
+// Value representation of a shell command argument, if representable, otherwise NoValue
+.decl OperationShellCommandArg(operation:OperationId, index:number, value:OptionalValue)
+
+// Value representation of a yaml field value, if representable, otherwise NoValue
+.decl OperationYamlSpecField(operation:OperationId, accessPath:YamlFieldAccessPath, value:OptionalValue)
+
+
+//
+// Control flow representation
+//
+// Control flow is represented via two kinds of blocks, sequential blocks, which specify a
+// control flow graph of blocks/writes, and scheduler blocks, which specify dependency constraints
+// between a collection of blocks/writes (such that all member blocks/writes are executed once 
+// each in some satisfying order). A top-level block represents the entire program.
+//
+
+// Block is a sequential block.
+.decl SequentialBlock(block:Block)
+
+// Entry node of sequential block.
+.decl SequentialBlockEntry(block:Block, element:CFGElement)
+
+// Successor control flow edge between elements of a sequential block.
+.decl SequentialBlockEdge(block:Block, element:CFGElement, nextElement:CFGElement)
+
+
+// Block is a scheduler block.
+.decl SchedulerBlock(block:Block)
+
+// Member of scheduler block.
+.decl SchedulerBlockMember(block:Block, element:CFGElement)
+
+// Dependency relation between members of a scheduler block, such that the preceding element
+// must be executed before element is run.
+.decl SchedulerBlockDependency(block:Block, element:CFGElement, precedingElement:CFGElement)
+
+// A block can optionally be associated with an operation
+.decl BlockOperation(block:Block, operation:OperationId)
+
+// A single top-level block represents the entire program.
+.decl TopLevelBlock(block:Block)
+
+#endif

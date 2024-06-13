@@ -35,6 +35,7 @@ dependencies = [
     "cyclonedx-bom >=4.0.0,<5.0.0",
     "cyclonedx-python-lib[validation] >=7.3.4,<8.0.0",
     "beautifulsoup4 >= 4.12.0,<5.0.0",
+    "lark >= 1.1.9,<2.0.0",
 ]
 keywords = []
 # https://pypi.org/classifiers/
