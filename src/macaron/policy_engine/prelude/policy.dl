@@ -1,4 +1,4 @@
-/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 /**
@@ -41,7 +41,7 @@ apply_to_analysis(analysis_id) :-
 policy_applies_to(policy_id, component_id) :-
     apply_policy_to(policy_id, component_id),
     apply_to_analysis(analysis_id),
-    repository_analysis(analysis_id, component_id, _, _).
+    component_analysis(analysis_id, component_id).
 
 /**
  *  Policies that are applied to a component and the requirements are not met.
