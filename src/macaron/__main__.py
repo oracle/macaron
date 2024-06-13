@@ -191,6 +191,9 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
 
         if ("failed_policies" in result) and any(result["failed_policies"]):
             return os.EX_DATAERR
+        if len(result.get("passed_policies", [])) == 0:
+            logger.error("Found no component passing policies.")
+            return os.EX_DATAERR
 
         return os.EX_OK
 
