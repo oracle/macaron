@@ -585,6 +585,7 @@ else
 fi
 
 docker run \
+    --platform=linux/amd64 \
     --network=host \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" \
