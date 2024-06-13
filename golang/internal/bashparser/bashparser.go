@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"mvdan.cc/sh/v3/syntax"
+	"mvdan.cc/sh/v3/syntax/typedjson"
 )
 
 // CMDResult is used to export the bash command results in JSON.
@@ -67,4 +68,40 @@ func ParseCommands(data string) (string, error) {
 	}
 	return string(result_bytes), nil
 
+}
+
+func ParseRaw(data string) (string, error) {
+	// Replace GitHub Actions's expressions with ``$MACARON_UNKNOWN``` variable because the bash parser
+	// doesn't recognize such expressions. For example: ``${{ foo }}`` will be replaced by ``$MACARON_UNKNOWN``.
+	// Note that we don't use greedy matching, so if we have `${{ ${{ foo }} }}`, it will not be replaced by
+	// `$MACARON_UNKNOWN`.
+	// See: https://docs.github.com/en/actions/learn-github-actions/expressions.
+	var re, reg_error = regexp.Compile(`\$\{\{.*?\}\}`)
+	if reg_error != nil {
+		return "", reg_error
+	}
+
+	// We replace the GH Actions variables with "$MACARON_UNKNOWN".
+	data = string(re.ReplaceAll([]byte(data), []byte("$$MACARON_UNKNOWN")))
+	data_str := strings.NewReader(data)
+	data_parsed, parse_err := syntax.NewParser().Parse(data_str, "")
+	if parse_err != nil {
+		return "", parse_err
+	}
+
+	b := new(strings.Builder)
+	encode_err := typedjson.Encode(b, data_parsed)
+	if encode_err != nil {
+		return "", encode_err
+	}
+
+	return b.String(), nil
+}
+
+func Parse(data string, raw bool) (string, error) {
+	if raw {
+		return ParseRaw(data)
+	} else {
+		return ParseCommands(data)
+	}
 }

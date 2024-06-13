@@ -1,0 +1,34 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+// 
+// @file facts-input-files
+// 
+// Input directives to import CI pipeline representation fact files.
+// Requires fact files to be in rfc4180 format, so that the values have
+// proper escaping (since they must encode arbitrary strings taken from
+// the original input workflow files, nested within algebraic data type
+// syntax).
+// 
+
+#ifndef _FACTS_INPUT_FILES_DL_
+#define _FACTS_INPUT_FILES_DL_
+
+#include "facts.dl"
+
+.input Write(IO=file, filename="Write.facts", rfc4180=true)
+.input WriteForEach(IO=file, filename="WriteForEach.facts", rfc4180=true)
+.input ScopeDirectlyInheritsFrom(IO=file, filename="ScopeDirectlyInheritsFrom.facts", rfc4180=true)
+.input SequentialBlock(IO=file, filename="SequentialBlock.facts", rfc4180=true)
+.input SequentialBlockEntry(IO=file, filename="SequentialBlockEntry.facts", rfc4180=true)
+.input SequentialBlockEdge(IO=file, filename="SequentialBlockEdge.facts", rfc4180=true)
+.input SchedulerBlock(IO=file, filename="SchedulerBlock.facts", rfc4180=true)
+.input SchedulerBlockMember(IO=file, filename="SchedulerBlockMember.facts", rfc4180=true)
+.input SchedulerBlockDependency(IO=file, filename="SchedulerBlockDependency.facts", rfc4180=true)
+.input TopLevelBlock(IO=file, filename="TopLevelBlock.facts", rfc4180=true)
+.input Operation(IO=file, filename="Operation.facts", rfc4180=true)
+.input OperationShellCommandArg(IO=file, filename="OperationShellCommandArg.facts", rfc4180=true)
+.input OperationYamlSpecField(IO=file, filename="OperationYamlSpecField.facts", rfc4180=true)
+.input BlockOperation(IO=file, filename="BlockOperation.facts", rfc4180=true)
+
+#endif

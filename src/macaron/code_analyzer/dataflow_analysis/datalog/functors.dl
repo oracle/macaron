@@ -1,0 +1,19 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+//
+// @file
+//
+// Defines signatures of external functors (implemented separately in C++).
+//
+
+#ifndef _FUNCTORS_DL_
+#define _FUNCTORS_DL_
+
+// Returns the basename of the given filepath
+.functor basename(path:symbol):symbol stateful
+
+// Returns whether the given filepath has the given dirpath as a prefix
+.functor isUnderDir(dirpath:symbol, filepath:symbol):number
+
+#endif

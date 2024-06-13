@@ -14,13 +14,14 @@ import logging
 import os
 import subprocess  # nosec B404
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from macaron.code_analyzer.call_graph import BaseNode
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.errors import CallGraphError, ParseError
 from macaron.parsers.actionparser import get_run_step
+from macaron.parsers.bashparser_model import File
 from macaron.parsers.github_workflow_model import Step
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -150,6 +151,60 @@ def parse(bash_content: str, macaron_path: str | None = None) -> dict:
     try:
         if result.returncode == 0:
             return dict(json.loads(result.stdout.decode("utf-8")))
+
+        raise ParseError(f"Bash script parser failed: {result.stderr.decode('utf-8')}")
+
+    except json.JSONDecodeError as error:
+        raise ParseError("Error while loading the parsed bash script.") from error
+
+
+def parse_raw(bash_content: str, macaron_path: str | None = None) -> File:
+    """Parse a bash script's content.
+
+    Parameters
+    ----------
+    bash_content : str
+        Bash script content
+    macaron_path : str | None
+        Macaron's root path (optional).
+
+    Returns
+    -------
+    bashparser_model.File
+        The parsed bash script AST in typed JSON (dict) format.
+
+    Raises
+    ------
+    ParseError
+        When parsing fails with errors.
+    """
+    if not macaron_path:
+        macaron_path = global_config.macaron_path
+    cmd = [
+        os.path.join(macaron_path, "bin", "bashparser"),
+        "-input",
+        bash_content,
+        "-raw",
+    ]
+
+    try:
+        result = subprocess.run(  # nosec B603
+            cmd,
+            capture_output=True,
+            check=True,
+            cwd=macaron_path,
+            timeout=defaults.getint("bashparser", "timeout", fallback=30),
+        )
+    except (
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        FileNotFoundError,
+    ) as error:
+        raise ParseError("Error while parsing bash script.") from error
+
+    try:
+        if result.returncode == 0:
+            return cast(File, json.loads(result.stdout.decode("utf-8")))
 
         raise ParseError(f"Bash script parser failed: {result.stderr.decode('utf-8')}")
 

@@ -1,0 +1,489 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#ifndef _VALUE_ANALYSIS_DL_
+#define _VALUE_ANALYSIS_DL_
+
+//
+// @file value-analysis.dl
+//
+// Core analysis for resolving values and locations, evaluating expressions, and resolving corresponding writes and reads.
+//
+
+#include "facts.dl"
+#include "cfg-analysis.dl"
+#include "functors.dl"
+
+
+//
+// ValueContext is a representation of a context in which a value is to be resolved,
+// encapsulating all the features that could cause the same value expression tree to
+// resolve to a different value depending on the context. This includes the program
+// point (e.g. write statement or block representing an operation containing values)
+// at which the value is to be resolved (since the value of a read expression
+// may depend on when exactly the read happens), and optionally an induction var value
+// (used for WriteForEach statements, since the induction vars in the value expression
+// are replaced with a different value for each "iteration").
+//
+
+.type ValueContext = [ cfgElement: CFGElement, inductionVarVal: OptionalValue ]
+
+
+//
+// Transitive closure of scope inheritance.
+//
+
+.decl ScopeInheritsFrom(fromScope:ScopeId, toScope:ScopeId)
+
+ScopeInheritsFrom(fromScope, toScope) :-
+    ScopeDirectlyInheritsFrom(fromScope, toScope).
+
+ScopeInheritsFrom(fromScope, toScope) :-
+    ScopeInheritsFrom(fromScope, intermediateScope),
+    ScopeDirectlyInheritsFrom(intermediateScope, toScope).
+
+
+// A version of the Write relation with full context information.
+// Includes both normal Writes, as well as all the writes expanded from
+// a WriteForEach.
+.decl WriteInContext(valueContext:ValueContext, location:Location, value:Value)
+
+
+//
+// Collection of all values/reads/read-ops/locations that are present/referenced
+// within a write, including subexprs and resolved or partially resolved values.
+// Resolution will be attempted for these values.
+//
+.decl ContextContainsValue(valueContext:ValueContext, value:Value)
+.decl ContextContainsRead(valueContext:ValueContext, from:Location)
+.decl ContextContainsReadOp(valueContext:ValueContext, op:UnaryLocationReadOperator, from:Location)
+.decl ContextContainsLoc(valueContext:ValueContext, loc:Location)
+
+//
+// Relation of some value that exists in some context, to more-resolved versions of that value.
+//
+.decl ResolvedValueInContext(valueContext:ValueContext, value:Value, resolvedValue:Value)
+.decl ResolvedLocationInContext(valueContext:ValueContext, loc:Location, resolvedLoc:Location)
+
+// The write context for a normal write statement is just the write statement itself.
+WriteInContext(valueContext, loc, value) :-
+    Write(writeStmt, loc, value),
+    valueContext = [$CFGWrite(writeStmt), $NoValue()].
+
+
+ContextContainsValue(valueContext, value) :-
+    WriteInContext(valueContext, _, value).
+
+ContextContainsValue(valueContext, subValue) :-
+    ContextContainsValue(valueContext, value),
+    (value = $BinaryStringOp(_, subValue, _) ; value = $BinaryStringOp(_, _, subValue)).
+
+ContextContainsValue(valueContext, subValue) :-
+    ContextContainsValue(valueContext, value),
+    value = $UnaryStringOp(_, subValue).
+
+ContextContainsValue(valueContext, resolvedValue) :-
+    ContextContainsValue(valueContext, value),
+    ResolvedValueInContext(valueContext, value, resolvedValue).
+
+ContextContainsValue(valueContext, value) :-
+    ContextContainsLoc(valueContext, loc),
+    (loc = [_, $Filesystem(value)] ; loc = [_, $Variable(value)] ; loc = [_, $Artifact(value, _)] ; loc = [_, $Artifact(_, value)]).
+
+ContextContainsRead(valueContext, loc) :-
+    ContextContainsValue(valueContext, value),
+    value = $Read(loc).
+
+ContextContainsRead(valueContext, resolvedLoc) :-
+    ContextContainsRead(valueContext, loc),
+    ResolvedLocationInContext(valueContext, loc, resolvedLoc).
+
+ContextContainsReadOp(valueContext, op, loc) :-
+    ContextContainsValue(valueContext, value),
+    value = $UnaryLocationReadOp(op, loc).
+
+ContextContainsReadOp(valueContext, op, resolvedLoc) :-
+    ContextContainsReadOp(valueContext, op, loc),
+    ResolvedLocationInContext(valueContext, loc, resolvedLoc).
+
+ContextContainsLoc(valueContext, loc) :-
+    ContextContainsRead(valueContext, loc).
+
+ContextContainsLoc(valueContext, loc) :-
+    ContextContainsReadOp(valueContext, _, loc).
+
+ContextContainsLoc(valueContext, loc) :-
+    WriteInContext(valueContext, loc, _).
+
+ContextContainsLoc(valueContext, resolvedLoc) :-
+    ContextContainsLoc(valueContext, loc),
+    ResolvedLocationInContext(valueContext, loc, resolvedLoc).
+
+ContextContainsValue(valueContext, collectionValue) :-
+    WriteForEach(writeStmt, collectionValue, _, _),
+    valueContext = [$CFGWrite(writeStmt), $NoValue()].
+
+ContextContainsValue(valueContext, value) :-
+    BlockOperation(block, operation),
+    valueContext = [$CFGBlock(block), $NoValue()],
+    Operation(operation, $YamlSpec(yamlSpecType)),
+    OperationYamlSpecField(operation, _, $SomeValue(value)).
+
+ContextContainsValue(valueContext, value) :-
+    BlockOperation(block, operation),
+    valueContext = [$CFGBlock(block), $NoValue()],
+    Operation(operation, $ShellCommand()),
+    OperationShellCommandArg(operation, _, $SomeValue(value)).
+
+
+//
+// Include induction-var-containing unexpanded versions of WriteForEach
+// loc and value for completeness (possibly unnecessary)
+//
+
+ContextContainsLoc(valueContext, loc) :-
+    WriteForEach(writeStmt, _, loc, _),
+    valueContext = [$CFGWrite(writeStmt), $NoValue()].
+
+ContextContainsValue(valueContext, value) :-
+    WriteForEach(writeStmt, _, _, value),
+    valueContext = [$CFGWrite(writeStmt), $NoValue()].
+
+
+#ifdef DEBUG_OUTPUT
+.output WriteInContext(IO=stdout)
+.output ContextContainsRead(IO=stdout)
+.output ContextContainsReadOp(IO=stdout)
+.output ContextContainsLoc(IO=stdout)
+.output ContextContainsValue(IO=stdout)
+#endif
+
+// Collection of any referenced values, which is the trigger for any
+// necessary context-independent processing.
+.decl RelevantValue(value:Value)
+
+RelevantValue(value) :-
+    ContextContainsValue(_, value).
+
+// Whether a value is concrete i.e. contains nothing that requires further resolution, evaluation, or simplification.
+.decl RelevantValueIsConcrete(value:Value)
+
+RelevantValueIsConcrete(value) :-
+    RelevantValue(value),
+    (value = $StringLiteral(s) ; value = $ArbitraryNewData(w)).
+
+// Collection of any referenced locations, which is the trigger for any
+// necessary context-independent processing.
+.decl RelevantLoc(loc:Location)
+
+RelevantLoc(loc) :-
+    ContextContainsLoc(_, loc).
+
+// Whether a location is concrete i.e. contains nothing that requires further resolution, evaluation, or simplification.
+.decl RelevantLocIsConcrete(loc:Location)
+
+RelevantLocIsConcrete(loc) :-
+    RelevantLoc(loc),
+    loc = [scope, $Filesystem(path)],
+    RelevantValueIsConcrete(path).
+
+RelevantLocIsConcrete(loc) :-
+    RelevantLoc(loc),
+    loc = [scope, $Variable(name)],
+    RelevantValueIsConcrete(name).
+
+RelevantLocIsConcrete(loc) :-
+    RelevantLoc(loc),
+    loc = [scope, $Artifact(name, file)],
+    RelevantValueIsConcrete(name),
+    RelevantValueIsConcrete(file).
+
+// Writes corresponding to a write, i.e. corresponding writes from which the written value may propagate to a read of
+// the specified location at the point of the containing write.
+.decl ReadCorrespondingWrite(containingValueContext:ValueContext, loc:Location, correspondingValueContext:ValueContext)
+
+// Writes corresponding to a write, with propagated value.
+.decl ReadCorrespondingValue(containingValueContext:ValueContext, loc:Location, correspondingValueContext:ValueContext, value:Value)
+
+// Collection of file name values that may be contained with the artifact location referenced at the containing write.
+.decl ArtifactFileListCorrespondingFile(containingValueContext:ValueContext, loc:Location, file:Value)
+
+// Collection of file name values that are observed to have been referenced, which are under the directory path specified by
+// the location (referenced in the write context).
+.decl AnyFileUnderDirectoryCorrespondingObservedLoc(containingValueContext:ValueContext, loc:Location, file:Value)
+
+ReadCorrespondingWrite(containingValueContext, loc, correspondingValueContext) :-
+    ContextContainsRead(containingValueContext, loc),
+    containingValueContext = [containingCFGElement, inductionVarVal],
+    WriteInContext(correspondingValueContext, writeLoc, _),
+    correspondingValueContext = [correspondingWriteCFGElement, corrIndVarVal],
+    ResolvedLocationInContext(correspondingValueContext, writeLoc, resolvedLoc),
+    RelevantLocIsConcrete(loc),
+    resolvedLoc = [writeScope, locSpec],
+    loc = [readScope, locSpec],
+    (readScope = writeScope ; ScopeInheritsFrom(writeScope, readScope)),
+    CFGElementMayPrecede(correspondingWriteCFGElement, containingCFGElement).
+
+
+ReadCorrespondingValue(containingValueContext, loc, correspondingValueContext, resolvedValue) :-
+    ReadCorrespondingWrite(containingValueContext, loc, correspondingValueContext),
+    WriteInContext(correspondingValueContext, _, value),
+    ResolvedValueInContext(correspondingValueContext, value, resolvedValue),
+    RelevantValueIsConcrete(resolvedValue).
+
+ArtifactFileListCorrespondingFile(containingValueContext, loc, file) :-
+    ContextContainsReadOp(containingValueContext, $FileList(), loc),
+    loc = [readScope, locSpec],
+    locSpec = $Artifact(name, fileIsIgnored),
+    containingValueContext = [containingCFGElement, inductionVarVal],
+    WriteInContext(correspondingValueContext, writeLoc, _),
+    correspondingValueContext = [correspondingWriteCFGElement, $NoValue()],
+    ResolvedLocationInContext(correspondingValueContext, writeLoc, resolvedLoc),
+    RelevantLocIsConcrete(loc),
+    RelevantLocIsConcrete(resolvedLoc),
+    resolvedLoc = [writeScope, actualLocSpec],
+    actualLocSpec = $Artifact(name, file),
+    (readScope = writeScope ; ScopeInheritsFrom(writeScope, readScope)),
+    CFGElementMayPrecede(correspondingWriteCFGElement, containingCFGElement).
+
+AnyFileUnderDirectoryCorrespondingObservedLoc(containingValueContext, loc, file) :-
+    ContextContainsReadOp(containingValueContext, $AnyFileUnderDirectory(), loc),
+    loc = [writeScope, locSpec],
+    locSpec = $Filesystem(dirpath),
+    ContextContainsLoc(correspondingValueContext, otherLoc),
+    otherLoc = [otherScope, otherLocSpec],
+    (writeScope = otherScope ; ScopeInheritsFrom(writeScope, otherScope) ; ScopeInheritsFrom(otherScope, writeScope)),
+    otherLocSpec = $Filesystem(file),
+    file = $StringLiteral(filepath),
+    dirpath = $StringLiteral(path),
+    @isUnderDir(path, filepath) = 1.
+
+#ifdef DEBUG_OUTPUT
+.output ReadCorrespondingWrite(IO=stdout)
+.output ReadCorrespondingValue(IO=stdout)
+.output ArtifactFileListCorrespondingFile(IO=stdout)
+.output AnyFileUnderDirectoryCorrespondingObservedLoc(IO=stdout)
+#endif
+
+
+//
+// Resolve value expressions by "rebuilding" the expression tree from the bottom up,
+// replacing read values and induction vars with their actual resolved values, and
+// evaluating operators when possible.
+//
+
+// Concrete values are already resolved.
+ResolvedValueInContext(valueContext, value, value) :-
+    ContextContainsValue(valueContext, value),
+    (value = $StringLiteral(s) ; value = $ArbitraryNewData(w)).
+
+// Resolve reads to their values.
+ResolvedValueInContext(valueContext, value, resolvedValue) :-
+    ContextContainsValue(valueContext, value),
+    value = $Read(loc),
+    ReadCorrespondingValue(valueContext, loc, _, resolvedValue).
+
+// Rewrite read expressions with the resolved location expression.
+ResolvedValueInContext(valueContext, value, resolvedValue) :-
+    ContextContainsValue(valueContext, value),
+    value = $Read(loc),
+    ResolvedLocationInContext(valueContext, loc, resolvedLoc),
+    resolvedValue = $Read(resolvedLoc).
+
+// Evaluate string concat expressions when operands are (or were resolved to)
+// concrete strings.
+ResolvedValueInContext(valueContext, value, resolvedValue) :-
+    ContextContainsValue(valueContext, value),
+    value = $BinaryStringOp($StringConcat(), operand1, operand2),
+    ResolvedValueInContext(valueContext, operand1, resolvedOperand1),
+    resolvedOperand1 = $StringLiteral(operand1Str),
+    ResolvedValueInContext(valueContext, operand2, resolvedOperand2),
+    resolvedOperand2 = $StringLiteral(operand2Str),
+    resolvedValue = $StringLiteral(cat(operand1Str, operand2Str)).
+
+// Evaluate basename expressions when operand is (or was resolved to)
+// a concrete string, by calling out to an external functor.
+ResolvedValueInContext(valueContext, value, resolvedValue) :-
+    ContextContainsValue(valueContext, value),
+    value = $UnaryStringOp($BaseName(), operand),
+    ResolvedValueInContext(valueContext, operand, resolvedOperand),
+    resolvedOperand = $StringLiteral(operandStr),
+    resolvedValue = $StringLiteral(@basename(operandStr)).
+
+// Transitive closure of successive resolution steps.
+ResolvedValueInContext(valueContext, value, resolvedValue) :-
+    ResolvedValueInContext(valueContext, value, intermediateValue),
+    ResolvedValueInContext(valueContext, intermediateValue, resolvedValue).
+
+// Resolve "artifact file list" expressions to the corresponding file name values.
+ResolvedValueInContext(valueContext, value, resolvedValue) :-
+    ContextContainsValue(valueContext, value),
+    value = $UnaryLocationReadOp($FileList(), loc),
+    ArtifactFileListCorrespondingFile(valueContext, loc, resolvedValue).
+
+// Resolve "any file under directory" expressions to the corresponding observed
+// concrete file name values.
+ResolvedValueInContext(valueContext, value, resolvedValue) :-
+    ContextContainsValue(valueContext, value),
+    value = $UnaryLocationReadOp($AnyFileUnderDirectory(), loc),
+    AnyFileUnderDirectoryCorrespondingObservedLoc(valueContext, loc, resolvedValue).
+
+// Replace induction vars with the value specified in the write context.
+ResolvedValueInContext(valueContext, value, resolvedValue) :-
+    ContextContainsValue(valueContext, value),
+    value = $InductionVar(),
+    valueContext = [$CFGWrite(writeStmt), inductionVarVal],
+    inductionVarVal = $SomeValue(resolvedValue).
+
+// Rewrite Filesystem location expressions with resolved path value expression.
+ResolvedLocationInContext(valueContext, loc, resolvedLoc) :-
+    ContextContainsLoc(valueContext, loc),
+    loc = [scope, $Filesystem(path)],
+    ResolvedValueInContext(valueContext, path, resolvedPath),
+    resolvedLoc = [scope, $Filesystem(resolvedPath)].
+
+// Rewrite Variable location expressions with resolved name value expression.
+ResolvedLocationInContext(valueContext, loc, resolvedLoc) :-
+    ContextContainsLoc(valueContext, loc),
+    loc = [scope, $Variable(name)],
+    ResolvedValueInContext(valueContext, name, resolvedName),
+    resolvedLoc = [scope, $Variable(resolvedName)].
+
+// Rewrite Artifact location expressions with resolved name and file value expressions.
+ResolvedLocationInContext(valueContext, loc, resolvedLoc) :-
+    ContextContainsLoc(valueContext, loc),
+    loc = [scope, $Artifact(name, file)],
+    ResolvedValueInContext(valueContext, name, resolvedName),
+    ResolvedValueInContext(valueContext, file, resolvedFile),
+    resolvedLoc = [scope, $Artifact(resolvedName, resolvedFile)].
+
+
+// Resolved versions of written value at a write.
+.decl WriteResolvedValue(valueContext:ValueContext, resolvedValue:Value)
+
+WriteResolvedValue(valueContext, resolvedValue) :-
+    WriteInContext(valueContext, _, value),
+    ResolvedValueInContext(valueContext, value, resolvedValue).
+
+
+#ifdef DEBUG_OUTPUT
+.output WriteResolvedValue(IO=stdout)
+.output WriteResolvedLocation(IO=stdout)
+.output ResolvedValueInContext(IO=stdout)
+.output ResolvedLocationInContext(IO=stdout)
+#endif
+
+// Resolved versions of written-to location at a write.
+.decl WriteResolvedLocation(valueContext:ValueContext, resolvedLoc:Location)
+
+WriteResolvedLocation(valueContext, resolvedLoc) :-
+    WriteInContext(valueContext, loc, _),
+    ResolvedLocationInContext(valueContext, loc, resolvedLoc).
+
+// Resolved versions of WriteForEach collection values.
+.decl WriteForEachResolvedCollection(writeStmt:WriteStmt, resolvedCollection:Value)
+
+WriteForEachResolvedCollection(writeStmt, resolvedCollection) :-
+    WriteForEach(writeStmt, collection, _, _),
+    valueContext = [$CFGWrite(writeStmt), $NoValue()],
+    ResolvedValueInContext(valueContext, collection, resolvedCollection),
+    RelevantValueIsConcrete(resolvedCollection).
+
+// Expand WriteForEach into a write for each collection value
+// (with the collection value becoming the induction var
+// replacement value in the write context).
+WriteInContext(valueContext, loc, value) :-
+    WriteForEach(writeStmt, collection, loc, value),
+    valueContext = [$CFGWrite(writeStmt), $SomeValue(collectionValue)],
+    WriteForEachResolvedCollection(writeStmt, collectionValue).
+
+.decl OperationShellCommandResolvedArg(operation:OperationId, index:number, resolvedValue:Value)
+
+OperationShellCommandResolvedArg(operation, index, resolvedValue) :-
+    OperationShellCommandArg(operation, index, $SomeValue(value)),
+    BlockOperation(block, operation),
+    valueContext = [$CFGBlock(block), $NoValue()],
+    ResolvedValueInContext(valueContext, value, resolvedValue).
+
+.decl OperationYamlSpecResolvedField(operation:OperationId, accessPath:YamlFieldAccessPath, resolvedValue:Value)
+
+OperationYamlSpecResolvedField(operation, accessPath, resolvedValue) :-
+    OperationYamlSpecField(operation, accessPath, $SomeValue(value)),
+    BlockOperation(block, operation),
+    valueContext = [$CFGBlock(block), $NoValue()],
+    ResolvedValueInContext(valueContext, value, resolvedValue).
+
+#ifdef DEBUG_OUTPUT
+.output WriteForEachResolvedCollection(IO=stdout)
+.output WriteForEach(IO=stdout)
+.output OperationShellCommandResolvedArg(IO=stdout)
+.output OperationYamlSpecResolvedField(IO=stdout)
+#endif
+
+// Fully resolved (i.e. resolved to a concrete value) written value of a write.
+.decl WriteFullyResolvedValue(valueContext:ValueContext, value:Value)
+
+WriteFullyResolvedValue(valueContext, value) :-
+    WriteResolvedValue(valueContext, value),
+    RelevantValueIsConcrete(value).
+
+#ifdef DEBUG_OUTPUT
+.output WriteFullyResolvedValue(IO=stdout)
+#endif
+
+// Fully resolved (i.e. resolved to concrete values) written-to location of a write.
+.decl WriteFullyResolvedLocation(valueContext:ValueContext, loc:Location)
+
+WriteFullyResolvedLocation(valueContext, loc) :-
+    WriteResolvedLocation(valueContext, loc),
+    RelevantLocIsConcrete(loc).
+
+#ifdef DEBUG_OUTPUT
+.output WriteFullyResolvedLocation(IO=stdout)
+#endif
+
+.decl OperationShellCommandFullyResolvedArg(operation:OperationId, index:number, resolvedValue:Value)
+
+OperationShellCommandFullyResolvedArg(operation, index, resolvedValue) :-
+    OperationShellCommandResolvedArg(operation, index, resolvedValue),
+    RelevantValueIsConcrete(resolvedValue).
+
+.decl OperationYamlSpecFullyResolvedField(operation:OperationId, accessPath:YamlFieldAccessPath, resolvedValue:Value)
+
+OperationYamlSpecFullyResolvedField(operation, accessPath, resolvedValue) :-
+    OperationYamlSpecResolvedField(operation, accessPath, resolvedValue),
+    RelevantValueIsConcrete(resolvedValue).
+
+#ifdef DEBUG_OUTPUT
+.output OperationShellCommandFullyResolvedArg(IO=stdout)
+.output OperationYamlSpecFullyResolvedField(IO=stdout)
+#endif
+
+// Fully resolved (i.e. resolved to concrete values) artifacts produced by the pipeline.
+.decl FullyResolvedArtifact(scope:ScopeId, name:symbol, file:symbol, data:Value)
+
+FullyResolvedArtifact(scope, name, file, data) :-
+    WriteFullyResolvedLocation(valueContext, loc),
+    loc = [scope, $Artifact(nameVal, fileVal)],
+    nameVal = $StringLiteral(name),
+    fileVal = $StringLiteral(file),
+    WriteFullyResolvedValue(valueContext, data).
+
+
+// Artifacts produced by the pipeline, where the name and file could be fully resolved
+// (i.e. resolved to concrete values), where the value may or may not be fully resolvable.
+.decl ResolvedArtifactNameAndFile(scope:ScopeId, name:symbol, file:symbol)
+
+ResolvedArtifactNameAndFile(scope, name, file) :-
+    WriteFullyResolvedLocation(_, loc),
+    loc = [scope, $Artifact(nameVal, fileVal)],
+    nameVal = $StringLiteral(name),
+    fileVal = $StringLiteral(file).
+
+
+#ifdef DEBUG_OUTPUT
+.output FullyResolvedArtifact(IO=stdout)
+.output ResolvedArtifactNameAndFile(IO=stdout)
+#endif
+
+#endif

@@ -1,0 +1,30 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+//
+// @file ci-dataflow.dl
+//
+// Main file defining complete CI pipeline analysis.
+//
+
+#ifndef _CI_DATAFLOW_DL_
+#define _CI_DATAFLOW_DL_
+
+#include "facts.dl"
+#include "facts-input-files.dl"
+#include "functors.dl"
+#include "cfg-analysis.dl"
+#include "value-analysis.dl"
+
+// Final output relation
+.output FullyResolvedArtifact(IO=stdout)
+.output FullyResolvedArtifact(IO=file, filename="FullyResolvedArtifact.facts", rfc4180=true)
+.output OperationShellCommandFullyResolvedArg(IO=stdout)
+.output OperationYamlSpecFullyResolvedField(IO=stdout)
+
+.output RelevantValue(IO=sqlite, filename="facts.db")
+.output RelevantLoc(IO=sqlite, filename="facts.db")
+.output RelevantValue(IO=file, filename="RelevantValue.facts", rfc4180=true)
+.output RelevantLoc(IO=file, filename="RelevantLoc.facts", rfc4180=true)
+
+#endif
