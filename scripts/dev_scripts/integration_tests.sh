@@ -724,8 +724,6 @@ echo -e "-----------------------------------------------------------------------
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/micronaut-core/test_deploy_info.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/micronaut-core/test_deploy_info.json
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/micronaut-core/micronaut-core.json
-JSON_RESULT=$WORKSPACE/output/reports/maven/io_micronaut/micronaut-core/micronaut-core.json
 DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/micronaut-core.ini
 $RUN_MACARON -dp $DEFAULTS_FILE analyze -purl pkg:maven/io.micronaut/micronaut-core@4.2.3 --skip-deps || log_fail
 
