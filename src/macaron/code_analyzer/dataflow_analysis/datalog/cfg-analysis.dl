@@ -1,0 +1,215 @@
+/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+//
+// @file 
+//
+// Analysis related to the Control Flow Graph (CFG) of the CI pipeline.
+//
+
+#ifndef _CFG_ANALYSIS_DL_
+#define _CFG_ANALYSIS_DL_
+
+#include "facts.dl"
+
+.decl CFGElementExists(element:CFGElement)
+.decl ParentBlock(element:CFGElement, block:Block)
+.decl AncestorBlock(element:CFGElement, block:Block)
+
+
+//
+// A CFG element exists if it appears anywhere in the control flow representation
+//
+
+CFGElementExists(element) :-
+    SequentialBlock(block),
+    element = $CFGBlock(block).
+
+CFGElementExists(element) :-
+    SequentialBlockEntry(block, _),
+    element = $CFGBlock(block).
+
+CFGElementExists(element) :-
+    SequentialBlockEntry(_, element).
+
+CFGElementExists(element) :-
+    SequentialBlockEdge(block, _, _),
+    element = $CFGBlock(block).
+
+CFGElementExists(element) :-
+    (SequentialBlockEdge(_, element, _) ; SequentialBlockEdge(_, _, element)).
+
+CFGElementExists(element) :-
+    Write(write, _, _),
+    element = $CFGWrite(write).
+
+CFGElementExists(element) :-
+    SchedulerBlock(block),
+    element = $CFGBlock(block).
+
+CFGElementExists(element) :-
+    SchedulerBlockMember(block, _),
+    element = $CFGBlock(block).
+
+CFGElementExists(element) :-
+    SchedulerBlockMember(_, element).
+
+CFGElementExists(element) :-
+    SchedulerBlockDependency(block, _, _),
+    element = $CFGBlock(block).
+
+CFGElementExists(element) :-
+    (SchedulerBlockDependency(_, element, _) ; SchedulerBlockDependency(_, _, element)).
+
+
+//
+// Compute direct containing parent block for each element, as well
+// as transitive closure of ancestors.
+//
+
+ParentBlock(element, block) :-
+    (SequentialBlockEntry(block, element) ; 
+        SequentialBlockEdge(block, element, _) ; 
+        SequentialBlockEdge(block, _, element) ;
+        SchedulerBlockMember(block, element)).
+
+AncestorBlock(element, block) :-
+    ParentBlock(element, block).
+
+AncestorBlock(element, block) :-
+    AncestorBlock(element, intermediateBlock),
+    intermediateElement = $CFGBlock(intermediateBlock),
+    ParentBlock(intermediateElement, block).
+
+.decl AncestorBlockOrSelf(element:CFGElement, ancestor:CFGElement)
+
+AncestorBlockOrSelf(element, element) :-
+    CFGElementExists(element).
+
+AncestorBlockOrSelf(element, ancestor) :-
+    AncestorBlock(element, ancestorBlock),
+    ancestor = $CFGBlock(ancestorBlock).
+
+#ifdef DEBUG_OUTPUT
+.output ParentBlock(IO=stdout)
+.output AncestorBlock(IO=stdout)
+.output AncestorBlockOrSelf(IO=stdout)
+#endif
+
+
+//
+// Compute transitive closure of sequential block successor edges and scheduler block dependency relations
+// to establish overall precedence relations within a block.
+//
+
+.decl SequentialBlockTransitiveEdge(block:Block, beforeElement:CFGElement, afterElement:CFGElement)
+
+SequentialBlockTransitiveEdge(block, beforeElement, afterElement) :-
+    SequentialBlockEdge(block, beforeElement, afterElement).
+
+SequentialBlockTransitiveEdge(block, beforeElement, afterElement) :-
+    SequentialBlockTransitiveEdge(block, beforeElement, intermediateElement),
+    SequentialBlockEdge(block, intermediateElement, afterElement).
+
+#ifdef DEBUG_OUTPUT
+.output SequentialBlockTransitiveEdge(IO=stdout)
+#endif
+
+.decl SchedulerBlockTransitiveDependency(block:Block, element:CFGElement, precedingElement:CFGElement)
+
+SchedulerBlockTransitiveDependency(block, element, precedingElement) :-
+    SchedulerBlockDependency(block, element, precedingElement).
+
+SchedulerBlockTransitiveDependency(block, element, precedingElement) :-
+    SchedulerBlockTransitiveDependency(block, element, intermediateElement),
+    SequentialBlockEdge(block, intermediateElement, precedingElement).
+
+#ifdef DEBUG_OUTPUT
+.output SchedulerBlockTransitiveDependency(IO=stdout)
+#endif
+
+
+//
+// Compute reachability of each CFG element from the top-level block.
+// (mainly useful for sanity checking the input CFG facts)
+//
+
+.decl ReachableCFGElement(element:CFGElement)
+
+ReachableCFGElement(element) :-
+    TopLevelBlock(block),
+    element = $CFGBlock(block).
+
+ReachableCFGElement(element) :-
+    ReachableCFGElement(prevElement),
+    prevElement = $CFGBlock(prevBlock),
+    SequentialBlockEntry(prevBlock, element).
+
+ReachableCFGElement(element) :-
+    ReachableCFGElement(prevElement),
+    SequentialBlockEdge(_, prevElement, element).
+
+ReachableCFGElement(element) :-
+    ReachableCFGElement(prevElement),
+    prevElement = $CFGBlock(block),
+    SchedulerBlockMember(block, element).
+
+
+// A well-formed CFG shouldn't have anything unreachable.
+.decl UnreachableCFGElement(element:CFGElement)
+
+UnreachableCFGElement(element) :-
+    CFGElementExists(element),
+    !ReachableCFGElement(element).
+
+#ifdef DEBUG_OUTPUT
+.output UnreachableCFGElement(IO=stdout)
+#endif
+
+
+//
+// Compute precedence of CFG nodes across the whole program.
+// Essentially, find the nearest common ancestor block of both CFG nodes,
+// and check whether one must follow the other at that level in that block.
+// A block itself is considered to be before its contained elements.
+// If it is not the case that a CFG node must come after another, then we
+// presume it may happen before. 
+//
+
+.decl CFGElementMustFollow(beforeElement:CFGElement, afterElement:CFGElement)
+
+CFGElementMustFollow(beforeElement, afterElement) :-
+    AncestorBlockOrSelf(beforeElement, beforeBlockElement),
+    AncestorBlockOrSelf(afterElement, afterBlockElement),
+    SequentialBlock(commonBlock),
+    SequentialBlockTransitiveEdge(commonBlock, beforeBlockElement, afterBlockElement),
+    !SequentialBlockTransitiveEdge(commonBlock, afterBlockElement, beforeBlockElement).
+
+CFGElementMustFollow(beforeElement, afterElement) :-
+    AncestorBlockOrSelf(beforeElement, beforeBlockElement),
+    AncestorBlockOrSelf(afterElement, afterBlockElement),
+    SchedulerBlock(commonBlock),
+    SchedulerBlockTransitiveDependency(commonBlock, afterBlockElement, beforeBlockElement).
+
+CFGElementMustFollow(beforeElement, afterElement) :-
+    AncestorBlock(afterElement, block),
+    beforeElement = $CFGBlock(block).
+
+#ifdef DEBUG_OUTPUT
+.output CFGElementMustFollow(IO=stdout)
+#endif
+
+.decl CFGElementMayPrecede(beforeElement:CFGElement, afterElement:CFGElement)
+
+CFGElementMayPrecede(beforeElement, afterElement) :-
+    ReachableCFGElement(beforeElement),
+    ReachableCFGElement(afterElement),
+    beforeElement != afterElement,
+    !CFGElementMustFollow(afterElement, beforeElement).
+
+
+#ifdef DEBUG_OUTPUT
+.output CFGElementMayPrecede(IO=stdout)
+#endif
+
+#endif
