@@ -1,4 +1,4 @@
-/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 /* Souffle datalog rules to assist in policy authoring */
@@ -8,6 +8,9 @@
  */
 .decl check_passed(component_id: number, check_name: symbol)
 check_passed(component_id, check_name) :- check_result(_, check_name, 1, component_id).
+
+.decl check_failed(component_id: number, check_name: symbol)
+check_failed(component_id, check_name) :- check_result(_, check_name, 0, component_id).
 
 /**
  * Check name is valid.
@@ -41,6 +44,12 @@ transitive_dependency(parent, dependency) :-
  */
 .decl is_repo(repo_id: number, repo_complete_name: symbol, component_id: number)
  is_repo(repo_id, repo_complete_name, component_id) :- repository(repo_id, component_id, repo_complete_name, _, _, _, _, _, _, _, _, _, _).
+
+/**
+ *  Extract the id and URL from the repository relation.
+ */
+.decl is_repo_url(repo_id: number, url: symbol)
+ is_repo_url(repo_id, url) :- repository(_, repo_id, _, _, _, _, _, url, _, _, _, _, _).
 
 
 /**

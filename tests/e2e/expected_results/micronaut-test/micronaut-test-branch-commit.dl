@@ -1,0 +1,19 @@
+/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("test_policy", component_id, "") :-
+    check_passed(component_id, "mcn_build_as_code_1"),
+    check_passed(component_id, "mcn_build_script_1"),
+    check_passed(component_id, "mcn_build_service_1"),
+    check_passed(component_id, "mcn_provenance_available_1"),
+    check_passed(component_id, "mcn_provenance_level_three_1"),
+    check_passed(component_id, "mcn_version_control_system_1"),
+    check_failed(component_id, "mcn_infer_artifact_pipeline_1"),
+    check_failed(component_id, "mcn_provenance_witness_level_one_1"),
+    check_failed(component_id, "mcn_trusted_builder_level_three_1"),
+    is_repo_url(component_id, "https://github.com/micronaut-projects/micronaut-test").
+
+apply_policy_to("test_policy", component_id) :-
+    is_component(component_id, "pkg:github.com/micronaut-projects/micronaut-test@7679d10b4073a3b842b6c56877c35fa8cd10acff").
