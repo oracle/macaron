@@ -7,13 +7,14 @@
 WORKSPACE=$1
 HOMEDIR=$2
 RESOURCES=$WORKSPACE/src/macaron/resources
-COMPARE_DEPS=$WORKSPACE/tests/dependency_analyzer/compare_dependencies.py
-COMPARE_JSON_OUT=$WORKSPACE/tests/e2e/compare_e2e_result.py
 COMPARE_POLICIES=$WORKSPACE/tests/policy_engine/compare_policy_reports.py
 COMPARE_VSA=$WORKSPACE/tests/vsa/compare_vsa.py
 TEST_REPO_FINDER=$WORKSPACE/tests/e2e/repo_finder/repo_finder.py
 TEST_COMMIT_FINDER=$WORKSPACE/tests/e2e/repo_finder/commit_finder.py
+DB=$WORKSPACE/output/macaron.db
 RUN_MACARON="python -m macaron -o $WORKSPACE/output"
+ANALYZE="analyze"
+RUN_POLICY="python -m macaron verify-policy"
 RESULT_CODE=0
 UPDATE=0
 
@@ -23,6 +24,11 @@ if [ $# -eq 3 ] && [ "$3" == "--update" ] ; then
     UPDATE=1
     COMPARE_VSA="$COMPARE_VSA --update"
 fi
+
+function run_macaron_clean() {
+    rm $DB
+    $RUN_MACARON "$@"
+}
 
 function check_or_update_expected_output() {
     if [ $UPDATE -eq 1 ] ; then
@@ -60,7 +66,6 @@ if [[ "$NO_NPM" == "TRUE" ]]; then
 fi
 NO_NPM_TEST=$NO_NPM
 
-
 function log_fail() {
     printf "Error: FAILED integration test (line ${BASH_LINENO}) %s\n" $@
     RESULT_CODE=1
@@ -83,167 +88,151 @@ echo -e "=======================================================================
 echo -e "\n----------------------------------------------------------------------------------"
 echo "micronaut-projects/micronaut-core: Analyzing the PURL when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/micronaut-core/micronaut-core.json
-JSON_RESULT=$WORKSPACE/output/reports/maven/io_micronaut/micronaut-core/micronaut-core.json
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/maven/micronaut-core/micronaut-core.dl
 DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/micronaut-core.ini
-$RUN_MACARON -dp $DEFAULTS_FILE analyze -purl pkg:maven/io.micronaut/micronaut-core@4.2.3 --skip-deps || log_fail
+run_macaron_clean -dp $DEFAULTS_FILE $ANALYZE -purl pkg:maven/io.micronaut/micronaut-core@4.2.3 --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 if [[ -z "$NO_NPM_TEST" ]]; then
     echo -e "\n----------------------------------------------------------------------------------"
     echo "sigstore/mock@0.1.0: Analyzing the PURL when automatic dependency resolution is skipped."
     echo -e "----------------------------------------------------------------------------------\n"
-    JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/npm/sigstore/mock/mock.json
-    JSON_RESULT=$WORKSPACE/output/reports/npm/_sigstore/mock/mock.json
-    $RUN_MACARON analyze -purl pkg:npm/@sigstore/mock@0.1.0 -rp https://github.com/sigstore/sigstore-js -b main -d ebdcfdfbdfeb9c9aeee6df53674ef230613629f5 --skip-deps || log_fail
+    OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/npm/sigstore/mock/mock.dl
+    run_macaron_clean $ANALYZE -purl pkg:npm/@sigstore/mock@0.1.0 -rp https://github.com/sigstore/sigstore-js -b main -d ebdcfdfbdfeb9c9aeee6df53674ef230613629f5 --skip-deps || log_fail
 
-    check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+    $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
     echo -e "\n----------------------------------------------------------------------------------"
     echo "semver@7.6.0: Extracting repository URL and commit from provenance while Repo Finder is disabled."
     echo -e "----------------------------------------------------------------------------------\n"
-    JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/npm/semver/semver.json
-    JSON_RESULT=$WORKSPACE/output/reports/npm/semver/semver.json
-    $RUN_MACARON -dp tests/e2e/defaults/disable_repo_finder.ini analyze -purl pkg:npm/semver@7.6.0 || log_fail
+    OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/npm/semver/semver.dl
+    run_macaron_clean -dp tests/e2e/defaults/disable_repo_finder.ini $ANALYZE -purl pkg:npm/semver@7.6.0 || log_fail
 
-    check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+    $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 fi
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "gitlab.com/tinyMediaManager/tinyMediaManager: Analyzing the repo path and the branch name when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/tinyMediaManager/tinyMediaManager.json
-JSON_RESULT=$WORKSPACE/output/reports/gitlab_com/tinyMediaManager/tinyMediaManager/tinyMediaManager.json
-$RUN_MACARON analyze -rp https://gitlab.com/tinyMediaManager/tinyMediaManager -b main -d cca6b67a335074eca42136556f0a321f75dc4f48 --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/tinyMediaManager/tinyMediaManager.dl
+run_macaron_clean $ANALYZE -rp https://gitlab.com/tinyMediaManager/tinyMediaManager -b main -d cca6b67a335074eca42136556f0a321f75dc4f48 --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "jenkinsci/plot-plugin: Analyzing the repo path, the branch name and the commit digest when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/plot-plugin/plot-plugin.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/jenkinsci/plot-plugin/plot-plugin.json
-$RUN_MACARON analyze -rp https://github.com/jenkinsci/plot-plugin -b master -d 55b059187e252b35ac0d6cb52268833ee1bb7380 --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/plot-plugin/plot-plugin.dl
+run_macaron_clean $ANALYZE -rp https://github.com/jenkinsci/plot-plugin -b master -d 55b059187e252b35ac0d6cb52268833ee1bb7380 --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
 echo "The CUE expectation file is provided as a single file path."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.dl
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/urllib3_PASS.cue
-$RUN_MACARON analyze -pe $EXPECTATION_FILE -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
+run_macaron_clean $ANALYZE -pe $EXPECTATION_FILE -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
 echo "The CUE expectation file should be found via the directory path."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.dl
 EXPECTATION_DIR=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/
-$RUN_MACARON analyze -pe $EXPECTATION_DIR -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
+run_macaron_clean $ANALYZE -pe $EXPECTATION_DIR -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "timyarkov/multibuild_test: Analyzing the repo path, the branch name and the commit digest"
 echo "with dependency resolution using cyclonedx Gradle and Maven plugins (defaults)."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/multibuild_test/multibuild_test.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/multibuild_test/multibuild_test.json
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/multibuild_test/multibuild_test.dl
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_timyarkov_multibuild_test.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/multibuild_test/dependencies.json
-$RUN_MACARON analyze -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
+run_macaron_clean $ANALYZE -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo "timyarkov/docker_test: Analyzing the repo path, the branch name and the commit digest"
 echo "when automatic dependency resolution is skipped, for a project using docker as a build tool."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/docker_test/docker_test.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/timyarkov/docker_test/docker_test.json
-$RUN_MACARON analyze -rp https://github.com/timyarkov/docker_test -b main -d 404a51a2f38c4470af6b32e4e00b5318c2d7c0cc --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/docker_test/docker_test.dl
+run_macaron_clean $ANALYZE -rp https://github.com/timyarkov/docker_test -b main -d 404a51a2f38c4470af6b32e4e00b5318c2d7c0cc --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "uiv-lib/uiv: Analysing the repo path, the branch name and the commit digest for an npm project,"
 echo "skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/uiv/uiv.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/uiv-lib/uiv/uiv.json
-$RUN_MACARON analyze -rp https://github.com/uiv-lib/uiv -b dev -d 057b25b4db0913edab4cf728c306085e6fc20d49 --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/uiv/uiv.dl
+run_macaron_clean $ANALYZE -rp https://github.com/uiv-lib/uiv -b dev -d 057b25b4db0913edab4cf728c306085e6fc20d49 --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "onu-ui/onu-ui: Analysing the repo path, the branch name and the commit digest for a pnpm project,"
 echo "skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/onu-ui/onu-ui.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/onu-ui/onu-ui/onu-ui.json
-$RUN_MACARON analyze -rp https://github.com/onu-ui/onu-ui -b main -d e3f2825c3940002a920d65476116a64684b3d95e --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/onu-ui/onu-ui.dl
+run_macaron_clean $ANALYZE -rp https://github.com/onu-ui/onu-ui -b main -d e3f2825c3940002a920d65476116a64684b3d95e --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "facebook/yoga: Analysing the repo path, the branch name and the commit digest for a Yarn classic"
 echo "project, skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/yoga/yoga.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/facebook/yoga/yoga.json
-$RUN_MACARON analyze -rp https://github.com/facebook/yoga -b main -d f8e2bc0875c145c429d0e865c9b83a40f65b3070 --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/yoga/yoga.dl
+run_macaron_clean $ANALYZE -rp https://github.com/facebook/yoga -b main -d f8e2bc0875c145c429d0e865c9b83a40f65b3070 --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "wojtekmaj/react-pdf: Analysing the repo path, the branch name and the commit digest for a Yarn modern"
 echo "project, skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/react-pdf/react-pdf.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/wojtekmaj/react-pdf/react-pdf.json
-$RUN_MACARON analyze -rp https://github.com/wojtekmaj/react-pdf -b main -d be18436b7be827eb993b2e1e4bd9230dd835a9a3 --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/react-pdf/react-pdf.dl
+run_macaron_clean $ANALYZE -rp https://github.com/wojtekmaj/react-pdf -b main -d be18436b7be827eb993b2e1e4bd9230dd835a9a3 --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "sigstore/sget: Analysing the repo path, the branch name and the"
 echo "commit digest for a Go project, skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/sget/sget.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/sigstore/sget/sget.json
-$RUN_MACARON analyze -rp https://github.com/sigstore/sget -b main -d 99e7b91204d391ccc76507f7079b6d2a7957489e --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/sget/sget.dl
+run_macaron_clean $ANALYZE -rp https://github.com/sigstore/sget -b main -d 99e7b91204d391ccc76507f7079b6d2a7957489e --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with PURL and repository path without dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.json
-JSON_RESULT=$WORKSPACE/output/reports/maven/apache/maven/maven.json
-$RUN_MACARON analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.dl
+run_macaron_clean $ANALYZE -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/maven.dl
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
-$RUN_MACARON analyze -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
+run_macaron_clean $ANALYZE -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing using a CycloneDx SBOM with target repo path"
@@ -252,10 +241,9 @@ SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/apache_maven_
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/apache_maven_with_sbom_provided.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
 
-$RUN_MACARON analyze -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b -sbom "$SBOM_FILE" || log_fail
+run_macaron_clean $ANALYZE -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b -sbom "$SBOM_FILE" || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing using a CycloneDx SBOM file of a software component whose repository is not available."
@@ -264,18 +252,17 @@ SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/private_mirro
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/private_mirror_apache_maven.json
 DEP_RESULT=$WORKSPACE/output/reports/private-domain_com/apache/maven/dependencies.json
 
-$RUN_MACARON analyze -purl pkg:private-domain.com/apache/maven -sbom "$SBOM_FILE" || log_fail
+run_macaron_clean $ANALYZE -purl pkg:private-domain.com/apache/maven -sbom "$SBOM_FILE" || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "com.example/nonexistent: Analyzing purl of nonexistent artifact."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/com_example_nonexistent/nonexistent.json
-JSON_RESULT=$WORKSPACE/output/reports/maven/com_example/nonexistent/nonexistent.json
-$RUN_MACARON analyze -purl pkg:maven/com.example/nonexistent@1.0.0 --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/maven/com_example_nonexistent/nonexistent.dl
+run_macaron_clean $ANALYZE -purl pkg:maven/com.example/nonexistent@1.0.0 --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 # Analyze micronaut-projects/micronaut-test.
 echo -e "\n=================================================================================="
@@ -287,33 +274,32 @@ echo -e "\n---------------------------------------------------------------------
 echo "micronaut-projects/micronaut-test: Check the resolved dependency output when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/skipdep_micronaut-projects_micronaut-test.json
-$RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_test_config.yaml --skip-deps || log_fail
+run_macaron_clean $ANALYZE -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_test_config.yaml --skip-deps || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "micronaut-projects/micronaut-test: Check the e2e output JSON file with config when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-test/
-JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/micronaut-test
+EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/micronaut-test
 
 declare -a COMPARE_FILES=(
-    "micronaut-test.json"
-    "caffeine.json"
-    "slf4j.json"
+    "micronaut-test.dl"
+    "caffeine.dl"
+    "slf4j.dl"
 )
 
 for i in "${COMPARE_FILES[@]}"
 do
-    check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
+    $RUN_POLICY -d $DB -f $EXPECT_DIR/$i || log_fail
 done
 
 # TODO: uncomment the test below after resolving https://github.com/oracle/macaron/issues/60.
 # echo -e "\n----------------------------------------------------------------------------------"
 # echo "micronaut-projects/micronaut-test: Check the resolved dependency output with config for cyclonedx gradle plugin (default)."
 # echo -e "----------------------------------------------------------------------------------\n"
-# DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-test.json
-# $RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_test_config.yaml || log_fail
+# DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-test.dl
+# run_macaron_clean analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_test_config.yaml || log_fail
 
 # python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
@@ -327,34 +313,33 @@ echo -e "\n---------------------------------------------------------------------
 echo "apache/maven: Check the resolved dependency output when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/skipdep_apache_maven.json
-$RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml --skip-deps || log_fail
+run_macaron_clean $ANALYZE -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml --skip-deps || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check the e2e output JSON file with config and no dependency analyzing."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/apache/maven
-JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
+EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
 
 declare -a COMPARE_FILES=(
-    "maven.json"
-    "guava.json"
-    "mockito.json"
+    "maven.dl"
+    "guava.dl"
+    "mockito.dl"
 )
 
-$RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/maven_config.yaml --skip-deps || log_fail
+run_macaron_clean $ANALYZE -c $WORKSPACE/tests/e2e/configurations/maven_config.yaml --skip-deps || log_fail
 
 for i in "${COMPARE_FILES[@]}"
 do
-    check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
+    $RUN_POLICY -d $DB -f $EXPECT_DIR/$i || log_fail
 done
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check the resolved dependency output with config for cyclonedx maven plugin."
 echo -e "----------------------------------------------------------------------------------\n"
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
-$RUN_MACARON analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || log_fail
+run_macaron_clean $ANALYZE -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
@@ -369,7 +354,7 @@ declare -a INVALID_BRANCH_DIGEST=(
 for i in "${INVALID_BRANCH_DIGEST[@]}"
 do
     echo -e "Running with $WORKSPACE/tests/e2e/configurations/$i"
-    $RUN_MACARON analyze -c $WORKSPACE/tests/e2e/configurations/$i
+    run_macaron_clean $ANALYZE -c $WORKSPACE/tests/e2e/configurations/$i
     if [ $? -eq 0 ];
     then
         echo -e "Expect non-zero status code for $WORKSPACE/test/e2e/configurations/$i but got $?."
@@ -380,26 +365,24 @@ done
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test using the default template file."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
-$RUN_MACARON analyze -rp https://github.com/apache/maven --skip-deps -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b -g $WORKSPACE/src/macaron/output_reporter/templates/macaron.html || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/maven.dl
+run_macaron_clean $ANALYZE -rp https://github.com/apache/maven --skip-deps -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b -g $WORKSPACE/src/macaron/output_reporter/templates/macaron.html || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 # Analyze FasterXML/jackson-databind.
 echo -e "\n=================================================================================="
 echo "Run integration tests with configurations for FasterXML/jackson-databind..."
 echo -e "==================================================================================\n"
-JSON_RESULT=$WORKSPACE/output/reports/maven/com_fasterxml_jackson_core/jackson-databind/jackson-databind.json
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "FasterXML/jackson-databind: Check the e2e output JSON file with config and no dependency analyzing."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/jackson-databind/jackson-databind.json
-$RUN_MACARON analyze -purl pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.0-rc1 --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/jackson-databind/jackson-databind.dl
+run_macaron_clean $ANALYZE -purl pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.0-rc1 --skip-deps || log_fail
 # Original commit f0af53d085eb2aa9f7f6199846cc526068e09977 seems to be first included in version tagged commit 2.14.0-rc1.
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 # echo -e "\n----------------------------------------------------------------------------------"
 # echo "FasterXML/jackson-databind: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
@@ -413,20 +396,18 @@ check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED ||
 echo -e "\n----------------------------------------------------------------------------------"
 echo "google/guava: Analyzing with PURL and repository path without dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/com_google_guava/guava/guava.json
-JSON_RESULT=$WORKSPACE/output/reports/maven/com_google_guava/guava/guava.json
-$RUN_MACARON analyze -purl pkg:maven/com.google.guava/guava@32.1.2-jre?type=jar --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/com_google_guava/guava/guava.dl
+run_macaron_clean $ANALYZE -purl pkg:maven/com.google.guava/guava@32.1.2-jre?type=jar --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "org.tinymediamanager/tinyMediaManager: Analyzing the purl with a version, and a provided repo with no commit."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/org_tinymediamanager/tinyMediaManager.json
-JSON_RESULT=$WORKSPACE/output/reports/maven/org_tinymediamanager/tinyMediaManager/tinyMediaManager.json
-$RUN_MACARON analyze -purl pkg:maven/org.tinymediamanager/tinyMediaManager@4.3.13 -rp https://gitlab.com/tinyMediaManager/tinyMediaManager --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/org_tinymediamanager/tinyMediaManager.dl
+run_macaron_clean $ANALYZE -purl pkg:maven/org.tinymediamanager/tinyMediaManager@4.3.13 -rp https://gitlab.com/tinyMediaManager/tinyMediaManager --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 
 # Running Macaron using local paths.
@@ -439,59 +420,55 @@ echo "bitbucket.org/snakeyaml/snakeyaml: Analyzing a repository with un-supporte
 echo -e "----------------------------------------------------------------------------------\n"
 git clone https://bitbucket.org/snakeyaml/snakeyaml $WORKSPACE/output/local_repos/snakeyaml || log_fail
 DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/bitbucket_local_repo.ini
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/snakeyaml/snakeyaml.json
-JSON_RESULT=$WORKSPACE/output/reports/bitbucket_org/snakeyaml/snakeyaml/snakeyaml.json
-$RUN_MACARON -dp $DEFAULTS_FILE -lr $WORKSPACE/output/local_repos analyze -rp snakeyaml -d a34989252e6f59e36a3aaf788a903b7a37a73d33 --skip-deps || log_fail
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/snakeyaml/snakeyaml.dl
+run_macaron_clean -dp $DEFAULTS_FILE -lr $WORKSPACE/output/local_repos $ANALYZE -rp snakeyaml -d a34989252e6f59e36a3aaf788a903b7a37a73d33 --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with the branch name, the commit digest and dependency resolution using cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/maven/maven.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/maven.json
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/maven.dl
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 DEP_RESULT=$WORKSPACE/output/reports/github_com/apache/maven/dependencies.json
-$RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com analyze -rp apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
+run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com $ANALYZE -rp apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with local paths in configuration and without dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/apache/maven
-JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
+EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
 
 declare -a COMPARE_FILES=(
-    "maven.json"
-    "guava.json"
-    "mockito.json"
+    "maven.dl"
+    "guava.dl"
+    "mockito.dl"
 )
 
-$RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com analyze -c $WORKSPACE/tests/e2e/configurations/maven_local_path.yaml --skip-deps || log_fail
+run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com $ANALYZE -c $WORKSPACE/tests/e2e/configurations/maven_local_path.yaml --skip-deps || log_fail
 for i in "${COMPARE_FILES[@]}"
 do
-    check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
+    $RUN_POLICY -d $DB -f $EXPECT_DIR/$i || log_fail
 done
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with local paths using local_repos_dir without dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
 # The report files are still stored in the same location.
-JSON_RESULT_DIR=$WORKSPACE/output/reports/github_com/apache/maven
-JSON_EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
+EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
 
 declare -a COMPARE_FILES=(
-    "maven.json"
-    "guava.json"
-    "mockito.json"
+    "maven.dl"
+    "guava.dl"
+    "mockito.dl"
 )
 
-$RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com/ analyze -rp apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
+run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com/ $ANALYZE -rp apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
 for i in "${COMPARE_FILES[@]}"
 do
-    check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT_DIR/$i $JSON_EXPECT_DIR/$i || log_fail
+    $RUN_POLICY -d $DB -f $EXPECT_DIR/$i || log_fail
 done
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -504,7 +481,7 @@ git clone $WORKSPACE/output/git_repos/github_com/apache/maven $WORKSPACE/output/
 JSON_EXPECTED=$WORKSPACE/output/reports/local_repos/maven/maven.json
 HTML_EXPECTED=$WORKSPACE/output/reports/local_repos/maven/maven.html
 
-$RUN_MACARON -lr $WORKSPACE/output/git_repos/local_repos/ analyze -rp test_repo -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
+run_macaron_clean -lr $WORKSPACE/output/git_repos/local_repos/ $ANALYZE -rp test_repo -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
 
 # We don't compare the report content because the remote_path fields in the reports are nondeterministic when running
 # this test locally and running it in the GitHub Actions runner. We only check if the reports are generated as
@@ -516,7 +493,7 @@ echo -e "\n---------------------------------------------------------------------
 echo "apache/maven: test using invalid local repo path."
 echo -e "----------------------------------------------------------------------------------\n"
 # Assume that $WORKSPACE is always an absolute path.
-$RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com/ analyze -rp path/to/invalid/repo --skip-deps
+run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com/ $ANALYZE -rp path/to/invalid/repo --skip-deps
 
 if [ $? -eq 0 ];
 then
@@ -527,7 +504,7 @@ fi
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: test using invalid local_repos_dir."
 echo -e "----------------------------------------------------------------------------------\n"
-$RUN_MACARON -lr $WORKSPACE/invalid_dir_should_fail analyze -rp apache/maven --skip-deps
+run_macaron_clean -lr $WORKSPACE/invalid_dir_should_fail $ANALYZE -rp apache/maven --skip-deps
 
 if [ $? -eq 0 ];
 then
@@ -538,7 +515,7 @@ fi
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: test using a repo path outside of local_repos_dir."
 echo -e "----------------------------------------------------------------------------------\n"
-$RUN_MACARON -lr $WORKSPACE/output/git_repos/github_com/ analyze -rp ../ --skip-deps
+run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com/ $ANALYZE -rp ../ --skip-deps
 
 if [ $? -eq 0 ];
 then
@@ -551,7 +528,7 @@ echo "Test using local repo with no commits."
 echo -e "----------------------------------------------------------------------------------\n"
 mkdir -p $WORKSPACE/output/git_repos/local_repos/empty_repo
 cd $WORKSPACE/output/git_repos/local_repos/empty_repo && git init && cd -
-$RUN_MACARON -lr $WORKSPACE/output/git_repos/local_repos analyze -rp empty_repo --skip-deps
+run_macaron_clean -lr $WORKSPACE/output/git_repos/local_repos $ANALYZE -rp empty_repo --skip-deps
 
 if [ $? -eq 0 ];
 then
@@ -595,7 +572,7 @@ cd "$WORKSPACE"  || log_fail
 # When we run the analysis, because we are providing a local repo path, Macaron is not supposed to pull the
 # latest changes (i.e the second commit of SOURCE_REPO) into TARGET_REPO.
 # Therefore, this analysis is expected to fail because the commit HEAD_COMMIT_SHA does not exist in TARGET_REPO.
-$RUN_MACARON -lr $WORKSPACE/output/git_repos/local_repos/ analyze -rp target -b master -d "$HEAD_COMMIT_SHA" --skip-deps
+run_macaron_clean -lr $WORKSPACE/output/git_repos/local_repos/ $ANALYZE -rp target -b master -d "$HEAD_COMMIT_SHA" --skip-deps
 
 if [ $? -eq 0 ];
 then
@@ -610,7 +587,7 @@ rm -rf "$TARGET_REPO"
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Running the analysis with all checks excluded. This test should return an error code."
 echo -e "----------------------------------------------------------------------------------\n"
-$RUN_MACARON -dp tests/e2e/defaults/exclude_all_checks.ini analyze -rp https://github.com/apache/maven --skip-deps
+run_macaron_clean -dp tests/e2e/defaults/exclude_all_checks.ini $ANALYZE -rp https://github.com/apache/maven --skip-deps
 
 if [ $? -eq 0 ];
 then
@@ -622,7 +599,7 @@ echo -e "\n---------------------------------------------------------------------
 echo "apache/maven: test analyzing without the environment variable GITHUB_TOKEN being set."
 echo -e "----------------------------------------------------------------------------------\n"
 temp="$GITHUB_TOKEN"
-GITHUB_TOKEN="" && $RUN_MACARON analyze -rp https://github.com/apache/maven --skip-deps
+GITHUB_TOKEN="" && run_macaron_clean $ANALYZE -rp https://github.com/apache/maven --skip-deps
 
 if [ $? -eq 0 ];
 then
@@ -635,7 +612,7 @@ GITHUB_TOKEN="$temp"
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: test analyzing with invalid PURL"
 echo -e "----------------------------------------------------------------------------------\n"
-$RUN_MACARON analyze -purl invalid-purl -rp https://github.com/apache/maven --skip-deps
+run_macaron_clean $ANALYZE -purl invalid-purl -rp https://github.com/apache/maven --skip-deps
 
 if [ $? -eq 0 ];
 then
@@ -646,7 +623,7 @@ fi
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: test analyzing with both PURL and repository path but no branch and digest are provided."
 echo -e "----------------------------------------------------------------------------------\n"
-$RUN_MACARON analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven --skip-deps
+run_macaron_clean $ANALYZE -purl pkg:maven/apache/maven -rp https://github.com/apache/maven --skip-deps
 
 if [ $? -eq 0 ];
 then
@@ -657,7 +634,7 @@ fi
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test using a custom template file that does not exist."
 echo -e "----------------------------------------------------------------------------------\n"
-$RUN_MACARON analyze -rp https://github.com/apache/maven --skip-deps -g $WORKSPACE/should/not/exist
+run_macaron_clean $ANALYZE -rp https://github.com/apache/maven --skip-deps -g $WORKSPACE/should/not/exist
 
 if [ $? -eq 0 ];
 then
@@ -668,7 +645,7 @@ fi
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test providing an invalid provenance file as input."
 echo -e "----------------------------------------------------------------------------------\n"
-$RUN_MACARON analyze -rp https://github.com/apache/maven --provenance-file $WORKSPACE/golang/internal/cue_validator/resources/invalid_provenance.json --skip-deps
+run_macaron_clean $ANALYZE -rp https://github.com/apache/maven --provenance-file $WORKSPACE/golang/internal/cue_validator/resources/invalid_provenance.json --skip-deps
 
 if [ $? -eq 0 ];
 then
@@ -678,67 +655,14 @@ fi
 
 # Testing the CUE provenance expectation verifier.
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Test verifying CUE provenance expectation for ossf/scorecard"
+echo "Test verifying CUE provenance expectation for ossf/scorecard and run policy CLI"
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/scorecard/scorecard.json
-JSON_RESULT=$WORKSPACE/output/reports/github/ossf/scorecard/scorecard.json
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/scorecard/scorecard.dl
 DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/scorecard.ini
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/scorecard_PASS.cue
-$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -purl pkg:github/ossf/scorecard@v4.13.1 --skip-deps || log_fail
+run_macaron_clean -dp $DEFAULTS_FILE $ANALYZE -pe $EXPECTATION_FILE -purl pkg:github/ossf/scorecard@v4.13.1 --skip-deps || log_fail
 
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Test verifying CUE provenance expectation for slsa-verifier"
-echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_cue_PASS.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
-EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
-DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/slsa_verifier.ini
-$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
-
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Test verifying CUE provenance expectation for slsa-verifier with explicitly-provided provenance file"
-echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_explicitly_provided_cue_PASS.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
-EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
-DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/slsa_verifier.ini
-PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/slsa-verifier-linux-amd64.intoto.jsonl
-$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -pf $PROVENANCE_FILE -rp https://github.com/slsa-framework/slsa-verifier -d 6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6 --skip-deps || log_fail
-
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Test verifying CUE provenance expectation for slsa-verifier with explicitly-provided provenance file as a URL link file"
-echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_explicitly_provided_cue_PASS.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/slsa-framework/slsa-verifier/slsa-verifier.json
-EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
-DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/allow_url_link_github.ini
-PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/slsa-verifier-linux-amd64.intoto.jsonl
-$RUN_MACARON -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -pf $PROVENANCE_FILE -rp https://github.com/slsa-framework/slsa-verifier -d 6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6 --skip-deps || log_fail
-
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped"
-echo "and CUE file is provided as expectation."
-echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3_cue_invalid.json
-JSON_RESULT=$WORKSPACE/output/reports/github_com/urllib3/urllib3/urllib3.json
-EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/invalid_expectations/invalid.cue
-$RUN_MACARON analyze -pe $EXPECTATION_FILE -rp https://github.com/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
-
-check_or_update_expected_output $COMPARE_JSON_OUT $JSON_RESULT $JSON_EXPECTED || log_fail
-
-# Testing the Souffle policy engine.
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Run policy CLI with scorecard results."
-echo -e "----------------------------------------------------------------------------------\n"
-RUN_POLICY="macaron verify-policy"
+# Run CLI policy
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/scorecard/scorecard.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/scorecard/scorecard_policy_report.json
@@ -749,13 +673,59 @@ $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
+# Finish verifying CUE provenance
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Test verifying CUE provenance expectation for slsa-verifier"
+echo -e "----------------------------------------------------------------------------------\n"
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_cue_PASS.dl
+EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
+DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/slsa_verifier.ini
+run_macaron_clean -dp $DEFAULTS_FILE $ANALYZE -pe $EXPECTATION_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
+
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Test verifying CUE provenance expectation for slsa-verifier with explicitly-provided provenance file"
+echo -e "----------------------------------------------------------------------------------\n"
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_explicitly_provided_cue_PASS.dl
+EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
+DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/slsa_verifier.ini
+PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/slsa-verifier-linux-amd64.intoto.jsonl
+run_macaron_clean -dp $DEFAULTS_FILE $ANALYZE -pe $EXPECTATION_FILE -pf $PROVENANCE_FILE -rp https://github.com/slsa-framework/slsa-verifier -d 6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6 --skip-deps || log_fail
+
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Test verifying CUE provenance expectation for slsa-verifier with explicitly-provided provenance file as a URL link file"
+echo -e "----------------------------------------------------------------------------------\n"
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_explicitly_provided_cue_PASS.dl
+EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
+DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/allow_url_link_github.ini
+PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/slsa-verifier-linux-amd64.intoto.jsonl
+run_macaron_clean -dp $DEFAULTS_FILE $ANALYZE -pe $EXPECTATION_FILE -pf $PROVENANCE_FILE -rp https://github.com/slsa-framework/slsa-verifier -d 6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6 --skip-deps || log_fail
+
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped"
+echo "and CUE file is provided as expectation."
+echo -e "----------------------------------------------------------------------------------\n"
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3_cue_invalid.dl
+EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/invalid_expectations/invalid.cue
+run_macaron_clean $ANALYZE -pe $EXPECTATION_FILE -rp https://github.com/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
+
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
+
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Run policy CLI with micronaut-core results to test deploy command information."
 echo -e "----------------------------------------------------------------------------------\n"
-RUN_POLICY="macaron verify-policy"
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/micronaut-core/test_deploy_info.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/micronaut-core/test_deploy_info.json
+DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/micronaut-core.ini
+$RUN_MACARON -dp $DEFAULTS_FILE analyze -purl pkg:maven/io.micronaut/micronaut-core@4.2.3 --skip-deps || log_fail
 
 $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
 check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
@@ -764,7 +734,6 @@ echo -e "\n---------------------------------------------------------------------
 echo "behnazh-w/example-maven-app as a local and remote repository"
 echo "Test the Witness and GitHub provenances as an input, Cue expectation validation, Policy CLI and VSA generation, User input vs. provenance."
 echo -e "----------------------------------------------------------------------------------\n"
-RUN_POLICY="macaron verify-policy"
 POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/example-maven-project/policy.dl
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/example-maven-project/example_maven_project_policy_report.json
@@ -779,14 +748,14 @@ WITNESS_PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/vali
 git clone https://github.com/behnazh-w/example-maven-app.git $WORKSPACE/output/git_repos/local_repos/example-maven-app || log_fail
 
 # Check the Witness provenance.
-$RUN_MACARON analyze -pf $WITNESS_PROVENANCE_FILE -pe $WITNESS_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar --repo-path example-maven-app --skip-deps || log_fail
+run_macaron_clean $ANALYZE -pf $WITNESS_PROVENANCE_FILE -pe $WITNESS_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar --repo-path example-maven-app --skip-deps || log_fail
 
 # Test the remote repo with GitHub provenance.
 GITHUB_EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/github-example-maven-project.cue
 GITHUB_PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/github-example-maven-project.json
 
-# Check the GitHub provenance.
-$RUN_MACARON analyze -pf $GITHUB_PROVENANCE_FILE -pe $GITHUB_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar --skip-deps || log_fail
+# Check the GitHub provenance (Do not clean).
+$RUN_MACARON $ANALYZE -pf $GITHUB_PROVENANCE_FILE -pe $GITHUB_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar --skip-deps || log_fail
 
 # Verify the policy and VSA for all the software components generated from behnazh-w/example-maven-app repo.
 $RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
@@ -795,13 +764,13 @@ check_or_update_expected_output "$COMPARE_POLICIES" "$POLICY_RESULT" "$POLICY_EX
 check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
 # Validate user input of repo and commit vs provenance.
-$RUN_MACARON analyze -pf $GITHUB_PROVENANCE_FILE -rp https://github.com/behnazh-w/example-maven-app -d 2deca75ed5dd365eaf1558a82347b1f11306135f --skip-deps || log_fail
+run_macaron_clean $ANALYZE -pf $GITHUB_PROVENANCE_FILE -rp https://github.com/behnazh-w/example-maven-app -d 2deca75ed5dd365eaf1558a82347b1f11306135f --skip-deps || log_fail
 
 # Validate user input of repo and commit (via purl) vs provenance.
-$RUN_MACARON analyze -pf $GITHUB_PROVENANCE_FILE -purl pkg:github/behnazh-w/example-maven-app@2deca75 --skip-deps || log_fail
+run_macaron_clean $ANALYZE -pf $GITHUB_PROVENANCE_FILE -purl pkg:github/behnazh-w/example-maven-app@2deca75 --skip-deps || log_fail
 
 # Validate user input of repo and commit (via purl with tag) vs provenance.
-$RUN_MACARON analyze -pf $GITHUB_PROVENANCE_FILE -purl pkg:github/behnazh-w/example-maven-app@1.0 --skip-deps || log_fail
+run_macaron_clean $ANALYZE -pf $GITHUB_PROVENANCE_FILE -purl pkg:github/behnazh-w/example-maven-app@1.0 --skip-deps || log_fail
 
 # Testing the Repo Finder's remote calls.
 # This requires the 'packageurl' Python module
