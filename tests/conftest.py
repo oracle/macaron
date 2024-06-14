@@ -42,7 +42,8 @@ from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
 from macaron.slsa_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
 
 # from macaron.slsa_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
-# from macaron.slsa_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
+from macaron.slsa_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
+
 # from macaron.slsa_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 # from macaron.slsa_analyzer.pypi_heuristics.metadata.unreachable_project_links import UnreachableProjectLinksAnalyzer
 # from macaron.slsa_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
@@ -460,25 +461,42 @@ def build_github_actions_call_graph_for_commands(commands: list[str]) -> CallGra
     return gh_cg
 
 
-# @pytest.fixture(autouse=True)
-# def one_release_analyzer() -> None:
-#     return None
+@pytest.fixture(autouse=True)
+def one_release_analyzer() -> dict:
+    """Create an one-release-analyzer setup.
+
+    Returns
+    -------
+        dict: Setup data for the test.
+    """
+    package_with_one_release = "ttttttttest-nester.py"
+    package_with_many_releases = "requests"
+    mock_api_client_fail = MagicMock(spec=PyPIRegistry(package_with_one_release))
+    mock_api_client_pass = MagicMock(spec=PyPIRegistry(package_with_many_releases))
+    analyzer = OneReleaseAnalyzer()
+
+    return {
+        "package_with_one_release": package_with_one_release,
+        "package_with_many_releases": package_with_many_releases,
+        "mock_api_client_fail": mock_api_client_fail,
+        "mock_api_client_pass": mock_api_client_pass,
+        "analyzer": analyzer,
+    }
 
 
 @pytest.fixture(autouse=True)
 def empty_project_link_analyzer() -> dict:
-    """Create an empty-project-link analyzer setup.
+    """Create an empty-project-link-analyzer setup.
 
     Returns
     -------
-        dict: setup data for the test.
+        dict: Setup data for the test.
     """
     package_with_links = "requests"
     package_no_links = "sfy_hello"
     mock_api_client_pass = MagicMock(spec=PyPIRegistry(package_with_links))
     mock_api_client_fail = MagicMock(spec=PyPIRegistry(package_no_links))
-    analyzer_pass = EmptyProjectLinkAnalyzer()
-    analyzer_fail = EmptyProjectLinkAnalyzer()
+    analyzer = EmptyProjectLinkAnalyzer()
     package_links = {
         "Documentation": "https://requests.readthedocs.io",
         "Homepage": "https://requests.readthedocs.io",
@@ -490,8 +508,7 @@ def empty_project_link_analyzer() -> dict:
         "package_no_links": package_no_links,
         "mock_api_client_pass": mock_api_client_pass,
         "mock_api_client_fail": mock_api_client_fail,
-        "analyzer_pass": analyzer_pass,
-        "analyzer_fail": analyzer_fail,
+        "analyzer": analyzer,
         "package_links": package_links,
     }
 
