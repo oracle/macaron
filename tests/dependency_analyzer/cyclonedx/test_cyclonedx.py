@@ -20,6 +20,9 @@ RESOURCES_DIR = Path(__file__).parent.joinpath("resources")
 def test_deserialize_bom_json(snapshot: list[str]) -> None:
     """Test deserializing a bom.json file."""
     # Deserialize a valid bom.json.
+    # Note that serializing the Bom object and compare against the original bom would be an ideal test,
+    # but cyclonedx took a really long time to finish serializing (could be a bug).
+    # So, we compare the resolved components as a proxy.
     path = Path(RESOURCES_DIR, "valid_bom.json")
     bom = deserialize_bom_json(path)
     assert snapshot == [str(cmp.bom_ref) for cmp in bom.components if isinstance(cmp, CDXComponent)]

@@ -155,7 +155,7 @@ echo "with dependency resolution using cyclonedx Maven plugins (defaults)."
 echo -e "----------------------------------------------------------------------------------\n"
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_timyarkov_multibuild_test_maven.json
 DEP_RESULT=$WORKSPACE/output/reports/maven/org_example/mock_maven_proj/dependencies.json
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/multibuild_test/multibuild_test.dl
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/org.example/mock_maven_proj/1.0-SNAPSHOT/multibuild_test.dl
 run_macaron_clean $ANALYZE -purl pkg:maven/org.example/mock_maven_proj@1.0-SNAPSHOT?type=jar -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
@@ -236,7 +236,7 @@ $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/maven.dl
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/org.apache.maven/maven/4.0.0-alpha-9-SNAPSHOT/maven.dl
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
 run_macaron_clean $ANALYZE -purl pkg:maven/org.apache.maven/maven@4.0.0-alpha-9-SNAPSHOT?type=pom -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
@@ -428,7 +428,7 @@ $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing local clone with the branch name, the commit digest and dependency resolution using cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/maven.dl
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/org.apache.maven/maven/4.0.0-alpha-9-SNAPSHOT/maven.dl
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
 DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
 run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com $ANALYZE -purl pkg:maven/org.apache.maven/maven@4.0.0-alpha-9-SNAPSHOT?type=pom -rp apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
@@ -633,6 +633,12 @@ then
     echo -e "Expect non-zero status code but got $?."
     log_fail
 fi
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "apache/maven: Analyzing dependencies when neither the repository nor SBOM is available."
+echo -e "----------------------------------------------------------------------------------\n"
+run_macaron_clean $ANALYZE -purl pkg:maven/private.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom || log_fail
+# We expect the analysis to finish with no errors.
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test using a custom template file that does not exist."

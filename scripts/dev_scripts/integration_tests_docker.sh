@@ -44,7 +44,7 @@ echo "with dependency resolution using cyclonedx Maven plugins (defaults)."
 echo -e "----------------------------------------------------------------------------------\n"
 DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_timyarkov_multibuild_test_maven.json
 DEP_RESULT=$WORKSPACE/output/reports/maven/org_example/mock_maven_proj/dependencies.json
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/multibuild_test/multibuild_test.dl
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/org.example/mock_maven_proj/1.0-SNAPSHOT/multibuild_test.dl
 run_macaron_clean analyze -purl pkg:maven/org.example/mock_maven_proj@1.0-SNAPSHOT?type=jar -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
 
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
