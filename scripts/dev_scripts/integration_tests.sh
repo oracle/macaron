@@ -457,19 +457,11 @@ echo -e "\n---------------------------------------------------------------------
 echo "apache/maven: Analyzing with local paths using local_repos_dir without dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
 # The report files are still stored in the same location.
-EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
-
-declare -a COMPARE_FILES=(
-    "maven.dl"
-    "guava.dl"
-    "mockito.dl"
-)
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/maven.dl
 
 run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com/ $ANALYZE -rp apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
-for i in "${COMPARE_FILES[@]}"
-do
-    $RUN_POLICY -d $DB -f $EXPECT_DIR/$i || log_fail
-done
+
+$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing a repository that was cloned from another local repo."

@@ -61,6 +61,13 @@ repository_analysis(analysis_id, component_id, repo_id, repo_name) :-
     is_repo(repo_id, repo_name, component_id).
 
 /**
+ * A convenience relation to find analyses conducted on a specific component.
+ */
+ .decl component_analysis(analysis_id: number, component_id: number)
+component_analysis(analysis_id, component_id) :-
+    component(component_id, _, analysis_id, _, _, _, _, _, _).
+
+/**
  *  ADT recursively describing a JSON object.
  */
 .type JsonType = Int {x : number}
