@@ -4,7 +4,7 @@
 
 """Analyzer checks the packages contain one release."""
 
-from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
+from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
@@ -13,18 +13,17 @@ from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 class OneReleaseAnalyzer(BaseHeuristicAnalyzer):
     """Analyzer checks heuristic."""
 
-    def __init__(self, api_client: PyPIApiClient) -> None:
+    def __init__(self) -> None:
         super().__init__(name="one_release_analyzer", heuristic=HEURISTIC.ONE_RELEASE, depends_on=None)
-        self.api_client = api_client
 
-    def analyze(self) -> tuple[HeuristicResult, dict]:
+    def analyze(self, api_client: PyPIRegistry) -> tuple[HeuristicResult, dict]:
         """Check the releases' total is one.
 
         Returns
         -------
             tuple[HeuristicResult, dict]: Result and confidence.
         """
-        releases: dict | None = self.api_client.get_releases()
+        releases: dict | None = api_client.get_releases()
         if releases is None:
             return HeuristicResult.SKIP, {"releases": {}}
 

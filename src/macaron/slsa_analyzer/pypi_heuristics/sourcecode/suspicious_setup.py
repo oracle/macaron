@@ -13,7 +13,7 @@ import zipfile
 
 import requests
 
-from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
+from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
@@ -24,12 +24,11 @@ logger: logging.Logger = logging.getLogger(__name__)
 class SuspiciousSetupAnalyzer(BaseHeuristicAnalyzer):
     """Analyzer checks heuristic."""
 
-    def __init__(self, api_client: PyPIApiClient) -> None:
+    def __init__(self) -> None:
         super().__init__(name="suspicious_setup_analyzer", heuristic=HEURISTIC.SUSPICIOUS_SETUP, depends_on=None)
         self.blacklist: list = ["base64", "request"]
-        self.api_client = api_client
 
-    def _get_setup_source_code(self) -> str | None:
+    def _get_setup_source_code(self, api_client: PyPIRegistry) -> str | None:
         """Get the source code in setup.py.
 
         Parameters
@@ -45,7 +44,7 @@ class SuspiciousSetupAnalyzer(BaseHeuristicAnalyzer):
         # Create a temporary directory to store the downloaded source
         with tempfile.TemporaryDirectory() as temp_dir:
             try:
-                sourcecode_url = self.api_client.get_sourcecode_url()
+                sourcecode_url = api_client.get_sourcecode_url()
                 if sourcecode_url is None:
                     return None
                 response = requests.get(sourcecode_url, stream=True, timeout=40)
@@ -79,14 +78,14 @@ class SuspiciousSetupAnalyzer(BaseHeuristicAnalyzer):
             except requests.exceptions.RequestException:
                 return None
 
-    def analyze(self) -> tuple[HeuristicResult, dict]:
+    def analyze(self, api_client: PyPIRegistry) -> tuple[HeuristicResult, dict]:
         """Analyze suspicious packages are imported in setup.py.
 
         Returns
         -------
             tuple[HeuristicResult, Confidence | None]: Result and confidence.
         """
-        content: str | None = self._get_setup_source_code()
+        content: str | None = self._get_setup_source_code(api_client)
         if content is None:
             return HeuristicResult.SKIP, {}
 
