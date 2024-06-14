@@ -584,7 +584,9 @@ else
     fi
 fi
 
+# Force docker to use linux/amd64 platform in order to make docker use emulation on ARM host platforms.
 docker run \
+    --platform=linux/amd64 \
     --network=host \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" \
