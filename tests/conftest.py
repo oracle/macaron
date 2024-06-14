@@ -511,8 +511,3 @@ def empty_project_link_analyzer() -> dict:
         "analyzer": analyzer,
         "package_links": package_links,
     }
-
-
-# @pytest.fixture(autouse=True)
-# def unreachable_project_links_analyzer() -> None:
-#     return None

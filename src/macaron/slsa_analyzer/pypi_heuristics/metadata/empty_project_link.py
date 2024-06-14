@@ -29,4 +29,4 @@ class EmptyProjectLinkAnalyzer(BaseHeuristicAnalyzer):
 
         if len(project_links) == 0:  # total
             return HeuristicResult.FAIL, {}
-        return HeuristicResult.PASS, project_links
+        return HeuristicResult.PASS, {"project_links": project_links}

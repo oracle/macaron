@@ -41,7 +41,7 @@ class UnreachableProjectLinksAnalyzer(BaseHeuristicAnalyzer):
             try:
                 response = requests.head(link, timeout=3)
                 if response.status_code < 400:
-                    return HeuristicResult.PASS, {"project_links": project_links}
+                    return HeuristicResult.PASS, {}
             except requests.exceptions.RequestException as error:
                 logger.debug(error)
                 continue
