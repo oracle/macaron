@@ -70,7 +70,7 @@ First, we need to run the ``analyze`` command of Macaron to run a number of :ref
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -rp https://github.com/behnazh-w/example-maven-app
+  ./run_macaron.sh analyze -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar -rp https://github.com/behnazh-w/example-maven-app
 
 .. note:: By default, Macaron clones the repositories and creates output files under the ``output`` directory. To understand the structure of this directory please see :ref:`Output Files Guide <output_files_guide>`.
 

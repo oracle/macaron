@@ -256,16 +256,6 @@ run_macaron_clean $ANALYZE -purl pkg:maven/org.apache.maven/maven@4.0.0-alpha-1-
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing using a CycloneDx SBOM file of a software component whose repository is not available."
-echo -e "----------------------------------------------------------------------------------\n"
-SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/private_mirror_apache_maven.json
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/private_mirror_apache_maven.json
-DEP_RESULT=$WORKSPACE/output/reports/maven/private_apache_maven/maven/dependencies.json
-run_macaron_clean $ANALYZE -purl pkg:maven/private.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom -sbom "$SBOM_FILE" || log_fail
-
-check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "com.example/nonexistent: Analyzing purl of nonexistent artifact."
 echo -e "----------------------------------------------------------------------------------\n"
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/maven/com_example_nonexistent/nonexistent.dl
@@ -445,38 +435,6 @@ run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com $ANALYZE -purl pkg:
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "pkg:pypi/django@5.0.6: Analyzing the dependencies with virtual env provided as input."
-echo -e "----------------------------------------------------------------------------------\n"
-# Prepare the virtual environment.
-VIRTUAL_ENV_PATH=$WORKSPACE/.django_venv
-$MAKE_VENV "$VIRTUAL_ENV_PATH"
-"$VIRTUAL_ENV_PATH"/bin/pip install django==5.0.6
-run_macaron_clean $ANALYZE -purl pkg:pypi/django@5.0.6 --python-venv "$VIRTUAL_ENV_PATH" || log_fail
-
-# Check the dependencies using the policy engine.
-RUN_POLICY="macaron verify-policy"
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/django/test_dependencies.dl
-POLICY_RESULT=$WORKSPACE/output/policy_report.json
-POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/django/test_dependencies.json
-
-$RUN_POLICY -f "$POLICY_FILE" -d "$WORKSPACE/output/macaron.db" || log_fail
-check_or_update_expected_output $COMPARE_POLICIES "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
-
-# Clean up and remove the virtual environment.
-rm -rf "$VIRTUAL_ENV_PATH"
-
-echo -e "\n-----------------------------------------------------------------------------------------"
-echo "pkg:pypi/django@5.0.6: Analyzing the dependencies with an invalid path to the virtual env dir."
-echo -e "-----------------------------------------------------------------------------------------\n"
-run_macaron_clean $ANALYZE -purl pkg:pypi/django@5.0.6 --python-venv invalid-path
-
-if [ $? -eq 0 ];
-then
-    echo -e "Expect non-zero status code but got $?."
-    log_fail
-fi
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with local paths in configuration and without dependency resolution."
@@ -665,6 +623,17 @@ then
     log_fail
 fi
 
+echo -e "\n-----------------------------------------------------------------------------------------"
+echo "pkg:pypi/django@5.0.6: Analyzing the dependencies with an invalid path to the virtual env dir."
+echo -e "-----------------------------------------------------------------------------------------\n"
+run_macaron_clean $ANALYZE -purl pkg:pypi/django@5.0.6 --python-venv invalid-path
+
+if [ $? -eq 0 ];
+then
+    echo -e "Expect non-zero status code but got $?."
+    log_fail
+fi
+
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test using a custom template file that does not exist."
 echo -e "----------------------------------------------------------------------------------\n"
@@ -828,6 +797,57 @@ then
     echo -e "Expect zero status code but got $?."
     log_fail
 fi
+
+# This section includes integration tests that are provided as tutorials on the website.
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Tutorial test for apache/maven: Analyzing using a CycloneDx SBOM file of a software component."
+echo -e "----------------------------------------------------------------------------------\n"
+SBOM_FILE=$WORKSPACE/docs/source/_static/examples/apache/maven/analyze_with_sbom/sbom.json
+DEP_EXPECTED=$WORKSPACE/tests/tutorials/dependency_analyze/maven/org_apache_maven/maven/dependencies.json
+DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
+run_macaron_clean $ANALYZE -purl pkg:maven/org.apache.maven/maven@3.9.7?type=pom -sbom "$SBOM_FILE" || log_fail
+
+check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Tutorial test for apache/maven: Analyzing using a CycloneDx SBOM file of a software component whose repository is not available."
+echo -e "----------------------------------------------------------------------------------\n"
+SBOM_FILE=$WORKSPACE/tests/tutorials/dependency_analyze/maven/private.apache.maven/maven/sbom.json
+DEP_EXPECTED=$WORKSPACE/tests/tutorials/dependency_analyze/maven/private.apache.maven/maven/dependencies.json
+DEP_RESULT=$WORKSPACE/output/reports/maven/private_apache_maven/maven/dependencies.json
+run_macaron_clean $ANALYZE -purl pkg:maven/private.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom -sbom "$SBOM_FILE" || log_fail
+
+check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Tutorial test for pkg:pypi/django@5.0.6: Analyzing the dependencies with virtual env provided as input."
+echo -e "----------------------------------------------------------------------------------\n"
+# Prepare the virtual environment.
+VIRTUAL_ENV_PATH=$WORKSPACE/.django_venv
+$MAKE_VENV "$VIRTUAL_ENV_PATH"
+"$VIRTUAL_ENV_PATH"/bin/pip install django==5.0.6
+run_macaron_clean $ANALYZE -purl pkg:pypi/django@5.0.6 --python-venv "$VIRTUAL_ENV_PATH" || log_fail
+
+# Check the dependencies using the policy engine.
+RUN_POLICY="macaron verify-policy"
+POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/django/test_dependencies.dl
+POLICY_RESULT=$WORKSPACE/output/policy_report.json
+POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/django/test_dependencies.json
+
+$RUN_POLICY -f "$POLICY_FILE" -d "$WORKSPACE/output/macaron.db" || log_fail
+check_or_update_expected_output $COMPARE_POLICIES "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
+
+# Clean up and remove the virtual environment.
+rm -rf "$VIRTUAL_ENV_PATH"
+
+echo -e "\n----------------------------------------------------------------------------------"
+echo "Tutorial test for behnazh-w/example-maven-app: testing automatic dependency resolution."
+echo -e "----------------------------------------------------------------------------------\n"
+DEP_EXPECTED=$WORKSPACE/tests/tutorials/dependency_analyze/maven/io_github_behnazh-w_demo/example-maven-app/dependencies.json
+DEP_RESULT=$WORKSPACE/output/reports/maven/io_github_behnazh-w_demo/example-maven-app/dependencies.json
+run_macaron_clean $ANALYZE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar -rp https://github.com/behnazh-w/example-maven-app || log_fail
+
+check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 # Important: This should be at the end of the file
 if [ $RESULT_CODE -ne 0 ];

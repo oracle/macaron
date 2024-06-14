@@ -405,6 +405,12 @@ class DependencyAnalyzer(ABC):
 
                 return deps_resolved
 
+            if not main_ctx.component.repository:
+                logger.info(
+                    "Unable to find a repository and no SBOM is provided as input. Analyzing the dependencies will be skipped."
+                )
+                return {}
+
             # Start resolving dependencies.
             logger.info(
                 "Running %s version %s dependency analyzer on %s",
