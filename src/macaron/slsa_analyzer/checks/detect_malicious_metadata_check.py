@@ -199,8 +199,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 # logger.info(f"{analyzer.heuristic}:  {detail_info}")
                 results[analyzer.heuristic] = result
                 detail_infos.update(detail_info)
-
-        return results, detail_info
+        return results, detail_infos
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
