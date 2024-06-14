@@ -194,7 +194,7 @@ where ``micronaut-core.cue`` file can contain:
 .. code-block:: javascript
 
   {
-    target: "micronaut-projects/micronaut-core",
+    target: "pkg:github.com/micronaut-projects/micronaut-core",
     predicate: {
         invocation: {
             configSource: {
