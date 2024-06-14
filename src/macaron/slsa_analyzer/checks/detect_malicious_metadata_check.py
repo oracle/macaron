@@ -12,8 +12,9 @@ from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
-from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
+from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
+from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 from macaron.slsa_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
@@ -53,7 +54,7 @@ class HeuristicAnalysisResultFacts(CheckFacts):
     }
 
 
-ANALYZERS = [
+ANALYZERS: list = [
     EmptyProjectLinkAnalyzer,
     UnreachableProjectLinksAnalyzer,
     OneReleaseAnalyzer,
@@ -101,7 +102,7 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,
         HeuristicResult.FAIL,
         HeuristicResult.FAIL,
-    ): Confidence.HIGH,  # The content changed and no-changed
+    ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,
         HeuristicResult.SKIP,
@@ -110,7 +111,7 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.PASS,
         HeuristicResult.FAIL,
         HeuristicResult.FAIL,
-    ): Confidence.HIGH,  # The content changed and no-changed
+    ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,
         HeuristicResult.SKIP,
@@ -119,7 +120,7 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,
         HeuristicResult.FAIL,
         HeuristicResult.PASS,
-    ): Confidence.MEDIUM,  # The content changed and no-changed
+    ): Confidence.MEDIUM,
     (
         HeuristicResult.FAIL,
         HeuristicResult.SKIP,
@@ -128,7 +129,7 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.PASS,
         HeuristicResult.FAIL,
         HeuristicResult.PASS,
-    ): Confidence.MEDIUM,  # The content changed and no-changed
+    ): Confidence.MEDIUM,
 }
 
 
@@ -168,13 +169,13 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         return False
 
     def run_heuristics(
-        self, api_client: PyPIApiClient
+        self, api_client: PyPIRegistry
     ) -> tuple[dict[HEURISTIC, HeuristicResult], dict[str, int | dict]]:
         """Run the main logic of heuristics analysis.
 
         Args
         ----
-            api_client (PyPIApiClient): The PyPI API client object used to interact with the official PyPI API.
+            api_client (PyPIRegistry): The PyPI API client object used to interact with the official PyPI API.
 
         Returns
         -------
@@ -183,15 +184,16 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         results: dict[HEURISTIC, HeuristicResult] = {}
         detail_infos: dict[str, int | dict] = {}
         for _analyzer in ANALYZERS:
-            analyzer = _analyzer(api_client)
+            analyzer: BaseHeuristicAnalyzer = _analyzer()
+            logger.debug("Instantiating %s", _analyzer.__name__)
             depends_on = analyzer.depends_on
 
             if depends_on:
                 should_skip: bool = self._should_skip(results, depends_on)
-                if should_skip and isinstance(analyzer.heuristic, HEURISTIC):
+                if should_skip:
                     results[analyzer.heuristic] = HeuristicResult.SKIP
                     continue
-            result, detail_info = analyzer.analyze()
+            result, detail_info = analyzer.analyze(api_client)
             if analyzer.heuristic:
                 # logger.info(f"{analyzer.heuristic}:  {detail_info}")
                 results[analyzer.heuristic] = result
@@ -215,7 +217,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         package = "requests"
         result_tables: list[CheckFacts] = []
 
-        api_client = PyPIApiClient(package)
+        api_client: PyPIRegistry = PyPIRegistry()
+        api_client.load_defaults()
+        api_client.download_attestation_payload(package)
         result, detail_infos = self.run_heuristics(api_client)
         heuristics_fail = [heuristic.value for heuristic, result in result.items() if result is HeuristicResult.FAIL]
         result_combo: tuple = tuple(result.values())

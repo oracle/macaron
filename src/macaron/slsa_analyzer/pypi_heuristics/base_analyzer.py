@@ -5,6 +5,7 @@
 
 from abc import abstractmethod
 
+from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
 
@@ -25,7 +26,7 @@ class BaseHeuristicAnalyzer:
         ] | None = depends_on  # Contains the dependent heuristics and the expected result of each heuristic
 
     @abstractmethod
-    def analyze(self) -> tuple[HeuristicResult, int | dict]:
+    def analyze(self, api_client: PyPIRegistry) -> tuple[HeuristicResult, dict]:
         """
         Implement the base analyze method for seven analyzers.
 

@@ -7,7 +7,7 @@ import logging
 from datetime import datetime
 
 from macaron.json_tools import json_extract
-from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIApiClient
+from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.slsa_analyzer.pypi_heuristics.heuristics import HEURISTIC
@@ -18,23 +18,22 @@ logger: logging.Logger = logging.getLogger(__name__)
 class HighReleaseFrequencyAnalyzer(BaseHeuristicAnalyzer):
     """Analyzer checks heuristic."""
 
-    def __init__(self, api_client: PyPIApiClient) -> None:
+    def __init__(self) -> None:
         super().__init__(
             name="high_release_frequency_analyzer",
             heuristic=HEURISTIC.HIGH_RELEASE_FREQUENCY,
             depends_on=[(HEURISTIC.ONE_RELEASE, HeuristicResult.PASS)],  # Analyzing when this heuristic pass
         )
         self.average_gap_threshold: int = 2  # Days
-        self.api_client = api_client
 
-    def analyze(self) -> tuple[HeuristicResult, dict]:
+    def analyze(self, api_client: PyPIRegistry) -> tuple[HeuristicResult, dict]:
         """Check whether the release frequency is high.
 
         Returns
         -------
             tuple[HeuristicResult, Confidence | None]: Confidence and result.
         """
-        version_to_releases: dict | None = self.api_client.get_releases()
+        version_to_releases: dict | None = api_client.get_releases()
         if version_to_releases is None:
             return HeuristicResult.SKIP, {}
         releases_amount = len(version_to_releases)
