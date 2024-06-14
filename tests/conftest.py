@@ -4,6 +4,7 @@
 """Fixtures for tests."""
 from pathlib import Path
 from typing import NoReturn
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -34,6 +35,17 @@ from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import Gi
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
+from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
+
+# from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
+# from macaron.slsa_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
+from macaron.slsa_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
+
+# from macaron.slsa_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
+# from macaron.slsa_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
+# from macaron.slsa_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
+# from macaron.slsa_analyzer.pypi_heuristics.metadata.unreachable_project_links import UnreachableProjectLinksAnalyzer
+# from macaron.slsa_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
 
 # We need to pass fixture names as arguments to maintain an order.
 # pylint: disable=redefined-outer-name
@@ -446,3 +458,44 @@ def build_github_actions_call_graph_for_commands(commands: list[str]) -> CallGra
     )
 
     return gh_cg
+
+
+# @pytest.fixture(autouse=True)
+# def one_release_analyzer() -> None:
+#     return None
+
+
+@pytest.fixture(autouse=True)
+def empty_project_link_analyzer() -> dict:
+    """Create an empty-project-link analyzer setup.
+
+    Returns
+    -------
+        dict: setup data for the test.
+    """
+    package_with_links = "requests"
+    package_no_links = "sfy_hello"
+    mock_api_client_pass = MagicMock(spec=PyPIRegistry(package_with_links))
+    mock_api_client_fail = MagicMock(spec=PyPIRegistry(package_no_links))
+    analyzer_pass = EmptyProjectLinkAnalyzer()
+    analyzer_fail = EmptyProjectLinkAnalyzer()
+    package_links = {
+        "Documentation": "https://requests.readthedocs.io",
+        "Homepage": "https://requests.readthedocs.io",
+        "Source": "https://github.com/psf/requests",
+    }
+
+    return {
+        "package_with_links": package_with_links,
+        "package_no_links": package_no_links,
+        "mock_api_client_pass": mock_api_client_pass,
+        "mock_api_client_fail": mock_api_client_fail,
+        "analyzer_pass": analyzer_pass,
+        "analyzer_fail": analyzer_fail,
+        "package_links": package_links,
+    }
+
+
+# @pytest.fixture(autouse=True)
+# def unreachable_project_links_analyzer() -> None:
+#     return None
