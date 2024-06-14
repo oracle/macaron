@@ -5,6 +5,7 @@
 
 from datetime import datetime, timedelta
 
+from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
@@ -57,7 +58,10 @@ class CloserReleaseJoinDateAnalyzer(BaseHeuristicAnalyzer):
         """
         upload_time: str | None = api_client.get_latest_release_upload_time()
         if upload_time:
-            return datetime.strptime(upload_time, "%Y-%m-%dT%H:%M:%S")
+            datetime_format: str = "%Y-%m-%dT%H:%M:%S"
+            res: datetime | None = parse_datetime(upload_time, datetime_format)
+            if res:
+                return res
         return None
 
     def analyze(self, api_client: PyPIRegistry) -> tuple[HeuristicResult, dict]:
