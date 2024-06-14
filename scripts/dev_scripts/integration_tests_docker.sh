@@ -100,7 +100,8 @@ python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing with PURL and repository path without dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.dl
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.dl
+
 run_macaron_clean analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
@@ -109,8 +110,9 @@ echo -e "\n---------------------------------------------------------------------
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
 echo "The CUE expectation file is provided as a single file path."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.dl
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.dl
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/urllib3_PASS.cue
+
 run_macaron_clean analyze -pe $EXPECTATION_FILE -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
@@ -119,8 +121,9 @@ echo -e "\n---------------------------------------------------------------------
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
 echo "The CUE expectation file should be found via the directory path."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.dl
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.dl
 EXPECTATION_DIR=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/
+
 run_macaron_clean analyze -pe $EXPECTATION_DIR -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
@@ -128,9 +131,10 @@ $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test verifying CUE provenance expectation for ossf/scorecard"
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/scorecard/scorecard.dl
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/scorecard/scorecard.dl
 DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/scorecard.ini
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/scorecard_PASS.cue
+
 run_macaron_clean -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -purl pkg:github/ossf/scorecard@v4.13.1 --skip-deps || log_fail
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
@@ -152,9 +156,10 @@ echo -e "\n---------------------------------------------------------------------
 echo "slsa-framework/slsa-verifier: Analyzing the repo path when automatic dependency resolution is skipped"
 echo "and CUE file is provided as expectation."
 echo -e "----------------------------------------------------------------------------------\n"
-JSON_EXPECTED=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_cue_PASS.dl
+OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_cue_PASS.dl
 EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
 DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/slsa_verifier.ini
+
 run_macaron_clean -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
