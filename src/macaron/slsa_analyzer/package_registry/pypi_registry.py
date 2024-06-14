@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup, Tag
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.json_tools import json_extract
+from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.build_tool import Pip, Poetry
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
@@ -285,5 +286,7 @@ class PyPIRegistry(PackageRegistry):
             datetime_format = "%Y-%m-%dT%H:%M:%S%z"
             # Return the parsed string to a datetime object
             if isinstance(datetime_val, str):
-                return datetime.strptime(datetime_val, datetime_format).replace(tzinfo=None)
+                res: datetime | None = parse_datetime(datetime_val, datetime_format)
+                if res:
+                    return res.replace(tzinfo=None)
         return None

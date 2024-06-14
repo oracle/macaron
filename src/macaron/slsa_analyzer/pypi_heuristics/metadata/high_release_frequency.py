@@ -7,6 +7,7 @@ import logging
 from datetime import datetime
 
 from macaron.json_tools import json_extract
+from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
 from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
 from macaron.slsa_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
@@ -45,12 +46,10 @@ class HighReleaseFrequencyAnalyzer(BaseHeuristicAnalyzer):
             upload_time: str | None = json_extract(metadata[0], ["upload_time"], str)
             if upload_time is None:
                 continue
-            try:
-                upload_datetime: datetime = datetime.strptime(upload_time, "%Y-%m-%dT%H:%M:%S")
-                extract_data[version] = upload_datetime
-            except ValueError as e:
-                logger.debug("Failed to parse upload_time for %s - %s", upload_datetime, e)
-                continue
+            datetime_format: str = "%Y-%m-%dT%H:%M:%S"
+            res: datetime | None = parse_datetime(upload_time, datetime_format)
+            if res:
+                extract_data[version] = res
 
         prev_timestamp: datetime = next(iter(extract_data.values()))
 

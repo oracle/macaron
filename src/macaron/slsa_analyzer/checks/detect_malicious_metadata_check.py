@@ -5,6 +5,7 @@
 
 import logging
 
+from packageurl import PackageURL
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -214,7 +215,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        package = "requests"
+        purl = ctx.component.purl
+        parsed_purl = PackageURL.from_string(purl)
+        package = parsed_purl.name
+        logger.debug("Run check with package %s", package)
         result_tables: list[CheckFacts] = []
 
         api_client: PyPIRegistry = PyPIRegistry()
