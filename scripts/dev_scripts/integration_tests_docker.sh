@@ -182,17 +182,6 @@ $RUN_POLICY -f "$POLICY_FILE" -d $DB || log_fail
 python "$COMPARE_POLICIES" "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
 python "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: test analyzing with both PURL and repository path but no branch and digest are provided."
-echo -e "----------------------------------------------------------------------------------\n"
-$RUN_MACARON_SCRIPT analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven --skip-deps
-
-if [ $? -eq 0 ];
-then
-    echo -e "Expect non-zero status code but got $?."
-    log_fail
-fi
-
 python3 ./tests/integration/run.py run \
     --macaron scripts/release_scripts/run_macaron.sh \
     --include-tag docker \

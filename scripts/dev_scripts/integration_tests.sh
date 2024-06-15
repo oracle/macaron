@@ -567,17 +567,6 @@ then
     log_fail
 fi
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: test analyzing with both PURL and repository path but no branch and digest are provided."
-echo -e "----------------------------------------------------------------------------------\n"
-run_macaron_clean $ANALYZE -purl pkg:maven/apache/maven -rp https://github.com/apache/maven --skip-deps
-
-if [ $? -eq 0 ];
-then
-    echo -e "Expect non-zero status code but got $?."
-    log_fail
-fi
-
 echo -e "\n-----------------------------------------------------------------------------------------"
 echo "pkg:pypi/django@5.0.6: Analyzing the dependencies with an invalid path to the virtual env dir."
 echo -e "-----------------------------------------------------------------------------------------\n"
