@@ -1,0 +1,23 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analysing the repo path, the branch name and the commit digest for a pnpm project,
+  skipping dependency resolution.
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -rp
+    - https://github.com/onu-ui/onu-ui
+    - -b
+    - main
+    - -d
+    - e3f2825c3940002a920d65476116a64684b3d95e
+    - --skip-deps
+- name: Run macaron verify-policy to verify passed/failed checks
+  kind: verify
+  options:
+    policy: policy.dl
