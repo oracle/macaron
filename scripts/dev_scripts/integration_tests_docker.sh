@@ -262,6 +262,11 @@ then
     log_fail
 fi
 
+python3 ./tests/integration/run.py run \
+    --macaron scripts/release_scripts/run_macaron.sh \
+    --include-tag docker \
+    ./tests/integration/cases/... || log_fail
+
 if [ $RESULT_CODE -ne 0 ];
 then
     exit 1

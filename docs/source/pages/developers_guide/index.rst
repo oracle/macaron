@@ -216,9 +216,15 @@ Finally, you need to register your check by adding it to the :mod:`registry modu
 Test your check
 '''''''''''''''
 
-Finally, you can add tests for you check by adding ``tests/slsa_analyzer/checks/test_repo_check.py`` module. Macaron
-uses `pytest <https://docs.pytest.org>`_ and `hypothesis <https://hypothesis.readthedocs.io>`_ for testing. Take a look
+Finally, you can add tests for you check. We utilize two types of tests: unit tests, and integration tests.
+
+For unit tests, you can add a ``tests/slsa_analyzer/checks/test_repo_check.py`` module. Macaron
+uses `pytest <https://docs.pytest.org>`_ and `hypothesis <https://hypothesis.readthedocs.io>`_ for unit testing. Take a look
 at other tests for inspiration!
+
+For integration tests, please refer to the README file under ``tests/integration`` for
+further instructions and have a look at our existing integration test cases if you need
+some examples.
 
 .. toctree::
    :maxdepth: 1

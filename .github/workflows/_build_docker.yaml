@@ -59,6 +59,10 @@ jobs:
         IMAGE_NAME: ghcr.io/oracle/macaron
       run: make build-docker
 
+    - name: Install dependencies for integration test utility
+      run: |
+        python3 -m pip install ruamel.yaml cfgv
+
     # Run the integration tests against the built Docker image.
     - name: Test the Docker image
       env:
