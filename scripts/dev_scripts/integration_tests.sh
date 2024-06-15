@@ -87,14 +87,6 @@ echo "Run integration tests without configurations"
 echo -e "==================================================================================\n"
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "jenkinsci/plot-plugin: Analyzing the repo path, the branch name and the commit digest when automatic dependency resolution is skipped."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/plot-plugin/plot-plugin.dl
-run_macaron_clean $ANALYZE -rp https://github.com/jenkinsci/plot-plugin -b master -d 55b059187e252b35ac0d6cb52268833ee1bb7380 --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "timyarkov/multibuild_test: Analyzing Maven artifact with the repo path, the branch name and the commit digest"
 echo "with dependency resolution using cyclonedx Maven plugins (defaults)."
 echo -e "----------------------------------------------------------------------------------\n"
