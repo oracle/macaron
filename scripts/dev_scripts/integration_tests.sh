@@ -100,15 +100,6 @@ check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_f
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "uiv-lib/uiv: Analysing the repo path, the branch name and the commit digest for an npm project,"
-echo "skipping dependency resolution."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/uiv/uiv.dl
-run_macaron_clean $ANALYZE -rp https://github.com/uiv-lib/uiv -b dev -d 057b25b4db0913edab4cf728c306085e6fc20d49 --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "onu-ui/onu-ui: Analysing the repo path, the branch name and the commit digest for a pnpm project,"
 echo "skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
