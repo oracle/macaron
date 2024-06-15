@@ -97,14 +97,6 @@ $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 if [[ -z "$NO_NPM_TEST" ]]; then
     echo -e "\n----------------------------------------------------------------------------------"
-    echo "sigstore/mock@0.1.0: Analyzing the PURL when automatic dependency resolution is skipped."
-    echo -e "----------------------------------------------------------------------------------\n"
-    OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/npm/sigstore/mock/mock.dl
-    run_macaron_clean $ANALYZE -purl pkg:npm/@sigstore/mock@0.1.0 -rp https://github.com/sigstore/sigstore-js -b main -d ebdcfdfbdfeb9c9aeee6df53674ef230613629f5 --skip-deps || log_fail
-
-    $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-    echo -e "\n----------------------------------------------------------------------------------"
     echo "semver@7.6.0: Extracting repository URL and commit from provenance while Repo Finder is disabled."
     echo -e "----------------------------------------------------------------------------------\n"
     OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/npm/semver/semver.dl

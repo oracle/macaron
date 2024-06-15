@@ -1,0 +1,27 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing the PURL when automatic dependency resolution is skipped.
+
+tags:
+- npm-registry
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:npm/@sigstore/mock@0.1.0
+    - -rp
+    - https://github.com/sigstore/sigstore-js
+    - -b
+    - main
+    - -d
+    - ebdcfdfbdfeb9c9aeee6df53674ef230613629f5
+    - --skip-deps
+- name: Run macaron verify-policy to verify passed/failed checks
+  kind: verify
+  options:
+    policy: policy.dl
