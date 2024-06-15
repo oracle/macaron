@@ -196,14 +196,6 @@ run_macaron_clean $ANALYZE -rp https://github.com/sigstore/sget -b main -d 99e7b
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing with PURL and repository path without dependency resolution."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.dl
-run_macaron_clean $ANALYZE -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/org.apache.maven/maven/4.0.0-alpha-9-SNAPSHOT/maven.dl

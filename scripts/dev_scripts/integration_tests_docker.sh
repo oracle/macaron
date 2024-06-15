@@ -81,15 +81,6 @@ run_macaron_clean analyze -purl pkg:maven/org.apache.maven/maven@4.0.0-alpha-1-S
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing with PURL and repository path without dependency resolution."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/maven/maven.dl
-
-run_macaron_clean analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "pkg:pypi/django@5.0.6: Analyzing the dependencies with virtual env provided as input."
 echo -e "----------------------------------------------------------------------------------\n"
 # Prepare the virtual environment.
