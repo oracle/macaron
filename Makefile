@@ -292,11 +292,13 @@ test-go:
 # Note: to disable npm tests set `NO_NPM` environment variable to `TRUE`.
 .PHONY: integration-test
 integration-test:
-	scripts/dev_scripts/integration_tests.sh $(REPO_PATH) "${HOME}"
+	# scripts/dev_scripts/integration_tests.sh $(REPO_PATH) "${HOME}"
+	python3 ./tests/integration/run.py run --exclude-tag tested ./tests/integration/cases/...
 
 .PHONY: integration-test-docker
 integration-test-docker:
-	scripts/dev_scripts/integration_tests_docker.sh $(REPO_PATH) scripts/release_scripts/run_macaron.sh
+	# scripts/dev_scripts/integration_tests_docker.sh $(REPO_PATH) scripts/release_scripts/run_macaron.sh
+	python3 ./tests/integration/run.py run --macaron scripts/release_scripts/run_macaron.sh --include-tag docker --exclude-tag tested ./tests/integration/cases/...
 
 # Update the expected results of the integration tests after generating the actual results.
 .PHONY: integration-test-update

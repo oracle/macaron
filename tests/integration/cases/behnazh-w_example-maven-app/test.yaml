@@ -1,0 +1,54 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# Case 11
+description: >
+  Test the Witness and GitHub provenances as an input, Cue expectation validation,
+  Policy CLI, and VSA generation.
+
+tags:
+- docker
+
+steps:
+- name: Clone the repository
+  kind: shell
+  options:
+    cmd: >
+      git clone https://github.com/behnazh-w/example-maven-app.git
+      output/git_repos/local_repos/example-maven-app
+- name: Run macaron analyze on the local repository with Witness provenance.
+  kind: analyze
+  options:
+    command_args:
+    - --package-url
+    - pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar
+    - --repo-path
+    - example-maven-app
+    - --skip-deps
+    expectation: witness_provenance_expectation.cue
+    provenance: witness_provenance.jsonl
+- name: Run macaron analyze on the remote repository with GitHub provenance.
+  kind: analyze
+  options:
+    command_args:
+    - --package-url
+    - pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar
+    - --skip-deps
+    expectation: github_provenance_expectation.cue
+    provenance: github_provenance.jsonl
+- name: Run macaron verify-policy
+  kind: verify
+  options:
+    policy: policy.dl
+- name: Compare verify report
+  kind: compare
+  options:
+    kind: policy_report
+    result: output/policy_report.json
+    expected: policy_report.json
+- name: Compare VSA
+  kind: compare
+  options:
+    kind: vsa
+    result: output/vsa.intoto.jsonl
+    expected: vsa_payload.json

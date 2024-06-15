@@ -1,0 +1,23 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# Case 07
+description: >
+  Check the resolved dependency output with config for cyclonedx maven plugin (default)
+
+tags:
+- docker
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -c
+    - maven_config.yaml
+- name: Compare dependency report
+  kind: compare
+  options:
+    kind: deps_report
+    result: output/reports/github_com/apache/maven/dependencies.json
+    expected: dependencies.json

@@ -238,6 +238,7 @@ minversion = "7.0"
 addopts = """-vv -ra --tb native \
     --doctest-modules --doctest-continue-on-failure --doctest-glob '*.rst' \
     --cov macaron \
+    --ignore tests/integration \
 """  # Consider adding --pdb
 # https://docs.python.org/3/library/doctest.html#option-flags
 doctest_optionflags = "IGNORE_EXCEPTION_DETAIL"

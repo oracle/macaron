@@ -1,0 +1,182 @@
+[
+    {
+        "id": "org.junit.jupiter:junit-jupiter-engine",
+        "purl": "pkg:maven/org.junit.jupiter/junit-jupiter-engine@5.8.1?type=jar",
+        "path": "https://github.com/junit-team/junit5",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.hamcrest:hamcrest-core",
+        "purl": "pkg:maven/org.hamcrest/hamcrest-core@2.2?type=jar",
+        "path": "https://github.com/hamcrest/JavaHamcrest",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.apache.maven:maven-model",
+        "purl": "pkg:maven/org.apache.maven/maven-model@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-artifact",
+        "purl": "pkg:maven/org.apache.maven/maven-artifact@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-plugin-api",
+        "purl": "pkg:maven/org.apache.maven/maven-plugin-api@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-builder-support",
+        "purl": "pkg:maven/org.apache.maven/maven-builder-support@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-model-transform",
+        "purl": "pkg:maven/org.apache.maven/maven-model-transform@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-model-builder",
+        "purl": "pkg:maven/org.apache.maven/maven-model-builder@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-settings",
+        "purl": "pkg:maven/org.apache.maven/maven-settings@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-settings-builder",
+        "purl": "pkg:maven/org.apache.maven/maven-settings-builder@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-toolchain-model",
+        "purl": "pkg:maven/org.apache.maven/maven-toolchain-model@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-toolchain-builder",
+        "purl": "pkg:maven/org.apache.maven/maven-toolchain-builder@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-repository-metadata",
+        "purl": "pkg:maven/org.apache.maven/maven-repository-metadata@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-resolver-provider",
+        "purl": "pkg:maven/org.apache.maven/maven-resolver-provider@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-core",
+        "purl": "pkg:maven/org.apache.maven/maven-core@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-slf4j-wrapper",
+        "purl": "pkg:maven/org.apache.maven/maven-slf4j-wrapper@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-slf4j-provider",
+        "purl": "pkg:maven/org.apache.maven/maven-slf4j-provider@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-embedder",
+        "purl": "pkg:maven/org.apache.maven/maven-embedder@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-compat",
+        "purl": "pkg:maven/org.apache.maven/maven-compat@4.0.0-alpha-1-SNAPSHOT?type=jar",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    },
+    {
+        "id": "org.apache.maven:apache-maven",
+        "purl": "pkg:maven/org.apache.maven/apache-maven@4.0.0-alpha-1-SNAPSHOT?type=pom",
+        "path": "",
+        "branch": "",
+        "digest": "",
+        "note": "Manual configuration required. Could not find SCM URL.",
+        "available": "MISSING REPO URL"
+    }
+]

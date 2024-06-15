@@ -1,0 +1,28 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# Case 14
+description: >
+  Analyzing the repo path, the branch name and the commit digest with dependency resolution using a CycloneDx SBOM.
+
+tags:
+- docker
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -rp
+    - https://github.com/apache/maven
+    - -b
+    - master
+    - -d
+    - 3fc399318edef0d5ba593723a24fff64291d6f9b
+    sbom: sbom.json
+- name: Compare dependency report
+  kind: compare
+  options:
+    kind: deps_report
+    result: output/reports/github_com/apache/maven/dependencies.json
+    expected: dependencies.json

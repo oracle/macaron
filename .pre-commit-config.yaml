@@ -161,6 +161,18 @@ repos:
   # - id: pretty-format-toml
   #   args: [--autofix]
 
+- repo: local
+  hooks:
+  - id: integration-test-vet
+    name: validate integration test cases
+    entry: python3
+    args:
+    - ./tests/integration/run.py
+    - vet
+    - ./tests/integration/cases/...
+    language: system
+    pass_filenames: false
+
 # On push to the remote, run the unit tests.
 - repo: local
   hooks:

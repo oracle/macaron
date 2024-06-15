@@ -1,0 +1,28 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# Case 10
+description: >
+  Analyze with PURL, repository path, no dependency resolution.
+
+tags:
+- docker
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - --package-url
+    - pkg:maven/apache/maven
+    - --repo-path
+    - https://github.com/apache/maven
+    - -b
+    - master
+    - -d
+    - 3fc399318edef0d5ba593723a24fff64291d6f9b
+    - --skip-deps
+- name: Run macaron verify-policy
+  kind: verify
+  options:
+    policy: policy.dl
