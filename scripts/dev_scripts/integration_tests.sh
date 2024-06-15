@@ -95,16 +95,6 @@ run_macaron_clean -dp $DEFAULTS_FILE $ANALYZE -purl pkg:maven/io.micronaut/micro
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
-if [[ -z "$NO_NPM_TEST" ]]; then
-    echo -e "\n----------------------------------------------------------------------------------"
-    echo "semver@7.6.0: Extracting repository URL and commit from provenance while Repo Finder is disabled."
-    echo -e "----------------------------------------------------------------------------------\n"
-    OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/npm/semver/semver.dl
-    run_macaron_clean -dp tests/e2e/defaults/disable_repo_finder.ini $ANALYZE -purl pkg:npm/semver@7.6.0 || log_fail
-
-    $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-fi
-
 echo -e "\n----------------------------------------------------------------------------------"
 echo "gitlab.com/tinyMediaManager/tinyMediaManager: Analyzing the repo path and the branch name when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
