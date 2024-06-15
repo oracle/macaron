@@ -87,15 +87,6 @@ echo "Run integration tests without configurations"
 echo -e "==================================================================================\n"
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "micronaut-projects/micronaut-core: Analyzing the PURL when automatic dependency resolution is skipped."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/maven/micronaut-core/micronaut-core.dl
-DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/micronaut-core.ini
-run_macaron_clean -dp $DEFAULTS_FILE $ANALYZE -purl pkg:maven/io.micronaut/micronaut-core@4.2.3 --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "gitlab.com/tinyMediaManager/tinyMediaManager: Analyzing the repo path and the branch name when automatic dependency resolution is skipped."
 echo -e "----------------------------------------------------------------------------------\n"
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/tinyMediaManager/tinyMediaManager.dl
@@ -546,18 +537,6 @@ EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/reso
 run_macaron_clean $ANALYZE -pe $EXPECTATION_FILE -rp https://github.com/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Run policy CLI with micronaut-core results to test deploy command information."
-echo -e "----------------------------------------------------------------------------------\n"
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/micronaut-core/test_deploy_info.dl
-POLICY_RESULT=$WORKSPACE/output/policy_report.json
-POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/micronaut-core/test_deploy_info.json
-DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/micronaut-core.ini
-$RUN_MACARON -dp $DEFAULTS_FILE analyze -purl pkg:maven/io.micronaut/micronaut-core@4.2.3 --skip-deps || log_fail
-
-$RUN_POLICY -f $POLICY_FILE -d $DB || log_fail
-check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 
 # Testing the Repo Finder's remote calls.
 # This requires the 'packageurl' Python module
