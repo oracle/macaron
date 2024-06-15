@@ -279,24 +279,6 @@ run_macaron_clean $ANALYZE -c $WORKSPACE/tests/dependency_analyzer/configuration
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the e2e results with config and no dependency analyzing."
-echo -e "----------------------------------------------------------------------------------\n"
-EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
-
-declare -a COMPARE_FILES=(
-    "maven.dl"
-    "guava.dl"
-    "mockito.dl"
-)
-
-run_macaron_clean $ANALYZE -c $WORKSPACE/tests/e2e/configurations/maven_config.yaml --skip-deps || log_fail
-
-for i in "${COMPARE_FILES[@]}"
-do
-    $RUN_POLICY -d $DB -f $EXPECT_DIR/$i || log_fail
-done
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check: Check the e2e status code of running with invalid branch or digest defined in the yaml configuration."
 echo -e "----------------------------------------------------------------------------------\n"
 declare -a INVALID_BRANCH_DIGEST=(

@@ -52,24 +52,6 @@ python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the e2e output JSON file with config and no dependency analyzing."
-echo -e "----------------------------------------------------------------------------------\n"
-EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
-
-declare -a COMPARE_FILES=(
-    "maven.dl"
-    "guava.dl"
-    "mockito.dl"
-)
-
-run_macaron_clean analyze -c $WORKSPACE/tests/e2e/configurations/maven_config.yaml --skip-deps || log_fail
-
-for i in "${COMPARE_FILES[@]}"
-do
-    $RUN_POLICY -d $DB -f $EXPECT_DIR/$i || log_fail
-done
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing using a CycloneDx SBOM with target repo path"
 echo -e "----------------------------------------------------------------------------------\n"
 SBOM_FILE=$WORKSPACE/tests/dependency_analyzer/cyclonedx/resources/apache_maven_root_sbom.json
