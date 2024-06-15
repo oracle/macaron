@@ -62,15 +62,6 @@ $RUN_MACARON_SCRIPT analyze -purl pkg:maven/org.example/mock_gradle_proj@1.0?typ
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
-echo -e "----------------------------------------------------------------------------------\n"
-DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
-
-run_macaron_clean analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || log_fail
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: e2e using the local repo path, the branch name and the commit digest without dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/maven.dl

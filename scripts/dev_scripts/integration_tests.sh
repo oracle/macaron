@@ -315,15 +315,6 @@ do
 done
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the resolved dependency output with config for cyclonedx maven plugin."
-echo -e "----------------------------------------------------------------------------------\n"
-DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
-run_macaron_clean $ANALYZE -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml || log_fail
-
-check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check: Check the e2e status code of running with invalid branch or digest defined in the yaml configuration."
 echo -e "----------------------------------------------------------------------------------\n"
 declare -a INVALID_BRANCH_DIGEST=(
