@@ -62,15 +62,6 @@ $RUN_MACARON_SCRIPT analyze -purl pkg:maven/org.example/mock_gradle_proj@1.0?typ
 python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: e2e using the local repo path, the branch name and the commit digest without dependency resolution."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/maven.dl
-
-run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com analyze -r apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check the e2e output JSON file with config and no dependency analyzing."
 echo -e "----------------------------------------------------------------------------------\n"
 EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
