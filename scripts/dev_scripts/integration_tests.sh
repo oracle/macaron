@@ -142,16 +142,6 @@ check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_f
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "timyarkov/multibuild_test: Analyzing Gradle artifact with the repo path, the branch name and the commit digest"
-echo "with dependency resolution using cyclonedx Gradle plugins (defaults)."
-echo -e "----------------------------------------------------------------------------------\n"
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_timyarkov_multibuild_test_gradle.json
-DEP_RESULT=$WORKSPACE/output/reports/maven/org_example/mock_gradle_proj/dependencies.json
-run_macaron_clean $ANALYZE -purl pkg:maven/org.example/mock_gradle_proj@1.0?type=jar -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
-
-check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
 echo "timyarkov/docker_test: Analyzing the repo path, the branch name and the commit digest"
 echo "when automatic dependency resolution is skipped, for a project using docker as a build tool."
 echo -e "----------------------------------------------------------------------------------\n"

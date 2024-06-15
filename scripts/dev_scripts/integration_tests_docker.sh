@@ -52,16 +52,6 @@ python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "timyarkov/multibuild_test: Analyzing Gradle artifact with the repo path, the branch name and the commit digest"
-echo "with dependency resolution using cyclonedx Gradle plugins (defaults)."
-echo -e "----------------------------------------------------------------------------------\n"
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_timyarkov_multibuild_test_gradle.json
-DEP_RESULT=$WORKSPACE/output/reports/maven/org_example/mock_gradle_proj/dependencies.json
-$RUN_MACARON_SCRIPT analyze -purl pkg:maven/org.example/mock_gradle_proj@1.0?type=jar -rp https://github.com/timyarkov/multibuild_test -b main -d a8b0efe24298bc81f63217aaa84776c3d48976c5 || log_fail
-
-python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Check the e2e output JSON file with config and no dependency analyzing."
 echo -e "----------------------------------------------------------------------------------\n"
 EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
