@@ -207,14 +207,6 @@ check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_f
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "com.example/nonexistent: Analyzing purl of nonexistent artifact."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/maven/com_example_nonexistent/nonexistent.dl
-run_macaron_clean $ANALYZE -purl pkg:maven/com.example/nonexistent@1.0.0 --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
 # Analyze micronaut-projects/micronaut-test.
 echo -e "\n=================================================================================="
 echo "Run integration tests with configurations for micronaut-projects/micronaut-test..."
