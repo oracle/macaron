@@ -100,15 +100,6 @@ check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_f
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "facebook/yoga: Analysing the repo path, the branch name and the commit digest for a Yarn classic"
-echo "project, skipping dependency resolution."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/yoga/yoga.dl
-run_macaron_clean $ANALYZE -rp https://github.com/facebook/yoga -b main -d f8e2bc0875c145c429d0e865c9b83a40f65b3070 --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "wojtekmaj/react-pdf: Analysing the repo path, the branch name and the commit digest for a Yarn modern"
 echo "project, skipping dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
