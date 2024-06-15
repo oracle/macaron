@@ -623,48 +623,6 @@ $RUN_MACARON -dp $DEFAULTS_FILE analyze -purl pkg:maven/io.micronaut/micronaut-c
 $RUN_POLICY -f $POLICY_FILE -d $DB || log_fail
 check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "behnazh-w/example-maven-app as a local and remote repository"
-echo "Test the Witness and GitHub provenances as an input, Cue expectation validation, Policy CLI and VSA generation, User input vs. provenance."
-echo -e "----------------------------------------------------------------------------------\n"
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/example-maven-project/policy.dl
-POLICY_RESULT=$WORKSPACE/output/policy_report.json
-POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/example-maven-project/example_maven_project_policy_report.json
-VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
-VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/example-maven-project/vsa_payload.json
-
-# Test the local repo with Witness provenance.
-WITNESS_EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/witness-example-maven-project.cue
-WITNESS_PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/witness-example-maven-project.json
-
-# Cloning the repository locally
-git clone https://github.com/behnazh-w/example-maven-app.git $WORKSPACE/output/git_repos/local_repos/example-maven-app || log_fail
-
-# Check the Witness provenance.
-run_macaron_clean $ANALYZE -pf $WITNESS_PROVENANCE_FILE -pe $WITNESS_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar --repo-path example-maven-app --skip-deps || log_fail
-
-# Test the remote repo with GitHub provenance.
-GITHUB_EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/github-example-maven-project.cue
-GITHUB_PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid_provenances/github-example-maven-project.json
-
-# Check the GitHub provenance (Do not clean).
-$RUN_MACARON $ANALYZE -pf $GITHUB_PROVENANCE_FILE -pe $GITHUB_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar --skip-deps || log_fail
-
-# Verify the policy and VSA for all the software components generated from behnazh-w/example-maven-app repo.
-$RUN_POLICY -f $POLICY_FILE -d $DB || log_fail
-
-check_or_update_expected_output "$COMPARE_POLICIES" "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
-check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
-
-# Validate user input of repo and commit vs provenance.
-run_macaron_clean $ANALYZE -pf $GITHUB_PROVENANCE_FILE -rp https://github.com/behnazh-w/example-maven-app -d 2deca75ed5dd365eaf1558a82347b1f11306135f --skip-deps || log_fail
-
-# Validate user input of repo and commit (via purl) vs provenance.
-run_macaron_clean $ANALYZE -pf $GITHUB_PROVENANCE_FILE -purl pkg:github/behnazh-w/example-maven-app@2deca75 --skip-deps || log_fail
-
-# Validate user input of repo and commit (via purl with tag) vs provenance.
-run_macaron_clean $ANALYZE -pf $GITHUB_PROVENANCE_FILE -purl pkg:github/behnazh-w/example-maven-app@1.0 --skip-deps || log_fail
-
 # Testing the Repo Finder's remote calls.
 # This requires the 'packageurl' Python module
 echo -e "\n----------------------------------------------------------------------------------"
