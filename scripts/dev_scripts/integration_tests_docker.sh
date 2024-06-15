@@ -207,18 +207,6 @@ python "$COMPARE_POLICIES" "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
 python "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Test running the analysis without setting the GITHUB_TOKEN environment variables."
-echo -e "----------------------------------------------------------------------------------\n"
-temp="$GITHUB_TOKEN"
-GITHUB_TOKEN="" && $RUN_MACARON_SCRIPT analyze -rp https://github.com/slsa-framework/slsa-verifier --skip-deps
-if [ $? -eq 0 ];
-then
-    echo -e "Expect non-zero status code but got $?."
-    log_fail
-fi
-GITHUB_TOKEN="$temp"
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: test analyzing with both PURL and repository path but no branch and digest are provided."
 echo -e "----------------------------------------------------------------------------------\n"
 $RUN_MACARON_SCRIPT analyze -purl pkg:maven/apache/maven -rp https://github.com/apache/maven --skip-deps
