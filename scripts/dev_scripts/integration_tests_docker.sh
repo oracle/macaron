@@ -82,18 +82,6 @@ python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 # Clean up and remove the virtual environment.
 rm -rf "$VIRTUAL_ENV_PATH"
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "slsa-framework/slsa-verifier: Analyzing the repo path when automatic dependency resolution is skipped"
-echo "and CUE file is provided as expectation."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_cue_PASS.dl
-EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
-DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/slsa_verifier.ini
-
-run_macaron_clean -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
 python3 ./tests/integration/run.py run \
     --macaron scripts/release_scripts/run_macaron.sh \
     --include-tag docker \

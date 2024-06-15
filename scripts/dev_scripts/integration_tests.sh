@@ -552,16 +552,6 @@ then
 fi
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Test verifying CUE provenance expectation for slsa-verifier"
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_cue_PASS.dl
-EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/slsa_verifier_PASS.cue
-DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/slsa_verifier.ini
-run_macaron_clean -dp $DEFAULTS_FILE $ANALYZE -pe $EXPECTATION_FILE -rp https://github.com/slsa-framework/slsa-verifier -b main -d fc50b662fcfeeeb0e97243554b47d9b20b14efac --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "Test verifying CUE provenance expectation for slsa-verifier with explicitly-provided provenance file"
 echo -e "----------------------------------------------------------------------------------\n"
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_explicitly_provided_cue_PASS.dl
