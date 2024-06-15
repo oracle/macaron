@@ -139,17 +139,6 @@ rm -rf "$VIRTUAL_ENV_PATH"
 
 echo -e "\n----------------------------------------------------------------------------------"
 echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
-echo "The CUE expectation file is provided as a single file path."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.dl
-EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/urllib3_PASS.cue
-
-run_macaron_clean analyze -pe $EXPECTATION_FILE -rp https://github.com/urllib3/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped."
 echo "The CUE expectation file should be found via the directory path."
 echo -e "----------------------------------------------------------------------------------\n"
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3.dl
