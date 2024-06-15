@@ -617,29 +617,6 @@ then
     log_fail
 fi
 
-# Testing the CUE provenance expectation verifier.
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Test verifying CUE provenance expectation for ossf/scorecard and run policy CLI"
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/scorecard/scorecard.dl
-DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/scorecard.ini
-EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/scorecard_PASS.cue
-run_macaron_clean -dp $DEFAULTS_FILE $ANALYZE -pe $EXPECTATION_FILE -purl pkg:github/ossf/scorecard@v4.13.1 --skip-deps || log_fail
-
-# Run CLI policy
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/scorecard/scorecard.dl
-POLICY_RESULT=$WORKSPACE/output/policy_report.json
-POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/scorecard/scorecard_policy_report.json
-VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
-VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_scorecard/vsa_payload.json
-
-$RUN_POLICY -f $POLICY_FILE -d $DB || log_fail
-check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
-check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
-
-# Finish verifying CUE provenance
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test verifying CUE provenance expectation for slsa-verifier"
 echo -e "----------------------------------------------------------------------------------\n"

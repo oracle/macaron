@@ -1,0 +1,39 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: >
+  Test CUE provenance expectation for ossf/scorecard, policy verification, and VSA generation.
+
+tags:
+- docker
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    ini: config.ini
+    expectation: expectation.cue
+    command_args:
+    - --package-url
+    - pkg:github/ossf/scorecard@v4.13.1
+    - --skip-deps
+- name: Run macaron verify-policy to verify passed/failed checks
+  kind: verify
+  options:
+    policy: policy.dl
+- name: Run macaron verify-policy to generate VSA
+  kind: verify
+  options:
+    policy: vsa_policy.dl
+- name: Compare verify policy result
+  kind: compare
+  options:
+    kind: policy_report
+    result: output/policy_report.json
+    expected: policy_report.json
+- name: Compare VSA
+  kind: compare
+  options:
+    kind: vsa
+    result: output/vsa.intoto.jsonl
+    expected: vsa_payload.json

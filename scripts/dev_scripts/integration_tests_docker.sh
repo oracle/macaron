@@ -138,30 +138,6 @@ python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 rm -rf "$VIRTUAL_ENV_PATH"
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Test verifying CUE provenance expectation for ossf/scorecard"
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/scorecard/scorecard.dl
-DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/scorecard.ini
-EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/valid_expectations/scorecard_PASS.cue
-
-run_macaron_clean -dp $DEFAULTS_FILE analyze -pe $EXPECTATION_FILE -purl pkg:github/ossf/scorecard@v4.13.1 --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Run policy CLI with scorecard results."
-echo -e "----------------------------------------------------------------------------------\n"
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/scorecard/scorecard.dl
-POLICY_RESULT=$WORKSPACE/output/policy_report.json
-POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/scorecard/scorecard_policy_report.json
-VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
-VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_scorecard/vsa_payload.json
-
-$RUN_POLICY -f "$POLICY_FILE" -d $DB || log_fail
-python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
-python "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "slsa-framework/slsa-verifier: Analyzing the repo path when automatic dependency resolution is skipped"
 echo "and CUE file is provided as expectation."
 echo -e "----------------------------------------------------------------------------------\n"
