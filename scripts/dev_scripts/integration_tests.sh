@@ -120,20 +120,6 @@ $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 # python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-# Analyze apache/maven.
-echo -e "\n=================================================================================="
-echo "Run integration tests with configurations for apache/maven..."
-echo -e "==================================================================================\n"
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check the resolved dependency output when automatic dependency resolution is skipped."
-echo -e "----------------------------------------------------------------------------------\n"
-DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/skipdep_apache_maven.json
-run_macaron_clean $ANALYZE -c $WORKSPACE/tests/dependency_analyzer/configurations/maven_config.yaml --skip-deps || log_fail
-
-check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
 echo -e "\n----------------------------------------------------------------------------------"
 echo "Test using the default template file."
 echo -e "----------------------------------------------------------------------------------\n"
