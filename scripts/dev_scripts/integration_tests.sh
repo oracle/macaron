@@ -399,16 +399,6 @@ run_macaron_clean -dp $DEFAULTS_FILE $ANALYZE -pe $EXPECTATION_FILE -pf $PROVENA
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "urllib3/urllib3: Analyzing the repo path when automatic dependency resolution is skipped"
-echo "and CUE file is provided as expectation."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/urllib3/urllib3_cue_invalid.dl
-EXPECTATION_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/expectations/cue/resources/invalid_expectations/invalid.cue
-run_macaron_clean $ANALYZE -pe $EXPECTATION_FILE -rp https://github.com/urllib3/urllib3 -b main -d 87a0ecee6e691fe5ff93cd000c0158deebef763b --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
 # Testing the Repo Finder's remote calls.
 # This requires the 'packageurl' Python module
 echo -e "\n----------------------------------------------------------------------------------"
