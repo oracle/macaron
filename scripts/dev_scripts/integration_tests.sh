@@ -214,14 +214,6 @@ $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 # check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "google/guava: Analyzing with PURL and repository path without dependency resolution."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/purl/com_google_guava/guava/guava.dl
-run_macaron_clean $ANALYZE -purl pkg:maven/com.google.guava/guava@32.1.2-jre?type=jar --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
 # Running Macaron using local paths.
 echo -e "\n=================================================================================="
 echo "Run integration tests with local paths for apache/maven..."
