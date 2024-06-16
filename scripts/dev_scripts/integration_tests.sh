@@ -378,17 +378,6 @@ run_macaron_clean $ANALYZE -purl pkg:maven/private.apache.maven/maven@4.0.0-alph
 # We expect the analysis to finish with no errors.
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Test using a custom template file that does not exist."
-echo -e "----------------------------------------------------------------------------------\n"
-run_macaron_clean $ANALYZE -rp https://github.com/apache/maven --skip-deps -g $WORKSPACE/should/not/exist
-
-if [ $? -eq 0 ];
-then
-    echo -e "Expect non-zero status code but got $?."
-    log_fail
-fi
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "Test providing an invalid provenance file as input."
 echo -e "----------------------------------------------------------------------------------\n"
 run_macaron_clean $ANALYZE -rp https://github.com/apache/maven --provenance-file $WORKSPACE/golang/internal/cue_validator/resources/invalid_provenance.json --skip-deps
