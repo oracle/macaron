@@ -12,6 +12,13 @@ import macaron
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.database.table_definitions import Analysis, Component, Repository
+
+# from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
+# from macaron.slsa_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
+
+# from macaron.slsa_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
 from macaron.parsers.bashparser import BashScriptType, create_bash_node
 from macaron.parsers.github_workflow_model import Identified, Job, NormalJob, RunStep, Workflow
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -36,13 +43,6 @@ from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
-
-# from macaron.slsa_analyzer.pypi_heuristics.analysis_result import HeuristicResult
-# from macaron.slsa_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
-from macaron.slsa_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
-
-# from macaron.slsa_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
-from macaron.slsa_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
 
 # from macaron.slsa_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 # from macaron.slsa_analyzer.pypi_heuristics.metadata.unreachable_project_links import UnreachableProjectLinksAnalyzer
