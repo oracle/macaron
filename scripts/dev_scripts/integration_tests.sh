@@ -135,25 +135,6 @@ run_macaron_clean $ANALYZE -c $WORKSPACE/tests/dependency_analyzer/configuration
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Check: Check the e2e status code of running with invalid branch or digest defined in the yaml configuration."
-echo -e "----------------------------------------------------------------------------------\n"
-declare -a INVALID_BRANCH_DIGEST=(
-    "maven_invalid_branch.yaml"
-    "maven_invalid_digest.yaml"
-)
-
-for i in "${INVALID_BRANCH_DIGEST[@]}"
-do
-    echo -e "Running with $WORKSPACE/tests/e2e/configurations/$i"
-    run_macaron_clean $ANALYZE -c $WORKSPACE/tests/e2e/configurations/$i
-    if [ $? -eq 0 ];
-    then
-        echo -e "Expect non-zero status code for $WORKSPACE/test/e2e/configurations/$i but got $?."
-        log_fail
-    fi
-done
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "Test using the default template file."
 echo -e "----------------------------------------------------------------------------------\n"
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/maven.dl

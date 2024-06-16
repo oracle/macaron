@@ -1,0 +1,21 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Check the e2e status code of running with invalid branch or commit defined in the yaml configuration.
+
+steps:
+- name: Run macaron analyze with yaml input containing invalid branch
+  kind: analyze
+  options:
+    command_args:
+    - -c
+    - maven_invalid_branch.yaml
+  expect_fail: true
+- name: Run macaron analyze with yaml input containing invalid commit
+  kind: analyze
+  options:
+    command_args:
+    - -c
+    - maven_invalid_commit.yaml
+  expect_fail: true
