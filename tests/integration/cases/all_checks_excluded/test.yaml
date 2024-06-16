@@ -1,0 +1,16 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Running the analysis with all checks excluded. This test should return an error code.
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    ini: config.ini
+    command_args:
+    - -rp
+    - https://github.com/apache/maven
+    - --skip-deps
+  expect_fail: true
