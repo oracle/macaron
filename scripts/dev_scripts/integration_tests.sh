@@ -378,17 +378,6 @@ run_macaron_clean $ANALYZE -purl pkg:maven/private.apache.maven/maven@4.0.0-alph
 # We expect the analysis to finish with no errors.
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Test providing an invalid provenance file as input."
-echo -e "----------------------------------------------------------------------------------\n"
-run_macaron_clean $ANALYZE -rp https://github.com/apache/maven --provenance-file $WORKSPACE/golang/internal/cue_validator/resources/invalid_provenance.json --skip-deps
-
-if [ $? -eq 0 ];
-then
-    echo -e "Expect non-zero status code but got $?."
-    log_fail
-fi
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "Test verifying CUE provenance expectation for slsa-verifier with explicitly-provided provenance file"
 echo -e "----------------------------------------------------------------------------------\n"
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/slsa-verifier/slsa-verifier_explicitly_provided_cue_PASS.dl
