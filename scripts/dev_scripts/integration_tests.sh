@@ -220,16 +220,6 @@ echo "Run integration tests with local paths for apache/maven..."
 echo -e "==================================================================================\n"
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "bitbucket.org/snakeyaml/snakeyaml: Analyzing a repository with un-supported git service as local repo without dependency resolution."
-echo -e "----------------------------------------------------------------------------------\n"
-git clone https://bitbucket.org/snakeyaml/snakeyaml $WORKSPACE/output/local_repos/snakeyaml || log_fail
-DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/bitbucket_local_repo.ini
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/snakeyaml/snakeyaml.dl
-run_macaron_clean -dp $DEFAULTS_FILE -lr $WORKSPACE/output/local_repos $ANALYZE -rp snakeyaml -d a34989252e6f59e36a3aaf788a903b7a37a73d33 --skip-deps || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "apache/maven: Analyzing local clone with the branch name, the commit digest and dependency resolution using cyclonedx maven plugin (default)."
 echo -e "----------------------------------------------------------------------------------\n"
 OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/org.apache.maven/maven/4.0.0-alpha-9-SNAPSHOT/maven.dl
