@@ -1,0 +1,32 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Test configurations for micronaut-projects/micronaut-test.
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -c
+    - micronaut_test_config.yaml
+    - --skip-deps
+- name: Compare dependency report
+  kind: compare
+  options:
+    kind: deps_report
+    result: output/reports/github_com/micronaut-projects/micronaut-test/dependencies.json
+    expected: dependencies.json
+- name: Run macaron verify-policy for micronaut-test
+  kind: verify
+  options:
+    policy: micronaut-test.dl
+- name: Run macaron verify-policy for caffeine
+  kind: verify
+  options:
+    policy: caffeine.dl
+- name: Run macaron verify-policy for slf4j
+  kind: verify
+  options:
+    policy: slf4j.dl

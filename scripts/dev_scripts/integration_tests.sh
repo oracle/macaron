@@ -111,36 +111,6 @@ check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_f
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
-# Analyze micronaut-projects/micronaut-test.
-echo -e "\n=================================================================================="
-echo "Run integration tests with configurations for micronaut-projects/micronaut-test..."
-echo -e "==================================================================================\n"
-DEP_RESULT=$WORKSPACE/output/reports/github_com/micronaut-projects/micronaut-test/dependencies.json
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "micronaut-projects/micronaut-test: Check the resolved dependency output when automatic dependency resolution is skipped."
-echo -e "----------------------------------------------------------------------------------\n"
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/skipdep_micronaut-projects_micronaut-test.json
-run_macaron_clean $ANALYZE -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_test_config.yaml --skip-deps || log_fail
-
-check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "micronaut-projects/micronaut-test: Check the e2e output JSON file with config when automatic dependency resolution is skipped."
-echo -e "----------------------------------------------------------------------------------\n"
-EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/micronaut-test
-
-declare -a COMPARE_FILES=(
-    "micronaut-test.dl"
-    "caffeine.dl"
-    "slf4j.dl"
-)
-
-for i in "${COMPARE_FILES[@]}"
-do
-    $RUN_POLICY -d $DB -f $EXPECT_DIR/$i || log_fail
-done
-
 # TODO: uncomment the test below after resolving https://github.com/oracle/macaron/issues/60.
 # echo -e "\n----------------------------------------------------------------------------------"
 # echo "micronaut-projects/micronaut-test: Check the resolved dependency output with config for cyclonedx gradle plugin (default)."
