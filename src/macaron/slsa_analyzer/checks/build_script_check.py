@@ -130,12 +130,16 @@ class BuildScriptCheck(BaseCheck):
                                 ci_service_name=ci_service.name,
                                 build_trigger=trigger_link,
                                 language=build_command["language"],
-                                language_distributions=tool.serialize_to_json(build_command["language_distributions"])
-                                if build_command["language_distributions"]
-                                else None,
-                                language_versions=tool.serialize_to_json(build_command["language_versions"])
-                                if build_command["language_versions"]
-                                else None,
+                                language_distributions=(
+                                    tool.serialize_to_json(build_command["language_distributions"])
+                                    if build_command["language_distributions"]
+                                    else None
+                                ),
+                                language_versions=(
+                                    tool.serialize_to_json(build_command["language_versions"])
+                                    if build_command["language_versions"]
+                                    else None
+                                ),
                                 language_url=build_command["language_url"],
                                 build_tool_command=tool.serialize_to_json(build_command["command"]),
                                 confidence=Confidence.HIGH,

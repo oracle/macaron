@@ -29,9 +29,12 @@ def test_bashparser_parse(script_file_name: str, expected_json_file_name: str) -
     resources_dir = Path(__file__).parent.joinpath("resources")
 
     # Parse the bash scripts.
-    with open(os.path.join(resources_dir, "bash_files", script_file_name), encoding="utf8") as bash_file, open(
-        os.path.join(resources_dir, "expected_results", expected_json_file_name), encoding="utf8"
-    ) as expected_file:
+    with (
+        open(os.path.join(resources_dir, "bash_files", script_file_name), encoding="utf8") as bash_file,
+        open(
+            os.path.join(resources_dir, "expected_results", expected_json_file_name), encoding="utf8"
+        ) as expected_file,
+    ):
         result = parse(bash_file.read(), MACARON_PATH)
         expected_result = json.load(expected_file)
         assert result == expected_result

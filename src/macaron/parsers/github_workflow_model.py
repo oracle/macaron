@@ -153,7 +153,7 @@ Matrix = Union[
     #   appears to be a datamodel-codegen issue, because workflow files that pass jsonschema validation end up with
     #   a matrix value incompatible with the above type
     dict[str, Union[ExpressionSyntax, list[Configuration]]],
-    ExpressionSyntax
+    ExpressionSyntax,
     # END MODIFIED
 ]
 
