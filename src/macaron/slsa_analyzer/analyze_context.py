@@ -95,7 +95,7 @@ class AnalyzeContext:
         # This attribute should be accessed via the `dynamic_data` property.
         self._dynamic_data: ChecksOutputs = ChecksOutputs(
             git_service=NoneGitService(),
-            build_spec=BuildSpec(tools=[]),
+            build_spec=BuildSpec(tools=[], purl_tools=[]),
             ci_services=[],
             package_registries=[],
             is_inferred_prov=True,

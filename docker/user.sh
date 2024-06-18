@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # We update the GID and UID of the existing macaron user in the container
@@ -50,6 +50,32 @@ fi
 if [[ ! -d "$HOME/output" ]];
 then
     mkdir --parents "$HOME"/output
+fi
+
+# Prepare the python virtual environment for the target software component if provided as input.
+# We copy the mounted directory if it exists to `analyze_python_venv_editable` to fix the symbolic
+# links to the Python interpreter in the container without affecting the files on host.
+# That's because cylonedx-py needs to access Python in the virtual environment where it generates
+# the SBOM from and the original files will be symbolic links to Python on the host system that
+# are not reachable from the container.
+if [[ -d "$HOME/analyze_python_venv_readonly" ]];
+then
+    cp -r "$HOME/analyze_python_venv_readonly" "$HOME/analyze_python_venv_editable"
+fi
+
+if [[ -d "$HOME/analyze_python_venv_editable/bin" ]];
+then
+    python_binaries=(
+        "python"
+        "python3"
+        "python3.11"
+    )
+    for p in "${python_binaries[@]}"; do
+        if [[ -f "$HOME/.venv/bin/${p}" ]];
+        then
+            ln -sf "$HOME/.venv/bin/${p}" "$HOME/analyze_python_venv_editable/bin/${p}"
+        fi
+    done
 fi
 
 # The directory that could be mounted to the host machine file systems should

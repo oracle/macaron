@@ -10,7 +10,7 @@ build tool.
 import os
 
 from macaron.config.defaults import defaults
-from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, NoneDependencyAnalyzer
+from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence
@@ -20,7 +20,7 @@ class Yarn(BaseBuildTool):
     """This class contains the information of the yarn build tool."""
 
     def __init__(self) -> None:
-        super().__init__(name="yarn", language=BuildLanguage.JAVASCRIPT)
+        super().__init__(name="yarn", language=BuildLanguage.JAVASCRIPT, purl_type="npm")
         # The run sub-commands is also accepted and takes its own build and deploy arguments.
         self.build_run_arg: list[str] = []
         self.deploy_run_arg: list[str] = []
@@ -80,13 +80,8 @@ class Yarn(BaseBuildTool):
         """
         return True
 
-    def get_dep_analyzer(self, repo_path: str) -> DependencyAnalyzer:
+    def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.
-
-        Parameters
-        ----------
-        repo_path: str
-            The path to the target repo.
 
         Returns
         -------

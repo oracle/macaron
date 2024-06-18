@@ -63,16 +63,6 @@
       ],
       "type" : "library",
       "bom-ref" : "pkg:maven/joda-time/joda-time@2.6?type=jar"
-    },
-    {
-      "publisher" : "Joda.org",
-      "group" : "joda-time",
-      "name" : "joda-time",
-      "description" : "Date and time library to replace JDK date handling",
-      "purl" : "pkg:maven/joda-time/joda-time@2.6?type=jar",
-      "modified" : false,
-      "type" : "library",
-      "bom-ref" : "pkg:maven/joda-time/joda-time@2.6?type=jar"
     }
   ],
   "dependencies" : [
