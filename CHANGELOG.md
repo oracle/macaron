@@ -1,3 +1,17 @@
+## v0.11.0 (2024-06-18)
+
+### Feat
+
+- add dependency resolution for Python (#748)
+- add checks to determine if repo and commit came from provenance (#704)
+- add support for GitHub provenances passed as input (#732)
+
+### Fix
+
+- modify verify-policy to exits succesfully if a passed policy exists and allow components having no repository to pass policies (#766)
+- force docker to use linux/amd64 platform (#768)
+- do not fetch from origin/HEAD for local repo targets (#734)
+
 ## v0.10.0 (2024-04-29)
 
 ### Feat
