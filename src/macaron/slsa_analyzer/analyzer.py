@@ -21,7 +21,7 @@ from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
 from macaron.database.table_definitions import Analysis, Component, ProvenanceSubject, Repository
-from macaron.dependency_analyzer import DependencyAnalyzer, DependencyInfo
+from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, DependencyInfo
 from macaron.errors import (
     CloneError,
     DuplicateError,
@@ -992,18 +992,27 @@ class Analyzer:
         """
         # Determine the git service.
         remote_path = analyze_ctx.component.repository.remote_path if analyze_ctx.component.repository else None
+
+        # Load the build tools and determine the build tools that match the software component's PURL type.
+        for build_tool in BUILD_TOOLS:
+            build_tool.load_defaults()
+            if build_tool.purl_type == analyze_ctx.component.type:
+                logger.debug(
+                    "Found %s build tool based on the %s PackageURL.", build_tool.name, analyze_ctx.component.purl
+                )
+                analyze_ctx.dynamic_data["build_spec"]["purl_tools"].append(build_tool)
+
         git_service = self.get_git_service(remote_path)
         if isinstance(git_service, NoneGitService):
-            logger.error("Unable to find repository or unsupported git service for %s", analyze_ctx.component.purl)
+            logger.info("Unable to find repository or unsupported git service for %s", analyze_ctx.component.purl)
         else:
             logger.info(
                 "Detected git service %s for %s.", git_service.name, analyze_ctx.component.repository.complete_name
             )
             analyze_ctx.dynamic_data["git_service"] = git_service
 
-            # Determine the build tool.
+            # Detect the build tools by analyzing the repository.
             for build_tool in BUILD_TOOLS:
-                build_tool.load_defaults()
                 logger.info(
                     "Checking if the repo %s uses build tool %s",
                     analyze_ctx.component.repository.complete_name,
@@ -1016,7 +1025,7 @@ class Analyzer:
 
             if not analyze_ctx.dynamic_data["build_spec"]["tools"]:
                 logger.info(
-                    "Cannot discover any build tools for %s or the build tools are not supported.",
+                    "Unable to discover any build tools for repository %s or the build tools are not supported.",
                     analyze_ctx.component.repository.complete_name,
                 )
 

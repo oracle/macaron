@@ -1,0 +1,16 @@
+{
+    "passed_policies": [
+        [
+            "check-dependencies"
+        ]
+    ],
+    "component_satisfies_policy": [
+        [
+            "1",
+            "pkg:pypi/django@5.0.6",
+            "check-dependencies"
+        ]
+    ],
+    "failed_policies": [],
+    "component_violates_policy": []
+}

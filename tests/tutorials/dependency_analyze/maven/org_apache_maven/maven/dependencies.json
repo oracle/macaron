@@ -1,0 +1,128 @@
+[
+    {
+        "id": "org.apache.maven:apache-maven",
+        "purl": "pkg:maven/org.apache.maven/apache-maven@3.9.7?type=pom",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.apache.maven:maven-artifact",
+        "purl": "pkg:maven/org.apache.maven/maven-artifact@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-builder-support",
+        "purl": "pkg:maven/org.apache.maven/maven-builder-support@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-compat",
+        "purl": "pkg:maven/org.apache.maven/maven-compat@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-core",
+        "purl": "pkg:maven/org.apache.maven/maven-core@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-embedder",
+        "purl": "pkg:maven/org.apache.maven/maven-embedder@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-model-builder",
+        "purl": "pkg:maven/org.apache.maven/maven-model-builder@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-model",
+        "purl": "pkg:maven/org.apache.maven/maven-model@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-plugin-api",
+        "purl": "pkg:maven/org.apache.maven/maven-plugin-api@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-repository-metadata",
+        "purl": "pkg:maven/org.apache.maven/maven-repository-metadata@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-resolver-provider",
+        "purl": "pkg:maven/org.apache.maven/maven-resolver-provider@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-settings-builder",
+        "purl": "pkg:maven/org.apache.maven/maven-settings-builder@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-settings",
+        "purl": "pkg:maven/org.apache.maven/maven-settings@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    },
+    {
+        "id": "org.apache.maven:maven-slf4j-provider",
+        "purl": "pkg:maven/org.apache.maven/maven-slf4j-provider@3.9.7?type=jar",
+        "path": "https://github.com/apache/maven",
+        "branch": "",
+        "digest": "",
+        "note": "https://github.com/apache/maven is already analyzed.",
+        "available": "DUPLICATED REPO URL"
+    }
+]

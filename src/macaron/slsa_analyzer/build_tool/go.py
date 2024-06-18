@@ -7,7 +7,7 @@ This module is used to work with repositories that have Go.
 """
 
 from macaron.config.defaults import defaults
-from macaron.dependency_analyzer.dependency_resolver import DependencyAnalyzer, NoneDependencyAnalyzer
+from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 
@@ -16,7 +16,7 @@ class Go(BaseBuildTool):
     """This class contains the information of the Go build tool."""
 
     def __init__(self) -> None:
-        super().__init__(name="go", language=BuildLanguage.GO)
+        super().__init__(name="go", language=BuildLanguage.GO, purl_type="golang")
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
@@ -69,13 +69,8 @@ class Go(BaseBuildTool):
         """
         return True
 
-    def get_dep_analyzer(self, repo_path: str) -> DependencyAnalyzer:
+    def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.
-
-        Parameters
-        ----------
-        repo_path: str
-            The path to the target repo.
 
         Returns
         -------

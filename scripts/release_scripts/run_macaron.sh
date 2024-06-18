@@ -327,6 +327,10 @@ if [[ $command == "analyze" ]]; then
                 arg_template_path="$2"
                 shift
                 ;;
+            --python-venv)
+                python_venv_path="$2"
+                shift
+                ;;
             *)
                 rest_command+=("$1")
                 ;;
@@ -452,6 +456,16 @@ if [[ -n "${arg_prov_file:-}" ]]; then
     argv_command+=("--provenance-file" "$prov_file_path_in_container")
 
     mount_file "-pf/--provenance-file" "$prov_file_path" "$prov_file_path_in_container" "ro,Z"
+fi
+
+# Mount the Python virtual environment into ${MACARON_WORKSPACE}/python_venv.
+if [[ -n "${python_venv_path:-}" ]]; then
+    python_venv_in_container="${MACARON_WORKSPACE}/analyze_python_venv_readonly"
+    # We copy the mounted directory to `analyze_python_venv_editable` once the container starts running to
+    # be able to make changes to the mounted files without affecting the files on host.
+    argv_command+=("--python-venv" "${MACARON_WORKSPACE}/analyze_python_venv_editable")
+
+    mount_dir_ro "--python-venv" "$python_venv_path" "$python_venv_in_container"
 fi
 
 # MACARON entrypoint - verify-policy command argvs

@@ -14,7 +14,7 @@
     "component" : {
       "group" : "io.micronaut.aws",
       "name" : "aws-parent",
-      "version" : "2.0.0",
+      "version" : "4.0.0-SNAPSHOT",
       "purl" : "pkg:maven/io.micronaut.aws/aws-parent@4.0.0-SNAPSHOT?type=pom",
       "type" : "application",
       "bom-ref" : "pkg:maven/io.micronaut.aws/aws-parent@4.0.0-SNAPSHOT?type=pom"

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildSpec class."""
@@ -47,8 +47,13 @@ class BuildSpec(TypedDict):
     # sourceRmFiles: str
 
     ## Rebuild environment prerequisites
+
+    #: The build tools used for building this artifact.
     tools: list[BaseBuildTool]
-    """The build tools used for building this artifact."""
+
+    #: The build tools that match the software component PackageURL type.
+    purl_tools: list[BaseBuildTool]
+
     # jdk: str
     # newline: str
     ## crlf for Windows, lf for Unix
