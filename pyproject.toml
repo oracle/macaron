@@ -22,10 +22,10 @@ dynamic = ["version", "description"]
 license = {file = "LICENSE.txt"}
 readme = "README.md"
 dependencies = [
-    "requests >=2.31.0,<3.0.0",
+    "requests >=2.32.3,<3.0.0",
     "pydriller >=2.0,<3.0.0",
-    "yamale >=4.0.3,<6.0.0",
-    "packaging >=21.3,<25.0.0",
+    "yamale >=5.0.0,<6.0.0",
+    "packaging >=24.0,<25.0.0",
     "jinja2 >=3.1.2,<4.0.0",
     "SQLAlchemy >=2.0.0,<3.0.0",
     "defusedxml >=0.7.1,<1.0.0",
@@ -63,11 +63,11 @@ macaron = 'macaron.__main__:main'
 # installed. Make sure to keep the requirements in sync with the workflows!
 actions = [
     "commitizen >=3.13.0,<4.0.0",
-    "twine >=4.0.1,<5.0.0",
+    "twine >=5.0.0,<6.0.0",
 ]
 dev = [
     "flit >=3.2.0,<4.0.0",
-    "mypy >=0.921,<1.11",
+    "mypy >=1.0.0,<1.11",
     "types-pyyaml >=6.0.4,<7.0.0",
     "types-requests >=2.25.6,<3.0.0",
     "types-jsonschema >=4.22.0,<5.0.0",
@@ -76,9 +76,9 @@ dev = [
     "cyclonedx-bom >=4.0.0,<5.0.0",
 ]
 docs = [
-    "sphinx >=5.3.0,<8.0.0",
-    "sphinx-autodoc-typehints >=1.25.2,<3.0.0",
-    "sphinx-rtd-theme >=1.0.0,<3.0.0",
+    "sphinx >=7.0.0,<8.0.0",
+    "sphinx-autodoc-typehints >=2.0.0,<3.0.0",
+    "sphinx-rtd-theme >=2.0.0,<3.0.0",
     "numpydoc >=1.5.0,<2.0.0",
     "sphinx_tabs >=3.4.1,<4.0.0",
     "sphinx-togglebutton >=0.3.2,<1.0.0",
@@ -88,11 +88,11 @@ hooks = [
 ]
 # Note that the `custom_exit_code` and `env` plugins may currently be unmaintained.
 test = [
-    "hypothesis >=6.21.0,<6.100.1",
-    "pytest >=7.2.0,<8.0.0",
+    "hypothesis >=6.100.1,<7.0.0",
+    "pytest >=8.2.2,<9.0.0",
     "pytest-custom_exit_code >=0.3.0,<1.0.0",
-    "pytest-cov >=4.0.0,<6.0.0",
-    "pytest-env >=0.8.1,<2.0.0",
+    "pytest-cov >=5.0.0,<6.0.0",
+    "pytest-env >=1.0.0,<2.0.0",
     "syrupy >=4.0.0,<5.0.0",
 ]
 
