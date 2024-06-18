@@ -678,7 +678,7 @@ POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/scorecard/scorec
 VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
 VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_scorecard/vsa_payload.json
 
-$RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
+$RUN_POLICY -f $POLICY_FILE -d $DB || log_fail
 check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
@@ -736,7 +736,7 @@ POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/micronaut-core/t
 DEFAULTS_FILE=$WORKSPACE/tests/e2e/defaults/micronaut-core.ini
 $RUN_MACARON -dp $DEFAULTS_FILE analyze -purl pkg:maven/io.micronaut/micronaut-core@4.2.3 --skip-deps || log_fail
 
-$RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
+$RUN_POLICY -f $POLICY_FILE -d $DB || log_fail
 check_or_update_expected_output $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
@@ -767,7 +767,7 @@ GITHUB_PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid
 $RUN_MACARON $ANALYZE -pf $GITHUB_PROVENANCE_FILE -pe $GITHUB_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar --skip-deps || log_fail
 
 # Verify the policy and VSA for all the software components generated from behnazh-w/example-maven-app repo.
-$RUN_POLICY -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
+$RUN_POLICY -f $POLICY_FILE -d $DB || log_fail
 
 check_or_update_expected_output "$COMPARE_POLICIES" "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
 check_or_update_expected_output "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
@@ -840,7 +840,7 @@ POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/django/test_depend
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/django/test_dependencies.json
 
-$RUN_POLICY -f "$POLICY_FILE" -d "$WORKSPACE/output/macaron.db" || log_fail
+$RUN_POLICY -f "$POLICY_FILE" -d $DB || log_fail
 check_or_update_expected_output $COMPARE_POLICIES "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
 
 # Clean up and remove the virtual environment.

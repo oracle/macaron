@@ -425,7 +425,8 @@ class DependencyAnalyzer(ABC):
             )
 
             # Clean up existing SBOM files.
-            dep_analyzer.remove_sboms(main_ctx.component.repository.fs_path)
+            if not dep_analyzer.remove_sboms(main_ctx.component.repository.fs_path):
+                logger.debug("Unable to remove intermediate files generated during the creation of SBOM.")
 
             commands = dep_analyzer.get_cmd()
             working_dirs: Iterable[Path] = build_tool.get_build_dirs(main_ctx.component.repository.fs_path)

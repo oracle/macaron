@@ -131,7 +131,7 @@ POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/django/test_depend
 POLICY_RESULT=$WORKSPACE/output/policy_report.json
 POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/django/test_dependencies.json
 
-$RUN_MACARON_SCRIPT verify-policy -f "$POLICY_FILE" -d "$WORKSPACE/output/macaron.db" || log_fail
+$RUN_POLICY -f "$POLICY_FILE" -d $DB || log_fail
 python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 
 # Clean up and remove the virtual environment.
@@ -179,7 +179,7 @@ POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/scorecard/scorec
 VSA_RESULT=$WORKSPACE/output/vsa.intoto.jsonl
 VSA_PAYLOAD_EXPECTED=$WORKSPACE/tests/vsa/integration/github_slsa-framework_scorecard/vsa_payload.json
 
-$RUN_MACARON_SCRIPT verify-policy -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
+$RUN_POLICY -f "$POLICY_FILE" -d $DB || log_fail
 python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 python "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
 
@@ -223,7 +223,7 @@ GITHUB_PROVENANCE_FILE=$WORKSPACE/tests/slsa_analyzer/provenance/resources/valid
 $RUN_MACARON_SCRIPT analyze -pf $GITHUB_PROVENANCE_FILE -pe $GITHUB_EXPECTATION_FILE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar --skip-deps || log_fail
 
 # Verify the policy and VSA for all the software components generated from behnazh-w/example-maven-app repo.
-$RUN_MACARON_SCRIPT verify-policy -f $POLICY_FILE -d "$WORKSPACE/output/macaron.db" || log_fail
+$RUN_POLICY -f "$POLICY_FILE" -d $DB || log_fail
 
 python "$COMPARE_POLICIES" "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
 python "$COMPARE_VSA" "$VSA_RESULT" "$VSA_PAYLOAD_EXPECTED" || log_fail
