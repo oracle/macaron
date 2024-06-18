@@ -3,7 +3,9 @@
 
 module github.com/oracle/macaron
 
-go 1.18
+go 1.21
+
+toolchain go1.21.0
 
 require (
 	cuelang.org/go v0.9.1
