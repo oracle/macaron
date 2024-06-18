@@ -242,9 +242,11 @@ class AnalyzeContext:
         result = {
             "info": {
                 "full_name": self.component.purl,
-                "local_cloned_path": os.path.relpath(self.component.repository.fs_path, self.output_dir)
-                if self.component.repository
-                else "Unable to find a repository.",
+                "local_cloned_path": (
+                    os.path.relpath(self.component.repository.fs_path, self.output_dir)
+                    if self.component.repository
+                    else "Unable to find a repository."
+                ),
                 "remote_path": self.component.repository.remote_path if self.component.repository else "",
                 "branch": self.component.repository.branch_name if self.component.repository else "",
                 "commit_hash": self.component.repository.commit_sha if self.component.repository else "",

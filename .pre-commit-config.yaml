@@ -17,7 +17,7 @@ repos:
 
 # Commitizen enforces semantic and conventional commit messages.
 - repo: https://github.com/commitizen-tools/commitizen
-  rev: v3.13.0
+  rev: v3.27.0
   hooks:
   - id: commitizen
     name: Check conventional commit message
@@ -25,7 +25,7 @@ repos:
 
 # Sort imports.
 - repo: https://github.com/pycqa/isort
-  rev: 5.12.0
+  rev: 5.13.2
   hooks:
   - id: isort
     name: Sort import statements
@@ -33,7 +33,7 @@ repos:
 
 # Add Black code formatters.
 - repo: https://github.com/ambv/black
-  rev: 23.11.0
+  rev: 24.4.2
   hooks:
   - id: black
     name: Format code
@@ -48,7 +48,7 @@ repos:
 
 # Upgrade and rewrite Python idioms.
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.15.0
+  rev: v3.16.0
   hooks:
   - id: pyupgrade
     name: Upgrade code idioms
@@ -69,7 +69,7 @@ repos:
 
 # Check GitHub Actions workflow files.
 - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
-  rev: v1.6.26.11
+  rev: v1.7.1.15
   hooks:
   - id: actionlint
 
@@ -98,7 +98,7 @@ repos:
 
 # Check for potential security issues.
 - repo: https://github.com/PyCQA/bandit
-  rev: 1.7.5
+  rev: 1.7.9
   hooks:
   - id: bandit
     name: Check for security issues
@@ -110,7 +110,7 @@ repos:
 # Enable a whole bunch of useful helper hooks, too.
 # See https://pre-commit.com/hooks.html for more hooks.
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.5.0
+  rev: v4.6.0
   hooks:
   - id: check-ast
   - id: check-case-conflict
@@ -151,7 +151,7 @@ repos:
 
 # Check and prettify the configuration files.
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.11.0
+  rev: v2.13.0
   hooks:
   - id: pretty-format-ini
     args: [--autofix]
@@ -187,7 +187,7 @@ repos:
 
 # A linter for Golang
 - repo: https://github.com/golangci/golangci-lint
-  rev: v1.55.2
+  rev: v1.59.1
   hooks:
   - id: golangci-lint
 
