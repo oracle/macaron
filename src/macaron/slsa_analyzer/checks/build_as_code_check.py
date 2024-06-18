@@ -175,11 +175,13 @@ class BuildAsCodeCheck(BaseCheck):
                                 trigger_link = ci_service.api_client.get_file_link(
                                     ctx.component.repository.full_name,
                                     ctx.component.repository.commit_sha,
-                                    file_path=ci_service.api_client.get_relative_path_of_workflow(
-                                        os.path.basename(caller_path)
-                                    )
-                                    if caller_path
-                                    else "",
+                                    file_path=(
+                                        ci_service.api_client.get_relative_path_of_workflow(
+                                            os.path.basename(caller_path)
+                                        )
+                                        if caller_path
+                                        else ""
+                                    ),
                                 )
                                 store_inferred_provenance(
                                     ctx=ctx,
@@ -228,13 +230,17 @@ class BuildAsCodeCheck(BaseCheck):
                                     ci_info=ci_info,
                                     ci_service=ci_service,
                                     trigger_link=trigger_link,
-                                    job_id=build_command["step_node"].caller.name
-                                    if isinstance(build_command["step_node"].caller, GitHubJobNode)
-                                    else None,
+                                    job_id=(
+                                        build_command["step_node"].caller.name
+                                        if isinstance(build_command["step_node"].caller, GitHubJobNode)
+                                        else None
+                                    ),
                                     step_id=build_command["step_node"].node_id,
-                                    step_name=build_command["step_node"].name
-                                    if isinstance(build_command["step_node"], BashNode)
-                                    else None,
+                                    step_name=(
+                                        build_command["step_node"].name
+                                        if isinstance(build_command["step_node"], BashNode)
+                                        else None
+                                    ),
                                 )
                             result_tables.append(
                                 BuildAsCodeFacts(
@@ -242,14 +248,16 @@ class BuildAsCodeCheck(BaseCheck):
                                     ci_service_name=ci_service.name,
                                     build_trigger=trigger_link,
                                     language=build_command["language"],
-                                    language_distributions=tool.serialize_to_json(
-                                        build_command["language_distributions"]
-                                    )
-                                    if build_command["language_distributions"]
-                                    else None,
-                                    language_versions=tool.serialize_to_json(build_command["language_versions"])
-                                    if build_command["language_versions"]
-                                    else None,
+                                    language_distributions=(
+                                        tool.serialize_to_json(build_command["language_distributions"])
+                                        if build_command["language_distributions"]
+                                        else None
+                                    ),
+                                    language_versions=(
+                                        tool.serialize_to_json(build_command["language_versions"])
+                                        if build_command["language_versions"]
+                                        else None
+                                    ),
                                     language_url=build_command["language_url"],
                                     deploy_command=tool.serialize_to_json(build_command["command"]),
                                     confidence=confidence,
