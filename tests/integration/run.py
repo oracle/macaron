@@ -816,15 +816,35 @@ def do_run(
     for test_case in test_cases:
         logger.info("* %s", test_case.case_dir)
 
+    failed_case_dirs = set()
+    exit_code = 0
+
     for test_case in test_cases:
-        ret = test_case.run(
+        case_exit = test_case.run(
             macaron_cmd=macaron_cmd,
             interactive=interactive,
             dry=dry,
         )
-        if ret != 0:
-            return ret
-    return 0
+        if case_exit != 0:
+            # Do not exit here, but let all test cases run and aggregate the result.
+            exit_code = 1
+            failed_case_dirs.add(test_case.case_dir)
+
+    if len(test_cases) > 1:
+        # Only shows this if runs more than one case.
+        logger.info("=" * 60)
+        all_cases = {test_case.case_dir for test_case in test_cases}
+        passed_case_dirs = all_cases.difference(failed_case_dirs)
+
+        logger.info("Number of passed cases: %d/%d.", len(passed_case_dirs), len(test_cases))
+        for test_case_dir in passed_case_dirs:
+            logger.info("* %s", test_case_dir)
+
+        logger.info("Number of failed cases: %d/%d.", len(failed_case_dirs), len(test_cases))
+        for test_case_dir in failed_case_dirs:
+            logger.info("* %s", test_case_dir)
+
+    return exit_code
 
 
 def do_update(
