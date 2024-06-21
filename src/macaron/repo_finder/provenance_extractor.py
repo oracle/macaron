@@ -132,36 +132,44 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str | None, str | N
         return None, None
 
     # Extract the repository URL.
-    repo = None
-    if build_type == "https://slsa-framework.github.io/gcb-buildtypes/triggered-build/v1":
-        repo = json_extract(build_def, ["externalParameters", "sourceToBuild", "repository"], str)
-        if not repo:
-            repo = json_extract(build_def, ["externalParameters", "configSource", "repository"], str)
-    if build_type == "https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1":
-        repo = json_extract(build_def, ["externalParameters", "workflow", "repository"], str)
+    match build_type:
+        case "https://slsa-framework.github.io/gcb-buildtypes/triggered-build/v1":
+            repo = json_extract(build_def, ["externalParameters", "sourceToBuild", "repository"], str)
+            if not repo:
+                repo = json_extract(build_def, ["externalParameters", "configSource", "repository"], str)
+        case "https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1":
+            repo = json_extract(build_def, ["externalParameters", "workflow", "repository"], str)
+        case "https://github.com/oracle/macaron/tree/main/src/macaron/resources/provenance-buildtypes/oci/v1":
+            repo = json_extract(build_def, ["externalParameters", "source"], str)
+        case _:
+            logger.debug("Unsupported build type for SLSA v1: %s", build_type)
+            return None, None
 
     if not repo:
-        logger.debug("Repo required to extract commit from SLSA v1.")
+        logger.debug("Repo URL not found in SLSA v1 payload.")
         return None, None
 
     # Extract the commit hash.
     commit = None
-    deps = json_extract(build_def, ["resolvedDependencies"], list)
-    if not deps:
-        return repo, None
-    for dep in deps:
-        if not isinstance(dep, dict):
-            continue
-        uri = json_extract(dep, ["uri"], str)
-        if not uri:
-            continue
-        url = _clean_spdx(uri)
-        if url != repo:
-            continue
-        digest_set = json_extract(dep, ["digest"], dict)
-        if not digest_set:
-            continue
-        commit = _extract_commit_from_digest_set(digest_set, SLSA_V1_DIGEST_SET_GIT_ALGORITHMS)
+    if build_type == "https://github.com/oracle/macaron/tree/main/src/macaron/resources/provenance-buildtypes/oci/v1":
+        commit = json_extract(build_def, ["internalParameters", "buildEnvVar", "BLD_COMMIT_HASH"], str)
+    else:
+        deps = json_extract(build_def, ["resolvedDependencies"], list)
+        if not deps:
+            return repo, None
+        for dep in deps:
+            if not isinstance(dep, dict):
+                continue
+            uri = json_extract(dep, ["uri"], str)
+            if not uri:
+                continue
+            url = _clean_spdx(uri)
+            if url != repo:
+                continue
+            digest_set = json_extract(dep, ["digest"], dict)
+            if not digest_set:
+                continue
+            commit = _extract_commit_from_digest_set(digest_set, SLSA_V1_DIGEST_SET_GIT_ALGORITHMS)
 
     return repo, commit or None
 
