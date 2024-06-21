@@ -84,7 +84,7 @@ You create a new test case by creating a new directory, then a `test.yaml` withi
 $ python3 ./tests/integration/run.py check ./test/case/directory
 ```
 
-At this point, some expected result files does not exist yet, since you normally want to run `macaron` once, inspect the result files, then turn them to expected result files if they look good. To do this, you can run in **interactive** mode. In this mode, the utility stops at each steps and ask if you want to run or skip a step. For compare steps, the utility also ask if you want to "update" the expected result file instead of compare.
+At this point, some expected result files do not exist yet, since you normally want to run `macaron` once, inspect the result files, then turn them into expected result files if they look good enough. To do this, you can run in **interactive** mode. In this mode, the utility stops at each step and asks if you want to run or skip a step. For `compare` steps, the utility also asks if you want to "update" the expected result file instead of compare.
 
 ```bash
 # Run a test case in interactive mode.
