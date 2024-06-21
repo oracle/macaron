@@ -654,7 +654,20 @@ def load_config(
     test_config_dir: str,
     check_expected_result_files: bool,
 ) -> CaseConfig:
-    """Test a ``test.yaml`` file."""
+    """Load a test case config.
+
+    Parameters
+    ----------
+    test_config_dir : str
+        The test case directory containing a ``test.yaml`` file.
+    check_expected_result_files : bool
+        Whether to check for expected result files.
+
+    Returns
+    -------
+    CaseConfig
+        The configuration of the test case.
+    """
     test_config_file = os.path.join(test_config_dir, "test.yaml")
     yaml = YAML(typ="safe")
     return cast(
