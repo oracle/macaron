@@ -758,6 +758,7 @@ def load_test_cases(
             logger.info("Case '%s' passes validation.", test_case_dir)
 
     if err:
+        logger.error("Error encountered while loading test config.")
         return None
 
     return test_cases
@@ -791,7 +792,6 @@ def do_run(
     )
 
     if test_cases is None:
-        logger.error("Error encountered while loading test config.")
         return 1
 
     logger.info("Running the following test cases:")
