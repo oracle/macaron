@@ -176,7 +176,7 @@ In case you want to debug the utility script itself, there is the verbose mode f
 ### Test case Schema
 
 * `description` (`string`, required): The description of the test case.
-* `tags` (`array[string]`, optional, default is `[]`): The tags of the test case. When the `--tag <tag>` argument is passed with the `run` command , only run test cases having the tag `<tag>`. (The `--tag` argument is typically used in combination with test case discovery using the `...` wildcard).
+* `tags` (`array[string]`, optional, default is `[]`): The tags of the test case. When the `--include-tag <tag>` and/or `--exclude-tag <tag>` arguments are passed with the `run` command, only run test cases having all `--include-tag` tags and no `--exclude-tag` tags. You can think of it as each `--include-tag`/`--exclude-tag` adds another constraint that a test needs to satisfy for it to be included in a run. These arguments are typically used in combination with test case discovery using the `...` wildcard.
 * `steps` (`array[string]`, required): The list of steps in a test case. Steps in a test case are executed sequentially. A test case stops execution and fails if any command fails.
 
 ### Step Schema
