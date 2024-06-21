@@ -116,7 +116,7 @@ def slsa_v1_github_provenance_() -> dict[str, JsonType]:
 @pytest.fixture(name="slsa_v1_oci_provenance")
 def slsa_v1_oci_provenance_() -> dict[str, JsonType]:
     """Return a valid SLSA v1 provenance using the OCI build type."""
-    return _load_and_validate_json(
+    payload = _load_and_validate_json(
         """
             {
                 "_type": "https://in-toto.io/Statement/v1",
@@ -124,7 +124,7 @@ def slsa_v1_oci_provenance_() -> dict[str, JsonType]:
                 "subject": [],
                 "predicate": {
                     "buildDefinition": {
-                        "buildType": "https://github.com/oracle/macaron/tree/main/src/macaron/resources/provenance-buildtypes/oci/v1",  # noqa: B950
+                        "buildType": "",
                         "externalParameters": {
                             "source": "https://github.com/oracle/macaron"
                         },
@@ -138,6 +138,13 @@ def slsa_v1_oci_provenance_() -> dict[str, JsonType]:
             }
         """
     )
+    # The build type is modified here to avoid issues with excessive line length.
+    _json_modify(
+        payload,
+        ["predicate", "buildDefinition", "buildType"],
+        "https://github.com/oracle/macaron/tree/main/src/macaron/resources/provenance-buildtypes/oci/v1",
+    )
+    return payload
 
 
 @pytest.fixture(name="slsa_v02_provenance")
