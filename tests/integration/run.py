@@ -473,7 +473,7 @@ def gen_step_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
             ),
             cfgv.ConditionalRecurse(
                 condition_key="kind",
-                condition_value="command",
+                condition_value="shell",
                 key="options",
                 schema=ShellStep.options_schema(),
             ),
