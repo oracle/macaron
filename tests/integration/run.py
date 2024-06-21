@@ -94,12 +94,17 @@ def check_required_file(cwd: str) -> Callable[[str], None]:
 
 
 def check_env(env: object) -> None:
-    """Check for a required file of a test case."""
+    """Validate the value of ``env`` in a step.
+
+    The value should be a dict.
+    Each key should be a string.
+    Each value should be a string or null.
+    """
     if not isinstance(env, dict):
         raise cfgv.ValidationError("Value of the 'env' field must be a dictionary.")
     for k, v in env.items():
         if not (v is None or isinstance(v, str)):
-            raise cfgv.ValidationError(f"Value of key '{k}' is not a str or null.")
+            raise cfgv.ValidationError(f"Value of key '{k}' is not a string or null.")
 
 
 class StepConfig(TypedDict):
