@@ -60,8 +60,7 @@ jobs:
       run: make build-docker
 
     - name: Install dependencies for integration test utility
-      run: |
-        python3 -m pip install ruamel.yaml cfgv
+      run: make setup-integration-test-utility-for-docker
 
     # Run the integration tests against the built Docker image.
     - name: Test the Docker image
