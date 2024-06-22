@@ -24,11 +24,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class PyPIRegistry(PackageRegistry):
-    """This class implements the npm package registry.
-
-    There is no complete and up-to-date API documentation for the npm registry and the endpoints
-    are discovered by manual inspection of links on https://www.npmjs.com.
-    """
+    """This class implements the pypi package registry."""
 
     def __init__(
         self,
@@ -38,18 +34,19 @@ class PyPIRegistry(PackageRegistry):
         enabled: bool = True,
     ) -> None:
         """
-        Initialize the npm Registry instance.
+        Initialize the pypi Registry instance.
 
         Parameters
         ----------
         hostname : str | None
-            The hostname of the npm registry.
+            The hostname of the pypi registry.
         attestation_endpoint : str | None
             The attestation REST API.
         request_timeout : int | None
             The timeout (in seconds) for requests made to the package registry.
         enabled: bool
-            Shows whether making REST API calls to npm registry is enabled.
+            Shows whether making REST API calls to pypi registry is enabled.
+
         """
         self.hostname = hostname or ""
         self.attestation_endpoint = attestation_endpoint or ""
@@ -143,7 +140,7 @@ class PyPIRegistry(PackageRegistry):
         try:
             res_obj = response.json()
         except requests.exceptions.JSONDecodeError as error:
-            raise InvalidHTTPResponseError(f"Failed to process response from npm for {url}.") from error
+            raise InvalidHTTPResponseError(f"Failed to process response from pypi for {url}.") from error
         if not res_obj:
             raise InvalidHTTPResponseError(f"Empty response returned by {url} .")
         self.attestation = res_obj
