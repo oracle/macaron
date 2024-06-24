@@ -113,6 +113,40 @@ def slsa_v1_github_provenance_() -> dict[str, JsonType]:
     )
 
 
+@pytest.fixture(name="slsa_v1_oci_provenance")
+def slsa_v1_oci_provenance_() -> dict[str, JsonType]:
+    """Return a valid SLSA v1 provenance using the OCI build type."""
+    payload = _load_and_validate_json(
+        """
+            {
+                "_type": "https://in-toto.io/Statement/v1",
+                "predicateType": "https://slsa.dev/provenance/v1",
+                "subject": [],
+                "predicate": {
+                    "buildDefinition": {
+                        "buildType": "",
+                        "externalParameters": {
+                            "source": "https://github.com/oracle/macaron"
+                        },
+                        "internalParameters": {
+                            "buildEnvVar": {
+                                "BLD_COMMIT_HASH": "51aa22a42ec1bffa71518041a6a6d42d40bf50f0"
+                            }
+                        }
+                    }
+                }
+            }
+        """
+    )
+    # The build type is modified here to avoid issues with excessive line length.
+    _json_modify(
+        payload,
+        ["predicate", "buildDefinition", "buildType"],
+        "https://github.com/oracle/macaron/tree/main/src/macaron/resources/provenance-buildtypes/oci/v1",
+    )
+    return payload
+
+
 @pytest.fixture(name="slsa_v02_provenance")
 def slsa_v02_provenance_() -> dict[str, JsonType]:
     """Return a valid SLSA v02 provenance."""
@@ -320,6 +354,28 @@ def test_slsa_v1_github_is_invalid(
     """Test invalidly modified SLSA v1 provenance with build type GitHub."""
     _json_modify(slsa_v1_github_provenance, keys, new_value)
     _test_extract_repo_and_commit_from_provenance(slsa_v1_github_provenance)
+
+
+def test_slsa_v1_oci_is_valid(
+    slsa_v1_oci_provenance: dict[str, JsonType], target_repository: str, target_commit: str
+) -> None:
+    """Test SLSA v1 oci provenance."""
+    _test_extract_repo_and_commit_from_provenance(slsa_v1_oci_provenance, target_repository, target_commit)
+
+
+@pytest.mark.parametrize(
+    ("keys", "new_value"),
+    [
+        (["predicate", "buildDefinition", "externalParameters", "source"], ""),
+        (["predicate", "buildDefinition", "externalParameters", "source"], None),
+    ],
+)
+def test_slsa_v1_oci_is_invalid(
+    slsa_v1_oci_provenance: dict[str, JsonType], keys: list[str], new_value: JsonType
+) -> None:
+    """Test invalidly modified SLSA v1 oci provenance."""
+    _json_modify(slsa_v1_oci_provenance, keys, new_value)
+    _test_extract_repo_and_commit_from_provenance(slsa_v1_oci_provenance)
 
 
 def test_slsa_v02_is_valid(
