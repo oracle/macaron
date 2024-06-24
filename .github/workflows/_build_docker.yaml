@@ -59,6 +59,9 @@ jobs:
         IMAGE_NAME: ghcr.io/oracle/macaron
       run: make build-docker
 
+    - name: Install dependencies for integration test utility
+      run: make setup-integration-test-utility-for-docker
+
     # Run the integration tests against the built Docker image.
     - name: Test the Docker image
       env:

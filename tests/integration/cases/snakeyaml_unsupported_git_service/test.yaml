@@ -1,0 +1,32 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing a repository with un-supported git service as local repo without dependency resolution.
+
+steps:
+- name: Prepare local repo directory
+  kind: shell
+  options:
+    cmd: mkdir -p output/local_repos
+- name: Clone snakeyaml
+  kind: shell
+  options:
+    cmd: git clone --filter=tree:0 https://bitbucket.org/snakeyaml/snakeyaml output/local_repos/snakeyaml
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    ini: config.ini
+    main_args:
+    - -lr
+    - output/local_repos
+    command_args:
+    - -rp
+    - snakeyaml
+    - -d
+    - a34989252e6f59e36a3aaf788a903b7a37a73d33
+    - --skip-deps
+- name: Run macaron verify-policy to verify passed/failed checks
+  kind: verify
+  options:
+    policy: policy.dl

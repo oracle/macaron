@@ -205,6 +205,12 @@ setup-github-actions:
 	python -m pip install --upgrade wheel
 	python -m pip install --upgrade --upgrade-strategy eager --editable .[actions]
 
+# Install dependencies for the integration test utility script in workflow to
+# test the docker image.
+.PHONY: setup-integration-test-utility-for-docker
+setup-integration-test-utility-for-docker:
+	python -m pip install ruamel.yaml cfgv
+
 # Generate a Software Bill of Materials (SBOM).
 .PHONY: sbom
 sbom: requirements
