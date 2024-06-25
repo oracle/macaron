@@ -17,6 +17,7 @@ from pydriller.git import Git
 from sqlalchemy.orm import Session
 
 from macaron import __version__
+from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
@@ -331,7 +332,7 @@ class Analyzer:
             provenances = provenance_finder.find_provenance(parsed_purl)
             if provenances:
                 provenance_payload = provenances[0]
-                if provenances:
+                if defaults.getboolean("analyzer", "verify_provenance"):
                     provenance_is_verified = provenance_finder.verify_provenance(parsed_purl, provenances)
 
         # Try to extract the repository URL and commit digest from the Provenance, if it exists.
