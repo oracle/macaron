@@ -50,6 +50,8 @@ class ChecksOutputs(TypedDict):
     """The repository URL extracted from provenance, if applicable."""
     provenance_commit_digest: str | None
     """The commit digest extracted from provenance, if applicable."""
+    provenance_verified: bool
+    """True if the provenance exists and has been verified against a signed companion provenance."""
 
 
 class AnalyzeContext:
@@ -103,6 +105,7 @@ class AnalyzeContext:
             provenance=None,
             provenance_repo_url=None,
             provenance_commit_digest=None,
+            provenance_verified=False,
         )
 
     @property
