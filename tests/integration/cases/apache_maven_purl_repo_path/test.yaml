@@ -21,6 +21,12 @@ steps:
     - -d
     - 3fc399318edef0d5ba593723a24fff64291d6f9b
     - --skip-deps
+# This to check if run_macaron.sh cleans up the token file after the test case runs for the docker image.
+- name: Check the token file doesn't exist.
+  kind: shell
+  options:
+    cmd: ls .macaron_env_file
+  expect_fail: true
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:
