@@ -259,16 +259,6 @@ function mount_file() {
     mounts+=("-v" "${file_on_host}:${file_in_container}:${mount_option}")
 }
 
-# Handle tokens.
-set +u
-echo "" > ${TOKEN_FILE}
-{
-    echo "GITHUB_TOKEN=${GITHUB_TOKEN}" >> ${TOKEN_FILE}
-    echo "MCN_GITLAB_TOKEN=${MCN_GITLAB_TOKEN}" >> ${TOKEN_FILE}
-    echo "MCN_SELF_HOSTED_GITLAB_TOKEN=${MCN_SELF_HOSTED_GITLAB_TOKEN}"
-} >> ${TOKEN_FILE}
-mount_file "macaron_env_file" ${TOKEN_FILE} ${MACARON_WORKSPACE}/${TOKEN_FILE} "rw,Z"
-set -u
 
 # Parse main arguments.
 while [[ $# -gt 0 ]]; do
@@ -597,6 +587,17 @@ else
         exit 1
     fi
 fi
+
+# Handle tokens.
+set +u
+echo "" > ${TOKEN_FILE}
+{
+    echo "GITHUB_TOKEN=${GITHUB_TOKEN}" >> ${TOKEN_FILE}
+    echo "MCN_GITLAB_TOKEN=${MCN_GITLAB_TOKEN}" >> ${TOKEN_FILE}
+    echo "MCN_SELF_HOSTED_GITLAB_TOKEN=${MCN_SELF_HOSTED_GITLAB_TOKEN}"
+} >> ${TOKEN_FILE}
+mount_file "macaron_env_file" ${TOKEN_FILE} ${MACARON_WORKSPACE}/${TOKEN_FILE} "rw,Z"
+set -u
 
 # Force docker to use linux/amd64 platform in order to make docker use emulation on ARM host platforms.
 docker run \
