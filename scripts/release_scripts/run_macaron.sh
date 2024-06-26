@@ -259,6 +259,17 @@ function mount_file() {
     mounts+=("-v" "${file_on_host}:${file_in_container}:${mount_option}")
 }
 
+# Clean up the token file and EXIT this bash script with the given status code.
+#
+# Arguments:
+#   $1: The eventual exit status code.
+#   $2: The path to the token file.
+function clean_up_exit() {
+    status_code=$1
+    token_file_path=$2
+    rm -f "$token_file_path"
+    exit "$status_code"
+}
 
 # Parse main arguments.
 while [[ $# -gt 0 ]]; do
@@ -600,6 +611,9 @@ mount_file "macaron_env_file" ${TOKEN_FILE} ${MACARON_WORKSPACE}/${TOKEN_FILE} "
 set -u
 
 # Force docker to use linux/amd64 platform in order to make docker use emulation on ARM host platforms.
+# We need the `docker run` command to be within `set +e` so that when it returns a non-zero status code,
+# it doesn't exit right away and still run the token file cleaning up command.
+set +e
 docker run \
     --platform=linux/amd64 \
     --network=host \
@@ -613,4 +627,4 @@ docker run \
     "${entrypoint[@]}" \
     "${macaron_args[@]}"
 
-rm -f "$TOKEN_FILE"
+clean_up_exit "$?" "$TOKEN_FILE"
