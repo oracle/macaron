@@ -356,15 +356,6 @@ run_macaron_clean $ANALYZE -purl pkg:maven/private.apache.maven/maven@4.0.0-alph
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Tutorial test for behnazh-w/example-maven-app: testing automatic dependency resolution."
-echo -e "----------------------------------------------------------------------------------\n"
-DEP_EXPECTED=$WORKSPACE/tests/tutorials/dependency_analyze/maven/io_github_behnazh-w_demo/example-maven-app/dependencies.json
-DEP_RESULT=$WORKSPACE/output/reports/maven/io_github_behnazh-w_demo/example-maven-app/dependencies.json
-run_macaron_clean $ANALYZE -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar -rp https://github.com/behnazh-w/example-maven-app || log_fail
-
-check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
