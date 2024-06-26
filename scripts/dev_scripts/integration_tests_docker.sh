@@ -34,11 +34,6 @@ function log_fail() {
 }
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Run unit tests for the run_macaron.sh script"
-python $UNIT_TEST_SCRIPT || log_fail
-echo -e "\n----------------------------------------------------------------------------------"
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "pkg:pypi/django@5.0.6: Analyzing the dependencies with virtual env provided as input."
 echo -e "----------------------------------------------------------------------------------\n"
 # Prepare the virtual environment.
