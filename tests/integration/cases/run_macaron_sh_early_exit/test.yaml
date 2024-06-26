@@ -1,0 +1,53 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Running run_macaron.sh on scenarios where the docker image is not available
+
+tags:
+- docker
+- token_file_clean_up
+
+steps:
+- name: Run run_macaron.sh.py with invalid docker image tag and DOCKER_PULL set to missing.
+  kind: analyze
+  env:
+    MACARON_IMAGE_TAG: this_is_not_a_real_tag
+    DOCKER_PULL: missing
+  options:
+    command_args:
+    - --version
+  expect_fail: true
+- name: Check the token file doesn't exist.
+  kind: shell
+  options:
+    cmd: ls .macaron_env_file
+  expect_fail: true
+- name: Run run_macaron.sh.py with invalid docker image tag and DOCKER_PULL set to always.
+  kind: analyze
+  env:
+    MACARON_IMAGE_TAG: this_is_not_a_real_tag
+    DOCKER_PULL: always
+  options:
+    command_args:
+    - --version
+  expect_fail: true
+- name: Check the token file doesn't exist.
+  kind: shell
+  options:
+    cmd: ls .macaron_env_file
+  expect_fail: true
+- name: Run run_macaron.sh.py with invalid docker image tag and DOCKER_PULL set to never.
+  kind: analyze
+  env:
+    MACARON_IMAGE_TAG: this_is_not_a_real_tag
+    DOCKER_PULL: never
+  options:
+    command_args:
+    - --version
+  expect_fail: true
+- name: Check the token file doesn't exist.
+  kind: shell
+  options:
+    cmd: ls .macaron_env_file
+  expect_fail: true
