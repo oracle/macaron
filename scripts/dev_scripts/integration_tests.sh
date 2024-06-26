@@ -346,16 +346,6 @@ run_macaron_clean $ANALYZE -purl pkg:maven/org.apache.maven/maven@3.9.7?type=pom
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Tutorial test for apache/maven: Analyzing using a CycloneDx SBOM file of a software component whose repository is not available."
-echo -e "----------------------------------------------------------------------------------\n"
-SBOM_FILE=$WORKSPACE/tests/tutorials/dependency_analyze/maven/private.apache.maven/maven/sbom.json
-DEP_EXPECTED=$WORKSPACE/tests/tutorials/dependency_analyze/maven/private.apache.maven/maven/dependencies.json
-DEP_RESULT=$WORKSPACE/output/reports/maven/private_apache_maven/maven/dependencies.json
-run_macaron_clean $ANALYZE -purl pkg:maven/private.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom -sbom "$SBOM_FILE" || log_fail
-
-check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
