@@ -33,26 +33,6 @@ function log_fail() {
     RESULT_CODE=1
 }
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "pkg:pypi/django@5.0.6: Analyzing the dependencies with virtual env provided as input."
-echo -e "----------------------------------------------------------------------------------\n"
-# Prepare the virtual environment.
-VIRTUAL_ENV_PATH=$WORKSPACE/.django_venv
-$MAKE_VENV "$VIRTUAL_ENV_PATH"
-"$VIRTUAL_ENV_PATH"/bin/pip install django==5.0.6
-run_macaron_clean analyze -purl pkg:pypi/django@5.0.6 --python-venv "$VIRTUAL_ENV_PATH" || log_fail
-
-# Check the dependencies using the policy engine.
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/django/test_dependencies.dl
-POLICY_RESULT=$WORKSPACE/output/policy_report.json
-POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/django/test_dependencies.json
-
-$RUN_POLICY -f "$POLICY_FILE" -d $DB || log_fail
-python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
-
-# Clean up and remove the virtual environment.
-rm -rf "$VIRTUAL_ENV_PATH"
-
 python ./tests/integration/run.py run \
     --macaron scripts/release_scripts/run_macaron.sh \
     --include-tag shared-docker-python \

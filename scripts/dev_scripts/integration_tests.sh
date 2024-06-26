@@ -368,27 +368,6 @@ run_macaron_clean $ANALYZE -purl pkg:maven/private.apache.maven/maven@4.0.0-alph
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 echo -e "\n----------------------------------------------------------------------------------"
-echo "Tutorial test for pkg:pypi/django@5.0.6: Analyzing the dependencies with virtual env provided as input."
-echo -e "----------------------------------------------------------------------------------\n"
-# Prepare the virtual environment.
-VIRTUAL_ENV_PATH=$WORKSPACE/.django_venv
-$MAKE_VENV "$VIRTUAL_ENV_PATH"
-"$VIRTUAL_ENV_PATH"/bin/pip install django==5.0.6
-run_macaron_clean $ANALYZE -purl pkg:pypi/django@5.0.6 --python-venv "$VIRTUAL_ENV_PATH" || log_fail
-
-# Check the dependencies using the policy engine.
-RUN_POLICY="macaron verify-policy"
-POLICY_FILE=$WORKSPACE/tests/policy_engine/resources/policies/django/test_dependencies.dl
-POLICY_RESULT=$WORKSPACE/output/policy_report.json
-POLICY_EXPECTED=$WORKSPACE/tests/policy_engine/expected_results/django/test_dependencies.json
-
-$RUN_POLICY -f "$POLICY_FILE" -d $DB || log_fail
-check_or_update_expected_output $COMPARE_POLICIES "$POLICY_RESULT" "$POLICY_EXPECTED" || log_fail
-
-# Clean up and remove the virtual environment.
-rm -rf "$VIRTUAL_ENV_PATH"
-
-echo -e "\n----------------------------------------------------------------------------------"
 echo "Tutorial test for behnazh-w/example-maven-app: testing automatic dependency resolution."
 echo -e "----------------------------------------------------------------------------------\n"
 DEP_EXPECTED=$WORKSPACE/tests/tutorials/dependency_analyze/maven/io_github_behnazh-w_demo/example-maven-app/dependencies.json
