@@ -312,18 +312,6 @@ run_macaron_clean -dp $DEFAULTS_FILE $ANALYZE -pe $EXPECTATION_FILE -pf $PROVENA
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
-# Testing the Repo Finder's remote calls.
-# This requires the 'packageurl' Python module
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Testing Repo Finder functionality."
-echo -e "----------------------------------------------------------------------------------\n"
-check_or_update_expected_output $TEST_REPO_FINDER || log_fail
-if [ $? -ne 0 ];
-then
-    echo -e "Expect zero status code but got $?."
-    log_fail
-fi
-
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
