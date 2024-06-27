@@ -284,12 +284,6 @@ fi
 rm -rf "$SOURCE_REPO"
 rm -rf "$TARGET_REPO"
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing dependencies when neither the repository nor SBOM is available."
-echo -e "----------------------------------------------------------------------------------\n"
-run_macaron_clean $ANALYZE -purl pkg:maven/private.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom || log_fail
-# We expect the analysis to finish with no errors.
-
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
