@@ -335,17 +335,6 @@ then
     log_fail
 fi
 
-# This section includes integration tests that are provided as tutorials on the website.
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Tutorial test for apache/maven: Analyzing using a CycloneDx SBOM file of a software component."
-echo -e "----------------------------------------------------------------------------------\n"
-SBOM_FILE=$WORKSPACE/docs/source/_static/examples/apache/maven/analyze_with_sbom/sbom.json
-DEP_EXPECTED=$WORKSPACE/tests/tutorials/dependency_analyze/maven/org_apache_maven/maven/dependencies.json
-DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
-run_macaron_clean $ANALYZE -purl pkg:maven/org.apache.maven/maven@3.9.7?type=pom -sbom "$SBOM_FILE" || log_fail
-
-check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
