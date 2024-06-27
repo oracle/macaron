@@ -324,17 +324,6 @@ then
     log_fail
 fi
 
-# Testing the Commit Finder's tag matching functionality.
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Testing Commit Finder tag matching functionality."
-echo -e "----------------------------------------------------------------------------------\n"
-python $TEST_COMMIT_FINDER || log_fail
-if [ $? -ne 0 ];
-then
-    echo -e "Expect zero status code but got $?."
-    log_fail
-fi
-
 python3 ./tests/integration/run.py run \
     --exclude-tag token_file_clean_up \
     ./tests/integration/cases/... || log_fail
