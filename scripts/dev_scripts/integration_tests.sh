@@ -189,18 +189,6 @@ run_macaron_clean -lr $WORKSPACE/output/git_repos/local_repos/ $ANALYZE -rp test
 ls $JSON_EXPECTED || log_fail
 ls $HTML_EXPECTED || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: test using invalid local repo path."
-echo -e "----------------------------------------------------------------------------------\n"
-# Assume that $WORKSPACE is always an absolute path.
-run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com/ $ANALYZE -rp path/to/invalid/repo --skip-deps
-
-if [ $? -eq 0 ];
-then
-    echo -e "Expect non-zero status code but got $?."
-    log_fail
-fi
-
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
