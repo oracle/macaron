@@ -1,0 +1,24 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Test not pulling from remote for a locally cloned repo.
+
+steps:
+- name: Preparing the testing environments
+  kind: shell
+  options:
+    cmd: ./setup.sh
+  expect_fail: false
+# We need to run this test case inside a shell script because we need to obtain the commit hash to analyze,
+# which is not fixed every run.
+- name: Run macaron analyze
+  kind: shell
+  options:
+    cmd: ./test.sh
+  expect_fail: true
+- name: Clean up the target_commit_sha.txt file
+  kind: shell
+  options:
+    cmd: rm -f target_commit_sha.txt
+  expect_fail: false
