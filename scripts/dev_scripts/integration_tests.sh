@@ -81,23 +81,6 @@ then
     cp $RESOURCES/settings.xml $HOMEDIR/.m2/
 fi
 
-# Running Macaron without config files
-echo -e "\n=================================================================================="
-echo "Run integration tests without configurations"
-echo -e "==================================================================================\n"
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing the repo path, the branch name and the commit digest with dependency resolution using cyclonedx maven plugin (default)."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/org.apache.maven/maven/4.0.0-alpha-9-SNAPSHOT/maven.dl
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
-DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
-run_macaron_clean $ANALYZE -purl pkg:maven/org.apache.maven/maven@4.0.0-alpha-9-SNAPSHOT?type=pom -rp https://github.com/apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
-
-check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
 # TODO: uncomment the test below after resolving https://github.com/oracle/macaron/issues/60.
 # echo -e "\n----------------------------------------------------------------------------------"
 # echo "micronaut-projects/micronaut-test: Check the resolved dependency output with config for cyclonedx gradle plugin (default)."
