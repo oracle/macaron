@@ -236,54 +236,6 @@ then
     log_fail
 fi
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: test not pulling from remote for a locally cloned repo."
-echo -e "----------------------------------------------------------------------------------\n"
-SOURCE_REPO="$WORKSPACE/output/git_repos/local_repos/source"
-TARGET_REPO="$WORKSPACE/output/git_repos/local_repos/target"
-
-mkdir -p  "$SOURCE_REPO"
-
-# Prepare the first commit for the repository.
-cd "$SOURCE_REPO" || log_fail
-git init || log_fail
-git config --local user.email "testing@example.com"
-git config --local user.name "Testing"
-echo 1 >> test1.txt || log_fail
-git add test1.txt || log_fail
-git commit -m "First commit" || log_fail
-
-# Clone from SOURCE_REPO. TARGET_REPO will be identical to SOURCE_REPO and contain only the first commit.
-mkdir -p "$TARGET_REPO"
-git clone "$SOURCE_REPO" "$TARGET_REPO" || log_fail
-
-# Create a second commit in SOURCE_REPO.
-# Note that after this commit is created, TARGET_REPO will not have the second commit.
-# However, because TARGET_REPO's remote origin points to SOURCE_REPO, the second commit can be pulled from SOURCE_REPO.
-cd "$SOURCE_REPO" || log_fail
-echo 2 >> test2.txt || log_fail
-git add test2.txt || log_fail
-git commit -m "Second commit"  || log_fail
-# This is the SHA for the second commit, which exists in SOURCE_REPO but not in TARGET_REPO yet.
-HEAD_COMMIT_SHA=$(git rev-parse HEAD) || log_fail
-
-cd "$WORKSPACE"  || log_fail
-
-# When we run the analysis, because we are providing a local repo path, Macaron is not supposed to pull the
-# latest changes (i.e the second commit of SOURCE_REPO) into TARGET_REPO.
-# Therefore, this analysis is expected to fail because the commit HEAD_COMMIT_SHA does not exist in TARGET_REPO.
-run_macaron_clean -lr $WORKSPACE/output/git_repos/local_repos/ $ANALYZE -rp target -b master -d "$HEAD_COMMIT_SHA" --skip-deps
-
-if [ $? -eq 0 ];
-then
-    echo -e "Expect non-zero status code but got $?."
-    log_fail
-fi
-
-# Clean up the repos.
-rm -rf "$SOURCE_REPO"
-rm -rf "$TARGET_REPO"
-
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
