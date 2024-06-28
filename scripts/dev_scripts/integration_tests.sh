@@ -201,17 +201,6 @@ then
     log_fail
 fi
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: test using invalid local_repos_dir."
-echo -e "----------------------------------------------------------------------------------\n"
-run_macaron_clean -lr $WORKSPACE/invalid_dir_should_fail $ANALYZE -rp apache/maven --skip-deps
-
-if [ $? -eq 0 ];
-then
-    echo -e "Expect non-zero status code but got $?."
-    log_fail
-fi
-
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
