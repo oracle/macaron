@@ -138,22 +138,6 @@ $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 # check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-# Running Macaron using local paths.
-echo -e "\n=================================================================================="
-echo "Run integration tests with local paths for apache/maven..."
-echo -e "==================================================================================\n"
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing local clone with the branch name, the commit digest and dependency resolution using cyclonedx maven plugin (default)."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/org.apache.maven/maven/4.0.0-alpha-9-SNAPSHOT/maven.dl
-DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_apache_maven.json
-DEP_RESULT=$WORKSPACE/output/reports/maven/org_apache_maven/maven/dependencies.json
-run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com $ANALYZE -purl pkg:maven/org.apache.maven/maven@4.0.0-alpha-9-SNAPSHOT?type=pom -rp apache/maven -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b || log_fail
-
-check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
