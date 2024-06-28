@@ -1,0 +1,44 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing with local paths in configuration and without dependency resolution.
+
+steps:
+- name: Clone apache/maven repo
+  kind: shell
+  options:
+    cmd: git clone --filter=tree:0 https://github.com/apache/maven ./output/git_repos/local_repos/apache/maven
+- name: Clone google/guava repo
+  kind: shell
+  options:
+    cmd: git clone --filter=tree:0 https://github.com/google/guava ./output/git_repos/local_repos/google/guava
+- name: Clone mockito/mockito repo
+  kind: shell
+  options:
+    cmd: git clone --filter=tree:0 https://github.com/mockito/mockito ./output/git_repos/local_repos/mockito/mockito
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    main_args:
+    - -lr
+    - ./output/git_repos/local_repos
+    command_args:
+    - -c
+    - config.yaml
+    - --skip-deps
+- name: Run verify-policy for apache/maven
+  kind: verify
+  options:
+    database: output/macaron.db
+    policy: maven.dl
+- name: Run verify-policy for google/guava
+  kind: verify
+  options:
+    database: output/macaron.db
+    policy: guava.dl
+- name: Run verify-policy for mockito/mockito
+  kind: verify
+  options:
+    database: output/macaron.db
+    policy: mockito.dl
