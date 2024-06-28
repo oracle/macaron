@@ -223,19 +223,6 @@ then
     log_fail
 fi
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Test using local repo with no commits."
-echo -e "----------------------------------------------------------------------------------\n"
-mkdir -p $WORKSPACE/output/git_repos/local_repos/empty_repo
-cd $WORKSPACE/output/git_repos/local_repos/empty_repo && git init && cd -
-run_macaron_clean -lr $WORKSPACE/output/git_repos/local_repos $ANALYZE -rp empty_repo --skip-deps
-
-if [ $? -eq 0 ];
-then
-    echo -e "Expect non-zero status code but got $?."
-    log_fail
-fi
-
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
