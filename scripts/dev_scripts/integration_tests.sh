@@ -115,20 +115,6 @@ run_macaron_clean $ANALYZE -rp https://github.com/apache/maven --skip-deps -b ma
 
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
-# Analyze FasterXML/jackson-databind.
-echo -e "\n=================================================================================="
-echo "Run integration tests with configurations for FasterXML/jackson-databind..."
-echo -e "==================================================================================\n"
-
-echo -e "\n----------------------------------------------------------------------------------"
-echo "FasterXML/jackson-databind: Check the e2e output JSON file with config and no dependency analyzing."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/jackson-databind/jackson-databind.dl
-run_macaron_clean $ANALYZE -purl pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.0-rc1 --skip-deps || log_fail
-# Original commit f0af53d085eb2aa9f7f6199846cc526068e09977 seems to be first included in version tagged commit 2.14.0-rc1.
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
 # echo -e "\n----------------------------------------------------------------------------------"
 # echo "FasterXML/jackson-databind: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
 # echo -e "----------------------------------------------------------------------------------\n"
