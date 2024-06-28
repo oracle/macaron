@@ -58,7 +58,7 @@ python $COMPARE_POLICIES $POLICY_RESULT $POLICY_EXPECTED || log_fail
 # Clean up and remove the virtual environment.
 rm -rf "$VIRTUAL_ENV_PATH"
 
-python3 ./tests/integration/run.py run \
+python ./tests/integration/run.py run \
     --macaron scripts/release_scripts/run_macaron.sh \
     --include-tag docker \
     ./tests/integration/cases/... || log_fail

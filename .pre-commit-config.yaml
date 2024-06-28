@@ -165,7 +165,7 @@ repos:
   hooks:
   - id: integration-test-vet
     name: validate integration test cases
-    entry: python3
+    entry: python
     args:
     - ./tests/integration/run.py
     - vet

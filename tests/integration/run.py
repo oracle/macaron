@@ -252,7 +252,7 @@ class CompareStep(Step[CompareStepOptions]):
         result_file = self.options["result"]
         expected_file = self.options["expected"]
         return [
-            "python3",
+            "python",
             os.path.abspath(os.path.join(*COMPARE_SCRIPTS[kind])),
             *[result_file, expected_file],
         ]
@@ -276,7 +276,7 @@ class CompareStep(Step[CompareStepOptions]):
         if kind == "vsa":
             proc = subprocess.run(
                 args=[
-                    "python3",
+                    "python",
                     os.path.abspath(os.path.join(*COMPARE_SCRIPTS[kind])),
                     "--update",
                     *[result_file, expected_file],
