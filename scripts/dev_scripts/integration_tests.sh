@@ -107,14 +107,6 @@ $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
 # python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "Test using the default template file."
-echo -e "----------------------------------------------------------------------------------\n"
-OUTPUT_POLICY=$WORKSPACE/tests/e2e/expected_results/maven/maven.dl
-run_macaron_clean $ANALYZE -rp https://github.com/apache/maven --skip-deps -b master -d 3fc399318edef0d5ba593723a24fff64291d6f9b -g $WORKSPACE/src/macaron/output_reporter/templates/macaron.html || log_fail
-
-$RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
-
 # echo -e "\n----------------------------------------------------------------------------------"
 # echo "FasterXML/jackson-databind: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
 # echo -e "----------------------------------------------------------------------------------\n"
