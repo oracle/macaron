@@ -154,23 +154,6 @@ run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com $ANALYZE -purl pkg:
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 $RUN_POLICY -d $DB -f $OUTPUT_POLICY || log_fail
 
-echo -e "\n----------------------------------------------------------------------------------"
-echo "apache/maven: Analyzing with local paths in configuration and without dependency resolution."
-echo -e "----------------------------------------------------------------------------------\n"
-EXPECT_DIR=$WORKSPACE/tests/e2e/expected_results/maven
-
-declare -a COMPARE_FILES=(
-    "maven.dl"
-    "guava.dl"
-    "mockito.dl"
-)
-
-run_macaron_clean -lr $WORKSPACE/output/git_repos/github_com $ANALYZE -c $WORKSPACE/tests/e2e/configurations/maven_local_path.yaml --skip-deps || log_fail
-for i in "${COMPARE_FILES[@]}"
-do
-    $RUN_POLICY -d $DB -f $EXPECT_DIR/$i || log_fail
-done
-
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
