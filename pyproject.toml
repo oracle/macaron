@@ -34,6 +34,7 @@ dependencies = [
     "jsonschema >= 4.22.0,<5.0.0",
     "cyclonedx-bom >=4.0.0,<5.0.0",
     "cyclonedx-python-lib[validation] >=7.3.4,<8.0.0",
+    "beautifulsoup4 >= 4.12.0,<5.0.0",
 ]
 keywords = []
 # https://pypi.org/classifiers/
@@ -74,6 +75,7 @@ dev = [
     "pip-audit >=2.5.6,<3.0.0",
     "pylint >=3.0.3,<4.0.0",
     "cyclonedx-bom >=4.0.0,<5.0.0",
+    "types-beautifulsoup4 >= 4.12.0,<5.0.0",
 ]
 docs = [
     "sphinx >=7.0.0,<8.0.0",
