@@ -5,7 +5,7 @@ description: |
   Analyzing with local paths using local_repos_dir without dependency resolution.
 
 tags:
-- docker
+- shared-docker-python
 
 steps:
 - name: Prepare local repo directory

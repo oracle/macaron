@@ -5,7 +5,7 @@ description: |
   Running run_macaron.sh on scenarios where the docker image is not available
 
 tags:
-- docker
+- shared-docker-python
 - docker-only
 
 steps:

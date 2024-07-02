@@ -6,7 +6,7 @@ description: |
   The CUE expectation file is invalid.
 
 tags:
-- docker
+- shared-docker-python
 
 steps:
 - name: Run macaron analyze with invalid expectation file
