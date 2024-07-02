@@ -398,7 +398,7 @@ run_macaron_clean $ANALYZE -purl pkg:maven/io.github.behnazh-w.demo/example-mave
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
 python ./tests/integration/run.py run \
-    --exclude-tag token_file_clean_up \
+    --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
 
 # Important: This should be at the end of the file

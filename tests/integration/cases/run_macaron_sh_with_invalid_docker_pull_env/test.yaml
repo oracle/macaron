@@ -6,7 +6,7 @@ description: |
 
 tags:
 - docker
-- token_file_clean_up
+- docker-only
 
 steps:
 - name: Run run_macaron.sh.py with DOCKER_PULL set to invalid value.
