@@ -599,6 +599,10 @@ else
     fi
 fi
 
+# Make sure commands that need to be cleaned up exist within `set +e` so that when any of them returns a non-zero
+# status code, we don't exit right away and still run the token file cleaning up command.
+set +e
+
 # Handle tokens.
 set +u
 echo "" > ${TOKEN_FILE}
@@ -611,9 +615,6 @@ mount_file "macaron_env_file" ${TOKEN_FILE} ${MACARON_WORKSPACE}/${TOKEN_FILE} "
 set -u
 
 # Force docker to use linux/amd64 platform in order to make docker use emulation on ARM host platforms.
-# We need the `docker run` command to be within `set +e` so that when it returns a non-zero status code,
-# it doesn't exit right away and still run the token file cleaning up command.
-set +e
 docker run \
     --platform=linux/amd64 \
     --network=host \
