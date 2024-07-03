@@ -6,7 +6,7 @@ description: |
   The CUE expectation file is provided as a single file path.
 
 tags:
-- docker
+- shared-docker-python
 
 steps:
 - name: Run macaron analyze with expectation file

@@ -179,3 +179,4 @@ tests/slsa_analyzer/ci_service/mock_repos/**
 docs/_build
 bin/
 requirements.txt
+.macaron_env_file

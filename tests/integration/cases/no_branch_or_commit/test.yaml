@@ -5,7 +5,7 @@ description: >
   Test analyzing with both PURL and repository path but no branch or commit is provided
 
 tags:
-- docker
+- shared-docker-python
 
 steps:
 - name: Run macaron analyze
