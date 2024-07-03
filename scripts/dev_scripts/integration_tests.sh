@@ -81,15 +81,6 @@ then
     cp $RESOURCES/settings.xml $HOMEDIR/.m2/
 fi
 
-# echo -e "\n----------------------------------------------------------------------------------"
-# echo "FasterXML/jackson-databind: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
-# echo -e "----------------------------------------------------------------------------------\n"
-# DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_FasterXML_jackson-databind.json
-# DEP_RESULT=$WORKSPACE/output/reports/github_com/FasterXML/jackson-databind/dependencies.json
-# run_macaron_clean $ANALYZE -purl pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.0-rc1 || log_fail
-
-# check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
     ./tests/integration/cases/... || log_fail
