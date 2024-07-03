@@ -11,7 +11,7 @@ steps:
 - name: Create virtual environment.
   kind: shell
   options:
-    cmd: python3 -m venv ./django_venv
+    cmd: python -m venv ./django_venv
 - name: Prepare virtual environment.
   kind: shell
   options:

@@ -12,4 +12,4 @@ steps:
 - name: Run test_run_macaron_sh.py
   kind: shell
   options:
-    cmd: python3 ./test_run_macaron_sh.py
+    cmd: python ./test_run_macaron_sh.py

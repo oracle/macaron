@@ -8,4 +8,4 @@ steps:
 - name: Run the test commit finder script
   kind: shell
   options:
-    cmd: python3 commit_finder.py
+    cmd: python commit_finder.py

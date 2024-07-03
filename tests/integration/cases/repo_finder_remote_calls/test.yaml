@@ -8,4 +8,4 @@ steps:
 - name: Run the test repo finder script
   kind: shell
   options:
-    cmd: python3 repo_finder.py
+    cmd: python repo_finder.py
