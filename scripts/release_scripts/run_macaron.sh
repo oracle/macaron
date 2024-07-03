@@ -604,14 +604,12 @@ fi
 set +e
 
 # Handle tokens.
-set +u
 {
     echo "GITHUB_TOKEN=${GITHUB_TOKEN}"
     echo "MCN_GITLAB_TOKEN=${MCN_GITLAB_TOKEN}"
     echo "MCN_SELF_HOSTED_GITLAB_TOKEN=${MCN_SELF_HOSTED_GITLAB_TOKEN}"
 } > ${TOKEN_FILE}
 mount_file "macaron_env_file" ${TOKEN_FILE} ${MACARON_WORKSPACE}/${TOKEN_FILE} "rw,Z"
-set -u
 
 # Force docker to use linux/amd64 platform in order to make docker use emulation on ARM host platforms.
 docker run \
