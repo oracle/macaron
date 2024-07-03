@@ -13,7 +13,7 @@ make docs
 This command will build and generate the documentation into `docs/_build/html`. To view it locally, run (with the dev environment activated):
 
 ```
-python3 -m http.server -d docs/_build/html
+python -m http.server -d docs/_build/html
 ```
 
 ## Extend the API reference

@@ -6,7 +6,7 @@
 We have an integration test utility script, [`./tests/integration/run.py`](./run.py), for running integration tests. The script should be called within the dev virtual environment and from the root directory of the repository.
 
 ```bash
-$ python3 ./tests/integration/run.py -h
+$ python ./tests/integration/run.py -h
 usage: ./tests/integration/run.py [-h] {check,vet,run,update} ...
 
 positional arguments:
@@ -26,7 +26,7 @@ The utility offers 4 different commands, as shown in the help message above. Som
 
 ```bash
 # Show help message for the check command.
-$ python3 ./tests/integration/run.py check -h
+$ python ./tests/integration/run.py check -h
 ```
 
 
@@ -81,21 +81,21 @@ You create a new test case by creating a new directory, then a `test.yaml` withi
 
 ```bash
 # Schema-validate the ./test/case/directory/test.yaml file.
-$ python3 ./tests/integration/run.py check ./test/case/directory
+$ python ./tests/integration/run.py check ./test/case/directory
 ```
 
 At this point, some expected result files do not exist yet, since you normally want to run `macaron` once, inspect the result files, then turn them into expected result files if they look good enough. To do this, you can run in **interactive** mode. In this mode, the utility stops at each step and asks if you want to run or skip a step. For `compare` steps, the utility also asks if you want to "update" the expected result file instead of compare.
 
 ```bash
 # Run a test case in interactive mode.
-$ python3 ./tests/integration/run.py run -i ./test/case/directory
+$ python ./tests/integration/run.py run -i ./test/case/directory
 ```
 
 After you have finished running the test case, you can rerun the test case to make sure everything works as expected.
 
 ```bash
 # Run a test case end-to-end.
-$ python3 ./tests/integration/run.py run ./test/case/directory
+$ python ./tests/integration/run.py run ./test/case/directory
 ```
 
 ### Inspect test cases
@@ -104,7 +104,7 @@ Besides the interactive mode, the `run` command also has another special mode ca
 
 ```bash
 # Run a test case in dry-run mode.
-$ python3 ./tests/integration/run.py run -d ./test/case/directory
+$ python ./tests/integration/run.py run -d ./test/case/directory
 ```
 
 ### Validate test cases before pushing commits to remote or running in CI
@@ -119,14 +119,14 @@ All commands (`check`, `vet`, `run`, and `update`) can process multiple test cas
 
 ```bash
 # Run two test cases one after another.
-$ python3 ./tests/integration/run.py run ./test_case_a/directory ./test_case_b/directory
+$ python ./tests/integration/run.py run ./test_case_a/directory ./test_case_b/directory
 ```
 
 You can also use the `...` path wildcard to allow for discovering test case directories recursively under a root directory.
 
 ```bash
 # Run all test cases discovered recursively under a directory.
-$ python3 ./tests/integration/run.py run ./all/cases/...
+$ python ./tests/integration/run.py run ./all/cases/...
 ```
 
 ### Select a subset of test cases to run
@@ -147,21 +147,21 @@ We typically have the test cases for the container image being a subset of the t
 
 ```bash
 # Test the container image with test cases having the `docker` tag.
-$ python3 ./tests/integration/run.py run --include-tag docker ./all/cases/...
+$ python ./tests/integration/run.py run --include-tag docker ./all/cases/...
 ```
 
 The `--include-tag` flag can be specified multiple times. A selected test case must contain all tags specified with the `--include-tag` flag.
 
 ```bash
 # Test the container image with test cases having the `docker` tag.
-$ python3 ./tests/integration/run.py run --include-tag tag-a --include-tag tag-b ./all/cases/...
+$ python ./tests/integration/run.py run --include-tag tag-a --include-tag tag-b ./all/cases/...
 ```
 
 There is also the `--exclude-tag` flag. A selected test case must also not contain any tag specified with the `--exclude-tag` flag.
 
 ```bash
 # Only run test cases not tagged with `npm`.
-$ python3 ./tests/integration/run.py run --exclude-tag npm ./all/cases/...
+$ python ./tests/integration/run.py run --exclude-tag npm ./all/cases/...
 ```
 
 You can simply think of each `--include-tag`/`--exclude-tag` argument as adding an additional constraint that a selected test case must satisfy".

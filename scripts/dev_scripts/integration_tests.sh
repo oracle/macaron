@@ -397,7 +397,7 @@ run_macaron_clean $ANALYZE -purl pkg:maven/io.github.behnazh-w.demo/example-mave
 
 check_or_update_expected_output $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
 
-python3 ./tests/integration/run.py run \
+python ./tests/integration/run.py run \
     ./tests/integration/cases/... || log_fail
 
 # Important: This should be at the end of the file
