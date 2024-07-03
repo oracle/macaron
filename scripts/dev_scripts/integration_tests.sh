@@ -83,6 +83,7 @@ fi
 
 python ./tests/integration/run.py run \
     --exclude-tag docker-only \
+    --exclude-tag skip \
     ./tests/integration/cases/... || log_fail
 
 # Important: This should be at the end of the file
