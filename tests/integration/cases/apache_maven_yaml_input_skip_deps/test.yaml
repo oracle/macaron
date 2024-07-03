@@ -5,7 +5,7 @@ description: |
   Check the e2e output JSON file with config and no dependency analyzing.
 
 tags:
-- docker
+- shared-docker-python
 
 steps:
 - name: Run macaron analyze

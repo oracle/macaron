@@ -6,7 +6,7 @@ description: |
   Policy CLI, and VSA generation.
 
 tags:
-- docker
+- shared-docker-python
 
 steps:
 - name: Clone the repository

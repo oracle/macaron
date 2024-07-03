@@ -5,7 +5,7 @@ description: |
   Test CUE provenance expectation check and policy verification.
 
 tags:
-- docker
+- shared-docker-python
 
 steps:
 - name: Run macaron analyze

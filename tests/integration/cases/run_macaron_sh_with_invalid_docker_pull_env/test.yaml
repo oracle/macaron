@@ -1,0 +1,24 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Making sure run_macaron.sh clean up the token file when it exits because DOCKER_PULL is set to an invalid value.
+
+tags:
+- shared-docker-python
+- docker-only
+
+steps:
+- name: Run run_macaron.sh.py with DOCKER_PULL set to invalid value.
+  kind: analyze
+  env:
+    DOCKER_PULL: invalid_value
+  options:
+    command_args:
+    - --version
+  expect_fail: true
+- name: Check the token file doesn't exist.
+  kind: shell
+  options:
+    cmd: ls .macaron_env_file
+  expect_fail: true

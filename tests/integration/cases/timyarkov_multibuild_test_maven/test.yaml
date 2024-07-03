@@ -6,7 +6,7 @@ description: |
   with dependency resolution using cyclonedx Maven plugins (defaults).
 
 tags:
-- docker
+- shared-docker-python
 
 steps:
 - name: Run macaron analyze

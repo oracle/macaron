@@ -60,7 +60,7 @@ rm -rf "$VIRTUAL_ENV_PATH"
 
 python ./tests/integration/run.py run \
     --macaron scripts/release_scripts/run_macaron.sh \
-    --include-tag docker \
+    --include-tag shared-docker-python \
     ./tests/integration/cases/... || log_fail
 
 if [ $RESULT_CODE -ne 0 ];
