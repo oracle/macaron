@@ -1,0 +1,22 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Checking the resolved dependency output with config for cyclonedx gradle plugin.
+
+tags:
+- skip
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -c
+    - config.yaml
+- name: Compare deps report
+  kind: compare
+  options:
+    kind: deps_report
+    expected: dependencies.json
+    result: output/reports/github_com/micronaut-projects/micronaut-test/dependencies.json

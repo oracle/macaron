@@ -81,15 +81,6 @@ then
     cp $RESOURCES/settings.xml $HOMEDIR/.m2/
 fi
 
-# TODO: uncomment the test below after resolving https://github.com/oracle/macaron/issues/60.
-# echo -e "\n----------------------------------------------------------------------------------"
-# echo "micronaut-projects/micronaut-test: Check the resolved dependency output with config for cyclonedx gradle plugin (default)."
-# echo -e "----------------------------------------------------------------------------------\n"
-# DEP_EXPECTED=$WORKSPACE/tests/dependency_analyzer/expected_results/cyclonedx_micronaut-projects_micronaut-test.dl
-# run_macaron_clean analyze -c $WORKSPACE/tests/dependency_analyzer/configurations/micronaut_test_config.yaml || log_fail
-
-# python $COMPARE_DEPS $DEP_RESULT $DEP_EXPECTED || log_fail
-
 # echo -e "\n----------------------------------------------------------------------------------"
 # echo "FasterXML/jackson-databind: Check the resolved dependency output with config for cyclonedx maven plugin (default)."
 # echo -e "----------------------------------------------------------------------------------\n"
