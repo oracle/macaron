@@ -4,6 +4,7 @@
 """Fixtures for tests."""
 from pathlib import Path
 from typing import NoReturn
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -11,6 +12,11 @@ import macaron
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.database.table_definitions import Analysis, Component, Repository
+from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 from macaron.parsers.bashparser import BashScriptType, create_bash_node
 from macaron.parsers.github_workflow_model import Identified, Job, NormalJob, RunStep, Workflow
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -34,6 +40,7 @@ from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import Gi
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
+from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
 
 # We need to pass fixture names as arguments to maintain an order.
 # pylint: disable=redefined-outer-name
@@ -446,3 +453,96 @@ def build_github_actions_call_graph_for_commands(commands: list[str]) -> CallGra
     )
 
     return gh_cg
+
+
+@pytest.fixture(autouse=True)
+def one_release_analyzer() -> dict:
+    """Create an one-release-analyzer setup.
+
+    Returns
+    -------
+    dict
+        Setup data for the test.
+    """
+    package_with_one_release = "ttttttttest-nester.py"
+    mock_api_client_fail = MagicMock(spec=PyPIRegistry())
+    mock_api_client_fail.load_defaults()
+    mock_api_client_fail.download_attestation_payload(package=package_with_one_release)
+
+    package_with_many_releases = "requests"
+    mock_api_client_pass = MagicMock(spec=PyPIRegistry())
+    mock_api_client_pass.load_defaults()
+    mock_api_client_pass.download_attestation_payload(package=package_with_many_releases)
+    analyzer = OneReleaseAnalyzer()
+
+    return {
+        "package_with_one_release": package_with_one_release,
+        "package_with_many_releases": package_with_many_releases,
+        "mock_api_client_fail": mock_api_client_fail,
+        "mock_api_client_pass": mock_api_client_pass,
+        "analyzer": analyzer,
+    }
+
+
+@pytest.fixture(autouse=True)
+def setup_empty_project_link_analyzer() -> dict:
+    """Create an empty-project-link-analyzer setup.
+
+    Returns
+    -------
+        dict: Setup data for the test.
+    """
+    package_with_links = "requests"
+    mock_api_client_pass = MagicMock(spec=PyPIRegistry)
+    mock_api_client_pass.load_defaults()
+    mock_api_client_pass.download_attestation_payload(package=package_with_links)
+
+    package_no_links = "sfy_hello"
+    mock_api_client_fail = MagicMock(spec=PyPIRegistry)
+    mock_api_client_fail.load_defaults()
+    mock_api_client_fail.download_attestation_payload(package=package_no_links)
+    analyzer = EmptyProjectLinkAnalyzer()
+    package_links = {
+        "Documentation": "https://requests.readthedocs.io",
+        "Homepage": "https://requests.readthedocs.io",
+        "Source": "https://github.com/psf/requests",
+    }
+
+    return {
+        "package_with_links": package_with_links,
+        "package_no_links": package_no_links,
+        "mock_api_client_pass": mock_api_client_pass,
+        "mock_api_client_fail": mock_api_client_fail,
+        "analyzer": analyzer,
+        "package_links": package_links,
+    }
+
+
+@pytest.fixture(autouse=True)
+def setup_closer_release_join_date_analyzer() -> tuple:
+    """Fixture for setting up the CloserReleaseJoinDateAnalyzer and a mock PyPIRegistry client.
+
+    Returns
+    -------
+    tuple:
+        A tuple containing the analyzer and the mocked api_client.
+    """
+    analyzer = CloserReleaseJoinDateAnalyzer()
+    api_client = MagicMock(spec=PyPIRegistry)
+    return analyzer, api_client
+
+
+@pytest.fixture(autouse=True)
+def setup_high_release_frequency_analyzer() -> tuple:
+    """Fixture for setting up the HighReleaseFrequencyAnalyzer and a mock PyPIRegistry client."""
+    analyzer = HighReleaseFrequencyAnalyzer()
+    api_client = MagicMock(spec=PyPIRegistry)
+    return analyzer, api_client
+
+
+@pytest.fixture(autouse=True)
+def setup_unchanged_release_analyzer() -> tuple:
+    """Fixture for setting up the UnchangedReleaseAnalyzer and a mock PyPIRegistry client."""
+    analyzer = UnchangedReleaseAnalyzer()
+    api_client = MagicMock(spec=PyPIRegistry)
+    return analyzer, api_client
