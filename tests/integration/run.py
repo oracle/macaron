@@ -573,6 +573,8 @@ class Case:
 
     def update(self, macaron_cmd: str) -> int:
         """Run the test case in update mode."""
+        logger.info("-" * 60)
+        logger.info("Case started: '%s'.", self.case_dir)
         for step in self.steps:
             if isinstance(step, CompareStep):
                 ret = step.update_result(cwd=self.case_dir)
@@ -961,6 +963,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         *("-m", "--macaron"),
         help="The command to run Macaron. Note: can be path to the run_macaron.sh script.",
         default="macaron",
+    )
+    update_parser.add_argument(
+        *("-t", "--include-tag"),
+        help=(
+            "Select only test cases having the tag. "
+            "This can be specified multiple times, which will select only cases that have all include tags."
+        ),
+        action="append",
+        default=[],
+    )
+    update_parser.add_argument(
+        *("-e", "--exclude-tag"),
+        help=(
+            "Select only test cases not having the tag. "
+            "This can be specified multiple times, which will select only cases that do not have any exclude tags."
+        ),
+        action="append",
+        default=[],
     )
 
     args = arg_parser.parse_args(argv)
