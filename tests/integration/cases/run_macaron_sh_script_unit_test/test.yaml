@@ -5,8 +5,7 @@ description: |
   Run unit tests for the run_macaron.sh script
 
 tags:
-- docker
-- token_file_clean_up
+- docker-only
 
 steps:
 - name: Run test_run_macaron_sh.py

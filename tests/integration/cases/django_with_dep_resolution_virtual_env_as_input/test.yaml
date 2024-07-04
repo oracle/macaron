@@ -5,7 +5,7 @@ description: |
   Tutorial test: Analyzing the dependencies with virtual env provided as input.
 
 tags:
-- docker
+- shared-docker-python
 
 steps:
 - name: Create virtual environment.

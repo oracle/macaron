@@ -133,17 +133,21 @@ $ python ./tests/integration/run.py run ./all/cases/...
 
 In certain cases, we can utilize the feature of tags to select a subset of test cases to run with the `run` command.
 
-Each test case can be attached with one or more tags in the yaml configuration. For example, you may find some of our test cases having the `docker` tag as follows.
+Each test case can be attached with one or more tags in the yaml configuration. For example, you may find some of our test cases having the `shared-docker-python` tag as follows.
 
 ```yaml
 description: ...
 tags:
-- docker
+- shared-docker-python
 steps:
 - ...
 ```
 
-We typically have the test cases for the container image being a subset of the test cases for the Macaron Python package. We can mark the test cases shared for both purposes with the `docker` tag. When we do integration testing for the container image, we can add the argument `--include-tag docker` to filter only test cases tagged with `docker`.
+We typically have the test cases for the container image being a subset of the test cases for the Macaron Python package. We can mark the test cases shared for both purposes with the `shared-docker-python` tag. When we do integration testing for the container image, we can add the argument `--include-tag shared-docker-python` to filter only test cases tagged with `shared-docker-python`.
+
+Some other use cases of this tagging feature in our current setup:
+- We can have test cases that **only** run for the container image. In the integration tests for the Macaron Python package, test cases marked with `docker-only` are not run. Note that `docker-only` shouldn't be used with `shared-docker-python`.
+- Test cases marked with `skip` are not run.
 
 ```bash
 # Test the container image with test cases having the `docker` tag.
