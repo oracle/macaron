@@ -298,16 +298,36 @@ test-go:
 # Note: to disable npm tests set `NO_NPM` environment variable to `TRUE`.
 .PHONY: integration-test
 integration-test:
-	scripts/dev_scripts/integration_tests.sh $(REPO_PATH) "${HOME}"
+	if [ "${NO_NPM}" == "TRUE" ]; then \
+    	echo "Note: NO_NPM environment variable is set to TRUE, so npm tests will be skipped."; \
+		python ./tests/integration/run.py \
+			run \
+			--exclude-tag docker-only \
+			--exclude-tag skip \
+			--exclude-tag npm-registry \
+			./tests/integration/cases/...; \
+	else \
+		python ./tests/integration/run.py \
+			run \
+			--exclude-tag docker-only \
+			--exclude-tag skip \
+			./tests/integration/cases/...; \
+	fi
 
 .PHONY: integration-test-docker
 integration-test-docker:
-	scripts/dev_scripts/integration_tests_docker.sh $(REPO_PATH) scripts/release_scripts/run_macaron.sh
+	python ./tests/integration/run.py \
+		run \
+    	--macaron scripts/release_scripts/run_macaron.sh \
+    	--include-tag shared-docker-python \
+    	./tests/integration/cases/...
 
 # Update the expected results of the integration tests after generating the actual results.
 .PHONY: integration-test-update
 integration-test-update:
-	scripts/dev_scripts/integration_tests.sh $(REPO_PATH) "${HOME}" "--update"
+	python ./tests/integration/run.py \
+		update \
+		./tests/integration/cases/...
 
 # Build a source distribution package and a binary wheel distribution artifact.
 # When building these artifacts, we need the environment variable SOURCE_DATE_EPOCH
