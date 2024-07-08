@@ -6,6 +6,7 @@ import logging
 import os
 import tempfile
 from collections.abc import Callable
+from inspect import signature
 from typing import Any
 
 from packageurl import PackageURL
@@ -41,7 +42,7 @@ class ProvenanceFinder:
         self,
         purl: PackageURL,
         discovery_functions: list[Callable[..., list[InTotoPayload]]] | None = None,
-        parameters: list[Any] | None = None,
+        parameter_lists: list[list[Any]] | None = None,
     ) -> list[InTotoPayload]:
         """Find the provenance file(s) of the passed PURL.
 
@@ -51,8 +52,8 @@ class ProvenanceFinder:
             The PURL to find provenance for.
         discovery_functions: list[Callable[..., list[InTotoPayload]]] | None
             A list of discovery functions to use for the given PURL, or None if the default should be used instead.
-        parameters: list[Any] | None
-            The list of parameters to pass to the callable, or None.
+        parameter_lists: list[Any] | None
+            The lists of parameters to pass to the callables, or None if the default should be used instead.
 
         Returns
         -------
@@ -69,12 +70,12 @@ class ProvenanceFinder:
                     logger.debug("Missing npm registry to find provenance in.")
                     return []
                 discovery_functions = [find_npm_provenance]
-                parameters = [purl, self.npm_registry]
+                parameter_lists = [[purl, self.npm_registry]]
 
             elif purl.type in ["gradle", "maven"]:
                 if self.jfrog_registry:
                     discovery_functions = [find_gav_provenance]
-                    parameters = [purl, self.jfrog_registry]
+                    parameter_lists = [[purl, self.jfrog_registry]]
                 logger.debug("Missing JFrog registry to find provenance in.")
             else:
                 logger.debug("Provenance finding not supported for PURL type: %s", purl.type)
@@ -83,13 +84,19 @@ class ProvenanceFinder:
             logger.debug("No provenance discovery functions provided/found for %s", purl)
             return []
 
-        for discovery_function in discovery_functions:
-            if parameters:
-                provenance = discovery_function(*parameters)
-            else:
-                # Assume any discovery function requires at least the PURL.
-                # None is required to prevent pylint error (E1120: no-value-for-parameter).
-                provenance = discovery_function(purl, None)
+        for index, discovery_function in enumerate(discovery_functions):
+            parameter_list = parameter_lists[index] if parameter_lists and index < len(parameter_lists) else [purl]
+            function_signature = signature(discovery_function)
+            if len(function_signature.parameters) != len(parameter_list):
+                logger.debug(
+                    "Mismatch between function and parameters: %s vs. %s",
+                    len(function_signature.parameters),
+                    len(parameter_list),
+                )
+                continue
+
+            provenance = discovery_function(*parameter_list)
+
             if provenance:
                 return provenance
 
@@ -138,12 +145,10 @@ class ProvenanceFinder:
 
         if not parameters:
             logger.debug("No parameter arguments for provenance verification function.")
-
-        if parameters:
-            provenance_verified = verification_function(*parameters)
-        else:
-            # This will never be reached, and exists only for mypy.
             return False
+
+        provenance_verified = verification_function(*parameters)
+
         if not provenance_verified:
             logger.debug("Provenance could not be verified.")
         return provenance_verified
@@ -153,9 +158,9 @@ def find_npm_provenance(purl: PackageURL, registry: NPMRegistry) -> list[InTotoP
     """Find and download the NPM based provenance for the passed PURL.
 
     Two kinds of attestation can be retrieved from npm: "Provenance" and "Publish". The "Provenance" attestation
-     contains the important information Macaron seeks, while the "Publish" attestation is pre-verified. Comparison
-     of the signed vs unsigned at the subject level, allows the unsigned to be verified too.
-     See: https://docs.npmjs.com/generating-provenance-statements
+    contains the important information Macaron seeks, but is not signed. The "Publish" attestation is signed.
+    Comparison of the signed vs unsigned at the subject level, allows the unsigned to be verified.
+    See: https://docs.npmjs.com/generating-provenance-statements
 
     Parameters
     ----------

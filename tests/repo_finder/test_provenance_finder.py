@@ -11,7 +11,7 @@ def test_callable_interface() -> None:
     """Test the callable parameter behaviour of the provenance finder using mock values."""
     provenance_finder = ProvenanceFinder()
     purl = PackageURL.from_string("pkg:npm/test@1.0.0")
-    provenance = provenance_finder.find_provenance(purl, [lambda x, y, z: [x + y + z]], [1, 2, 3])
+    provenance = provenance_finder.find_provenance(purl, [lambda x, y, z: [x + y + z]], [[1, 2, 3]])
     assert provenance
     validated = provenance_finder.verify_provenance(purl, [], lambda a, b: False)
     assert not validated
