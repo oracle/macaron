@@ -8,6 +8,10 @@ tags:
 - docker-only
 
 steps:
+- name: Copy the run_macaron.sh from the source repo to ./output which will eventually be cleaned up.
+  kind: shell
+  options:
+    cmd: ./setup.sh
 - name: Run test_run_macaron_sh.py
   kind: shell
   options:

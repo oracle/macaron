@@ -41,7 +41,7 @@ def test_macaron_command() -> int:
 
         result = subprocess.run(
             [  # nosec B603
-                "../../../../scripts/release_scripts/run_macaron.sh",
+                "./output/run_macaron.sh",
                 *script_args,
             ],
             capture_output=True,
