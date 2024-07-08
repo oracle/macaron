@@ -4,7 +4,7 @@
 """Tests for the ``run_macaron.sh`` script."""
 
 import os
-import subprocess  # nosec
+import subprocess  # nosec B404
 import sys
 from collections import namedtuple
 
