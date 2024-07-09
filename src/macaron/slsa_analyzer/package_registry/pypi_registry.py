@@ -154,7 +154,7 @@ class PyPIRegistry(PackageRegistry):
         """
         return json_extract(self.attestation, ["releases"], dict)
 
-    def get_project_links(self) -> dict[str, str] | None:
+    def get_project_links(self) -> dict | None:
         """Retrieve the project links from the base metadata.
 
         This method accesses the "info" section of the base metadata to extract the "project_urls" dictionary,
@@ -162,7 +162,7 @@ class PyPIRegistry(PackageRegistry):
 
         Returns
         -------
-        dict[str, str] | None
+        dict | None
             Containing project URLs where the keys are the names of the links
             and the values are the corresponding URLs. Returns None if the "project_urls"
             section is not found in the base metadata.
