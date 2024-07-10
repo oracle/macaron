@@ -318,10 +318,10 @@ integration-test:
 integration-test-docker:
 	python ./tests/integration/run.py \
 		run \
-    	--macaron scripts/release_scripts/run_macaron.sh \
+		--macaron scripts/release_scripts/run_macaron.sh \
 		--include-tag docker-only \
-    	--include-tag shared-docker-python \
-    	./tests/integration/cases/...
+		--include-tag shared-docker-python \
+		./tests/integration/cases/...
 
 # Update the expected results of the integration tests after generating the actual results.
 .PHONY: integration-test-update
