@@ -5,9 +5,7 @@
 import logging
 import os
 import tempfile
-from collections.abc import Callable
-from inspect import signature
-from typing import Any
+from functools import partial
 
 from packageurl import PackageURL
 
@@ -38,64 +36,61 @@ class ProvenanceFinder:
                 elif isinstance(registry, JFrogMavenRegistry):
                     self.jfrog_registry = registry
 
-    def find_provenance(
-        self,
-        purl: PackageURL,
-        discovery_functions: list[Callable[..., list[InTotoPayload]]] | None = None,
-        parameter_lists: list[list[Any]] | None = None,
-    ) -> list[InTotoPayload]:
+    def find_provenance(self, purl: PackageURL) -> list[InTotoPayload]:
         """Find the provenance file(s) of the passed PURL.
 
         Parameters
         ----------
         purl: PackageURL
             The PURL to find provenance for.
-        discovery_functions: list[Callable[..., list[InTotoPayload]]] | None
-            A list of discovery functions to use for the given PURL, or None if the default should be used instead.
-        parameter_lists: list[Any] | None
-            The lists of parameters to pass to the callables, or None if the default should be used instead.
 
         Returns
         -------
         list[InTotoPayload]
             The provenance payload, or an empty list if not found.
         """
-        if not discovery_functions:
-            if determine_abstract_purl_type(purl) == AbstractPurlType.REPOSITORY:
-                # Do not perform default discovery for repository type targets.
-                return []
-
-            if purl.type == "npm":
-                if not self.npm_registry:
-                    logger.debug("Missing npm registry to find provenance in.")
-                    return []
-                discovery_functions = [find_npm_provenance]
-                parameter_lists = [[purl, self.npm_registry]]
-
-            elif purl.type in ["gradle", "maven"]:
-                if self.jfrog_registry:
-                    discovery_functions = [find_gav_provenance]
-                    parameter_lists = [[purl, self.jfrog_registry]]
-                logger.debug("Missing JFrog registry to find provenance in.")
-            else:
-                logger.debug("Provenance finding not supported for PURL type: %s", purl.type)
-
-        if not discovery_functions:
-            logger.debug("No provenance discovery functions provided/found for %s", purl)
+        if determine_abstract_purl_type(purl) == AbstractPurlType.REPOSITORY:
+            # Do not perform default discovery for repository type targets.
             return []
 
-        for index, discovery_function in enumerate(discovery_functions):
-            parameter_list = parameter_lists[index] if parameter_lists and index < len(parameter_lists) else [purl]
-            function_signature = signature(discovery_function)
-            if len(function_signature.parameters) != len(parameter_list):
-                logger.debug(
-                    "Mismatch between function and parameters: %s vs. %s",
-                    len(function_signature.parameters),
-                    len(parameter_list),
-                )
-                continue
+        if purl.type == "npm":
+            if not self.npm_registry:
+                logger.debug("Missing npm registry to find provenance in.")
+                return []
 
-            provenance = discovery_function(*parameter_list)
+            discovery_functions = [partial(find_npm_provenance, purl, self.npm_registry)]
+            return self._find_provenance(discovery_functions)
+
+        if purl.type in ["gradle", "maven"]:
+            if not self.jfrog_registry:
+                logger.debug("Missing JFrog registry to find provenance in.")
+                return []
+
+            discovery_functions = [partial(find_gav_provenance, purl, self.jfrog_registry)]
+            return self._find_provenance(discovery_functions)
+
+        # TODO add other possible discovery functions.
+        logger.debug("Provenance finding not supported for PURL type: %s", purl.type)
+        return []
+
+    def _find_provenance(self, discovery_functions: list[partial[list[InTotoPayload]]]) -> list[InTotoPayload]:
+        """Find the provenance file(s) using the passed discovery functions.
+
+        Parameters
+        ----------
+        discovery_functions: list[partial[list[InTotoPayload]]]
+            A list of discovery functions to use to find the provenance.
+
+        Returns
+        -------
+        list[InTotoPayload]
+            The provenance payload(s) from the first successful function, or an empty list if none were.
+        """
+        if not discovery_functions:
+            return []
+
+        for discovery_function in discovery_functions:
+            provenance = discovery_function()
 
             if provenance:
                 return provenance
@@ -103,13 +98,7 @@ class ProvenanceFinder:
         logger.debug("No provenance found.")
         return []
 
-    def verify_provenance(
-        self,
-        purl: PackageURL,
-        provenance: list[InTotoPayload],
-        verification_function: Callable[[PackageURL, list[InTotoPayload]], bool] | None = None,
-        parameters: list[Any] | None = None,
-    ) -> bool:
+    def verify_provenance(self, purl: PackageURL, provenance: list[InTotoPayload]) -> bool:
         """Verify the passed provenance.
 
         Parameters
@@ -118,40 +107,28 @@ class ProvenanceFinder:
             The PURL of the analysis target.
         provenance: list[InTotoPayload]
             The list of provenance.
-        verification_function: list[Callable[[PackageURL, list[InTotoPayload]], bool]] | None
-            A callable that should verify the provenance, or None if the default callable should be used instead.
-        parameters: list[Any] | None
-            The list of parameters to pass to the callable, or None.
 
         Returns
         -------
         bool
             True if the provenance could be verified, or False otherwise.
         """
-        if not verification_function:
-            if determine_abstract_purl_type(purl) == AbstractPurlType.REPOSITORY:
-                # Do not perform default verification for repository type targets.
-                return False
-
-            if purl.type == "npm":
-                verification_function = verify_npm_provenance
-                parameters = [purl, provenance]
-            else:
-                logger.debug("Provenance verification not supported for PURL type: %s", purl.type)
-
-        if not verification_function:
-            logger.debug("No provenance verification function provided/found for %s", purl)
+        if determine_abstract_purl_type(purl) == AbstractPurlType.REPOSITORY:
+            # Do not perform default verification for repository type targets.
             return False
 
-        if not parameters:
-            logger.debug("No parameter arguments for provenance verification function.")
-            return False
+        verification_function = None
 
-        provenance_verified = verification_function(*parameters)
+        if purl.type == "npm":
+            verification_function = partial(verify_npm_provenance, purl, provenance)
 
-        if not provenance_verified:
-            logger.debug("Provenance could not be verified.")
-        return provenance_verified
+        # TODO other verification functions go here.
+
+        if verification_function:
+            return verification_function()
+
+        logger.debug("Provenance verification not supported for PURL type: %s", purl.type)
+        return False
 
 
 def find_npm_provenance(purl: PackageURL, registry: NPMRegistry) -> list[InTotoPayload]:
