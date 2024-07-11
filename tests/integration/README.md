@@ -145,10 +145,6 @@ steps:
 
 We typically have the test cases for the container image being a subset of the test cases for the Macaron Python package. We can mark the test cases shared for both purposes with the `shared-docker-python` tag. When we do integration testing for the container image, we can add the argument `--include-tag shared-docker-python` to filter only test cases tagged with `shared-docker-python`.
 
-Some other use cases of this tagging feature in our current setup:
-- We can have test cases that **only** run for the container image. In the integration tests for the Macaron Python package, test cases marked with `docker-only` are not run. Note that `docker-only` shouldn't be used with `shared-docker-python`.
-- Test cases marked with `skip` are not run.
-
 ```bash
 # Test the container image with test cases having the `docker` tag.
 $ python ./tests/integration/run.py run --include-tag docker ./all/cases/...
@@ -169,6 +165,29 @@ $ python ./tests/integration/run.py run --exclude-tag npm ./all/cases/...
 ```
 
 You can simply think of each `--include-tag`/`--exclude-tag` argument as adding an additional constraint that a selected test case must satisfy".
+
+Some other use cases of this tagging feature in our current setup:
+- We can have test cases that **only** run for the container image. In the integration tests for the Macaron Python package, test cases marked with `docker-only` are not run. Note that `docker-only` shouldn't be used with `shared-docker-python`. Therefore our current test suite for the docker container must be run as separated commands:
+```bash
+# Run all test cases with `docker-only` tag.
+$ python ./tests/integration/run.py \
+      run \
+      --macaron scripts/release_scripts/run_macaron.sh \
+      --include-tag docker-only \
+      ./tests/integration/cases/...
+
+# Run all test cases with `shared-docker-python` tag.
+$ python ./tests/integration/run.py \
+      run \
+      --macaron scripts/release_scripts/run_macaron.sh \
+      --include-tag shared-docker-python \
+      ./tests/integration/cases/...
+```
+- Test cases marked with `skip` are not run.
+- Test cases marked with `npm-registry` are not run if the environment variable `NO_NPM` is set to `TRUE`. This only applies when you run the integration tests with:
+```bash
+$ make integration-test
+```
 
 ### Debug utility script
 
