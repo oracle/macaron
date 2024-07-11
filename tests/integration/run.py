@@ -75,7 +75,7 @@ def configure_logging(verbose: bool) -> None:
 
 
 COMPARE_SCRIPTS: dict[str, Sequence[str]] = {
-    "analysis_report": ["tests", "e2e", "compare_e2e_result.py"],
+    "analysis_report": ["tests", "analyze_json_output", "compare_analyze_json_output.py"],
     "policy_report": ["tests", "policy_engine", "compare_policy_reports.py"],
     "deps_report": ["tests", "dependency_analyzer", "compare_dependencies.py"],
     "vsa": ["tests", "vsa", "compare_vsa.py"],
