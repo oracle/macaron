@@ -57,7 +57,7 @@ the requirements that are currently supported by Macaron.
      - Concrete check
    * - 0+
      - **Provenance verified** - Provenance is available and verified.
-     - See :doc:`SLSA Build Levels </pages/slsa_builds>`
+     - See :doc:`SLSA Build Levels </pages/checks/slsa_builds>`
    * - 1
      - **Scripted build** - All build steps were fully defined in a “build script”.
      - Identify and validate build script(s).
@@ -117,6 +117,7 @@ intermediate representations as abstractions. Using such abstractions, Macaron i
    pages/cli_usage/index
    pages/tutorials/index
    pages/output_files
+   pages/checks/slsa_builds
    pages/vsa
    pages/supported_technologies/index
    pages/developers_guide/index
