@@ -5,6 +5,7 @@ description: |
   Checking the resolved dependency output with PURL for cyclonedx maven plugin (default).
 
 tags:
+# Skipped due to https://github.com/oracle/macaron/issues/60.
 - skip
 
 steps:
