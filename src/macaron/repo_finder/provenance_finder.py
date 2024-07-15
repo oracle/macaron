@@ -62,6 +62,7 @@ class ProvenanceFinder:
             return self._find_provenance(discovery_functions)
 
         if purl.type in ["gradle", "maven"]:
+            # TODO add support for Maven Central provenance.
             if not self.jfrog_registry:
                 logger.debug("Missing JFrog registry to find provenance in.")
                 return []

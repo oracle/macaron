@@ -1,4 +1,4 @@
-.. Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+.. Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 .. Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 .. _index:
@@ -55,6 +55,9 @@ the requirements that are currently supported by Macaron.
    * - SLSA level
      - SLSA spec v0.1
      - Concrete check
+   * - 0+
+     - **Provenance verified** - Provenance is available and verified.
+     - See :doc:`SLSA Build Levels </pages/slsa_builds>`
    * - 1
      - **Scripted build** - All build steps were fully defined in a “build script”.
      - Identify and validate build script(s).
