@@ -36,9 +36,8 @@ def send_get_http(url: str, headers: dict) -> dict:
         The response's json data or an empty dict if there is an error.
     """
     logger.debug("GET - %s", url)
-    response = requests.get(
-        url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
-    )  # nosec B113:request_without_timeout
+    timeout = defaults.getint("requests", "timeout", fallback=10)
+    response = requests.get(url=url, headers=headers, timeout=timeout)
     while response.status_code != 200:
         logger.error(
             "Receiving error code %s from server. Message: %s.",
@@ -49,9 +48,7 @@ def send_get_http(url: str, headers: dict) -> dict:
             check_rate_limit(response)
         else:
             return {}
-        response = requests.get(
-            url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
-        )  # nosec B113:request_without_timeout
+        response = requests.get(url=url, headers=headers, timeout=timeout)
 
     return dict(response.json())
 
@@ -77,16 +74,20 @@ def send_get_http_raw(
     Returns
     -------
     Response | None
-        The response object or None if there is an error.
+        If a Response object is returned and ``allow_redirects`` is ``True`` (the default) it will have a status code of
+        200 (OK). If ``allow_redirects`` is ``False`` the response can instead have a status code of 302. Otherwise, the
+        request has failed and ``None`` will be returned.
     """
     logger.debug("GET - %s", url)
+    if not timeout:
+        timeout = defaults.getint("requests", "timeout", fallback=10)
     try:
         response = requests.get(
             url=url,
             headers=headers,
-            timeout=timeout or defaults.getint("requests", "timeout", fallback=10),
+            timeout=timeout,
             allow_redirects=allow_redirects,
-        )  # nosec B113:request_without_timeout
+        )
     except requests.exceptions.RequestException as error:
         logger.debug(error)
         return None
@@ -105,9 +106,9 @@ def send_get_http_raw(
         response = requests.get(
             url=url,
             headers=headers,
-            timeout=defaults.getint("requests", "timeout", fallback=10),
+            timeout=timeout,
             allow_redirects=allow_redirects,
-        )  # nosec B113:request_without_timeout
+        )
 
     return response
 
