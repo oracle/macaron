@@ -29,7 +29,6 @@ class PyPIRegistry(PackageRegistry):
     def __init__(
         self,
         hostname: str | None = None,
-        attestation_endpoint: str | None = None,
         request_timeout: int | None = None,
         enabled: bool = True,
     ) -> None:
@@ -38,18 +37,15 @@ class PyPIRegistry(PackageRegistry):
 
         Parameters
         ----------
-        hostname : str | None
+        hostname: str | None
             The hostname of the pypi registry.
-        attestation_endpoint : str | None
-            The attestation REST API.
-        request_timeout : int | None
+        request_timeout: int | None
             The timeout (in seconds) for requests made to the package registry.
         enabled: bool
             Shows whether making REST API calls to pypi registry is enabled.
 
         """
         self.hostname = hostname or ""
-        self.attestation_endpoint = attestation_endpoint or ""
         self.request_timeout = request_timeout or 10
         self.enabled = enabled
         self.attestation: dict = {}
@@ -76,6 +72,7 @@ class PyPIRegistry(PackageRegistry):
                 f'The "hostname" key is missing in section [{section_name}] of the .ini configuration file.'
             )
         self.base_url = f"https://{self.hostname}"
+
         try:
             self.request_timeout = section.getint("request_timeout", fallback=10)
         except ValueError as error:
@@ -95,7 +92,7 @@ class PyPIRegistry(PackageRegistry):
 
         Parameters
         ----------
-        build_tool : BaseBuildTool
+        build_tool: BaseBuildTool
             A detected build tool of the repository under analysis.
 
         Returns
@@ -116,7 +113,7 @@ class PyPIRegistry(PackageRegistry):
         Parameters
         ----------
         package: str
-            PyPI's package name.
+            The package name.
 
         Returns
         -------
@@ -129,14 +126,14 @@ class PyPIRegistry(PackageRegistry):
             If the HTTP request to the registry fails or an unexpected response is returned.
         """
         self.package = package
-        self.attestation_endpoint = f"pypi/{package}/json"
-        url = urljoin(self.base_url, self.attestation_endpoint)
-        response = send_get_http_raw(url, headers=None, timeout=None)
-        if not response or response.status_code != 200:
-            logger.debug(
-                "Unable to find attestation at %s",
-            )
+        attestation_endpoint = f"pypi/{package}/json"
+        url = urljoin(self.base_url, attestation_endpoint)
+        response = send_get_http_raw(url, headers=None, timeout=self.request_timeout)
+
+        if not response:
+            logger.debug("Unable to find attestation for %s", package)
             return False
+
         try:
             res_obj = response.json()
         except requests.exceptions.JSONDecodeError as error:
@@ -144,6 +141,7 @@ class PyPIRegistry(PackageRegistry):
         if not res_obj:
             raise InvalidHTTPResponseError(f"Empty response returned by {url} .")
         self.attestation = res_obj
+
         return True
 
     def get_releases(self) -> dict | None:
@@ -151,7 +149,8 @@ class PyPIRegistry(PackageRegistry):
 
         Returns
         -------
-            dict | None: Version to metadata.
+        dict | None
+            Version to metadata.
         """
         return json_extract(self.attestation, ["releases"], dict)
 
@@ -163,18 +162,20 @@ class PyPIRegistry(PackageRegistry):
 
         Returns
         -------
-            dict[str, str] | None: Containing project URLs where the keys are the names of the links
-                               and the values are the corresponding URLs. Returns None if the "project_urls"
-                               section is not found in the base metadata.
+        dict[str, str] | None
+            Containing project URLs where the keys are the names of the links
+            and the values are the corresponding URLs. Returns None if the "project_urls"
+            section is not found in the base metadata.
         """
         return json_extract(self.attestation, ["info", "project_urls"], dict)
 
     def get_latest_version(self) -> str | None:
-        """Get latest version of the package.
+        """Get the latest version of the package.
 
         Returns
         -------
-            str | None: Latest version.
+        str | None
+            The latest version.
         """
         return json_extract(self.attestation, ["info", "version"], str)
 
@@ -183,15 +184,18 @@ class PyPIRegistry(PackageRegistry):
 
         Returns
         -------
-            str | None: Url of the source distribution.
+        str | None
+            The URL of the source distribution.
         """
         urls: list | None = json_extract(self.attestation, ["urls"], list)
-        if urls is not None:
-            for distribution in urls:
-                if distribution.get("python_version") == "source":
-                    source: str = distribution.get("url", "")
-                    if source:
-                        return source
+        if not urls:
+            return None
+        for distribution in urls:
+            if distribution.get("python_version") != "source":
+                continue
+            source: str = distribution.get("url", "")
+            if source:
+                return source
         return None
 
     def get_latest_release_upload_time(self) -> str | None:
@@ -199,7 +203,8 @@ class PyPIRegistry(PackageRegistry):
 
         Returns
         -------
-            str | None: Upload time of latest release.
+        str | None
+            The upload time of the latest release.
         """
         urls: list | None = json_extract(self.attestation, ["urls"], list)
         if urls is not None and urls:
@@ -212,7 +217,8 @@ class PyPIRegistry(PackageRegistry):
 
         Returns
         -------
-            str | None: Package main page.
+        str | None
+            The package main page.
         """
         url = os.path.join(self.base_url, "project", self.package)
         response = send_get_http_raw(url)
@@ -221,12 +227,13 @@ class PyPIRegistry(PackageRegistry):
             return html_snippets
         return None
 
-    def get_maintainer_of_package(self) -> list | None:
+    def get_maintainers_of_package(self) -> list | None:
         """Implement custom API to get all maintainers of the package.
 
         Returns
         -------
-            list | None: Maintainers.
+        list | None
+            The list of maintainers.
         """
         package_page: str | None = self.get_package_page()
         if package_page is None:
@@ -240,11 +247,13 @@ class PyPIRegistry(PackageRegistry):
 
         Parameters
         ----------
-            username (str): Maintainer's name.
+        username: str
+            The maintainer's username.
 
         Returns
         -------
-            str | None: Profile page.
+        str | None
+            The profile page.
         """
         url = os.path.join(self.base_url, "user", username)
         response = send_get_http_raw(url, headers=None)
@@ -253,37 +262,46 @@ class PyPIRegistry(PackageRegistry):
             return html_snippets
         return None
 
-    def get_maintainer_join_date(self, maintainer: str) -> datetime | None:
-        """Implement custom API to get the maintainers join date.
+    def get_maintainer_join_date(self, username: str) -> datetime | None:
+        """Implement custom API to get the maintainer's join date.
 
         Parameters
         ----------
-            maintainer (str): Username.
+        username: str
+            The maintainer's username.
 
         Returns
         -------
             datetime | None: Maintainers join date. Only recent maintainer's data available.
         """
-        user_page: str | None = self.get_maintainer_profile_page(maintainer)
+        user_page: str | None = self.get_maintainer_profile_page(username)
         if user_page is None:
             return None
 
         soup = BeautifulSoup(user_page, "html.parser")
         span = soup.find("span", class_="sr-only", string="Date joined")
-        if span:
-            next_element = span.find_next("time")
-            # Loop to skip over any NavigableString instances
-            while next_element and not isinstance(next_element, Tag):
-                next_element = next_element.find_next()
-            if isinstance(next_element, Tag) and next_element.name == "time" and "datetime" in next_element.attrs:
-                datetime_val = next_element["datetime"]
-            else:
-                return None
-            # Define the format of the datetime string
-            datetime_format = "%Y-%m-%dT%H:%M:%S%z"
-            # Return the parsed string to a datetime object
-            if isinstance(datetime_val, str):
-                res: datetime | None = parse_datetime(datetime_val, datetime_format)
-                if res:
-                    return res.replace(tzinfo=None)
-        return None
+        if not span:
+            return None
+
+        next_element = span.find_next("time")
+        # Loop to skip over any NavigableString instances.
+        while next_element and not isinstance(next_element, Tag):
+            next_element = next_element.find_next()
+
+        if not next_element:
+            return None
+
+        if next_element.name != "time" or "datetime" not in next_element.attrs:
+            return None
+
+        datetime_val = next_element["datetime"]
+
+        if not isinstance(datetime_val, str):
+            return None
+
+        # Define the format of the datetime string.
+        datetime_format = "%Y-%m-%dT%H:%M:%S%z"
+        # Return the parsed string to a datetime object.
+        res: datetime | None = parse_datetime(datetime_val, datetime_format)
+
+        return res.replace(tzinfo=None) if res else None
