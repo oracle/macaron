@@ -4,6 +4,9 @@
 description: |
   Verifying CUE provenance expectation for slsa-verifier with explicitly-provided provenance file, with and without url link configuration.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Run macaron analyze without url link configuration.
   kind: analyze

@@ -4,6 +4,9 @@
 description: |
   Analyzing a local repository whose path is outside of local_repos directory.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Prepare the local repo directory.
   kind: shell

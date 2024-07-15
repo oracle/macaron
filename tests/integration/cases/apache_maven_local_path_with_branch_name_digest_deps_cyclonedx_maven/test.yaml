@@ -4,6 +4,9 @@
 description: |
   Analyzing local clone with the branch name, the commit digest and dependency resolution using cyclonedx maven plugin (default).
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Clone apache/maven repo
   kind: shell

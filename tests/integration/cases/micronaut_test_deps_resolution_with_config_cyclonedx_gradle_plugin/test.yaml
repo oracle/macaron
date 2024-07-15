@@ -5,6 +5,7 @@ description: |
   Checking the resolved dependency output with config for cyclonedx gradle plugin.
 
 tags:
+- macaron-python-package
 # Skipped due to https://github.com/oracle/macaron/issues/60.
 - skip
 

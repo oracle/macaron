@@ -4,6 +4,9 @@
 description: |
   Analyzing with local paths in configuration and without dependency resolution.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Clone apache/maven repo
   kind: shell

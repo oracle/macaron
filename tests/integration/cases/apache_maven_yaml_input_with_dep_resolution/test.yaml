@@ -5,7 +5,8 @@ description: |
   Check the resolved dependency output with config for cyclonedx maven plugin
 
 tags:
-- shared-docker-python
+- macaron-python-package
+- macaron-docker-image
 
 steps:
 - name: Run macaron analyze

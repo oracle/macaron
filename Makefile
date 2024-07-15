@@ -302,14 +302,14 @@ integration-test:
     	echo "Note: NO_NPM environment variable is set to TRUE, so npm tests will be skipped."; \
 		python ./tests/integration/run.py \
 			run \
-			--exclude-tag docker-only \
+			--include-tag macaron-python-package \
 			--exclude-tag skip \
-			--exclude-tag npm-registry \
+			--exclude-tag npm-registry-testcase \
 			./tests/integration/cases/...; \
 	else \
 		python ./tests/integration/run.py \
 			run \
-			--exclude-tag docker-only \
+			--include-tag macaron-python-package \
 			--exclude-tag skip \
 			./tests/integration/cases/...; \
 	fi
@@ -319,13 +319,8 @@ integration-test-docker:
 	python ./tests/integration/run.py \
 		run \
 		--macaron scripts/release_scripts/run_macaron.sh \
-		--include-tag docker-only \
-		./tests/integration/cases/...
-
-	python ./tests/integration/run.py \
-		run \
-		--macaron scripts/release_scripts/run_macaron.sh \
-		--include-tag shared-docker-python \
+		--include-tag macaron-docker-image \
+		--exclude-tag skip \
 		./tests/integration/cases/...
 
 # Update the expected results of the integration tests after generating the actual results.
@@ -333,6 +328,7 @@ integration-test-docker:
 integration-test-update:
 	python ./tests/integration/run.py \
 		update \
+		--exclude-tag skip \
 		./tests/integration/cases/...
 
 # Build a source distribution package and a binary wheel distribution artifact.

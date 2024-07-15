@@ -4,6 +4,9 @@
 description: |
   Analyzing with the default template file as the input template.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Run macaron analyze
   kind: analyze

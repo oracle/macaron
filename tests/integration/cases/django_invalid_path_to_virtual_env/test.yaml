@@ -4,6 +4,9 @@
 description: |
   Analyzing the dependencies with an invalid path to the virtual env dir.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Run macaron analyze
   kind: analyze

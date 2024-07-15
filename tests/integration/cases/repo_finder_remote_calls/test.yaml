@@ -4,6 +4,9 @@
 description: |
   Testing Repo Finder functionality.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Run the test repo finder script
   kind: shell

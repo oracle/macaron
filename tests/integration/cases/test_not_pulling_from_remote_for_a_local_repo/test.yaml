@@ -4,6 +4,9 @@
 description: |
   Test not pulling from remote for a locally cloned repo.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Preparing the testing environments
   kind: shell

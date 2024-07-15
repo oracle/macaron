@@ -5,7 +5,7 @@ description: |
   Run unit tests for the run_macaron.sh script
 
 tags:
-- docker-only
+- macaron-docker-image
 
 steps:
 - name: Copy the run_macaron.sh from the source repo to ./output which will eventually be cleaned up.

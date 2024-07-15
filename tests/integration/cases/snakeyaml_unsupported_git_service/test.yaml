@@ -4,6 +4,9 @@
 description: |
   Analyzing a repository with un-supported git service as local repo without dependency resolution.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Prepare local repo directory
   kind: shell

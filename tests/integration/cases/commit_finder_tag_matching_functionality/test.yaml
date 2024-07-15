@@ -4,6 +4,9 @@
 description: |
   Testing Commit Finder tag matching functionality.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Run the test commit finder script
   kind: shell

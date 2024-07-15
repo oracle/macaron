@@ -4,6 +4,9 @@
 description: |
   Analyzing a repository that was cloned from another local repo.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Clone the apache maven repository
   kind: shell
