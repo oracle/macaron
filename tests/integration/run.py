@@ -744,7 +744,7 @@ def load_test_cases(
         else:
             # Each --include-tag/--exclude-tag argument adds an additional constraint
             # that a selected test case needs to satisfy, i.e. a selected test case must:
-            # - contains at least on tag specified with --include-tag
+            # - contains at least one tag specified with --include-tag
             # - contains no tag specified with --exclude-tag
             select_case = True
             for include_tag in include_tags:
