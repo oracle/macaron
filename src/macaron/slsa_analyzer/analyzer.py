@@ -322,8 +322,7 @@ class Analyzer:
                 status=SCMStatus.ANALYSIS_FAILED,
             )
 
-        provenance_is_verified = False
-        if not provenance_payload and parsed_purl and not config.get_value("path"):
+        if not provenance_payload and parsed_purl:
             # Try to find the provenance file for the parsed PURL.
             provenance_finder = ProvenanceFinder()
             provenances = provenance_finder.find_provenance(parsed_purl)
