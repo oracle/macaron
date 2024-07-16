@@ -15,6 +15,6 @@ Macaron's ``Provenance verified`` check uses the criteria of SLSA Build Levels t
 - Build Level 0: There is no provenance for the artifact.
 - Build Level 1: There is provenance for the artifact but it cannot be verified.
 - Build Level 2: There is provenance for the artifact, and it has been verified.
-- Build Level 3: There is provenance for the artifact, it has been verified, and it was created by the SLSA GitHub Generator.
+- Build Level 3: There is provenance for the artifact, it has been verified, and the build service isolates provenance generation in the control plane from the untrusted build process.
 
 .. note :: Build Level 4 is not included in the check.
