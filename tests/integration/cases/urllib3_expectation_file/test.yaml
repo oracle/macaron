@@ -16,7 +16,7 @@ steps:
     expectation: expectation.cue
     command_args:
     - --repo-path
-    - https://github.com/urllib3/urllib3/urllib3
+    - https://github.com/urllib3/urllib3
     - --branch
     - main
     - --digest
