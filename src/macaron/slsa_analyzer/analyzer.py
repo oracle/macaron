@@ -1040,6 +1040,9 @@ class Analyzer:
 
     def _determine_build_tools(self, analyze_ctx: AnalyzeContext, git_service: BaseGitService) -> None:
         """Determine the build tools that match the software component's PURL type."""
+        if isinstance(git_service, NoneGitService):
+            return
+
         for build_tool in BUILD_TOOLS:
             build_tool.load_defaults()
             if build_tool.purl_type == analyze_ctx.component.type:
@@ -1047,10 +1050,6 @@ class Analyzer:
                     "Found %s build tool based on the %s PackageURL.", build_tool.name, analyze_ctx.component.purl
                 )
                 analyze_ctx.dynamic_data["build_spec"]["purl_tools"].append(build_tool)
-                continue
-
-            if isinstance(git_service, NoneGitService):
-                continue
 
             logger.info(
                 "Checking if the repo %s uses build tool %s",
