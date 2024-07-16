@@ -1050,6 +1050,9 @@ class Analyzer:
             if isinstance(git_service, NoneGitService):
                 continue
 
+            if not analyze_ctx.component.repository:
+                continue
+
             logger.info(
                 "Checking if the repo %s uses build tool %s",
                 analyze_ctx.component.repository.complete_name,
@@ -1061,10 +1064,13 @@ class Analyzer:
                 analyze_ctx.dynamic_data["build_spec"]["tools"].append(build_tool)
 
         if not analyze_ctx.dynamic_data["build_spec"]["tools"]:
-            logger.info(
-                "Unable to discover any build tools for repository %s or the build tools are not supported.",
-                analyze_ctx.component.repository.complete_name,
-            )
+            if analyze_ctx.component.repository:
+                logger.info(
+                    "Unable to discover any build tools for repository %s or the build tools are not supported.",
+                    analyze_ctx.component.repository.complete_name,
+                )
+            else:
+                logger.info("Unable to discover build tools because repository is None.")
 
     def _determine_ci_services(self, analyze_ctx: AnalyzeContext, git_service: BaseGitService) -> None:
         """Determine the CI services used by the software component."""

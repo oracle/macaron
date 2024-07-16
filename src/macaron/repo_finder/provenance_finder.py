@@ -55,6 +55,8 @@ class ProvenanceFinder:
         list[InTotoPayload]
             The provenance payload, or an empty list if not found.
         """
+        logger.debug("Seeking provenance of: %s", purl)
+
         if determine_abstract_purl_type(purl) == AbstractPurlType.REPOSITORY:
             # Do not perform default discovery for repository type targets.
             return []
@@ -427,7 +429,7 @@ def find_provenance_from_ci(self, analyze_ctx: AnalyzeContext, git_obj: Git | No
                     return None
                 tags = git_obj.repo.tags
                 for _tag in tags:
-                    if _tag.commit and _tag.commit == digest:
+                    if _tag.commit and str(_tag.commit) == digest:
                         tag = str(_tag)
                         break
 
