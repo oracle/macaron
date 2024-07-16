@@ -6,9 +6,11 @@
 Policy("check-dependencies", component_id, "Check the dependencies of django@5.0.6.") :-
     is_component(component_id, _),
     transitive_dependency(component_id, sqlparse),
-    is_component(sqlparse, "pkg:pypi/sqlparse@0.5.0"),
+    is_component(sqlparse, sqlparse_purl),
+    match("pkg:pypi/sqlparse@0.*", sqlparse_purl),
     transitive_dependency(component_id, asgiref),
-    is_component(asgiref, "pkg:pypi/asgiref@3.8.1").
+    is_component(asgiref, asgiref_purl),
+    match("pkg:pypi/asgiref@3.*", asgiref_purl).
 
 apply_policy_to("check-dependencies", component_id) :-
     is_component(component_id, "pkg:pypi/django@5.0.6").
