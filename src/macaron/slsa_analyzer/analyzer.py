@@ -436,6 +436,8 @@ class Analyzer:
 
         git_service = self._determine_git_service(analyze_ctx)
         self._determine_ci_services(analyze_ctx, git_service)
+        self._determine_build_tools(analyze_ctx, git_service)
+        self._determine_package_registries(analyze_ctx)
 
         if not provenance_payload:
             # Look for provenance using the CI.
