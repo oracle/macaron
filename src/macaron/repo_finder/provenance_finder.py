@@ -8,16 +8,22 @@ import tempfile
 from functools import partial
 
 from packageurl import PackageURL
+from pydriller import Git
 
 from macaron.config.defaults import defaults
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
+from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.provenance_available_check import ProvenanceAvailableException
+from macaron.slsa_analyzer.ci_service import GitHubActions
+from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, JFrogMavenRegistry, NPMRegistry
 from macaron.slsa_analyzer.package_registry.npm_registry import NPMAttestationAsset
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError
 from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
+from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.provenance.witness import is_witness_provenance_payload, load_witness_verifier_config
+from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -367,3 +373,154 @@ def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[
 
     # We assume that there is only one provenance per GAV.
     return provenances[:1]
+
+
+def find_provenance_from_ci(self, analyze_ctx: AnalyzeContext, git_obj: Git | None) -> InTotoPayload | None:
+    """Try to find provenance from CI services of the repository.
+
+    Note that we stop going through the CI services once we encounter a CI service
+    that does host provenance assets.
+
+    This method also loads the provenance payloads into the ``CIInfo`` object where
+    the provenance assets are found.
+
+    Parameters
+    ----------
+    analyze_ctx: AnalyzeContext
+        The contenxt of the ongoing analysis.
+    git_obj: Git | None
+        The Pydriller Git object representing the repository, if any.
+
+    Returns
+    -------
+    InTotoPayload | None
+        The provenance payload, or None if not found.
+    """
+    provenance_extensions = defaults.get_list(
+        "slsa.verifier",
+        "provenance_extensions",
+        fallback=["intoto.jsonl"],
+    )
+    component = analyze_ctx.component
+    ci_info_entries = analyze_ctx.dynamic_data["ci_services"]
+
+    if not component.repository:
+        logger.debug("Unable to find a provenance because a repository was not found for %s.", component.purl)
+        return None
+
+    repo_full_name = component.repository.full_name
+    for ci_info in ci_info_entries:
+        ci_service = ci_info["service"]
+
+        if isinstance(ci_service, NoneCIService):
+            continue
+
+        if isinstance(ci_service, GitHubActions):
+            # Find the release for the software component version being analyzed.
+
+            digest = component.repository.commit_sha
+            tag = None
+            if git_obj:
+                # Use the software component commit to find the tag.
+                if not digest:
+                    logger.debug("Cannot retrieve asset provenance without commit digest.")
+                    return None
+                tags = git_obj.repo.tags
+                for _tag in tags:
+                    if _tag.commit and _tag.commit == digest:
+                        tag = str(_tag)
+                        break
+
+            if not tag:
+                logger.debug("Could not find the tag matching commit: %s", digest)
+                return None
+
+            # Get the correct release using the tag.
+            release_payload = ci_service.api_client.get_release_by_tag(repo_full_name, tag)
+            if not release_payload:
+                logger.debug("Failed to find release matching tag: %s", tag)
+                return None
+
+            # Store the release data for other checks.
+            ci_info["release"] = release_payload
+
+            # Get the provenance assets.
+            for prov_ext in provenance_extensions:
+                provenance_assets = ci_service.api_client.fetch_assets(
+                    release_payload,
+                    ext=prov_ext,
+                )
+                if not provenance_assets:
+                    continue
+
+                logger.info("Found the following provenance assets:")
+                for provenance_asset in provenance_assets:
+                    logger.info("* %s", provenance_asset.url)
+
+                # Store the provenance assets for other checks.
+                ci_info["provenance_assets"].extend(provenance_assets)
+
+                # Download the provenance assets and load the provenance payloads.
+                self.download_provenances_from_github_actions_ci_service(
+                    ci_info,
+                )
+
+                # TODO consider how to handle multiple payloads here.
+                return ci_info["provenances"][0].payload if ci_info["provenances"] else None
+
+    return None
+
+
+def download_provenances_from_github_actions_ci_service(self, ci_info: CIInfo) -> None:
+    """Download provenances from GitHub Actions.
+
+    Parameters
+    ----------
+    ci_info: CIInfo,
+        A ``CIInfo`` instance that holds a GitHub Actions git service object.
+    """
+    ci_service = ci_info["service"]
+    prov_assets = ci_info["provenance_assets"]
+
+    try:
+        with tempfile.TemporaryDirectory() as temp_path:
+            downloaded_provs = []
+            for prov_asset in prov_assets:
+                # Check the size before downloading.
+                if prov_asset.size_in_bytes > defaults.getint(
+                    "slsa.verifier",
+                    "max_download_size",
+                    fallback=1000000,
+                ):
+                    logger.info(
+                        "Skip verifying the provenance %s: asset size too large.",
+                        prov_asset.name,
+                    )
+                    continue
+
+                provenance_filepath = os.path.join(temp_path, prov_asset.name)
+
+                if not ci_service.api_client.download_asset(
+                    prov_asset.url,
+                    provenance_filepath,
+                ):
+                    logger.debug(
+                        "Could not download the provenance %s. Skip verifying...",
+                        prov_asset.name,
+                    )
+                    continue
+
+                # Read the provenance.
+                try:
+                    payload = load_provenance_payload(provenance_filepath)
+                except LoadIntotoAttestationError as error:
+                    logger.error("Error logging provenance: %s", error)
+                    continue
+
+                # Add the provenance file.
+                downloaded_provs.append(SLSAProvenanceData(payload=payload, asset=prov_asset))
+
+            # Persist the provenance payloads into the CIInfo object.
+            ci_info["provenances"] = downloaded_provs
+    except OSError as error:
+        logger.error("Error while storing provenance in the temporary directory: %s", error)

@@ -433,6 +433,41 @@ class Analyzer:
         analyze_ctx.dynamic_data["expectation"] = self.expectations.get_expectation_for_target(
             analyze_ctx.component.purl.split("@")[0]
         )
+
+        git_service = self._determine_git_service(analyze_ctx)
+        self._determine_ci_services(analyze_ctx, git_service)
+
+        if not provenance_payload:
+            # Look for provenance using the CI.
+            provenance_payload = ProvenanceFinder().find_provenance_from_ci(analyze_ctx, git_obj)
+            # If found, verify analysis target against new provenance
+            if provenance_payload:
+                # If the digest and repository URL were not provided as input, check those found during analysis.
+                if not digest_input and component.repository:
+                    digest_input = component.repository.commit_sha
+                if not repo_path_input and component.repository:
+                    repo_path_input = component.repository.remote_path
+
+                # Extract the digest and repository URL from provenance.
+                provenance_repo_url = provenance_commit_digest = None
+                try:
+                    provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
+                        provenance_payload
+                    )
+                except ProvenanceError as error:
+                    logger.debug("Failed to extract repo or commit from provenance: %s", error)
+
+                # Try to validate the input repo and/or commit against provenance contents.
+                if (provenance_repo_url or provenance_commit_digest) and check_if_input_repo_commit_provenance_conflict(
+                    repo_path_input, digest_input, provenance_repo_url, provenance_commit_digest
+                ):
+                    return Record(
+                        record_id=repo_id,
+                        description="Input mismatch between repo/commit and provenance.",
+                        pre_config=config,
+                        status=SCMStatus.ANALYSIS_FAILED,
+                    )
+
         analyze_ctx.dynamic_data["provenance"] = provenance_payload
         if provenance_payload:
             analyze_ctx.dynamic_data["is_inferred_prov"] = False
@@ -986,6 +1021,98 @@ class Analyzer:
             logger.error(error)
             return ""
 
+    def _determine_git_service(self, analyze_ctx: AnalyzeContext) -> BaseGitService:
+        """Determine the Git service used by the software component."""
+        remote_path = analyze_ctx.component.repository.remote_path if analyze_ctx.component.repository else None
+        git_service = self.get_git_service(remote_path)
+
+        if isinstance(git_service, NoneGitService):
+            logger.info("Unable to find repository or unsupported git service for %s", analyze_ctx.component.purl)
+        else:
+            logger.info(
+                "Detected git service %s for %s.", git_service.name, analyze_ctx.component.repository.complete_name
+            )
+            analyze_ctx.dynamic_data["git_service"] = git_service
+
+        return git_service
+
+    def _determine_build_tools(self, analyze_ctx: AnalyzeContext, git_service: BaseGitService) -> None:
+        """Determine the build tools that match the software component's PURL type."""
+        for build_tool in BUILD_TOOLS:
+            build_tool.load_defaults()
+            if build_tool.purl_type == analyze_ctx.component.type:
+                logger.debug(
+                    "Found %s build tool based on the %s PackageURL.", build_tool.name, analyze_ctx.component.purl
+                )
+                analyze_ctx.dynamic_data["build_spec"]["purl_tools"].append(build_tool)
+                continue
+
+            if isinstance(git_service, NoneGitService):
+                continue
+
+            logger.info(
+                "Checking if the repo %s uses build tool %s",
+                analyze_ctx.component.repository.complete_name,
+                build_tool.name,
+            )
+
+            if build_tool.is_detected(analyze_ctx.component.repository.fs_path):
+                logger.info("The repo uses %s build tool.", build_tool.name)
+                analyze_ctx.dynamic_data["build_spec"]["tools"].append(build_tool)
+
+        if not analyze_ctx.dynamic_data["build_spec"]["tools"]:
+            logger.info(
+                "Unable to discover any build tools for repository %s or the build tools are not supported.",
+                analyze_ctx.component.repository.complete_name,
+            )
+
+    def _determine_ci_services(self, analyze_ctx: AnalyzeContext, git_service: BaseGitService) -> None:
+        """Determine the CI services used by the software component."""
+        if isinstance(git_service, NoneGitService):
+            return
+
+        # Determine the CI services.
+        for ci_service in CI_SERVICES:
+            ci_service.load_defaults()
+            ci_service.set_api_client()
+
+            if ci_service.is_detected(
+                repo_path=analyze_ctx.component.repository.fs_path,
+                git_service=analyze_ctx.dynamic_data["git_service"],
+            ):
+                logger.info("The repo uses %s CI service.", ci_service.name)
+
+                # Parse configuration files and generate IRs.
+                # Add the bash commands to the context object to be used by other checks.
+                callgraph = ci_service.build_call_graph(
+                    analyze_ctx.component.repository.fs_path,
+                    os.path.relpath(analyze_ctx.component.repository.fs_path, analyze_ctx.output_dir),
+                )
+                analyze_ctx.dynamic_data["ci_services"].append(
+                    CIInfo(
+                        service=ci_service,
+                        callgraph=callgraph,
+                        provenance_assets=[],
+                        release={},
+                        provenances=[
+                            SLSAProvenanceData(
+                                payload=InTotoV01Payload(statement=Provenance().payload),
+                                asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0),
+                            )
+                        ],
+                    )
+                )
+
+    def _determine_package_registries(self, analyze_ctx: AnalyzeContext) -> None:
+        """Determine the package registries used by the software component based on its build tools."""
+        build_tools = analyze_ctx.dynamic_data["build_spec"]["tools"]
+        for package_registry in PACKAGE_REGISTRIES:
+            for build_tool in build_tools:
+                if package_registry.is_detected(build_tool):
+                    analyze_ctx.dynamic_data["package_registries"].append(
+                        PackageRegistryInfo(build_tool=build_tool, package_registry=package_registry)
+                    )
+
     def perform_checks(self, analyze_ctx: AnalyzeContext) -> dict[str, CheckResult]:
         """Run the analysis on the target repo and return the results.
 
@@ -1085,8 +1212,7 @@ class Analyzer:
                         )
                     )
 
-        results = registry.scan(analyze_ctx)
-        return results
+        return registry.scan(analyze_ctx)
 
 
 class DuplicateCmpError(DuplicateError):

@@ -157,7 +157,7 @@ class AnalyzeContext:
             result: dict[str, list[InTotoV01Statement | InTotoV1Statement]] = defaultdict(list)
             for ci_info in ci_services:
                 result[ci_info["service"].name].extend(
-                    prov_asset.payload.statement for prov_asset in ci_info["provenances"]
+                    provenance.payload.statement for provenance in ci_info["provenances"]
                 )
             package_registry_entries = self.dynamic_data["package_registries"]
             for package_registry_entry in package_registry_entries:

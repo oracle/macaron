@@ -47,7 +47,7 @@ def test_trusted_builder_l3_check(
         service=github_actions_service,
         callgraph=CallGraph(BaseNode(), ""),
         provenance_assets=[],
-        latest_release={},
+        release={},
         provenances=[],
     )
 
