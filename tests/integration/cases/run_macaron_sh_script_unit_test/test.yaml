@@ -1,0 +1,18 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Run unit tests for the run_macaron.sh script
+
+tags:
+- macaron-docker-image
+
+steps:
+- name: Copy the run_macaron.sh from the source repo to ./output which will eventually be cleaned up.
+  kind: shell
+  options:
+    cmd: ./setup.sh
+- name: Run test_run_macaron_sh.py
+  kind: shell
+  options:
+    cmd: python ./test_run_macaron_sh.py

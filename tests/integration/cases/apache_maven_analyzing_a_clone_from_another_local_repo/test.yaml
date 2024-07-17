@@ -1,0 +1,48 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing a repository that was cloned from another local repo.
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Clone the apache maven repository
+  kind: shell
+  options:
+# We don't want to perform a treeless clone here. This is because
+# we later make another clone of this repository at output/git_repos/local_repos/maven.
+# A clone from output/git_repos/local_repos/maven will have its remote pointing to this
+# local path output/git_repos/local_repos/maven. If output/git_repos/local_repos/maven is treeless,
+# then any clone from it will not be able to checkout previous commit due to its trees and blobs missing.
+    cmd: git clone https://github.com/apache/maven output/git_repos/local_repos/maven
+- name: Make a clone from the maven repository
+  kind: shell
+  options:
+    cmd: git clone output/git_repos/local_repos/maven output/git_repos/local_repos/second_maven
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    main_args:
+    - -lr
+    - ./output/git_repos/local_repos
+    command_args:
+    - -rp
+    - second_maven
+    - -b
+    - master
+    - -d
+    - 3fc399318edef0d5ba593723a24fff64291d6f9b
+    - --skip-deps
+# We don't compare the report content because the remote_path fields in the reports are nondeterministic when running
+# this test locally and running it in the GitHub Actions runner. We only check if the reports are generated as
+# expected without the issue described in https://github.com/oracle/macaron/issues/116.
+- name: Check if the JSON report is generated in the expected location
+  kind: shell
+  options:
+    cmd: ls output/reports/local_repos/maven/maven.json
+- name: Check if the HTML report is generated in the expected location
+  kind: shell
+  options:
+    cmd: ls output/reports/local_repos/maven/maven.html

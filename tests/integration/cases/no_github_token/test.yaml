@@ -5,7 +5,8 @@ description: |
   Test running the analysis without setting the GITHUB_TOKEN environment variables.
 
 tags:
-- shared-docker-python
+- macaron-python-package
+- macaron-docker-image
 
 steps:
 - name: Run macaron analyze

@@ -4,6 +4,9 @@
 description: |
   Check the e2e status code of running with invalid branch or commit defined in the yaml configuration.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Run macaron analyze with yaml input containing invalid branch
   kind: analyze

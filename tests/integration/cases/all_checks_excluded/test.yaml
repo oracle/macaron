@@ -4,6 +4,9 @@
 description: |
   Running the analysis with all checks excluded. This test should return an error code.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Run macaron analyze
   kind: analyze

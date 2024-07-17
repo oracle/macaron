@@ -5,8 +5,7 @@ description: |
   Making sure run_macaron.sh clean up the token file when it exits because DOCKER_PULL is set to an invalid value.
 
 tags:
-- shared-docker-python
-- docker-only
+- macaron-docker-image
 
 steps:
 - name: Run run_macaron.sh.py with DOCKER_PULL set to invalid value.

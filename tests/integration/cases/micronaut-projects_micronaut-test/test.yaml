@@ -4,6 +4,9 @@
 description: |
   Test configurations for micronaut-projects/micronaut-test.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Run macaron analyze
   kind: analyze

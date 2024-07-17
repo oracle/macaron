@@ -6,7 +6,8 @@ description: |
   The CUE expectation file should be found via the directory path.
 
 tags:
-- shared-docker-python
+- macaron-python-package
+- macaron-docker-image
 
 steps:
 - name: Run macaron analyze with expectation directory
@@ -14,7 +15,7 @@ steps:
   options:
     command_args:
     - --repo-path
-    - https://github.com/urllib3/urllib3/urllib3
+    - https://github.com/urllib3/urllib3
     - --branch
     - main
     - --digest

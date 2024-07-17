@@ -1,0 +1,14 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Testing Commit Finder tag matching functionality.
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Run the test commit finder script
+  kind: shell
+  options:
+    cmd: python commit_finder.py
