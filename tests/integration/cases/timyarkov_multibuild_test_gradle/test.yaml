@@ -5,7 +5,8 @@ description: |
   Analyze with dependency resolution using cyclonedx Gradle plugin (default)
 
 tags:
-- shared-docker-python
+- macaron-python-package
+- macaron-docker-image
 
 steps:
 - name: Run macaron analyze

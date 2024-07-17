@@ -75,7 +75,7 @@ def configure_logging(verbose: bool) -> None:
 
 
 COMPARE_SCRIPTS: dict[str, Sequence[str]] = {
-    "analysis_report": ["tests", "e2e", "compare_e2e_result.py"],
+    "analysis_report": ["tests", "analyze_json_output", "compare_analyze_json_output.py"],
     "policy_report": ["tests", "policy_engine", "compare_policy_reports.py"],
     "deps_report": ["tests", "dependency_analyzer", "compare_dependencies.py"],
     "vsa": ["tests", "vsa", "compare_vsa.py"],
@@ -744,17 +744,23 @@ def load_test_cases(
         else:
             # Each --include-tag/--exclude-tag argument adds an additional constraint
             # that a selected test case needs to satisfy, i.e. a selected test case must:
-            # - contains all tags specified with --include-tag
+            # - contains at least one tag specified with --include-tag
             # - contains no tag specified with --exclude-tag
             select_case = True
             for include_tag in include_tags:
-                if include_tag not in case_config["tags"]:
+                if include_tag in case_config["tags"]:
                     logger.info(
-                        "Skipping case '%s' for not having tag '%s'.",
+                        "Selecting case '%s' for having tag '%s'.",
                         *(test_case_dir, include_tag),
                     )
-                    select_case = False
+                    select_case = True
                     break
+                select_case = False
+            if not select_case:
+                logger.info(
+                    "Skipping case '%s' for not having any tag in %s",
+                    *(test_case_dir, include_tags),
+                )
             for exclude_tag in exclude_tags:
                 if exclude_tag in case_config["tags"]:
                     logger.info(

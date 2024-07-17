@@ -4,6 +4,9 @@
 description: |
   Analyzing the repo path, the branch name and the commit digest when automatic dependency resolution is skipped.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Run macaron analyze
   kind: analyze

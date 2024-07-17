@@ -4,6 +4,9 @@
 description: |
   Check the e2e output JSON file with yaml input containing no dependency and skipping dependency resolution.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Run macaron analyze
   kind: analyze

@@ -5,6 +5,9 @@ description: |
   Analyzing the PURL when automatic dependency resolution is skipped.
   Run policy CLI with micronaut-core results to test deploy command information.
 
+tags:
+- macaron-python-package
+
 steps:
 - name: Run macaron analyze
   kind: analyze

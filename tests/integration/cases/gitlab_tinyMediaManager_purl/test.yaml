@@ -5,7 +5,7 @@ description: |
   Analyzing the purl with a version, and a provided repo with no commit.
 
 tags:
-- npm-registry
+- macaron-python-package
 
 steps:
 - name: Run macaron analyze

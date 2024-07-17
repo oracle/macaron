@@ -6,7 +6,8 @@ description: |
   Policy CLI, and VSA generation.
 
 tags:
-- shared-docker-python
+- macaron-python-package
+- macaron-docker-image
 
 steps:
 - name: Clone the repository

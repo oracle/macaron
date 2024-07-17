@@ -6,7 +6,8 @@ description: |
   The CUE expectation file is provided as a single file path.
 
 tags:
-- shared-docker-python
+- macaron-python-package
+- macaron-docker-image
 
 steps:
 - name: Run macaron analyze with expectation file
@@ -15,7 +16,7 @@ steps:
     expectation: expectation.cue
     command_args:
     - --repo-path
-    - https://github.com/urllib3/urllib3/urllib3
+    - https://github.com/urllib3/urllib3
     - --branch
     - main
     - --digest

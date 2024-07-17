@@ -1,0 +1,24 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Checking the resolved dependency output with PURL for cyclonedx maven plugin (default).
+
+tags:
+- macaron-python-package
+# Skipped due to https://github.com/oracle/macaron/issues/60.
+- skip
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.0-rc1
+- name: Compare deps report
+  kind: compare
+  options:
+    kind: deps_report
+    expected: dependencies.json
+    result: output/reports/github_com/FasterXML/jackson-databind/dependencies.json

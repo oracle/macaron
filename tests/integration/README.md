@@ -133,38 +133,53 @@ $ python ./tests/integration/run.py run ./all/cases/...
 
 In certain cases, we can utilize the feature of tags to select a subset of test cases to run with the `run` command.
 
-Each test case can be attached with one or more tags in the yaml configuration. For example, you may find some of our test cases having the `docker` tag as follows.
+Each test case can be attached with one or more tags in the yaml configuration. For example, you may find some of our test cases having the tags as follows.
 
 ```yaml
 description: ...
 tags:
-- docker
+- macaron-python-package
+- macaron-docker-image
 steps:
 - ...
 ```
 
-We typically have the test cases for the container image being a subset of the test cases for the Macaron Python package. We can mark the test cases shared for both purposes with the `docker` tag. When we do integration testing for the container image, we can add the argument `--include-tag docker` to filter only test cases tagged with `docker`.
+We typically have test cases that are shared for the container image and the Macaron Python package. We can mark the test cases shared for both purposes with `macaron-python-package` and `macaron-docker-image` tags.
+When we do integration testing for the container image, we can add the argument `--include-tag macaron-docker-image` to filter test cases that are tagged with `macaron-docker-image`.
 
 ```bash
-# Test the container image with test cases having the `docker` tag.
-$ python ./tests/integration/run.py run --include-tag docker ./all/cases/...
+# Test the container image with test cases having the `macaron-docker-image` tag.
+$ python ./tests/integration/run.py run --include-tag macaron-docker-image ./all/cases/...
 ```
 
-The `--include-tag` flag can be specified multiple times. A selected test case must contain all tags specified with the `--include-tag` flag.
+We can do the same with `macaron-python-package` when we do integration tests for the Macaron Python package.
+
+The `--include-tag` flag can be specified multiple times. A selected test case must be tagged with at least a tag specified with any of the `--include-tag` flags.
 
 ```bash
-# Test the container image with test cases having the `docker` tag.
+# Test the container image with test cases having EITHER `tag-a` for `tag-b` tag.
 $ python ./tests/integration/run.py run --include-tag tag-a --include-tag tag-b ./all/cases/...
 ```
 
 There is also the `--exclude-tag` flag. A selected test case must also not contain any tag specified with the `--exclude-tag` flag.
 
 ```bash
-# Only run test cases not tagged with `npm`.
-$ python ./tests/integration/run.py run --exclude-tag npm ./all/cases/...
+# Only run test cases not tagged with `npm-registry-testcase`.
+$ python ./tests/integration/run.py run --exclude-tag npm-registry-testcase ./all/cases/...
 ```
 
-You can simply think of each `--include-tag`/`--exclude-tag` argument as adding an additional constraint that a selected test case must satisfy".
+You can simply think of each `--include-tag`/`--exclude-tag` argument as adding an additional constraint that a selected test case must satisfy.
+
+Instructions on how to tag a test case for our CI/CD pipeline:
+- If you want a test case to **only** run for the container image, use **only** `macaron-docker-image`.
+- If you want a test case to **only** run with the Macaron Python package, use **only** `macaron-python-package`.
+- To skip a test case, use `skip`. `skip` still has the same effect if it's used with other tags.
+- If you want to run a test case for both the Macaron Python package and the docker container, use `macaron-python-package` and `macaron-docker-image` tags.
+- If you want to run test cases that must contain all of a given set of tags (e.g. `['tag-a', 'tag-b']`), please create an additional tag for those test cases (e.g `tag-a-b`) and use it within `--include-tag`.
+- Test cases marked with `npm-registry-testcase` are not run if the environment variable `NO_NPM` is set to `TRUE`. This only applies when you run the integration tests with:
+```bash
+$ make integration-test
+```
 
 ### Debug utility script
 

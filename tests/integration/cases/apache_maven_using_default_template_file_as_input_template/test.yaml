@@ -1,0 +1,28 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing with the default template file as the input template.
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -rp
+    - https://github.com/apache/maven
+    - -b
+    - master
+    - -d
+    - 3fc399318edef0d5ba593723a24fff64291d6f9b
+    - -g
+    - macaron.html
+    - --skip-deps
+- name: Run verify-policy
+  kind: verify
+  options:
+    database: output/macaron.db
+    policy: maven.dl
