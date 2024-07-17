@@ -233,7 +233,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 if should_skip:
                     results[analyzer.heuristic] = HeuristicResult.SKIP
                     continue
-                
+
             result, result_info = analyzer.analyze(api_client)
             if analyzer.heuristic:
                 results[analyzer.heuristic] = result
