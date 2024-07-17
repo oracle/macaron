@@ -349,7 +349,7 @@ class Analyzer:
             ):
                 return Record(
                     record_id=repo_id,
-                    description="Input mismatch between repo/commit and provenance.",
+                    description="Input mismatch between repo and provenance.",
                     pre_config=config,
                     status=SCMStatus.ANALYSIS_FAILED,
                 )
@@ -443,9 +443,7 @@ class Analyzer:
             provenance_payload = ProvenanceFinder().find_provenance_from_ci(analyze_ctx, git_obj)
             # If found, verify analysis target against new provenance
             if provenance_payload:
-                # If the digest and repository URL were not provided as input, check those found during analysis.
-                if not digest_input and component.repository:
-                    digest_input = component.repository.commit_sha
+                # If repository URL was not provided as input, check the one found during analysis.
                 if not repo_path_input and component.repository:
                     repo_path_input = component.repository.remote_path
 
