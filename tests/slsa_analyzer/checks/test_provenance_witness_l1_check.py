@@ -69,7 +69,7 @@ def subjects_() -> list[InTotoV01Subject]:
                     jfrog_maven_registry=JFrogMavenRegistry(),
                 ),
             ],
-            id="The assets list can match only a subset of subjects. As long as all assets in that list are verified.",
+            id="The assets list can match only a subset of subjects, as long as all assets in that list are verified.",
         ),
         pytest.param(
             [
@@ -98,7 +98,7 @@ def subjects_() -> list[InTotoV01Subject]:
                     jfrog_maven_registry=JFrogMavenRegistry(),
                 ),
             ],
-            id="2 assets can share the same file name but have different digests.",
+            id="Two assets can share the same file name but have different digests.",
         ),
     ],
 )
@@ -143,7 +143,7 @@ def test_verify_artifact_assets(
                     jfrog_maven_registry=JFrogMavenRegistry(),
                 ),
             ],
-            id="An asset that is not included in the subjects lead to a failed verification.",
+            id="An asset that fails verification lead to failed verification as a whole.",
         ),
     ],
 )
