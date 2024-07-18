@@ -73,13 +73,15 @@ def verify_artifact_assets(
     look_up: dict[str, dict[str, InTotoV01Subject]] = {}
 
     for subject in subjects:
-        if subject["name"] not in look_up:
-            look_up[subject["name"]] = {}
-        look_up[subject["name"]][subject["digest"]["sha256"]] = subject
+        # Get the artifact name, which should be the last part of the artifact subject value.
+        _, _, artifact_filename = subject["name"].rpartition("/")
+        if artifact_filename not in look_up:
+            look_up[artifact_filename] = {}
+        look_up[artifact_filename][subject["digest"]["sha256"]] = subject
 
     for asset in artifact_assets:
         if asset.name not in look_up:
-            message = f"Could not find subject with name {asset.name} in the provenance."
+            message = f"Could not find subject for asset {asset.name} in the provenance."
             logger.info(message)
             return False
 
