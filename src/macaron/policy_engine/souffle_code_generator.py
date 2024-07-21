@@ -7,7 +7,7 @@ import logging
 import os
 
 from sqlalchemy import Column, Float, MetaData, Table
-from sqlalchemy.sql.sqltypes import Boolean, Integer, String, Text
+from sqlalchemy.sql.sqltypes import JSON, Boolean, Integer, String, Text
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -87,6 +87,8 @@ def column_to_souffle_type(column: Column) -> str:
         souffle_type = "symbol"
     elif isinstance(sql_type, Boolean):
         souffle_type = "number"
+    elif isinstance(sql_type, JSON):
+        souffle_type = "symbol"
     else:
         raise ValueError("Unexpected column type in table")
     return souffle_type

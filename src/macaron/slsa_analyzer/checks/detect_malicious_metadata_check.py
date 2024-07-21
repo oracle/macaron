@@ -208,12 +208,14 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 return True
         return False
 
-    def run_heuristics(self, api_client: PyPIRegistry) -> tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]:
+    def run_heuristics(
+        self, pypi_registry: PyPIRegistry
+    ) -> tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]:
         """Run the analysis heuristics.
 
         Parameters
         ----------
-        api_client: PyPIRegistry
+        pypi_registry: PyPIRegistry
             The PyPI API client object used to interact with the PyPI API.
 
         Returns
@@ -234,7 +236,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                     results[analyzer.heuristic] = HeuristicResult.SKIP
                     continue
 
-            result, result_info = analyzer.analyze(api_client)
+            result, result_info = analyzer.analyze(pypi_registry)
             if analyzer.heuristic:
                 results[analyzer.heuristic] = result
                 detail_info.update(result_info)
@@ -259,10 +261,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         package = parsed_purl.name
         result_tables: list[CheckFacts] = []
 
-        api_client: PyPIRegistry = PyPIRegistry()
-        api_client.load_defaults()
-        api_client.download_attestation_payload(package)
-        result, detail_info = self.run_heuristics(api_client)
+        pypi_registry: PyPIRegistry = PyPIRegistry()
+        pypi_registry.load_defaults()
+        pypi_registry.download_attestation_payload(package)
+        result, detail_info = self.run_heuristics(pypi_registry)
         result_combo: tuple = tuple(result.values())
         confidence: float | None = SUSPICIOUS_COMBO.get(result_combo, None)
         result_type = CheckResultType.FAILED

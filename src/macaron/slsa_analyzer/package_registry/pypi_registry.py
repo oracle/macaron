@@ -5,8 +5,8 @@
 
 import logging
 import os
+import urllib.parse
 from datetime import datetime
-from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup, Tag
@@ -28,7 +28,10 @@ class PyPIRegistry(PackageRegistry):
 
     def __init__(
         self,
-        hostname: str | None = None,
+        registry_url_netloc: str | None = None,
+        registry_url_scheme: str | None = None,
+        fileserver_url_netloc: str | None = None,
+        fileserver_url_scheme: str | None = None,
         request_timeout: int | None = None,
         enabled: bool = True,
     ) -> None:
@@ -37,19 +40,28 @@ class PyPIRegistry(PackageRegistry):
 
         Parameters
         ----------
-        hostname: str | None
-            The hostname of the pypi registry.
+        registry_url_netloc: str | None
+            The netloc of the pypi registry url.
+        registry_url_scheme: str | None
+            The scheme of the pypi registry url.
+        fileserver_url_netloc: str | None
+            The netloc of the server url that stores package source files, which contains the hostname and port.
+        fileserver_url_scheme: str | None
+            The scheme of the server url that stores package source files.
         request_timeout: int | None
             The timeout (in seconds) for requests made to the package registry.
         enabled: bool
             Shows whether making REST API calls to pypi registry is enabled.
 
         """
-        self.hostname = hostname or ""
+        self.registry_url_netloc = registry_url_netloc or ""
+        self.registry_url_scheme = registry_url_scheme or ""
+        self.fileserver_url_netloc = fileserver_url_netloc or ""
+        self.fileserver_url_scheme = fileserver_url_scheme or ""
         self.request_timeout = request_timeout or 10
         self.enabled = enabled
         self.attestation: dict = {}
-        self.base_url = ""
+        self.registry_url = ""
         self.package = ""
         super().__init__("PyPI Registry")
 
@@ -66,12 +78,28 @@ class PyPIRegistry(PackageRegistry):
             return
         section = defaults[section_name]
 
-        self.hostname = section.get("hostname")
-        if not self.hostname:
+        self.registry_url_netloc = section.get("registry_url_netloc")
+        if not self.registry_url_netloc:
             raise ConfigurationError(
-                f'The "hostname" key is missing in section [{section_name}] of the .ini configuration file.'
+                f'The "registry_url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
             )
-        self.base_url = f"https://{self.hostname}"
+        self.registry_url_scheme = section.get("registry_url_scheme", "https")
+        self.registry_url = urllib.parse.ParseResult(
+            scheme=self.registry_url_scheme,
+            netloc=self.registry_url_netloc,
+            path="",
+            params="",
+            query="",
+            fragment="",
+        ).geturl()
+
+        fileserver_url_netloc = section.get("fileserver_url_netloc")
+        if not fileserver_url_netloc:
+            raise ConfigurationError(
+                f'The "fileserver_url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
+            )
+        self.fileserver_url_netloc = fileserver_url_netloc
+        self.fileserver_url_scheme = section.get("fileserver_url_scheme", "https")
 
         try:
             self.request_timeout = section.getint("request_timeout", fallback=10)
@@ -127,7 +155,7 @@ class PyPIRegistry(PackageRegistry):
         """
         self.package = package
         attestation_endpoint = f"pypi/{package}/json"
-        url = urljoin(self.base_url, attestation_endpoint)
+        url = urllib.parse.urljoin(self.registry_url, attestation_endpoint)
         response = send_get_http_raw(url, headers=None, timeout=self.request_timeout)
 
         if not response:
@@ -193,9 +221,18 @@ class PyPIRegistry(PackageRegistry):
         for distribution in urls:
             if distribution.get("python_version") != "source":
                 continue
-            source: str = distribution.get("url", "")
-            if source:
-                return source
+            source_url: str = distribution.get("url", "")
+            if source_url:
+                parsed_url = urllib.parse.urlparse(source_url)
+                if self.fileserver_url_netloc and self.fileserver_url_scheme:
+                    return urllib.parse.ParseResult(
+                        scheme=self.fileserver_url_scheme,
+                        netloc=self.fileserver_url_netloc,
+                        path=parsed_url.path,
+                        params="",
+                        query="",
+                        fragment="",
+                    ).geturl()
         return None
 
     def get_latest_release_upload_time(self) -> str | None:
@@ -220,7 +257,7 @@ class PyPIRegistry(PackageRegistry):
         str | None
             The package main page.
         """
-        url = os.path.join(self.base_url, "project", self.package)
+        url = os.path.join(self.registry_url, "project", self.package)
         response = send_get_http_raw(url)
         if response:
             html_snippets = response.content.decode("utf-8")
@@ -255,7 +292,7 @@ class PyPIRegistry(PackageRegistry):
         str | None
             The profile page.
         """
-        url = os.path.join(self.base_url, "user", username)
+        url = os.path.join(self.registry_url, "user", username)
         response = send_get_http_raw(url, headers=None)
         if response:
             html_snippets = response.content.decode("utf-8")
