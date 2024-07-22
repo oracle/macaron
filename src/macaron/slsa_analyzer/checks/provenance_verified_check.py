@@ -4,14 +4,14 @@
 """This module adds a Check that checks whether the provenance is verified."""
 import logging
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.table_definitions import CheckFacts
 from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 
@@ -23,11 +23,14 @@ class ProvenanceVerifiedFacts(CheckFacts):
 
     __tablename__ = "_provenance_verified_check"
 
-    #: The primary key.
+    # The primary key.
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
-    #: The SLSA build level of the provenance.
+    # The SLSA build level of the provenance.
     build_level: Mapped[int]
+
+    # The build type of the provenance.
+    build_type: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
 
     __mapper_args__ = {
         "polymorphic_identity": __tablename__,
@@ -71,26 +74,30 @@ class ProvenanceVerifiedCheck(BaseCheck):
                 result_type=CheckResultType.FAILED,
             )
 
+        predicate = ctx.dynamic_data["provenance"].statement.get("predicate")
+        build_type = None
+        if predicate:
+            build_type = json_extract(predicate, ["buildType"], str)
+
         if not ctx.dynamic_data["provenance_verified"]:
             # Provenance is not verified.
             return CheckResultData(
                 result_tables=[
                     ProvenanceVerifiedFacts(
                         build_level=1,
+                        build_type=build_type,
                         confidence=Confidence.HIGH,
                     )
                 ],
                 result_type=CheckResultType.FAILED,
             )
 
-        predicate = ctx.dynamic_data["provenance"].statement.get("predicate")
-        build_type = None
-        if predicate:
-            build_type = json_extract(predicate, ["buildType"], str)
         if not (build_type and build_type == "https://github.com/slsa-framework/slsa-github-generator/generic@v1"):
             # Provenance is a verified but not a SLSA GitHub Generator kind.
             return CheckResultData(
-                result_tables=[ProvenanceVerifiedFacts(build_level=2, confidence=Confidence.HIGH)],
+                result_tables=[
+                    ProvenanceVerifiedFacts(build_level=2, build_type=build_type, confidence=Confidence.HIGH)
+                ],
                 result_type=CheckResultType.PASSED,
             )
 
@@ -99,6 +106,7 @@ class ProvenanceVerifiedCheck(BaseCheck):
             result_tables=[
                 ProvenanceVerifiedFacts(
                     build_level=3,
+                    build_type=build_type,
                     confidence=Confidence.HIGH,
                 )
             ],
