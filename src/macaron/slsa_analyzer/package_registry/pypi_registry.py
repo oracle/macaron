@@ -60,7 +60,7 @@ class PyPIRegistry(PackageRegistry):
         self.fileserver_url_scheme = fileserver_url_scheme or ""
         self.request_timeout = request_timeout or 10
         self.enabled = enabled
-        self.attestation: dict = {}
+        self.package_json: dict = {}
         self.registry_url = ""
         self.package = ""
         super().__init__("PyPI Registry")
@@ -135,8 +135,8 @@ class PyPIRegistry(PackageRegistry):
                 return True
         return False
 
-    def download_attestation_payload(self, package: str) -> bool:
-        """Download the pypi attestation from pypi registry.
+    def download_package_json(self, package: str) -> bool:
+        """Download the package JSON metadata from pypi registry.
 
         Parameters
         ----------
@@ -154,12 +154,12 @@ class PyPIRegistry(PackageRegistry):
             If the HTTP request to the registry fails or an unexpected response is returned.
         """
         self.package = package
-        attestation_endpoint = f"pypi/{package}/json"
-        url = urllib.parse.urljoin(self.registry_url, attestation_endpoint)
+        json_endpoint = f"pypi/{package}/json"
+        url = urllib.parse.urljoin(self.registry_url, json_endpoint)
         response = send_get_http_raw(url, headers=None, timeout=self.request_timeout)
 
         if not response:
-            logger.debug("Unable to find attestation for %s", package)
+            logger.debug("Unable to find package JSON metadata for %s", package)
             return False
 
         try:
@@ -168,7 +168,7 @@ class PyPIRegistry(PackageRegistry):
             raise InvalidHTTPResponseError(f"Failed to process response from pypi for {url}.") from error
         if not res_obj:
             raise InvalidHTTPResponseError(f"Empty response returned by {url} .")
-        self.attestation = res_obj
+        self.package_json = res_obj
 
         return True
 
@@ -180,7 +180,7 @@ class PyPIRegistry(PackageRegistry):
         dict | None
             Version to metadata.
         """
-        return json_extract(self.attestation, ["releases"], dict)
+        return json_extract(self.package_json, ["releases"], dict)
 
     def get_project_links(self) -> dict | None:
         """Retrieve the project links from the base metadata.
@@ -195,7 +195,7 @@ class PyPIRegistry(PackageRegistry):
             and the values are the corresponding URLs. Returns None if the "project_urls"
             section is not found in the base metadata.
         """
-        return json_extract(self.attestation, ["info", "project_urls"], dict)
+        return json_extract(self.package_json, ["info", "project_urls"], dict)
 
     def get_latest_version(self) -> str | None:
         """Get the latest version of the package.
@@ -205,7 +205,7 @@ class PyPIRegistry(PackageRegistry):
         str | None
             The latest version.
         """
-        return json_extract(self.attestation, ["info", "version"], str)
+        return json_extract(self.package_json, ["info", "version"], str)
 
     def get_sourcecode_url(self) -> str | None:
         """Get the url of the source distribution.
@@ -215,7 +215,7 @@ class PyPIRegistry(PackageRegistry):
         str | None
             The URL of the source distribution.
         """
-        urls: list | None = json_extract(self.attestation, ["urls"], list)
+        urls: list | None = json_extract(self.package_json, ["urls"], list)
         if not urls:
             return None
         for distribution in urls:
@@ -243,7 +243,7 @@ class PyPIRegistry(PackageRegistry):
         str | None
             The upload time of the latest release.
         """
-        urls: list | None = json_extract(self.attestation, ["urls"], list)
+        urls: list | None = json_extract(self.package_json, ["urls"], list)
         if urls is not None and urls:
             upload_time: str | None = urls[0].get("upload_time")
             return upload_time

@@ -263,7 +263,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         pypi_registry: PyPIRegistry = PyPIRegistry()
         pypi_registry.load_defaults()
-        pypi_registry.download_attestation_payload(package)
+        pypi_registry.download_package_json(package)
         result, detail_info = self.run_heuristics(pypi_registry)
         result_combo: tuple = tuple(result.values())
         confidence: float | None = SUSPICIOUS_COMBO.get(result_combo, None)

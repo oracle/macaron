@@ -60,7 +60,7 @@ class MockNPMRegistry(NPMRegistry):
 
     resource_valid_prov_dir: str
 
-    def download_attestation_payload(self, url: str, download_path: str) -> bool:
+    def download_package_json(self, url: str, download_path: str) -> bool:
         src_path = os.path.join(self.resource_valid_prov_dir, "sigstore-mock.payload.json")
         try:
             shutil.copy2(src_path, download_path)
