@@ -170,7 +170,8 @@ class NPMRegistry(PackageRegistry):
         if not res_obj.get("attestations"):
             raise InvalidHTTPResponseError(f"The response returned by {url} misses `attestations` attribute.")
 
-        downloaded = False
+        downloaded_unsigned = False
+        downloaded_signed = False
         for att in res_obj.get("attestations"):
             if not att.get("predicateType"):
                 logger.debug("predicateType attribute is missing for %s", url)
@@ -193,13 +194,17 @@ class NPMRegistry(PackageRegistry):
 
             download_path_extended = download_path
             if att.get("predicateType") == "https://github.com/npm/attestation/tree/main/specs/publish/v0.1":
+                if downloaded_signed:
+                    logger.debug("Found multiple signed provenance.")
+                    continue
+                downloaded_signed = True
                 download_path_extended = download_path_extended + ".signed"
             else:
-                if downloaded:
+                if downloaded_unsigned:
                     # In case there are multiple unsigned provenance, log it and continue.
                     logger.debug("Found multiple unsigned provenance.")
                     continue
-                downloaded = True
+                downloaded_unsigned = True
 
             try:
                 with open(download_path_extended, "w", encoding="utf-8") as file:
@@ -213,7 +218,10 @@ class NPMRegistry(PackageRegistry):
                     error,
                 )
 
-        return downloaded
+        if downloaded_signed and not downloaded_unsigned:
+            logger.debug("Found signed provenance but no unsigned provenance.")
+
+        return downloaded_unsigned
 
     def get_latest_version(self, namespace: str | None, name: str) -> str | None:
         """Try to retrieve the latest version of a package from the registry.
