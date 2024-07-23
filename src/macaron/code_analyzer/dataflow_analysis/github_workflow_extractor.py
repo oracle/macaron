@@ -9,6 +9,7 @@ from macaron.code_analyzer.dataflow_analysis import bash_extractor, facts, githu
 from macaron.parsers import bashparser, github_workflow_model
 
 
+
 @dataclass(frozen=True)
 class StepContext:
     filesystem_scope: str
@@ -16,6 +17,74 @@ class StepContext:
     github_output_var_scope: str
     github_output_var_prefix: str
 
+def extract_yaml_spec_from_step(step: github_workflow_model.Step, step_context: StepContext) -> facts.YamlSpec:
+    fields: dict[facts.YamlFieldAccessPath, facts.Value | None] = {}
+    if "id" in step:
+        id = step["id"]
+        val = github_expr_extractor.extract_value_from_expr_string(id, step_context.github_output_var_scope)
+        fields[facts.YamlFieldAccessPath(("id",))] = val
+    if "if" in step:
+        if_clause = step["if"]
+        if isinstance(if_clause, str):
+            val = github_expr_extractor.extract_value_from_expr_string(if_clause, step_context.github_output_var_scope)
+        else:
+            val = None
+        fields[facts.YamlFieldAccessPath(("if",))] = val
+    if "name" in step:
+        name = step["name"]
+        val = github_expr_extractor.extract_value_from_expr_string(name, step_context.github_output_var_scope)
+        fields[facts.YamlFieldAccessPath(("name",))] = val
+    if "uses" in step:
+        uses = step["uses"]
+        val = github_expr_extractor.extract_value_from_expr_string(uses, step_context.github_output_var_scope)
+        fields[facts.YamlFieldAccessPath(("uses",))] = val
+    if "run" in step:
+        run = step["run"]
+        val = github_expr_extractor.extract_value_from_expr_string(run, step_context.github_output_var_scope)
+        fields[facts.YamlFieldAccessPath(("run",))] = val
+    if "working-directory" in step:
+        working_dir = step["working-directory"]
+        val = github_expr_extractor.extract_value_from_expr_string(working_dir, step_context.github_output_var_scope)
+        fields[facts.YamlFieldAccessPath(("working-directory",))] = val
+    if "shell" in step:
+        shell = step["shell"]
+        val = github_expr_extractor.extract_value_from_expr_string(shell, step_context.github_output_var_scope)
+        fields[facts.YamlFieldAccessPath(("shell",))] = val
+    if "with" in step:
+        with_spec = step["with"]
+        if isinstance(with_spec, dict):
+            for env_key, env_val in with_spec.items():
+                if isinstance(env_val, str):
+                    val = github_expr_extractor.extract_value_from_expr_string(env_val, step_context.github_output_var_scope)
+                    fields[facts.YamlFieldAccessPath(("with", env_key))] = val
+                else:
+                    # TODO
+                    pass
+        else:
+            # TODO
+            pass
+    if "env" in step:
+        env_spec = step["env"]
+        if isinstance(env_spec, dict):
+            for env_key, env_val in env_spec.items():
+                if isinstance(env_val, str):
+                    val = github_expr_extractor.extract_value_from_expr_string(env_val, step_context.github_output_var_scope)
+                    fields[facts.YamlFieldAccessPath(("env", env_key))] = val
+                else:
+                    # TODO
+                    pass
+        else:
+            # TODO
+            pass
+    if "continue-on-error" in step:
+        continue_on_error = step["continue-on-error"]
+        # TODO
+    if "timeout-minutes" in step:
+        timeout_minutes = step["timeout-minutes"]
+        # TODO
+
+    return facts.YamlSpec(fields)
+        
 
 def extract_from_run_step(
     step: github_workflow_model.RunStep, step_context: StepContext, id_creator: facts.UniqueIdCreator
@@ -27,7 +96,6 @@ def extract_from_run_step(
     id_str = id_str + "@" + step_context.base_id
     unique_id = id_creator.get_next_id(id_str)
 
-    # TODO generate block from shell script
     run_val = step["run"]
 
     parsed_bash = bashparser.parse_raw(run_val, "/home/nicallen/macaron/src/macaron/")
@@ -42,7 +110,9 @@ def extract_from_run_step(
 
     shell_block = bash_extractor.extract_from_simple_bash_stmts(parsed_bash["Stmts"], shell_context, id_creator)
 
-    return facts.OperationNode(id=unique_id, block=shell_block, parsed_obj=step)
+    yaml_spec = extract_yaml_spec_from_step(step, step_context)
+
+    return facts.OperationNode(id=unique_id, block=shell_block, operation_details=yaml_spec, parsed_obj=step)
 
 
 def extract_from_action_step(
@@ -176,7 +246,9 @@ def extract_from_action_step(
         block_id = id_creator.get_next_id(block_base_id_str)
         block = facts.StatementBlockNode(id=block_id, statements=[])
 
-    return facts.OperationNode(id=unique_id, block=block, parsed_obj=step)
+    yaml_spec = extract_yaml_spec_from_step(step, step_context)
+
+    return facts.OperationNode(id=unique_id, block=block, operation_details=yaml_spec, parsed_obj=step)
 
 
 def extract_from_step(
@@ -212,7 +284,7 @@ def extract_from_normal_job(
                 filesystem_scope=job_context.filesystem_scope,
                 base_id=job_context.base_id + ".steps." + str(step_index),
                 github_output_var_scope=job_context.github_output_var_scope,
-                github_output_var_prefix="steps." + step_id_or_index + ".outputs",
+                github_output_var_prefix="steps." + step_id_or_index + ".outputs.",
             )
 
             step_node = extract_from_step(step, step_context, id_creator)
@@ -226,7 +298,7 @@ def extract_from_normal_job(
         block_id = id_creator.get_next_id("block@" + job_context.base_id)
         block = facts.StatementBlockNode(id=block_id, statements=[])
 
-    return facts.OperationNode(id=job_unique_id, block=block, parsed_obj=job)
+    return facts.OperationNode(id=job_unique_id, block=block, operation_details=None, parsed_obj=job)
 
 
 def extract_from_reusable_workflow_call_job(
@@ -239,7 +311,7 @@ def extract_from_reusable_workflow_call_job(
     # TODO generate block from models of reusable workflows
     block_id = id_creator.get_next_id(job_id + "::block")
     block = facts.StatementBlockNode(id=block_id, statements=[])
-    return facts.OperationNode(id=unique_id, block=block, parsed_obj=job)
+    return facts.OperationNode(id=unique_id, block=block, operation_details=None, parsed_obj=job)
 
 
 def extract_from_job(
@@ -271,7 +343,7 @@ def extract_from_workflow(
     block_id = id_creator.get_next_id(id_str + "::block")
 
     job_unique_ids: dict[str, str] = {}
-    children: list[facts.Node] = []  # TODO populate
+    children: list[facts.Node] = []
 
     for job_id, job in workflow["jobs"].items():
         job_node = extract_from_job(job_id, job, id_creator)
@@ -296,4 +368,4 @@ def extract_from_workflow(
 
     block = facts.CFGBlockNode(id=block_id, children=children, control_flow_graph=control_flow_graph)
 
-    return facts.OperationNode(id=id, block=block, parsed_obj=workflow)
+    return facts.OperationNode(id=id, block=block, operation_details=None, parsed_obj=workflow)

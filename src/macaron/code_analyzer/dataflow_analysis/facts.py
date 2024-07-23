@@ -425,7 +425,7 @@ class OperationKind(Enum):
 
 def operation_kind_to_datalog_fact_string(operation_kind: OperationKind) -> str:
     if operation_kind == OperationKind.YamlSpecGitHubAction:
-        return "$YamlSpec($GitHubAction))"
+        return "$YamlSpec($GitHubAction)"
     elif operation_kind == OperationKind.ShellCommand:
         return "$ShellCommand"
     raise ValueError("unknown OperationKind")
@@ -433,17 +433,13 @@ def operation_kind_to_datalog_fact_string(operation_kind: OperationKind) -> str:
 
 class Operation(abc.ABC):
     @abc.abstractmethod
-    def get_id(self) -> str:
-        pass
-
-    @abc.abstractmethod
-    def convert_to_facts(self, db: FactDatabase) -> None:
+    def convert_to_facts(self, node_id: str, db: FactDatabase) -> None:
         pass
 
 
 @dataclass(frozen=True)
 class YamlFieldAccessPath:
-    fields: tuple[str]
+    fields: tuple[str, ...]
 
     def to_datalog_fact_string(self) -> str:
         if len(self.fields) == 0:
@@ -454,69 +450,50 @@ class YamlFieldAccessPath:
             result = "[" + enquote_datalog_string_literal(field) + ", " + "$SomeYamlFields(" + result + ")" + "]"
         return result
 
-
-def block_or_write_to_cfg_element_datalog_string(is_block: bool, element: str):
-    if is_block:
-        return "$CFGBlock(" + element + ")"
-    else:
-        return "$CFGWrite(" + element + ")"
-
-
 @dataclass(frozen=True)
 class SequentialBlockEntry(DatalogRelationRow):
     block: str
-    is_block: bool
     element: str
 
     def to_datalog_fact_csv_line(self) -> str:
-        return to_csv_string([self.block, block_or_write_to_cfg_element_datalog_string(self.is_block, self.element)])
+        return to_csv_string([self.block, self.element])
 
 
 @dataclass(frozen=True)
 class SequentialBlockEdge(DatalogRelationRow):
     block: str
-    from_is_block: bool
     from_element: str
-    to_is_block: bool
     to_element: str
 
     def to_datalog_fact_csv_line(self) -> str:
-        return to_csv_string(
-            [
-                self.block,
-                block_or_write_to_cfg_element_datalog_string(self.from_is_block, self.from_element),
-                block_or_write_to_cfg_element_datalog_string(self.to_is_block, self.to_element),
-            ]
-        )
+        return to_csv_string([self.block, self.from_element, self.to_element])
 
 
 @dataclass(frozen=True)
 class SchedulerBlockMember(DatalogRelationRow):
     block: str
-    is_block: bool
     element: str
 
     def to_datalog_fact_csv_line(self) -> str:
-        return to_csv_string([self.block, block_or_write_to_cfg_element_datalog_string(self.is_block, self.element)])
+        return to_csv_string([self.block, self.element])
 
 
 @dataclass(frozen=True)
 class SchedulerBlockDependency(DatalogRelationRow):
     block: str
-    is_block: bool
     element: str
-    preceding_is_block: bool
     preceding_element: str
 
     def to_datalog_fact_csv_line(self) -> str:
-        return to_csv_string(
-            [
-                self.block,
-                block_or_write_to_cfg_element_datalog_string(self.is_block, self.element),
-                block_or_write_to_cfg_element_datalog_string(self.preceding_is_block, self.preceding_element),
-            ]
-        )
+        return to_csv_string([self.block, self.element, self.preceding_element])
+    
+@dataclass(frozen=True)
+class StatementBlockMember(DatalogRelationRow):
+    block: str
+    element: str
 
+    def to_datalog_fact_csv_line(self) -> str:
+        return to_csv_string([self.block, self.element])
 
 @dataclass(frozen=True)
 class ScopeDirectlyInheritsFrom(DatalogRelationRow):
@@ -525,20 +502,28 @@ class ScopeDirectlyInheritsFrom(DatalogRelationRow):
 
     def to_datalog_fact_csv_line(self) -> str:
         return to_csv_string([self.from_scope, self.to_scope])
+    
 
+@dataclass(frozen=True)
+class OperationSubBlock(DatalogRelationRow):
+    block: str
+    sub_block: str
+
+    def to_datalog_fact_csv_line(self) -> str:
+        return to_csv_string([self.block, self.sub_block])
 
 @dataclass(frozen=True)
 class OperationType(DatalogRelationRow):
-    operation_id: str
+    block: str
     operation_type: OperationKind
 
     def to_datalog_fact_csv_line(self) -> str:
-        return to_csv_string([self.operation_id, operation_kind_to_datalog_fact_string(self.operation_type)])
+        return to_csv_string([self.block, operation_kind_to_datalog_fact_string(self.operation_type)])
 
 
 @dataclass(frozen=True)
 class OperationShellCommandArg(DatalogRelationRow):
-    operation_id: str
+    block: str
     arg_index: int
     value: Value | None
 
@@ -548,12 +533,12 @@ class OperationShellCommandArg(DatalogRelationRow):
             val_str = "$SomeValue(" + self.value.to_datalog_fact_string() + ")"
         else:
             val_str = "$NoValue"
-        return to_csv_string([self.operation_id, str(self.arg_index), val_str])
+        return to_csv_string([self.block, str(self.arg_index), val_str])
 
 
 @dataclass(frozen=True)
 class OperationYamlSpecField(DatalogRelationRow):
-    operation_id: str
+    block: str
     field: YamlFieldAccessPath
     value: Value | None
 
@@ -563,16 +548,7 @@ class OperationYamlSpecField(DatalogRelationRow):
             val_str = "$SomeValue(" + self.value.to_datalog_fact_string() + ")"
         else:
             val_str = "$NoValue"
-        return to_csv_string([self.operation_id, self.field.to_datalog_fact_string(), val_str])
-
-
-@dataclass(frozen=True)
-class BlockOperation(DatalogRelationRow):
-    block_id: str
-    operation_id: str
-
-    def to_datalog_fact_csv_line(self) -> str:
-        return to_csv_string([self.block_id, self.operation_id])
+        return to_csv_string([self.block, self.field.to_datalog_fact_string(), val_str])
 
 
 @dataclass(frozen=True)
@@ -597,32 +573,38 @@ class FactDatabase:
     write: set[Write]
     write_for_each: set[WriteForEach]
     scope_directly_inherits_from: set[ScopeDirectlyInheritsFrom]
-    operation: set[OperationType]
-    operation_shell_command_arg: set[OperationShellCommandArg]
-    operation_yaml_spec_field: set[OperationYamlSpecField]
     sequential_block: set[BlockId]
     sequential_block_entry: set[SequentialBlockEntry]
     sequential_block_edge: set[SequentialBlockEdge]
     scheduler_block: set[BlockId]
     scheduler_block_member: set[SchedulerBlockMember]
     scheduler_block_dependency: set[SchedulerBlockDependency]
-    block_operation: set[BlockOperation]
+    statement_block: set[BlockId]
+    statement_block_member: set[StatementBlockMember]
+    operation_block: set[BlockId]
+    operation_sub_block: set[OperationSubBlock]
+    operation_type: set[OperationType]
+    operation_shell_command_arg: set[OperationShellCommandArg]
+    operation_yaml_spec_field: set[OperationYamlSpecField]
     top_level_block: set[BlockId]
 
     def __init__(self):
         self.write = set()
         self.write_for_each = set()
         self.scope_directly_inherits_from = set()
-        self.operation = set()
-        self.operation_shell_command_arg = set()
-        self.operation_yaml_spec_field = set()
         self.sequential_block = set()
         self.sequential_block_entry = set()
         self.sequential_block_edge = set()
         self.scheduler_block = set()
         self.scheduler_block_member = set()
         self.scheduler_block_dependency = set()
-        self.block_operation = set()
+        self.statement_block = set()
+        self.statement_block_member = set()
+        self.operation_block = set()
+        self.operation_sub_block = set()
+        self.operation_type = set()
+        self.operation_shell_command_arg = set()
+        self.operation_yaml_spec_field = set()
         self.top_level_block = set()
 
     def write_to_files(self, dir: str):
@@ -630,133 +612,80 @@ class FactDatabase:
         write_relation_to_file(os.path.join(dir, "Write.facts"), self.write)
         write_relation_to_file(os.path.join(dir, "WriteForEach.facts"), self.write_for_each)
         write_relation_to_file(os.path.join(dir, "ScopeDirectlyInheritsFrom.facts"), self.scope_directly_inherits_from)
-        write_relation_to_file(os.path.join(dir, "Operation.facts"), self.operation)
-        write_relation_to_file(os.path.join(dir, "OperationShellCommandArg.facts"), self.operation_shell_command_arg)
-        write_relation_to_file(os.path.join(dir, "OperationYamlSpecField.facts"), self.operation_yaml_spec_field)
         write_relation_to_file(os.path.join(dir, "SequentialBlock.facts"), self.sequential_block)
         write_relation_to_file(os.path.join(dir, "SequentialBlockEntry.facts"), self.sequential_block_entry)
         write_relation_to_file(os.path.join(dir, "SequentialBlockEdge.facts"), self.sequential_block_edge)
         write_relation_to_file(os.path.join(dir, "SchedulerBlock.facts"), self.scheduler_block)
         write_relation_to_file(os.path.join(dir, "SchedulerBlockMember.facts"), self.scheduler_block_member)
         write_relation_to_file(os.path.join(dir, "SchedulerBlockDependency.facts"), self.scheduler_block_dependency)
-        write_relation_to_file(os.path.join(dir, "BlockOperation.facts"), self.block_operation)
+        write_relation_to_file(os.path.join(dir, "StatementBlock.facts"), self.statement_block)
+        write_relation_to_file(os.path.join(dir, "StatementBlockMember.facts"), self.statement_block_member)
+        write_relation_to_file(os.path.join(dir, "OperationBlock.facts"), self.operation_block)
+        write_relation_to_file(os.path.join(dir, "OperationSubBlock.facts"), self.operation_sub_block)
+        write_relation_to_file(os.path.join(dir, "OperationType.facts"), self.operation_type)
+        write_relation_to_file(os.path.join(dir, "OperationShellCommandArg.facts"), self.operation_shell_command_arg)
+        write_relation_to_file(os.path.join(dir, "OperationYamlSpecField.facts"), self.operation_yaml_spec_field)
         write_relation_to_file(os.path.join(dir, "TopLevelBlock.facts"), self.top_level_block)
 
     def get_stats(self) -> dict[str, int]:
         result: dict[str, int] = {}
         result["write"] = len(self.write)
-        result["writeForEach"] = len(self.write_for_each)
-        result["scopeDirectlyInheritsFrom"] = len(self.scope_directly_inherits_from)
-        result["operation"] = len(self.operation)
-        result["operationShellCommandArg"] = len(self.operation_shell_command_arg)
-        result["operationYamlSpecField"] = len(self.operation_yaml_spec_field)
-        result["sequentialBlock"] = len(self.sequential_block)
-        result["sequentialBlockEntry"] = len(self.sequential_block_entry)
-        result["sequentialBlockEdge"] = len(self.sequential_block_edge)
-        result["schedulerBlock"] = len(self.scheduler_block)
-        result["schedulerBlockMember"] = len(self.scheduler_block_member)
-        result["schedulerBlockDependency"] = len(self.scheduler_block_dependency)
-        result["blockOperation"] = len(self.block_operation)
-        result["topLevelBlock"] = len(self.top_level_block)
+        result["write_for_each"] = len(self.write_for_each)
+        result["scope_directly_inherits_from"] = len(self.scope_directly_inherits_from)
+        result["sequential_block"] = len(self.sequential_block)
+        result["sequential_block_entry"] = len(self.sequential_block_entry)
+        result["sequential_block_edge"] = len(self.sequential_block_edge)
+        result["scheduler_block"] = len(self.scheduler_block)
+        result["scheduler_block_member"] = len(self.scheduler_block_member)
+        result["scheduler_block_dependency"] = len(self.scheduler_block_dependency)
+        result["statement_block"] = len(self.statement_block)
+        result["statement_block_member"] = len(self.statement_block_member)
+        result["operation_block"] = len(self.operation_block)
+        result["operation_sub_block"] = len(self.operation_sub_block)
+        result["operation_type"] = len(self.operation_type)
+        result["operation_shell_command_arg"] = len(self.operation_shell_command_arg)
+        result["operation_yaml_spec_field"] = len(self.operation_yaml_spec_field)
+        result["top_level_block"] = len(self.top_level_block)
         return result
 
 
 @dataclass(frozen=True)
 class YamlSpec(Operation):
-    id: str
     fields: dict[YamlFieldAccessPath, Value | None]
 
-    def get_id(self) -> str:
-        return self.id
-
-    def convert_to_facts(self, db: FactDatabase) -> None:
-        db.operation.add(OperationType(operation_id=self.id, operation_type=OperationKind.YamlSpecGitHubAction))
+    def convert_to_facts(self, node_id: str, db: FactDatabase) -> None:
+        db.operation_type.add(OperationType(block=node_id, operation_type=OperationKind.YamlSpecGitHubAction))
         for key, val in self.fields.items():
-            db.operation_yaml_spec_field.add(OperationYamlSpecField(operation_id=self.id, field=key, value=val))
+            db.operation_yaml_spec_field.add(OperationYamlSpecField(block=node_id, field=key, value=val))
 
 
 @dataclass(frozen=True)
 class ShellCommand(Operation):
-    id: str
     args: tuple[Value | None]
 
-    def get_id(self) -> str:
-        return self.id
-
-    def convert_to_facts(self, db: FactDatabase) -> None:
-        db.operation.add(OperationType(operation_id=self.id, operation_type=OperationKind.ShellCommand))
+    def convert_to_facts(self, node_id: str, db: FactDatabase) -> None:
+        db.operation_type.add(OperationType(block=node_id, operation_type=OperationKind.ShellCommand))
 
         for i, arg in enumerate(self.args):
-            db.operation_shell_command_arg.add(OperationShellCommandArg(operation_id=self.id, arg_index=i, value=arg))
+            db.operation_shell_command_arg.add(OperationShellCommandArg(block=node_id, arg_index=i, value=arg))
 
-
-# def getIsBlockAndId(cfgElement: SimpleBlock | Write | WriteForEach) -> tuple[bool, str]:
-#     if isinstance(cfgElement, SimpleBlock):
-#         return True, cfgElement.id
-#     else:
-#         return False, cfgElement.id
 
 Statement = Union["Write", "WriteForEach"]
-
-# @dataclass(frozen=True)
-# class StatementBlock:
-#     id: str
-#     stmts: list[Statement]
-
-# Block = Union["SimpleBlock", "SchedulerBlock", "SequentialBlock", "Write", "WriteForEach"]
-
-# @dataclass(frozen=True)
-# class SimpleBlock:
-#     id: str
-#     sequence: list[Block]
-#     operation: Operation | None
-
-#     def convertToFacts(self, db: FactDatabase) -> None:
-#         db.sequentialBlock.add(BlockId(self.id))
-
-#         if self.operation is not None:
-#             db.blockOperation.add(BlockOperation(blockId=self.id, operationId=self.operation.getId()))
-#             self.operation.convertToFacts(db)
-
-#         if len(self.sequence) != 0:
-#             isBlock, element = getIsBlockAndId(self.sequence[0])
-#             db.sequentialBlockEntry.add(SequentialBlockEntry(block=self.id, isBlock=isBlock, element=element))
-
-#             for i in range(1, len(self.sequence)):
-#                 fromIsBlock, fromElement = getIsBlockAndId(self.sequence[i-1])
-#                 toIsBlock, toElement = getIsBlockAndId(self.sequence[i])
-#                 db.sequentialBlockEdge.add(SequentialBlockEdge(block=self.id, fromIsBlock=fromIsBlock, fromElement=fromElement, toIsBlock=toIsBlock, toElement=toElement))
-
-#             for elem in self.sequence:
-#                 if isinstance(elem, SimpleBlock):
-#                     elem.convertToFacts(db)
-#                 else:
-#                     if isinstance(elem, Write):
-#                         db.write.add(elem)
-#                     elif isinstance(elem, WriteForEach):
-#                         db.writeForEach.add(elem)
-
-# Possible mapping?
-# Workflow <--> SchedulerBlock
-#   --> NormalJob <--> SequentialBlock
-#     --> Step = RunStep | ActionStep
-#       | RunStep <--> SequentialBlock
-#         --> Bash Statement in run str <--> Invocation --> SequentialBlock
-#           --> <implicit semantics> <--> StatementBlock
-#             --> <implicit semantics <--> WriteStmt | WriteForEach
-#           --> Tokenised Bash Statement <--> BlockOperation + OperationShellCommandArg
-#       | ActionStep <--> Invocation --> SequentialBlock
-#         --> <implicit semantics <--> StatementBlock
-#           --> <implicit semantics> <--> WriteStmt | WriteForEach
-#         --> Specification/Fields <--> BlockOperation + OperationYamlSpecField
-#   --> ReusableWorkflowCallJob <--> Invocation --> SchedulerBlock/SequentialBlock
-#     --> Specification/Fields <--> BlockOperation + OperationYamlSpecField
-
 
 Node = Union["BlockNode", "OperationNode"]
 
 BlockNode = Union["CFGBlockNode", "StatementBlockNode"]
 
+ControlFlowGraph = Union["SequenceCFG", "SchedulerCFG"]
+
+@dataclass(frozen=True)
+class SequenceCFG:
+    entry: str
+    flow_graph: dict[str, list[str]]
+
+@dataclass(frozen=True)
+class SchedulerCFG:
+    dependency_graph: dict[str, list[str]]
 
 @dataclass(frozen=True)
 class CFGBlockNode:
@@ -764,33 +693,62 @@ class CFGBlockNode:
     children: list[Node]
     control_flow_graph: ControlFlowGraph
 
+    def convert_to_facts(self, db: FactDatabase) -> None:
+        cfg = self.control_flow_graph
+        if isinstance(cfg, SequenceCFG):
+            db.sequential_block.add(BlockId(self.id))
+            db.sequential_block_entry.add(SequentialBlockEntry(block=self.id, element=cfg.entry))
+
+            for key, val_list in cfg.flow_graph.items():
+                for val in val_list:
+                    db.sequential_block_edge.add(SequentialBlockEdge(block=self.id, from_element=key, to_element=val))
+
+        elif isinstance(cfg, SchedulerCFG):
+            db.scheduler_block.add(BlockId(self.id))
+            for child in self.children:
+                db.scheduler_block_member.add(SchedulerBlockMember(block=self.id, element=child.id))
+
+            for key, val_list in cfg.dependency_graph.items():
+                for val in val_list:
+                    db.scheduler_block_dependency.add(SchedulerBlockDependency(block=self.id, element=key, preceding_element=val))
+        else:
+            raise ValueError("unknown cfg type")
+
+        for child in self.children:
+            child.convert_to_facts(db)
+
 
 @dataclass(frozen=True)
 class StatementBlockNode:
     id: str
     statements: list[Statement]
 
+    def convert_to_facts(self, db: FactDatabase) -> None:
+        db.statement_block.add(BlockId(self.id))
+        for statement in self.statements:
+            db.statement_block_member.add(StatementBlockMember(block=self.id, element=statement.id))
+            
+            if isinstance(statement, Write):
+                db.write.add(statement)
+            elif isinstance(statement, WriteForEach):
+                db.write_for_each.add(statement)
+
 
 @dataclass(frozen=True)
 class OperationNode:
     id: str
     block: BlockNode
+    operation_details: Operation | None
     parsed_obj: Any  # TODO
 
+    def convert_to_facts(self, db: FactDatabase) -> None:
+        db.operation_block.add(BlockId(self.id))
+        db.operation_sub_block.add(OperationSubBlock(block=self.id, sub_block=self.block.id))
 
-ControlFlowGraph = Union["SequenceCFG", "SchedulerCFG"]
+        if self.operation_details is not None:
+            self.operation_details.convert_to_facts(self.id, db)
 
-
-@dataclass(frozen=True)
-class SequenceCFG:
-    entry: str
-    flow_graph: dict[str, list[str]]
-
-
-@dataclass(frozen=True)
-class SchedulerCFG:
-    dependency_graph: dict[str, list[str]]
-
+        self.block.convert_to_facts(db)
 
 def create_cfg_block_from_sequence(unique_block_id: str, sequence: list[Node]) -> CFGBlockNode:
     if len(sequence) == 0:

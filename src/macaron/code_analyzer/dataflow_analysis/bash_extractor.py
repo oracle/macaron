@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from macaron.code_analyzer.dataflow_analysis import facts
 from macaron.parsers import bashparser_model
+from pprint import pformat
 
 
 @dataclass(frozen=True)
@@ -72,11 +73,9 @@ def extract_from_simple_bash_stmts(
 
                 fact_stmt_list: list[facts.Statement] = []
 
-                print("COMMAND")
 
                 # TODO revise mvn identification based on Macaron's existing rules
                 if is_literal_word(args[0], "mvn"):
-                    print("MVN")
                     is_build = False
                     for arg in args:
                         if (
@@ -89,7 +88,6 @@ def extract_from_simple_bash_stmts(
                             break
 
                     if is_build:
-                        print("IS BUILD")
                         write_id = id_creator.get_next_id(write_base_id_str)
                         coll = facts.UnaryLocationReadOp(
                             op=facts.UnaryLocationReadOperator.AnyFileUnderDirectory,
@@ -106,10 +104,11 @@ def extract_from_simple_bash_stmts(
 
                 for r in stmt.get("Redirs", []):
                     if (
-                        r["Op"] == bashparser_model.RedirOperators.AppOut
+                        r["Op"] == bashparser_model.RedirOperators.AppOut.value
                         and "Word" in r
                         and len(r["Word"]["Parts"]) == 1
                     ):
+
                         env_var = parse_env_var_read_word(r["Word"], True)
                         if env_var == "GITHUB_OUTPUT":
                             if len(args) == 2 and is_literal_word(args[0], "echo"):
@@ -141,7 +140,7 @@ def extract_from_simple_bash_stmts(
                 )
 
                 op_node = facts.OperationNode(
-                    id=id_creator.get_next_id(shell_cmd_base_id_str), block=stmt_node, parsed_obj=None
+                    id=id_creator.get_next_id(shell_cmd_base_id_str), block=stmt_node, operation_details=None, parsed_obj=None
                 )  # TODO parsed_obj
 
                 sequence.append(op_node)
