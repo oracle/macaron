@@ -9,6 +9,7 @@ from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.table_definitions import CheckFacts
+from macaron.errors import MacaronError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
@@ -25,6 +26,10 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+class WitnessProvenanceException(MacaronError):
+    """When there is an error while processing a Witness provenance."""
 
 
 class WitnessProvenanceAvailableFacts(CheckFacts):
@@ -66,6 +71,11 @@ def verify_artifact_assets(
     -------
     bool
         True if verification succeeds and False otherwise.
+
+    Raises
+    ------
+    WitnessProvenanceException
+        If a subject is not a file attested by the Witness product attestor.
     """
     # A look-up table to verify:
     # 1. if the name of the artifact appears in any subject of the witness provenance, then
@@ -73,6 +83,11 @@ def verify_artifact_assets(
     look_up: dict[str, dict[str, InTotoV01Subject]] = {}
 
     for subject in subjects:
+        if not subject["name"].startswith("https://witness.dev/attestations/product/v0.1/file:"):
+            raise WitnessProvenanceException(
+                f"{subject['name']} is not a file attested by the Witness product attestor."
+            )
+
         # Get the artifact name, which should be the last part of the artifact subject value.
         _, _, artifact_filename = subject["name"].rpartition("/")
         if artifact_filename not in look_up:
@@ -171,7 +186,16 @@ class ProvenanceWitnessL1Check(BaseCheck):
                         )
                         subjects = extract_build_artifacts_from_witness_subjects(provenance.payload)
 
-                        if not verify_artifact_assets(artifact_assets, subjects):
+                        try:
+                            verify_status = verify_artifact_assets(artifact_assets, subjects)
+                        except WitnessProvenanceException as err:
+                            logger.error(err)
+                            return CheckResultData(
+                                result_tables=result_tables,
+                                result_type=CheckResultType.UNKNOWN,
+                            )
+
+                        if not verify_status:
                             return CheckResultData(
                                 result_tables=result_tables,
                                 result_type=CheckResultType.FAILED,
