@@ -25,10 +25,13 @@
 .input SchedulerBlock(IO=file, filename="SchedulerBlock.facts", rfc4180=true)
 .input SchedulerBlockMember(IO=file, filename="SchedulerBlockMember.facts", rfc4180=true)
 .input SchedulerBlockDependency(IO=file, filename="SchedulerBlockDependency.facts", rfc4180=true)
+.input StatementBlock(IO=file, filename="StatementBlock.facts", rfc4180=true)
+.input StatementBlockMember(IO=file, filename="StatementBlockMember.facts", rfc4180=true)
 .input TopLevelBlock(IO=file, filename="TopLevelBlock.facts", rfc4180=true)
-.input Operation(IO=file, filename="Operation.facts", rfc4180=true)
+.input OperationBlock(IO=file, filename="OperationBlock.facts", rfc4180=true)
+.input OperationSubBlock(IO=file, filename="OperationSubBlock.facts", rfc4180=true)
+.input OperationType(IO=file, filename="OperationType.facts", rfc4180=true)
 .input OperationShellCommandArg(IO=file, filename="OperationShellCommandArg.facts", rfc4180=true)
 .input OperationYamlSpecField(IO=file, filename="OperationYamlSpecField.facts", rfc4180=true)
-.input BlockOperation(IO=file, filename="BlockOperation.facts", rfc4180=true)
 
 #endif

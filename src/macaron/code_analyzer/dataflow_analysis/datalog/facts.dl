@@ -13,7 +13,6 @@
 .type WriteStmt <: symbol
 .type ScopeId <: symbol
 .type Block <: symbol
-.type OperationId <: symbol
 .type DataSourceId <: symbol
 
 // Representation of a write/read location, consisting of a representation of the kind
@@ -42,7 +41,7 @@
 
     // A representation of arbitrary data, with no information on its content,
     // only the identity of where/when it originated.
-    | ArbitraryNewData { at: WriteStmt }
+    | ArbitraryNewData { at: DataSourceId }
 
     // A unary operator on another value, semantics vary by operator used.
     | UnaryStringOp { operator: UnaryStringOperator, operand: Value }
@@ -76,14 +75,10 @@
 
     // Represents any file path that is under/within a given directory.
     | AnyFileUnderDirectory { }
-
-// A node of the control flow graph, either a write or a block.
-.type CFGElement = CFGWrite { writeStmt: WriteStmt }
-                | CFGBlock { block: Block }
-
+    
 .type YamlSpecType = GitHubAction { }
 
-.type OperationType = 
+.type OperationKind = 
     YamlSpec { type: YamlSpecType }
     | ShellCommand { }
 
@@ -110,46 +105,59 @@
 .decl ScopeDirectlyInheritsFrom(fromScope:ScopeId, toScope:ScopeId)
 
 
-.decl Operation(operation:OperationId, operationType:OperationType)
-
-// Value representation of a shell command argument, if representable, otherwise NoValue
-.decl OperationShellCommandArg(operation:OperationId, index:number, value:OptionalValue)
-
-// Value representation of a yaml field value, if representable, otherwise NoValue
-.decl OperationYamlSpecField(operation:OperationId, accessPath:YamlFieldAccessPath, value:OptionalValue)
-
-
 //
 // Control flow representation
 //
-// Control flow is represented via two kinds of blocks, sequential blocks, which specify a
-// control flow graph of blocks/writes, and scheduler blocks, which specify dependency constraints
-// between a collection of blocks/writes (such that all member blocks/writes are executed once 
-// each in some satisfying order). A top-level block represents the entire program.
+// Control flow is represented via four kinds of blocks, operation blocks, which represent some
+// high-level operation, and contain within them a single sub block, sequential blocks, which specify a
+// control flow graph of blocks, scheduler blocks, which specify dependency constraints
+// between a collection of blocks (such that all member blocks are executed once 
+// each in some satisfying order), and statement blocks, which contain a set of statements (e.g. writes),
+// that are executed simultaneously when the block executes. A top-level block represents the entire program.
 //
 
 // Block is a sequential block.
 .decl SequentialBlock(block:Block)
 
 // Entry node of sequential block.
-.decl SequentialBlockEntry(block:Block, element:CFGElement)
+.decl SequentialBlockEntry(block:Block, element:Block)
 
 // Successor control flow edge between elements of a sequential block.
-.decl SequentialBlockEdge(block:Block, element:CFGElement, nextElement:CFGElement)
+.decl SequentialBlockEdge(block:Block, element:Block, nextElement:Block)
 
 
 // Block is a scheduler block.
 .decl SchedulerBlock(block:Block)
 
 // Member of scheduler block.
-.decl SchedulerBlockMember(block:Block, element:CFGElement)
+.decl SchedulerBlockMember(block:Block, element:Block)
 
 // Dependency relation between members of a scheduler block, such that the preceding element
 // must be executed before element is run.
-.decl SchedulerBlockDependency(block:Block, element:CFGElement, precedingElement:CFGElement)
+.decl SchedulerBlockDependency(block:Block, element:Block, precedingElement:Block)
 
-// A block can optionally be associated with an operation
-.decl BlockOperation(block:Block, operation:OperationId)
+
+// Block is an operation block
+.decl OperationBlock(block:Block)
+
+// Operation block contains a sub block
+.decl OperationSubBlock(block:Block, subBlock:Block)
+
+// Operation block type
+.decl OperationType(block:Block, operationType:OperationKind)
+
+// Value representation of a shell command argument, if representable, otherwise NoValue
+.decl OperationShellCommandArg(block:Block, index:number, value:OptionalValue)
+
+// Value representation of a yaml field value, if representable, otherwise NoValue
+.decl OperationYamlSpecField(block:Block, accessPath:YamlFieldAccessPath, value:OptionalValue)
+
+
+// Block is a statement block
+.decl StatementBlock(block:Block)
+
+// Statement block contains statement
+.decl StatementBlockMember(block:Block, writeStmt:WriteStmt)
 
 // A single top-level block represents the entire program.
 .decl TopLevelBlock(block:Block)

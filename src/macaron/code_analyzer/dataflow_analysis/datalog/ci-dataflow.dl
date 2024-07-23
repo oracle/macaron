@@ -22,9 +22,9 @@
 .output OperationShellCommandFullyResolvedArg(IO=stdout)
 .output OperationYamlSpecFullyResolvedField(IO=stdout)
 
-.output RelevantValue(IO=sqlite, filename="facts.db")
-.output RelevantLoc(IO=sqlite, filename="facts.db")
-.output RelevantValue(IO=file, filename="RelevantValue.facts", rfc4180=true)
-.output RelevantLoc(IO=file, filename="RelevantLoc.facts", rfc4180=true)
+// .output RelevantValue(IO=sqlite, filename="facts.db")
+// .output RelevantLoc(IO=sqlite, filename="facts.db")
+// .output RelevantValue(IO=file, filename="RelevantValue.facts", rfc4180=true)
+// .output RelevantLoc(IO=file, filename="RelevantLoc.facts", rfc4180=true)
 
 #endif
