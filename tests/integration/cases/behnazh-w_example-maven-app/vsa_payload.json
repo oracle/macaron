@@ -1,33 +1,33 @@
 {
-  "_type": "https://in-toto.io/Statement/v1",
-  "subject": [
-    {
-      "uri": "pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar",
-      "digest": {
-        "sha256": "19986144a60f3d16d1e8d96bc1807c42bb7c91068ab3018b85033f62c2845921"
-      }
-    },
-    {
-      "uri": "pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar",
-      "digest": {
-        "sha256": "759a3c7f76ef2c467cedb814ed3fd38cb9125126664f66f9a62d1cfa0e54b6b7"
-      }
+    "_type": "https://in-toto.io/Statement/v1",
+    "subject": [
+        {
+            "uri": "pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar",
+            "digest": {
+                "sha256": "19986144a60f3d16d1e8d96bc1807c42bb7c91068ab3018b85033f62c2845921"
+            }
+        },
+        {
+            "uri": "pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar",
+            "digest": {
+                "sha256": "759a3c7f76ef2c467cedb814ed3fd38cb9125126664f66f9a62d1cfa0e54b6b7"
+            }
+        }
+    ],
+    "predicateType": "https://slsa.dev/verification_summary/v1",
+    "predicate": {
+        "verifier": {
+            "id": "https://github.com/oracle/macaron",
+            "version": {
+                "macaron": "0.11.0"
+            }
+        },
+        "timeVerified": "2024-07-23T05:34:41.564563+00:00",
+        "resourceUri": "",
+        "policy": {
+            "content": "/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */\n/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */\n\n#include \"prelude.dl\"\n\nPolicy(\"example_maven_app_policy\", component_id, \"Policy for github Maven project with Witness and GitHub provenances\") :-\n    check_passed(component_id, \"mcn_build_service_1\"),\n    check_passed(component_id, \"mcn_build_script_1\"),\n    check_passed(component_id, \"mcn_provenance_available_1\"),\n    check_passed(component_id, \"mcn_provenance_expectation_1\"),\n    // We expect mcn_provenance_witness_level_one_1 to fail because at the moment\n    // it tries to discover the witness provenance even when the provenance is provided as input.\n    // TODO: address this policy once the issue with mcn_provenance_witness_level_one_1 is addressed.\n    check_failed(component_id, \"mcn_provenance_witness_level_one_1\").\n\napply_policy_to(\"example_maven_app_policy\", component_id) :-\n    is_repo(\n      _,  // repo_id\n      \"github.com/behnazh-w/example-maven-app\",  // http URL to the repo but without the \"http://\"\n      component_id\n    ).\n"
+        },
+        "verificationResult": "PASSED",
+        "verifiedLevels": []
     }
-  ],
-  "predicateType": "https://slsa.dev/verification_summary/v1",
-  "predicate": {
-    "verifier": {
-      "id": "https://github.com/oracle/macaron",
-      "version": {
-        "macaron": "0.9.0"
-      }
-    },
-    "timeVerified": "2024-05-07T05:32:42.105941+00:00",
-    "resourceUri": "",
-    "policy": {
-      "content": "/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */\n/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */\n\n#include \"prelude.dl\"\n\nPolicy(\"example_maven_app_policy\", component_id, \"Policy for github Maven project with Witness and GitHub provenances\") :-\n    check_passed(component_id, \"mcn_build_service_1\"),\n    check_passed(component_id, \"mcn_build_script_1\"),\n    check_passed(component_id, \"mcn_provenance_available_1\"),\n    check_passed(component_id, \"mcn_provenance_expectation_1\").\n\napply_policy_to(\"example_maven_app_policy\", component_id) :-\n    is_repo(\n      _,  // repo_id\n      \"github.com/behnazh-w/example-maven-app\",  // http URL to the repo but without the \"http://\"\n      component_id\n    ).\n"
-    },
-    "verificationResult": "PASSED",
-    "verifiedLevels": []
-  }
 }

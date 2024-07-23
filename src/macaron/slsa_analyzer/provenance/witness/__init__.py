@@ -82,21 +82,6 @@ def is_witness_provenance_payload(
     return isinstance(payload, InTotoV01Payload) and payload.statement["predicateType"] in predicate_types
 
 
-class WitnessProvenanceSubject(NamedTuple):
-    """A helper class to store elements of the ``subject`` list in the provenances."""
-
-    #: The ``"name"`` field of each ``subject``.
-    subject_name: str
-    #: The SHA256 digest of the corresponding asset to the subject.
-    sha256_digest: str
-
-    @property
-    def artifact_name(self) -> str:
-        """Get the artifact name, which should be the last part of the subject."""
-        _, _, artifact_name = self.subject_name.rpartition("/")
-        return artifact_name
-
-
 def extract_repo_url(witness_payload: InTotoPayload) -> str | None:
     """Extract the repo URL from the witness provenance payload.
 
