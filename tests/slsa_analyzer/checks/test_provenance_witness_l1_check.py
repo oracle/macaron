@@ -143,11 +143,28 @@ def test_verify_artifact_assets(
                     jfrog_maven_registry=JFrogMavenRegistry(),
                 ),
             ],
-            id="An asset that fails verification lead to failed verification as a whole.",
+            id="An asset that is not attested will lead to a failed verification.",
+        ),
+        pytest.param(
+            [
+                JFrogMavenAsset(
+                    name="boo-1.0.0.jar",
+                    group_id="io.oracle.macaron",
+                    artifact_id="boo",
+                    version="1.0.0",
+                    metadata=JFrogMavenAssetMetadata(
+                        size_in_bytes=50,
+                        sha256_digest="aaa123",
+                        download_uri="https://artifactory.com/repo/io/oracle/macaron/boo/1.0.0/target/boo-1.0.0.jar",
+                    ),
+                    jfrog_maven_registry=JFrogMavenRegistry(),
+                ),
+            ],
+            id="An asset with mismatched sha256_digest will lead to a failed verification.",
         ),
     ],
 )
-def test_verify_invalid_artifact_assets(
+def test_failed_verify_artifact_assets(
     artifact_assets: list[JFrogMavenAsset],
     subjects: list[InTotoV01Subject],
 ) -> None:
