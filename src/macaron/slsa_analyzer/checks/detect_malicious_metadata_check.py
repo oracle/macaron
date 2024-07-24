@@ -24,7 +24,7 @@ from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
-from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
+from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset, PyPIRegistry
 from macaron.slsa_analyzer.registry import registry
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -209,14 +209,14 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         return False
 
     def run_heuristics(
-        self, pypi_registry: PyPIRegistry
+        self, pypi_package_json: PyPIPackageJsonAsset
     ) -> tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]:
         """Run the analysis heuristics.
 
         Parameters
         ----------
-        pypi_registry: PyPIRegistry
-            The PyPI API client object used to interact with the PyPI API.
+        pypi_package_json: PyPIPackageJsonAsset
+            The PyPI package JSON asset object.
 
         Returns
         -------
@@ -236,7 +236,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                     results[analyzer.heuristic] = HeuristicResult.SKIP
                     continue
 
-            result, result_info = analyzer.analyze(pypi_registry)
+            result, result_info = analyzer.analyze(pypi_package_json)
             if analyzer.heuristic:
                 results[analyzer.heuristic] = result
                 detail_info.update(result_info)
@@ -256,34 +256,43 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             The result of the check.
         """
         parsed_purl = PackageURL.from_string(ctx.component.purl)
-        if parsed_purl.type != "pypi":
-            return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
-        package = parsed_purl.name
-        result_tables: list[CheckFacts] = []
 
-        pypi_registry: PyPIRegistry = PyPIRegistry()
-        pypi_registry.load_defaults()
-        pypi_registry.download_package_json(package)
-        result, detail_info = self.run_heuristics(pypi_registry)
-        result_combo: tuple = tuple(result.values())
-        confidence: float | None = SUSPICIOUS_COMBO.get(result_combo, None)
-        result_type = CheckResultType.FAILED
-        if confidence is None:
-            confidence = Confidence.HIGH
-            result_type = CheckResultType.PASSED
+        match (parsed_purl.type):
+            case "pypi":
+                result_tables: list[CheckFacts] = []
+                pypi_registry: PyPIRegistry = PyPIRegistry()
+                pypi_registry.load_defaults()
 
-        result_tables.append(
-            MaliciousMetadataFacts(
-                result=result,
-                detail_information=detail_info,
-                confidence=confidence,
-            )
-        )
+                # Create an AssetLocator object for the PyPI package JSON object.
+                pypi_package_json = PyPIPackageJsonAsset(
+                    component=ctx.component, pypi_registry=pypi_registry, size_in_bytes=0, package_json={}
+                )
 
-        return CheckResultData(
-            result_tables=result_tables,
-            result_type=result_type,
-        )
+                # Download the PyPI package JSON.
+                if pypi_package_json.download():
+                    result, detail_info = self.run_heuristics(pypi_package_json)
+                    result_combo: tuple = tuple(result.values())
+                    confidence: float | None = SUSPICIOUS_COMBO.get(result_combo, None)
+                    result_type = CheckResultType.FAILED
+                    if confidence is None:
+                        confidence = Confidence.HIGH
+                        result_type = CheckResultType.PASSED
+
+                    result_tables.append(
+                        MaliciousMetadataFacts(
+                            result=result,
+                            detail_information=detail_info,
+                            confidence=confidence,
+                        )
+                    )
+
+                    return CheckResultData(
+                        result_tables=result_tables,
+                        result_type=result_type,
+                    )
+
+        # Return UNKNOWN result for unsupported ecosystems.
+        return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
 
 registry.register(DetectMaliciousMetadataCheck())

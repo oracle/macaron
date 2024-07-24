@@ -3,7 +3,7 @@
 
 """Fixtures for tests."""
 from pathlib import Path
-from typing import NoReturn
+from typing import Any, NoReturn
 
 import pytest
 
@@ -396,11 +396,20 @@ def get_git_services(
 class MockAnalyzeContext(AnalyzeContext):
     """This class initializes a Component for the AnalyzeContext."""
 
-    def __init__(self, *args, **kwargs) -> None:  # type: ignore
+    def __init__(
+        self,
+        *args: Any,
+        purl: str | None = None,
+        complete_name: str | None = None,
+        fs_path: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         component = Component(
-            purl="pkg:github.com/package-url/purl-spec@244fd47e07d1004f0aed9c",
+            purl=purl or "pkg:github.com/package-url/purl-spec@244fd47e07d1004f0aed9c",
             analysis=Analysis(),
-            repository=Repository(complete_name="github.com/package-url/purl-spec", fs_path=""),
+            repository=Repository(
+                complete_name=complete_name or "github.com/package-url/purl-spec", fs_path=fs_path or ""
+            ),
         )
         super().__init__(component, *args, **kwargs)
 

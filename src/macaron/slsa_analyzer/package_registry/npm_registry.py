@@ -126,7 +126,7 @@ class NPMRegistry(PackageRegistry):
                 return True
         return False
 
-    def download_package_json(self, url: str, download_path: str) -> bool:
+    def download_attestation_payload(self, url: str, download_path: str) -> bool:
         """Download the npm attestation from npm registry.
 
         Each npm package can have the following types of attestations:
@@ -337,7 +337,7 @@ class NPMAttestationAsset(NamedTuple):
             ``True`` if the asset is downloaded successfully; ``False`` if not.
         """
         try:
-            return self.npm_registry.download_package_json(self.url, dest)
+            return self.npm_registry.download_attestation_payload(self.url, dest)
         except InvalidHTTPResponseError as error:
             logger.debug(error)
             return False

@@ -26,6 +26,8 @@ RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
     ("purl", "expected"),
     [
         ("pkg:pypi/zlibxjson", CheckResultType.FAILED),
+        ("pkg:pypi/test", CheckResultType.UNKNOWN),
+        ("pkg:maven:test/test", CheckResultType.UNKNOWN),
     ],
 )
 def test_detect_malicious_metadata(
@@ -35,9 +37,8 @@ def test_detect_malicious_metadata(
     check = DetectMaliciousMetadataCheck()
 
     # Set up the context object with provenances.
-    ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
+    ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl=purl)
     pypi_registry = PyPIRegistry()
-    ctx.component.purl = purl
     ctx.dynamic_data["package_registries"] = [PackageRegistryInfo(pip_tool, pypi_registry)]
 
     # Set up mock return values.
