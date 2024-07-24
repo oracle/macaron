@@ -51,7 +51,7 @@ def test_detect_malicious_metadata(
     with open(os.path.join(RESOURCE_PATH, "pypi_files", "zlibxjson_package.json"), encoding="utf8") as page:
         package_json = json.load(page)
 
-    with open(os.path.join(RESOURCE_PATH, "pypi_files", "zlibxjson-8.2.tar.gz"), "rb") as source:
+    with open(os.path.join(RESOURCE_PATH, "pypi_files", "zlibxjson-8.2.source"), "rb") as source:
         source_tarball = source.read()
 
     base_url_parsed = urllib.parse.urlparse(httpserver.url_for(""))
