@@ -91,17 +91,6 @@ SUSPICIOUS_COMBO: dict[
     (
         HeuristicResult.FAIL,  # Empty Project
         HeuristicResult.SKIP,  # Unreachable Project Links
-        HeuristicResult.FAIL,  # One Release
-        HeuristicResult.SKIP,  # High Release Frequency
-        HeuristicResult.SKIP,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.PASS,  # Suspicious Setup
-        # No project link, only one release, and the maintainer released it shortly
-        # after account registration.
-    ): Confidence.MEDIUM,
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
         HeuristicResult.PASS,  # One Release
         HeuristicResult.FAIL,  # High Release Frequency
         HeuristicResult.FAIL,  # Unchanged Release
@@ -134,17 +123,6 @@ SUSPICIOUS_COMBO: dict[
         # No project link, frequent releases of multiple versions without modifying the content,
         # and the maintainer released it shortly after account registration.
     ): Confidence.MEDIUM,
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
-        HeuristicResult.PASS,  # One Release
-        HeuristicResult.FAIL,  # High Release Frequency
-        HeuristicResult.PASS,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.PASS,  # Suspicious Setup
-        # No project link, frequent releases of multiple versions,
-        # and the maintainer released it shortly after account registration.
-    ): Confidence.LOW,
     (
         HeuristicResult.PASS,  # Empty Project
         HeuristicResult.FAIL,  # Unreachable Project Links
@@ -157,17 +135,6 @@ SUSPICIOUS_COMBO: dict[
         # and the maintainer released it shortly after account registration.
         # The setup.py file contains suspicious imports.
     ): Confidence.HIGH,
-    # (
-    #     HeuristicResult.PASS,  # Empty Project
-    #     HeuristicResult.FAIL,  # Unreachable Project Links
-    #     HeuristicResult.PASS,  # One Release
-    #     HeuristicResult.FAIL,  # High Release Frequency
-    #     HeuristicResult.PASS,  # Unchanged Release
-    #     HeuristicResult.FAIL,  # Closer Release Join Date
-    #     HeuristicResult.PASS,  # Suspicious Setup
-    #     # All project links are unreachable, frequent releases of multiple versions,
-    #     # and the maintainer released it shortly after account registration.
-    # ): Confidence.LOW,
 }
 
 

@@ -378,7 +378,7 @@ class PyPIPackageJsonAsset:
         if not urls:
             return None
         for distribution in urls:
-            if distribution.get("python_version") != "source":
+            if distribution.get("packagetype") != "sdist":
                 continue
             # We intentionally check if the url is None and use empty string if that's the case.
             source_url: str = distribution.get("url") or ""
