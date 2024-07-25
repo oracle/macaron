@@ -135,7 +135,7 @@ class NPMRegistry(PackageRegistry):
         * SLSA with "https://slsa.dev/provenance/v0.2" predicateType
         * SLSA with "https://slsa.dev/provenance/v1" predicateType
 
-        For now we download the SLSA provenance v0.2 or v1 in this method.
+        We download the unsigned SLSA provenance v0.2 or v1 in this method, and the signed npm type.
 
         An example SLSA v0.2 provenance: https://registry.npmjs.org/-/npm/v1/attestations/@sigstore/mock@0.1.0
         An example SLSA v1 provenance: https://registry.npmjs.org/-/npm/v1/attestations/@sigstore/mock@0.6.3
@@ -170,12 +170,17 @@ class NPMRegistry(PackageRegistry):
         if not res_obj.get("attestations"):
             raise InvalidHTTPResponseError(f"The response returned by {url} misses `attestations` attribute.")
 
-        # Download the SLSA provenance only.
+        downloaded_unsigned = False
+        downloaded_signed = False
         for att in res_obj.get("attestations"):
             if not att.get("predicateType"):
                 logger.debug("predicateType attribute is missing for %s", url)
                 continue
-            if att.get("predicateType") not in ["https://slsa.dev/provenance/v0.2", "https://slsa.dev/provenance/v1"]:
+            if att.get("predicateType") not in [
+                "https://slsa.dev/provenance/v0.2",
+                "https://slsa.dev/provenance/v1",
+                "https://github.com/npm/attestation/tree/main/specs/publish/v0.1",
+            ]:
                 logger.debug("predicateType %s is not accepted. Skipping...", att.get("predicateType"))
                 continue
             if not (bundle := att.get("bundle")):
@@ -187,10 +192,24 @@ class NPMRegistry(PackageRegistry):
 
             logger.debug("Found attestation with valid predicateType: %s", att.get("predicateType"))
 
+            download_path_extended = download_path
+            if att.get("predicateType") == "https://github.com/npm/attestation/tree/main/specs/publish/v0.1":
+                if downloaded_signed:
+                    logger.debug("Found multiple signed provenance.")
+                    continue
+                downloaded_signed = True
+                download_path_extended = download_path_extended + ".signed"
+            else:
+                if downloaded_unsigned:
+                    # In case there are multiple unsigned provenance, log it and continue.
+                    logger.debug("Found multiple unsigned provenance.")
+                    continue
+                downloaded_unsigned = True
+
             try:
-                with open(download_path, "w", encoding="utf-8") as file:
+                with open(download_path_extended, "w", encoding="utf-8") as file:
                     json.dump(dsse_env, file)
-                    return True
+                    continue
             except OSError as error:
                 logger.debug(
                     "Failed to write the downloaded attestation from %s to %s. Error: %s",
@@ -199,7 +218,10 @@ class NPMRegistry(PackageRegistry):
                     error,
                 )
 
-        return False
+        if downloaded_signed and not downloaded_unsigned:
+            logger.debug("Found signed provenance but no unsigned provenance.")
+
+        return downloaded_unsigned
 
     def get_latest_version(self, namespace: str | None, name: str) -> str | None:
         """Try to retrieve the latest version of a package from the registry.
