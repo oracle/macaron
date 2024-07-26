@@ -42,7 +42,7 @@ class MaliciousMetadataFacts(CheckFacts):
     detail_information: Mapped[dict[str, JsonType]] = mapped_column(DBJsonDict, nullable=False)
 
     #: The result of analysis, which is of dict[Heuristics, HeuristicResult] type.
-    result: Mapped[dict[str, JsonType]] = mapped_column(
+    result: Mapped[dict[Heuristics, HeuristicResult]] = mapped_column(
         DBJsonDict, nullable=False, info={"justification": JustificationType.TEXT}
     )
 
