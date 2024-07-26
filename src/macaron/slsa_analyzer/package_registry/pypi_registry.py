@@ -17,6 +17,7 @@ from macaron.database.table_definitions import Component
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
+from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.build_tool import Pip, Poetry
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
@@ -274,11 +275,8 @@ class PyPIRegistry(PackageRegistry):
 
 
 @dataclass
-class PyPIPackageJsonAsset:
-    """The package JSON hosted on the PyPI registry.
-
-    This class matches the AssetLocator protocol.
-    """
+class PyPIPackageJsonAsset(AssetLocator):
+    """The package JSON hosted on the PyPI registry."""
 
     #: The target pypi software component.
     component: Component
@@ -286,12 +284,15 @@ class PyPIPackageJsonAsset:
     #: The pypi registry.
     pypi_registry: PyPIRegistry
 
-    #: The size of the asset (in bytes). This attribute is added to match the AssetLocator
-    #: protocol and is not used because pypi API registry does not provide it.
-    size_in_bytes: int
-
     #: The asset content.
     package_json: dict
+
+    #: The size of the asset (in bytes). This attribute is added to match the AssetLocator
+    #: protocol and is not used because pypi API registry does not provide it.
+    @property
+    def size_in_bytes(self) -> int:
+        """Get the size of asset."""
+        return -1
 
     @property
     def name(self) -> str:
@@ -311,8 +312,8 @@ class PyPIPackageJsonAsset:
         json_endpoint = f"pypi/{self.component.name}/json"
         return urllib.parse.urljoin(self.pypi_registry.registry_url, json_endpoint)
 
-    def download(self) -> bool:
-        """Download the package JSON metadata and stores it in the package_json attribute.
+    def download(self, dest: str) -> bool:  # pylint: disable=unused-argument
+        """Download the package JSON metadata and store it in the package_json attribute.
 
         Returns
         -------

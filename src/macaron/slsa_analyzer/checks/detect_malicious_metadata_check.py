@@ -232,11 +232,11 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
                 # Create an AssetLocator object for the PyPI package JSON object.
                 pypi_package_json = PyPIPackageJsonAsset(
-                    component=ctx.component, pypi_registry=pypi_registry, size_in_bytes=0, package_json={}
+                    component=ctx.component, pypi_registry=pypi_registry, package_json={}
                 )
 
-                # Download the PyPI package JSON.
-                if pypi_package_json.download():
+                # Download the PyPI package JSON, but no need to persist it to the filesystem.
+                if pypi_package_json.download(dest=""):
                     result, detail_info = self.run_heuristics(pypi_package_json)
                     result_combo: tuple = tuple(result.values())
                     confidence: float | None = SUSPICIOUS_COMBO.get(result_combo, None)

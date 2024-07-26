@@ -78,8 +78,6 @@ class DBJsonDict(TypeDecorator):  # pylint: disable=W0223
         value: None | dict
             The value being stored
         """
-        if value is None:
-            return None
         if not isinstance(value, dict):
             raise TypeError("DBJsonDict type expects a dict.")
 
@@ -91,8 +89,6 @@ class DBJsonDict(TypeDecorator):  # pylint: disable=W0223
         value: None | dict
             The value being loaded
         """
-        if value is None:
-            return None
         if not isinstance(value, dict):
             raise TypeError("DBJsonDict type expects a dict.")
         return value
