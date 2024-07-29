@@ -1071,8 +1071,10 @@ class Analyzer:
                     )
 
         # Determine the package registries.
-        # We match the repo against package registries through build tools.
-        build_tools = analyze_ctx.dynamic_data["build_spec"]["tools"]
+        # We match the software component against package registries through build tools.
+        build_tools = (
+            analyze_ctx.dynamic_data["build_spec"]["tools"] or analyze_ctx.dynamic_data["build_spec"]["purl_tools"]
+        )
         for package_registry in PACKAGE_REGISTRIES:
             for build_tool in build_tools:
                 if package_registry.is_detected(build_tool):

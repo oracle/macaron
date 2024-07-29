@@ -17,7 +17,6 @@ from macaron.database.table_definitions import Component
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
-from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.build_tool import Pip, Poetry
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
@@ -275,7 +274,7 @@ class PyPIRegistry(PackageRegistry):
 
 
 @dataclass
-class PyPIPackageJsonAsset(AssetLocator):
+class PyPIPackageJsonAsset:
     """The package JSON hosted on the PyPI registry."""
 
     #: The target pypi software component.
