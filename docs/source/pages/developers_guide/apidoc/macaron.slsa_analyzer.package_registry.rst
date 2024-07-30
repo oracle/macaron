@@ -40,3 +40,11 @@ macaron.slsa\_analyzer.package\_registry.package\_registry module
    :members:
    :undoc-members:
    :show-inheritance:
+
+macaron.slsa\_analyzer.package\_registry.pypi\_registry module
+--------------------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.package_registry.pypi_registry
+   :members:
+   :undoc-members:
+   :show-inheritance:

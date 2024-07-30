@@ -5,11 +5,12 @@
 
 import logging
 
-from packageurl import PackageURL
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
+from macaron.database.db_custom_types import DBJsonDict
 from macaron.database.table_definitions import CheckFacts
+from macaron.json_tools import JsonType
 from macaron.malware_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult, Heuristics
 from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
@@ -20,15 +21,18 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import 
 from macaron.malware_analyzer.pypi_heuristics.metadata.unreachable_project_links import UnreachableProjectLinksAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
+from macaron.slsa_analyzer.build_tool.pip import Pip
+from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
-from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
+from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset, PyPIRegistry
 from macaron.slsa_analyzer.registry import registry
+from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class HeuristicAnalysisResultFacts(CheckFacts):
+class MaliciousMetadataFacts(CheckFacts):
     """The ORM mapping for justifications in pypi heuristic check."""
 
     __tablename__ = "_detect_malicious_metadata_check"
@@ -36,17 +40,12 @@ class HeuristicAnalysisResultFacts(CheckFacts):
     #: The primary key.
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
-    #: List of heuristic names that failed.
-    heuristics_fail: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
-
     #: Detailed information about the analysis.
-    detail_information: Mapped[str] = mapped_column(
-        String, nullable=False, info={"justification": JustificationType.TEXT}
-    )
+    detail_information: Mapped[dict[str, JsonType]] = mapped_column(DBJsonDict, nullable=False)
 
-    #: The result of heuristic analysis.
-    heuristic_result: Mapped[str] = mapped_column(
-        String, nullable=False, info={"justification": JustificationType.TEXT}
+    #: The result of analysis, which is of dict[Heuristics, HeuristicResult] type.
+    result: Mapped[dict[Heuristics, HeuristicResult]] = mapped_column(
+        DBJsonDict, nullable=False, info={"justification": JustificationType.TEXT}
     )
 
     __mapper_args__ = {
@@ -94,17 +93,6 @@ SUSPICIOUS_COMBO: dict[
     (
         HeuristicResult.FAIL,  # Empty Project
         HeuristicResult.SKIP,  # Unreachable Project Links
-        HeuristicResult.FAIL,  # One Release
-        HeuristicResult.SKIP,  # High Release Frequency
-        HeuristicResult.SKIP,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.PASS,  # Suspicious Setup
-        # No project link, only one release, and the maintainer released it shortly
-        # after account registration.
-    ): Confidence.MEDIUM,
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
         HeuristicResult.PASS,  # One Release
         HeuristicResult.FAIL,  # High Release Frequency
         HeuristicResult.FAIL,  # Unchanged Release
@@ -137,17 +125,6 @@ SUSPICIOUS_COMBO: dict[
         # No project link, frequent releases of multiple versions without modifying the content,
         # and the maintainer released it shortly after account registration.
     ): Confidence.MEDIUM,
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
-        HeuristicResult.PASS,  # One Release
-        HeuristicResult.FAIL,  # High Release Frequency
-        HeuristicResult.PASS,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.PASS,  # Suspicious Setup
-        # No project link, frequent releases of multiple versions,
-        # and the maintainer released it shortly after account registration.
-    ): Confidence.LOW,
     (
         HeuristicResult.PASS,  # Empty Project
         HeuristicResult.FAIL,  # Unreachable Project Links
@@ -160,17 +137,6 @@ SUSPICIOUS_COMBO: dict[
         # and the maintainer released it shortly after account registration.
         # The setup.py file contains suspicious imports.
     ): Confidence.HIGH,
-    # (
-    #     HeuristicResult.PASS,  # Empty Project
-    #     HeuristicResult.FAIL,  # Unreachable Project Links
-    #     HeuristicResult.PASS,  # One Release
-    #     HeuristicResult.FAIL,  # High Release Frequency
-    #     HeuristicResult.PASS,  # Unchanged Release
-    #     HeuristicResult.FAIL,  # Closer Release Join Date
-    #     HeuristicResult.PASS,  # Suspicious Setup
-    #     # All project links are unreachable, frequent releases of multiple versions,
-    #     # and the maintainer released it shortly after account registration.
-    # ): Confidence.LOW,
 }
 
 
@@ -212,22 +178,22 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         return False
 
     def run_heuristics(
-        self, api_client: PyPIRegistry
-    ) -> tuple[dict[Heuristics, HeuristicResult], dict[str, int | dict]]:
-        """Run the main logic of heuristics analysis.
+        self, pypi_package_json: PyPIPackageJsonAsset
+    ) -> tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]:
+        """Run the analysis heuristics.
 
         Parameters
         ----------
-        api_client: PyPIRegistry
-            The PyPI API client object used to interact with the PyPI API.
+        pypi_package_json: PyPIPackageJsonAsset
+            The PyPI package JSON asset object.
 
         Returns
         -------
-        tuple[dict[Heuristics, HeuristicResult], dict[str, int | dict]]
-            Containing the heuristics' results and relevant metadata.
+        tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]
+            Containing the analysis results and relevant metadata.
         """
         results: dict[Heuristics, HeuristicResult] = {}
-        detail_infos: dict[str, int | dict] = {}
+        detail_info: dict[str, JsonType] = {}
         for _analyzer in ANALYZERS:
             analyzer: BaseHeuristicAnalyzer = _analyzer()
             logger.debug("Instantiating %s", _analyzer.__name__)
@@ -239,11 +205,11 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                     results[analyzer.heuristic] = HeuristicResult.SKIP
                     continue
 
-            result, detail_info = analyzer.analyze(api_client)
+            result, result_info = analyzer.analyze(pypi_package_json)
             if analyzer.heuristic:
                 results[analyzer.heuristic] = result
-                detail_infos.update(detail_info)
-        return results, detail_infos
+                detail_info.update(result_info)
+        return results, detail_info
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         """Implement the check in this method.
@@ -258,39 +224,47 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        parsed_purl = PackageURL.from_string(ctx.component.purl)
-        if parsed_purl.type != "pypi":
-            return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
-        package = parsed_purl.name
-        result_tables: list[CheckFacts] = []
+        package_registry_info_entries = ctx.dynamic_data["package_registries"]
+        for package_registry_info_entry in package_registry_info_entries:
+            match package_registry_info_entry:
+                case PackageRegistryInfo(
+                    build_tool=Pip() | Poetry(),
+                    package_registry=PyPIRegistry() as pypi_registry,
+                ) as pypi_registry_info:
+                    result_tables: list[CheckFacts] = []
 
-        api_client: PyPIRegistry = PyPIRegistry()
-        api_client.load_defaults()
-        api_client.download_attestation_payload(package)
-        result, detail_infos = self.run_heuristics(api_client)
-        heuristics_fail: list[str] = [
-            heuristic.value for heuristic, result in result.items() if result is HeuristicResult.FAIL
-        ]
-        result_combo: tuple = tuple(result.values())
-        confidence: float | None = SUSPICIOUS_COMBO.get(result_combo, None)
-        result_type = CheckResultType.FAILED
-        if confidence is None:
-            confidence = Confidence.HIGH
-            result_type = CheckResultType.PASSED
+                    # Create an AssetLocator object for the PyPI package JSON object.
+                    pypi_package_json = PyPIPackageJsonAsset(
+                        component=ctx.component, pypi_registry=pypi_registry, package_json={}
+                    )
 
-        result_tables.append(
-            HeuristicAnalysisResultFacts(
-                heuristics_fail=str(heuristics_fail),
-                heuristic_result=str(result),
-                detail_information=str(detail_infos),
-                confidence=confidence,
-            )
-        )
+                    pypi_registry_info.metadata.append(pypi_package_json)
 
-        return CheckResultData(
-            result_tables=result_tables,
-            result_type=result_type,
-        )
+                    # Download the PyPI package JSON, but no need to persist it to the filesystem.
+                    if pypi_package_json.download(dest=""):
+                        result, detail_info = self.run_heuristics(pypi_package_json)
+                        result_combo: tuple = tuple(result.values())
+                        confidence: float | None = SUSPICIOUS_COMBO.get(result_combo, None)
+                        result_type = CheckResultType.FAILED
+                        if confidence is None:
+                            confidence = Confidence.HIGH
+                            result_type = CheckResultType.PASSED
+
+                        result_tables.append(
+                            MaliciousMetadataFacts(
+                                result=result,
+                                detail_information=detail_info,
+                                confidence=confidence,
+                            )
+                        )
+
+                        return CheckResultData(
+                            result_tables=result_tables,
+                            result_type=result_type,
+                        )
+
+        # Return UNKNOWN result for unsupported ecosystems.
+        return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
 
 registry.register(DetectMaliciousMetadataCheck())

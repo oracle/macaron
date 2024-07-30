@@ -5,13 +5,15 @@
 
 import logging
 import os
+import urllib.parse
+from dataclasses import dataclass
 from datetime import datetime
-from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup, Tag
 
 from macaron.config.defaults import defaults
+from macaron.database.table_definitions import Component
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
@@ -28,7 +30,10 @@ class PyPIRegistry(PackageRegistry):
 
     def __init__(
         self,
-        hostname: str | None = None,
+        registry_url_netloc: str | None = None,
+        registry_url_scheme: str | None = None,
+        fileserver_url_netloc: str | None = None,
+        fileserver_url_scheme: str | None = None,
         request_timeout: int | None = None,
         enabled: bool = True,
     ) -> None:
@@ -37,20 +42,27 @@ class PyPIRegistry(PackageRegistry):
 
         Parameters
         ----------
-        hostname: str | None
-            The hostname of the pypi registry.
+        registry_url_netloc: str | None
+            The netloc of the pypi registry url.
+        registry_url_scheme: str | None
+            The scheme of the pypi registry url.
+        fileserver_url_netloc: str | None
+            The netloc of the server url that stores package source files, which contains the hostname and port.
+        fileserver_url_scheme: str | None
+            The scheme of the server url that stores package source files.
         request_timeout: int | None
             The timeout (in seconds) for requests made to the package registry.
         enabled: bool
             Shows whether making REST API calls to pypi registry is enabled.
 
         """
-        self.hostname = hostname or ""
+        self.registry_url_netloc = registry_url_netloc or ""
+        self.registry_url_scheme = registry_url_scheme or ""
+        self.fileserver_url_netloc = fileserver_url_netloc or ""
+        self.fileserver_url_scheme = fileserver_url_scheme or ""
         self.request_timeout = request_timeout or 10
         self.enabled = enabled
-        self.attestation: dict = {}
-        self.base_url = ""
-        self.package = ""
+        self.registry_url = ""
         super().__init__("PyPI Registry")
 
     def load_defaults(self) -> None:
@@ -66,12 +78,28 @@ class PyPIRegistry(PackageRegistry):
             return
         section = defaults[section_name]
 
-        self.hostname = section.get("hostname")
-        if not self.hostname:
+        self.registry_url_netloc = section.get("registry_url_netloc")
+        if not self.registry_url_netloc:
             raise ConfigurationError(
-                f'The "hostname" key is missing in section [{section_name}] of the .ini configuration file.'
+                f'The "registry_url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
             )
-        self.base_url = f"https://{self.hostname}"
+        self.registry_url_scheme = section.get("registry_url_scheme", "https")
+        self.registry_url = urllib.parse.ParseResult(
+            scheme=self.registry_url_scheme,
+            netloc=self.registry_url_netloc,
+            path="",
+            params="",
+            query="",
+            fragment="",
+        ).geturl()
+
+        fileserver_url_netloc = section.get("fileserver_url_netloc")
+        if not fileserver_url_netloc:
+            raise ConfigurationError(
+                f'The "fileserver_url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
+            )
+        self.fileserver_url_netloc = fileserver_url_netloc
+        self.fileserver_url_scheme = section.get("fileserver_url_scheme", "https")
 
         try:
             self.request_timeout = section.getint("request_timeout", fallback=10)
@@ -107,135 +135,73 @@ class PyPIRegistry(PackageRegistry):
                 return True
         return False
 
-    def download_attestation_payload(self, package: str) -> bool:
-        """Download the pypi attestation from pypi registry.
+    def download_package_json(self, url: str) -> dict:
+        """Download the package JSON metadata from pypi registry.
 
         Parameters
         ----------
-        package: str
-            The package name.
+        url: str
+            The package JSON url.
 
         Returns
         -------
-        bool
-            ``True`` if the asset is downloaded successfully; ``False`` if not.
+        dict
+            The JSON response if the request is successful.
 
         Raises
         ------
         InvalidHTTPResponseError
             If the HTTP request to the registry fails or an unexpected response is returned.
         """
-        self.package = package
-        attestation_endpoint = f"pypi/{package}/json"
-        url = urljoin(self.base_url, attestation_endpoint)
         response = send_get_http_raw(url, headers=None, timeout=self.request_timeout)
 
         if not response:
-            logger.debug("Unable to find attestation for %s", package)
-            return False
+            logger.debug("Unable to find package JSON metadata using URL: %s", url)
+            raise InvalidHTTPResponseError(f"Unable to find package JSON metadata using URL: {url}.")
 
         try:
             res_obj = response.json()
         except requests.exceptions.JSONDecodeError as error:
             raise InvalidHTTPResponseError(f"Failed to process response from pypi for {url}.") from error
-        if not res_obj:
+        if not isinstance(res_obj, dict):
             raise InvalidHTTPResponseError(f"Empty response returned by {url} .")
-        self.attestation = res_obj
 
-        return True
+        return res_obj
 
-    def get_releases(self) -> dict | None:
-        """Get all releases.
-
-        Returns
-        -------
-        dict | None
-            Version to metadata.
-        """
-        return json_extract(self.attestation, ["releases"], dict)
-
-    def get_project_links(self) -> dict[str, str] | None:
-        """Retrieve the project links from the base metadata.
-
-        This method accesses the "info" section of the base metadata to extract the "project_urls" dictionary,
-        which contains various links related to the project.
-
-        Returns
-        -------
-        dict[str, str] | None
-            Containing project URLs where the keys are the names of the links
-            and the values are the corresponding URLs. Returns None if the "project_urls"
-            section is not found in the base metadata.
-        """
-        return json_extract(self.attestation, ["info", "project_urls"], dict)
-
-    def get_latest_version(self) -> str | None:
-        """Get the latest version of the package.
-
-        Returns
-        -------
-        str | None
-            The latest version.
-        """
-        return json_extract(self.attestation, ["info", "version"], str)
-
-    def get_sourcecode_url(self) -> str | None:
-        """Get the url of the source distribution.
-
-        Returns
-        -------
-        str | None
-            The URL of the source distribution.
-        """
-        urls: list | None = json_extract(self.attestation, ["urls"], list)
-        if not urls:
-            return None
-        for distribution in urls:
-            if distribution.get("python_version") != "source":
-                continue
-            source: str = distribution.get("url", "")
-            if source:
-                return source
-        return None
-
-    def get_latest_release_upload_time(self) -> str | None:
-        """Get upload time of the latest release.
-
-        Returns
-        -------
-        str | None
-            The upload time of the latest release.
-        """
-        urls: list | None = json_extract(self.attestation, ["urls"], list)
-        if urls is not None and urls:
-            upload_time: str | None = urls[0].get("upload_time")
-            return upload_time
-        return None
-
-    def get_package_page(self) -> str | None:
+    def get_package_page(self, package_name: str) -> str | None:
         """Implement custom API to get package main page.
+
+        Parameters
+        ----------
+        package_name: str
+            The package name.
 
         Returns
         -------
         str | None
             The package main page.
         """
-        url = os.path.join(self.base_url, "project", self.package)
+        url = os.path.join(self.registry_url, "project", package_name)
         response = send_get_http_raw(url)
         if response:
             html_snippets = response.content.decode("utf-8")
             return html_snippets
         return None
 
-    def get_maintainers_of_package(self) -> list | None:
+    def get_maintainers_of_package(self, package_name: str) -> list | None:
         """Implement custom API to get all maintainers of the package.
+
+        Parameters
+        ----------
+        package_name: str
+            The package name.
 
         Returns
         -------
         list | None
             The list of maintainers.
         """
-        package_page: str | None = self.get_package_page()
+        package_page: str | None = self.get_package_page(package_name)
         if package_page is None:
             return None
         soup = BeautifulSoup(package_page, "html.parser")
@@ -255,7 +221,7 @@ class PyPIRegistry(PackageRegistry):
         str | None
             The profile page.
         """
-        url = os.path.join(self.base_url, "user", username)
+        url = os.path.join(self.registry_url, "user", username)
         response = send_get_http_raw(url, headers=None)
         if response:
             html_snippets = response.content.decode("utf-8")
@@ -305,3 +271,146 @@ class PyPIRegistry(PackageRegistry):
         res: datetime | None = parse_datetime(datetime_val, datetime_format)
 
         return res.replace(tzinfo=None) if res else None
+
+
+@dataclass
+class PyPIPackageJsonAsset:
+    """The package JSON hosted on the PyPI registry."""
+
+    #: The target pypi software component.
+    component: Component
+
+    #: The pypi registry.
+    pypi_registry: PyPIRegistry
+
+    #: The asset content.
+    package_json: dict
+
+    #: The size of the asset (in bytes). This attribute is added to match the AssetLocator
+    #: protocol and is not used because pypi API registry does not provide it.
+    @property
+    def size_in_bytes(self) -> int:
+        """Get the size of asset."""
+        return -1
+
+    @property
+    def name(self) -> str:
+        """Get the asset name."""
+        return "package_json"
+
+    @property
+    def url(self) -> str:
+        """Get the download URL of the asset.
+
+        Note: we assume that the path parameters used to construct the URL are sanitized already.
+
+        Returns
+        -------
+        str
+        """
+        json_endpoint = f"pypi/{self.component.name}/json"
+        return urllib.parse.urljoin(self.pypi_registry.registry_url, json_endpoint)
+
+    def download(self, dest: str) -> bool:  # pylint: disable=unused-argument
+        """Download the package JSON metadata and store it in the package_json attribute.
+
+        Returns
+        -------
+        bool
+            ``True`` if the asset is downloaded successfully; ``False`` if not.
+        """
+        try:
+            self.package_json = self.pypi_registry.download_package_json(self.url)
+            return True
+        except InvalidHTTPResponseError as error:
+            logger.debug(error)
+            return False
+
+    def get_releases(self) -> dict | None:
+        """Get all releases.
+
+        Returns
+        -------
+        dict | None
+            Version to metadata.
+        """
+        return json_extract(self.package_json, ["releases"], dict)
+
+    def get_project_links(self) -> dict | None:
+        """Retrieve the project links from the base metadata.
+
+        This method accesses the "info" section of the base metadata to extract the "project_urls" dictionary,
+        which contains various links related to the project.
+
+        Returns
+        -------
+        dict | None
+            Containing project URLs where the keys are the names of the links
+            and the values are the corresponding URLs. Returns None if the "project_urls"
+            section is not found in the base metadata.
+        """
+        return json_extract(self.package_json, ["info", "project_urls"], dict)
+
+    def get_latest_version(self) -> str | None:
+        """Get the latest version of the package.
+
+        Returns
+        -------
+        str | None
+            The latest version.
+        """
+        return json_extract(self.package_json, ["info", "version"], str)
+
+    def get_sourcecode_url(self) -> str | None:
+        """Get the url of the source distribution.
+
+        Returns
+        -------
+        str | None
+            The URL of the source distribution.
+        """
+        urls: list | None = None
+        if self.component.version:
+            urls = json_extract(self.package_json, ["releases", self.component.version], list)
+        else:
+            # Get the latest version.
+            urls = json_extract(self.package_json, ["urls"], list)
+        if not urls:
+            return None
+        for distribution in urls:
+            if distribution.get("packagetype") != "sdist":
+                continue
+            # We intentionally check if the url is None and use empty string if that's the case.
+            source_url: str = distribution.get("url") or ""
+            if source_url:
+                try:
+                    parsed_url = urllib.parse.urlparse(source_url)
+                except ValueError:
+                    logger.debug("Error occurred while processing the source URL %s.", source_url)
+                    return None
+                if self.pypi_registry.fileserver_url_netloc and self.pypi_registry.fileserver_url_scheme:
+                    configured_source_url = urllib.parse.ParseResult(
+                        scheme=self.pypi_registry.fileserver_url_scheme,
+                        netloc=self.pypi_registry.fileserver_url_netloc,
+                        path=parsed_url.path,
+                        params="",
+                        query="",
+                        fragment="",
+                    ).geturl()
+                    logger.debug("Found source URL: %s", configured_source_url)
+                    return configured_source_url
+        return None
+
+    def get_latest_release_upload_time(self) -> str | None:
+        """Get upload time of the latest release.
+
+        Returns
+        -------
+        str | None
+            The upload time of the latest release.
+        """
+        urls: list | None = json_extract(self.package_json, ["urls"], list)
+        if urls is not None and urls:
+            upload_time: str | None = urls[0].get("upload_time")
+            return upload_time
+        return None

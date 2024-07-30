@@ -24,8 +24,8 @@ class BaseNode(Generic[Node]):
     def __init__(self, caller: Node | None = None, node_id: str | None = None) -> None:
         """Initialize instance.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         caller: Node | None
             The caller node.
         node_id: str | None
