@@ -67,7 +67,7 @@ class ProvenanceVerifiedCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        if not ctx.dynamic_data["provenance"]:
+        if ctx.dynamic_data["is_inferred_prov"] or not ctx.dynamic_data["provenance"]:
             # Provenance is not available.
             return CheckResultData(
                 result_tables=[ProvenanceVerifiedFacts(build_level=0, confidence=Confidence.HIGH)],
