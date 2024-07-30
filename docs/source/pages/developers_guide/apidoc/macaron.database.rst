@@ -17,10 +17,10 @@ macaron.database.database\_manager module
    :undoc-members:
    :show-inheritance:
 
-macaron.database.rfc3339\_datetime module
+macaron.database.db\_custom\_types module
 -----------------------------------------
 
-.. automodule:: macaron.database.rfc3339_datetime
+.. automodule:: macaron.database.db_custom_types
    :members:
    :undoc-members:
    :show-inheritance:

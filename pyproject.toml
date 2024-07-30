@@ -95,6 +95,7 @@ test = [
     "pytest-custom_exit_code >=0.3.0,<1.0.0",
     "pytest-cov >=5.0.0,<6.0.0",
     "pytest-env >=1.0.0,<2.0.0",
+    "pytest_httpserver >=1.0.10,<2.0.0",
     "syrupy >=4.0.0,<5.0.0",
 ]
 

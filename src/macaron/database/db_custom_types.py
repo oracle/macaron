@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module implements SQLAlchemy type for converting date format to RFC3339 string representation."""
@@ -6,7 +6,7 @@
 import datetime
 from typing import Any
 
-from sqlalchemy import String, TypeDecorator
+from sqlalchemy import JSON, String, TypeDecorator
 
 
 class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
@@ -60,3 +60,35 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
         if result.tzinfo:
             return result
         return result.astimezone(RFC3339DateTime._host_tzinfo)
+
+
+class DBJsonDict(TypeDecorator):  # pylint: disable=W0223
+    """SQLAlchemy column type to serialize dictionaries."""
+
+    # It is stored in the database as a json value.
+    impl = JSON
+
+    # To prevent Sphinx from rendering the docstrings for `cache_ok`, make this docstring private.
+    #: :meta private:
+    cache_ok = True
+
+    def process_bind_param(self, value: None | dict, dialect: Any) -> None | dict:
+        """Process when storing a dict object to the SQLite db.
+
+        value: None | dict
+            The value being stored
+        """
+        if not isinstance(value, dict):
+            raise TypeError("DBJsonDict type expects a dict.")
+
+        return value
+
+    def process_result_value(self, value: None | dict, dialect: Any) -> None | dict:
+        """Process when loading a dict object from the SQLite db.
+
+        value: None | dict
+            The value being loaded
+        """
+        if not isinstance(value, dict):
+            raise TypeError("DBJsonDict type expects a dict.")
+        return value

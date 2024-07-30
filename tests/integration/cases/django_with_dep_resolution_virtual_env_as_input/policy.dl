@@ -10,7 +10,11 @@ Policy("check-dependencies", component_id, "Check the dependencies of django@5.0
     match("pkg:pypi/sqlparse@0.*", sqlparse_purl),
     transitive_dependency(component_id, asgiref),
     is_component(asgiref, asgiref_purl),
-    match("pkg:pypi/asgiref@3.*", asgiref_purl).
+    match("pkg:pypi/asgiref@3.*", asgiref_purl),
+    check_passed(component_id, "mcn_detect_malicious_metadata_1"),
+    check_passed(sqlparse, "mcn_detect_malicious_metadata_1"),
+    check_passed(asgiref, "mcn_detect_malicious_metadata_1").
+
 
 apply_policy_to("check-dependencies", component_id) :-
     is_component(component_id, "pkg:pypi/django@5.0.6").

@@ -32,9 +32,6 @@ from macaron.errors import (
     PURLNotFoundError,
     RepoCheckOutError,
 )
-from macaron.malware_analyzer.checks import (  # pylint: disable=unused-import # noqa: F401
-    detect_malicious_metadata_check,
-)
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
@@ -1074,8 +1071,10 @@ class Analyzer:
                     )
 
         # Determine the package registries.
-        # We match the repo against package registries through build tools.
-        build_tools = analyze_ctx.dynamic_data["build_spec"]["tools"]
+        # We match the software component against package registries through build tools.
+        build_tools = (
+            analyze_ctx.dynamic_data["build_spec"]["tools"] or analyze_ctx.dynamic_data["build_spec"]["purl_tools"]
+        )
         for package_registry in PACKAGE_REGISTRIES:
             for build_tool in build_tools:
                 if package_registry.is_detected(build_tool):
