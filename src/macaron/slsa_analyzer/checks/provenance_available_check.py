@@ -71,7 +71,7 @@ class ProvenanceAvailableCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        available = True if (not ctx.dynamic_data["is_inferred_prov"] and ctx.dynamic_data["provenance"]) else False
+        available = ctx.dynamic_data["provenance"] and not ctx.dynamic_data["is_inferred_prov"]
         return CheckResultData(
             result_tables=[
                 ProvenanceAvailableFacts(

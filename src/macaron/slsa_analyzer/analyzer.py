@@ -41,7 +41,7 @@ from macaron.repo_finder.provenance_extractor import (
     check_if_input_repo_commit_provenance_conflict,
     extract_repo_and_commit_from_provenance,
 )
-from macaron.repo_finder.provenance_finder import ProvenanceFinder
+from macaron.repo_finder.provenance_finder import ProvenanceFinder, find_provenance_from_ci
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import VirtualReleaseAsset
@@ -322,6 +322,7 @@ class Analyzer:
                 status=SCMStatus.ANALYSIS_FAILED,
             )
 
+        provenance_is_verified = False
         if not provenance_payload and parsed_purl:
             # Try to find the provenance file for the parsed PURL.
             provenance_finder = ProvenanceFinder()
@@ -440,7 +441,7 @@ class Analyzer:
 
         if not provenance_payload:
             # Look for provenance using the CI.
-            provenance_payload = ProvenanceFinder().find_provenance_from_ci(analyze_ctx, git_obj)
+            provenance_payload = find_provenance_from_ci(analyze_ctx, git_obj)
             # If found, verify analysis target against new provenance
             if provenance_payload:
                 # If repository URL was not provided as input, check the one found during analysis.
@@ -1191,7 +1192,7 @@ class Analyzer:
                             service=ci_service,
                             callgraph=callgraph,
                             provenance_assets=[],
-                            latest_release={},
+                            release={},
                             provenances=[
                                 SLSAProvenanceData(
                                     payload=InTotoV01Payload(statement=Provenance().payload),

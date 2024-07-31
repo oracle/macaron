@@ -377,7 +377,7 @@ def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[
     return provenances[:1]
 
 
-def find_provenance_from_ci(self, analyze_ctx: AnalyzeContext, git_obj: Git | None) -> InTotoPayload | None:
+def find_provenance_from_ci(analyze_ctx: AnalyzeContext, git_obj: Git | None) -> InTotoPayload | None:
     """Try to find provenance from CI services of the repository.
 
     Note that we stop going through the CI services once we encounter a CI service
@@ -463,7 +463,7 @@ def find_provenance_from_ci(self, analyze_ctx: AnalyzeContext, git_obj: Git | No
                 ci_info["provenance_assets"].extend(provenance_assets)
 
                 # Download the provenance assets and load the provenance payloads.
-                self.download_provenances_from_github_actions_ci_service(
+                download_provenances_from_github_actions_ci_service(
                     ci_info,
                 )
 
@@ -473,7 +473,7 @@ def find_provenance_from_ci(self, analyze_ctx: AnalyzeContext, git_obj: Git | No
     return None
 
 
-def download_provenances_from_github_actions_ci_service(self, ci_info: CIInfo) -> None:
+def download_provenances_from_github_actions_ci_service(ci_info: CIInfo) -> None:
     """Download provenances from GitHub Actions.
 
     Parameters
