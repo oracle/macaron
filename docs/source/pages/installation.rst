@@ -25,7 +25,7 @@ Download
 
 Macaron is currently distributed as a Docker image. We provide a bash script ``run_macaron.sh`` to easily download and run it.
 
-.. note:: When run, Macaron will create output files inside the current directory where ``run_macaron.sh`` is run.
+.. note:: When run, Macaron will create output files inside the current directory where ``run_macaron.sh`` is run. If you run Docker Desktop, please make sure that the current directory is bind mountable for Docker (see the `File Sharing settings <https://docs.docker.com/desktop/settings/mac/?uuid=95C3E343-F11C-4A35-A10C-6B5431B73E14#file-sharing>`_).
 
 Download the ``run_macaron.sh`` script and make it executable by running the commands (replace ``tag`` with the version you want or ``main`` for the latest version):
 
