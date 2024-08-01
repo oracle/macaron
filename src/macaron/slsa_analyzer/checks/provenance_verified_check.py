@@ -92,7 +92,7 @@ class ProvenanceVerifiedCheck(BaseCheck):
                 result_type=CheckResultType.FAILED,
             )
 
-        if not build_type == "https://github.com/slsa-framework/slsa-github-generator/generic@v1":
+        if build_type != "https://github.com/slsa-framework/slsa-github-generator/generic@v1":
             # Provenance is verified but the build service does not isolate generation in the control plane from the
             # untrusted build process.
             return CheckResultData(
