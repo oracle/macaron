@@ -243,11 +243,9 @@ def _clean_spdx(uri: str) -> str:
     return url
 
 
-def check_if_input_repo_commit_provenance_conflict(
+def check_if_input_repo_provenance_conflict(
     repo_path_input: str | None,
-    digest_input: str | None,
     provenance_repo_url: str | None,
-    provenance_commit_digest: str | None,
 ) -> bool:
     """Test if the input repo and commit match the contents of the provenance.
 
@@ -255,12 +253,8 @@ def check_if_input_repo_commit_provenance_conflict(
     ----------
     repo_path_input: str | None
         The repo URL from input.
-    digest_input: str | None
-        The digest from input.
     provenance_repo_url: str | None
         The repo URL from provenance.
-    provenance_commit_digest: str | None
-        The commit digest from provenance.
 
     Returns
     -------
@@ -274,16 +268,6 @@ def check_if_input_repo_commit_provenance_conflict(
             "Input Repo: %s, Provenance Repo: %s.",
             repo_path_input,
             provenance_repo_url,
-        )
-        return True
-
-    # Check the provenance commit against the input commit.
-    if digest_input and provenance_commit_digest and digest_input != provenance_commit_digest:
-        logger.debug(
-            "The commit digest from input does not match what exists in the provenance. "
-            "Input Commit: %s, Provenance Commit: %s.",
-            digest_input,
-            provenance_commit_digest,
         )
         return True
 

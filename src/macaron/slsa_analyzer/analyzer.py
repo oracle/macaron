@@ -38,7 +38,7 @@ from macaron.repo_finder import repo_finder
 from macaron.repo_finder.commit_finder import find_commit
 from macaron.repo_finder.provenance_extractor import (
     check_if_input_purl_provenance_conflict,
-    check_if_input_repo_commit_provenance_conflict,
+    check_if_input_repo_provenance_conflict,
     extract_repo_and_commit_from_provenance,
 )
 from macaron.repo_finder.provenance_finder import ProvenanceFinder, find_provenance_from_ci
@@ -343,10 +343,8 @@ class Analyzer:
             except ProvenanceError as error:
                 logger.debug("Failed to extract repo or commit from provenance: %s", error)
 
-            # Try to validate the input repo and/or commit against provenance contents.
-            if (provenance_repo_url or provenance_commit_digest) and check_if_input_repo_commit_provenance_conflict(
-                repo_path_input, digest_input, provenance_repo_url, provenance_commit_digest
-            ):
+            # Try to validate the input repo against provenance contents.
+            if provenance_repo_url and check_if_input_repo_provenance_conflict(repo_path_input, provenance_repo_url):
                 return Record(
                     record_id=repo_id,
                     description="Input mismatch between repo and provenance.",
@@ -456,9 +454,9 @@ class Analyzer:
                 except ProvenanceError as error:
                     logger.debug("Failed to extract repo or commit from provenance: %s", error)
 
-                # Try to validate the input repo and/or commit against provenance contents.
-                if (provenance_repo_url or provenance_commit_digest) and check_if_input_repo_commit_provenance_conflict(
-                    repo_path_input, digest_input, provenance_repo_url, provenance_commit_digest
+                # Try to validate the input repo against provenance contents.
+                if provenance_repo_url and check_if_input_repo_provenance_conflict(
+                    repo_path_input, provenance_repo_url
                 ):
                     return Record(
                         record_id=repo_id,

@@ -15,8 +15,12 @@ steps:
     ini: config.ini
     expectation: expectation.cue
     command_args:
-    - -purl
-    - pkg:golang/slsa-framework/slsa-verifier@1.4.0
+    - -rp
+    - https://github.com/slsa-framework/slsa-verifier
+    - -b
+    - main
+    - -d
+    - e6428d7da594455a4c2b7f24907fec421a5e0e95
     - --skip-deps
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
