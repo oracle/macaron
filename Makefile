@@ -185,7 +185,7 @@ upgrade: .venv/upgraded-on
 .venv/upgraded-on: pyproject.toml
 	python -m pip install --upgrade pip
 	python -m pip install --upgrade wheel
-	python -m pip install --upgrade --upgrade-strategy eager --editable .[actions,dev,docs,hooks,test]
+	python -m pip install --upgrade --upgrade-strategy eager --editable .[actions,dev,docs,hooks,test,test-docker]
 	$(MAKE) upgrade-quiet
 force-upgrade:
 	rm -f .venv/upgraded-on
@@ -209,7 +209,9 @@ setup-github-actions:
 # test the docker image.
 .PHONY: setup-integration-test-utility-for-docker
 setup-integration-test-utility-for-docker:
-	python -m pip install ruamel.yaml cfgv
+	python -m pip install --upgrade pip
+	python -m pip install --upgrade wheel
+	python -m pip install --upgrade --upgrade-strategy eager --editable .[test-docker]
 
 # Generate a Software Bill of Materials (SBOM).
 .PHONY: sbom
