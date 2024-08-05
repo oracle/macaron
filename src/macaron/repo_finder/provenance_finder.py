@@ -429,7 +429,12 @@ def find_provenance_from_ci(analyze_ctx: AnalyzeContext, git_obj: Git | None) ->
                     return None
                 tags = git_obj.repo.tags
                 for _tag in tags:
-                    if _tag.commit and str(_tag.commit) == digest:
+                    try:
+                        tag_commit = str(_tag.commit)
+                    except ValueError as error:
+                        logger.debug("Commit of tag is a blob or tree: %s", error)
+                        continue
+                    if tag_commit and tag_commit == digest:
                         tag = str(_tag)
                         break
 

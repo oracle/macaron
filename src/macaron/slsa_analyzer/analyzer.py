@@ -49,7 +49,6 @@ from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 
 # To load all checks into the registry
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
-from macaron.slsa_analyzer.checks.check_result import CheckResult
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.database_store import store_analyze_context_to_db
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
@@ -475,7 +474,7 @@ class Analyzer:
         analyze_ctx.dynamic_data["provenance_repo_url"] = provenance_repo_url
         analyze_ctx.dynamic_data["provenance_commit_digest"] = provenance_commit_digest
 
-        analyze_ctx.check_results = self.perform_checks(analyze_ctx)
+        analyze_ctx.check_results = registry.scan(analyze_ctx)
 
         return Record(
             record_id=repo_id,
@@ -1110,100 +1109,6 @@ class Analyzer:
 
     def _determine_package_registries(self, analyze_ctx: AnalyzeContext) -> None:
         """Determine the package registries used by the software component based on its build tools."""
-        build_tools = analyze_ctx.dynamic_data["build_spec"]["tools"]
-        for package_registry in PACKAGE_REGISTRIES:
-            for build_tool in build_tools:
-                if package_registry.is_detected(build_tool):
-                    analyze_ctx.dynamic_data["package_registries"].append(
-                        PackageRegistryInfo(build_tool=build_tool, package_registry=package_registry)
-                    )
-
-    def perform_checks(self, analyze_ctx: AnalyzeContext) -> dict[str, CheckResult]:
-        """Run the analysis on the target repo and return the results.
-
-        Parameters
-        ----------
-        analyze_ctx : AnalyzeContext
-            The object containing processed data for the target repo.
-
-        Returns
-        -------
-        dict[str, CheckResult]
-            The mapping between the check id and its result.
-        """
-        # Determine the git service.
-        remote_path = analyze_ctx.component.repository.remote_path if analyze_ctx.component.repository else None
-
-        # Load the build tools and determine the build tools that match the software component's PURL type.
-        for build_tool in BUILD_TOOLS:
-            build_tool.load_defaults()
-            if build_tool.purl_type == analyze_ctx.component.type:
-                logger.debug(
-                    "Found %s build tool based on the %s PackageURL.", build_tool.name, analyze_ctx.component.purl
-                )
-                analyze_ctx.dynamic_data["build_spec"]["purl_tools"].append(build_tool)
-
-        git_service = self.get_git_service(remote_path)
-        if isinstance(git_service, NoneGitService):
-            logger.info("Unable to find repository or unsupported git service for %s", analyze_ctx.component.purl)
-        else:
-            logger.info(
-                "Detected git service %s for %s.", git_service.name, analyze_ctx.component.repository.complete_name
-            )
-            analyze_ctx.dynamic_data["git_service"] = git_service
-
-            # Detect the build tools by analyzing the repository.
-            for build_tool in BUILD_TOOLS:
-                logger.info(
-                    "Checking if the repo %s uses build tool %s",
-                    analyze_ctx.component.repository.complete_name,
-                    build_tool.name,
-                )
-
-                if build_tool.is_detected(analyze_ctx.component.repository.fs_path):
-                    logger.info("The repo uses %s build tool.", build_tool.name)
-                    analyze_ctx.dynamic_data["build_spec"]["tools"].append(build_tool)
-
-            if not analyze_ctx.dynamic_data["build_spec"]["tools"]:
-                logger.info(
-                    "Unable to discover any build tools for repository %s or the build tools are not supported.",
-                    analyze_ctx.component.repository.complete_name,
-                )
-
-            # Determine the CI services.
-            for ci_service in CI_SERVICES:
-                ci_service.load_defaults()
-                ci_service.set_api_client()
-
-                if ci_service.is_detected(
-                    repo_path=analyze_ctx.component.repository.fs_path,
-                    git_service=analyze_ctx.dynamic_data["git_service"],
-                ):
-                    logger.info("The repo uses %s CI service.", ci_service.name)
-
-                    # Parse configuration files and generate IRs.
-                    # Add the bash commands to the context object to be used by other checks.
-                    callgraph = ci_service.build_call_graph(
-                        analyze_ctx.component.repository.fs_path,
-                        os.path.relpath(analyze_ctx.component.repository.fs_path, analyze_ctx.output_dir),
-                    )
-                    analyze_ctx.dynamic_data["ci_services"].append(
-                        CIInfo(
-                            service=ci_service,
-                            callgraph=callgraph,
-                            provenance_assets=[],
-                            release={},
-                            provenances=[
-                                SLSAProvenanceData(
-                                    payload=InTotoV01Payload(statement=Provenance().payload),
-                                    asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0),
-                                )
-                            ],
-                        )
-                    )
-
-        # Determine the package registries.
-        # We match the software component against package registries through build tools.
         build_tools = (
             analyze_ctx.dynamic_data["build_spec"]["tools"] or analyze_ctx.dynamic_data["build_spec"]["purl_tools"]
         )
@@ -1211,13 +1116,8 @@ class Analyzer:
             for build_tool in build_tools:
                 if package_registry.is_detected(build_tool):
                     analyze_ctx.dynamic_data["package_registries"].append(
-                        PackageRegistryInfo(
-                            build_tool=build_tool,
-                            package_registry=package_registry,
-                        )
+                        PackageRegistryInfo(build_tool=build_tool, package_registry=package_registry)
                     )
-
-        return registry.scan(analyze_ctx)
 
 
 class DuplicateCmpError(DuplicateError):
