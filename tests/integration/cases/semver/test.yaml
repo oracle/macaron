@@ -15,7 +15,7 @@ steps:
     ini: config.ini
     command_args:
     - -purl
-    - pkg:npm/semver@7.6.0
+    - pkg:npm/semver@7.6.2
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:

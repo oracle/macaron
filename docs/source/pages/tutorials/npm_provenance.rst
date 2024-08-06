@@ -5,9 +5,9 @@
 Provenance discovery, extraction, and verification
 --------------------------------------------------
 
-This tutorial demonstrates how Macaron can automatically retrieve provenance for NodeJS artifacts, validate the contents, and verify the authenticity. Any artifact that can be analyzed and checked for these properties can then be trusted to a greater degree than would be otherwise possible, as provenance files provide an assurance that the artifact is what it claims to be, and when verified, this becomes a certainty.
+This tutorial demonstrates how Macaron can automatically retrieve provenance for npm artifacts, validate the contents, and verify the authenticity. Any artifact that can be analyzed and checked for these properties can then be trusted to a greater degree than would be otherwise possible, as provenance files provide verifiable information, such as the commit and build service pipeline that has triggered the release.
 
-For NodeJS artifacts, Macaron makes use of available features provided by `npm <https://npmjs.com/>`_. Most importantly, npm allows developers to generate provenance files when publishing their artifacts. The `semver <https://www.npmjs.com/package/semver>`_ package is chosen as an example for this tutorial.
+For npm artifacts, Macaron makes use of available features provided by `npm <https://npmjs.com/>`_. Most importantly, npm allows developers to generate provenance files when publishing their artifacts. The `semver <https://www.npmjs.com/package/semver>`_ package is chosen as an example for this tutorial.
 
 ******************************
 Installation and Prerequisites
@@ -48,7 +48,7 @@ The analysis involves Macaron downloading the contents of the target repository 
 
 .. note:: If you are unfamiliar with PackageURLs (purl), see this link: `PURLs <https://github.com/package-url/purl-spec>`_.
 
-During this analysis, Macaron will retrieve two provenance files from npm. One is a :term:`SLSA` v1.0 provenance, while the other is a npm specific publication provenance. The SLSA provenance provides details of the artifact it relates to, the repository it was built from, and the build action used to build it. The npm specific provenance contains only information pertaining to the artifact, but this is sufficient to check if the two provenance files are from the same artifact.
+During this analysis, Macaron will retrieve two provenance files from the npm registry. One is a :term:`SLSA` v1.0 provenance, while the other is a npm specific publication provenance. The SLSA provenance provides details of the artifact it relates to, the repository it was built from, and the build action used to build it. The npm specific publication provenance exists if the SLSA provenance has been verified before publication.
 
 .. note:: Most of the details from the two provenance files can be found through the links provided on the artifacts page on the npm website. In particular: `Sigstore Rekor <https://search.sigstore.dev/?logIndex=92391688>`_. The provenance file itself can be found at: `npm registry <https://registry.npmjs.org/-/npm/v1/attestations/semver@7.6.2>`_.
 
@@ -87,7 +87,7 @@ For this tutorial, we can create a policy that checks whether the three checks (
     apply_policy_to("has-verified-provenance", component_id) :-
         is_component(component_id, "pkg:npm/semver@7.6.2").
 
-After including some helper rules, the above policy is defined as requiring all three of the checks to pass through the ``check_passed(<target>, <check_name>)`` mechanism. The target is then defined by the criteria applied to the policy. In this case, the artifact with a PURL that matches the version of ``semver`` used in this tutorial: ``pkg:npm/semver@7.6.2``. With this check saved to a file, say ``verified.dl``, we can run it against Macaron's database to confirm that the analysis we performed earlier in this tutorial did indeed pass all three checks.
+After including some helper rules, the above policy is defined as requiring all three of the checks to pass through the ``check_passed(<target>, <check_name>)`` mechanism. The target is then defined by the criteria applied to the policy. In this case, the artifact with a PURL that matches the version of ``semver`` used in this tutorial: ``pkg:npm/semver@7.6.2``. With this check saved to a file, say ``verified.dl``, we can run it against Macaron's local database to confirm that the analysis we performed earlier in this tutorial did indeed pass all three checks.
 
 .. code-block:: shell
 
@@ -124,4 +124,45 @@ With this modification, all versions of ``semver`` previously analysed will show
     failed_policies
         ['has-verified-provenance']
 
-Here we can see that the newer versions, 7.6.2 and 7.6.0, passed the checks, meaning they have verified provenance. The much older version, 1.0.0, did not pass the checks, which is not surprising given that it was published 13 years before this tutorial was made!
+Here we can see that the newer versions, 7.6.2 and 7.6.0, passed the checks, meaning they have verified provenance. The much older version, 1.0.0, did not pass the checks, which is not surprising given that it was published 13 years before this tutorial was made.
+
+However, if we wanted to acknowledge that earlier versions of the artifact do not have provenance, and accept that as part of the policy, we can do that too. For this to succeed we need to extend the policy with more complicated modifications.
+
+.. code-block:: c++
+
+    #include "prelude.dl"
+
+    Policy("has-verified-provenance", component_id, "Require a verified provenance file.") :-
+        check_passed(component_id, "mcn_provenance_derived_repo_1"),
+        check_passed(component_id, "mcn_provenance_derived_commit_1"),
+        check_passed(component_id, "mcn_provenance_verified_1"),
+        !exception(component_id).
+
+    Policy("has-verified-provenance", component_id, "Make exception for older artifacts.") :-
+        exception(component_id).
+
+    .decl exception(component_id: number)
+    exception(component_id) :-
+        is_component(component_id, purl),
+        match("pkg:npm/semver@[0-6][.].*", purl).
+
+    apply_policy_to("has-verified-provenance", component_id) :-
+        is_component(component_id, purl),
+        match("pkg:npm/semver@.*", purl).
+
+In this final policy, we declare (``.decl``) a new rule called ``exception`` that utilises more regular expression in its ``match`` constraint. For this tutorial we have set the exception to accept any versions of ``semver`` that starts with a number between 0 and 6 using the regular expression range component of ``[0-6]``. Then we modify the previous ``Policy`` so that it expects the same three checks to pass, but only if the exception rule is not applicable -- the exclamation mark before the exception negates the requirement. Finally, we add a new ``Policy`` that applies only to those artifacts that match the exception rule.
+
+When run, this updated policy produces the following:
+
+.. code-block:: javascript
+
+    component_satisfies_policy
+        ['1', 'pkg:npm/semver@7.6.2', 'has-verified-provenance']
+        ['2', 'pkg:npm/semver@7.6.0', 'has-verified-provenance']
+        ['3', 'pkg:npm/semver@1.0.0', 'has-verified-provenance']
+    component_violates_policy
+    failed_policies
+    passed_policies
+        ['has-verified-provenance']
+
+Now all versions pass the policy check.

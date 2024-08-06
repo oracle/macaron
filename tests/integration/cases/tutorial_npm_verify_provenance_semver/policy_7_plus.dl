@@ -1,0 +1,22 @@
+/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("has-verified-provenance", component_id, "Require a verified provenance file.") :-
+    check_passed(component_id, "mcn_provenance_derived_repo_1"),
+    check_passed(component_id, "mcn_provenance_derived_commit_1"),
+    check_passed(component_id, "mcn_provenance_verified_1"),
+    !exception(component_id).
+
+Policy("has-verified-provenance", component_id, "Make exception for older artifacts.") :-
+    exception(component_id).
+
+.decl exception(component_id: number)
+exception(component_id) :-
+    is_component(component_id, purl),
+    match("pkg:npm/semver@[0-6][.].*", purl).
+
+apply_policy_to("has-verified-provenance", component_id) :-
+    is_component(component_id, purl),
+    match("pkg:npm/semver@[0-9].*", purl).

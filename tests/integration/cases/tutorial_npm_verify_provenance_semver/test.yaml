@@ -1,0 +1,43 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analysing artifacts via PURL, then demonstrating provenances are as verified as expected.
+
+tags:
+- tutorial
+
+steps:
+- name: Run macaron analyze semver@7.6.2
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:npm/semver@7.6.2
+    - --skip-deps
+- name: Verify checks for semver@7.6.2
+  kind: verify
+  options:
+    policy: policy_7_6_2.dl
+- name: Run macaron analyze@semver@7.6.0
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:npm/semver@7.6.0
+    - --skip-deps
+- name: Verify checks for all 7.6.x semver runs
+  kind: verify
+  options:
+    policy: policy_7_6_x.dl
+- name: Run macaron analyze semver@7.6.2
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:npm/semver@1.0.0
+    - --skip-deps
+- name: Verify checks for all semver runs
+  kind: verify
+  options:
+    policy: policy_7_plus.dl
