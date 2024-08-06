@@ -126,7 +126,7 @@ Another feature of Macaron is policy verification. This allows Macaron to report
 
 The security requirement chosen for this tutorial reflects the difference between the two versions in the previous section. That is, we want to ensure that the artifact has a valid hosted build platform for building and publishing. If we refer back to :ref:`Arrow 0.15.0 <fig_arrow_0.15.0>` and :ref:`Arrow 1.3.0 <fig_arrow_1.3.0>`, we can use the check ID ``mcn_build_as_code_1`` to identify the differences between the two versions. Note that in Macaron the result of one check can depend on the result of another check. This is especially useful to avoid running checks if unnecessary. In this example, if the ``mcn_build_as_code_1`` check passes, it is implied that ``mcn_build_service_1`` is passed too because while the former checks that the CI service (GitHub Actions) is set up to automatically build and publish to a registry, the latter checks if a build step exists in the CI even if it is used for testing purposes only. Since we are interested to know if the Arrow artifact is published automatically from a hosted build platform, we just include the ``mcn_build_as_code_1`` check in the policy as follows:
 
-.. code-block:: c++
+.. code-block:: prolog
 
     #include "prelude.dl"
 
@@ -164,8 +164,6 @@ Future Work
 
 Mapping artifact to commits within repositories is a challenging endeavour. Macron's Commit Finder feature relies on repositories having and using version tags in a sensible way (a tag is considered sensible if it closely matches the version it represents). An alternative, or complimentary, approach would be to make use of the information found within provenance files, where information such as the commit hash used to create the artifact can potentially be found. Additionally, it should be noted that the Commit Finder feature was modelled on the intentions of developers (in terms of tag usage) within a large quantity of Java projects. As tag formatting is "generally" language agnostic in the same way that versioning schemes are, this feature should work well for other languages. However, there may be some improvements to be made by further testing on a large number of non-Java projects.
 
-^^^^^^^^^^^^^^^
-Update June '24
-^^^^^^^^^^^^^^^
+.. note::
 
 Macaron now supports extracting repository URLs and commit hashes from provenance files. This is demonstrated in a new tutorial: :doc:`npm_provenance </pages/tutorials/npm_provenance>`.

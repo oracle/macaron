@@ -156,7 +156,7 @@ revisit the checks shown in the HTML report in the previous :ref:`step <fig_exam
 The result of each of the checks can be queried by the check ID in the first column. For the policy in this tutorial,
 we are interested in the ``mcn_infer_artifact_pipeline_1`` and ``mcn_provenance_level_three_1`` checks:
 
-.. code-block:: c++
+.. code-block:: prolog
 
   #include "prelude.dl"
 
@@ -182,7 +182,7 @@ only if ``mcn_provenance_level_three_1`` fails.
 
 Let's take a closer look at this policy to understand what each line means.
 
-.. code-block:: c++
+.. code-block:: prolog
 
   #include "prelude.dl"
 
@@ -205,7 +205,7 @@ Feel free to browse through the available
 relations `here <https://github.com/oracle/macaron/blob/main/src/macaron/policy_engine/prelude/>`_
 to see how they are constructed before moving on.
 
-.. code-block:: c++
+.. code-block:: prolog
 
   Policy("detect-malicious-upload", component_id, "") :-
     is_component(component_id, _),
@@ -214,7 +214,7 @@ to see how they are constructed before moving on.
 This rule populates the ``Policy`` relation if ``component_id`` exists in the database and
 ``violating_dependencies`` relation for this component is empty.
 
-.. code-block:: c++
+.. code-block:: prolog
 
   .decl violating_dependencies(parent: number)
   violating_dependencies(parent) :-
@@ -227,7 +227,7 @@ Here we declare a relation called ``violating_dependencies`` and populate it if 
 ``transitive_dependency`` relation do not pass any of the ``mcn_infer_artifact_pipeline_1`` and
 ``mcn_provenance_level_three_1`` checks.
 
-.. code-block:: c++
+.. code-block:: prolog
 
     apply_policy_to("detect-malicious-upload", component_id) :-
       is_repo(_, "github.com/behnazh-w/example-maven-app", component_id).

@@ -75,7 +75,7 @@ Another feature of Macaron is policy verification. This allows Macaron to report
 
 For this tutorial, we can create a policy that checks whether the three checks (as above) have passed. In this way we can be sure that the requirement is satisfied without having to dive into the reports directly.
 
-.. code-block:: c++
+.. code-block:: prolog
 
     #include "prelude.dl"
 
@@ -106,7 +106,7 @@ The result of this command should show that the policy we have written succeeds 
 
 Additionally, if we had happened to run some more analyses on other versions of ``semver``, we could also apply the policy to them with only a small modification:
 
-.. code-block:: c++
+.. code-block:: prolog
 
     apply_policy_to("has-verified-provenance", component_id) :-
         is_component(component_id, purl),
@@ -128,7 +128,7 @@ Here we can see that the newer versions, 7.6.2 and 7.6.0, passed the checks, mea
 
 However, if we wanted to acknowledge that earlier versions of the artifact do not have provenance, and accept that as part of the policy, we can do that too. For this to succeed we need to extend the policy with more complicated modifications.
 
-.. code-block:: c++
+.. code-block:: prolog
 
     #include "prelude.dl"
 
@@ -150,7 +150,7 @@ However, if we wanted to acknowledge that earlier versions of the artifact do no
         is_component(component_id, purl),
         match("pkg:npm/semver@.*", purl).
 
-In this final policy, we declare (``.decl``) a new rule called ``exception`` that utilises more regular expression in its ``match`` constraint. For this tutorial we have set the exception to accept any versions of ``semver`` that starts with a number between 0 and 6 using the regular expression range component of ``[0-6]``. Then we modify the previous ``Policy`` so that it expects the same three checks to pass, but only if the exception rule is not applicable -- the exclamation mark before the exception negates the requirement. Finally, we add a new ``Policy`` that applies only to those artifacts that match the exception rule.
+In this final policy, we declare (``.decl``) a new rule called ``exception`` that utilises more regular expression in its ``match`` constraint to exclude artifacts that were published before provenance generation was supported. For this tutorial, we have set the exception to accept any versions of ``semver`` that starts with a number between 0 and 6 using the regular expression range component of ``[0-6]``. Then we modify the previous ``Policy`` so that it expects the same three checks to pass, but only if the exception rule is not applicable -- the exclamation mark before the exception negates the requirement. Finally, we add a new ``Policy`` that applies only to those artifacts that match the exception rule.
 
 When run, this updated policy produces the following:
 
