@@ -339,7 +339,8 @@ def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[
             logger.error(msg)
             raise ProvenanceAvailableException(msg)
 
-    provenance_filepaths = []
+    provenances = []
+    witness_verifier_config = load_witness_verifier_config()
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
             for provenance_asset in provenance_assets:
@@ -350,24 +351,19 @@ def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[
                         provenance_asset.name,
                     )
                     continue
-                provenance_filepaths.append(provenance_filepath)
+
+                try:
+                    provenance_payload = load_provenance_payload(provenance_filepath)
+                except LoadIntotoAttestationError as load_error:
+                    logger.error("Error while loading provenance: %s", load_error)
+                    continue
+
+                if not is_witness_provenance_payload(provenance_payload, witness_verifier_config.predicate_types):
+                    continue
+
+                provenances.append(provenance_payload)
     except OSError as error:
         logger.error("Error while storing provenance in the temporary directory: %s", error)
-
-    provenances = []
-    witness_verifier_config = load_witness_verifier_config()
-
-    for provenance_filepath in provenance_filepaths:
-        try:
-            provenance_payload = load_provenance_payload(provenance_filepath)
-        except LoadIntotoAttestationError as error:
-            logger.error("Error while loading provenance: %s", error)
-            continue
-
-        if not is_witness_provenance_payload(provenance_payload, witness_verifier_config.predicate_types):
-            continue
-
-        provenances.append(provenance_payload)
 
     if not provenances:
         logger.debug("No payloads found in provenance files.")
