@@ -203,7 +203,7 @@ upgrade-go:
 setup-github-actions:
 	python -m pip install --upgrade pip
 	python -m pip install --upgrade wheel
-	python -m pip install --upgrade --upgrade-strategy eager --editable .[actions]
+	python -m pip install --upgrade --upgrade-strategy eager .[actions]
 
 # Install dependencies for the integration test utility script in workflow to
 # test the docker image.
@@ -211,7 +211,7 @@ setup-github-actions:
 setup-integration-test-utility-for-docker:
 	python -m pip install --upgrade pip
 	python -m pip install --upgrade wheel
-	python -m pip install --upgrade --upgrade-strategy eager --editable .[test-docker]
+	python -m pip install --upgrade --upgrade-strategy eager .[test-docker]
 
 # Generate a Software Bill of Materials (SBOM).
 .PHONY: sbom
