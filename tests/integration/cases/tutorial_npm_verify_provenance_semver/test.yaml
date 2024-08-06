@@ -30,7 +30,7 @@ steps:
   kind: verify
   options:
     policy: policy_7_6_x.dl
-- name: Run macaron analyze semver@7.6.2
+- name: Run macaron analyze semver@1.0.0
   kind: analyze
   options:
     command_args:
