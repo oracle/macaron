@@ -132,13 +132,13 @@ However, if we wanted to acknowledge that earlier versions of the artifact do no
 
     #include "prelude.dl"
 
-    Policy("has-verified-provenance", component_id, "Require a verified provenance file.") :-
+    Policy("has-verified-provenance-or-is-excluded", component_id, "Require a verified provenance file.") :-
         check_passed(component_id, "mcn_provenance_derived_repo_1"),
         check_passed(component_id, "mcn_provenance_derived_commit_1"),
         check_passed(component_id, "mcn_provenance_verified_1"),
         !exception(component_id).
 
-    Policy("has-verified-provenance", component_id, "Make exception for older artifacts.") :-
+    Policy("has-verified-provenance-or-is-excluded", component_id, "Make exception for older artifacts.") :-
         exception(component_id).
 
     .decl exception(component_id: number)
@@ -146,7 +146,7 @@ However, if we wanted to acknowledge that earlier versions of the artifact do no
         is_component(component_id, purl),
         match("pkg:npm/semver@[0-6][.].*", purl).
 
-    apply_policy_to("has-verified-provenance", component_id) :-
+    apply_policy_to("has-verified-provenance-or-is-excluded", component_id) :-
         is_component(component_id, purl),
         match("pkg:npm/semver@.*", purl).
 
@@ -157,12 +157,12 @@ When run, this updated policy produces the following:
 .. code-block:: javascript
 
     component_satisfies_policy
-        ['1', 'pkg:npm/semver@7.6.2', 'has-verified-provenance']
-        ['2', 'pkg:npm/semver@7.6.0', 'has-verified-provenance']
-        ['3', 'pkg:npm/semver@1.0.0', 'has-verified-provenance']
+        ['1', 'pkg:npm/semver@7.6.2', 'has-verified-provenance-or-is-excluded']
+        ['2', 'pkg:npm/semver@7.6.0', 'has-verified-provenance-or-is-excluded']
+        ['3', 'pkg:npm/semver@1.0.0', 'has-verified-provenance-or-is-excluded']
     component_violates_policy
     failed_policies
     passed_policies
-        ['has-verified-provenance']
+        ['has-verified-provenance-or-is-excluded']
 
 Now all versions pass the policy check.
