@@ -164,6 +164,4 @@ Future Work
 
 Mapping artifact to commits within repositories is a challenging endeavour. Macron's Commit Finder feature relies on repositories having and using version tags in a sensible way (a tag is considered sensible if it closely matches the version it represents). An alternative, or complimentary, approach would be to make use of the information found within provenance files, where information such as the commit hash used to create the artifact can potentially be found. Additionally, it should be noted that the Commit Finder feature was modelled on the intentions of developers (in terms of tag usage) within a large quantity of Java projects. As tag formatting is "generally" language agnostic in the same way that versioning schemes are, this feature should work well for other languages. However, there may be some improvements to be made by further testing on a large number of non-Java projects.
 
-.. note::
-
-Macaron now supports extracting repository URLs and commit hashes from provenance files. This is demonstrated in a new tutorial: :doc:`npm_provenance </pages/tutorials/npm_provenance>`.
+.. note:: Macaron now supports extracting repository URLs and commit hashes from provenance files. This is demonstrated in a new tutorial: :doc:`npm_provenance </pages/tutorials/npm_provenance>`.
