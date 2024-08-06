@@ -1114,7 +1114,10 @@ class Analyzer:
             for build_tool in build_tools:
                 if package_registry.is_detected(build_tool):
                     analyze_ctx.dynamic_data["package_registries"].append(
-                        PackageRegistryInfo(build_tool=build_tool, package_registry=package_registry)
+                        PackageRegistryInfo(
+                            build_tool=build_tool,
+                            package_registry=package_registry,
+                        )
                     )
 
 
