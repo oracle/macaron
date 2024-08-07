@@ -103,6 +103,17 @@ Where the policy looks like below:
       is_component(component_id, purl),
       match("pkg:pypi/django@.*", purl).
 
+The ``match`` constraint in this policy allows us to apply the policy on all versions of ``django``. The result of this command should show that the policy succeeds with a zero exit code:
+
+.. code-block:: javascript
+
+    passed_policies
+        ['check-django']
+    component_satisfies_policy
+        ['1', 'pkg:pypi/django@5.0.6', 'check-django']
+    failed_policies
+    component_violates_policy
+
 Note that the ``match`` constraint applies a regex and can be expanded to enforce the ``mcn_detect_malicious_metadata_1`` check to pass on all Python packages analyzed so far by Macaron:
 
 .. code-block:: prolog
@@ -110,6 +121,8 @@ Note that the ``match`` constraint applies a regex and can be expanded to enforc
   apply_policy_to("check-django", component_id) :-
       is_component(component_id, purl),
       match("pkg:pypi.*", purl).
+
+Note that if a policy fails to pass, Macaron returns a none-zero error code.
 
 ''''''''''''''''''''''''''''''''''
 Analyzing django with dependencies
@@ -154,6 +167,17 @@ Now we can enforce the policy below to ensure that the ``mcn_detect_malicious_me
   apply_policy_to("check-dependencies", component_id) :-
       is_component(component_id, purl),
       match("pkg:pypi.*", purl).
+
+As you can see below, the policy passes for ``django`` and all its transitive dependencies.
+
+.. code-block:: javascript
+
+  passed_policies
+      ['check-dependencies']
+  component_satisfies_policy
+      ['1', 'pkg:pypi/django@5.0.6', 'check-dependencies']
+  failed_policies
+  component_violates_policy
 
 ***********
 Future Work
