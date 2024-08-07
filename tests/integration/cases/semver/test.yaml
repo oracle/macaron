@@ -7,6 +7,7 @@ description: |
 tags:
 - macaron-python-package
 - npm-registry-testcase
+- tutorial
 
 steps:
 - name: Run macaron analyze
