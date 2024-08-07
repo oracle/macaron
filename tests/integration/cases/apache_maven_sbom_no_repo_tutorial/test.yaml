@@ -6,6 +6,7 @@ description: |
 
 tags:
 - macaron-python-package
+- tutorial
 
 steps:
 - name: Run macaron analyze
