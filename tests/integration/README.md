@@ -170,17 +170,6 @@ $ python ./tests/integration/run.py run --exclude-tag npm-registry-testcase ./al
 
 You can simply think of each `--include-tag`/`--exclude-tag` argument as adding an additional constraint that a selected test case must satisfy.
 
-Instructions on how to tag a test case for our CI/CD pipeline:
-- If you want a test case to **only** run for the container image, use **only** `macaron-docker-image`.
-- If you want a test case to **only** run with the Macaron Python package, use **only** `macaron-python-package`.
-- To skip a test case, use `skip`. `skip` still has the same effect if it's used with other tags.
-- If you want to run a test case for both the Macaron Python package and the docker container, use `macaron-python-package` and `macaron-docker-image` tags.
-- If you want to run test cases that must contain all of a given set of tags (e.g. `['tag-a', 'tag-b']`), please create an additional tag for those test cases (e.g `tag-a-b`) and use it within `--include-tag`.
-- Test cases marked with `npm-registry-testcase` are not run if the environment variable `NO_NPM` is set to `TRUE`. This only applies when you run the integration tests with:
-```bash
-$ make integration-test
-```
-
 ### Debug utility script
 
 In case you want to debug the utility script itself, there is the verbose mode for all commands which can be enabled with the `-v/--verbose` flag.

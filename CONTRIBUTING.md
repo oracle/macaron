@@ -220,6 +220,16 @@ Please substitute `<image_name>` and `<tag>` with the values of the container im
 Note that integration tests can take a long time to complete.
 
 
+Each integration test case has a set of tags. Please follow these instructions on how a test case is tagged for our CI/CD pipeline:
+- If you want a test case to **only** run for the container image, use **only** `macaron-docker-image`.
+- If you want a test case to **only** run with the Macaron Python package, use **only** `macaron-python-package`.
+- To skip a test case, use `skip`. `skip` still has the same effect if it's used with other tags.
+- If you want to run a test case for both the Macaron Python package and the docker container, use `macaron-python-package` and `macaron-docker-image` tags.
+- If you want to run test cases that must contain all of a given set of tags (e.g. `['tag-a', 'tag-b']`), please create an additional tag for those test cases (e.g `tag-a-b`) and use it within `--include-tag`.
+- Test cases marked with `npm-registry-testcase` are not run if the environment variable `NO_NPM` is set to `TRUE`. This only applies when you run the integration tests with:
+```bash
+$ make integration-test
+```
 
 ## Generating documentation
 
