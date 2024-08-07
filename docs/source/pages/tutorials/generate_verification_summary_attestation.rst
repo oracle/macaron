@@ -55,7 +55,7 @@ In order to verify the artifact with Macaron, you can follow the following steps
 
 - **Step 2**: Compose a policy to verify the artifact against. The following is a sample policy enforcing the two checks ``mcn_version_control_system_1`` and ``mcn_provenance_expectation_1`` passing for the artifact. Let's put this policy in a file ``policy.dl``.
 
-.. code-block:: c++
+.. code-block:: prolog
 
     #include "prelude.dl"
 

@@ -21,3 +21,4 @@ For the full list of supported technologies, such as CI services, registries, an
    commit_finder
    exclude_include_checks
    generate_verification_summary_attestation
+   npm_provenance
