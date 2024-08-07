@@ -230,6 +230,7 @@ Each integration test case has a set of tags. Please follow these instructions o
 ```bash
 $ make integration-test
 ```
+- If a test case is relevant to a tutorial, please tag it with `tutorial`.
 
 ## Generating documentation
 
