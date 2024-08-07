@@ -7,6 +7,7 @@ description: |
 tags:
 - macaron-python-package
 - macaron-docker-image
+- tutorial
 
 steps:
 - name: Create virtual environment.
