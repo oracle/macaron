@@ -162,11 +162,15 @@ runs _all_ installed git hooks over your code. For more control over the code ch
 
 ### Testing
 
-This repository is set up to test either standalone or as a pre-push git hook. Tests are stored in the `tests/` folder, and you can run them manually like so:
+#### Unit tests
+
+This repository is set up to perform unit tests either standalone or as a pre-push git hook. Unit tests are stored in the `tests/` folder (except for the `tests/integration` directory), and you can run them manually like so:
 ```bash
 make test
 ```
-which runs all unit tests in your local environment. You can also add tests to the docstrings in the Python source files or documentation `.rst` files, which will be picked up by pytest from `src/` and `docs/` directories. Here is an example:
+which runs all unit tests in your local environment.
+
+You can also add tests to the docstrings in the Python source files or documentation `.rst` files, which will be picked up by pytest from `src/` and `docs/` directories. Here is an example:
 
 ```python
 def do_something(value: bool = False) -> bool:
@@ -185,12 +189,36 @@ def do_something(value: bool = False) -> bool:
 
 Test code and branch coverage is already tracked using [coverage](https://github.com/nedbat/coveragepy) and the [pytest-cov](https://github.com/pytest-dev/pytest-cov) plugin for pytest, and it measures how much code in the `src/macaron/` folder is covered by tests.
 
-You can also run integration tests locally:
+#### Integration tests
+
+To know more about our integration test utility, please see [here](./tests/integration/README.md).
+
+We have two types of integration tests:
+1. Integration tests that are run against the Macaron Python package.
+  - Prerequisites: The dev environment must be setup first (you should only need to run once, unless you make changes to the project's dependencies).
+```bash
+make setup
+```
+  - Run these tests locally with:
 ```bash
 make integration-test
 ```
+2. Integration tests that are run against the container image.
+  - Prerequisites: Setup the integration test utility for docker.
+```bash
+make setup-integration-test-utility-for-docker
+```
+  - Run these tests locally with:
+```bash
+IMAGE=<image_name> MACARON_IMAGE_TAG=<tag> make integration-test-docker
+```
 
-Note that integration tests can take a long time to complete. Also the repositories that we clone for these tests will be stored under `output/` directory. If you do not remove/move this directory and run the pre-commit tool you might get errors.
+Please substitute `<image_name>` and `<tag>` with the values of the container image you want to test. This container image can either be:
+- Pulled from `ghcr.io/oracle/macaron`.
+- Built from running `make build-docker`.
+
+Note that integration tests can take a long time to complete.
+
 
 
 ## Generating documentation
