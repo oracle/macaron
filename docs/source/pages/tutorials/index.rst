@@ -19,6 +19,7 @@ For the full list of supported technologies, such as CI services, registries, an
 
    detect_malicious_java_dep
    commit_finder
+   detect_malicious_package
    exclude_include_checks
    generate_verification_summary_attestation
    npm_provenance

@@ -36,6 +36,29 @@ steps:
     kind: policy_report
     result: output/policy_report.json
     expected: policy_report.json
+- name: Clean up the database.
+  kind: shell
+  options:
+    cmd: rm -f output/macaron.db
+- name: Run macaron analyze on deps recursively
+  kind: analyze
+  options:
+    main_args:
+    - --defaults-path
+    - configurations.ini
+    command_args:
+    - -purl
+    - pkg:pypi/django@5.0.6
+    - --python-venv
+    - ./django_venv
+- name: Run macaron verify-policy to check for all transitive dependencies.
+  kind: verify
+  options:
+    policy: policy-recursive-deps.dl
+- name: Run macaron verify-policy to check for all Python packages.
+  kind: verify
+  options:
+    policy: policy-all-pypi.dl
 - name: Clean up the virtual environment
   kind: shell
   options:

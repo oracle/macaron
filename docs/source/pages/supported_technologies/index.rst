@@ -79,6 +79,9 @@ Package Registries
    * - `npm Registry <https://registry.npmjs.org>`_
      - Projects built with npm or Yarn and published on the npm registry.
      - :doc:`page </pages/supported_technologies/npm_registry>`
+   * - `Python Package Index (PyPI) <https://pypi.org/>`_
+     - Projects built with Pip or Poetry and published on the PyPI registry.
+     - :doc:`page </pages/supported_technologies/pypi_registry>`
 
 -----------
 Provenances
@@ -115,3 +118,4 @@ See also
    witness
    maven_central
    npm_registry
+   pypi_registry

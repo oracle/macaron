@@ -141,16 +141,15 @@ SUSPICIOUS_COMBO: dict[
 
 
 class DetectMaliciousMetadataCheck(BaseCheck):
-    """This check analyzes the metadata of the pypi package based on seven heuristics."""
+    """This check analyzes the metadata of a package based on reports malicious behavior."""
 
     def __init__(self) -> None:
         """Initialize a check instance."""
         check_id = "mcn_detect_malicious_metadata_1"
-        description = "Check whether the features of package adhere to the heuristics."
-        super().__init__(
-            check_id=check_id,
-            description=description,
-        )
+        description = """This check analyzes the metadata of a package based on reports malicious behavior.
+        Supported ecosystem: PyPI.
+        """
+        super().__init__(check_id=check_id, description=description, eval_reqs=[])
 
     def _should_skip(
         self, results: dict[Heuristics, HeuristicResult], depends_on: list[tuple[Heuristics, HeuristicResult]]
