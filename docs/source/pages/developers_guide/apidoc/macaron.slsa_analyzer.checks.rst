@@ -105,6 +105,14 @@ macaron.slsa\_analyzer.checks.provenance\_repo\_check module
    :undoc-members:
    :show-inheritance:
 
+macaron.slsa\_analyzer.checks.provenance\_verified\_check module
+----------------------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.checks.provenance_verified_check
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.slsa\_analyzer.checks.provenance\_witness\_l1\_check module
 -------------------------------------------------------------------
 

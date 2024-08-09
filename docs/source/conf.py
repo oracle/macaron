@@ -61,11 +61,29 @@ html_theme_options = {
 }
 html_static_path = ["_static"]
 
+# These objects must be excluded due to their use of hyphens.
+# E.g. invalid signature for autoattribute ('macaron.parsers.github_workflow_model::Step5.working-directory')
+hyphenated_exclusion_list = [
+    "<class 'macaron.parsers.github_workflow_model.Strategy'>",
+    "<class 'macaron.parsers.github_workflow_model.Concurrency'>",
+    "<class 'macaron.parsers.github_workflow_model.Run'>",
+    "<class 'macaron.parsers.github_workflow_model.PermissionsEvent'>",
+    "<class 'macaron.parsers.github_workflow_model.Ref1'>",
+    "<class 'macaron.parsers.github_workflow_model.Step3'>",
+    "<class 'macaron.parsers.github_workflow_model.Step4'>",
+    "<class 'macaron.parsers.github_workflow_model.Step5'>",
+    "<class 'macaron.parsers.github_workflow_model.NormalJob'>",
+    "<class 'macaron.parsers.github_workflow_model.Workflow'>",
+]
+
 
 # We add the docstrings for class constructors in the `__init__` methods.
 def skip(app, what, name, obj, would_skip, options):
     if name == "__init__":
         return False
+    obj_str = str(obj)
+    if obj_str in hyphenated_exclusion_list:
+        return True
     return would_skip
 
 
