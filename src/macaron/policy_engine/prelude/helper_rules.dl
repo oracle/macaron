@@ -12,6 +12,38 @@ check_passed(component_id, check_name) :- check_result(_, check_name, 1, compone
 .decl check_failed(component_id: number, check_name: symbol)
 check_failed(component_id, check_name) :- check_result(_, check_name, 0, component_id).
 
+
+/**
+ * This relation provides the passed checks together with the confidence score for a component.
+   Parameters:
+   component_id: number
+       The target software component id.
+   check_name: symbol
+       The check name that matches the ``^mcn_([a-z]+_)+([0-9]+)$`` regular expression.
+   confidence: float
+       The confidence score computed for the check result.
+ */
+.decl check_passed_with_confidence(component_id: number, check_name: symbol, confidence: float)
+check_passed_with_confidence(component_id, check_name, confidence) :-
+    check_result(check_id, check_name, 1, component_id),
+    check_facts(check_id, confidence, component_id,_,_).
+
+/**
+ * This relation provides the failed checks together with the confidence score for a component.
+   Parameters:
+   component_id: number
+       The target software component id.
+   check_name: symbol
+       The check name that matches the ``^mcn_([a-z]+_)+([0-9]+)$`` regular expression.
+   confidence: float
+       The confidence score computed for the check result.
+ */
+.decl check_failed_with_confidence(component_id: number, check_name: symbol, confidence: float)
+check_failed_with_confidence(component_id, check_name, confidence) :-
+    check_result(check_id, check_name, 0, component_id),
+    check_facts(check_id, confidence, component_id,_,_).
+
+
 /**
  * Check name is valid.
  */

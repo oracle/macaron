@@ -10,6 +10,10 @@ tags:
 - tutorial
 
 steps:
+- name: Clean up the virtual environment if it exists.
+  kind: shell
+  options:
+    cmd: rm -rf ./django_venv
 - name: Create virtual environment.
   kind: shell
   options:
@@ -55,11 +59,15 @@ steps:
   kind: verify
   options:
     policy: policy-recursive-deps.dl
+- name: Run macaron verify-policy to check for all transitive dependencies with high confidence.
+  kind: verify
+  options:
+    policy: policy-recursive-deps-confidence.dl
 - name: Run macaron verify-policy to check for all Python packages.
   kind: verify
   options:
     policy: policy-all-pypi.dl
-- name: Clean up the virtual environment
+- name: Clean up the virtual environment.
   kind: shell
   options:
     cmd: rm -rf ./django_venv
