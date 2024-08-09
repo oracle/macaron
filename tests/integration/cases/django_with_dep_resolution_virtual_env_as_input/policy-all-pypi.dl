@@ -3,7 +3,7 @@
 
 #include "prelude.dl"
 
-Policy("all-pypi", component_id, "Check al the Python packages.") :-
+Policy("all-pypi", component_id, "Check all the Python packages.") :-
     check_passed(component_id, "mcn_detect_malicious_metadata_1").
 
 apply_policy_to("all-pypi", component_id) :-

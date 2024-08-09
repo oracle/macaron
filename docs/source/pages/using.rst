@@ -17,7 +17,7 @@ Using Macaron
 Analyzing an artifact with a PURL string
 ----------------------------------------
 
-Macaron can analyze an artifact (and it dependencies) to determine its supply chain security posture. To analyze an artifact, you need to provide the PURL identifier of the artifact:
+Macaron can analyze an artifact (and its dependencies) to determine its supply chain security posture. To analyze an artifact, you need to provide the PURL identifier of the artifact:
 
  .. code-block::
 
@@ -40,7 +40,7 @@ Where ``artifact_details`` varies based on the provided ``package_type``. Exampl
    * - NuGet (.Net)
      - ``pkg:nuget/EnterpriseLibrary.Common@6.0.1304``
    * - NPM (NodeJS)
-     - ``pkg:npm/%40angular/animation@12.3.1``
+     - ``pkg:npm/@angular/animation@12.3.1``
 
 For more detailed information on converting a given artifact into a PURL, see `PURL Specification <https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst>`_ and `PURL Types <https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst>`_
 
@@ -56,9 +56,9 @@ To run Macaron on an artifact, we use the following command:
 Automated repository and commit finder
 ''''''''''''''''''''''''''''''''''''''
 
-Macaron is capable of automatically determining the repository and exact commit that matches the given artifact. For repository URLs, this is achieved through examination of SCM meta data found within artifact POM files (for Java), or use of Google's Open Source Insights API (for other languages). For commits, Macaron will attempt to match repository tags with the artifact version being sought, thereby requiring that the repository supports and uses tags on commits that were used for releases.
+Macaron is capable of automatically determining the repository and exact commit that match a given artifact. For repository URLs, this is achieved through examination of SCM meta data found within artifact POM files (for Java), or use of Google's Open Source Insights API (for other languages). For commits, Macaron will attempt to match repository tags with the artifact version being sought, thereby requiring that the repository supports and uses tags on commits that were used for releases.
 
-Macaron will try to discover the corresponding repository of an artifact by default unless it is provided as input as shown `later <#analyze-repo>`_. This feature is enabled by default. To disable, or configure its behaviour in other ways, a custom ``.ini`` file should be passed to Macaron during execution. See `How to change the default configuration <#change-config>`_ for more details.
+By default, Macaron will try to discover the corresponding repository of an artifact unless it is already provided as input (as shown `later <#analyze-repo>`_). To disable or otherwise configure this behavior, or others, a custom ``.ini`` file should be passed to Macaron during execution. See `How to change the default configuration <#change-config>`_ for more details.
 
 For example, under the ``repofinder`` header, three options exist: ``find_repos``, ``use_open_source_insights``, and ``redirect_urls``:
 
@@ -113,7 +113,7 @@ Analyzing a source code repository
 Analyzing a public GitHub repository
 ''''''''''''''''''''''''''''''''''''
 
-Macaron can also analyze a GitHub public repository (and potentially the repositories of it dependencies).
+Macaron can also analyze a public GitHub repository (and potentially the repositories of its dependencies).
 
 To run Macaron on a GitHub public repository, we use the following command:
 

@@ -7,7 +7,7 @@
 Detecting malicious packages
 ----------------------------
 
-In this tutorial we show how to use Macaron to find malicious packages. Imagine you have found a Python package and you would like to add this as a dependency to your project, but you are not sure whether you can trust the maintainers or not. You can run Macaron to see if it can detect any malicious behavior. Note that Macaron is an analysis tool and can either miss a malicious behavior or report a false positive. So, while we encourage you to use Macaron, you might still need to triage the results manually.
+In this tutorial we show how to use Macaron to find malicious packages. Imagine you’ve discovered a Python package you want to add as a dependency to your project, but you’re unsure whether you can trust its maintainers. In this case, you can run Macaron to see if it can detect any malicious behavior. Note that Macaron is an analysis tool and can either miss a malicious behavior or report a false positive.
 
 .. list-table::
    :widths: 25
@@ -23,7 +23,7 @@ In this tutorial we show how to use Macaron to find malicious packages. Imagine 
 Background
 **********
 
-Detecting malicious behavior in open-source software has been a focus for the `Open Source Security Foundation <https://github.com/ossf>`_ (OpenSSF) community in recent years. One significant initiative is :term:`SLSA`, which offers practical recommendations to enhance the integrity of software packages and infrastructure. Macaron is designed to detect poorly maintained or malicious packages by implementing checks inspired by the SLSA specification. However, some forms of attacks currently fall outside the scope of SLSA version 1—notably, SLSA doesn't address the issue of malicious maintainers. Our primary goal is to make it more difficult for malicious actors to compromise critical supply chains and infrastructure. To achieve this, we're developing new methods to detect when maintainers of open source projects are untrustworthy and deliberately spread malware.
+Detecting malicious behavior in open-source software has been a focus for the `Open Source Security Foundation <https://github.com/ossf>`_ (OpenSSF) community in recent years. One significant initiative is :term:`SLSA`, which offers practical recommendations to enhance the integrity of software packages and infrastructure. Macaron is designed to detect poorly maintained or malicious packages by implementing checks inspired by the SLSA specification. However, some forms of attacks currently fall outside the scope of SLSA version 1—notably, SLSA doesn't address the issue of malicious maintainers. Our primary goal is to make it more difficult for malicious actors to compromise critical supply chains and infrastructure. To achieve this, we're developing new methods to detect when maintainers of open source projects are untrustworthy and deliberately spreading malware.
 
 ******************************
 Installation and Prerequisites
@@ -61,7 +61,7 @@ In this tutorial, we run Macaron on the ``django`` Python package as an example 
 Analyzing django without dependencies
 '''''''''''''''''''''''''''''''''''''
 
-First, we need to run the ``analyze`` command of Macaron to run a number of :ref:`checks <checks>` on the ``django`` package. In this tutorial, we are interested in the results of the ``mcn_detect_malicious_metadata_1``. Check :ref:`this tutorial <include_exclude_checks>` if you would like to exclude other checks.
+First, we need to run the ``analyze`` command of Macaron to run a number of :ref:`checks <checks>` on the ``django`` package. In this tutorial, we are interested in the results of the ``mcn_detect_malicious_metadata_1`` check. Check :ref:`this tutorial <include_exclude_checks>` if you would like to exclude other checks.
 
 .. code-block:: shell
 
@@ -79,11 +79,9 @@ First, we need to run the ``analyze`` command of Macaron to run a number of :ref
    :alt: Check ``mcn_detect_malicious_metadata_1`` result for ``django@5.0.6``
    :align: center
 
-|
+The image above shows the result of the ``mcn_detect_malicious_metadata_1`` check for ``django@5.0.6``. The check has passed, which means this package is not malicious. If a package is malicious, this check fails. If the ecosystem is not supported, the check returns ``UNKNOWN``. You can also see the result of individual heuristics applied in this check under the ``Justification`` column.
 
-The image above shows the result of the ``mcn_detect_malicious_metadata_1`` check for ``django@5.0.6``. The check has passed, which means this package is not malicious. If a package is malicious, this check fails, and if the ecosystem is not supported, the check returns ``UKNOWN``. You can also see the result of individual heuristics applied in this check under the ``Justification`` column.
-
-Now we can write a policy to enforce that all versions of ``django`` pass the ``mcn_detect_malicious_metadata_1`` check. The policy will be enforced against the ``analyze`` command run outputs cached in the local database at ``output/macaron.db``.
+Now we can write a policy to ensure that all versions of ``django`` pass the ``mcn_detect_malicious_metadata_1`` check. The policy will be enforced against the output of the ``analyze`` command that is cached in the local database at ``output/macaron.db``.
 
 .. code-block:: shell
 
@@ -114,7 +112,7 @@ The ``match`` constraint in this policy allows us to apply the policy on all ver
     failed_policies
     component_violates_policy
 
-Note that the ``match`` constraint applies a regex and can be expanded to enforce the ``mcn_detect_malicious_metadata_1`` check to pass on all Python packages analyzed so far by Macaron:
+Note that the ``match`` constraint applies a regex pattern and can be expanded to ensure the ``mcn_detect_malicious_metadata_1`` check passes on all Python packages analyzed so far by Macaron:
 
 .. code-block:: prolog
 
@@ -128,7 +126,7 @@ Note that if a policy fails to pass, Macaron returns a none-zero error code.
 Analyzing django with dependencies
 ''''''''''''''''''''''''''''''''''
 
-Macaron supports analyzing dependencies of a package and runs the same set of checks on the dependencies as the main target package. To analyze the dependencies of ``django@5.0.6`` Python package, you can either :ref:`generate an SBOM <python-sbom>` yourself or :ref:`point Macaron to a virtual environment <python-venv-deps>` where ``django`` is installed.
+Macaron supports analyzing a package's dependencies and performs the same set of checks on them as it does on the main target package. To analyze the dependencies of ``django@5.0.6`` Python package, you can either :ref:`generate an SBOM <python-sbom>` yourself or :ref:`point Macaron to a virtual environment <python-venv-deps>` where ``django`` is installed.
 
 
 Let's assume ``/tmp/.django_venv`` is the virtual environment where ``django@5.0.6`` is installed. Run Macaron as follows to analyze ``django`` and its dependencies.
@@ -153,22 +151,22 @@ And pass that to the ``analyze`` command:
 
 To learn more about changing configurations see :ref:`here <change-config>`.
 
-Now we can enforce the policy below to ensure that the ``mcn_detect_malicious_metadata_1`` check always passes on ``django`` and its dependencies and none of the dependencies have malicious behavior.
+Now we can enforce the policy below to ensure that the ``mcn_detect_malicious_metadata_1`` check always passes on ``django`` and its dependencies, indicating that none of the dependencies have malicious behavior.
 
 .. code-block:: prolog
 
   #include "prelude.dl"
 
   Policy("check-dependencies", component_id, "Check the dependencies of django.") :-
-    is_component(component_id, _),
     transitive_dependency(component_id, dependency),
+    check_passed(component_id, "mcn_detect_malicious_metadata_1"),
     check_passed(dependency, "mcn_detect_malicious_metadata_1").
 
   apply_policy_to("check-dependencies", component_id) :-
       is_component(component_id, purl),
-      match("pkg:pypi.*", purl).
+      match("pkg:pypi/django@.*", purl).
 
-As you can see below, the policy passes for ``django`` and all its transitive dependencies.
+As you can see below, the policy passes because Macaron doesn't detect malicious behavior for ``django`` or any of its transitive dependencies.
 
 .. code-block:: javascript
 
@@ -183,4 +181,4 @@ As you can see below, the policy passes for ``django`` and all its transitive de
 Future Work
 ***********
 
-We are actively working on the malware detection analysis in Macaron to improve the precision and support more ecosystems. An upcoming feature is a more advanced source code analysis. Stay tuned and feel free to contribute to improve this check.
+We are actively working on the malware detection analysis check in Macaron — to improve precision, support more ecosystems, and in particular, perform more advanced source code analysis. Stay tuned and feel free to contribute to improve this check.

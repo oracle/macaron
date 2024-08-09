@@ -141,7 +141,7 @@ SUSPICIOUS_COMBO: dict[
 
 
 class DetectMaliciousMetadataCheck(BaseCheck):
-    """This check analyzes the metadata of a package based on reports malicious behavior."""
+    """This check analyzes the metadata of a package for malicious behavior."""
 
     def __init__(self) -> None:
         """Initialize a check instance."""
