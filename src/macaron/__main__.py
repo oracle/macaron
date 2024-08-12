@@ -19,6 +19,7 @@ from macaron.config.global_config import global_config
 from macaron.errors import ConfigurationError
 from macaron.output_reporter.reporter import HTMLReporter, JSONReporter, PolicyReporter
 from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
+from macaron.repo_finder.repo_finder import find_repo
 from macaron.slsa_analyzer.analyzer import Analyzer
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
@@ -212,6 +213,47 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
     return os.EX_USAGE
 
 
+def find_commit(find_args: argparse.Namespace) -> int:
+    """Perform repo and commit finding for a passed PURL, or commit finding for a passed PURL and repo."""
+    if not find_args.package_url:
+        logger.error("Missing PURL for commit finder operation.")
+        return os.EX_USAGE
+
+    try:
+        purl = PackageURL.from_string(find_args.package_url)
+    except ValueError as error:
+        logger.error("Could not parse PURL: %s", error)
+        return os.EX_USAGE
+
+    repo = find_args.repo_path
+    if not repo:
+        logger.debug("Searching for repo of PURL: %s", purl)
+        repo = find_repo(purl)
+
+    if not repo:
+        logger.error("Could not find repo for PURL: %s", purl)
+        return os.EX_DATAERR
+
+    # Prepare the repo.
+    logger.debug("Preparing repo: %s", repo)
+    analyzer = Analyzer(global_config.output_path, global_config.build_log_path)
+    git_obj, digest = analyzer.prepare_temp_repo(purl, repo)
+
+    if not git_obj:
+        logger.error("Could not resolve repository: %s", repo)
+        return os.EX_DATAERR
+
+    if not digest:
+        logger.error("Could not find commit for purl / repository: %s / %s", purl, repo)
+        return os.EX_DATAERR
+
+    if not find_args.repo_path:
+        logger.info("Found repository for PURL: %s", repo)
+    logger.info("Found commit for PURL: %s", digest)
+
+    return os.EX_OK
+
+
 def perform_action(action_args: argparse.Namespace) -> None:
     """Perform the indicated action of Macaron."""
     match action_args.action:
@@ -239,6 +281,17 @@ def perform_action(action_args: argparse.Namespace) -> None:
                 sys.exit(os.EX_USAGE)
 
             analyze_slsa_levels_single(action_args)
+
+        case "find-commit":
+            try:
+                for git_service in GIT_SERVICES:
+                    git_service.load_defaults()
+            except ConfigurationError as error:
+                logger.error(error)
+                sys.exit(os.EX_USAGE)
+
+            find_commit(action_args)
+
         case _:
             logger.error("Macaron does not support command option %s.", action_args.action)
             sys.exit(os.EX_USAGE)
@@ -443,6 +496,28 @@ def main(argv: list[str] | None = None) -> None:
     vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
     vp_group.add_argument("-f", "--file", type=str, help="Path to the Datalog policy.")
     vp_group.add_argument("-s", "--show-prelude", action="store_true", help="Show policy prelude.")
+
+    # Find the repo and commit of a passed PURL, or the commit of a passed PURL and repo.
+    find_parser = sub_parser.add_parser(name="find-commit")
+
+    find_parser.add_argument(
+        "-purl",
+        "--package-url",
+        required=True,
+        type=str,
+        help=("The PURL string to perform repository and commit finding for."),
+    )
+
+    find_parser.add_argument(
+        "-rp",
+        "--repo-path",
+        required=False,
+        type=str,
+        help=(
+            "The path to a repository that matches the provided PURL, can be local or remote. "
+            "This argument is only required in cases where the repository cannot be discovered automatically."
+        ),
+    )
 
     args = main_parser.parse_args(argv)
 
