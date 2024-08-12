@@ -124,7 +124,7 @@ Note that the ``match`` constraint applies a regex pattern and can be expanded t
 Verification Summary Attestation report
 +++++++++++++++++++++++++++++++++++++++
 
-Additionally, Macaron generates a Verification Summary Attestation (:term:`VSA`) report that contains the policy and information about the analyzed artifact. See :ref:`this page <vsa>` for more details. For instance, the VSA report for the ``check-django`` policy shown above can be viewed by running the command below:
+Additionally, Macaron generates a Verification Summary Attestation (:term:`VSA`) report that contains the policy, and information about the analyzed artifact. See :ref:`this page <vsa>` for more details. For instance, the VSA report for the ``check-django`` policy shown above can be viewed by running this command:
 
 .. toggle::
 
@@ -220,7 +220,7 @@ As you can see below, the policy passes because Macaron doesn't detect malicious
 Require a confidence level in the policy
 ''''''''''''''''''''''''''''''''''''''''
 
-Macaron also provides a confidence score for each check result, represented as a value between ``0`` and ``1`` inclusive, respectively. You can incorporate this score into your policy to ensure checks meet a required level of confidence. Currently, Macaron :class:`has these confidence levels <macaron.slsa_analyzer.checks.check_result.Confidence>`. For instance, you might adjust the :ref:`check-dependencies policy shown earlier <django_with_deps>` to require that the ``mcn_detect_malicious_metadata_1`` check passes with a high confidence, i.e., ``1``:
+Macaron also provides a confidence score for each check result, represented as a value ranging from ``0`` to ``1`` (inclusive). You can incorporate this score into your policy to ensure checks meet a required level of confidence. Currently, Macaron :class:`has these confidence levels <macaron.slsa_analyzer.checks.check_result.Confidence>`. For instance, you might adjust the :ref:`check-dependencies policy shown earlier <django_with_deps>` to require that the ``mcn_detect_malicious_metadata_1`` check passes with a high confidence, i.e., ``1``:
 
 .. code-block:: prolog
 
