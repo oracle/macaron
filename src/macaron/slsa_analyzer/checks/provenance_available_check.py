@@ -34,8 +34,11 @@ class ProvenanceAvailableFacts(CheckFacts):
     #: The primary key.
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
-    #: The availability of the provenance.
-    available: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
+    #: The provenance asset name.
+    asset_name: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
+
+    #: The URL for the provenance asset.
+    asset_url: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
     __mapper_args__ = {
         "polymorphic_identity": "_provenance_available_check",
@@ -75,7 +78,6 @@ class ProvenanceAvailableCheck(BaseCheck):
         return CheckResultData(
             result_tables=[
                 ProvenanceAvailableFacts(
-                    available=f"The provenance is {'available' if available else 'not available'}.",
                     confidence=Confidence.HIGH,
                 )
             ],
