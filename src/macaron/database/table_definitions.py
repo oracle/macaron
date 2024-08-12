@@ -449,7 +449,7 @@ class CheckFacts(ORMBase):
     component: Mapped["Component"] = relationship(back_populates="checkfacts")
 
     #: The foreign key to the check result.
-    check_result_id: Mapped[int] = mapped_column(String, ForeignKey("_check_result.id"), nullable=False)
+    check_result_id: Mapped[int] = mapped_column(Integer, ForeignKey("_check_result.id"), nullable=False)
 
     #: The column used as a mapper argument for distinguishing checks in polymorphic inheritance.
     check_type: Mapped[str]
