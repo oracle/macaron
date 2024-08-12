@@ -13,6 +13,98 @@ Using Macaron
 
 .. contents:: :local:
 
+----------------------------------------
+Analyzing an artifact with a PURL string
+----------------------------------------
+
+Macaron can analyze an artifact (and its dependencies) to determine its supply chain security posture. To analyze an artifact, you need to provide the PURL identifier of the artifact:
+
+ .. code-block::
+
+  pkg:<package_type>/<artifact_details>
+
+Where ``artifact_details`` varies based on the provided ``package_type``. Examples for those currently supported by Macaron are as follows:
+
+.. list-table:: Examples of PURL strings for artifacts.
+   :widths: 50 50
+   :header-rows: 1
+
+   * - Package Type
+     - PURL String
+   * - Maven (Java)
+     - ``pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1``
+   * - PyPi (Python)
+     - ``pkg:pypi/django@1.11.1``
+   * - Cargo (Rust)
+     - ``pkg:cargo/rand@0.7.2``
+   * - NuGet (.Net)
+     - ``pkg:nuget/EnterpriseLibrary.Common@6.0.1304``
+   * - NPM (NodeJS)
+     - ``pkg:npm/@angular/animation@12.3.1``
+
+For more detailed information on converting a given artifact into a PURL, see `PURL Specification <https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst>`_ and `PURL Types <https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst>`_
+
+
+To run Macaron on an artifact, we use the following command:
+
+.. code-block:: shell
+
+  ./run_macaron.sh analyze -purl <artifact-purl>
+
+
+''''''''''''''''''''''''''''''''''''''
+Automated repository and commit finder
+''''''''''''''''''''''''''''''''''''''
+
+Macaron is capable of automatically determining the repository and exact commit that match a given artifact. For repository URLs, this is achieved through examination of SCM meta data found within artifact POM files (for Java), or use of Google's Open Source Insights API (for other languages). For commits, Macaron will attempt to match repository tags with the artifact version being sought, thereby requiring that the repository supports and uses tags on commits that were used for releases.
+
+By default, Macaron will try to discover the corresponding repository of an artifact unless it is already provided as input (as shown `later <#analyze-repo>`_). To disable or otherwise configure this behavior, or others, a custom ``.ini`` file should be passed to Macaron during execution. See `How to change the default configuration <#change-config>`_ for more details.
+
+For example, under the ``repofinder`` header, three options exist: ``find_repos``, ``use_open_source_insights``, and ``redirect_urls``:
+
+- ``find_repos`` (Values: True or False) - Enables or disables the Repository Finding feature.
+- ``use_open_source_insights`` (Values: True or False) - Enables or disables use of Google's Open Source Insights API.
+- ``redirect_urls`` (Values: List of URLs) - These are URLs that are known to redirect to actual repository URLs.
+
+To turn off the automatic source repo finding feature, change the following section in the configuration ``ini`` file:
+
+.. code-block:: ini
+
+    [repofinder]
+    find_repos = False
+
+Within the configuration file under the ``repofinder.java`` header, three options exist: ``artifact_repositories``, ``repo_pom_paths``, ``find_parents``. These options behave as follows:
+
+- ``artifact_repositories`` (Values: List of URLs) - Determines the remote artifact repositories to attempt to retrieve dependency information from.
+- ``repo_pom_paths`` (Values: List of POM tags) - Determines where to search for repository information in the POM files. E.g. scm.url.
+- ``find_parents`` (Values: True or False) - When enabled, the Repository Finding feature will also search for repository URLs in parents POM files of the current dependency.
+
+
+.. note:: Finding repositories requires at least one remote call, adding some additional overhead to an analysis run.
+
+.. note:: Google's Open Source Insights API is currently used to find repositories for: Python, Rust, .Net, NodeJS
+
+An example configuration file for utilising this feature:
+
+.. code-block:: ini
+
+    [repofinder]
+    find_repos = True
+    use_open_source_insights = True
+    redirect_urls =
+        gitbox.apache.org
+        git-wip-us.apache.org
+
+    [repofinder.java]
+    artifact_repositories = https://repo.maven.apache.org/maven2
+    repo_pom_paths =
+        scm.url
+        scm.connection
+        scm.developerConnection
+    find_parents = True
+
+.. _analyze-repo:
+
 ----------------------------------
 Analyzing a source code repository
 ----------------------------------
@@ -21,7 +113,7 @@ Analyzing a source code repository
 Analyzing a public GitHub repository
 ''''''''''''''''''''''''''''''''''''
 
-Macaron can analyze a GitHub public repository (and potentially the repositories of it dependencies) to determine its SLSA posture following the specification of `SLSA v0.1 <https://slsa.dev/spec/v0.1/>`_.
+Macaron can also analyze a public GitHub repository (and potentially the repositories of its dependencies).
 
 To run Macaron on a GitHub public repository, we use the following command:
 
@@ -139,43 +231,6 @@ Analyzing a PURL (without an included version) and a repository path (with a dig
 
   ./run_macaron.sh analyze -purl <purl_string> -rp <repo_path> -b <branch> -d <digest>
 
-''''''''''''''''''''''''''''''''''''''
-Providing an artifact as a PURL string
-''''''''''''''''''''''''''''''''''''''
-
-The PURL format supports artifacts as well as repositories, and Macaron supports (some of) these too.
-
-.. code-block::
-
-  pkg:<package_type>/<artifact_details>
-
-Where ``artifact_details`` varies based on the provided ``package_type``. Examples for those currently supported by Macaron are as follows:
-
-.. list-table:: Examples of PURL strings for artifacts.
-   :widths: 50 50
-   :header-rows: 1
-
-   * - Package Type
-     - PURL String
-   * - Maven (Java)
-     - ``pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1``
-   * - PyPi (Python)
-     - ``pkg:pypi/django@1.11.1``
-   * - Cargo (Rust)
-     - ``pkg:cargo/rand@0.7.2``
-   * - NuGet (.Net)
-     - ``pkg:nuget/EnterpriseLibrary.Common@6.0.1304``
-   * - NPM (NodeJS)
-     - ``pkg:npm/%40angular/animation@12.3.1``
-
-For more detailed information on converting a given artifact into a PURL, see `PURL Specification <https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst>`_ and `PURL Types <https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst>`_
-
-.. note:: If a repository is not also provided, Macaron will try to discover it based on the artifact purl. For this to work, ``find_repos`` in the configuration file **must be enabled**\. See `Analyzing more dependencies <#more-deps>`_ for more information about the configuration options of the Repository Finding feature.
-
-.. note:: If no repository is provided, but the PURL contains a version (as with all of the above examples), Macaron will attempt to find the exact commit that matches the provided version. For this to work, the discovered repository must support and make use of tags to denote commits relating to released artifacts.
-
-
-
 -------------------------------------------------
 Verifying provenance expectations in CUE language
 -------------------------------------------------
@@ -232,6 +287,8 @@ To run the analysis against that SBOM, run this command:
 
 Where ``path_to_sbom`` is the path to the SBOM you want to use.
 
+.. _python-sbom:
+
 ''''''''''''''''''''''''
 SBOM for Python projects
 ''''''''''''''''''''''''
@@ -267,6 +324,8 @@ Then the analysis can be run as follows:
 
 Where ``path_to_sbom`` is the path to the SBOM you want to use.
 
+.. _python-venv-deps:
+
 -------------------------------------------------------
 Analyzing dependencies using Python virtual environment
 -------------------------------------------------------
@@ -292,54 +351,6 @@ Where ``--python-venv`` is the path to virtual environment.
 Alternatively, you can create an SBOM for the python package and provide it to Macaron as input as explained :ref:`here <with-sbom>`.
 
 .. note:: We only support Python 3.11 for this feature of Macaron. Please make sure to install the package using this version of Python.
-
-.. _more-deps:
-
-'''''''''''''''''''''''''''
-Analyzing more dependencies
-'''''''''''''''''''''''''''
-
-In some cases the dependencies that Macaron discovers lack a direct connection to a repository for it to analyze. To improve results in these instances, Macaron is capable of automatically determining the repository and exact commit that matches the given dependency. For repositories, this is achieved through examination of SCM meta data found within artifact POM files (for Java), or use of Google's Open Source Insights API (for other languages). For commits, Macaron will attempt to match repository tags with the artifact version being sought, thereby requiring that the repository supports and uses tags on commits that were used for releases.
-
-This feature is enabled by default. To disable, or configure its behaviour in other ways, a custom ``defaults.ini`` should be passed to Macaron during execution.
-
-See :ref:`dump-defaults <action_dump_defaults>`, the CLI command to dump the default configurations in ``defaults.ini``. After making changes, see :ref:`analyze <analyze-command-cli>` CLI command for the option to pass the modified ``defaults.ini`` file.
-
-Within the configuration file under the ``repofinder.java`` header, three options exist: ``artifact_repositories``, ``repo_pom_paths``, ``find_parents``. These options behave as follows:
-
-- ``artifact_repositories`` (Values: List of URLs) - Determines the remote artifact repositories to attempt to retrieve dependency information from.
-- ``repo_pom_paths`` (Values: List of POM tags) - Determines where to search for repository information in the POM files. E.g. scm.url.
-- ``find_parents`` (Values: True or False) - When enabled, the Repository Finding feature will also search for repository URLs in parents POM files of the current dependency.
-
-Under the related header ``repofinder``, three more options exist: ``find_repos``, ``use_open_source_insights``, and ``redirect_urls``:
-
-- ``find_repos`` (Values: True or False) - Enables or disables the Repository Finding feature.
-- ``use_open_source_insights`` (Values: True or False) - Enables or disables use of Google's Open Source Insights API.
-- ``redirect_urls`` (Values: List of URLs) - These are URLs that are known to redirect to actual repository URLs.
-
-.. note:: Finding repositories requires at least one remote call, adding some additional overhead to an analysis run.
-
-.. note:: Google's Open Source Insights API is currently used to find repositories for: Python, Rust, .Net, NodeJS
-
-An example configuration file for utilising this feature:
-
-.. code-block:: ini
-
-    [repofinder]
-    find_repos = True
-    use_open_source_insights = True
-    redirect_urls =
-        gitbox.apache.org
-        git-wip-us.apache.org
-
-    [repofinder.java]
-    artifact_repositories = https://repo.maven.apache.org/maven2
-    repo_pom_paths =
-        scm.url
-        scm.connection
-        scm.developerConnection
-    find_parents = True
-
 
 
 -----------------------------------------------
@@ -480,3 +491,24 @@ Thanks to Datalog's expressive language model, it's easy to add exception rules 
 requirement. For example, `the Mysql Connector/J <https://slsa.dev/spec/v0.1/requirements#build-service>`_ dependency in
 the Micronaut MuShop project does not pass the ``build_service`` check, but can be manually investigated and exempted if trusted. Overall, policies expressed in Datalog can be
 enforced by Macaron as part of your CI/CD pipeline to detect regressions or unexpected behavior.
+
+.. _change-config:
+
+-----------------------------------
+Modifying the default configuration
+-----------------------------------
+
+See :ref:`dump-defaults <action_dump_defaults>`, the CLI command to dump the default configurations in ``defaults.ini``. After making changes, see :ref:`analyze <analyze-command-cli>` CLI command for the option to pass the modified ``defaults.ini`` file.
+
+For example, to turn off the automatic source repo finding feature, change the following section in the configuration ``ini`` file:
+
+.. code-block:: ini
+
+    [repofinder]
+    find_repos = False
+
+Then run Macaron passing the modified configuration file:
+
+.. code-block:: shell
+
+      ./run_macaron.sh -dp <path-to-modified-default.ini> analyze -purl <artifact-purl>

@@ -1,4 +1,4 @@
-/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 #include "prelude.dl"
@@ -12,22 +12,23 @@ Policy("trusted_builder", repo_id, name) :-
 
 Policy("trusted_builder", repo_id, name) :-
         repository_analysis(_, component_id, repo_id, name),
-        check_facts(check_id, component_id, result_id, _),
-        build_service_check(check_id, build_tool_name, ci_service, build_trigger,
-        build_command, build_status_url),
+        check_facts(check_id, _, component_id, _, _),
+        check_result(check_id, _, passed, component_id),
+        build_service_check(check_id, build_tool_name, _, _, _, _, _, _, _),
         passed = 1,
         match("github-actions", build_tool_name).
 
 Policy("trusted_builder", repo_id, name) :-
         repository_analysis(_, component_id, repo_id, name),
-        check_facts(check_id, component_id, result_id, _),
-        build_script_check(check_id, build_tool_name),
+        check_facts(check_id, _, component_id, _, _),
+        check_result(check_id, _, passed, component_id),
+        build_script_check(check_id, build_tool_name, _, _, _, _, _, _, _),
         passed = 1,
         match("github-actions", build_tool_name).
 
 
 apply_policy_to("trusted_builder", repo_id) :-
-    repository_analysis(_, component_id, repo_id, name),
+    repository_analysis(_, component_id, repo_id, _),
     provenance(_, component_id, _, _, _, _).
 
 apply_policy_to("aggregate_l4", repo_id) :-

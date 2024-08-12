@@ -55,9 +55,6 @@ the requirements that are currently supported by Macaron.
    * - SLSA level
      - SLSA spec v0.1
      - Concrete check
-   * - 0+
-     - **Provenance verified** - Provenance is available and verified.
-     - See :doc:`SLSA Build Levels </pages/checks/slsa_builds>`
    * - 1
      - **Scripted build** - All build steps were fully defined in a “build script”.
      - Identify and validate build script(s).
@@ -70,6 +67,9 @@ the requirements that are currently supported by Macaron.
    * - 2
      - **Build service** - All build steps are run using some build service (e.g. GitHub Actions)
      - Identify and validate the CI service(s) used for the build process.
+   * - 2+
+     - **Provenance verified** - Provenance is available and verified.
+     - See :doc:`SLSA Build Levels </pages/checks/slsa_builds>`
    * - 3
      - **Trusted builders** - Guarantees the identification of the top-level build configuration used to initiate the build. The build is verified to be hermetic, isolated, parameterless, and executed in an ephemeral environment.
      - Identify and validate that the builder used in the CI pipeline is a trusted one.
@@ -91,6 +91,19 @@ the requirements that are currently supported by Macaron.
    * - 3
      - **Provenance derived commit** - Check if the analysis target's commit matches the commit in the provenance.
      - If there is no commit, this check will fail.
+
+****************************************************************************************
+Macaron checks that report integrity issues but do not map to SLSA requirements directly
+****************************************************************************************
+
+.. list-table::
+   :widths: 20 40
+   :header-rows: 1
+
+   * - Check name
+     - Description
+   * - Detect malicious metadata
+     - This check analyzes the metadata of a package and reports malicious behavior. This check currently supports PyPI packages.
 
 ----------------------
 How does Macaron work?

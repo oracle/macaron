@@ -17,8 +17,9 @@ For the full list of supported technologies, such as CI services, registries, an
 .. toctree::
    :maxdepth: 1
 
-   detect_malicious_java_dep
    commit_finder
-   exclude_include_checks
-   generate_verification_summary_attestation
+   detect_malicious_package
    npm_provenance
+   detect_malicious_java_dep
+   generate_verification_summary_attestation
+   exclude_include_checks
