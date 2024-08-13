@@ -415,7 +415,6 @@ def find_provenance_from_ci(analyze_ctx: AnalyzeContext, git_obj: Git | None) ->
 
         if isinstance(ci_service, GitHubActions):
             # Find the release for the software component version being analyzed.
-
             digest = component.repository.commit_sha
             tag = None
             if git_obj:
@@ -470,6 +469,9 @@ def find_provenance_from_ci(analyze_ctx: AnalyzeContext, git_obj: Git | None) ->
 
                 # TODO consider how to handle multiple payloads here.
                 return ci_info["provenances"][0].payload if ci_info["provenances"] else None
+
+        else:
+            logger.debug("CI service not supported for provenance finding: %s", ci_service.name)
 
     return None
 

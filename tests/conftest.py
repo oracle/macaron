@@ -408,7 +408,10 @@ class MockAnalyzeContext(AnalyzeContext):
             purl=purl or "pkg:github.com/package-url/purl-spec@244fd47e07d1004f0aed9c",
             analysis=Analysis(),
             repository=Repository(
-                complete_name=complete_name or "github.com/package-url/purl-spec", fs_path=fs_path or ""
+                complete_name=complete_name or "github.com/package-url/purl-spec",
+                fs_path=fs_path or "",
+                # Must match test_provenance_finder.MockGit.MockTag.commit.
+                commit_sha="dig",
             ),
         )
         super().__init__(component, *args, **kwargs)
