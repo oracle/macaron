@@ -6,7 +6,6 @@ import logging
 import os
 import re
 import sys
-import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -385,7 +384,7 @@ class Analyzer:
         # Prepare the repo.
         git_obj = None
         if analysis_target.repo_path:
-            git_obj, _ = self._prepare_repo(
+            git_obj = self.prepare_repo(
                 os.path.join(self.output_path, self.GIT_REPOS_DIR),
                 analysis_target.repo_path,
                 analysis_target.branch,
@@ -860,32 +859,14 @@ class Analyzer:
 
         return analyze_ctx
 
-    def prepare_temp_repo(self, purl: PackageURL, repo_path: str) -> tuple[Git | None, str | None]:
-        """Prepare the target repository for analysis in a temporary folder (if remote).
-
-        Parameters
-        ----------
-        purl : PackageURL | None
-            The PURL of the analysis target.
-        repo_path : str
-            The path to the repository, can be either local or remote.
-
-        Returns
-        -------
-        tuple[Git | None, str | None]
-            The pydriller.Git object and digest of the repository, or None if error.
-        """
-        with tempfile.TemporaryDirectory() as temp_dir:
-            return self._prepare_repo(temp_dir, repo_path, "", "", purl)
-
-    def _prepare_repo(
+    def prepare_repo(
         self,
         target_dir: str,
         repo_path: str,
         branch_name: str = "",
         digest: str = "",
         purl: PackageURL | None = None,
-    ) -> tuple[Git | None, str | None]:
+    ) -> Git | None:
         """Prepare the target repository for analysis.
 
         If ``repo_path`` is a remote path, the target repo is cloned to ``{target_dir}/{unique_path}``.
@@ -911,8 +892,8 @@ class Analyzer:
 
         Returns
         -------
-        tuple[Git | None, str | None]
-            The pydriller.Git object and digest of the repository, or None if error.
+        Git | None
+            The pydriller.Git object or None if error.
         """
         # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
         logger.info(
@@ -930,10 +911,9 @@ class Analyzer:
             resolved_remote_path = git_url.get_remote_vcs_url(repo_path)
             if not resolved_remote_path:
                 logger.error("The provided path to repo %s is not a valid remote path.", repo_path)
-                return None, None
+                return None
 
             git_service = self.get_git_service(resolved_remote_path)
-            print(f"GITS: {git_service}")
             repo_unique_path = git_url.get_repo_dir_name(resolved_remote_path)
             resolved_local_path = os.path.join(target_dir, repo_unique_path)
             logger.info("Cloning the repository.")
@@ -941,7 +921,7 @@ class Analyzer:
                 git_service.clone_repo(resolved_local_path, resolved_remote_path)
             except CloneError as error:
                 logger.error("Cannot clone %s: %s", resolved_remote_path, str(error))
-                return None, None
+                return None
         else:
             logger.info("Checking if the path to repo %s is a local path.", repo_path)
             resolved_local_path = self._resolve_local_path(self.local_repos_path, repo_path)
@@ -951,14 +931,14 @@ class Analyzer:
                 git_obj = Git(resolved_local_path)
             except InvalidGitRepositoryError:
                 logger.error("No git repo exists at %s.", resolved_local_path)
-                return None, None
+                return None
         else:
             logger.error("Error happened while preparing the repo.")
-            return None, None
+            return None
 
         if git_url.is_empty_repo(git_obj):
             logger.error("The target repository does not have any commit.")
-            return None, None
+            return None
 
         # Find the digest and branch if a version has been specified
         if not digest and purl and purl.version:
@@ -967,7 +947,7 @@ class Analyzer:
                 logger.error(
                     "Could not map the input purl string to a specific commit in the corresponding repository."
                 )
-                return None, None
+                return None
             digest = found_digest
 
         # Checking out the specific branch or commit. This operation varies depends on the git service that the
@@ -987,18 +967,18 @@ class Analyzer:
                 # ``git_url.check_out_repo_target``.
                 if not git_url.check_out_repo_target(git_obj, branch_name, digest, not is_remote):
                     logger.error("Cannot checkout the specific branch or commit of the target repo.")
-                    return None, None
+                    return None
 
-                return git_obj, digest
+                return git_obj
 
         try:
             git_service.check_out_repo(git_obj, branch_name, digest, not is_remote)
         except RepoCheckOutError as error:
             logger.error("Failed to check out repository at %s", resolved_local_path)
             logger.error(error)
-            return None, None
+            return None
 
-        return git_obj, digest
+        return git_obj
 
     @staticmethod
     def get_git_service(remote_path: str | None) -> BaseGitService:

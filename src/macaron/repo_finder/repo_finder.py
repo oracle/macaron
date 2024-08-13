@@ -39,6 +39,7 @@ from urllib.parse import ParseResult, urlunparse
 from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
+from macaron.config.global_config import global_config
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
@@ -148,3 +149,73 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
             fragment="",
         )
     )
+
+
+def find_source(purl_string: str, repo: str | None) -> bool:
+    """Perform repo and commit finding for a passed PURL, or commit finding for a passed PURL and repo.
+
+    Parameters
+    ----------
+    purl_string: str
+        The PURL string of the target.
+    repo: str | None
+        The optional repository path.
+
+    Returns
+    -------
+    bool
+        True if the source was found.
+    """
+    print(f"{purl_string} -- {repo}")
+    try:
+        purl = PackageURL.from_string(purl_string)
+    except ValueError as error:
+        logger.error("Could not parse PURL: %s", error)
+        return False
+
+    found_repo = repo
+    if not repo:
+        logger.debug("Searching for repo of PURL: %s", purl)
+        found_repo = find_repo(purl)
+
+    if not found_repo:
+        logger.error("Could not find repo for PURL: %s", purl)
+        return False
+
+    # Disable other loggers for cleaner output.
+    analyzer_logger = logging.getLogger("macaron.slsa_analyzer.analyzer")
+    analyzer_logger.disabled = True
+    git_logger = logging.getLogger("macaron.slsa_analyzer.git_url")
+    git_logger.disabled = True
+
+    # Prepare the repo.
+    logger.debug("Preparing repo: %s", found_repo)
+    # Importing here to avoid cyclic import problem.
+    from macaron.slsa_analyzer.analyzer import Analyzer  # pylint: disable=import-outside-toplevel, cyclic-import
+
+    analyzer = Analyzer(global_config.output_path, global_config.build_log_path)
+    repo_dir = os.path.join(analyzer.output_path, analyzer.GIT_REPOS_DIR)
+    git_obj = analyzer.prepare_repo(repo_dir, found_repo, "", "", purl)
+
+    if not git_obj:
+        # TODO expand this message to cover cases where the obj was not created due to lack of correct tag.
+        logger.error("Could not resolve repository: %s", found_repo)
+        return False
+
+    try:
+        digest = git_obj.get_head().hash
+    except ValueError:
+        logger.debug("Could not retrieve commit hash from repository.")
+        return False
+
+    if not digest:
+        logger.error("Could not find commit for purl / repository: %s / %s", purl, found_repo)
+        return False
+
+    if not repo:
+        logger.info("Found repository for PURL: %s", found_repo)
+    logger.info("Found commit for PURL: %s", digest)
+
+    logger.info("%s/commit/%s", found_repo, digest)
+
+    return True
