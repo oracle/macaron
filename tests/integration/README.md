@@ -214,7 +214,7 @@ In case you want to debug the utility script itself, there is the verbose mode f
 
 ### Compare step options Schema
 
-* `kind` (`"analysis_report" | "policy_report" | "deps_report" | "vsa"`, required): The kind of JSON report to compare.
+* `kind` (`"analysis_report_json_schema" | "analysis_report" | "policy_report" | "deps_report" | "vsa"`, required): The kind of JSON report to compare.
 * `result` (`string`, required): The output file (a relative path from test case directory).
 * `expected` (`string`, required): The expected output file (a relative path from test case directory).
 

@@ -1,0 +1,110 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "macaron-json-report-schema",
+    "title": "Report",
+    "type": "object",
+    "properties": {
+        "metadata": {
+            "type": "object"
+        },
+        "target": {
+            "type": "object",
+            "properties": {
+                "info": {
+                    "type": "object"
+                },
+                "provenances": {
+                    "type": "object"
+                },
+                "checks": {
+                    "type": "object",
+                    "properties": {
+                        "summary": {
+                            "type": "object",
+                            "items": {
+                                "type": "integer"
+                            }
+                        },
+                        "results": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "check_id": {
+                                        "type": "string"
+                                    },
+                                    "check_description": {
+                                        "type": "string"
+                                    },
+                                    "slsa_requirements": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "justification": {
+                                        "type": "array",
+                                        "items": {
+                                            "oneOf": [
+                                                { "type": "string" },
+                                                { "type": "object" }
+                                            ]
+                                        }
+                                    },
+                                    "result_type": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "dependencies": {
+            "type": "object",
+            "properties": {
+                "analyzed_deps": {
+                    "type": "integer"
+                },
+                "unique_dep_repos": {
+                    "type": "integer"
+                },
+                "checks_summary": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "check_id": {
+                                "type": "string"
+                            },
+                            "num_deps_pass": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                },
+                "dep_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "description": {
+                                "type": "string"
+                            },
+                            "report": {
+                                "type": "string"
+                            },
+                            "repo_url_status": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

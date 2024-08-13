@@ -15,6 +15,12 @@ steps:
     - -c
     - micronaut_test_config.yaml
     - --skip-deps
+- name: Compare JSON report schema
+  kind: compare
+  options:
+    kind: analysis_report_json_schema
+    result: output/reports/github_com/micronaut-projects/micronaut-test/micronaut-test.json
+    expected: ./report_schema.json
 - name: Compare dependency report
   kind: compare
   options:
