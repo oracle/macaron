@@ -168,7 +168,11 @@ Analyzing django with dependencies
 Macaron supports analyzing a package's dependencies and performs the same set of checks on them as it does on the main target package. To analyze the dependencies of ``django@5.0.6`` Python package, you can either :ref:`generate an SBOM <python-sbom>` yourself or :ref:`point Macaron to a virtual environment <python-venv-deps>` where ``django`` is installed.
 
 
-Let's assume ``/tmp/.django_venv`` is the virtual environment where ``django@5.0.6`` is installed. Run Macaron as follows to analyze ``django`` and its dependencies.
+Let's assume ``/tmp/.django_venv`` is the virtual environment where ``django@5.0.6`` is installed.
+
+.. note:: If you want Macaron to analyze the virtual environment directly to identify the dependencies, we require Python 3.11 to be used to install the package. Alternatively, you can generate the SBOM as instructed :ref:`here <python-sbom>` and pass it to Macaron as input.
+
+Run Macaron as follows to analyze ``django`` and its dependencies.
 
 .. code-block:: shell
 
