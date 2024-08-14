@@ -1,9 +1,7 @@
 # Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""
-This modules contains tests for the AnalyzeContext module
-"""
+"""This module contains tests for the AnalyzeContext module."""
 
 from unittest import TestCase
 from unittest.mock import MagicMock
@@ -96,11 +94,11 @@ class TestAnalyzeContext(TestCase):
             service=gh_actions,
             callgraph=CallGraph(BaseNode(), ""),
             provenance_assets=[],
-            latest_release={},
+            release={},
             provenances=[
                 SLSAProvenanceData(
                     payload=expected_payload, asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0)
-                )
+                ),
             ],
         )
 

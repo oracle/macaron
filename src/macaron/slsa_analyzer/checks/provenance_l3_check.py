@@ -1,7 +1,7 @@
 # Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This modules implements a check to verify a target repo has intoto provenance level 3."""
+"""This module implements a check to verify a target repo has intoto provenance level 3."""
 
 import glob
 import hashlib
@@ -307,7 +307,7 @@ class ProvenanceL3Check(BaseCheck):
                 continue
 
             # Checking if we have found a release for the repo.
-            if not ci_info["latest_release"] or "assets" not in ci_info["latest_release"]:
+            if not ci_info["release"] or "assets" not in ci_info["release"]:
                 logger.info("Could not find any release assets for the repository.")
                 break
 
@@ -317,7 +317,7 @@ class ProvenanceL3Check(BaseCheck):
                 break
 
             prov_assets = ci_info["provenance_assets"]
-            all_assets = ci_info["latest_release"]["assets"]
+            all_assets = ci_info["release"]["assets"]
 
             # Download and verify the artifacts if they are not large.
             # Create a temporary directory and automatically remove it when we are done.
@@ -356,7 +356,7 @@ class ProvenanceL3Check(BaseCheck):
                         prov.version = "0.2"
                         prov.release_commit_sha = ""
                         prov.provenance_json = json.dumps(provenance_payload.statement)
-                        prov.release_tag = ci_info["latest_release"]["tag_name"]
+                        prov.release_tag = ci_info["release"]["tag_name"]
                         prov.component = ctx.component
 
                         # Iterate through the subjects and verify.

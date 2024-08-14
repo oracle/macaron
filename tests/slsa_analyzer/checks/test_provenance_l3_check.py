@@ -1,7 +1,7 @@
 # Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This modules contains tests for the provenance l3 check."""
+"""This module contains tests for the provenance l3 check."""
 
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
@@ -70,7 +70,7 @@ class TestProvL3Check(MacaronTestCase):
             service=github_actions,
             callgraph=CallGraph(BaseNode(), ""),
             provenance_assets=[],
-            latest_release={},
+            release={},
             provenances=[],
         )
 
@@ -86,7 +86,7 @@ class TestProvL3Check(MacaronTestCase):
                 )
             ]
         )
-        ci_info["latest_release"] = {
+        ci_info["release"] = {
             "assets": [
                 {"name": "attestation.intoto.jsonl", "url": "URL", "size": 10},
                 {"name": "artifact.txt", "url": "URL", "size": 10},
@@ -108,7 +108,7 @@ class TestProvL3Check(MacaronTestCase):
                 )
             ]
         )
-        ci_info["latest_release"] = {
+        ci_info["release"] = {
             "assets": [
                 {"name": "attestation.intoto.jsonl", "url": "URL", "size": 100_000_000},
                 {"name": "artifact.txt", "url": "URL", "size": 10},
@@ -118,7 +118,7 @@ class TestProvL3Check(MacaronTestCase):
 
         # No provenance available.
         ci_info["provenance_assets"] = []
-        ci_info["latest_release"] = {
+        ci_info["release"] = {
             "assets": [
                 {"name": "attestation.intoto.jsonl", "url": "URL", "size": 10},
                 {"name": "artifact.txt", "url": "URL", "size": 10},
@@ -138,7 +138,7 @@ class TestProvL3Check(MacaronTestCase):
                 )
             ]
         )
-        ci_info["latest_release"] = {}
+        ci_info["release"] = {}
         assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
         # Test Jenkins.

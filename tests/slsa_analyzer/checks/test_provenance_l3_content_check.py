@@ -1,7 +1,7 @@
 # Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This modules contains tests for the expectation check."""
+"""This module contains tests for the expectation check."""
 
 import os
 
@@ -82,7 +82,7 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
             service=github_actions,
             callgraph=CallGraph(BaseNode(), ""),
             provenance_assets=[],
-            latest_release={},
+            release={},
             provenances=[],
         )
         ctx.dynamic_data["ci_services"] = [ci_info]
@@ -143,7 +143,7 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
             SLSAProvenanceData(
                 asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0),
                 payload=load_provenance_payload(os.path.join(prov_dir, "slsa-verifier-linux-amd64.intoto.jsonl.gz")),
-            ),
+            )
         ]
         ctx.dynamic_data["expectation"] = CUEExpectation.make_expectation(
             os.path.join(expectation_dir, "valid_expectations", "slsa_verifier_PASS.cue")
