@@ -15,12 +15,8 @@ steps:
   options:
     expectation: expectation.cue
     command_args:
-    - --repo-path
-    - https://github.com/urllib3/urllib3
-    - --branch
-    - main
-    - --digest
-    - 87a0ecee6e691fe5ff93cd000c0158deebef763b
+    - -purl
+    - pkg:pypi/urllib3@2.0.0a1
     - --skip-deps
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify

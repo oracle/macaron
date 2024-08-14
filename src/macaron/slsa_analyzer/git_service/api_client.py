@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides API clients for VCS services, such as GitHub."""
@@ -528,6 +528,26 @@ class GhAPIClient(BaseAPIClient):
         '.github/workflows/build.yaml'
         """
         return f".github/workflows/{workflow_name}"
+
+    def get_release_by_tag(self, full_name: str, tag: str) -> dict | None:
+        """Return the release of the passed tag.
+
+        Parameters
+        ----------
+        full_name: str
+            The full name of the repo.
+        tag: str
+            The tag being analyzed.
+
+        Returns
+        -------
+        dict | None
+            The release object in JSON format, or None if not found.
+        """
+        logger.debug("Get the release for '%s' using tag '%s'.", full_name, tag)
+        url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/releases/tags/{tag}"
+        response_data = send_get_http(url, self.headers)
+        return response_data or None
 
     def get_latest_release(self, full_name: str) -> dict:
         """Return the latest release for the repo.

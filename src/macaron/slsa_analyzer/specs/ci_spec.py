@@ -25,13 +25,13 @@ class CIInfo(TypedDict):
     """Release assets for provenances, e.g., asset for attestation.intoto.jsonl.
 
     For GitHub Actions, each asset is a member of the ``assets`` list in the GitHub
-    Actions latest release payload.
-    See: https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release.
+    Actions appropriate release payload.
+    See: https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-a-release-by-tag-name.
     """
 
-    latest_release: dict
-    """The latest release.
-    Schema: https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release.
+    release: dict
+    """The appropriate release.
+    Schema: https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-a-release-by-tag-name
     """
 
     provenances: Sequence[DownloadedProvenanceData]

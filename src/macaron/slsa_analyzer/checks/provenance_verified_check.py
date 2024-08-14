@@ -79,15 +79,6 @@ class ProvenanceVerifiedCheck(BaseCheck):
         if predicate:
             build_type = json_extract(predicate, ["buildType"], str)
 
-        if build_type and build_type == "https://github.com/slsa-framework/slsa-github-generator/generic@v1":
-            # Provenance is created by the SLSA GitHub generator and therefore verified.
-            return CheckResultData(
-                result_tables=[
-                    ProvenanceVerifiedFacts(build_level=3, build_type=build_type, confidence=Confidence.HIGH)
-                ],
-                result_type=CheckResultType.PASSED,
-            )
-
         if not ctx.dynamic_data["provenance_verified"]:
             # Provenance is not verified.
             return CheckResultData(
@@ -101,15 +92,23 @@ class ProvenanceVerifiedCheck(BaseCheck):
                 result_type=CheckResultType.FAILED,
             )
 
-        # Provenance is verified.
+        if build_type != "https://github.com/slsa-framework/slsa-github-generator/generic@v1":
+            # Provenance is verified but the build service does not isolate generation in the control plane from the
+            # untrusted build process.
+            return CheckResultData(
+                result_tables=[
+                    ProvenanceVerifiedFacts(
+                        build_level=2,
+                        build_type=build_type,
+                        confidence=Confidence.HIGH,
+                    )
+                ],
+                result_type=CheckResultType.PASSED,
+            )
+
+        # Provenance is created by the SLSA GitHub generator and verified.
         return CheckResultData(
-            result_tables=[
-                ProvenanceVerifiedFacts(
-                    build_level=2,
-                    build_type=build_type,
-                    confidence=Confidence.HIGH,
-                )
-            ],
+            result_tables=[ProvenanceVerifiedFacts(build_level=3, build_type=build_type, confidence=Confidence.HIGH)],
             result_type=CheckResultType.PASSED,
         )
 

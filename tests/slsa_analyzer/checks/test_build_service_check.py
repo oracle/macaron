@@ -44,7 +44,7 @@ def test_build_service_check_no_callgraph(
         service=ci_services[ci_name],
         callgraph=CallGraph(BaseNode(), ""),
         provenance_assets=[],
-        latest_release={},
+        release={},
         provenances=[],
     )
     use_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
@@ -94,7 +94,7 @@ def test_packaging_commands(
         service=github_actions_service,
         callgraph=build_github_actions_call_graph_for_commands(commands=commands),
         provenance_assets=[],
-        latest_release={},
+        release={},
         provenances=[],
     )
     ci_info["service"] = github_actions_service
@@ -112,7 +112,7 @@ def test_multibuild_facts_saved(
         service=github_actions_service,
         callgraph=build_github_actions_call_graph_for_commands(["./gradlew build", "mvn package"]),
         provenance_assets=[],
-        latest_release={},
+        release={},
         provenances=[],
     )
 
