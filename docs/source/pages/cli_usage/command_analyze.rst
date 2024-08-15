@@ -11,7 +11,7 @@ Analyze
 Description
 -----------
 
-Analyze a public GitHub repository (and optionally the repositories of its dependencies) to determine its SLSA posture. We currently support `SLSA v0.1 <https://slsa.dev/spec/v0.1/>`_. The support for `SLSA v1.0 <https://slsa.dev/spec/v1.0/>`_ will be added in future.
+Analyze a public GitHub repository (and optionally the repositories of its dependencies) to determine its :term:`SLSA` posture.
 
 -----
 Usage

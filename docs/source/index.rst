@@ -46,14 +46,12 @@ Current checks in Macaron
 The table below shows the current set of actionable checks derived from
 the requirements that are currently supported by Macaron.
 
-.. note:: The current checks are designed based on `SLSA v0.1 <https://slsa.dev/spec/v0.1/>`_. Support for `SLSA v1.0 <https://slsa.dev/spec/v1.0/>`_ is currently under development.
-
 .. list-table:: Mapping SLSA requirements to Macaron checks
    :widths: 20 40 40
    :header-rows: 1
 
    * - SLSA level
-     - SLSA spec v0.1
+     - SLSA requirement
      - Concrete check
    * - 1
      - **Scripted build** - All build steps were fully defined in a “build script”.
