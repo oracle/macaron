@@ -10,7 +10,7 @@ SLSA Build Levels
 SLSA Build Levels report on various security aspects of a project, to provide a score that represents its overall trustworthiness and completeness.
 See `SLSA Levels <https://slsa.dev/spec/v1.0/levels>`_.
 
-Macaron's ``Provenance verified`` check uses the criteria of SLSA Build Levels to output a result that matches the correct level for a given artifact.
+Macaron's :class:`Provenance verified <macaron.slsa_analyzer.checks.provenance_verified_check.ProvenanceVerifiedCheck>` check uses the criteria of SLSA Build Levels to output a result that matches the correct level for a given artifact.
 
 - Build Level 0: There is no provenance for the artifact.
 - Build Level 1: There is provenance for the artifact but it cannot be verified.

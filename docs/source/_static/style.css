@@ -1,6 +1,8 @@
 /* Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
+/* !important prevents the common CSS stylesheets from overriding
+    this as on RTD they are loaded after this stylesheet */
 .wy-nav-content {
     max-width: 1200px !important;
 }
@@ -8,4 +10,19 @@
 .wy-side-nav-search,
 .wy-nav-top {
     background: #464545;
+}
+
+/* The Read the Docs Sphinx theme contains a bug that causes text in table cells not to wrap.
+   This results in very wide tables with horizontal scroll bars.
+*/
+.wy-table-responsive table td {
+    /* The white-space CSS property sets how white space inside an element is handled. */
+    white-space: normal !important;
+}
+
+.wy-table-responsive {
+    /* The overflow CSS shorthand property sets the desired behavior when content does not fit in the
+    element's padding box (overflows) in the horizontal and/or vertical direction.
+    */
+    overflow: visible !important;
 }
