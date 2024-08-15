@@ -893,7 +893,7 @@ class Analyzer:
         Returns
         -------
         Git | None
-            The pydriller.Git object or None if error.
+            The pydriller.Git object of the repository or None if error.
         """
         # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
         logger.info(

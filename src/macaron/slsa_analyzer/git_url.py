@@ -350,7 +350,7 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
         }
         result = subprocess.run(  # nosec B603
             args=["git", "clone", "--filter=tree:0", url],
-            capture_output=False,
+            capture_output=True,
             cwd=parent_dir,
             # If `check=True` and return status code is not zero, subprocess.CalledProcessError is
             # raised, which we don't want. We want to check the return status code of the subprocess
