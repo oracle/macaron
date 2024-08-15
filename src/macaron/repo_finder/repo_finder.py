@@ -166,7 +166,6 @@ def find_source(purl_string: str, repo: str | None) -> bool:
     bool
         True if the source was found.
     """
-    print(f"{purl_string} -- {repo}")
     try:
         purl = PackageURL.from_string(purl_string)
     except ValueError as error:
