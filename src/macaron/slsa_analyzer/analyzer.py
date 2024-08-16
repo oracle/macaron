@@ -369,7 +369,7 @@ class Analyzer:
         # Prepare the repo.
         git_obj = None
         if analysis_target.repo_path:
-            git_obj = self._prepare_repo(
+            git_obj = self.prepare_repo(
                 os.path.join(self.output_path, self.GIT_REPOS_DIR),
                 analysis_target.repo_path,
                 analysis_target.branch,
@@ -842,7 +842,7 @@ class Analyzer:
 
         return analyze_ctx
 
-    def _prepare_repo(
+    def prepare_repo(
         self,
         target_dir: str,
         repo_path: str,
