@@ -1,3 +1,16 @@
+## v0.12.0 (2024-08-16)
+
+### Feat
+
+- verify npm SLSA provenance against signed npm provenance (#747)
+- add a check to analyze malicious Python packages (#750)
+- add support for SLSA v1 provenance with OCI build type (#778)
+
+### Fix
+
+- accept provenances that are not inferred in the provenance checks (#802)
+- use artifact filenames as keys for verifying jfrog assets in provenance_witness_l1_check (#796)
+
 ## v0.11.0 (2024-06-18)
 
 ### Feat
