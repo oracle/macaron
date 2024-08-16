@@ -167,42 +167,6 @@ class Gradle(BaseBuildTool):
         # We use Macaron's built-in gradlew as a fallback option.
         return os.path.join(os.path.join(macaron.MACARON_PATH, "resources"), "gradlew")
 
-    def get_group_ids(self, repo_path: str) -> set[str]:
-        """Get the group ids of all Gradle projects in a repository.
-
-        A Gradle project is a directory containing a ``build.gradle`` file.
-        According to the Gradle's documentation, there is a one-to-one mapping between
-        a "project" and a ``build.gradle`` file.
-        See: https://docs.gradle.org/current/javadoc/org/gradle/api/Project.html.
-
-        Note: This method makes the assumption that projects nested in a parent project
-        directory has the same group id with the parent. This behavior is consistent with
-        the behavior of the ``get_build_dirs`` method.
-
-        Parameters
-        ----------
-        repo_path: str
-            The absolute path to a repository containing Gradle projects.
-
-        Returns
-        -------
-        set[str]
-            The set of group ids of all Gradle projects in the repository.
-        """
-        gradle_exec = self.get_gradle_exec(repo_path)
-        group_ids = set()
-
-        for gradle_project_relpath in self.get_build_dirs(repo_path):
-            gradle_project_path = os.path.join(repo_path, gradle_project_relpath)
-            group_id = self.get_group_id(
-                gradle_exec=gradle_exec,
-                project_path=gradle_project_path,
-            )
-            if group_id:
-                group_ids.add(group_id)
-
-        return group_ids
-
     def get_group_id(self, gradle_exec: str, project_path: str) -> str | None:
         """Get the group id of a Gradle project.
 
