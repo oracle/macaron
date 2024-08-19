@@ -10,12 +10,12 @@ from pydriller import Git
 
 from macaron.errors import ProvenanceError
 from macaron.json_tools import JsonType, json_extract
+from macaron.repo_finder import to_domain_from_known_purl_types
 from macaron.repo_finder.commit_finder import (
     AbstractPurlType,
     determine_abstract_purl_type,
     extract_commit_from_version,
 )
-from macaron.repo_finder.repo_finder import to_domain_from_known_purl_types
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV1Payload, InTotoV01Payload
 
 logger: logging.Logger = logging.getLogger(__name__)

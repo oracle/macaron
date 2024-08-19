@@ -13,6 +13,7 @@ from hypothesis import strategies as st
 
 from macaron.config.defaults import defaults, load_defaults
 from macaron.slsa_analyzer import git_url
+from macaron.slsa_analyzer.git_url import resolve_local_path
 
 
 @pytest.mark.parametrize(
@@ -313,3 +314,42 @@ def test_clean_url_valid_input(url: str, expected: str) -> None:
 def test_clean_url_invalid_input(url: str) -> None:
     """Test that the clean_url function correctly returns None for invalid input."""
     assert git_url.clean_url(url) is None
+
+
+@pytest.fixture(name="parent_dir")
+def parent_dir_() -> str:
+    """Return the parent dir."""
+    return str(Path(__file__).parent)
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        # Paths outside of parent dir.
+        "../",
+        "./../",
+        "../../../../../",
+        # Non-existent path.
+        "./this-should-not-exist",
+    ],
+)
+def test_resolve_invalid_local_path(parent_dir: str, target: str) -> None:
+    """Test the resolve local path method with invalid local paths."""
+    assert not resolve_local_path(parent_dir, target)
+
+
+def test_resolve_invalid_parent_path() -> None:
+    """Test the resolve local path method with an invalid parent directory."""
+    assert not resolve_local_path("non-existing-dir", "./")
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        "./",
+        "././././",
+    ],
+)
+def test_resolve_valid_local_path(parent_dir: str, target: str) -> None:
+    """Test the resolve local path method with valid local paths."""
+    assert resolve_local_path(parent_dir, target) == parent_dir
