@@ -547,7 +547,7 @@ def gen_step_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
                         "compare",
                         "analyze",
                         "verify",
-                        "schema",
+                        "validate_schema",
                     ),
                 ),
             ),
@@ -559,7 +559,7 @@ def gen_step_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
             ),
             cfgv.ConditionalRecurse(
                 condition_key="kind",
-                condition_value="schema",
+                condition_value="validate_schema",
                 key="options",
                 schema=SchemaStep.options_schema(
                     cwd=cwd,
@@ -783,7 +783,7 @@ def parse_step_config(step_id: int, step_config: Mapping) -> Step:
         "verify": VerifyStep,
         "shell": ShellStep,
         "compare": CompareStep,
-        "schema": SchemaStep,
+        "validate_schema": SchemaStep,
     }[kind]
     return step_cls(  # type: ignore  # https://github.com/python/mypy/issues/3115
         step_id=step_id,

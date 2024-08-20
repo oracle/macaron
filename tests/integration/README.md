@@ -186,12 +186,12 @@ In case you want to debug the utility script itself, there is the verbose mode f
 ### Step Schema
 
 * `name` (`string`, required): The name of the step.
-* `kind` (`"analyze" | "verify" | "compare" | "shell"`, required): The kind of the step. There are 4 kinds of steps:
+* `kind` (`"analyze" | "verify" | "compare" | "shell" | "validate_schema`, required): The kind of the step. There are 5 kinds of steps:
   * `"analyze"`: runs the `macaron analyze` command.
   * `"verify"`: runs the `macaron verify-policy` command.
   * `"compare"`: compares an output file with an expected output file.
   * `"shell"`: runs an arbitrary shell command.
-  * `"schema"`: validates an output file with a schema.
+  * `"validate_schema"`: validates an output file with a schema.
 * `options`: Configuration options for the step. These options are specific to the step kind. See their schema below.
 * `env` (`dict[string, string | null]`, optional): Key value pairs of environment variables being modified during the step after inheriting the environment in which the utility is executed within. Each value can be a string if you want to set a value to the environment variable, or null if you want to "unset" the variable.
 * `expect_fail` (`bool`, optional, default is `false`): If `true`, assert that the step must exit with non-zero code. This should be used for cases where we expect a command to fail.
@@ -219,7 +219,7 @@ In case you want to debug the utility script itself, there is the verbose mode f
 * `result` (`string`, required): The output file (a relative path from test case directory).
 * `expected` (`string`, required): The expected output file (a relative path from test case directory).
 
-### Schema step options Schema
+### Vallidate Schema step options Schema
 
 * `kind` (`"json_schema"`, required): The kind of schema validation to perform. For now, only json-schema is supported.
 * `result` (`string`, required): The output file (a relative path from test case directory).

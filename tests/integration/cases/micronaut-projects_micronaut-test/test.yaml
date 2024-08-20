@@ -16,7 +16,7 @@ steps:
     - micronaut_test_config.yaml
     - --skip-deps
 - name: Validate JSON report schema
-  kind: schema
+  kind: validate_schema
   options:
     kind: json_schema
     schema_type: output_json_report
