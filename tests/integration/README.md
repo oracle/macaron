@@ -191,6 +191,7 @@ In case you want to debug the utility script itself, there is the verbose mode f
   * `"verify"`: runs the `macaron verify-policy` command.
   * `"compare"`: compares an output file with an expected output file.
   * `"shell"`: runs an arbitrary shell command.
+  * `"schema"`: validates an output file with a schema.
 * `options`: Configuration options for the step. These options are specific to the step kind. See their schema below.
 * `env` (`dict[string, string | null]`, optional): Key value pairs of environment variables being modified during the step after inheriting the environment in which the utility is executed within. Each value can be a string if you want to set a value to the environment variable, or null if you want to "unset" the variable.
 * `expect_fail` (`bool`, optional, default is `false`): If `true`, assert that the step must exit with non-zero code. This should be used for cases where we expect a command to fail.
@@ -214,9 +215,16 @@ In case you want to debug the utility script itself, there is the verbose mode f
 
 ### Compare step options Schema
 
-* `kind` (`"analysis_report_json_schema" | "analysis_report" | "policy_report" | "deps_report" | "vsa"`, required): The kind of JSON report to compare.
+* `kind` (`"analysis_report" | "policy_report" | "deps_report" | "vsa"`, required): The kind of JSON report to compare.
 * `result` (`string`, required): The output file (a relative path from test case directory).
 * `expected` (`string`, required): The expected output file (a relative path from test case directory).
+
+### Schema step options Schema
+
+* `kind` (`"json_schema"`, required): The kind of schema validation to perform. For now, only json-schema is supported.
+* `result` (`string`, required): The output file (a relative path from test case directory).
+* `schema_type` (`output_json_report`, required): The type of schema for the validation. These are the default schemas available for the integration test.
+* `custom_schema_path` (`string`, optional): The path to the custom schema (a relative path from test case directory). If it is provided, the validation will use this schema and ignore the schema corresponding with `schema_type`.
 
 ### Shell step options Schema
 
