@@ -216,7 +216,7 @@ class ShellStep(Step[ShellStepOptions]):
         return self.options["cmd"].strip().split()
 
 
-class SchemaStepOptions(TypedDict):
+class ValidateSchemaStepOptions(TypedDict):
     """The configuration options of a schema validation step."""
 
     kind: str
@@ -226,7 +226,7 @@ class SchemaStepOptions(TypedDict):
 
 
 @dataclass
-class SchemaStep(Step[SchemaStepOptions]):
+class ValidateSchemaStep(Step[ValidateSchemaStepOptions]):
     """A schema validation step in a test case, which allows for validating a file against a schema."""
 
     @staticmethod
@@ -561,7 +561,7 @@ def gen_step_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
                 condition_key="kind",
                 condition_value="validate_schema",
                 key="options",
-                schema=SchemaStep.options_schema(
+                schema=ValidateSchemaStep.options_schema(
                     cwd=cwd,
                     check_expected_result_files=check_expected_result_files,
                 ),
@@ -783,7 +783,7 @@ def parse_step_config(step_id: int, step_config: Mapping) -> Step:
         "verify": VerifyStep,
         "shell": ShellStep,
         "compare": CompareStep,
-        "validate_schema": SchemaStep,
+        "validate_schema": ValidateSchemaStep,
     }[kind]
     return step_cls(  # type: ignore  # https://github.com/python/mypy/issues/3115
         step_id=step_id,
