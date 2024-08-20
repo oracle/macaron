@@ -1,17 +1,81 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "macaron-json-report-schema",
-    "title": "Report",
+    "title": "Macaron JSON Report",
+    "$comment": "For any details about the schema specification and validation documentation, see https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-00 and https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-validation-00.",
     "type": "object",
+    "$defs": {
+        "wholeNumber": {
+            "$comment": "A schema that describes whole numbers (positive interger and 0).",
+            "type": "integer",
+            "minimum": 0
+        },
+        "checkNamePattern": {
+            "$comment": "The pattern for all Macaron check names. Following ECMA-262 regular expression dialect.",
+            "pattern": "^mcn_([a-z]+_)+([0-9]+)$",
+            "type": "string"
+        },
+        "checkTree": {
+            "$comment": "The schema for a check tree. All property names must follow checkNamePattern, and each child instance within this object must follow the checkTree schema recursively.",
+            "type": "object",
+            "propertyNames": {
+                "$ref": "#/$defs/checkNamePattern"
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/checkTree"
+            }
+        }
+    },
     "properties": {
         "metadata": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "timestamps": {
+                    "type": "string"
+                },
+                "has_passing_check": {
+                    "type": "boolean"
+                },
+                "run_checks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/checkNamePattern"
+                    }
+                },
+                "check_tree": {
+                    "$ref": "#/$defs/checkTree"
+                }
+            }
         },
         "target": {
             "type": "object",
             "properties": {
                 "info": {
-                    "type": "object"
+                    "type": "object",
+                    "properties": {
+                        "full_name": {
+                            "type": "string"
+                        },
+                        "local_cloned_path": {
+                            "type": "string"
+                        },
+                        "remote_path": {
+                            "type": "string"
+                        },
+                        "branch": {
+                            "$comment": "Follow https://github.com/oracle/macaron/issues/832.",
+                            "oneOf": [
+                                { "type": "string" },
+                                { "type": "null" }
+                            ]
+                        },
+                        "commit_hash": {
+                            "type": "string"
+                        },
+                        "commit_date": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "provenances": {
                     "type": "object"
@@ -21,8 +85,8 @@
                     "properties": {
                         "summary": {
                             "type": "object",
-                            "items": {
-                                "type": "integer"
+                            "additionalProperties": {
+                                "$ref": "#/$defs/wholeNumber"
                             }
                         },
                         "results": {
@@ -65,10 +129,10 @@
             "type": "object",
             "properties": {
                 "analyzed_deps": {
-                    "type": "integer"
+                    "$ref": "#/$defs/wholeNumber"
                 },
                 "unique_dep_repos": {
-                    "type": "integer"
+                    "$ref": "#/$defs/wholeNumber"
                 },
                 "checks_summary": {
                     "type": "array",
@@ -79,7 +143,7 @@
                                 "type": "string"
                             },
                             "num_deps_pass": {
-                                "type": "integer"
+                                "$ref": "#/$defs/wholeNumber"
                             }
                         }
                     }
