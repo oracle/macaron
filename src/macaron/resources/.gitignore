@@ -10,3 +10,7 @@ build
 
 # Ignore downloaded schemastore files
 schemastore
+
+# Any JDK artifacts downloaded by the user
+jdk-*.jdk
+jdk-*.tar.gz

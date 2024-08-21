@@ -176,6 +176,7 @@ tests/slsa_analyzer/build_tool/mock_repos/gradle_repos/no_gradle/
 tests/slsa_analyzer/build_tool/mock_repos/maven_repos/no_pom/
 tests/slsa_analyzer/checks/mock_repos/**
 tests/slsa_analyzer/ci_service/mock_repos/**
+tests/repo_finder/mock_repos/**
 docs/_build
 bin/
 requirements.txt
