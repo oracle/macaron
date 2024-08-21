@@ -149,7 +149,10 @@ else
 endif
 .PHONY: souffle
 souffle:
-	if ! command -v souffle; then \
+ifeq ($(INSTALL_SOUFFLE),false)
+	$(warning "Skipping Souffle installation. Set INSTALL_SOUFFLE=true to install.")
+else
+	@if ! command -v souffle; then \
 		echo "Installing system dependency: souffle" && \
 	    case $(OS_DISTRO) in \
 	        "Oracle Linux") \
@@ -170,10 +173,9 @@ souffle:
                 else \
                     echo "Unable to install Souffle. Please install it manually." && exit 0; \
                 fi ;; \
-	esac;                                                                                                                                                  \
-	fi && \
-    command -v souffle || true
-
+	    esac; \
+	fi
+endif
 
 # Install or upgrade an existing virtual environment based on the
 # package dependencies declared in pyproject.toml.
