@@ -107,6 +107,7 @@ $(PACKAGE_PATH)/resources/mvnw:
 		&& echo -e "distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.8.6/apache-maven-3.8.6-bin.zip\nwrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.1.1/maven-wrapper-3.1.1.jar" > .mvn/wrapper/maven-wrapper.properties \
 		&& cd $(REPO_PATH)
 $(PACKAGE_PATH)/resources/gradlew:
+ifeq ($(shell java --version 2>&1 | grep '19.' >/dev/null; echo $$?), 0)
 	cd $(PACKAGE_PATH)/resources \
 		&& export GRADLE_VERSION=7.6 \
 		&& wget https://services.gradle.org/distributions/gradle-$$GRADLE_VERSION-bin.zip \
@@ -114,10 +115,10 @@ $(PACKAGE_PATH)/resources/gradlew:
 		&& rm -r gradle-$$GRADLE_VERSION-bin.zip \
 		&& gradle-$$GRADLE_VERSION/bin/gradle wrapper \
 		&& cd $(REPO_PATH)
-	ifneq ($(shell echo $$?),0)
-		$(warning Java 19 is required for Gradle 7.6 installation)
-		$(warning View the Gradle compatbility matrix: https://docs.gradle.org/current/userguide/compatibility.html)
-	endif
+else
+	$(warning Java 19 is required for Gradle 7.6 installation)
+	$(warning View the Gradle compatbility matrix: https://docs.gradle.org/current/userguide/compatibility.html)
+endif
 setup-schemastore: $(PACKAGE_PATH)/resources/schemastore/github-workflow.json $(PACKAGE_PATH)/resources/schemastore/LICENSE $(PACKAGE_PATH)/resources/schemastore/NOTICE
 $(PACKAGE_PATH)/resources/schemastore/github-workflow.json:
 	cd $(PACKAGE_PATH)/resources \
