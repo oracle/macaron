@@ -116,8 +116,7 @@ ifeq ($(shell java --version 2>&1 | grep '19.' >/dev/null; echo $$?), 0)
 		&& gradle-$$GRADLE_VERSION/bin/gradle wrapper \
 		&& cd $(REPO_PATH)
 else
-	$(warning Java 19 is required for Gradle 7.6 installation)
-	$(warning View the Gradle compatbility matrix: https://docs.gradle.org/current/userguide/compatibility.html)
+	$(error Java 19 is required for Gradle 7.6 installation. See the Grable compatbility matrix: https://docs.gradle.org/current/userguide/compatibility.html)
 endif
 setup-schemastore: $(PACKAGE_PATH)/resources/schemastore/github-workflow.json $(PACKAGE_PATH)/resources/schemastore/LICENSE $(PACKAGE_PATH)/resources/schemastore/NOTICE
 $(PACKAGE_PATH)/resources/schemastore/github-workflow.json:
