@@ -82,7 +82,7 @@ a detailed commit message body is preferred. Make sure to keep the `Signed-off-b
 
 - Python 3.11
 - Go 1.21
-- JDK 19
+- JDK 17
 
 ### Prepare the environment
 
