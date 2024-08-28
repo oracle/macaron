@@ -16,6 +16,7 @@ steps:
     command_args:
     - -purl
     - pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.0-rc1
+    - --deps-depth=1
 - name: Compare deps report
   kind: compare
   options:

@@ -17,6 +17,7 @@ steps:
     - pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar
     - -rp
     - https://github.com/behnazh-w/example-maven-app
+    - --deps-depth=1
 - name: Compare dependencies report.
   kind: compare
   options:
