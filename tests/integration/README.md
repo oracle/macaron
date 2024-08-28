@@ -219,12 +219,12 @@ In case you want to debug the utility script itself, there is the verbose mode f
 * `result` (`string`, required): The output file (a relative path from test case directory).
 * `expected` (`string`, required): The expected output file (a relative path from test case directory).
 
-### Vallidate Schema step options Schema
+### Validate Schema step options Schema
 
 * `kind` (`"json_schema"`, required): The kind of schema validation to perform. For now, only json-schema is supported.
 * `result` (`string`, required): The output file (a relative path from test case directory).
-* `schema_type` (`output_json_report`, required): The type of schema for the validation. These are the default schemas available for the integration test.
-* `custom_schema_path` (`string`, optional): The path to the custom schema (a relative path from test case directory). If it is provided, the validation will use this schema and ignore the schema corresponding with `schema_type`.
+* `schema` (`output_json_report`, required): The name of the schema for the validation. These are the default schemas available for the integration test.
+* `custom_schema_path` (`string`, optional): The path to the custom schema (a relative path from test case directory). If it is provided, the validation will use this schema and ignore the schema corresponding with `schema`.
 
 ### Shell step options Schema
 

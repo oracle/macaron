@@ -221,7 +221,7 @@ class ValidateSchemaStepOptions(TypedDict):
 
     kind: str
     result: str
-    schema_type: str
+    schema: str
     custom_schema_path: str | None
 
 
@@ -250,7 +250,7 @@ class ValidateSchemaStep(Step[ValidateSchemaStepOptions]):
                     check_fn=cfgv.check_string,
                 ),
                 cfgv.Required(
-                    key="schema_type",
+                    key="schema",
                     check_fn=cfgv.check_one_of(tuple(DEFAULT_SCHEMAS.keys())),
                 ),
                 cfgv.Optional(
@@ -264,14 +264,14 @@ class ValidateSchemaStep(Step[ValidateSchemaStepOptions]):
     def cmd(self, macaron_cmd: str) -> list[str]:
         kind = self.options["kind"]
         result_file = self.options["result"]
-        schema_type = self.options["schema_type"]
+        schema = self.options["schema"]
         custom_schema_path = self.options["custom_schema_path"]
 
         if custom_schema_path is None:
             return [
                 "python",
                 os.path.abspath(os.path.join(*VALIDATE_SCHEMA_SCRIPTS[kind])),
-                *[result_file, os.path.abspath(os.path.join(*DEFAULT_SCHEMAS[schema_type]))],
+                *[result_file, os.path.abspath(os.path.join(*DEFAULT_SCHEMAS[schema]))],
             ]
 
         logger.info("A custom schema path at %s is given, using that instead.", custom_schema_path)

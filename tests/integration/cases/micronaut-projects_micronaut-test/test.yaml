@@ -19,7 +19,7 @@ steps:
   kind: validate_schema
   options:
     kind: json_schema
-    schema_type: output_json_report
+    schema: output_json_report
     result: output/reports/github_com/micronaut-projects/micronaut-test/micronaut-test.json
 - name: Compare dependency report
   kind: compare
