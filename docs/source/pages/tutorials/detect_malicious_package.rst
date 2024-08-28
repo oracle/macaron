@@ -172,27 +172,17 @@ Let's assume ``/tmp/.django_venv`` is the virtual environment where ``django@5.0
 
 .. note:: If you want Macaron to analyze the virtual environment directly to identify the dependencies, we require Python 3.11 to be used to install the package. Alternatively, you can generate the SBOM as instructed :ref:`here <python-sbom>` and pass it to Macaron as input.
 
-Run Macaron as follows to analyze ``django`` and its dependencies.
+Run Macaron as follows to analyze ``django`` and its direct dependencies.
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 --python-venv "/tmp/.django_venv"
+  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 --python-venv "/tmp/.django_venv" --deps-depth=1
 
-
-By default Macaron only checks the direct dependencies. To turn on recursive dependency analysis, add the following to the ``configurations.ini`` file:
-
-.. code-block:: ini
-
-  [dependency.resolver]
-  recursive = True
-
-And pass that to the ``analyze`` command:
+Or alternatively, run Macaron as follows to analyze ``django`` and all its transitive dependencies.
 
 .. code-block:: shell
 
-  ./run_macaron.sh --defaults-path configurations.ini analyze -purl pkg:pypi/django@5.0.6 --python-venv "/tmp/.django_venv"
-
-To learn more about changing configurations see :ref:`here <change-config>`.
+  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 --python-venv "/tmp/.django_venv" --deps-depth=inf
 
 Now we can enforce the policy below to ensure that the ``mcn_detect_malicious_metadata_1`` check always passes on ``django`` and its dependencies, indicating that none of the dependencies have malicious behavior.
 

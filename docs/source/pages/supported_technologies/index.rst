@@ -107,6 +107,17 @@ Provenances
        * The provenance should be published on JFrog Artifactory
      - :doc:`page </pages/supported_technologies/jfrog>`
 
+.. _supported_automatic_deps_resolution:
+
+-------------------------------
+Automatic dependency resolution
+-------------------------------
+
+Currently, we support the following type of project for automatic dependency resolution.
+
+* Java Maven
+* Java gradle
+
 --------
 See also
 --------

@@ -17,7 +17,7 @@ Using Macaron
 Analyzing an artifact with a PURL string
 ----------------------------------------
 
-Macaron can analyze an artifact (and its dependencies) to determine its supply chain security posture. To analyze an artifact, you need to provide the PURL identifier of the artifact:
+Macaron can analyze an artifact to determine its supply chain security posture. To analyze an artifact, you need to provide the PURL identifier of the artifact:
 
  .. code-block::
 
@@ -51,6 +51,7 @@ To run Macaron on an artifact, we use the following command:
 
   ./run_macaron.sh analyze -purl <artifact-purl>
 
+Macaron can also analyze the package's dependencies. Please see :ref:`automate-deps-resolution`.
 
 ''''''''''''''''''''''''''''''''''''''
 Automated repository and commit finder
@@ -79,6 +80,7 @@ Within the configuration file under the ``repofinder.java`` header, three option
 - ``repo_pom_paths`` (Values: List of POM tags) - Determines where to search for repository information in the POM files. E.g. scm.url.
 - ``find_parents`` (Values: True or False) - When enabled, the Repository Finding feature will also search for repository URLs in parents POM files of the current dependency.
 
+.. note:: Dependency related configurations like ``artifact_repositories`` or ``find_parents`` can affect  :ref:`Macaron automatic dependency resolution <automate-deps-resolution>`.
 
 .. note:: Finding repositories requires at least one remote call, adding some additional overhead to an analysis run.
 
@@ -113,7 +115,7 @@ Analyzing a source code repository
 Analyzing a public GitHub repository
 ''''''''''''''''''''''''''''''''''''
 
-Macaron can also analyze a public GitHub repository (and potentially the repositories of its dependencies).
+Macaron can also analyze a public GitHub repository.
 
 To run Macaron on a GitHub public repository, we use the following command:
 
@@ -134,14 +136,6 @@ For example, to analyze the SLSA posture of `micronaut-core <https://github.com/
 .. code-block:: shell
 
   ./run_macaron.sh analyze -rp https://github.com/micronaut-projects/micronaut-core -b 4.0.x -d 82d115b4901d10226552ac67b0a10978cd5bc603
-
-.. note:: Macaron automatically detects and analyzes **direct** dependencies for Java Maven and Gradle projects. This process might take a while and can be skipped by using the ``--skip-deps`` option.
-
-Take the same example as above, to disable analyzing `micronaut-core <https://github.com/micronaut-projects/micronaut-core>`_ direct dependencies, we could use the following command:
-
-.. code-block:: shell
-
-  ./run_macaron.sh analyze -rp https://github.com/micronaut-projects/micronaut-core -b 4.0.x -d 82d115b4901d10226552ac67b0a10978cd5bc603 --skip-deps
 
 .. note:: By default, Macaron would generate report files into the ``output`` directory in the current working directory. To understand the structure of this directory please see :ref:`Output Files Guide <output_files_guide>`.
 
@@ -263,6 +257,32 @@ where ``micronaut-core.cue`` file can contain:
 .. note::
   The provenance expectation is verified via the ``provenance_expectation`` check in Macaron. You can see the result of this check in the HTML or JSON report and see if the provenance found by Macaron meets the expectation CUE file.
 
+.. _automate-deps-resolution:
+
+------------------------------------
+Analyzing dependencies automatically
+------------------------------------
+
+Macaron supports automatically detecting and analyzing dependencies for certain types of projects (:ref:`supported_automatic_deps_resolution`). This feature is disabled by default and can be enabled with the CLI flag ``--deps-depth``.
+
+The ``--deps-depth`` flag currently accepts these values:
+
+* ``0``: Disable dependency resolution (Default).
+* ``1``: Resolve and analyze direct dependencies.
+* ``inf``: Resolve and analyze all transitive dependencies.
+
+For example, to analyze `micronaut-core <https://github.com/micronaut-projects/micronaut-core>`_ and its **direct** dependencies, we could use the following command:
+
+.. code-block:: shell
+
+  ./run_macaron.sh analyze \
+    -rp https://github.com/micronaut-projects/micronaut-core \
+    -b 4.0.x \
+    -d 82d115b4901d10226552ac67b0a10978cd5bc603 \
+    --deps-depth=1
+
+.. note:: This process might take a while. Alternatively, you can help Macaron by providing the dependencies information through : :ref:`an sbom <with-sbom>` or :ref:`a Python virtual environment <python-venv-deps>` (for Python packages only).
+
 .. _with-sbom:
 
 ----------------------
@@ -283,9 +303,11 @@ To run the analysis against that SBOM, run this command:
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -purl pkg:maven/org.apache.maven/maven@3.9.7?type=pom -sbom <path_to_sbom>
+  ./run_macaron.sh analyze -purl pkg:maven/org.apache.maven/maven@3.9.7?type=pom -sbom <path_to_sbom> --deps-depth=1
 
 Where ``path_to_sbom`` is the path to the SBOM you want to use.
+
+.. note:: Make sure to enable dependency resolution with ``--deps-depth``.
 
 .. _python-sbom:
 
@@ -305,7 +327,7 @@ Then run Macaron and pass the SBOM file as input:
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 -sbom <path_to_django_sbom.json>
+  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 -sbom <path_to_django_sbom.json> --deps-depth=1
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Analyzing dependencies in the SBOM without the main software component
@@ -320,7 +342,7 @@ Then the analysis can be run as follows:
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -purl pkg:maven/private.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom -sbom <path_to_sbom>
+  ./run_macaron.sh analyze -purl pkg:maven/private.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom -sbom <path_to_sbom> --deps-depth=1
 
 Where ``path_to_sbom`` is the path to the SBOM you want to use.
 
@@ -344,9 +366,11 @@ Then run Macaron as follows:
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 --python-venv "/tmp/.django_venv"
+  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 --python-venv "/tmp/.django_venv" --deps-depth=1
 
 Where ``--python-venv`` is the path to virtual environment.
+
+.. note:: Make sure to enable dependency resolution with ``--deps-depth``.
 
 Alternatively, you can create an SBOM for the python package and provide it to Macaron as input as explained :ref:`here <with-sbom>`.
 
