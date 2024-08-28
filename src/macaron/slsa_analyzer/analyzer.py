@@ -130,7 +130,7 @@ class Analyzer:
         self,
         user_config: dict,
         sbom_path: str = "",
-        skip_deps: bool = False,
+        deps_depth: int = 0,
         provenance_payload: InTotoPayload | None = None,
     ) -> int:
         """Run the analysis and write results to the output path.
@@ -144,8 +144,8 @@ class Analyzer:
             The dictionary that contains the user config parsed from the yaml file.
         sbom_path : str
             The path to the SBOM.
-        skip_deps : bool
-            Flag to skip dependency resolution.
+        deps_depth : int
+            The depth of dependency resolution. Default: 0.
         provenance_payload : InToToPayload | None
             The provenance intoto payload for the main software component.
 
@@ -186,11 +186,26 @@ class Analyzer:
                     logger.info("Analysis has failed.")
                     return os.EX_DATAERR
 
-                # Run the chosen dependency analyzer plugin.
-                if skip_deps:
+                if deps_depth == 0:
                     logger.info("Skipping automatic dependency analysis...")
+                elif deps_depth == 1:
+                    # Run the chosen dependency analyzer plugin on direct dependencies.
+                    deps_resolved = DependencyAnalyzer.resolve_dependencies(
+                        main_record.context,
+                        sbom_path,
+                        recursive=False,
+                    )
+                elif deps_depth == -1:
+                    # Run the chosen dependency analyzer plugin on transitive dependencies.
+                    deps_resolved = DependencyAnalyzer.resolve_dependencies(
+                        main_record.context,
+                        sbom_path,
+                        recursive=True,
+                    )
                 else:
-                    deps_resolved = DependencyAnalyzer.resolve_dependencies(main_record.context, sbom_path)
+                    # Can't reach here.
+                    logger.critical("Expecting deps depth to be '0', '1' or '-1', got %s", deps_depth)
+                    return os.EX_USAGE
 
                 # Merge the automatically resolved dependencies with the manual configuration.
                 deps_config = DependencyAnalyzer.to_configs(deps_resolved)
