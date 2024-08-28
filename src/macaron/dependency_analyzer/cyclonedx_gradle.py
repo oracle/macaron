@@ -15,7 +15,6 @@ from pathlib import Path
 from cyclonedx.model.component import Component as CDXComponent
 from packageurl import PackageURL
 
-from macaron.config.defaults import defaults
 from macaron.database.table_definitions import Component
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, DependencyInfo
 
@@ -47,7 +46,12 @@ class CycloneDxGradle(DependencyAnalyzer):
             "cyclonedxBom",
         ]
 
-    def collect_dependencies(self, dir_path: str, target_component: Component) -> dict[str, DependencyInfo]:
+    def collect_dependencies(
+        self,
+        dir_path: str,
+        target_component: Component,
+        recursive: bool = False,
+    ) -> dict[str, DependencyInfo]:
         """Process the dependency JSON files and collect direct dependencies.
 
         Parameters
@@ -56,6 +60,8 @@ class CycloneDxGradle(DependencyAnalyzer):
             Local path to the target repo.
         target_component: Component
             The analyzed target software component.
+        recursive: bool
+            Set to False to get the direct dependencies only (default).
 
         Returns
         -------
@@ -82,11 +88,7 @@ class CycloneDxGradle(DependencyAnalyzer):
             target_component,
             top_path,
             child_paths,
-            recursive=defaults.getboolean(
-                "dependency.resolver",
-                "recursive",
-                fallback=False,
-            ),
+            recursive=recursive,
         )
         return self.convert_components_to_artifacts(components, root_component)
 

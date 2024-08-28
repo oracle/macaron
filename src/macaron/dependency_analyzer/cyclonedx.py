@@ -137,7 +137,9 @@ class DependencyAnalyzer(ABC):
         self.visited_deps: set = set()
 
     @abstractmethod
-    def collect_dependencies(self, dir_path: str, target_component: Component) -> dict[str, DependencyInfo]:
+    def collect_dependencies(
+        self, dir_path: str, target_component: Component, recursive: bool = False
+    ) -> dict[str, DependencyInfo]:
         """Process the dependency JSON files and collect direct dependencies.
 
         Parameters
@@ -146,6 +148,8 @@ class DependencyAnalyzer(ABC):
             Local path to the target repo.
         target_component: Component
             The analyzed target software component.
+        recursive: bool
+            Set to False to get the direct dependencies only (default).
 
         Returns
         -------
@@ -328,14 +332,16 @@ class DependencyAnalyzer(ABC):
         return True
 
     @staticmethod
-    def resolve_dependencies(main_ctx: Any, sbom_path: str) -> dict[str, DependencyInfo]:
+    def resolve_dependencies(main_ctx: Any, sbom_path: str, recursive: bool = False) -> dict[str, DependencyInfo]:
         """Resolve the dependencies of the main target repo.
 
         Parameters
         ----------
         main_ctx : Any (AnalyzeContext)
             The context of object of the target repository.
-        sbom_path: str
+        recursive : bool
+            If True, perform transitive dependency resolution. Default: False.
+        sbom_path : str
             The path to the SBOM.
 
         Returns
@@ -376,7 +382,11 @@ class DependencyAnalyzer(ABC):
             if sbom_path:
                 logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
 
-                deps_resolved = dep_analyzer.get_deps_from_sbom(sbom_path, main_ctx.component)
+                deps_resolved = dep_analyzer.get_deps_from_sbom(
+                    sbom_path,
+                    main_ctx.component,
+                    recursive=recursive,
+                )
 
                 # Use repo finder to find more repositories to analyze.
                 if defaults.getboolean("repofinder", "find_repos"):
@@ -435,7 +445,11 @@ class DependencyAnalyzer(ABC):
 
                 # We collect the generated SBOM as a best effort, even if the build exits with errors.
                 # TODO: add improvements to help the SBOM build succeed as much as possible.
-                deps_resolved |= dep_analyzer.collect_dependencies(str(working_dir), main_ctx.component)
+                deps_resolved |= dep_analyzer.collect_dependencies(
+                    str(working_dir),
+                    main_ctx.component,
+                    recursive=recursive,
+                )
 
             logger.info("Stored dependency resolver log for %s to %s.", dep_analyzer.tool_name, log_path)
 
@@ -698,7 +712,9 @@ class DependencyAnalyzer(ABC):
 
         return latest_deps
 
-    def get_deps_from_sbom(self, sbom_path: str | Path, target_component: Component) -> dict[str, DependencyInfo]:
+    def get_deps_from_sbom(
+        self, sbom_path: str | Path, target_component: Component, recursive: bool = False
+    ) -> dict[str, DependencyInfo]:
         """Get the dependencies from a provided SBOM.
 
         Parameters
@@ -707,6 +723,8 @@ class DependencyAnalyzer(ABC):
             The path to the SBOM file.
         target_component: Component
             The analyzed target software component.
+        recursive: bool
+            Set to False to get the direct dependencies only (default).
 
         Returns
         -------
@@ -716,11 +734,7 @@ class DependencyAnalyzer(ABC):
             self.get_dep_components(
                 target_component=target_component,
                 root_bom_path=Path(sbom_path),
-                recursive=defaults.getboolean(
-                    "dependency.resolver",
-                    "recursive",
-                    fallback=False,
-                ),
+                recursive=recursive,
             )
         )
 
@@ -732,7 +746,9 @@ class NoneDependencyAnalyzer(DependencyAnalyzer):
         """Initialize the dependency analyzer instance."""
         super().__init__(resources_path="", file_name="", tool_name="", tool_version="")
 
-    def collect_dependencies(self, dir_path: str, target_component: Component) -> dict[str, DependencyInfo]:
+    def collect_dependencies(
+        self, dir_path: str, target_component: Component, recursive: bool = False
+    ) -> dict[str, DependencyInfo]:
         """Process the dependency JSON files and collect direct dependencies.
 
         Parameters
@@ -741,6 +757,8 @@ class NoneDependencyAnalyzer(DependencyAnalyzer):
             Local path to the target repo.
         target_component: Component
             The analyzed target software component.
+        recursive: bool
+            Set to False to get the direct dependencies only (default).
 
         Returns
         -------

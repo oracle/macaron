@@ -14,7 +14,6 @@ from pathlib import Path
 from cyclonedx.model.component import Component as CDXComponent
 from packageurl import PackageURL
 
-from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.database.table_definitions import Component
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, DependencyInfo
@@ -50,7 +49,12 @@ class CycloneDxPython(DependencyAnalyzer):
             os.path.join(global_config.output_path, self.file_name),
         ]
 
-    def collect_dependencies(self, dir_path: str, target_component: Component) -> dict[str, DependencyInfo]:
+    def collect_dependencies(
+        self,
+        dir_path: str,
+        target_component: Component,
+        recursive: bool = False,
+    ) -> dict[str, DependencyInfo]:
         """Process the dependency JSON files and collect dependencies.
 
         Parameters
@@ -59,6 +63,8 @@ class CycloneDxPython(DependencyAnalyzer):
             Local path to the target repo.
         target_component: Component
             The analyzed target software component.
+        recursive: bool
+            Set to False to get the direct dependencies only (default).
 
         Returns
         -------
@@ -69,11 +75,7 @@ class CycloneDxPython(DependencyAnalyzer):
             self.get_dep_components(
                 target_component=target_component,
                 root_bom_path=Path(global_config.output_path, self.file_name),
-                recursive=defaults.getboolean(
-                    "dependency.resolver",
-                    "recursive",
-                    fallback=False,
-                ),
+                recursive=recursive,
             )
         )
 
