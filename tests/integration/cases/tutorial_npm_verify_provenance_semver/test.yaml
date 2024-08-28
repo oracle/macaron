@@ -14,7 +14,6 @@ steps:
     command_args:
     - -purl
     - pkg:npm/semver@7.6.2
-    - --skip-deps
 - name: Verify checks for semver@7.6.2
   kind: verify
   options:
@@ -25,7 +24,6 @@ steps:
     command_args:
     - -purl
     - pkg:npm/semver@7.6.0
-    - --skip-deps
 - name: Verify checks for all 7.6.x semver runs
   kind: verify
   options:
@@ -36,7 +34,6 @@ steps:
     command_args:
     - -purl
     - pkg:npm/semver@1.0.0
-    - --skip-deps
 - name: Verify checks for all semver runs
   kind: verify
   options:

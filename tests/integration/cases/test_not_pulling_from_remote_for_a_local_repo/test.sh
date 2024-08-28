@@ -6,4 +6,4 @@
 # latest changes (i.e the second commit of SOURCE_REPO) into TARGET_REPO.
 # Therefore, this analysis is expected to fail because the commit HEAD_COMMIT_SHA does not exist in TARGET_REPO.
 HEAD_COMMIT_SHA=$(cat target_commit_sha.txt)
-macaron -lr ./output/git_repos/local_repos/ analyze -rp target -d "$HEAD_COMMIT_SHA" --skip-deps
+macaron -lr ./output/git_repos/local_repos/ analyze -rp target -d "$HEAD_COMMIT_SHA"

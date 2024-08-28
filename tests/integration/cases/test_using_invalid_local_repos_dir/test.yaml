@@ -17,5 +17,4 @@ steps:
     command_args:
     - -rp
     - apache/maven
-    - --skip-deps
   expect_fail: true

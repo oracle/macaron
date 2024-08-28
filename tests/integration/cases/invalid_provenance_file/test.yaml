@@ -15,5 +15,4 @@ steps:
     command_args:
     - -rp
     - https://github.com/apache/maven
-    - --skip-deps
   expect_fail: true

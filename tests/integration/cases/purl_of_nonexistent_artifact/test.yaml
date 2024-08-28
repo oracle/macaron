@@ -14,7 +14,6 @@ steps:
     command_args:
     - -purl
     - pkg:maven/com.example/nonexistent@1.0.0
-    - --skip-deps
 - name: Run macaron verify-policy
   kind: verify
   options:

@@ -28,7 +28,6 @@ steps:
     - snakeyaml
     - -d
     - a34989252e6f59e36a3aaf788a903b7a37a73d33
-    - --skip-deps
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:

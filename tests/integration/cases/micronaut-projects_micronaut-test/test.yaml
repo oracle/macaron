@@ -17,7 +17,6 @@ steps:
     - https://github.com/micronaut-projects/micronaut-test
     - -d
     - 5b81340f319a2287cb2e81ddec0154c0ea2510cf
-    - --skip-deps
 - name: Validate JSON report schema
   kind: validate_schema
   options:

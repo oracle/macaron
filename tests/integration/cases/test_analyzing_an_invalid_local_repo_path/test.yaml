@@ -17,5 +17,4 @@ steps:
     command_args:
     - -rp
     - path/to/invalid/repo
-    - --skip-deps
   expect_fail: true

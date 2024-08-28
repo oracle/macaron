@@ -27,7 +27,6 @@ steps:
     - https://github.com/google/guava
     - -d
     - d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4
-    - --skip-deps
 - name: Run macaron analyze mockito/mockito
   kind: analyze
   options:
@@ -36,7 +35,6 @@ steps:
     - https://github.com/mockito/mockito
     - -d
     - 512ee3949484e4765038a0410cd7a7f1b73cc655
-    - --skip-deps
 - name: Run macaron verify-policy for maven
   kind: verify
   options:
