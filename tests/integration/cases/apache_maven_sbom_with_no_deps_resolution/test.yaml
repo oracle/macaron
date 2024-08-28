@@ -1,0 +1,39 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing using a CycloneDx SBOM but --deps-depth is not set or set to 0. Macaron should exit on error.
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Run macaron analyze using an SBOM but --deps-depth is not set
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/org.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom
+    - -rp
+    - https://github.com/apache/maven
+    - -b
+    - master
+    - -d
+    - 3fc399318edef0d5ba593723a24fff64291d6f9b
+    sbom: sbom.json
+  expect_fail: true
+- name: Run macaron analyze using an SBOM but --deps-depth is set to 0
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/org.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom
+    - -rp
+    - https://github.com/apache/maven
+    - -b
+    - master
+    - -d
+    - 3fc399318edef0d5ba593723a24fff64291d6f9b
+    - --deps-depth=0
+    sbom: sbom.json
+  expect_fail: true

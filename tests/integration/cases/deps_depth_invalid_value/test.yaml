@@ -1,0 +1,42 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Setting invalid values to --deps-depth flag.
+
+tags:
+- macaron-python-package
+
+steps:
+- name: A negative integer is not valid.
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/django@5.0.6
+    - --depth=-10
+  expect_fail: true
+- name: A string value (except from `inf`) is not valid.
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/django@5.0.6
+    - --depth=infinity
+  expect_fail: true
+- name: Provide un-supported depth.
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/django@5.0.6
+    - --depth=10
+  expect_fail: true
+- name: Expect one argument for --deps-depth
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/django@5.0.6
+    - --depth
+  expect_fail: true
