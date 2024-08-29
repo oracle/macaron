@@ -117,8 +117,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
             "path": repo_path or "",
             "branch": branch or "",
             "digest": digest or "",
-        },
-        "dependencies": [],
+        }
     }
 
     prov_payload = None

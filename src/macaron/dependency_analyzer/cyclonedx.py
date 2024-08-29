@@ -31,7 +31,6 @@ from macaron.errors import CycloneDXParserError, DependencyAnalyzerError
 from macaron.output_reporter.scm import SCMStatus
 from macaron.repo_finder.repo_finder import find_repo
 from macaron.repo_finder.repo_validator import find_valid_repository_url
-from macaron.slsa_analyzer.git_url import get_repo_full_name_from_url
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -259,46 +258,26 @@ class DependencyAnalyzer(ABC):
                 logger.error("Could not parse dependency version number: %s", error)
 
     @staticmethod
-    def merge_configs(
-        config_deps: list[Configuration], resolved_deps: dict[str, DependencyInfo]
-    ) -> list[Configuration]:
-        """Merge the resolved dependencies into the manual config dependencies.
-
-        Manual configuration entries are prioritized over the automatically resolved dependencies.
+    def to_configs(resolved_deps: dict[str, DependencyInfo]) -> list[Configuration]:
+        """Convert the resolved dependencies into the format used by the Analyzer.
 
         Parameters
         ----------
-        config_deps : list[Configuration]
-            Dependencies defined in the configuration file.
         resolved_deps : dict[str, DependencyInfo]
             The automatically resolved dependencies.
 
         Returns
         -------
         list[Configuration]
-            The result list contains the merged dependencies.
+            The dependencies list to be used by the Analyzer.
         """
-        merged_deps: list[Configuration] = []
-        if config_deps:
-            for dep in config_deps:
-                dep.set_value("available", SCMStatus.AVAILABLE)
-                merged_deps.append(dep)
-
         if not resolved_deps:
-            return merged_deps
+            return []
+
+        config_list: list[Configuration] = []
 
         for key, value in resolved_deps.items():
-            duplicate = False
-            if config_deps:
-                for m_dep in config_deps:
-                    m_repo = get_repo_full_name_from_url(m_dep.get_value("path"))
-                    a_repo = get_repo_full_name_from_url(value.get("url", ""))
-                    if m_repo and m_repo == a_repo:
-                        duplicate = True
-                        break
-                if duplicate:
-                    continue
-            merged_deps.append(
+            config_list.append(
                 Configuration(
                     {
                         "id": key,
@@ -312,7 +291,7 @@ class DependencyAnalyzer(ABC):
                 )
             )
 
-        return merged_deps
+        return config_list
 
     @staticmethod
     def tool_valid(tool: str) -> bool:
