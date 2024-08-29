@@ -18,7 +18,6 @@ from macaron.config.defaults import create_defaults, load_defaults
 from macaron.config.global_config import global_config
 from macaron.errors import ConfigurationError
 from macaron.output_reporter.reporter import HTMLReporter, JSONReporter, PolicyReporter
-from macaron.parsers.yaml.loader import YamlLoader
 from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
 from macaron.slsa_analyzer.analyzer import Analyzer
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
@@ -32,20 +31,12 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None:
     """Run the SLSA checks against a single target repository."""
-    if not (analyzer_single_args.repo_path or analyzer_single_args.package_url or analyzer_single_args.config_path):
-        # We don't mention --config-path as a possible option in this log message as it going to be move soon.
-        # See: https://github.com/oracle/macaron/issues/417
+    if not (analyzer_single_args.repo_path or analyzer_single_args.package_url):
         logger.error(
             """Analysis target missing. Please provide a package url (PURL) and/or repo path.
             Examples of a PURL can be seen at https://github.com/package-url/purl-spec:
             pkg:github/micronaut-projects/micronaut-core."""
         )
-        sys.exit(os.EX_USAGE)
-
-    if analyzer_single_args.config_path and (analyzer_single_args.package_url or analyzer_single_args.repo_path):
-        # TODO: revisit when the config-path option is moved.
-        # See: https://github.com/oracle/macaron/issues/417
-        logger.error("Cannot provide both config path and (package url (PURL) and/or repo path).")
         sys.exit(os.EX_USAGE)
 
     # Set provenance expectation path.
@@ -89,55 +80,46 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     analyzer.reporters.append(JSONReporter())
 
     run_config = {}
-    if analyzer_single_args.config_path:
-        # Get user config from yaml file
-        loaded_config = YamlLoader.load(analyzer_single_args.config_path)
-        if loaded_config is None:
-            logger.error("The input yaml config at %s is invalid.", analyzer_single_args.config_path)
-            sys.exit(os.EX_DATAERR)
-        else:
-            run_config = loaded_config
-    else:
-        repo_path = analyzer_single_args.repo_path
-        purl = analyzer_single_args.package_url
-        branch = analyzer_single_args.branch
-        digest = analyzer_single_args.digest
+    repo_path = analyzer_single_args.repo_path
+    purl = analyzer_single_args.package_url
+    branch = analyzer_single_args.branch
+    digest = analyzer_single_args.digest
 
-        if repo_path and purl:
-            # To provide the purl together with the repository path, the user must specify the commit digest unless the
-            # purl has a version.
-            try:
-                purl_object = PackageURL.from_string(purl)
-            except ValueError as error:
-                logger.debug("Could not parse PURL: %s", error)
-                sys.exit(os.EX_USAGE)
-            if not (purl_object.version or digest):
-                logger.error(
-                    "Please provide the commit digest for the repo at %s that matches to the PURL string %s. Or "
-                    "include the version in the PURL",
-                    repo_path,
-                    purl,
-                )
-                sys.exit(os.EX_USAGE)
+    if repo_path and purl:
+        # To provide the purl together with the repository path, the user must specify the commit digest unless the
+        # purl has a version.
+        try:
+            purl_object = PackageURL.from_string(purl)
+        except ValueError as error:
+            logger.debug("Could not parse PURL: %s", error)
+            sys.exit(os.EX_USAGE)
+        if not (purl_object.version or digest):
+            logger.error(
+                "Please provide the commit digest for the repo at %s that matches to the PURL string %s. Or "
+                "include the version in the PURL",
+                repo_path,
+                purl,
+            )
+            sys.exit(os.EX_USAGE)
 
-        # We need to use empty strings when the input values are of None type. This is because this dictionary will be
-        # passed into the Configuration instance, where the existing values in Configuration.options are replaced by
-        # whatever we assign it here. Technically, the data in ``Configuration`` class are not limited to only strings.
-        # Therefore, it could be cases where the ``purl`` field is initialized as an empty string in the constructor
-        # of the Configuration class, but if `` analyzer_single_args.package_url`` is None, the ``purl`` field is set
-        # to None in the Configuration instance.
-        # This inconsistency could cause potential issues when Macaron handles those inputs.
-        # TODO: improve the implementation of ``Configuration`` class to avoid such inconsistencies.
-        run_config = {
-            "target": {
-                "id": purl or repo_path or "",
-                "purl": purl or "",
-                "path": repo_path or "",
-                "branch": branch or "",
-                "digest": digest or "",
-            },
-            "dependencies": [],
-        }
+    # We need to use empty strings when the input values are of None type. This is because this dictionary will be
+    # passed into the Configuration instance, where the existing values in Configuration.options are replaced by
+    # whatever we assign it here. Technically, the data in ``Configuration`` class are not limited to only strings.
+    # Therefore, it could be cases where the ``purl`` field is initialized as an empty string in the constructor
+    # of the Configuration class, but if `` analyzer_single_args.package_url`` is None, the ``purl`` field is set
+    # to None in the Configuration instance.
+    # This inconsistency could cause potential issues when Macaron handles those inputs.
+    # TODO: improve the implementation of ``Configuration`` class to avoid such inconsistencies.
+    run_config = {
+        "target": {
+            "id": purl or repo_path or "",
+            "purl": purl or "",
+            "path": repo_path or "",
+            "branch": branch or "",
+            "digest": digest or "",
+        },
+        "dependencies": [],
+    }
 
     prov_payload = None
     if analyzer_single_args.provenance_file:
@@ -325,15 +307,6 @@ def main(argv: list[str] | None = None) -> None:
     # Use Macaron to analyze one single repository.
     single_analyze_parser = sub_parser.add_parser(name="analyze")
 
-    # We make the mutually exclusive usage of --config-path and --repo-path optional
-    # so that the user can provide the --package-url separately while keeping the current behavior of Macaron.
-    # Note that if the user provides both --package-url and --config-path, we will still raise an error,
-    # which is handled within the ``analyze_slsa_levels_single`` method.
-    # When we remove the --config-path option, we can remove this group and instead add all relevant
-    # options in the analyze command through ``single_analyze_parser``.
-    # See: https://github.com/oracle/macaron/issues/417
-    group = single_analyze_parser.add_mutually_exclusive_group(required=False)
-
     single_analyze_parser.add_argument(
         "-sbom",
         "--sbom-path",
@@ -343,7 +316,7 @@ def main(argv: list[str] | None = None) -> None:
         help=("The path to the SBOM of the analysis target."),
     )
 
-    group.add_argument(
+    single_analyze_parser.add_argument(
         "-rp",
         "--repo-path",
         required=False,
@@ -396,15 +369,6 @@ def main(argv: list[str] | None = None) -> None:
         "--provenance-file",
         required=False,
         help=("The path to the provenance file in in-toto format."),
-    )
-
-    group.add_argument(
-        "-c",
-        "--config-path",
-        required=False,
-        type=str,
-        default="",
-        help=("The path to the user configuration."),
     )
 
     single_analyze_parser.add_argument(
