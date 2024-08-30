@@ -91,7 +91,7 @@ After including some helper rules, the above policy is defined as requiring all 
 
 .. code-block:: shell
 
-    ./run_macaron.sh -d output/macaron.db -f verified.dl
+    ./run_macaron.sh verify-policy -d output/macaron.db -f verified.dl
 
 The result of this command should show that the policy we have written succeeds on the ``semver`` library. As follows:
 
