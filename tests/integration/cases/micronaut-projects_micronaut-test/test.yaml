@@ -2,18 +2,21 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Test configurations for micronaut-projects/micronaut-test.
+  Test micronaut-projects/micronaut-test. qos-ch/slf4j and ben-manes/caffeine were originally used as manually specified dependencies.
+  We still keep it here even though manual dependencies specification is not available anymore.
 
 tags:
 - macaron-python-package
 
 steps:
-- name: Run macaron analyze
+- name: Run macaron analyze micronaut-projects/micronaut-test
   kind: analyze
   options:
     command_args:
-    - -c
-    - micronaut_test_config.yaml
+    - -rp
+    - https://github.com/micronaut-projects/micronaut-test
+    - -d
+    - 5b81340f319a2287cb2e81ddec0154c0ea2510cf
     - --skip-deps
 - name: Validate JSON report schema
   kind: validate_schema
@@ -21,12 +24,24 @@ steps:
     kind: json_schema
     schema: output_json_report
     result: output/reports/github_com/micronaut-projects/micronaut-test/micronaut-test.json
-- name: Compare dependency report
-  kind: compare
+- name: Run macaron analyze qos-ch/slf4j
+  kind: analyze
   options:
-    kind: deps_report
-    result: output/reports/github_com/micronaut-projects/micronaut-test/dependencies.json
-    expected: dependencies.json
+    command_args:
+    - -rp
+    - https://github.com/qos-ch/slf4j
+    - -d
+    - e9ee55cca93c2bf26f14482a9bdf961c750d2a56
+    - --skip-deps
+- name: Run macaron analyze ben-manes/caffeine
+  kind: analyze
+  options:
+    command_args:
+    - -rp
+    - https://github.com/ben-manes/caffeine
+    - -d
+    - 05a040c2478341bab8a58a02b3dc1fe14d626d72
+    - --skip-deps
 - name: Run macaron verify-policy for micronaut-test
   kind: verify
   options:
