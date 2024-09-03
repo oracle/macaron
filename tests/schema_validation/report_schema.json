@@ -1,0 +1,174 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "macaron-json-report-schema",
+    "title": "Macaron JSON Report",
+    "$comment": "For any details about the schema specification and validation documentation, see https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-00 and https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-validation-00.",
+    "type": "object",
+    "$defs": {
+        "wholeNumber": {
+            "$comment": "A schema that describes whole numbers (positive interger and 0).",
+            "type": "integer",
+            "minimum": 0
+        },
+        "checkNamePattern": {
+            "$comment": "The pattern for all Macaron check names. Following ECMA-262 regular expression dialect.",
+            "pattern": "^mcn_([a-z]+_)+([0-9]+)$",
+            "type": "string"
+        },
+        "checkTree": {
+            "$comment": "The schema for a check tree. All property names must follow checkNamePattern, and each child instance within this object must follow the checkTree schema recursively.",
+            "type": "object",
+            "propertyNames": {
+                "$ref": "#/$defs/checkNamePattern"
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/checkTree"
+            }
+        }
+    },
+    "properties": {
+        "metadata": {
+            "type": "object",
+            "properties": {
+                "timestamps": {
+                    "type": "string"
+                },
+                "has_passing_check": {
+                    "type": "boolean"
+                },
+                "run_checks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/checkNamePattern"
+                    }
+                },
+                "check_tree": {
+                    "$ref": "#/$defs/checkTree"
+                }
+            }
+        },
+        "target": {
+            "type": "object",
+            "properties": {
+                "info": {
+                    "type": "object",
+                    "properties": {
+                        "full_name": {
+                            "type": "string"
+                        },
+                        "local_cloned_path": {
+                            "type": "string"
+                        },
+                        "remote_path": {
+                            "type": "string"
+                        },
+                        "branch": {
+                            "$comment": "Follow https://github.com/oracle/macaron/issues/832.",
+                            "oneOf": [
+                                { "type": "string" },
+                                { "type": "null" }
+                            ]
+                        },
+                        "commit_hash": {
+                            "type": "string"
+                        },
+                        "commit_date": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "provenances": {
+                    "type": "object"
+                },
+                "checks": {
+                    "type": "object",
+                    "properties": {
+                        "summary": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/$defs/wholeNumber"
+                            }
+                        },
+                        "results": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "check_id": {
+                                        "type": "string"
+                                    },
+                                    "check_description": {
+                                        "type": "string"
+                                    },
+                                    "slsa_requirements": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "justification": {
+                                        "type": "array",
+                                        "items": {
+                                            "oneOf": [
+                                                { "type": "string" },
+                                                { "type": "object" }
+                                            ]
+                                        }
+                                    },
+                                    "result_type": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "dependencies": {
+            "type": "object",
+            "properties": {
+                "analyzed_deps": {
+                    "$ref": "#/$defs/wholeNumber"
+                },
+                "unique_dep_repos": {
+                    "$ref": "#/$defs/wholeNumber"
+                },
+                "checks_summary": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "check_id": {
+                                "type": "string"
+                            },
+                            "num_deps_pass": {
+                                "$ref": "#/$defs/wholeNumber"
+                            }
+                        }
+                    }
+                },
+                "dep_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "description": {
+                                "type": "string"
+                            },
+                            "report": {
+                                "type": "string"
+                            },
+                            "repo_url_status": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

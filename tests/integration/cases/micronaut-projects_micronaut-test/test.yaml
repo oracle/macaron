@@ -15,6 +15,12 @@ steps:
     - -c
     - micronaut_test_config.yaml
     - --skip-deps
+- name: Validate JSON report schema
+  kind: validate_schema
+  options:
+    kind: json_schema
+    schema: output_json_report
+    result: output/reports/github_com/micronaut-projects/micronaut-test/micronaut-test.json
 - name: Compare dependency report
   kind: compare
   options:
