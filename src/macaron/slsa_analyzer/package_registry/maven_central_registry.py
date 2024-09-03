@@ -4,10 +4,11 @@
 """The module provides abstractions for the Maven Central package registry."""
 
 import logging
+import urllib.parse
 from datetime import datetime, timezone
-from urllib.parse import SplitResult, urlunsplit
 
 import requests
+from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
@@ -75,8 +76,11 @@ class MavenCentralRegistry(PackageRegistry):
 
     def __init__(
         self,
-        hostname: str | None = None,
+        search_netloc: str | None = None,
+        search_scheme: str | None = None,
         search_endpoint: str | None = None,
+        registry_url_netloc: str | None = None,
+        registry_url_scheme: str | None = None,
         request_timeout: int | None = None,
     ) -> None:
         """
@@ -84,15 +88,25 @@ class MavenCentralRegistry(PackageRegistry):
 
         Parameters
         ----------
-        hostname : str
-            The hostname of the Maven Central service.
+        search_netloc: str | None = None,
+            The netloc of Maven Central search URL.
+        search_scheme: str | None = None,
+            The scheme of Maven Central URL.
         search_endpoint : str | None
             The search REST API to find artifacts.
+        registry_url_netloc: str | None
+            The netloc of the Maven Central registry url.
+        registry_url_scheme: str | None
+            The scheme of the Maven Central registry url.
         request_timeout : int | None
             The timeout (in seconds) for requests made to the package registry.
         """
-        self.hostname = hostname or ""
+        self.search_netloc = search_netloc or ""
+        self.search_scheme = search_scheme or ""
         self.search_endpoint = search_endpoint or ""
+        self.registry_url_netloc = registry_url_netloc or ""
+        self.registry_url_scheme = registry_url_scheme or ""
+        self.registry_url = ""  # Created from the registry_url_scheme and registry_url_netloc.
         self.request_timeout = request_timeout or 10
         super().__init__("Maven Central Registry")
 
@@ -109,17 +123,33 @@ class MavenCentralRegistry(PackageRegistry):
             return
         section = defaults[section_name]
 
-        self.hostname = section.get("hostname")
-        if not self.hostname:
+        self.search_netloc = section.get("search_netloc")
+        if not self.search_netloc:
             raise ConfigurationError(
-                f'The "hostname" key is missing in section [{section_name}] of the .ini configuration file.'
+                f'The "search_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
             )
 
+        self.search_scheme = section.get("search_scheme", "https")
         self.search_endpoint = section.get("search_endpoint")
         if not self.search_endpoint:
             raise ConfigurationError(
                 f'The "search_endpoint" key is missing in section [{section_name}] of the .ini configuration file.'
             )
+
+        self.registry_url_netloc = section.get("registry_url_netloc")
+        if not self.registry_url_netloc:
+            raise ConfigurationError(
+                f'The "registry_url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
+            )
+        self.registry_url_scheme = section.get("registry_url_scheme", "https")
+        self.registry_url = urllib.parse.ParseResult(
+            scheme=self.registry_url_scheme,
+            netloc=self.registry_url_netloc,
+            path="",
+            params="",
+            query="",
+            fragment="",
+        ).geturl()
 
         try:
             self.request_timeout = section.getint("request_timeout", fallback=10)
@@ -152,41 +182,45 @@ class MavenCentralRegistry(PackageRegistry):
         compatible_build_tool_classes = [Maven, Gradle]
         return any(isinstance(build_tool, build_tool_class) for build_tool_class in compatible_build_tool_classes)
 
-    def find_publish_timestamp(self, group_id: str, artifact_id: str, version: str | None = None) -> datetime:
+    def find_publish_timestamp(self, purl: str, registry_url: str | None = None) -> datetime:
         """Make a search request to Maven Central to find the publishing timestamp of an artifact.
 
-        If version is not provided, the timestamp of the latest version will be returned.
+        The reason for directly fetching timestamps from Maven Central is that deps.dev occasionally
+        misses timestamps for Maven artifacts, making it unreliable for this purpose.
 
         To see the search API syntax see: https://central.sonatype.org/search/rest-api-guide/
 
         Parameters
         ----------
-        group_id : str
-            The group id of the artifact.
-        artifact_id: str
-            The artifact id of the artifact.
-        version: str | None
-            The version of the artifact.
+        purl: str
+            The Package URL (purl) of the package whose publication timestamp is to be retrieved.
+            This should conform to the PURL specification.
+        registry_url: str | None
+            The registry URL that can be set for testing.
 
         Returns
         -------
         datetime
-            The artifact publish timestamp as a timezone-aware datetime object.
+            A timezone-aware datetime object representing the publication timestamp
+            of the specified package.
 
         Raises
         ------
         InvalidHTTPResponseError
-            If the HTTP response is invalid or unexpected.
+            If the URL construction fails, the HTTP response is invalid, or if the response
+            cannot be parsed correctly, or if the expected timestamp is missing or invalid.
         """
-        query_params = [f"q=g:{group_id}", f"a:{artifact_id}"]
-        if version:
-            query_params.append(f"v:{version}")
+        try:
+            purl_object = PackageURL.from_string(purl)
+        except ValueError as error:
+            logger.debug("Could not parse PURL: %s", error)
+        query_params = [f"q=g:{purl_object.namespace}", f"a:{purl_object.name}", f"v:{purl_object.version}"]
 
         try:
-            url = urlunsplit(
-                SplitResult(
-                    scheme="https",
-                    netloc=self.hostname,
+            url = urllib.parse.urlunsplit(
+                urllib.parse.SplitResult(
+                    scheme=self.search_scheme,
+                    netloc=self.search_netloc,
                     path=f"/{self.search_endpoint}",
                     query="&".join(["+AND+".join(query_params), "core=gav", "rows=1", "wt=json"]),
                     fragment="",
@@ -221,7 +255,7 @@ class MavenCentralRegistry(PackageRegistry):
             # The timestamp published in Maven Central is in milliseconds and needs to be divided by 1000.
             # Unfortunately, this is not documented in the API docs.
             try:
-                return datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
+                return datetime.fromtimestamp(round(timestamp / 1000), tz=timezone.utc)
             except (OverflowError, OSError) as error:
                 raise InvalidHTTPResponseError(f"The timestamp returned by {url} is invalid") from error
 

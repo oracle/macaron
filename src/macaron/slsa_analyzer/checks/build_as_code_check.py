@@ -12,10 +12,11 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
 from macaron.database.table_definitions import CheckFacts
-from macaron.errors import CallGraphError
+from macaron.errors import CallGraphError, ProvenanceError
 from macaron.parsers.bashparser import BashNode
-from macaron.parsers.github_workflow_model import ActionStep, Identified, ReusableWorkflowCallJob
-from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_provenance
+from macaron.parsers.github_workflow_model import ActionStep
+from macaron.repo_finder.provenance_extractor import ProvenancePredicate
+from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_build_info_results
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
@@ -78,9 +79,9 @@ class BuildAsCodeFacts(CheckFacts):
 
 
 class BuildAsCodeCheck(BaseCheck):
-    """This class checks the build as code requirement.
+    """This check analyzes the CI configurations to determine if the software component is published automatically.
 
-    See https://slsa.dev/spec/v0.1/requirements#build-as-code.
+    As a requirement of this check, the software component should be published using a hosted build service.
     """
 
     def __init__(self) -> None:
@@ -121,6 +122,17 @@ class BuildAsCodeCheck(BaseCheck):
         if not build_tools:
             return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
 
+        # If a provenance is found, obtain the workflow that has triggered the artifact release.
+        prov_workflow = None
+        prov_payload = ctx.dynamic_data["provenance"]
+        if not ctx.dynamic_data["is_inferred_prov"] and prov_payload:
+            try:
+                build_def = ProvenancePredicate.find_build_def(prov_payload.statement)
+            except ProvenanceError as error:
+                logger.error(error)
+                return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
+            prov_workflow, _ = build_def.get_build_invocation(prov_payload.statement)
+
         ci_services = ctx.dynamic_data["ci_services"]
 
         # Check if "build as code" holds for each build tool.
@@ -150,27 +162,30 @@ class BuildAsCodeCheck(BaseCheck):
                                 logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
                                 continue
                             if workflow_name in trusted_deploy_actions:
-                                job_id = ""
-                                step_id = ""
-                                step_name = ""
+                                job_id = None
+                                step_id = None
+                                step_name = None
                                 caller_path = ""
                                 job = callee.caller
-                                if isinstance(job, GitHubJobNode):
-                                    job_id = job.parsed_obj.id
-                                    caller_path = job.source_path
 
+                                # We always expect the caller of the node that calls a third-party
+                                # or Reusable GitHub Action to be be a GitHubJobNode.
+                                if not isinstance(job, GitHubJobNode):
+                                    continue
+
+                                job_id = job.parsed_obj.id
+                                caller_path = job.source_path
+
+                                # Only third-party Actions can be called from a step.
+                                # Reusable workflows have to be directly called from the job.
+                                # See https://docs.github.com/en/actions/sharing-automations/ \
+                                # reusing-workflows#calling-a-reusable-workflow
                                 if callee.node_type == GitHubWorkflowType.EXTERNAL:
                                     callee_step_obj = cast(ActionStep, callee.parsed_obj)
                                     if "id" in callee_step_obj:
                                         step_id = callee_step_obj["id"]
                                     if "name" in callee_step_obj:
                                         step_name = callee_step_obj["name"]
-                                else:
-                                    callee_reusable = cast(Identified[ReusableWorkflowCallJob], callee.parsed_obj)
-                                    step_id = callee_reusable.id
-                                    callee_reusable_job = callee_reusable.obj
-                                    if "name" in callee_reusable_job:
-                                        step_name = callee_reusable_job["name"]
 
                                 trigger_link = ci_service.api_client.get_file_link(
                                     ctx.component.repository.full_name,
@@ -183,15 +198,27 @@ class BuildAsCodeCheck(BaseCheck):
                                         else ""
                                     ),
                                 )
-                                store_inferred_provenance(
-                                    ctx=ctx,
-                                    ci_info=ci_info,
-                                    ci_service=ci_service,
-                                    trigger_link=trigger_link,
-                                    job_id=job_id,
-                                    step_id=step_id,
-                                    step_name=step_name,
+
+                                trusted_workflow_confidence = tool.infer_confidence_deploy_workflow(
+                                    ci_path=caller_path, provenance_workflow=prov_workflow
                                 )
+                                # Store or update the inferred build information if the confidence
+                                # for the current check fact is bigger than the maximum score.
+                                if (
+                                    not result_tables
+                                    or trusted_workflow_confidence
+                                    > max(result_tables, key=lambda item: item.confidence).confidence
+                                ):
+                                    store_inferred_build_info_results(
+                                        ctx=ctx,
+                                        ci_info=ci_info,
+                                        ci_service=ci_service,
+                                        trigger_link=trigger_link,
+                                        job_id=job_id,
+                                        step_id=step_id,
+                                        step_name=step_name,
+                                        callee_node_type=callee.node_type.value,
+                                    )
                                 result_tables.append(
                                     BuildAsCodeFacts(
                                         build_tool_name=tool.name,
@@ -199,7 +226,7 @@ class BuildAsCodeCheck(BaseCheck):
                                         build_trigger=trigger_link,
                                         language=tool.language.value,
                                         deploy_command=workflow_name,
-                                        confidence=Confidence.HIGH,
+                                        confidence=trusted_workflow_confidence,
                                     )
                                 )
                                 overall_res = CheckResultType.PASSED
@@ -207,9 +234,12 @@ class BuildAsCodeCheck(BaseCheck):
                     for build_command in ci_service.get_build_tool_commands(
                         callgraph=ci_info["callgraph"], build_tool=tool
                     ):
+
                         # Yes or no with a confidence score.
                         result, confidence = tool.is_deploy_command(
-                            build_command, ci_service.get_third_party_configurations()
+                            build_command,
+                            ci_service.get_third_party_configurations(),
+                            provenance_workflow=prov_workflow,
                         )
                         if result:
                             trigger_link = ci_service.api_client.get_file_link(
@@ -219,13 +249,13 @@ class BuildAsCodeCheck(BaseCheck):
                                     os.path.basename(build_command["ci_path"])
                                 ),
                             )
-                            # Store or update the inferred provenance if the confidence
+                            # Store or update the inferred build information if the confidence
                             # for the current check fact is bigger than the maximum score.
                             if (
                                 not result_tables
                                 or confidence > max(result_tables, key=lambda item: item.confidence).confidence
                             ):
-                                store_inferred_provenance(
+                                store_inferred_build_info_results(
                                     ctx=ctx,
                                     ci_info=ci_info,
                                     ci_service=ci_service,
@@ -280,7 +310,7 @@ class BuildAsCodeCheck(BaseCheck):
                             if not config_name:
                                 break
 
-                            store_inferred_provenance(
+                            store_inferred_build_info_results(
                                 ctx=ctx, ci_info=ci_info, ci_service=ci_service, trigger_link=config_name
                             )
                             result_tables.append(

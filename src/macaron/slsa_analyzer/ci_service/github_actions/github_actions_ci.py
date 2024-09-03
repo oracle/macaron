@@ -20,6 +20,7 @@ from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
     GitHubJobNode,
     GitHubWorkflowNode,
+    GitHubWorkflowType,
     build_call_graph_from_path,
     find_language_setup_action,
     get_ci_events,
@@ -243,14 +244,69 @@ class GitHubActions(BaseCIService):
 
         return ""
 
+    def check_publish_start_commit_timestamps(
+        self, started_at: datetime, publish_date_time: datetime, commit_date_time: datetime, time_range: int
+    ) -> bool:
+        """
+        Check if the timestamps of CI run, artifact publishing, and commit date are within the acceptable time range and valid.
+
+        This function checks that the CI run has happened before the artifact publishing timestamp.
+
+        This function also verifies whether the commit date is within an acceptable time range
+        from the publish start time. The acceptable range is defined as half of the provided
+        time range parameter.
+
+        Parameters
+        ----------
+        started_at : datetime
+            The timestamp indicating when the GitHub Actions workflow started.
+        publish_date_time : datetime
+            The timestamp indicating when the artifact is published.
+        commit_date_time : datetime
+            The timestamp of the source code commit.
+        time_range : int
+            The total acceptable time range in seconds.
+
+        Returns
+        -------
+        bool
+            True if the commit date is within the acceptable range from the publish start time,
+                False otherwise. Returns False in case of any errors during timestamp comparisons.
+        """
+        try:
+            if started_at < publish_date_time:
+                # Make sure the source-code commit date is also within acceptable range.
+                acceptable_range = time_range / 2
+                if timedelta.total_seconds(abs(started_at - commit_date_time)) > acceptable_range:
+                    logger.debug(
+                        (
+                            "The difference between GitHub Actions starting time %s and source commit time %s"
+                            " is not within %s seconds."
+                        ),
+                        started_at,
+                        commit_date_time,
+                        acceptable_range,
+                    )
+                    return False
+                return True
+
+        # Handle errors for calls to `fromisoformat()` and the time comparison.
+        except (ValueError, OverflowError, OSError, TypeError) as error:
+            logger.debug(error)
+
+        return False
+
     def workflow_run_in_date_time_range(
         self,
         repo_full_name: str,
         workflow: str,
-        date_time: datetime,
+        publish_date_time: datetime,
+        commit_date_time: datetime,
+        job_id: str,
         step_name: str | None,
         step_id: str | None,
         time_range: int = 0,
+        callee_node_type: str | None = None,
     ) -> set[str]:
         """Check if the repository has a workflow run started before the date_time timestamp within the time_range.
 
@@ -273,7 +329,6 @@ class GitHubActions(BaseCIService):
             The ID of the step in the GitHub Action workflow that needs to be checked.
         time_range: int
             The date-time range in seconds. The default value is 0.
-            For example a 30 seconds range for 2022-11-05T20:30 is 2022-11-05T20:15..2022-11-05T20:45.
 
         Returns
         -------
@@ -281,15 +336,16 @@ class GitHubActions(BaseCIService):
             The set of URLs found for the workflow within the time range.
         """
         logger.debug(
-            "Getting the latest workflow run of %s at %s within time range %s",
+            "Getting the latest workflow run of %s at publishing time %s and source commit date %s within time range %s.",
             workflow,
-            str(date_time),
+            str(publish_date_time),
+            str(commit_date_time),
             str(time_range),
         )
 
         html_urls: set[str] = set()
         try:
-            datetime_from = date_time - timedelta(seconds=time_range)
+            datetime_from = publish_date_time - timedelta(seconds=time_range)
         except (OverflowError, OSError, TypeError) as error:
             logger.debug(error)
             return html_urls
@@ -298,7 +354,7 @@ class GitHubActions(BaseCIService):
         logger.debug("Search for the workflow runs within the range.")
         try:
             run_data = self.api_client.get_workflow_run_for_date_time_range(
-                repo_full_name, f"{datetime_from.isoformat()}..{date_time.isoformat()}"
+                repo_full_name, f"{datetime_from.isoformat()}..{publish_date_time.isoformat()}"
             )
         except ValueError as error:
             logger.debug(error)
@@ -321,33 +377,48 @@ class GitHubActions(BaseCIService):
                         continue
 
                     # Find the matching step and check its `conclusion` and `started_at` attributes.
+                    html_url = None
                     for job in run_jobs["jobs"]:
-                        for step in job["steps"]:
-                            if (step["name"] not in [step_name, step_id]) or step["conclusion"] != "success":
+                        # If the deploy step is a Reusable Workflow, there won't be any steps in the caller job.
+                        if callee_node_type == GitHubWorkflowType.REUSABLE.value:
+                            if not job["name"].startswith(job_id) or job["conclusion"] != "success":
                                 continue
-                            try:
-                                if datetime.fromisoformat(step["started_at"]) < date_time:
-                                    run_id: str = item["id"]
-                                    html_url: str = item["html_url"]
-                                    logger.info(
-                                        "The workflow run status of %s (id = %s, url = %s, step = %s) is %s.",
-                                        workflow,
-                                        run_id,
-                                        html_url,
-                                        step["name"],
-                                        step["conclusion"],
-                                    )
-                                    html_urls.add(html_url)
-                                else:
-                                    logger.debug(
-                                        "The workflow start run %s happened after %s with status %s.",
-                                        datetime.fromisoformat(step["started_at"]),
-                                        date_time,
-                                        step["conclusion"],
-                                    )
-                            # Handle errors for calls to `fromisoformat()` and the time comparison.
-                            except (ValueError, OverflowError, OSError, TypeError) as error:
-                                logger.debug(error)
+                            started_at = datetime.fromisoformat(job["started_at"])
+                            if self.check_publish_start_commit_timestamps(
+                                started_at=started_at,
+                                publish_date_time=publish_date_time,
+                                commit_date_time=commit_date_time,
+                                time_range=time_range,
+                            ):
+                                run_id = item["id"]
+                                html_url = item["html_url"]
+                                break
+
+                        for step in job["steps"]:
+                            if step["name"] not in [step_name, step_id] or step["conclusion"] != "success":
+                                continue
+                            started_at = datetime.fromisoformat(step["started_at"])
+                            if self.check_publish_start_commit_timestamps(
+                                started_at=started_at,
+                                publish_date_time=publish_date_time,
+                                commit_date_time=commit_date_time,
+                                time_range=time_range,
+                            ):
+                                run_id = item["id"]
+                                html_url = item["html_url"]
+                                logger.info(
+                                    "The workflow run status of %s (id = %s, url = %s, step = %s) is %s.",
+                                    workflow,
+                                    run_id,
+                                    html_url,
+                                    step["name"],
+                                    step["conclusion"],
+                                )
+                                break
+
+                    if html_url:
+                        html_urls.add(html_url)
+
         except KeyError as key_error:
             logger.debug(
                 "Unable to read data of %s from the GitHub API result. Error: %s",
@@ -356,6 +427,35 @@ class GitHubActions(BaseCIService):
             )
 
         return html_urls
+
+    def workflow_run_deleted(self, timestamp: datetime) -> bool:
+        """
+        Check if the CI run data is deleted based on a retention policy.
+
+        Parameters
+        ----------
+        timestamp: datetime
+            The timestamp of the CI run.
+
+        Returns
+        -------
+        bool
+            True if the CI run data is deleted.
+        """
+        # Setting the timezone to UTC because the date format
+        # we are using for GitHub Actions is in ISO format, which contains the offset
+        # from the UTC timezone. For example: 2022-04-10T14:10:01+07:00
+        # GitHub retains GitHub Actions pipeline data for 400 days. So, we cannot analyze the
+        # pipelines if artifacts are older than 400 days.
+        # https://docs.github.com/en/rest/guides/using-the-rest-api-to-interact-with-checks?
+        # apiVersion=2022-11-28#retention-of-checks-data
+        # TODO: change this check if this issue is resolved:
+        # https://github.com/orgs/community/discussions/138249
+        if datetime.now(timezone.utc) - timedelta(days=400) > timestamp:
+            logger.debug("Artifact published at %s is older than 410 days.", timestamp)
+            return True
+
+        return False
 
     def search_for_workflow_run(
         self,
