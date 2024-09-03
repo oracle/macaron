@@ -4,8 +4,8 @@
 """The module provides abstractions for the Maven Central package registry."""
 
 import logging
+import urllib.parse
 from datetime import datetime, timezone
-from urllib.parse import SplitResult, urlunsplit
 
 import requests
 
@@ -25,8 +25,11 @@ class MavenCentralRegistry(PackageRegistry):
 
     def __init__(
         self,
-        hostname: str | None = None,
+        search_netloc: str | None = None,
+        search_scheme: str | None = None,
         search_endpoint: str | None = None,
+        registry_url_netloc: str | None = None,
+        registry_url_scheme: str | None = None,
         request_timeout: int | None = None,
     ) -> None:
         """
@@ -34,15 +37,25 @@ class MavenCentralRegistry(PackageRegistry):
 
         Parameters
         ----------
-        hostname : str
-            The hostname of the Maven Central service.
+        search_netloc: str | None = None,
+            The netloc of Maven Central search URL.
+        search_scheme: str | None = None,
+            The scheme of Maven Central URL.
         search_endpoint : str | None
             The search REST API to find artifacts.
+        registry_url_netloc: str | None
+            The netloc of the Maven Central registry url.
+        registry_url_scheme: str | None
+            The scheme of the Maven Central registry url.
         request_timeout : int | None
             The timeout (in seconds) for requests made to the package registry.
         """
-        self.hostname = hostname or ""
+        self.search_netloc = search_netloc or ""
+        self.search_scheme = search_scheme or ""
         self.search_endpoint = search_endpoint or ""
+        self.registry_url_netloc = registry_url_netloc or ""
+        self.registry_url_scheme = registry_url_scheme or ""
+        self.registry_url = ""  # Created from the registry_url_scheme and registry_url_netloc.
         self.request_timeout = request_timeout or 10
         super().__init__("Maven Central Registry")
 
@@ -59,17 +72,33 @@ class MavenCentralRegistry(PackageRegistry):
             return
         section = defaults[section_name]
 
-        self.hostname = section.get("hostname")
-        if not self.hostname:
+        self.search_netloc = section.get("search_netloc")
+        if not self.search_netloc:
             raise ConfigurationError(
-                f'The "hostname" key is missing in section [{section_name}] of the .ini configuration file.'
+                f'The "search_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
             )
 
+        self.search_scheme = section.get("search_scheme", "https")
         self.search_endpoint = section.get("search_endpoint")
         if not self.search_endpoint:
             raise ConfigurationError(
                 f'The "search_endpoint" key is missing in section [{section_name}] of the .ini configuration file.'
             )
+
+        self.registry_url_netloc = section.get("registry_url_netloc")
+        if not self.registry_url_netloc:
+            raise ConfigurationError(
+                f'The "registry_url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
+            )
+        self.registry_url_scheme = section.get("registry_url_scheme", "https")
+        self.registry_url = urllib.parse.ParseResult(
+            scheme=self.registry_url_scheme,
+            netloc=self.registry_url_netloc,
+            path="",
+            params="",
+            query="",
+            fragment="",
+        ).geturl()
 
         try:
             self.request_timeout = section.getint("request_timeout", fallback=10)
@@ -133,10 +162,10 @@ class MavenCentralRegistry(PackageRegistry):
             query_params.append(f"v:{version}")
 
         try:
-            url = urlunsplit(
-                SplitResult(
-                    scheme="https",
-                    netloc=self.hostname,
+            url = urllib.parse.urlunsplit(
+                urllib.parse.SplitResult(
+                    scheme=self.search_scheme,
+                    netloc=self.search_netloc,
                     path=f"/{self.search_endpoint}",
                     query="&".join(["+AND+".join(query_params), "core=gav", "rows=1", "wt=json"]),
                     fragment="",
@@ -171,7 +200,7 @@ class MavenCentralRegistry(PackageRegistry):
             # The timestamp published in Maven Central is in milliseconds and needs to be divided by 1000.
             # Unfortunately, this is not documented in the API docs.
             try:
-                return datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
+                return datetime.fromtimestamp(round(timestamp / 1000), tz=timezone.utc)
             except (OverflowError, OSError) as error:
                 raise InvalidHTTPResponseError(f"The timestamp returned by {url} is invalid") from error
 

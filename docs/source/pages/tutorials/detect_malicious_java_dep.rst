@@ -1,11 +1,11 @@
 .. Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
 .. Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-.. _detect-malicious-java-dep:
+.. _detect-manual-upload-java-dep:
 
-------------------------------------------------------------------------
-Detecting a malicious Java dependency uploaded manually to Maven Central
-------------------------------------------------------------------------
+---------------------------------------------------------------
+Detecting Java dependencies manually uploaded to Maven Central.
+---------------------------------------------------------------
 
 In this tutorial we show how Macaron can determine whether the dependencies of a Java project are built
 and published via transparent CI workflows or manually uploaded to Maven Central. You can also
@@ -24,12 +24,12 @@ dependencies:
 
    * - Artifact name
      - `Package URL (PURL) <https://github.com/package-url/purl-spec>`_
-   * - `guava <https://central.sonatype.com/artifact/com.google.guava/guava>`_
-     - ``pkg:maven/com.google.guava/guava@32.1.2-jre?type=jar``
+   * - `log4j-core <https://central.sonatype.com/artifact/org.apache.logging.log4j/log4j-core>`_
+     - ``pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta2?type=jar``
    * - `jackson-databind <https://central.sonatype.com/artifact/io.github.behnazh-w.demo/jackson-databind>`_
      - ``pkg:maven/io.github.behnazh-w.demo/jackson-databind@1.0?type=jar``
 
-While the ``guava`` dependency follows best practices to publish artifacts automatically with minimal human
+While the ``log4j-core`` dependency follows best practices to publish artifacts automatically with minimal human
 intervention, ``jackson-databind`` is a malicious dependency that pretends to provide data-binding functionalities
 like `the official jackson-databind <https://github.com/FasterXML/jackson-databind>`_ library (note that
 this artifact is created for demonstration purposes and is not actually malicious).
@@ -70,7 +70,7 @@ First, we need to run the ``analyze`` command of Macaron to run a number of :ref
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar -rp https://github.com/behnazh-w/example-maven-app
+  ./run_macaron.sh analyze -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar -rp https://github.com/behnazh-w/example-maven-app --deps-depth=1
 
 .. note:: By default, Macaron clones the repositories and creates output files under the ``output`` directory. To understand the structure of this directory please see :ref:`Output Files Guide <output_files_guide>`.
 
@@ -96,7 +96,7 @@ As you can see, some of the checks are passing and some are failing. In summary,
 * is not producing any :term:`SLSA` or :term:`Witness` provenances (``mcn_provenance_available_1``)
 * is using GitHub Actions to build and test using ``mvnw`` (``mcn_build_service_1``)
 * but it is not deploying any artifacts automatically (``mcn_build_as_code_1``)
-* and no CI workflow runs are detected that automatically publish artifacts (``mcn_infer_artifact_pipeline_1``)
+* and no CI workflow runs are detected that automatically publish artifacts (``mcn_find_artifact_pipeline_1``)
 
 As you scroll down in the HTML report, you will see a section for the dependencies that were automatically identified:
 
@@ -110,25 +110,25 @@ As you scroll down in the HTML report, you will see a section for the dependenci
 | Macaron has found the two dependencies as expected:
 
 * ``io.github.behnazh-w.demo:jackson-databind:1.0``
-* ``com.google.guava:guava:32.1.2-jre``
+* ``org.apache.logging.log4j:log4j-core:3.0.0-beta2``
 
-When we open the reports for each dependency, we see that ``mcn_infer_artifact_pipeline_1`` is passed for ``com.google.guava:guava:32.1.2-jre``
-and a GitHub Actions workflow run is found for publishing version ``32.1.2-jre``. However, this check is failing for ``io.github.behnazh-w.demo:jackson-databind:1.0``.
+When we open the reports for each dependency, we see that ``mcn_find_artifact_pipeline_1`` is passed for ``org.apache.logging.log4j:log4j-core:3.0.0-beta2``
+and a GitHub Actions workflow run is found for publishing version ``3.0.0-beta2``. However, this check is failing for ``io.github.behnazh-w.demo:jackson-databind:1.0``.
 This means that ``io.github.behnazh-w.demo:jackson-databind:1.0`` could have been built and published manually to Maven Central
 and could potentially be malicious.
 
-.. _fig_infer_artifact_pipeline_guava:
+.. _fig_find_artifact_pipeline_log4j:
 
-.. figure:: ../../_static/images/tutorial_guava_infer_pipeline.png
-   :alt: mcn_infer_artifact_pipeline_1 for com.google.guava:guava:32.1.2-jre
+.. figure:: ../../_static/images/tutorial_log4j_find_pipeline.png
+   :alt: mcn_find_artifact_pipeline_1 for org.apache.logging.log4j:log4j-core:3.0.0-beta2
    :align: center
 
-   ``com.google.guava:guava:32.1.2-jre``
+   ``org.apache.logging.log4j:log4j-core:3.0.0-beta2``
 
 .. _fig_infer_artifact_pipeline_bh_jackson_databind:
 
 .. figure:: ../../_static/images/tutorial_bh_jackson_databind_infer_pipeline.png
-   :alt: mcn_infer_artifact_pipeline_1 for io.github.behnazh-w.demo:jackson-databind:1.0
+   :alt: mcn_find_artifact_pipeline_1 for io.github.behnazh-w.demo:jackson-databind:1.0
    :align: center
 
    ``io.github.behnazh-w.demo:jackson-databind:1.0``
@@ -154,7 +154,7 @@ The security requirement in this tutorial is to mandate dependencies of our proj
 transparent artifact publish CI workflows. To write a policy for this requirement, first we need to
 revisit the checks shown in the HTML report in the previous :ref:`step <fig_example-maven-app>`.
 The result of each of the checks can be queried by the check ID in the first column. For the policy in this tutorial,
-we are interested in the ``mcn_infer_artifact_pipeline_1`` and ``mcn_provenance_level_three_1`` checks:
+we are interested in the ``mcn_find_artifact_pipeline_1`` and ``mcn_provenance_level_three_1`` checks:
 
 .. code-block:: prolog
 
@@ -167,7 +167,7 @@ we are interested in the ``mcn_infer_artifact_pipeline_1`` and ``mcn_provenance_
   .decl violating_dependencies(parent: number)
   violating_dependencies(parent) :-
       transitive_dependency(parent, dependency),
-      !check_passed(dependency, "mcn_infer_artifact_pipeline_1"),
+      !check_passed(dependency, "mcn_find_artifact_pipeline_1"),
       !check_passed(dependency, "mcn_provenance_level_three_1").
 
   apply_policy_to("detect-malicious-upload", component_id) :-
@@ -176,8 +176,8 @@ we are interested in the ``mcn_infer_artifact_pipeline_1`` and ``mcn_provenance_
 
 This policy requires that all the dependencies
 of repository ``github.com/behnazh-w/example-maven-app`` either pass the ``mcn_provenance_level_three_1`` (have non-forgeable
-:term:`SLSA` provenances) or ``mcn_infer_artifact_pipeline_1`` check. Note that if an artifact already has a non-forgeable provenance, it means it is produced
-by a hosted build platform, such as GitHub Actions CI workflows. So, the ``mcn_infer_artifact_pipeline_1`` needs to pass
+:term:`SLSA` provenances) or ``mcn_find_artifact_pipeline_1`` check. Note that if an artifact already has a non-forgeable provenance, it means it is produced
+by a hosted build platform, such as GitHub Actions CI workflows. So, the ``mcn_find_artifact_pipeline_1`` needs to pass
 only if ``mcn_provenance_level_three_1`` fails.
 
 Let's take a closer look at this policy to understand what each line means.
@@ -219,12 +219,12 @@ This rule populates the ``Policy`` relation if ``component_id`` exists in the da
   .decl violating_dependencies(parent: number)
   violating_dependencies(parent) :-
       transitive_dependency(parent, dependency),
-      !check_passed(dependency, "mcn_infer_artifact_pipeline_1"),
+      !check_passed(dependency, "mcn_find_artifact_pipeline_1"),
       !check_passed(dependency, "mcn_provenance_level_three_1").
 
 This is the rule that the user needs to design to detect dependencies that violate a security requirement.
 Here we declare a relation called ``violating_dependencies`` and populate it if the dependencies in the
-``transitive_dependency`` relation do not pass any of the ``mcn_infer_artifact_pipeline_1`` and
+``transitive_dependency`` relation do not pass any of the ``mcn_find_artifact_pipeline_1`` and
 ``mcn_provenance_level_three_1`` checks.
 
 .. code-block:: prolog
@@ -253,7 +253,7 @@ printed to the console will look like the following:
   failed_policies
       ['detect-malicious-upload']
   component_violates_policy
-      ['1', 'pkg:github.com/behnazh-w/example-maven-app@34c06e8ae3811885c57f8bd42db61f37ac57eb6c', 'detect-malicious-upload']
+      ['1', 'pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar', 'detect-malicious-upload']
 
 As you can see, the policy has failed because the ``io.github.behnazh-w.demo:jackson-databind:1.0``
 dependency is manually uploaded to Maven Central and does not meet the security requirement.

@@ -187,10 +187,13 @@ class BaseCIService:
         self,
         repo_full_name: str,
         workflow: str,
-        date_time: datetime,
+        publish_date_time: datetime,
+        commit_date_time: datetime,
+        job_id: str,
         step_name: str | None,
         step_id: str | None,
         time_range: int = 0,
+        callee_node_type: str | None = None,
     ) -> set[str]:
         """Check if the repository has a workflow run started before the date_time timestamp within the time_range.
 
@@ -205,8 +208,12 @@ class BaseCIService:
             The target repo's full name.
         workflow : str
             The workflow URL.
-        date_time: datetime
-            The datetime object to query.
+        publish_date_time: datetime
+            The artifact publishing datetime object.
+        commit_date_time: datetime
+            The artifact's source-code commit datetime object.
+        job_id:str
+            The job that triggers the run.
         step_name: str
             The step in the GitHub Action workflow that needs to be checked.
         time_range: int
@@ -219,6 +226,22 @@ class BaseCIService:
             The set of URLs found for the workflow within the time range.
         """
         return set()
+
+    def workflow_run_deleted(self, timestamp: datetime) -> bool:
+        """
+        Check if the CI run data is deleted based on a retention policy.
+
+        Parameters
+        ----------
+        timestamp: datetime
+            The timestamp of the CI run.
+
+        Returns
+        -------
+        bool
+            True if the CI run data is deleted.
+        """
+        return False
 
     def get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
         """

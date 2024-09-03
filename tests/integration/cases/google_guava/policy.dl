@@ -7,10 +7,6 @@ Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_build_as_code_1"),
     check_passed(component_id, "mcn_build_script_1"),
     check_passed(component_id, "mcn_build_service_1"),
-    // TODO: The GitHub API is no longer returning the required information about the workflow run
-    // steps for this version of Guava. So, we need to disable this check for now and adjust
-    // the logic in the mcn_infer_artifact_pipeline_1 check.
-    check_failed(component_id, "mcn_infer_artifact_pipeline_1"),
     check_passed(component_id, "mcn_version_control_system_1"),
     check_failed(component_id, "mcn_provenance_available_1"),
     check_failed(component_id, "mcn_provenance_derived_commit_1"),
@@ -19,7 +15,19 @@ Policy("test_policy", component_id, "") :-
     check_failed(component_id, "mcn_provenance_level_three_1"),
     check_failed(component_id, "mcn_provenance_witness_level_one_1"),
     check_failed(component_id, "mcn_trusted_builder_level_three_1"),
-    is_repo_url(component_id, "https://github.com/google/guava").
+    is_repo_url(component_id, "https://github.com/google/guava"),
+    check_failed(component_id, "mcn_find_artifact_pipeline_1"),
+    artifact_pipeline_check(
+        apc_check_id,
+        _,
+        _,
+        _,
+        _,
+        0,  // From provenance.
+        1,  // Run deleted.
+        0   // Published before the code was committed.
+    ),
+    check_facts(apc_check_id, _, component_id,_,_).
 
 apply_policy_to("test_policy", component_id) :-
     is_component(component_id, "pkg:maven/com.google.guava/guava@32.1.2-jre?type=jar").

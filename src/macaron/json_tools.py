@@ -31,28 +31,27 @@ def json_extract(entry: dict | list, keys: Sequence[str | int], type_: type[T]) 
     T | None:
         The found value as the type of the type parameter.
     """
-    target: JsonType = entry
     for key in keys:
-        if isinstance(target, dict) and isinstance(key, str):
-            if key not in target:
-                logger.debug("JSON key '%s' not found in dict target.", key)
+        if isinstance(entry, dict) and isinstance(key, str):
+            if key not in entry:
+                logger.debug("JSON key '%s' not found in dict entry.", key)
                 return None
-        elif isinstance(target, list) and isinstance(key, int):
-            if key < 0 or key >= len(target):
-                logger.debug("JSON list index '%s' is outside of list bounds %s.", key, len(target))
+        elif isinstance(entry, list) and isinstance(key, int):
+            if key < 0 or key >= len(entry):
+                logger.debug("JSON list index '%s' is outside of list bounds %s.", key, len(entry))
                 return None
         else:
-            logger.debug("Cannot index '%s' (type: %s) in target (type: %s).", key, type(key), type(target))
+            logger.debug("Cannot index '%s' (type: %s) in entry (type: %s).", key, type(key), type(entry))
             return None
 
         # If statement required for mypy to not complain. The else case can never happen because of the above if block.
-        if isinstance(target, dict) and isinstance(key, str):
-            target = target[key]
-        elif isinstance(target, list) and isinstance(key, int):
-            target = target[key]
+        if isinstance(entry, dict) and isinstance(key, str):
+            entry = entry[key]
+        elif isinstance(entry, list) and isinstance(key, int):
+            entry = entry[key]
 
-    if isinstance(target, type_):
-        return target
+    if isinstance(entry, type_):
+        return entry
 
-    logger.debug("Found value of incorrect type: %s instead of %s.", type(target), type(type_))
+    logger.debug("Found value of incorrect type: %s instead of %s.", type(entry), type(type_))
     return None

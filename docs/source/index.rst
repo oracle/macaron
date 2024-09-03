@@ -74,7 +74,7 @@ the requirements that are currently supported by Macaron.
    * - ``mcn_build_as_code_1``
      - **Build as code** - If a trusted builder is not present, this requirement determines that the build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.
      - Identify and validate the CI service(s) used to build and deploy/publish an artifact.
-   * - ``mcn_infer_artifact_pipeline_1``
+   * - ``mcn_find_artifact_pipeline_1``
      - **Infer artifact publish pipeline** - When a provenance is not available, checks whether a CI workflow run has automatically published the artifact.
      - Identify a workflow run that has triggered the deploy step determined by the ``Build as code`` check.
    * - ``mcn_provenance_level_three_1``

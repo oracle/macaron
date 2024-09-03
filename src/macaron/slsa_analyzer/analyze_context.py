@@ -309,7 +309,7 @@ class AnalyzeContext:
         return output
 
 
-def store_inferred_provenance(
+def store_inferred_build_info_results(
     ctx: AnalyzeContext,
     ci_info: CIInfo,
     ci_service: BaseCIService,
@@ -317,8 +317,9 @@ def store_inferred_provenance(
     job_id: str | None = None,
     step_id: str | None = None,
     step_name: str | None = None,
+    callee_node_type: str | None = None,
 ) -> None:
-    """Store the data related to the build provenance when the project does not generate provenances.
+    """Store the data related to the build.
 
     Parameters
     ----------
@@ -336,15 +337,13 @@ def store_inferred_provenance(
         The CI step ID.
     step_name: str | None
         The CI step name.
+    callee_node_type: str | None
+        The callee node type in the call graph.
     """
     # TODO: This data is potentially duplicated in the check result tables. Instead of storing the data
     # in the context object, retrieve it from the result tables and remove this function.
-    if (
-        ctx.dynamic_data["is_inferred_prov"]
-        and ci_info["provenances"]
-        and isinstance(ci_info["provenances"][0].payload, InTotoV01Payload)
-    ):
-        predicate: Any = ci_info["provenances"][0].payload.statement["predicate"]
+    if isinstance(ci_info["build_info_results"], InTotoV01Payload):
+        predicate: Any = ci_info["build_info_results"].statement["predicate"]
         predicate["buildType"] = f"Custom {ci_service.name}"
         predicate["builder"]["id"] = trigger_link
         predicate["invocation"]["configSource"]["uri"] = (
@@ -355,3 +354,4 @@ def store_inferred_provenance(
         predicate["buildConfig"]["jobID"] = job_id or ""
         predicate["buildConfig"]["stepID"] = step_id or ""
         predicate["buildConfig"]["stepName"] = step_name or ""
+        predicate["buildConfig"]["calleeType"] = callee_node_type

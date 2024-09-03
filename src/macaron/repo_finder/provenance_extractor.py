@@ -4,6 +4,7 @@
 """This module contains methods for extracting repository and commit metadata from provenance files."""
 import logging
 import urllib.parse
+from abc import ABC, abstractmethod
 
 from packageurl import PackageURL
 from pydriller import Git
@@ -17,6 +18,8 @@ from macaron.repo_finder.commit_finder import (
 )
 from macaron.repo_finder.repo_finder import to_domain_from_known_purl_types
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV1Payload, InTotoV01Payload
+from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Statement
+from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1Statement
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -355,3 +358,309 @@ def check_if_repository_purl_and_url_match(url: str, repo_purl: PackageURL) -> b
         purl_path = f"{repo_purl.namespace}/{purl_path}"
     # Note that the urllib method includes the "/" before path while the PURL method does not.
     return f"{parsed_url.hostname}{parsed_url.path}".lower() == f"{expanded_purl_type or repo_purl.type}/{purl_path}"
+
+
+class ProvenanceBuildDefinition(ABC):
+    """Abstract base class for representing provenance build definitions.
+
+    This class serves as a blueprint for various types of build definitions
+    in provenance data. It outlines the methods and properties that derived
+    classes must implement to handle specific build definition types.
+    """
+
+    #: Determines the expected ``buildType`` field in the provenance predicate.
+    expected_build_type: str
+
+    @abstractmethod
+    def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
+        """Retrieve the build invocation information from the given statement.
+
+        This method is intended to be implemented by subclasses to extract
+        specific invocation details from a provenance statement.
+
+        Parameters
+        ----------
+        statement : InTotoV1Statement | InTotoV01Statement
+            The provenance statement from which to extract the build invocation
+            details. This statement contains the metadata about the build process
+            and its associated artifacts.
+
+        Returns
+        -------
+        tuple[str | None, str | None]
+            A tuple containing two elements:
+            - The first element is the build invocation entry point (e.g., workflow name), or None if not found.
+            - The second element is the invocation URL or identifier (e.g., job URL), or None if not found.
+
+        Raises
+        ------
+        NotImplementedError
+            If the method is called directly without being overridden in a subclass.
+        """
+
+
+class SLSAGithubGenericBuildDefinitionV01(ProvenanceBuildDefinition):
+    """Class representing the SLSA GitHub Generic Build Definition (v0.1).
+
+    This class implements the abstract methods defined in `ProvenanceBuildDefinition`
+    to extract build invocation details specific to the GitHub provenance generator's generic build type.
+    """
+
+    #: Determines the expected ``buildType`` field in the provenance predicate.
+    expected_build_type = "https://github.com/slsa-framework/slsa-github-generator/generic@v1"
+
+    def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
+        """Retrieve the build invocation information from the given statement.
+
+        This method is intended to be implemented by subclasses to extract
+        specific invocation details from a provenance statement.
+
+        Parameters
+        ----------
+        statement : InTotoV1Statement | InTotoV01Statement
+            The provenance statement from which to extract the build invocation
+            details. This statement contains the metadata about the build process
+            and its associated artifacts.
+
+        Returns
+        -------
+        tuple[str | None, str | None]
+            A tuple containing two elements:
+            - The first element is the build invocation entry point (e.g., workflow name), or None if not found.
+            - The second element is the invocation URL or identifier (e.g., job URL), or None if not found.
+        """
+        if statement["predicate"] is None:
+            return None, None
+        gha_workflow = json_extract(statement["predicate"], ["invocation", "configSource", "entryPoint"], str)
+        gh_run_id = json_extract(statement["predicate"], ["invocation", "environment", "github_run_id"], str)
+        repo_uri = json_extract(statement["predicate"], ["invocation", "configSource", "uri"], str)
+        repo = None
+        if repo_uri:
+            repo = _clean_spdx(repo_uri)
+        if repo is None:
+            return gha_workflow, repo
+        invocation_url = f"{repo}/" f"actions/runs/{gh_run_id}"
+        return gha_workflow, invocation_url
+
+
+class SLSAGithubActionsBuildDefinitionV1(ProvenanceBuildDefinition):
+    """Class representing the SLSA GitHub Actions Build Definition (v1).
+
+    This class implements the abstract methods from the `ProvenanceBuildDefinition`
+    to extract build invocation details specific to the GitHub Actions build type.
+    """
+
+    #: Determines the expected ``buildType`` field in the provenance predicate.
+    expected_build_type = "https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1"
+
+    def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
+        """Retrieve the build invocation information from the given statement.
+
+        This method is intended to be implemented by subclasses to extract
+        specific invocation details from a provenance statement.
+
+        Parameters
+        ----------
+        statement : InTotoV1Statement | InTotoV01Statement
+            The provenance statement from which to extract the build invocation
+            details. This statement contains the metadata about the build process
+            and its associated artifacts.
+
+        Returns
+        -------
+        tuple[str | None, str | None]
+            A tuple containing two elements:
+            - The first element is the build invocation entry point (e.g., workflow name), or None if not found.
+            - The second element is the invocation URL or identifier (e.g., job URL), or None if not found.
+        """
+        if statement["predicate"] is None:
+            return None, None
+
+        gha_workflow = json_extract(
+            statement["predicate"], ["buildDefinition", "externalParameters", "workflow", "path"], str
+        )
+        invocation_url = json_extract(statement["predicate"], ["runDetails", "metadata", "invocationId"], str)
+        return gha_workflow, invocation_url
+
+
+class SLSAGCBBuildDefinitionV1(ProvenanceBuildDefinition):
+    """Class representing the SLSA Google Cloud Build (GCB) Build Definition (v1).
+
+    This class implements the abstract methods from `ProvenanceBuildDefinition`
+    to extract build invocation details specific to the Google Cloud Build (GCB).
+    """
+
+    #: Determines the expected ``buildType`` field in the provenance predicate.
+    expected_build_type = "https://slsa-framework.github.io/gcb-buildtypes/triggered-build/v1"
+
+    def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
+        """Retrieve the build invocation information from the given statement.
+
+        This method is intended to be implemented by subclasses to extract
+        specific invocation details from a provenance statement.
+
+        Parameters
+        ----------
+        statement : InTotoV1Statement | InTotoV01Statement
+            The provenance statement from which to extract the build invocation
+            details. This statement contains the metadata about the build process
+            and its associated artifacts.
+
+        Returns
+        -------
+        tuple[str | None, str | None]
+            A tuple containing two elements:
+            - The first element is the build invocation entry point (e.g., workflow name), or None if not found.
+            - The second element is the invocation URL or identifier (e.g., job URL), or None if not found.
+        """
+        # TODO implement this method.
+        return None, None
+
+
+class SLSAOCIBuildDefinitionV1(ProvenanceBuildDefinition):
+    """Class representing the SLSA Oracle Cloud Infrastructure (OCI) Build Definition (v1).
+
+    This class implements the abstract methods from `ProvenanceBuildDefinition`
+    to extract build invocation details specific to OCI builds.
+    """
+
+    #: Determines the expected ``buildType`` field in the provenance predicate.
+    expected_build_type = (
+        "https://github.com/oracle/macaron/tree/main/src/macaron/resources/provenance-buildtypes/oci/v1"
+    )
+
+    def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
+        """Retrieve the build invocation information from the given statement.
+
+        This method is intended to be implemented by subclasses to extract
+        specific invocation details from a provenance statement.
+
+        Parameters
+        ----------
+        statement : InTotoV1Statement | InTotoV01Statement
+            The provenance statement from which to extract the build invocation
+            details. This statement contains the metadata about the build process
+            and its associated artifacts.
+
+        Returns
+        -------
+        tuple[str | None, str | None]
+            A tuple containing two elements:
+            - The first element is the build invocation entry point (e.g., workflow name), or None if not found.
+            - The second element is the invocation URL or identifier (e.g., job URL), or None if not found.
+        """
+        # TODO implement this method.
+        return None, None
+
+
+class WitnessGitLabBuildDefinitionV01(ProvenanceBuildDefinition):
+    """Class representing the Witness GitLab Build Definition (v0.1).
+
+    This class implements the abstract methods from `ProvenanceBuildDefinition`
+    to extract build invocation details specific to GitLab.
+    """
+
+    #: Determines the expected ``buildType`` field in the provenance predicate.
+    expected_build_type = "https://witness.testifysec.com/attestation-collection/v0.1"
+
+    #: Determines the expected ``attestations.type`` field in the Witness provenance predicate.
+    expected_attestation_type = "https://witness.dev/attestations/gitlab/v0.1"
+
+    def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
+        """Retrieve the build invocation information from the given statement.
+
+        This method is intended to be implemented by subclasses to extract
+        specific invocation details from a provenance statement.
+
+        Parameters
+        ----------
+        statement : InTotoV1Statement | InTotoV01Statement
+            The provenance statement from which to extract the build invocation
+            details. This statement contains the metadata about the build process
+            and its associated artifacts.
+
+        Returns
+        -------
+        tuple[str | None, str | None]
+            A tuple containing two elements:
+            - The first element is the build invocation entry point (e.g., workflow name), or None if not found.
+            - The second element is the invocation URL or identifier (e.g., job URL), or None if not found.
+        """
+        if statement["predicate"] is None:
+            return None, None
+
+        attestation_type = json_extract(statement["predicate"], ["attestations", "type"], str)
+        if not self.expected_attestation_type == attestation_type:
+            return None, None
+        gl_workflow = json_extract(statement["predicate"], ["attestations", "attestation", "ciconfigpath"], str)
+        gl_job_url = json_extract(statement["predicate"], ["attestations", "attestation", "joburl"], str)
+        return gl_workflow, gl_job_url
+
+
+class ProvenancePredicate:
+    """Class providing utility methods for handling provenance predicates.
+
+    This class contains static methods for extracting information from predicates in
+    provenance statements related to various build definitions. It serves as a helper
+    for identifying build types and finding the appropriate build definitions based on the extracted data.
+    """
+
+    @staticmethod
+    def get_build_type(statement: InTotoV1Statement | InTotoV01Statement) -> str | None:
+        """Extract the build type from the provided provenance statement.
+
+        Parameters
+        ----------
+        statement : InTotoV1Statement | InTotoV01Statement
+            The provenance statement from which to extract the build type.
+
+        Returns
+        -------
+        str | None
+            The build type if found; otherwise, None.
+        """
+        if statement["predicate"] is None:
+            return None
+
+        if build_type := json_extract(statement["predicate"], ["buildType"], str):
+            return build_type
+
+        return json_extract(statement["predicate"], ["buildDefinition", "buildType"], str)
+
+    @staticmethod
+    def find_build_def(statement: InTotoV01Statement | InTotoV1Statement) -> ProvenanceBuildDefinition:
+        """Find the appropriate build definition class based on the extracted build type.
+
+        This method checks the provided provenance statement for its build type
+        and returns the corresponding `ProvenanceBuildDefinition` subclass.
+
+        Parameters
+        ----------
+        statement : InTotoV01Statement | InTotoV1Statement
+            The provenance statement containing the build type information.
+
+        Returns
+        -------
+        ProvenanceBuildDefinition
+            An instance of the appropriate build definition class that matches the
+            extracted build type.
+
+        Raises
+        ------
+        ProvenanceError
+            Raised when the build definition cannot be found in the provenance statement.
+        """
+        build_type = ProvenancePredicate.get_build_type(statement)
+        build_defs: list[ProvenanceBuildDefinition] = [
+            SLSAGithubGenericBuildDefinitionV01(),
+            SLSAGithubActionsBuildDefinitionV1(),
+            SLSAGCBBuildDefinitionV1(),
+            SLSAOCIBuildDefinitionV1(),
+            WitnessGitLabBuildDefinitionV01(),
+        ]
+
+        for build_def in build_defs:
+            if build_def.expected_build_type == build_type:
+                return build_def
+
+        raise ProvenanceError("Unable to find build definition in the provenance statement.")

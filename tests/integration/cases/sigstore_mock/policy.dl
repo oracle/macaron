@@ -12,7 +12,7 @@ Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_provenance_derived_commit_1"),
     check_passed(component_id, "mcn_provenance_derived_repo_1"),
     check_passed(component_id, "mcn_provenance_verified_1"),
-    check_failed(component_id, "mcn_infer_artifact_pipeline_1"),
+    check_failed(component_id, "mcn_find_artifact_pipeline_1"),
     check_failed(component_id, "mcn_provenance_level_three_1"),
     check_failed(component_id, "mcn_provenance_witness_level_one_1"),
     check_failed(component_id, "mcn_trusted_builder_level_three_1"),

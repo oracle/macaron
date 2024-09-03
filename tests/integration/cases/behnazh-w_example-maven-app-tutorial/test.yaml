@@ -1,0 +1,24 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Test the example-maven-app detect-manual-upload-java-dep tutorial scenario.
+
+tags:
+- macaron-python-package
+- tutorial
+steps:
+- name: Run macaron analyze on the remote repository and resolve dependencies.
+  kind: analyze
+  options:
+    command_args:
+    - --package-url
+    - pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar
+    - -rp
+    - https://github.com/behnazh-w/example-maven-app
+    - --deps-depth=1
+- name: Run macaron verify-policy and expect to fail some deps do not pass the policy.
+  kind: verify
+  options:
+    policy: policy.dl
+  expect_fail: true

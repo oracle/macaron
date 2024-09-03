@@ -18,7 +18,9 @@ from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
     build_call_graph_from_node,
 )
 from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
+from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
 from tests.conftest import MockAnalyzeContext
 
 
@@ -49,6 +51,7 @@ def test_trusted_builder_l3_check(
         provenance_assets=[],
         release={},
         provenances=[],
+        build_info_results=InTotoV01Payload(statement=Provenance().payload),
     )
 
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")

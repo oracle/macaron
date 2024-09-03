@@ -1,0 +1,17 @@
+/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+  #include "prelude.dl"
+
+  Policy("detect-malicious-upload", component_id, "") :-
+      is_component(component_id, _),
+      !violating_dependencies(component_id).
+
+  .decl violating_dependencies(parent: number)
+  violating_dependencies(parent) :-
+      transitive_dependency(parent, dependency),
+      !check_passed(dependency, "mcn_find_artifact_pipeline_1"),
+      !check_passed(dependency, "mcn_provenance_level_three_1").
+
+  apply_policy_to("detect-malicious-upload", component_id) :-
+      is_repo(_, "github.com/behnazh-w/example-maven-app", component_id).
