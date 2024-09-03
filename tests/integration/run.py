@@ -81,6 +81,14 @@ COMPARE_SCRIPTS: dict[str, Sequence[str]] = {
     "vsa": ["tests", "vsa", "compare_vsa.py"],
 }
 
+VALIDATE_SCHEMA_SCRIPTS: dict[str, Sequence[str]] = {
+    "json_schema": ["tests", "schema_validation", "json_schema_validate.py"],
+}
+
+DEFAULT_SCHEMAS: dict[str, Sequence[str]] = {
+    "output_json_report": ["tests", "schema_validation", "report_schema.json"],
+}
+
 
 def check_required_file(cwd: str) -> Callable[[str], None]:
     """Check for a required file of a test case."""
@@ -206,6 +214,72 @@ class ShellStep(Step[ShellStepOptions]):
 
     def cmd(self, macaron_cmd: str) -> list[str]:
         return self.options["cmd"].strip().split()
+
+
+class ValidateSchemaStepOptions(TypedDict):
+    """The configuration options of a schema validation step."""
+
+    kind: str
+    result: str
+    schema: str
+    custom_schema_path: str | None
+
+
+@dataclass
+class ValidateSchemaStep(Step[ValidateSchemaStepOptions]):
+    """A schema validation step in a test case, which allows for validating a file against a schema."""
+
+    @staticmethod
+    def options_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
+        """Generate the schema of a schema validation step."""
+        if check_expected_result_files:
+            check_file = check_required_file(cwd)
+        else:
+            check_file = cfgv.check_string
+
+        return cfgv.Map(
+            "schema options",
+            None,
+            *[
+                cfgv.Required(
+                    key="kind",
+                    check_fn=cfgv.check_one_of(tuple(VALIDATE_SCHEMA_SCRIPTS.keys())),
+                ),
+                cfgv.Required(
+                    key="result",
+                    check_fn=cfgv.check_string,
+                ),
+                cfgv.Required(
+                    key="schema",
+                    check_fn=cfgv.check_one_of(tuple(DEFAULT_SCHEMAS.keys())),
+                ),
+                cfgv.Optional(
+                    key="custom_schema_path",
+                    default=None,
+                    check_fn=check_file,
+                ),
+            ],
+        )
+
+    def cmd(self, macaron_cmd: str) -> list[str]:
+        kind = self.options["kind"]
+        result_file = self.options["result"]
+        schema = self.options["schema"]
+        custom_schema_path = self.options["custom_schema_path"]
+
+        if custom_schema_path is None:
+            return [
+                "python",
+                os.path.abspath(os.path.join(*VALIDATE_SCHEMA_SCRIPTS[kind])),
+                *[result_file, os.path.abspath(os.path.join(*DEFAULT_SCHEMAS[schema]))],
+            ]
+
+        logger.info("A custom schema path at %s is given, using that instead.", custom_schema_path)
+        return [
+            "python",
+            os.path.abspath(os.path.join(*VALIDATE_SCHEMA_SCRIPTS[kind])),
+            *[result_file, custom_schema_path],
+        ]
 
 
 class CompareStepOptions(TypedDict):
@@ -473,6 +547,7 @@ def gen_step_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
                         "compare",
                         "analyze",
                         "verify",
+                        "validate_schema",
                     ),
                 ),
             ),
@@ -481,6 +556,15 @@ def gen_step_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
                 condition_value="shell",
                 key="options",
                 schema=ShellStep.options_schema(),
+            ),
+            cfgv.ConditionalRecurse(
+                condition_key="kind",
+                condition_value="validate_schema",
+                key="options",
+                schema=ValidateSchemaStep.options_schema(
+                    cwd=cwd,
+                    check_expected_result_files=check_expected_result_files,
+                ),
             ),
             cfgv.ConditionalRecurse(
                 condition_key="kind",
@@ -699,6 +783,7 @@ def parse_step_config(step_id: int, step_config: Mapping) -> Step:
         "verify": VerifyStep,
         "shell": ShellStep,
         "compare": CompareStep,
+        "validate_schema": ValidateSchemaStep,
     }[kind]
     return step_cls(  # type: ignore  # https://github.com/python/mypy/issues/3115
         step_id=step_id,
