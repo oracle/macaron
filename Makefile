@@ -94,7 +94,7 @@ setup: force-upgrade setup-go setup-binaries setup-schemastore
 setup-go:
 	go build -o $(PACKAGE_PATH)/bin/ $(REPO_PATH)/golang/cmd/...
 	go build -o $(PACKAGE_PATH)/bin/cuevalidate.so -buildmode=c-shared $(REPO_PATH)/golang/internal/cue_validator/cue_validator.go
-setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier $(PACKAGE_PATH)/resources/mvnw $(PACKAGE_PATH)/resources/gradlew souffle
+setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier $(PACKAGE_PATH)/resources/mvnw $(PACKAGE_PATH)/resources/gradlew souffle gnu-sed
 $(PACKAGE_PATH)/bin/slsa-verifier:
 	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.5.1
 	cd slsa-verifier/cli/slsa-verifier && go build -o $(PACKAGE_PATH)/bin/
@@ -170,6 +170,12 @@ souffle:
 	fi && \
     command -v souffle || true
 
+# Install gnu-sed on mac using homebrew
+.PHONY: gnu-sed
+gnu-sed:
+	if [ "$(OS_DISTRO)" == "Darwin" ]; then \
+		brew install gnu-sed; \
+	fi
 
 # Install or upgrade an existing virtual environment based on the
 # package dependencies declared in pyproject.toml.
