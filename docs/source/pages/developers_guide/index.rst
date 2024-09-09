@@ -49,7 +49,7 @@ The Check Interface
 +++++++++++++++++++
 
 Each check needs to be implemented as a Python class in a Python module under ``src/macaron/slsa_analyzer/checks``.
-A check class should subclass the :class:`BaseCheck <macaron.slsa_analyzer.checks.base_check.BaseCheck>` class.
+A check class should subclass the :class:`BaseCheck <macaron.slsa_analyzer.checks.base_check.BaseCheck>` class. The name of the source file containing the check should end with ``_check.py``.
 
 The main logic of a check should be implemented in the :func:`run_check <macaron.slsa_analyzer.checks.base_check.BaseCheck.run_check>` abstract method. It is important to understand the input
 parameters and output objects computed by this method.
