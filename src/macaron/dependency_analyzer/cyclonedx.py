@@ -269,7 +269,7 @@ class DependencyAnalyzer(ABC):
         Returns
         -------
         list[Configuration]
-            The dependencies list to be used by the Analyzer.
+            The dependency list to be used by the Analyzer.
         """
         if not resolved_deps:
             return []

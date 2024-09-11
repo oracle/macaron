@@ -3,7 +3,7 @@
 
 description: |
   Test micronaut-projects/micronaut-test. qos-ch/slf4j and ben-manes/caffeine were originally used as manually specified dependencies.
-  We still keep it here even though manual dependencies specification is not available anymore.
+  We still keep it here even though manual dependency specification is not available anymore.
 
 tags:
 - macaron-python-package
