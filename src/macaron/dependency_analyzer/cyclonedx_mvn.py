@@ -68,7 +68,7 @@ class CycloneDxMaven(DependencyAnalyzer):
         target_component: Component
             The analyzed target software component.
         recursive: bool
-            Set to False to get the direct dependencies only (default).
+            Whether to get all transitive dependencies, otherwise only the direct dependencies will be returned (default: False).
 
         Returns
         -------

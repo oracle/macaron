@@ -149,7 +149,7 @@ class DependencyAnalyzer(ABC):
         target_component: Component
             The analyzed target software component.
         recursive: bool
-            Set to False to get the direct dependencies only (default).
+            Whether to get all transitive dependencies, otherwise only the direct dependencies will be returned (default: False).
 
         Returns
         -------
@@ -339,10 +339,10 @@ class DependencyAnalyzer(ABC):
         ----------
         main_ctx : Any (AnalyzeContext)
             The context of object of the target repository.
-        recursive : bool
-            If True, perform transitive dependency resolution. Default: False.
         sbom_path : str
             The path to the SBOM.
+        recursive : bool
+            Whether to get all transitive dependencies, otherwise only the direct dependencies will be returned (default: False).
 
         Returns
         -------
@@ -758,7 +758,7 @@ class NoneDependencyAnalyzer(DependencyAnalyzer):
         target_component: Component
             The analyzed target software component.
         recursive: bool
-            Set to False to get the direct dependencies only (default).
+            Whether to get all transitive dependencies, otherwise only the direct dependencies will be returned (default: False).
 
         Returns
         -------
