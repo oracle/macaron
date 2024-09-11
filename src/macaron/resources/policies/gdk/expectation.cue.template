@@ -1,0 +1,18 @@
+{
+    target: "<EXPECTATION_PURL>",
+    predicate: {
+        attestations: [
+            {
+                attestation: {
+                    jobimage: =~"<IMAGE>:.*",
+                    projecturl: "https://<REPO_URL>",
+                },
+            },
+            _,
+            _,
+            _,
+            _,
+            _
+        ]
+    }
+}
