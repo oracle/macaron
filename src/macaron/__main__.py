@@ -155,7 +155,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     if analyzer_single_args.skip_deps:
         logger.warning(
             "The --skip-deps flag has been deprecated and WILL NOT do anything. "
-            + "Dependency resolution is off by default. This flag will be removed soon."
+            + "Dependency resolution is off by default. This flag does nothing and will be removed in the next release."
         )
 
     status_code = analyzer.run(
