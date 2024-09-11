@@ -77,7 +77,7 @@ Options
 
 .. option::  --python-venv PYTHON_VENV
 
-    The path to the Python virtual environment of the target software component.If this is set, dependency resolution must be enabled with '--deps-depth'.
+    The path to the Python virtual environment of the target software component. If this is set, dependency resolution must be enabled with '--deps-depth'.
 
 -----------
 Environment
