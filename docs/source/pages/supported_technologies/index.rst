@@ -116,7 +116,7 @@ Automatic dependency resolution
 Currently, we support the following type of project for automatic dependency resolution.
 
 * Java Maven
-* Java gradle
+* Java Gradle
 
 --------
 See also
