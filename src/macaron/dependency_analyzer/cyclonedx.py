@@ -568,7 +568,7 @@ class DependencyAnalyzer(ABC):
         child_bom_paths: list[Path] | None
             The list of paths to sub-project bom.json files.
         recursive: bool
-            Set to False to get the direct dependencies only (default).
+            Whether to get all transitive dependencies, otherwise only the direct dependencies will be returned (default: False).
 
         Yields
         ------
@@ -724,7 +724,7 @@ class DependencyAnalyzer(ABC):
         target_component: Component
             The analyzed target software component.
         recursive: bool
-            Set to False to get the direct dependencies only (default).
+            Whether to get all transitive dependencies, otherwise only the direct dependencies will be returned (default: False).
 
         Returns
         -------
