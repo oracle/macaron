@@ -303,7 +303,7 @@ To run the analysis against that SBOM, run this command:
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -purl pkg:maven/org.apache.maven/maven@3.9.7?type=pom -sbom <path_to_sbom> --deps-depth=1
+  ./run_macaron.sh analyze -purl pkg:maven/org.apache.maven/maven@3.9.7?type=pom -sbom <path_to_sbom> --deps-depth=inf
 
 Where ``path_to_sbom`` is the path to the SBOM you want to use.
 
@@ -327,7 +327,7 @@ Then run Macaron and pass the SBOM file as input:
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 -sbom <path_to_django_sbom.json> --deps-depth=1
+  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 -sbom <path_to_django_sbom.json> --deps-depth=inf
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Analyzing dependencies in the SBOM without the main software component
@@ -342,7 +342,7 @@ Then the analysis can be run as follows:
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -purl pkg:maven/private.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom -sbom <path_to_sbom> --deps-depth=1
+  ./run_macaron.sh analyze -purl pkg:maven/private.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom -sbom <path_to_sbom> --deps-depth=inf
 
 Where ``path_to_sbom`` is the path to the SBOM you want to use.
 
