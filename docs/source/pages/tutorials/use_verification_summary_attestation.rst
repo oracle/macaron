@@ -128,6 +128,7 @@ Here is a pretty-printed version of the policy as it appears in the VSA, along w
     .. code-block:: javascript
 
         {
+            target: "<EXPECTATION_PURL>",
             predicate: {
                 attestations: [
                     {
@@ -140,6 +141,8 @@ Here is a pretty-printed version of the policy as it appears in the VSA, along w
             }
         }
 
+
+    * ``target: "<EXPECTATION_PURL>"``: This specifies the software component that is verified. ``<EXPECTATION_PURL>`` is a placeholder for the actual PURL (Package URL) of the target component, e.g., ``pkg:maven/io.micronaut/micronaut-core``.
 
     * ``jobimage: "<IMAGE-NAME>"``: This condition checks that the ``jobimage`` attribute matches a specific pattern. ``<IMAGE-NAME>`` is a placeholder for the actual image name used at build time, e.g., ``container-registry.oracle.com/os/oraclelinux:9-slim``.
 

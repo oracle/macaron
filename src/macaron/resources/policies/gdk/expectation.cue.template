@@ -4,7 +4,7 @@
         attestations: [
             {
                 attestation: {
-                    jobimage: "<IMAGE-ADDRESS>",
+                    jobimage: "<IMAGE-NAME>",
                     projecturl: "https://<REPO_URL>",
                 },
             },

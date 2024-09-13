@@ -59,7 +59,7 @@ the requirements that are currently supported by Macaron.
    * - ``mcn_provenance_available_1``
      - **Provenance available** - Provenances are available.
      - Check for existence of provenances, which can be :term:`SLSA` or :term:`Witness` provenances. If there is no provenance, the repo can still be compliant to level 1 given the build script is available.
-   * - ``mcn_provenance_available_1``
+   * - ``mcn_provenance_witness_level_one_1``
      - **Witness provenance** - One or more :term:`Witness` provenances are discovered.
      - Check for existence of :term:`Witness` provenances, and whether artifact digests match those in the provenances.
    * - ``mcn_build_service_1``
