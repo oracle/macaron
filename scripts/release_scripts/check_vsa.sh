@@ -93,7 +93,7 @@ done
 # Check the artifact path and compute the checksum of the artifact.
 if [[ -n "${arg_artifact_path:-}" ]]; then
     assert_file_exists "$arg_artifact_path"
-    artifact_checksum=$(shasum -a 256  "$arg_artifact_path" | awk '{print $1}')
+    artifact_checksum=$(shasum -a 256 "$arg_artifact_path" | awk '{print $1}')
 else
     log_err "Please provide the artifact path."
     print_help

@@ -16,22 +16,22 @@ steps:
   kind: shell
   options:
     cmd: curl -o ./output/micronaut-core-4.5.3-oracle-00001.jar https://maven.oracle.com/public/io/micronaut/micronaut-core/4.5.3-oracle-00001/micronaut-core-4.5.3-oracle-00001.jar
-- name: Check a failing VSA.
+- name: Check if the script correctly reports that VSA check fails. In this test, the checksum of the artifact does not match the expected value.
   kind: shell
   options:
     cmd: ./output/check_vsa.sh --artifact-path ./output/micronaut-core-4.5.3-oracle-00001.jar --vsa-path ./resources/vsa-micronaut-core-4.5.3-invalid.intoto.jsonl --purl pkg:maven/io.micronaut/micronaut-core@4.5.3-oracle-00001?type=jar
   expect_fail: true
-- name: Check invalid arguments.
+- name: Check missing --purl argument.
   kind: shell
   options:
     cmd: ./output/check_vsa.sh --artifact-path ./output/micronaut-core-4.5.3-oracle-00001.jar --vsa-path ./resources/vsa-micronaut-core-4.5.3-invalid.intoto.jsonl
   expect_fail: true
-- name: Check invalid arguments.
+- name: Check an invalid artifact path.
   kind: shell
   options:
     cmd: ./output/check_vsa.sh --artifact-path ./output/micronaut-core-4.5.3-oracle-00001-invalid.jar --vsa-path ./resources/vsa-micronaut-core-4.5.3-invalid.intoto.jsonl
   expect_fail: true
-- name: Check invalid arguments.
+- name: Check an invalid VSA path.
   kind: shell
   options:
     cmd: ./output/check_vsa.sh --artifact-path ./output/micronaut-core-4.5.3-oracle-00001.jar --vsa-path ./resources/vsa-micronaut-core-4.5.3-invalid.intoto.jsonl --purl pkg:maven/io.micronaut/micronaut-core@4.5.3-oracle-00001?type=pom

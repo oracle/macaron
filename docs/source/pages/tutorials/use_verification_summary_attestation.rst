@@ -17,13 +17,13 @@ Use case
 
 Imagine you are a consumer of GDK artifacts and want to verify whether they are produced by a secure, :term:`SLSA`-compliant build service and sourced from a trusted source code repository. You need to confirm whether a provenance record for this artifact is published and has been verified. The GDK team must keep the details of their build pipeline confidential while still communicating that verification has occurred.
 
-A VSA allows you to assess the security properties of an artifact without needing direct access to the provenance details. This process involves delegating the policy decision to Macaron. Macaron receives the provenance of the build as input, analyzes various aspects of the build, and verifies the gathered data against a Datalog policy. It then generates a VSA that attests to the artifacts produced by the build, which is published alongside the artifacts.
+A VSA allows you to assess the security properties of an artifact without needing direct access to the provenance details. This process involves delegating the policy decision to Macaron. Macaron receives the provenance of the build as input, analyzes various aspects of the build, and verifies the gathered data against a Datalog policy. It then generates a VSA that is published alongside the artifacts, attesting to the artifacts produced by the build.
 
 -------
 Example
 -------
 
-GDK is an Oracle build of the open source Micronaut® framework. GDK provides a curated set of Micronaut framework modules which are built from source and published on the `Oracle Maven repository <https://maven.oracle.com/public>`_. If a GDK artifact is verified by Macaron, you should be able to to find a corresponding VSA on Oracle Maven repository. Let's consider, the ``io.micronaut/micronaut-core@4.6.3-oracle-00001`` JAR artifact which is published at `<https://maven.oracle.com/public/io/micronaut/micronaut-core/4.6.3-oracle-00001/micronaut-core-4.6.3-oracle-00001.jar>`_. In order to verify the artifact with Macaron, you can follow the following steps:
+GDK is an Oracle build of the open source Micronaut® framework. GDK provides a curated set of Micronaut framework modules which are built from source and published on the `Oracle Maven repository <https://maven.oracle.com/public>`_. If a GDK artifact is verified by Macaron, you should be able to to find a corresponding VSA on Oracle Maven repository. Let's consider, the ``io.micronaut/micronaut-core@4.6.5-oracle-00001`` JAR artifact which is published at `<https://maven.oracle.com/public/io/micronaut/micronaut-core/4.6.5-oracle-00001/micronaut-core-4.6.5-oracle-00001.jar>`_. In order to verify the artifact with Macaron, you can follow the following steps:
 
 ''''''''''''''''
 Download the VSA
@@ -33,7 +33,7 @@ Check wether a VSA is published for the artifact and download it for further exa
 
 .. code-block:: shell
 
-  curl -O https://maven.oracle.com/public/io/micronaut/micronaut-core/4.6.3-oracle-00001/vsa.intoto.jsonl
+  curl -O https://maven.oracle.com/public/io/micronaut/micronaut-core/4.6.5-oracle-00001/vsa.intoto.jsonl
 
 ''''''''''''''''''''''''''''''''''''
 Manual inspection of the VSA content
@@ -49,52 +49,51 @@ The output of the this command should look like below:
 
     .. code-block:: json
 
-        {
-            "_type": "https://in-toto.io/Statement/v1",
-            "subject": [
-            {
-                "uri": "pkg:maven/io.micronaut/micronaut-core@4.6.3-oracle-00001?type=jar",
-                "digest": {
-                "sha256": "67ccb8e1a69da33ac7494b90d296db4ed3b2cdf3ccd267432dd2b7fac9b9bb12"
-                }
-            },
-            {
-                "uri": "pkg:maven/io.micronaut/micronaut-core@4.6.3-oracle-00001?type=pom",
-                "digest": {
-                "sha256": "c24499cbd1bc2aef1fbd961c6502304d183c43eba61f377ec1ddc89de6837f97"
-                }
-            },
-            {
-                "uri": "pkg:maven/io.micronaut/micronaut-core@4.6.3-oracle-00001?type=javadoc",
-                "digest": {
-                "sha256": "ed073facae8bf19d3e666e7f473ef01189784c974ebc2d017f157443ba09b33a"
-                }
-            },
-            {
-                "uri": "pkg:maven/io.micronaut/micronaut-core@4.6.3-oracle-00001?type=java-source",
-                "digest": {
-                "sha256": "3eee2a4434044702df9b1ab22a48322dc42707cda1558ab61d4a8760b96fd645"
-                }
+      {
+        "_type": "https://in-toto.io/Statement/v1",
+        "subject": [
+          {
+            "uri": "pkg:maven/io.micronaut/micronaut-core@4.6.5-oracle-00001?type=jar",
+            "digest": {
+              "sha256": "685644ae52ed580030550c7e4f441f39df2741c45095f1cf93583bddc413e6f8"
             }
-            ],
-            "predicateType": "https://slsa.dev/verification_summary/v1",
-            "predicate": {
-            "verifier": {
-                "id": "https://github.com/oracle/macaron",
-                "version": {
-                "macaron": "0.10.0"
-                }
-            },
-            "timeVerified": "2024-08-25T06:36:24.654718+00:00",
-            "resourceUri": "pkg:maven/io.micronaut/micronaut-core@4.6.3-oracle-00001",
-            "policy": {
-                "content": "#include \"prelude.dl\"\n\nPolicy(\"gdk_provenance_policy\", component_id, \"Policy for GDK builds\") :-\n    check_passed(component_id, \"mcn_provenance_expectation_1\").\n\napply_policy_to(\"gdk_provenance_policy\", component_id) :-\n    is_component(component_id, purl),\n    match(\"^pkg:maven/io.micronaut/micronaut-core@.*$\", purl)."
-            },
-            "verificationResult": "PASSED",
-            "verifiedLevels": []
+          },
+          {
+            "uri": "pkg:maven/io.micronaut/micronaut-core@4.6.5-oracle-00001?type=pom",
+            "digest": {
+              "sha256": "64ba60107cdf5a93bec28b73f33585b93635f1fe6ae0707e6c8b42ed2d7d5198"
             }
+          },
+          {
+            "uri": "pkg:maven/io.micronaut/micronaut-core@4.6.5-oracle-00001?type=java-source",
+            "digest": {
+              "sha256": "bcfcdb0213868100ca421f341411a5d5bc98ecb5cf44186804d27a4a34906818"
+            }
+          },
+          {
+            "uri": "pkg:maven/io.micronaut/micronaut-core@4.6.5-oracle-00001?type=javadoc",
+            "digest": {
+              "sha256": "33f720a21faad105f2566944a2e49b198eb310a1f9cfaa7742fdae8f46677e46"
+            }
+          }
+        ],
+        "predicateType": "https://slsa.dev/verification_summary/v1",
+        "predicate": {
+          "verifier": {
+            "id": "https://github.com/oracle/macaron",
+            "version": {
+              "macaron": "0.10.0"
+            }
+          },
+          "timeVerified": "2024-09-10T06:35:56.559568+00:00",
+          "resourceUri": "pkg:maven/io.micronaut/micronaut-core@4.6.5-oracle-00001",
+          "policy": {
+            "content": "#include \"prelude.dl\"\n\nPolicy(\"gdk_provenance_policy\", component_id, \"Policy for GDK builds\") :-\n    check_passed(component_id, \"mcn_provenance_expectation_1\").\n\napply_policy_to(\"gdk_provenance_policy\", component_id) :-\n    is_component(component_id, purl),\n    match(\"^pkg:maven/io.micronaut/micronaut-core@.*$\", purl)."
+          },
+          "verificationResult": "PASSED",
+          "verifiedLevels": []
         }
-
+      }
 
 
 The VSA adheres to the `schema <https://slsa.dev/spec/v1.0/verification_summary>`_ provided by SLSA. However, rather than specifying a URI for the policy, it includes the policy directly within the VSA under the ``predicate.policy.content`` field. Below is a pretty-printed format of the policy as it appears in the VSA.
@@ -126,6 +125,16 @@ Automatically check the artifact checksum and verification result
 To verify that the artifact checksum matches the subject listed in the VSA and that the verification process has passed, follow these steps:
 
 
+**Prerequisites**
+
+Before running the script, ensure that the following tools are installed and available on your system’s PATH:
+
+* ``bash``: This script has been tested with ``bash 5.1.16(1)-release``.
+* ``curl``
+* ``jq``
+* ``shasum``
+* ``awk``
+
 **Download the check_vsa.sh script:**
 
 .. code-block:: shell
@@ -140,13 +149,13 @@ To verify that the artifact checksum matches the subject listed in the VSA and t
 
 **Run the script with the appropriate arguments:**
 
-Following our example, let’s verify that the VSA has passed for the artifact available at `<https://maven.oracle.com/public/io/micronaut/micronaut-core/4.6.3-oracle-00001/micronaut-core-4.6.3-oracle-00001.jar>`_. You can either download the JAR from the repository or, if you have built the GDK project, obtain the artifact from your local Maven repository at ``~/.m2/repository/io/micronaut/micronaut-core/4.6.3-oracle-00001/micronaut-core-4.6.3-oracle-00001.jar``. Then, run the following command:
+Following our example, let’s verify that the VSA has passed for the artifact available at `<https://maven.oracle.com/public/io/micronaut/micronaut-core/4.6.5-oracle-00001/micronaut-core-4.6.5-oracle-00001.jar>`_. You can either download the JAR from the repository or, if you have built the GDK project, obtain the artifact from your local Maven repository at ``~/.m2/repository/io/micronaut/micronaut-core/4.6.5-oracle-00001/micronaut-core-4.6.5-oracle-00001.jar``. Then, run the following command:
 
 .. code-block:: shell
 
-    ./check_vsa.sh --artifact-path micronaut-core-4.6.3-oracle-00001.jar --vsa-path vsa.intoto.jsonl --purl "pkg:maven/io.micronaut/micronaut-core@4.6.3-oracle-00001?type=jar"
+    ./check_vsa.sh --artifact-path micronaut-core-4.6.5-oracle-00001.jar --vsa-path vsa.intoto.jsonl --purl "pkg:maven/io.micronaut/micronaut-core@4.6.5-oracle-00001?type=jar"
 
-The artifact and VSA paths should be valid paths on your filesystem. Ensure you replace ``micronaut-core-4.6.3-oracle-00001.jar``, ``vsa.intoto.jsonl``, and ``pkg:maven/io.micronaut/micronaut-core@4.6.3-oracle-00001?type=jar`` with your actual file paths and package URL.
+The artifact and VSA paths should be valid paths on your filesystem. Ensure you replace ``micronaut-core-4.6.5-oracle-00001.jar``, ``vsa.intoto.jsonl``, and ``pkg:maven/io.micronaut/micronaut-core@4.6.5-oracle-00001?type=jar`` with your actual file paths and package URL.
 
 **Verify the output:**
 
