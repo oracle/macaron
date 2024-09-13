@@ -136,7 +136,7 @@ fi
 
 # Check whether the verification has passed.
 if [ "$verify_result" = "PASSED" ]; then
-    echo "passed"
+    echo "PASSED"
 else
     echo "The verification has failed."
     exit 1

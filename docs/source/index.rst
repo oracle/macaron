@@ -50,43 +50,43 @@ the requirements that are currently supported by Macaron.
    :widths: 20 40 40
    :header-rows: 1
 
-   * - SLSA level
+   * - Check ID
      - SLSA requirement
      - Concrete check
-   * - 1
+   * - ``mcn_build_script_1``
      - **Scripted build** - All build steps were fully defined in a “build script”.
      - Identify and validate build script(s).
-   * - 1
+   * - ``mcn_provenance_available_1``
      - **Provenance available** - Provenances are available.
      - Check for existence of provenances, which can be :term:`SLSA` or :term:`Witness` provenances. If there is no provenance, the repo can still be compliant to level 1 given the build script is available.
-   * - 1
+   * - ``mcn_provenance_available_1``
      - **Witness provenance** - One or more :term:`Witness` provenances are discovered.
      - Check for existence of :term:`Witness` provenances, and whether artifact digests match those in the provenances.
-   * - 2
+   * - ``mcn_build_service_1``
      - **Build service** - All build steps are run using some build service (e.g. GitHub Actions)
      - Identify and validate the CI service(s) used for the build process.
-   * - 2+
+   * - ``mcn_provenance_verified_1``
      - **Provenance verified** - Provenance is available and verified.
      - See :doc:`SLSA Build Levels </pages/checks/slsa_builds>`
-   * - 3
+   * - ``mcn_trusted_builder_level_three_1``
      - **Trusted builders** - Guarantees the identification of the top-level build configuration used to initiate the build. The build is verified to be hermetic, isolated, parameterless, and executed in an ephemeral environment.
      - Identify and validate that the builder used in the CI pipeline is a trusted one.
-   * - 3
+   * - ``mcn_build_as_code_1``
      - **Build as code** - If a trusted builder is not present, this requirement determines that the build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.
      - Identify and validate the CI service(s) used to build and deploy/publish an artifact.
-   * - 3
+   * - ``mcn_infer_artifact_pipeline_1``
      - **Infer artifact publish pipeline** - When a provenance is not available, checks whether a CI workflow run has automatically published the artifact.
      - Identify a workflow run that has triggered the deploy step determined by the ``Build as code`` check.
-   * - 3
+   * - ``mcn_provenance_level_three_1``
      - **Provenance Level three** - Check whether the target has SLSA provenance level 3.
      - Use the `slsa-verifier <https://github.com/slsa-framework/slsa-verifier>`_ to attest to the subjects in the SLSA provenance that accompanies an artifact.
-   * - 3
+   * - ``mcn_provenance_expectation_1``
      - **Provenance expectation** - Check if the provenance meets an expectation.
-     - The user can provide an expectation for the provenance as a CUE policy, which will be compared against the SLSA provenance.
-   * - 3
+     - The user can provide an expectation for the provenance as a CUE expectation file, which will be compared against the provenance.
+   * - ``mcn_provenance_derived_repo_1``
      - **Provenance derived repo** - Check if the analysis target's repository matches the repository in the provenance.
      - If there is no provenance, this check will fail.
-   * - 3
+   * - ``mcn_provenance_derived_commit_1``
      - **Provenance derived commit** - Check if the analysis target's commit matches the commit in the provenance.
      - If there is no commit, this check will fail.
 
@@ -98,9 +98,9 @@ Macaron checks that report integrity issues but do not map to SLSA requirements 
    :widths: 20 40
    :header-rows: 1
 
-   * - Check name
+   * - Check ID
      - Description
-   * - Detect malicious metadata
+   * - ``mcn_detect_malicious_metadata_1``
      - This check analyzes the metadata of a package and reports malicious behavior. This check currently supports PyPI packages.
 
 ----------------------

@@ -96,7 +96,9 @@ The output of the this command should look like below:
       }
 
 
-The VSA adheres to the `schema <https://slsa.dev/spec/v1.0/verification_summary>`_ provided by SLSA. However, rather than specifying a URI for the policy, it includes the policy directly within the VSA under the ``predicate.policy.content`` field. Below is a pretty-printed format of the policy as it appears in the VSA.
+The VSA adheres to the `schema <https://slsa.dev/spec/v1.0/verification_summary>`_ provided by SLSA. However, rather than specifying a URI for the policy, it includes the policy directly within the VSA under the ``predicate.policy.content`` field. The VSA also includes the list of subjects and their corresponding checksums that have been verified, the version of Macaron used, the timestamp of the verification, and the result of the verification.
+
+Here is a pretty-printed version of the policy as it appears in the VSA, along with its description.
 
 .. toggle::
 
@@ -107,16 +109,44 @@ The VSA adheres to the `schema <https://slsa.dev/spec/v1.0/verification_summary>
         Policy("gdk_provenance_policy", component_id, "Policy for GDK builds") :-
             check_passed(component_id, "mcn_provenance_expectation_1")
 
-        apply_policy_to("has-hosted-build", component_id) :-
+        apply_policy_to("gdk_provenance_policy", component_id) :-
             is_component(component_id, purl),
             match("^pkg:maven/io.micronaut/micronaut-core@.*$", purl).
 
-This policy makes sure the :ref:`mcn_provenance_expectation_1 <checks>` check, which verifies the content of the provenance file matches :ref:`CUE expectation <pages/using:Verifying provenance expectations in CUE language>`. You can find the template policy files for GDK builds below:
+    This policy makes sure the :ref:`mcn_provenance_expectation_1 <checks>` check, which verifies the content of the provenance file matches :ref:`CUE expectation <pages/using:Verifying provenance expectations in CUE language>`.
 
-* `Template CUE expectation <https://github.com/oracle/macaron/tree/main/src/macaron/resources/policies/gdk/expectation.cue.template>`_
-* `Template Datalog policy file <https://github.com/oracle/macaron/tree/main/src/macaron/resources/policies/gdk/policy.dl.template>`_
+    * Policy prelude (``#include "prelude.dl"``): Copies all the pre-written rules and the generated fact import statements into the policy program. All user-written policy files must begin with ``#include "prelude.dl"``.
 
-The VSA also includes the list of subjects and their corresponding checksums that have been verified, the version of Macaron used, the timestamp of the verification, and the result of the verification.
+    * Policy Validation (``Policy``): This rule ensures that the component satisfies the ``mcn_provenance_expectation_1`` check.
+
+    * Applying the Policy (``apply_policy_to``): To apply the ``gcn_provenance_policy``, Macaron first determines if the ``component_id`` is a valid component and if its ``PURL`` conforms to the pattern defined in the ``match`` predicate. If both conditions are met, the policy is applied.
+
+    * The template Datalog policy file can be downloaded from `here <https://github.com/oracle/macaron/tree/main/src/macaron/resources/policies/gdk/policy.dl.template>`_
+
+    Below you can find the template CUE file that has been used by the :ref:`mcn_provenance_expectation_1 <checks>` check at verification time to verify the provenance. It contains place holders for expected values that are populated by the GDK maintainers.
+
+    .. code-block:: javascript
+
+        {
+            predicate: {
+                attestations: [
+                    {
+                        attestation: {
+                            jobimage: "<IMAGE-ADDRESS>",
+                            projecturl: "https://<REPO_URL>",
+                        },
+                    },
+                ]
+            }
+        }
+
+
+    * ``jobimage: "<IMAGE-ADDRESS>"``: This condition checks that the ``jobimage`` attribute matches a specific pattern. ``<IMAGE-ADDRESS>`` is a placeholder for the actual image name used at build time.
+
+    * ``projecturl: "https://<REPO_URL>"``: This checks that the ``projecturl`` attribute exactly matches the expected Repository URL. ``<REPO_URL>`` is a placeholder for the actual repository URL.
+
+    * The template CUE expectation can be downloaded in `this location <https://github.com/oracle/macaron/tree/main/src/macaron/resources/policies/gdk/expectation.cue.template>`_.
+
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Automatically check the artifact checksum and verification result
@@ -124,8 +154,9 @@ Automatically check the artifact checksum and verification result
 
 To verify that the artifact checksum matches the subject listed in the VSA and that the verification process has passed, follow these steps:
 
-
-**Prerequisites**
++++++++++++++
+Prerequisites
++++++++++++++
 
 Before running the script, ensure that the following tools are installed and available on your system’s PATH:
 
@@ -135,19 +166,25 @@ Before running the script, ensure that the following tools are installed and ava
 * ``shasum``
 * ``awk``
 
-**Download the check_vsa.sh script:**
+++++++++++++++++++++++++++++++++
+Download the check_vsa.sh script
+++++++++++++++++++++++++++++++++
 
 .. code-block:: shell
 
     curl -O https://raw.githubusercontent.com/oracle/macaron/main/scripts/release_scripts/check_vsa.sh
 
-**Make the script executable:**
+++++++++++++++++++++++++++
+Make the script executable
+++++++++++++++++++++++++++
 
 .. code-block:: shell
 
     chmod +x check_vsa.sh
 
-**Run the script with the appropriate arguments:**
++++++++++++++++++++++++++++++++++++++++++++++
+Run the script with the appropriate arguments
++++++++++++++++++++++++++++++++++++++++++++++
 
 Following our example, let’s verify that the VSA has passed for the artifact available at `<https://maven.oracle.com/public/io/micronaut/micronaut-core/4.6.5-oracle-00001/micronaut-core-4.6.5-oracle-00001.jar>`_. You can either download the JAR from the repository or, if you have built the GDK project, obtain the artifact from your local Maven repository at ``~/.m2/repository/io/micronaut/micronaut-core/4.6.5-oracle-00001/micronaut-core-4.6.5-oracle-00001.jar``. Then, run the following command:
 
@@ -157,12 +194,14 @@ Following our example, let’s verify that the VSA has passed for the artifact a
 
 The artifact and VSA paths should be valid paths on your filesystem. Ensure you replace ``micronaut-core-4.6.5-oracle-00001.jar``, ``vsa.intoto.jsonl``, and ``pkg:maven/io.micronaut/micronaut-core@4.6.5-oracle-00001?type=jar`` with your actual file paths and package URL.
 
-**Verify the output:**
++++++++++++++++++
+Verify the output
++++++++++++++++++
 
 If the verification is successful, the script will print:
 
 .. code-block:: shell
 
-    passed
+    PASSED
 
 If there is an issue, the script will return an error code ``1`` and print an appropriate error message.
