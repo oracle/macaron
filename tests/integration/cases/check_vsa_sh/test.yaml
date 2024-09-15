@@ -13,11 +13,23 @@ steps:
   kind: shell
   options:
     cmd: ./setup.sh
-- name: Download JAR file
+- name: Download JAR file for micronaut-core@4.5.3.
   kind: shell
   options:
     cmd: curl -o ./output/micronaut-core-4.5.3-oracle-00001.jar https://maven.oracle.com/public/io/micronaut/micronaut-core/4.5.3-oracle-00001/micronaut-core-4.5.3-oracle-00001.jar
-- name: Check a passing VSA.
+- name: Check a passing VSA for micronaut-core@4.5.3.
   kind: shell
   options:
     cmd: ./output/check_vsa.sh --artifact-path ./output/micronaut-core-4.5.3-oracle-00001.jar --vsa-path ./resources/vsa-micronaut-core-4.5.3.intoto.jsonl --purl pkg:maven/io.micronaut/micronaut-core@4.5.3-oracle-00001?type=jar
+- name: Download JAR file for micronaut-core@4.6.5.
+  kind: shell
+  options:
+    cmd: curl -o ./output/micronaut-core-4.6.5-oracle-00001.jar https://maven.oracle.com/public/io/micronaut/micronaut-core/4.6.5-oracle-00001/micronaut-core-4.6.5-oracle-00001.jar
+- name: Download VSA for micronaut-core@4.6.5.
+  kind: shell
+  options:
+    cmd: curl -o ./output/vsa-micronaut-core-4.6.5-oracle-00001.intoto.jsonl https://maven.oracle.com/public/io/micronaut/micronaut-core/4.6.5-oracle-00001/vsa.intoto.jsonl
+- name: Check a passing VSA for micronaut-core@4.6.5.
+  kind: shell
+  options:
+    cmd: ./output/check_vsa.sh --artifact-path ./output/micronaut-core-4.6.5-oracle-00001.jar --vsa-path ./output/vsa-micronaut-core-4.6.5-oracle-00001.intoto.jsonl --purl pkg:maven/io.micronaut/micronaut-core@4.6.5-oracle-00001?type=jar
