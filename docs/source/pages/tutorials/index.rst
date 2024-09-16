@@ -22,4 +22,5 @@ For the full list of supported technologies, such as CI services, registries, an
    npm_provenance
    detect_malicious_java_dep
    generate_verification_summary_attestation
+   use_verification_summary_attestation
    exclude_include_checks
