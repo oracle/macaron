@@ -1,3 +1,13 @@
+## v0.13.0 (2024-09-16)
+
+### Feat
+
+- add a script to check VSA (#858)
+
+### Fix
+
+- use gnu-sed on mac instead of the built-in sed command (#853)
+
 ## v0.12.0 (2024-08-16)
 
 ### Feat
