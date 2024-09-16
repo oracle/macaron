@@ -155,7 +155,6 @@ class Analyzer:
             The return status code.
         """
         main_config = Configuration(user_config.get("target", {}))
-        deps_config: list[Configuration] = [Configuration(dep) for dep in user_config.get("dependencies", [])]
         deps_resolved: dict[str, DependencyInfo] = {}
 
         # Get a single session once for the whole analysis.
@@ -194,7 +193,7 @@ class Analyzer:
                     deps_resolved = DependencyAnalyzer.resolve_dependencies(main_record.context, sbom_path)
 
                 # Merge the automatically resolved dependencies with the manual configuration.
-                deps_config = DependencyAnalyzer.merge_configs(deps_config, deps_resolved)
+                deps_config = DependencyAnalyzer.to_configs(deps_resolved)
 
                 # Create a report instance with the record of the main repo.
                 report = Report(main_record)
