@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Check the e2e output JSON file with yaml input containing no dependency and skipping dependency resolution.
+  Check the dependency report should be empty when no dependency analysis is enabled.
 
 tags:
 - macaron-python-package
@@ -12,8 +12,12 @@ steps:
   kind: analyze
   options:
     command_args:
-    - -c
-    - maven_config.yaml
+    - -purl
+    - pkg:maven/org.apache.maven/maven@4.0.0-alpha-9-SNAPSHOT?type=pom
+    - -rp
+    - https://github.com/apache/maven
+    - -d
+    - 3fc399318edef0d5ba593723a24fff64291d6f9b
     - --skip-deps
 - name: Compare dependency report
   kind: compare

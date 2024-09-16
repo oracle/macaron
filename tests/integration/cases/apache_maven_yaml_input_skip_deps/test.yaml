@@ -2,19 +2,40 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Check the e2e output JSON file with config and no dependency analyzing.
+  Check apache/maven with repo path and no dependency analyzing. google/guava and mockito/mockito were originally used as manually specified dependencies.
+  We still keep it here even though manual dependencies specification is not available anymore.
 
 tags:
 - macaron-python-package
 - macaron-docker-image
 
 steps:
-- name: Run macaron analyze
+- name: Run macaron analyze apache/maven
   kind: analyze
   options:
     command_args:
-    - -c
-    - maven_config.yaml
+    - -rp
+    - https://github.com/apache/maven
+    - -d
+    - 3fc399318edef0d5ba593723a24fff64291d6f9b
+    - --skip-deps
+- name: Run macaron analyze google/guava
+  kind: analyze
+  options:
+    command_args:
+    - -rp
+    - https://github.com/google/guava
+    - -d
+    - d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4
+    - --skip-deps
+- name: Run macaron analyze mockito/mockito
+  kind: analyze
+  options:
+    command_args:
+    - -rp
+    - https://github.com/mockito/mockito
+    - -d
+    - 512ee3949484e4765038a0410cd7a7f1b73cc655
     - --skip-deps
 - name: Run macaron verify-policy for maven
   kind: verify

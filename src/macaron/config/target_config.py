@@ -1,20 +1,13 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Configuration class for the target analyzed repository."""
 
 import logging
-import os
 from typing import Any
-
-import yamale
-from yamale.schema import Schema
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-_SCHEMA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "target_config_schema.yaml")
-
-TARGET_CONFIG_SCHEMA: Schema = yamale.make_schema(_SCHEMA_DIR)
 """The schema for the target configuration yaml file."""
 
 

@@ -320,10 +320,6 @@ if [[ $command == "analyze" ]]; then
                 arg_prov_file="$2"
                 shift
                 ;;
-            -c|--config-path)
-                arg_config_path="$2"
-                shift
-                ;;
             -g|--template-path)
                 arg_template_path="$2"
                 shift
@@ -412,16 +408,6 @@ if [[ -n "${arg_template_path:-}" ]]; then
 
     argv_command+=("--template-path" "$template_path_in_container")
     mount_file "-g/--template-path" "$template_path" "$template_path_in_container" "ro,Z"
-fi
-
-# Determine the config path to be mounted into ${MACARON_WORKSPACE}/config/${file_name}
-if [[ -n "${arg_config_path:-}" ]]; then
-    config_path="${arg_config_path}"
-    file_name="$(basename "${config_path}")"
-    config_path_in_container="${MACARON_WORKSPACE}/config/${file_name}"
-
-    argv_command+=("--config-path" "$config_path_in_container")
-    mount_file "-c/--config-path" "$config_path" "$config_path_in_container" "ro,Z"
 fi
 
 # Determine the sbom path to be mounted into ${MACARON_WORKSPACE}/sbom/${file_name}

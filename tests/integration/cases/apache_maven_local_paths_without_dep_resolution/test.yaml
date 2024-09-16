@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Analyzing with local paths in configuration and without dependency resolution.
+  Analyzing with local paths and without dependency resolution.
 
 tags:
 - macaron-python-package
@@ -20,15 +20,41 @@ steps:
   kind: shell
   options:
     cmd: git clone --filter=tree:0 https://github.com/mockito/mockito ./output/git_repos/local_repos/mockito/mockito
-- name: Run macaron analyze
+- name: Run macaron analyze on apache/maven
   kind: analyze
   options:
     main_args:
     - -lr
     - ./output/git_repos/local_repos
     command_args:
-    - -c
-    - config.yaml
+    - -rp
+    - apache/maven
+    - -d
+    - 3fc399318edef0d5ba593723a24fff64291d6f9b
+    - --skip-deps
+- name: Run macaron analyze on google/guava
+  kind: analyze
+  options:
+    main_args:
+    - -lr
+    - ./output/git_repos/local_repos
+    command_args:
+    - -rp
+    - google/guava
+    - -d
+    - d8633ac8539dae52c8361f79c7a0dbd9ad6dd2c4
+    - --skip-deps
+- name: Run macaron analyze on mockito/mockito
+  kind: analyze
+  options:
+    main_args:
+    - -lr
+    - ./output/git_repos/local_repos
+    command_args:
+    - -rp
+    - mockito/mockito
+    - -d
+    - 512ee3949484e4765038a0410cd7a7f1b73cc655
     - --skip-deps
 - name: Run verify-policy for apache/maven
   kind: verify
