@@ -1,0 +1,8 @@
+#include "prelude.dl"
+
+Policy("gdk_provenance_policy", component_id, "Policy for GDK builds") :-
+    check_passed(component_id, "mcn_provenance_expectation_1").
+
+apply_policy_to("gcn_provenance_policy", component_id) :-
+    is_component(component_id, purl),
+    match("^<PACKAGE_PURL>@.*$", purl).
