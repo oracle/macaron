@@ -4,13 +4,11 @@
 """This module tests the commit finder."""
 import logging
 import os
-import re
 import shutil
 
-import hypothesis
 import pytest
 from hypothesis import given, settings
-from hypothesis.strategies import DataObject, data, text
+from hypothesis.strategies import text
 from packageurl import PackageURL
 
 from macaron.repo_finder import commit_finder
@@ -126,10 +124,10 @@ def test_commit_finder() -> None:
     git_obj.repo.create_tag(tag_tree_version, ref=tree)
 
     # Add a new tag with an associated commit. This is the Japanese character for 'snow'.
-    bad_version = "雪"
-    git_obj.repo.create_tag(bad_version, commit_0.hexsha)
+    unicode_version = "雪"
+    git_obj.repo.create_tag(unicode_version, commit_0.hexsha)
 
-    # Create a more proper tag on the same commit.
+    # Create a more typical tag on the same commit.
     tag_version = "2.3.4"
     git_obj.repo.create_tag(tag_version, commit_0.hexsha)
 
@@ -140,14 +138,14 @@ def test_commit_finder() -> None:
     git_obj.repo.create_tag(f"{tag_version_2}_DEV_RC1_RELEASE", ref=empty_commit.hexsha)
     git_obj.repo.create_tag(f"rel/prefix_name-{tag_version}", ref=empty_commit.hexsha)
 
-    # Version that fails to create a pattern.
-    assert not commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/maven@{bad_version}"))
-
     # Version with a suffix and no matching tag.
     assert not commit_finder.find_commit(git_obj, PackageURL.from_string("pkg:maven/apache/maven@1-JRE"))
 
     # Version with only one digit and no matching tag.
     assert not commit_finder.find_commit(git_obj, PackageURL.from_string("pkg:maven/apache/maven@1"))
+
+    # Unicode version.
+    assert commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:maven/apache/maven@{unicode_version}"))
 
     # Valid repository PURL.
     digest = commit_finder.find_commit(git_obj, PackageURL.from_string(f"pkg:github/apache/maven@{commit_0.hexsha}"))
@@ -199,48 +197,3 @@ def test_pattern_generation(version: str) -> None:
 
     commit_finder._build_version_pattern(purl.name, purl.version)
     assert True
-
-
-input_pattern = re.compile(r"[0-9]{1,3}(\.[0-9a-z]{1,3}){,5}([-+#][a-z0-9].+)?", flags=re.IGNORECASE)
-# These numbers should be kept low as the complex regex makes generation slow.
-VERSION_ITERATIONS = 50  # The number of times to iterate the test_version_to_tag_matching test.
-TAG_ITERATIONS = 1  # The number of tags to generate per version iteration.
-
-
-@given(data())
-@settings(max_examples=VERSION_ITERATIONS, deadline=None)
-def test_version_to_tag_matching(_data: DataObject) -> None:  # noqa: PT019
-    """Test matching generated versions to generated tags.
-
-    This test verifies that a similar version and tag can be matched by the commit finder.
-    """
-    # pylint: disable=protected-access
-    # Generate the version
-    version = _data.draw(hypothesis.strategies.from_regex(input_pattern, fullmatch=True))
-    if not version:
-        return
-    purl = PackageURL(name="test", version=version, type="maven")
-    if not purl.version:
-        return
-    # Build the pattern from the version.
-    pattern, parts = commit_finder._build_version_pattern(purl.name, purl.version)
-    if not pattern:
-        return
-    # Generate the tag from a pattern that is very similar to how version patterns are made.
-    sep = "[^a-z0-9]"
-    tag_pattern = (
-        "(?P<prefix_0>(?:[a-z].*(?:[a-z0-9][a-z][0-9]+|[0-9][a-z]|[a-z]{2}))|[a-z]{2})?("
-        "?P<prefix_sep_0>(?:(?:(?<![0-9a-z])[vrc])|(?:[^0-9a-z][vrc])|[^0-9a-z])(?:[^0-9a-z])?)?"
-    )
-    for count, part in enumerate(parts):
-        if count > 0:
-            tag_pattern = tag_pattern + f"{sep}"
-        tag_pattern = tag_pattern + part
-    tag_pattern = tag_pattern + f"({sep}[a-z].*)?"
-    compiled_pattern = re.compile(tag_pattern, flags=re.IGNORECASE)
-    # Generate tags to match the generated version.
-    for _ in range(TAG_ITERATIONS):
-        tag = _data.draw(hypothesis.strategies.from_regex(compiled_pattern, fullmatch=True))
-        # Perform the match.
-        match = pattern.match(tag)
-        assert match

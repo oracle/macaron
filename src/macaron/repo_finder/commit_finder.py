@@ -19,10 +19,11 @@ from macaron.slsa_analyzer.git_service import GIT_SERVICES
 logger: logging.Logger = logging.getLogger(__name__)
 
 # An optional named capture group "prefix" that accepts one of the following:
-# - A string of any characters starting with an alphabetic character, ending with one of:
+# - A string of any characters that ends with one of:
 #   - One non-alphanumeric character, one alphabetic character, and one or more numbers.
 #   - One number and one alphabetic character.
 #   - Two alphabetic characters.
+#   - One or two numbers.
 # - OR
 # - Two alphabetic characters.
 # E.g.
@@ -34,15 +35,18 @@ logger: logging.Logger = logging.getLogger(__name__)
 # artifact as another possible prefix match.
 # E.g.
 # PREFIX_START + <artifact_name> + PREFIX_END
-PREFIX_START = "(?P<prefix_0>(?:(?:[a-z].*(?:[a-z0-9][a-z][0-9]+|[0-9][a-z]|[a-z]{2}))|[a-z]{2})|"
+PREFIX_START = "(?P<prefix_0>(?:(?:.*(?:[a-z0-9][a-z][0-9]+|[0-9][a-z]|[a-z]{2}|[0-9]{1,2}))|[a-z]{2})|"
 PREFIX_END = ")?"
 
 # An alternative prefix pattern that is intended for a single use case: A prefix that contains a part that is
 # difficult to distinguish from part of a version, i.e. java-v1-1.1.0 (prefix: java-v1, version: 1.1.0)
 PREFIX_WITH_SEPARATOR = "(?P<prefix_1>(?:[a-z].*(?P<prefix_sep_1>[^a-z0-9])[a-z][0-9]+))(?:(?P=prefix_sep_1))"
 
-# An optional named capture group "prefix_sep" that accepts one of:
-# - A 'v', 'r', or 'c' character that is not preceded by a non-alphanumeric character.
+# Another alternative prefix pattern that accepts a string of any number of alphabetic characters and no separator.
+PREFIX_WITHOUT_SEPARATOR = "(?P<prefix_2>(?:[a-z]+))"
+
+# An named capture group "prefix_sep" that accepts one of:
+# - A 'v', 'r', or 'c' character that is not preceded by a non-alphanumeric character (negative look behind).
 # ('c' is probably a typo as it was found in only one example tag, but accepting any single alphabetic character
 # would also most likely be fine.)
 # - A non-alphanumeric character followed by 'v', 'r', or 'c'.
@@ -53,7 +57,7 @@ PREFIX_WITH_SEPARATOR = "(?P<prefix_1>(?:[a-z].*(?P<prefix_sep_1>[^a-z0-9])[a-z]
 # - 'r_'  of 'r_3_3_3'
 # - 'c'   of 'c4.1'
 # - '.'   of 'name.9-9-9-9'
-PREFIX_SEPARATOR = "(?P<prefix_sep_0>(?:(?:(?<![0-9a-z])[vrc])|(?:[^0-9a-z][vrc])|[^0-9a-z])(?:[^0-9a-z])?)?"
+PREFIX_SEPARATOR = "(?P<prefix_sep_0>(?:(?:(?<![0-9a-z])[vrc])|(?:[^0-9a-z][vrc])|[^0-9a-z])(?:[^0-9a-z])?)"
 
 # Together, the prefix and prefix separator exist to separate the prefix from version part of a tag, while ensuring that
 # the prefix is free from non-prefix characters (the separator). Note that the prefix is expected to be at least two
@@ -83,11 +87,11 @@ INFIX_2 = "(?P=sep)"  # A back reference to INFIX_1.
 # - '_'  of 'prefix_1.2.3_suffix'
 # - '..  of 'name-v-4-4-4..RELEASE'
 # - '#'  of 'v0.0.1#'
-SUFFIX_SEPARATOR = "(?P<suffix_sep>(?:[^0-9a-z]{1,2}(?:(?=[^0-9])|(?!.))))?"
+SUFFIX_SEPARATOR = "(?P<suffix_sep>(?:[^0-9a-z]{1,2}(?:(?=[^0-9])|(?!.))))"
 
 # The suffix optionally accepts:
-# A string that starts with an alphabetic character, and continues for one or more characters of any kind.
-SUFFIX = "(?P<suffix>[a-z].*)?"
+# A string that starts with an alphanumeric character, and continues for one or more characters of any kind.
+SUFFIX = "(?P<suffix>[a-z0-9].*)?"
 
 # If a version string has less parts than this number it will be padded with additional zeros to provide better matching
 # opportunities.
@@ -95,13 +99,16 @@ SUFFIX = "(?P<suffix>[a-z].*)?"
 # E.g 1.2 (2) -> 1.2.0.0 (4), 1.2.RELEASE (3) -> 1.2.RELEASE (3), 1.DEV-5 (3) -> 1.DEV-5 (3)
 MAX_ZERO_DIGIT_EXTENSION = 4
 
-split_pattern = re.compile("[^0-9a-z]", flags=re.IGNORECASE)
-validation_pattern = re.compile("^[0-9a-z]+$", flags=re.IGNORECASE)
+split_pattern = re.compile("[^0-9a-z]", flags=re.IGNORECASE)  # Used to split version strings.
+anti_split_pattern = re.compile("[0-9a-z]+", flags=re.IGNORECASE)  # Inversion of split_pattern.
+validation_pattern = re.compile("^[0-9a-z]+$", flags=re.IGNORECASE)  # Used to verify characters in version parts.
 alphabetic_only_pattern = re.compile("^[a-z]+$", flags=re.IGNORECASE)
 hex_only_pattern = re.compile("^[0-9a-f]+$", flags=re.IGNORECASE)
 numeric_only_pattern = re.compile("^[0-9]+$")
-versioned_string = re.compile("^([a-z]+)(0*)([1-9]+[0-9]*)$", flags=re.IGNORECASE)  # e.g. RC1, M5, etc.
+special_suffix_pattern = re.compile("^([0-9]+)([a-z]+[0-9]+)$", flags=re.IGNORECASE)  # E.g. 1.10rc1
+versioned_string = re.compile("^([a-z]*)(0*)([1-9]+[0-9]*)?$", flags=re.IGNORECASE)  # e.g. RC1, 15, 0010, M, etc.
 multiple_zero_pattern = re.compile("^0+$")
+name_version_pattern = re.compile("([0-9]+(?:[.][0-9]+)*)")  # Identifies version-like parts within prefixes.
 
 
 class AbstractPurlType(Enum):
@@ -288,6 +295,61 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
     return hexsha if hexsha else None
 
 
+def _split_name(name: str) -> list[str]:
+    """Split an artifact name, or prefix that might be an artifact name, into its delimited components."""
+    result = []
+    # Find all version-like parts.
+    number_match = name_version_pattern.findall(name)
+    if number_match:
+        for match in number_match:
+            result.append(match)
+            name = name.replace(match, "")
+
+    # Split remainder on delimiters.
+    name_split = split_pattern.split(name)
+    for item in name_split:
+        if not item.strip():
+            continue
+        result.append(item)
+
+    return result
+
+
+def _split_version(version: str) -> tuple[list[str], bool, set[int]]:
+    """Split a version into its constituent parts, and flag if the version contained more than one kind of seperator."""
+    # The version is split on non-alphanumeric characters to separate the version parts from the non-version parts.
+    # e.g. 1.2.3-DEV -> [1, 2, 3, DEV]
+    split = split_pattern.split(version)
+    version_separators = _split_separators(version)
+    multi_sep = False
+    if len(set(version_separators)) != 1:
+        multi_sep = True
+
+    parts = []
+    special_index = set()
+    for index, part in enumerate(split):
+        # Validate the split part by checking it is only comprised of alphanumeric characters.
+        valid = validation_pattern.match(part)
+        if not valid:
+            continue
+        special_suffix = special_suffix_pattern.match(part)
+        if special_suffix:
+            # Special case: a release candidate suffix with no suffix separator.
+            parts.append(special_suffix.group(1))
+            parts.append(special_suffix.group(2))
+            special_index.add(index + 1)
+        else:
+            parts.append(part)
+
+    return parts, multi_sep, special_index
+
+
+def _split_separators(version: str) -> list[str]:
+    """Split a string on its separators and return only those."""
+    split = anti_split_pattern.split(version)
+    return [item for item in split if item]
+
+
 def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, list[str]]:
     """Build a version pattern to match the passed version string.
 
@@ -311,44 +373,52 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
     # Escape input to prevent it being treated as regex.
     name = re.escape(name)
 
-    # The version is split on non-alphanumeric characters to separate the version parts from the non-version parts.
-    # e.g. 1.2.3-DEV -> [1, 2, 3, DEV]
-    split = split_pattern.split(version)
-    logger.debug("Split version: %s", split)
-
-    parts = []
-    for part in split:
-        # Validate the split part by checking it is only comprised of alphanumeric characters.
-        valid = validation_pattern.match(part)
-        if not valid:
-            continue
-        parts.append(part)
+    parts, multi_sep, special_indices = _split_version(version)
 
     if not parts:
         logger.debug("Version contained no valid parts: %s", version)
         return None, []
 
+    logger.debug("Final version parts: %s", parts)
+
     this_version_pattern = ""
-    has_non_numeric_suffix = False
     # Detect versions that end with a zero number (0, 00, 000, etc.), so that part can be made optional.
-    has_trailing_zero = len(split) > 2 and multiple_zero_pattern.match(split[-1])
+    has_trailing_zero = len(parts) > 2 and multiple_zero_pattern.match(parts[-1])
+
+    # Version parts that are alphanumeric, and do not come before parts that are purely numeric, can be treated
+    # as optional suffixes.
+    # E.g.
+    # - 1.2.RELEASE -> 'RELEASE' becomes optional.
+    # - 3.1.test.2.M5 -> 'M5' becomes optional.
+    # Parts that come after a change in seperator are also flagged as optional.
+    # - 2.2-3 -> '3' becomes optional.
+    optional_start_index = None
+    separators = _split_separators(version)
+    last_separator = separators[0] if separators else None
+    for index in range(1, len(parts)):
+        # Check if current part should be optional, or reset the index if not.
+        optional_start_index = None if numeric_only_pattern.match(parts[index]) else index
+
+        if not last_separator:
+            continue
+
+        if index >= len(separators):
+            continue
+
+        # Check if parts should be made optional based on a difference in separators.
+        new_separator = separators[index]
+        if new_separator != last_separator:
+            optional_start_index = index + 1
+            break
+        last_separator = new_separator
+
+    # Create the pattern.
     for count, part in enumerate(parts):
-        numeric_only = numeric_only_pattern.match(part)
-
-        if not has_non_numeric_suffix and not numeric_only:
-            # A non-numeric part enables the flag for treating this and all remaining parts as version suffix parts.
-            # Within the built regex, such parts will be made optional.
-            # E.g.
-            # - 1.2.RELEASE -> 'RELEASE' becomes optional.
-            # - 3.1.test.2 -> 'test' and '2' become optional.
-            has_non_numeric_suffix = True
-
-        # This part will be made optional in the regex if it matches the correct requirements:
-        # - There is more than one version part, e.g. 1.2 (2), 1.2.3 (3)
-        # - AND either of:
-        #   - This is the last version part, and it has a trailing zero, e.g. 10
-        #   - OR has_non_numeric_suffix is True (See its comments above for more details)
-        optional = len(split) > 1 and ((count == len(split) - 1 and has_trailing_zero) or has_non_numeric_suffix)
+        # This part will be made optional in the regex if within the optional suffix range, or the final part and it
+        # is a trailing zero.
+        optional = (optional_start_index and count >= optional_start_index) or (
+            count == len(parts) - 1 and has_trailing_zero
+        )
 
         if optional:
             this_version_pattern = this_version_pattern + "("
@@ -356,13 +426,27 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
         if count == 1:
             this_version_pattern = this_version_pattern + INFIX_1
         elif count > 1:
-            this_version_pattern = this_version_pattern + INFIX_3
+            if multi_sep:
+                # Allow for a change in separator type.
+                this_version_pattern = this_version_pattern + INFIX_3
+            else:
+                # Expect the same separator as matched by INFIX_1.
+                this_version_pattern = this_version_pattern + INFIX_2
 
-        if numeric_only:
-            # Allow for any number of preceding zeros when the part is numeric only. E.g. 000 + 1, 0 + 20
+        if count in special_indices:
+            # If this part exists because it was split from its original part, flag the separator as optional.
+            # E.g. 4rc7 -> 4, rc7 (with optional separator between 4 and rc7).
+            this_version_pattern = this_version_pattern + "?"
+
+        if numeric_only_pattern.match(part) and not optional_start_index:
+            # Allow for any number of preceding zeros when the part is numeric only. E.g. 000 + 1, 0 + 20.
             this_version_pattern = this_version_pattern + "0*"
 
         # Add the current part to the pattern.
+        if count == 0:
+            # Add a negative look behind that prevents the first part from being matched inside a multi-digit number.
+            # E.g. '11.33' will not match '1.33'.
+            this_version_pattern = this_version_pattern + "(?<![0-9])"
         this_version_pattern = this_version_pattern + part
 
         if optional:
@@ -373,15 +457,19 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
     # regex, and thereby provide an opportunity to map mismatches between version and tags (that are still the same
     # number).
     # E.g. MAX_ZERO_DIGIT_EXTENSION = 4 -> 1.2 to 1.2.0.0, or 3 to 3.0.0.0, etc.
-    if not has_non_numeric_suffix and 0 < len(parts) < MAX_ZERO_DIGIT_EXTENSION:
+    if not optional_start_index and 0 < len(parts) < MAX_ZERO_DIGIT_EXTENSION:
         for count in range(len(parts), MAX_ZERO_DIGIT_EXTENSION):
             # Additional zeros added for this purpose make use of a back reference to the first matched separator.
             this_version_pattern = this_version_pattern + "(" + (INFIX_2 if count > 1 else INFIX_1) + "0)?"
 
+    # Combine the version pattern with the pre-defined pattern parts.
     this_version_pattern = (
-        f"^(?:(?:{PREFIX_WITH_SEPARATOR})|(?:{PREFIX_START}{name}{PREFIX_END}{PREFIX_SEPARATOR}))(?P<version>"
-        f"{this_version_pattern}){SUFFIX_SEPARATOR}{SUFFIX}$"
+        f"^(?:(?:{PREFIX_WITH_SEPARATOR})|(?:{PREFIX_WITHOUT_SEPARATOR})|"
+        f"(?:{PREFIX_START}{name}{PREFIX_END}{PREFIX_SEPARATOR}))?(?P<version>"
+        f"{this_version_pattern})(?:{SUFFIX_SEPARATOR}{SUFFIX})?$"
     )
+
+    # Compile the pattern.
     try:
         return re.compile(this_version_pattern, flags=re.IGNORECASE), parts
     except Exception as error:  # pylint: disable=broad-exception-caught
@@ -407,7 +495,33 @@ def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
     list[str]
         The list of tags that matched the pattern.
     """
-    # Create the pattern for the passed version.
+    logger.debug("Tag Sample: %s", tag_list[:5])
+
+    # If any tag exactly matches the version, return it immediately.
+    # Also allow for an optional 'v' prefix, and tags of the form: <release_prefix>/<artifact_name>-<version>.
+    v_prefix = "(?:v)?" if not version.lower().startswith("v") else ""
+    escaped_version = re.escape(version)
+    almost_exact_pattern = re.compile(
+        f"^(?:[^/]+/)?(?P<prefix>{re.escape(name)}-)?{v_prefix}{escaped_version}$", re.IGNORECASE
+    )
+
+    # Compare tags to the almost exact pattern. Prefer tags that matched the name prefix as well.
+    almost_exact_matches = {}
+    last_match = None
+    prefix_match = None
+    for tag in tag_list:
+        match = almost_exact_pattern.match(tag)
+        if match:
+            almost_exact_matches[tag] = match
+            last_match = tag
+            if match.group(1):
+                prefix_match = tag
+    if prefix_match:
+        return [prefix_match]
+    if last_match:
+        return [last_match]
+
+    # Create the more complicated pattern for the passed version.
     pattern, parts = _build_version_pattern(name, version)
     if not pattern:
         return []
@@ -418,17 +532,18 @@ def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
         match = pattern.match(tag)
         if not match:
             continue
-        # Tags are append with their match information for possible further evaluation.
-        matched_tags.append(
-            {
-                "tag": tag,
-                "version": match.group("version"),
-                "prefix": match.group("prefix_0") or match.group("prefix_1"),
-                "prefix_sep": match.group("prefix_sep_0") or match.group("prefix_sep_1"),
-                "suffix_sep": match.group("suffix_sep"),
-                "suffix": match.group("suffix"),
-            }
-        )
+        # Tags are appended with their match information for possible further evaluation.
+        matched_tag: dict[str, str] = {
+            "tag": tag,
+            "version": match.group("version"),
+            "prefix": match.group("prefix_0") or match.group("prefix_1") or match.group("prefix_2"),
+            "prefix_sep": match.group("prefix_sep_0") or match.group("prefix_sep_1"),
+            "suffix_sep": match.group("suffix_sep"),
+            "suffix": match.group("suffix"),
+        }
+        matched_tags.append(matched_tag)
+
+    matched_tags = _fix_misaligned_tag_matches(matched_tags, version)
 
     if len(matched_tags) <= 1:
         return [_["tag"] for _ in matched_tags]
@@ -439,7 +554,7 @@ def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
     # the version, remove those that don't.
     named_tags = []
     for item in matched_tags:
-        prefix: str | None = item["prefix"]
+        prefix = item["prefix"]
         if not prefix:
             continue
         if "/" in prefix:
@@ -447,7 +562,10 @@ def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
             _, _, prefix = prefix.rpartition("/")
         if (
             prefix.lower() == name.lower()
-            and _compute_tag_version_similarity(item["version"], item["suffix"], parts) == 0
+            and _compute_tag_version_similarity(
+                "", "", item["version"], item["suffix"], item["suffix_sep"], parts, version, name
+            )
+            == 0
         ):
             named_tags.append(item)
 
@@ -457,99 +575,305 @@ def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
     # If multiple tags still remain, sort them based on the closest match in terms of individual parts.
     if len(matched_tags) > 1:
         matched_tags.sort(
-            key=lambda matched_tag: _compute_tag_version_similarity(
-                matched_tag["version"], matched_tag["suffix"], parts
+            key=lambda matched_tag_: _compute_tag_version_similarity(
+                matched_tag_["prefix"],
+                matched_tag_["prefix_sep"],
+                matched_tag_["version"],
+                matched_tag_["suffix"],
+                matched_tag_["suffix_sep"],
+                parts,
+                version,
+                name,
             )
         )
 
     return [_["tag"] for _ in matched_tags]
 
 
-def _compute_tag_version_similarity(tag_version: str, tag_suffix: str, version_parts: list[str]) -> int:
+def _fix_misaligned_tag_matches(matched_tags: list[dict[str, str]], version: str) -> list[dict[str, str]]:
+    """Fix tags that were matched due to alignment errors in the prefix.
+
+    E.g. v6.3.1 -> Prefix 'v6', version '3.1' could match Version '3.1.0'.
+    """
+    if not matched_tags:
+        return matched_tags
+
+    filtered_tags = []
+    for matched_tag in matched_tags:
+        prefix = matched_tag["prefix"]
+        prefix_sep = matched_tag["prefix_sep"]
+        if not version:
+            # Reject matches with no version part.
+            continue
+
+        if not prefix:
+            # Matches without a prefix cannot be evaluated here.
+            filtered_tags.append(matched_tag)
+            continue
+
+        # Get the separators for the actual version, and the parts and separators for the matched tag's prefix.
+        version_seps = _split_separators(version)
+        version_sep = version_seps[0] if version_seps else ""
+        prefixes, _, _ = _split_version(prefix)
+        prefix_separators = _split_separators(prefix)
+
+        # Try to move any version-like strings from the end of the prefix to the version.
+        # E.g. An optional 'v', 'r', or 'c', followed by one or more numbers.
+        # TODO consider cases where multiple version-like parts exist in the prefix.
+        #  E.g. Prefix: 'prefix-1.2' Version: '3.4' from Artifact Version 'prefix-1.2.3.4'
+        if re.match("^([vrc])?[0-9]+$", prefixes[-1], re.IGNORECASE):
+            if version_sep and version_sep == prefix_sep:
+                # Ensure there is a version separator and a prefix separator, and they match.
+                # E.g. '.' from '1.2' and '.' from '<rest-of-prefix>.v4'.
+                new_prefix = ""
+                # Create the new prefix.
+                for index in range(len(prefixes) - 1):
+                    if index > 0:
+                        new_prefix = new_prefix + prefix_separators[index - 1]
+                    new_prefix = new_prefix + prefixes[index]
+
+                # Get the parts for the actual version.
+                version_parts, _, _ = _split_version(version)
+                if version_parts[0] not in prefixes[-1]:
+                    # Only perform the fix if the prefix version-like parts match (contain) parts of the sought version.
+                    continue
+
+                # Create the new matched_tag version.
+                tag_version = matched_tag["version"]
+                new_version = prefixes[-1] + version_sep + tag_version
+
+                # Check if the new version can match the actual version.
+                bad_match = False
+                new_parts, _, _ = _split_version(new_version)
+                for index in range(min(len(new_parts), len(version_parts))):
+                    if version_parts[index] not in new_parts[index]:
+                        bad_match = True
+                        break
+                if bad_match:
+                    # The match is rejected.
+                    continue
+
+                # Apply change to match.
+                matched_tag["prefix"] = new_prefix
+                matched_tag["version"] = new_version
+
+        filtered_tags.append(matched_tag)
+
+    return filtered_tags
+
+
+def _compute_tag_version_similarity(
+    prefix: str,
+    prefix_sep: str,
+    tag_version: str,
+    tag_suffix: str,
+    tag_suffix_sep: str,
+    version_parts: list[str],
+    version: str,
+    artifact_name: str,
+) -> float:
     """Return a sort value based on how well the tag version and tag suffix match the parts of the actual version.
 
     Parameters
     ----------
+    prefix: str
+        The tag's prefix.
+    prefix_sep: str
+        The prefix separator.
     tag_version: str
         The tag's version.
     tag_suffix: str
         The tag's suffix.
+    tag_suffix_sep: str
+        The tag's suffix seperator.
     version_parts: str
         The version parts from the version string.
+    version: str
+        The actual version being sought.
+    artifact_name: str
+        The name of the artifact.
 
     Returns
     -------
-    int
+    float
         The sort value based on the similarity between the tag and version, lower means more similar.
 
     """
-    count = len(version_parts)
-    # Reduce count for each direct match between version parts and tag version.
     tag_version_text = tag_version.lower()
-    for part in version_parts:
-        part = part.lower()
-        if part in tag_version_text:
-            tag_version_text = tag_version_text.replace(part, "", 1)
-            count = count - 1
+    tag_parts, _, _ = _split_version(tag_version_text)
+    if tag_suffix:
+        tag_suffix = tag_suffix.lower()
+    if tag_suffix and len(tag_parts) < len(version_parts):
+        # Append the tag suffix parts to the list of the tag parts if the version has more parts.
+        suffix_parts, _, _ = _split_version(tag_suffix.lower())
+        for suffix_part in suffix_parts:
+            tag_parts.append(suffix_part)
 
-    # Try to reduce the count further based on the tag suffix.
+    # Start the count as the highest length of the version parts and tag parts lists.
+    part_count = max(len(version_parts), len(tag_parts))
+
+    # Reduce count for each direct match between version parts and tag version.
+    for index in range(part_count):
+        if index >= len(version_parts) or index >= len(tag_parts):
+            continue
+        part = version_parts[index].lower()
+        if part in tag_parts[index]:
+            part_count = part_count - 1
+
+    score: float = part_count
+
+    # A set of release related words to notice during evaluation.
+    release_set = {"rel", "release", "fin", "final"}
+
+    # Try to reduce the score further based on the tag suffix.
     if tag_suffix:
         last_part = version_parts[-1].lower()
         # The tag suffix might consist of multiple version parts, e.g. RC1.RELEASE
-        suffix_split = split_pattern.split(tag_suffix)
+        suffix_split, _, _ = _split_version(tag_suffix)
         # Try to match suffix parts to version.
         versioned_string_match = False
         if len(suffix_split) > 1:
+            # Multiple suffix parts.
             for suffix_part in suffix_split:
                 suffix_part = suffix_part.lower()
                 if alphabetic_only_pattern.match(suffix_part) and suffix_part == last_part:
-                    # If the suffix part only contains alphabetic characters, reduce the count if it
+                    # If the suffix part only contains alphabetic characters, reduce the score if it
                     # matches the version.
-                    count = count - 1
+                    score = score - 1
                     continue
 
+                # Create a pattern to allow loose matching between the tag part and version.
                 variable_suffix_pattern = _create_suffix_tag_comparison_pattern(suffix_part)
                 if not variable_suffix_pattern:
+                    # If no pattern could be created the tag part worsens the score of this match.
+                    score = score + 1
                     continue
 
                 if versioned_string_match:
-                    count = count + 1
+                    # If a comparison already matched, worsen the score for this superfluous tag part.
+                    score = score + 1
                     continue
 
                 # If the suffix part contains alphabetic characters followed by numeric characters,
-                # reduce the count if it closely matches the version (once only), otherwise increase the count.
+                # reduce the score if it closely matches the version (once only), otherwise increase the score.
                 if re.match(variable_suffix_pattern, last_part):
-                    count = count - 1
+                    score = score - 1
                     versioned_string_match = True
                 else:
-                    count = count + 1
-
-        variable_suffix_pattern = _create_suffix_tag_comparison_pattern(tag_suffix)
-        if variable_suffix_pattern:
-            if re.match(variable_suffix_pattern, last_part):
-                count = count - 1
-            else:
-                count = count + 1
+                    score = score + 1
         else:
-            count = count + 1
+            # Single suffix part.
+            if len(tag_parts) < len(version_parts):
+                # When there are fewer tag parts than version parts the 'last' version part must take that into account.
+                last_part_index = len(version_parts) - len(tag_parts) + 1
+                last_part = version_parts[-last_part_index]
+            if tag_suffix != last_part:
+                variable_suffix_pattern = _create_suffix_tag_comparison_pattern(tag_suffix)
+                if variable_suffix_pattern:
+                    if re.match(variable_suffix_pattern, last_part):
+                        # A half value is used here as otherwise it can lead to the same score as a tag_suffix that is
+                        # equal to the last part.
+                        score = score - 0.5
+                    else:
+                        if tag_suffix not in release_set:
+                            # The suffix does not match, and is not similar.
+                            score = score + 1
+                        else:
+                            score = score + 0.2
+                else:
+                    # If no suffix pattern can be created the suffix cannot be matched to the last version part.
+                    score = score + 1
+            else:
+                # Decrease score if there is a single suffix, and it matches the last version part.
+                score = score - 0.5
 
-    return count
+    score = 0 if score < 0 else score
+
+    if tag_suffix:
+        # Slightly prefer matches with a release related suffix.
+        suffix_parts, _, _ = _split_version(tag_suffix)
+        for suffix_part in suffix_parts:
+            if suffix_part in version_parts:
+                continue
+            if suffix_part in release_set:
+                score = score - 0.1
+
+    if prefix:
+        pre_score = score
+        if len(prefix) > 2:
+            # Prefer tags whose prefix is a superstring of the artifact name, or release related.
+            name_split = _split_name(artifact_name.lower())
+            name_set = set(name_split)
+            prefix_split = _split_name(prefix.lower())
+            bonus = 0.0
+            for prefix_part in prefix_split:
+                if prefix_part in name_set:
+                    # Matches accumulate bonus score.
+                    bonus = bonus - 0.1
+                else:
+                    if prefix_part.lower() in release_set:
+                        # If the prefix part is release related, improve the score directly.
+                        score = score - 0.11
+                        continue
+                    # A non-match sets the bonus to a penalty.
+                    bonus = 0.11
+                    if name_version_pattern.match(prefix_part):
+                        # Heavily penalise non-matching version-like values.
+                        bonus = 1.0
+                    # Do not check remaining parts after a non-match.
+                    break
+            score = score + bonus
+
+        if pre_score == score:
+            # Prefer tags with shorter prefixes. Only applies if no other change was made for the prefix already.
+            if len(prefix) == 1 and alphabetic_only_pattern.match(prefix):
+                # Prefer 'v' over alternatives.
+                if prefix.lower() != "v":
+                    score = score + 0.01
+            else:
+                # Worsen the score based on the length of the prefix.
+                score = score + min(len(prefix) / 100, 0.09)
+
+    if len(version_parts) > 1 > score:
+        # Prefer tags with version separators that exist in the version string.
+        tag_separators = _split_separators(tag_version)
+        for tag_separator in tag_separators:
+            if tag_separator not in version:
+                score = score + 0.5
+                break
+
+        if tag_suffix and tag_suffix in version_parts:
+            # If the tag has a suffix, and it is part of the version, ensure the seperator matches exactly.
+            suffix_index = version_parts.index(tag_suffix)
+            version_separators = _split_separators(version)
+            if suffix_index - 1 < len(version_separators):
+                if version_separators[suffix_index - 1] != tag_suffix_sep:
+                    score = score + 0.5
+
+    if prefix_sep:
+        # Prefer shorter prefix separators.
+        prefix_sep_len = len(prefix_sep)
+        if "v" in prefix_sep:
+            # Ignore the 'v' prefix separator.
+            prefix_sep_len = prefix_sep_len - 1
+        # The regex patterns ensure this length is never greater than 3.
+        score = score + prefix_sep_len * 0.01
+
+    return score
 
 
-def _create_suffix_tag_comparison_pattern(tag_part: str) -> str | None:
+def _create_suffix_tag_comparison_pattern(tag_part: str) -> Pattern | None:
     """Create pattern to compare part of a tag with part of a version.
 
     The created pattern allows for numeric parts within the tag to have a variable number of zeros for matching.
     """
+    # The tag part must be a number that may optionally start with one or more alphabet characters.
     versioned_string_result = versioned_string.match(tag_part)
     if not versioned_string_result:
         return None
 
-    variable_suffix_pattern = f"{versioned_string_result.group(1)}"
-    if not versioned_string_result.group(2):
-        return f"{variable_suffix_pattern}{versioned_string_result.group(3)}"
-
-    return f"{variable_suffix_pattern}(0*){versioned_string_result.group(3)}"
+    # Combine the alphabetic and zero-extended numeric parts.
+    return re.compile(f"{versioned_string_result.group(1)}(0*){versioned_string_result.group(3)}", re.IGNORECASE)
 
 
 def _get_tag_commit(tag: TagReference) -> Commit | None:
