@@ -170,6 +170,7 @@ class JavaRepoFinder(BaseRepoFinder):
         pom_element = parse_pom_string(pom)
         if pom_element is None:
             return []
+        self.pom_element = pom_element
 
         # Attempt to extract SCM data and return URL
         return self._find_scm(pom_element, tags)
