@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Analyzing the dependencies with virtual env provided as input. --deps-depth is not set or set to 0. Macaron should exit on error.
+  Analyzing the dependencies with virtual env provided as input. Macaron should not exit on error when --deps-depth is not set or set to 0.
 
 tags:
 - macaron-python-package
@@ -16,7 +16,7 @@ steps:
   kind: shell
   options:
     cmd: python -m venv ./django_venv
-- name: Run macaron analyze with --deps-depth not set.
+- name: Run macaron analyze with python venv and --deps-depth not set.
   kind: analyze
   options:
     command_args:
@@ -24,8 +24,7 @@ steps:
     - pkg:pypi/django@5.0.6
     - --python-venv
     - ./django_venv
-  expect_fail: true
-- name: Run macaron analyze with --deps-depth set to 0.
+- name: Run macaron analyze with python venv and --deps-depth set to 0.
   kind: analyze
   options:
     command_args:
@@ -34,7 +33,6 @@ steps:
     - --python-venv
     - ./django_venv
     - --deps-depth=0
-  expect_fail: true
 - name: Clean up the virtual environment.
   kind: shell
   options:

@@ -35,7 +35,7 @@ Options
 
 .. option:: -sbom SBOM_PATH, --sbom-path SBOM_PATH
 
-    The path to the SBOM of the analysis target. If this is set, dependency resolution must be enabled with '--deps-depth'.
+    The path to the SBOM of the analysis target.
 
 .. option:: -purl PACKAGE_URL, --package-url PACKAGE_URL
 
@@ -77,7 +77,7 @@ Options
 
 .. option::  --python-venv PYTHON_VENV
 
-    The path to the Python virtual environment of the target software component. If this is set, dependency resolution must be enabled with '--deps-depth'.
+    The path to the Python virtual environment of the target software component.
 
 -----------
 Environment

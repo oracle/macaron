@@ -45,14 +45,6 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         logger.error("Please provide '1', '0' or 'inf' to `--deps-depth`")
         sys.exit(os.EX_USAGE)
 
-    if analyzer_single_args.sbom_path and deps_depth == 0:
-        logger.error("Please enable dependency resolution with '--deps-depth' when providing an SBOM.")
-        sys.exit(os.EX_USAGE)
-
-    if analyzer_single_args.python_venv and deps_depth == 0:
-        logger.error("Please enable dependency resolution with '--deps-depth' when providing a Python environment.")
-        sys.exit(os.EX_USAGE)
-
     if not (analyzer_single_args.repo_path or analyzer_single_args.package_url):
         # We don't mention --config-path as a possible option in this log message as it going to be move soon.
         # See: https://github.com/oracle/macaron/issues/417
