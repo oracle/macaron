@@ -6,11 +6,10 @@ import logging
 import re
 from xml.etree.ElementTree import Element  # nosec
 
-import defusedxml.ElementTree
-from defusedxml.ElementTree import fromstring
 from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
+from macaron.parsers.pomparser import parse_pom_string
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 from macaron.util import send_get_http_raw
@@ -168,33 +167,12 @@ class JavaRepoFinder(BaseRepoFinder):
             return []
 
         # Parse POM using defusedxml
-        pom_element = self._parse_pom(pom)
+        pom_element = parse_pom_string(pom)
         if pom_element is None:
             return []
 
         # Attempt to extract SCM data and return URL
         return self._find_scm(pom_element, tags)
-
-    def _parse_pom(self, pom: str) -> Element | None:
-        """
-        Parse the passed POM using defusedxml.
-
-        Parameters
-        ----------
-        pom : str
-            The contents of a POM file as a string.
-
-        Returns
-        -------
-        Element | None :
-            The parsed element representing the POM's XML hierarchy.
-        """
-        try:
-            self.pom_element = fromstring(pom)
-            return self.pom_element
-        except defusedxml.ElementTree.ParseError as error:
-            logger.debug("Failed to parse XML: %s", error)
-            return None
 
     def _find_scm(self, pom: Element, tags: list[str], resolve_properties: bool = True) -> list[str]:
         """
