@@ -46,6 +46,9 @@ class GlobalConfig:
     #: The path to Python virtual environment.
     python_venv_path: str = ""
 
+    #: The path to the local .m2 Maven repository. This attribute is None if there is no available .m2 directory.
+    local_maven_repo: str | None = None
+
     def load(
         self,
         macaron_path: str,

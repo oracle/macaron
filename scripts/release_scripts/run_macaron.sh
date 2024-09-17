@@ -328,6 +328,10 @@ if [[ $command == "analyze" ]]; then
                 python_venv_path="$2"
                 shift
                 ;;
+            --local-maven-repo)
+                local_maven_repo="$2"
+                shift
+                ;;
             *)
                 rest_command+=("$1")
                 ;;
@@ -453,6 +457,32 @@ if [[ -n "${python_venv_path:-}" ]]; then
     argv_command+=("--python-venv" "${MACARON_WORKSPACE}/analyze_python_venv_editable")
 
     mount_dir_ro "--python-venv" "$python_venv_path" "$python_venv_in_container"
+fi
+
+# Mount the local Maven repo into ${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly.
+if [[ -n "${local_maven_repo:-}" ]]; then
+    local_maven_repo_in_container="${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly"
+    argv_command+=("--local-maven-repo" "${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly")
+
+    mount_dir_ro "--local-maven-repo" "$local_maven_repo" "$local_maven_repo_in_container"
+else
+    # If the user doesn't provide local maven repo, we mount $HOME/.m2 into ${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly ONLY IF $HOME/.m2 directory exists.
+    # If $HOME/.m2 doesn't exist, we create and mount an empty directory ${output}/analyze_local_maven_repo_readonly into ${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly instead.
+    # This is because we don't want Macaron running within
+    # the container to use `$HOME/.m2` within the container as it is being used
+    # by the cyclonedx plugins for dependency resolution.
+    if [[ -d "$HOME/.m2" ]]; then
+        local_maven_repo_in_container="${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly"
+        argv_command+=("--local-maven-repo" "${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly")
+
+        mount_dir_ro "--local-maven-repo" "$HOME/.m2" "$local_maven_repo_in_container"
+    else
+        local_maven_repo_in_container="${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly"
+        output_local_maven_repo="${output}/analyze_local_maven_repo_readonly"
+        mkdir -p "$output_local_maven_repo"
+
+        mount_dir_ro "--local-maven-repo" "$output_local_maven_repo" "$local_maven_repo_in_container"
+    fi
 fi
 
 # MACARON entrypoint - verify-policy command argvs
