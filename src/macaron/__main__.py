@@ -57,6 +57,29 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
             sys.exit(os.EX_OSFILE)
         global_config.load_python_venv(analyzer_single_args.python_venv)
 
+    # Set Python virtual environment path.
+    if analyzer_single_args.local_maven_repo is None:
+        # Load the default user local .m2 directory.
+        # Exit on error if $HOME is not set or empty.
+        home_dir = os.getenv("HOME")
+        if not home_dir:
+            logger.critical("Environment variable HOME is not set.")
+            sys.exit(os.EX_USAGE)
+
+        local_maven_repo = os.path.join(home_dir, ".m2")
+        if not os.path.isdir(local_maven_repo):
+            logger.debug("The default local Maven repo at %s does not exist. Ignore ...")
+            global_config.local_maven_repo = None
+
+        global_config.local_maven_repo = local_maven_repo
+    else:
+        user_provided_local_maven_repo = analyzer_single_args.local_maven_repo
+        if not os.path.exists(user_provided_local_maven_repo) or not os.path.isdir(user_provided_local_maven_repo):
+            logger.error("The user provided local Maven repo at %s is not valid.", user_provided_local_maven_repo)
+            sys.exit(os.EX_USAGE)
+
+        global_config.local_maven_repo = user_provided_local_maven_repo
+
     analyzer = Analyzer(global_config.output_path, global_config.build_log_path)
 
     # Initiate reporters.
@@ -391,6 +414,14 @@ def main(argv: list[str] | None = None) -> None:
         "--python-venv",
         required=False,
         help=("The path to the Python virtual environment of the target software component."),
+    )
+
+    single_analyze_parser.add_argument(
+        "--local-maven-repo",
+        required=False,
+        help=(
+            "The path to the local .m2 directory. If this option is not used, Macaron will use the default location at $HOME/.m2"
+        ),
     )
 
     # Dump the default values.
