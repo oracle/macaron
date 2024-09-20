@@ -16,6 +16,7 @@ from pydriller.git import Git
 from sqlalchemy.orm import Session
 
 from macaron import __version__
+from macaron.artifact.local_artifact import get_local_artifact_paths, get_local_artifact_repo_mapper
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
@@ -472,6 +473,17 @@ class Analyzer:
             analyze_ctx.dynamic_data["provenance_verified"] = provenance_is_verified
         analyze_ctx.dynamic_data["provenance_repo_url"] = provenance_repo_url
         analyze_ctx.dynamic_data["provenance_commit_digest"] = provenance_commit_digest
+
+        discovered_build_toosl = (
+            analyze_ctx.dynamic_data["build_spec"]["tools"] + analyze_ctx.dynamic_data["build_spec"]["purl_tools"]
+        )
+        build_tools_purl_types = [build_tool.purl_type for build_tool in discovered_build_toosl]
+        analyze_ctx.dynamic_data["local_artifact_paths"] = get_local_artifact_paths(
+            # The PURL is definitely valid here.
+            PackageURL.from_string(analyze_ctx.component.purl),
+            build_tools_purl_types,
+            local_artifact_repo_mapper=get_local_artifact_repo_mapper(),
+        )
 
         analyze_ctx.check_results = registry.scan(analyze_ctx)
 
