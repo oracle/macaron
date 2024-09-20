@@ -37,6 +37,8 @@ def send_get_http(url: str, headers: dict) -> dict:
     """
     logger.debug("GET - %s", url)
     timeout = defaults.getint("requests", "timeout", fallback=10)
+    error_retries = defaults.getint("requests", "error_retries", fallback=5)
+    retry_counter = error_retries
     response = requests.get(url=url, headers=headers, timeout=timeout)
     while response.status_code != 200:
         logger.error(
@@ -44,11 +46,15 @@ def send_get_http(url: str, headers: dict) -> dict:
             response.status_code,
             response.text,
         )
+        if retry_counter <= 0:
+            logger.debug("Maximum retries reached: %s", error_retries)
+            return {}
         if response.status_code == 403:
             if not check_rate_limit(response):
                 return {}
         else:
             return {}
+        retry_counter = retry_counter - 1
         response = requests.get(url=url, headers=headers, timeout=timeout)
 
     return dict(response.json())
@@ -82,6 +88,8 @@ def send_get_http_raw(
     logger.debug("GET - %s", url)
     if not timeout:
         timeout = defaults.getint("requests", "timeout", fallback=10)
+    error_retries = defaults.getint("requests", "error_retries", fallback=5)
+    retry_counter = error_retries
     try:
         response = requests.get(
             url=url,
@@ -100,12 +108,16 @@ def send_get_http_raw(
             "Receiving error code %s from server.",
             response.status_code,
         )
+        if retry_counter <= 0:
+            logger.debug("Maximum retries reached: %s", error_retries)
+            return None
         if response.status_code == 403:
             if not check_rate_limit(response):
                 # If the 403 code was not because of a rate limit, do not try to resend the request.
                 return None
         else:
             return None
+        retry_counter = retry_counter - 1
         response = requests.get(
             url=url,
             headers=headers,
