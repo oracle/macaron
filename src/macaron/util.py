@@ -50,8 +50,7 @@ def send_get_http(url: str, headers: dict) -> dict:
             logger.debug("Maximum retries reached: %s", error_retries)
             return {}
         if response.status_code == 403:
-            if not check_rate_limit(response):
-                return {}
+            check_rate_limit(response)
         else:
             return {}
         retry_counter = retry_counter - 1
@@ -112,9 +111,7 @@ def send_get_http_raw(
             logger.debug("Maximum retries reached: %s", error_retries)
             return None
         if response.status_code == 403:
-            if not check_rate_limit(response):
-                # If the 403 code was not because of a rate limit, do not try to resend the request.
-                return None
+            check_rate_limit(response)
         else:
             return None
         retry_counter = retry_counter - 1
@@ -128,18 +125,13 @@ def send_get_http_raw(
     return response
 
 
-def check_rate_limit(response: Response) -> bool:
+def check_rate_limit(response: Response) -> None:
     """Check the remaining calls limit to GitHub API and wait accordingly.
 
     Parameters
     ----------
     response : Response
         The latest response from GitHub API.
-
-    Returns
-    -------
-    bool
-        True if the rate limit was reached.
     """
     if "X-RateLimit-Remaining" in response.headers:
         remains = int(response.headers["X-RateLimit-Remaining"])
@@ -150,23 +142,18 @@ def check_rate_limit(response: Response) -> bool:
         rate_limit_reset = response.headers.get("X-RateLimit-Reset", default="")
 
         if not rate_limit_reset:
-            return False
+            return
 
         try:
             reset_time = float(rate_limit_reset)
         except ValueError:
             logger.critical("X-RateLimit-Reset=%s in the response's header is not a valid number.", rate_limit_reset)
-            return False
+            return
 
         time_to_sleep: float = reset_time - datetime.timestamp(datetime.now()) + 1
         if time_to_sleep > 0:
             logger.info("Exceeding rate limit. Sleep for %s seconds", time_to_sleep)
             time.sleep(time_to_sleep)
-
-        return True
-
-    logger.debug("Rate limit: %s", remains)
-    return False
 
 
 def construct_query(params: dict) -> str:
