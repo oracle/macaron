@@ -140,3 +140,41 @@ def create_maven_purl_from_artifact_filename(
             )
 
     return None
+
+
+def construct_maven_repository_path(
+    group_id: str,
+    artifact_id: str | None = None,
+    version: str | None = None,
+    asset_name: str | None = None,
+) -> str:
+    """Construct a path to a folder or file on the registry, assuming Maven repository layout.
+
+    For more details regarding Maven repository layout, see the following:
+    - https://maven.apache.org/repository/layout.html
+    - https://maven.apache.org/guides/mini/guide-naming-conventions.html
+
+    Parameters
+    ----------
+    group_id : str
+        The group id of a Maven package.
+    artifact_id : str
+        The artifact id of a Maven package.
+    version : str
+        The version of a Maven package.
+    asset_name : str
+        The asset name.
+
+    Returns
+    -------
+    str
+        The path to a folder or file on the registry.
+    """
+    path = group_id.replace(".", "/")
+    if artifact_id:
+        path = "/".join([path, artifact_id])
+    if version:
+        path = "/".join([path, version])
+    if asset_name:
+        path = "/".join([path, asset_name])
+    return path
