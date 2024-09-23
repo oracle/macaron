@@ -1,14 +1,19 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
 This module test the Util methods
 """
-
+from collections.abc import Callable
 from unittest import TestCase
 from unittest.mock import call, patch
 
+from pytest_httpserver import HTTPServer
+from werkzeug import Request, Response
+
 from macaron import util
+from macaron.config.defaults import defaults
+from macaron.util import send_get_http_raw
 
 
 class TestUtil(TestCase):
@@ -78,3 +83,42 @@ class TestUtil(TestCase):
                             call("/src/path/foo/file2", "/target/path/foo/file2"),
                         ]
                     )
+
+
+def _response_generator(target_value: int) -> Callable[[Request], Response]:
+    """Return a generator with closure so a value can be tracked across multiple invocations."""
+    value = 0
+
+    def generator(request: Request) -> Response:  # pylint: disable=unused-argument
+        """Add the next value as a header and adjust the status code based on the value."""
+        nonlocal value, target_value
+        value += 1
+        response = Response()
+        response.status_code = 403 if value <= (target_value + 1) else 200
+        response.headers["X-VALUE"] = str(value)
+        return response
+
+    return generator
+
+
+def test_get_http_failure(httpserver: HTTPServer) -> None:
+    """Test get http operations when a 403 error code is received."""
+    # Set up a localhost URL.
+    mocked_url = httpserver.url_for("")
+
+    # Retrieve the allowed number of retries on a failed request.
+    target_value = defaults.getint("requests", "error_retries", fallback=5)
+
+    # Create and assign the stateful handler.
+    handler = _response_generator(target_value)
+    httpserver.expect_request("").respond_with_handler(handler)
+
+    # Assert the request fails and returns nothing.
+    assert send_get_http_raw(mocked_url) is None
+
+    # Test for a correct response after the expected number of retries and other requests (including this one).
+    expected_value = target_value + 2
+    response = send_get_http_raw(mocked_url)
+    assert response
+    assert "X-VALUE" in response.headers
+    assert response.headers["X-VALUE"] == str(expected_value)
