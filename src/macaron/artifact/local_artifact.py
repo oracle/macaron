@@ -25,17 +25,17 @@ def get_local_artifact_repo_mapper() -> Mapping[str, str]:
     return local_artifact_mapper
 
 
-def construct_local_artifact_path_from_purl(
+def construct_local_artifact_paths_from_purl(
     build_purl_type: str,
     component_purl: PackageURL,
     local_artifact_repo_mapper: Mapping[str, str],
-) -> str | None:
+) -> list[str] | None:
     """Get B."""
     local_artifact_repo = local_artifact_repo_mapper.get(build_purl_type)
     if local_artifact_repo is None:
         return None
 
-    artifact_path = None
+    artifact_path = []
     match build_purl_type:
         case "maven":
             group = component_purl.namespace
@@ -45,10 +45,12 @@ def construct_local_artifact_path_from_purl(
             if group is None or version is None:
                 return None
 
-            artifact_path = os.path.join(
-                local_artifact_repo,
-                "repository",
-                construct_maven_repository_path(group, artifact, version),
+            artifact_path.append(
+                os.path.join(
+                    local_artifact_repo,
+                    "repository",
+                    construct_maven_repository_path(group, artifact, version),
+                )
             )
         case "pypi":
             # TODO: implement this.
@@ -59,22 +61,36 @@ def construct_local_artifact_path_from_purl(
     return artifact_path
 
 
+# key: purl type
+# value: list of paths
+# If a key doesn't exist -> cannot construct the artifact paths for that purl type
+# (no local artifact repo found or not enough information from PURL string or simply
+# the PURL string is not applicable for that purl type).
+# If a value is an empty list -> Can construct the local artifact paths but no paths exist in the local artifact repository.
 def get_local_artifact_paths(
     purl: PackageURL,
     build_tool_purl_types: list[str],
     local_artifact_repo_mapper: Mapping[str, str],
-) -> dict[str, str]:
+) -> dict[str, list[str]]:
     """Get C."""
-    result = {}
+    local_artifact_paths_purl_mapping = {}
 
     for build_purl_type in build_tool_purl_types:
-        local_artfiact_path = construct_local_artifact_path_from_purl(
+        local_artfiact_paths = construct_local_artifact_paths_from_purl(
             build_purl_type=build_purl_type,
             component_purl=purl,
             local_artifact_repo_mapper=local_artifact_repo_mapper,
         )
 
-        if local_artfiact_path and os.path.isdir(local_artfiact_path):
-            result[build_purl_type] = local_artfiact_path
+        if not local_artfiact_paths:
+            continue
 
-    return result
+        resolved_local_artifact_paths = []
+
+        for local_artifact_path in local_artfiact_paths:
+            if os.path.isdir(local_artifact_path):
+                resolved_local_artifact_paths.append(local_artifact_path)
+
+        local_artifact_paths_purl_mapping[build_purl_type] = resolved_local_artifact_paths
+
+    return local_artifact_paths_purl_mapping
