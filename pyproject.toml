@@ -106,10 +106,10 @@ test-docker = [
 ]
 
 [project.urls]
-Homepage = "https://my.project/"
-Changelog = "https://my.project/CHANGELOG"
-Documentation = "https://my.project/docs/"
-Issues = "https://my.project/issues"
+Homepage = "https://github.com/oracle/macaron"
+Changelog = "https://github.com/oracle/macaron/blob/main/CHANGELOG.md"
+Documentation = "https://oracle.github.io/macaron/"
+Issues = "https://github.com/oracle/macaron/issues"
 
 
 # https://bandit.readthedocs.io/en/latest/config.html
