@@ -9,7 +9,7 @@ from collections.abc import Mapping
 import pytest
 from packageurl import PackageURL
 
-from macaron.artifact.local_artifact import construct_local_artifact_path_from_purl, get_local_artifact_paths
+from macaron.artifact.local_artifact import construct_local_artifact_paths_from_purl, get_local_artifact_paths
 
 
 @pytest.mark.parametrize(
@@ -19,7 +19,7 @@ from macaron.artifact.local_artifact import construct_local_artifact_path_from_p
             "maven",
             "pkg:maven/com.google.guava/guava@33.2.1-jre",
             {"maven": "/home/foo/.m2"},
-            "/home/foo/.m2/repository/com/google/guava/guava/33.2.1-jre",
+            ["/home/foo/.m2/repository/com/google/guava/guava/33.2.1-jre"],
             id="A maven type PURL with available local maven repo",
         ),
         pytest.param(
@@ -63,12 +63,12 @@ def test_construct_local_artifact_path_from_purl(
     build_purl_type: str,
     purl_str: str,
     local_artifact_repo_mapper: Mapping[str, str],
-    expectation: str,
+    expectation: list[str],
 ) -> None:
     """Test constructing a local artifact path from a given purl."""
     component_purl = PackageURL.from_string(purl_str)
     assert (
-        construct_local_artifact_path_from_purl(
+        construct_local_artifact_paths_from_purl(
             build_purl_type=build_purl_type,
             component_purl=component_purl,
             local_artifact_repo_mapper=local_artifact_repo_mapper,
@@ -78,18 +78,20 @@ def test_construct_local_artifact_path_from_purl(
 
 
 @pytest.mark.parametrize(
-    ("purl_str", "build_tool_purl_types"),
+    ("purl_str", "build_tool_purl_types", "expectation"),
     [
         pytest.param(
             "pkg:maven/com.google.guava/guava@33.2.1-jre",
             ["maven", "pypi"],
-            id="A maven type PURL where multiple build tool types are discovered",
+            {"maven": []},
+            id="A maven type PURL where multiple build tool types are discovered. But no artifact path is available.",
         ),
     ],
 )
 def test_get_local_artifact_paths_non_existing(
     purl_str: str,
     build_tool_purl_types: list[str],
+    expectation: dict[str, list[str]],
 ) -> None:
     """Test getting local artifact paths of non existing artifacts.
 
@@ -101,8 +103,11 @@ def test_get_local_artifact_paths_non_existing(
             "maven": temp_dir,
             "pypi": temp_dir,
         }
-        assert not get_local_artifact_paths(
-            purl=purl,
-            build_tool_purl_types=build_tool_purl_types,
-            local_artifact_repo_mapper=local_artifact_repo_mapper,
+        assert (
+            get_local_artifact_paths(
+                purl=purl,
+                build_tool_purl_types=build_tool_purl_types,
+                local_artifact_repo_mapper=local_artifact_repo_mapper,
+            )
+            == expectation
         )
