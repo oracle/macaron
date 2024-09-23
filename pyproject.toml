@@ -226,6 +226,7 @@ disable = [
     "too-many-return-statements",
     "too-many-statements",
     "too-many-function-args",
+    "too-many-positional-arguments",
     "duplicate-code",
 ]
 
