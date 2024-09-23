@@ -55,9 +55,8 @@ class ChecksOutputs(TypedDict):
     """The commit digest extracted from provenance, if applicable."""
     provenance_verified: bool
     """True if the provenance exists and has been verified against a signed companion provenance."""
-    local_artifact_paths: dict[str, str]
-    # TODO this doc string for this variable need more informatino, to be revise later.
-    """The mapping between build tool types and the directory that contains the corresponding artifacts."""
+    local_artifact_paths: dict[str, list[str]]
+    """The mapping between purl types and the local artifact absolute paths."""
 
 
 class AnalyzeContext:
