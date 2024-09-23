@@ -108,7 +108,7 @@ test-docker = [
 [project.urls]
 Homepage = "https://github.com/oracle/macaron"
 Changelog = "https://github.com/oracle/macaron/blob/main/CHANGELOG.md"
-Documentation = "https://oracle.github.io/macaron/"
+Documentation = "https://oracle.github.io/macaron/index.html"
 Issues = "https://github.com/oracle/macaron/issues"
 
 
