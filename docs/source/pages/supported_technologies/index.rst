@@ -117,6 +117,7 @@ Currently, we support the following type of project for automatic dependency res
 
 * Java Maven
 * Java Gradle
+* Python (with a Python virtual environment created and packages installed using Python3.11, see :ref:`providing Python virtual environment <python-venv-deps>`.)
 
 --------
 See also
