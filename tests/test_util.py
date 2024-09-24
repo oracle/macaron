@@ -127,7 +127,7 @@ def test_get_http_partial_failure(httpserver: HTTPServer) -> None:
 
 
 def test_get_http_complete_failure(httpserver: HTTPServer) -> None:
-    """Test get http GET operations when too many errors are received and the request fails."""
+    """Test the http GET operation when too many errors are received and the request fails."""
     # Retrieve the allowed number of retries on a failed request.
     target_value = defaults.getint("requests", "error_retries", fallback=5)
 
