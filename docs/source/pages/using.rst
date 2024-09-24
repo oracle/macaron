@@ -236,7 +236,7 @@ workflows.
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -pe micronaut-core.cue -rp https://github.com/micronaut-projects/micronaut-core -b 4.0.x -d 82d115b4901d10226552ac67b0a10978cd5bc603 --skip-deps
+  ./run_macaron.sh analyze -pe micronaut-core.cue -rp https://github.com/micronaut-projects/micronaut-core -b 4.0.x -d 82d115b4901d10226552ac67b0a10978cd5bc603
 
 where ``micronaut-core.cue`` file can contain:
 
@@ -420,7 +420,7 @@ We can run Macaron against the local repository at ``target`` by using this comm
 
   ./run_macaron.sh --local-repos-path ./boo/foo --defaults-path ./defaults.ini analyze --repo-path target <rest_of_args>
 
-With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``--branch/-b``, ``--digest/-d`` or ``--skip-deps`` similar to two previous examples).
+With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``--branch/-b``, ``--digest/-d`` similar to two previous examples).
 
 The ``--local-repos-path/-lr`` flag tells Macaron to look into ``./boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
 
@@ -446,7 +446,7 @@ We can run Macaron against the local repository at ``target`` by using this comm
 
   ./run_macaron.sh --local-repos-path ./boo/foo analyze --repo-path target <rest_of_args>
 
-With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``--branch/-b``, ``--digest/-d`` or ``--skip-deps`` similar to two previous examples).
+With ``rest_of_args`` being the arguments to the ``analyze`` command (e.g. ``--branch/-b``, ``--digest/-d`` similar to two previous examples).
 
 The ``--local-repos-path/-lr`` flag tells Macaron to look into ``./boo/foo`` for local repositories. For more information, please see :ref:`Command Line Usage <cli-usage>`.
 

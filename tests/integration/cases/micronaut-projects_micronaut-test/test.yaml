@@ -31,7 +31,6 @@ steps:
     - https://github.com/qos-ch/slf4j
     - -d
     - e9ee55cca93c2bf26f14482a9bdf961c750d2a56
-    - --skip-deps
 - name: Run macaron analyze ben-manes/caffeine
   kind: analyze
   options:
@@ -40,7 +39,6 @@ steps:
     - https://github.com/ben-manes/caffeine
     - -d
     - 05a040c2478341bab8a58a02b3dc1fe14d626d72
-    - --skip-deps
 - name: Run macaron verify-policy for micronaut-test
   kind: verify
   options:

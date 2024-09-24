@@ -65,7 +65,7 @@ First, we need to run the ``analyze`` command of Macaron to run a number of :ref
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 --skip-deps
+  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6
 
 .. note:: By default, Macaron clones the repositories and creates output files under the ``output`` directory. To understand the structure of this directory please see :ref:`Output Files Guide <output_files_guide>`.
 

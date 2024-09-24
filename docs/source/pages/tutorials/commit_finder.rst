@@ -50,7 +50,7 @@ To perform an analysis on Arrow, Macaron can be run with the following command:
 
 .. code-block:: shell
 
-    ./run_macaron.sh analyze -rp https://github.com/arrow-py/arrow --skip-deps
+    ./run_macaron.sh analyze -rp https://github.com/arrow-py/arrow
 
 However, this will return results based only on the current state of the repository, which as described above, is not what we want to achieve in this tutorial. To perform analyses on other repository states, we need to provide Macaron with the target artifact versions in the form of `PURLs <https://github.com/package-url/purl-spec>`_, or Package URLs, which is a convenient way to encode packages from different ecosystems into the same format.
 
@@ -67,7 +67,7 @@ We will start by running the analysis on the latest version, ``1.3.0``, with the
 
 .. code-block:: shell
 
-    ./run_macaron.sh analyze -purl pkg:pypi/arrow@1.3.0 --skip-deps
+    ./run_macaron.sh analyze -purl pkg:pypi/arrow@1.3.0
 
 The analysis involves Macaron downloading the contents of the target repository to the configured, or default, ``output`` folder. Results from the analysis, including checks, are stored in the database found at ``output/macaron.db``  (See :ref:`Output Files Guide <output_files_guide>`). Once the analysis is complete, Macaron will also produce a report in the form of a HTML file.
 
@@ -101,7 +101,7 @@ Now we should run the next analysis, and then open the new report.
 
 .. code-block:: shell
 
-    ./run_macaron.sh analyze -purl pkg:pypi/arrow@0.15.0 --skip-deps
+    ./run_macaron.sh analyze -purl pkg:pypi/arrow@0.15.0
     open output/reports/pypi/arrow/arrow.html
 
 .. _fig_arrow_0.15.0_top:

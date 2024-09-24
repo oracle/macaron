@@ -61,7 +61,6 @@ steps:
     - master
     - -d
     - 3fc399318edef0d5ba593723a24fff64291d6f9b
-    - --skip-deps
 - name: Compare analysis report
   kind: compare
   options:

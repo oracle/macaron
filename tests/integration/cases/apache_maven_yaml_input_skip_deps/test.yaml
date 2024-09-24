@@ -18,7 +18,6 @@ steps:
     - https://github.com/apache/maven
     - -d
     - 3fc399318edef0d5ba593723a24fff64291d6f9b
-    - --skip-deps
 - name: Run macaron analyze google/guava
   kind: analyze
   options:
