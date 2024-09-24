@@ -2,10 +2,13 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles the cloning and analyzing a Git repo."""
+
+import glob
 import logging
 import os
 import re
 import sys
+from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -17,7 +20,7 @@ from pydriller.git import Git
 from sqlalchemy.orm import Session
 
 from macaron import __version__
-from macaron.artifact.local_artifact import get_local_artifact_paths, get_local_artifact_repo_mapper
+from macaron.artifact.local_artifact import get_local_artifact_paths
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
@@ -472,15 +475,14 @@ class Analyzer:
         analyze_ctx.dynamic_data["provenance_repo_url"] = provenance_repo_url
         analyze_ctx.dynamic_data["provenance_commit_digest"] = provenance_commit_digest
 
-        discovered_build_toosl = (
+        discovered_build_tools = (
             analyze_ctx.dynamic_data["build_spec"]["tools"] + analyze_ctx.dynamic_data["build_spec"]["purl_tools"]
         )
-        build_tools_purl_types = [build_tool.purl_type for build_tool in discovered_build_toosl]
+        build_tools_purl_types = [build_tool.purl_type for build_tool in discovered_build_tools]
         analyze_ctx.dynamic_data["local_artifact_paths"] = get_local_artifact_paths(
-            # The PURL is definitely valid here.
             PackageURL.from_string(analyze_ctx.component.purl),
             build_tools_purl_types,
-            local_artifact_repo_mapper=get_local_artifact_repo_mapper(),
+            local_artifact_repo_mapper=self._get_local_artifact_repo_mapper(),
         )
 
         analyze_ctx.check_results = registry.scan(analyze_ctx)
@@ -1130,6 +1132,30 @@ class Analyzer:
                             package_registry=package_registry,
                         )
                     )
+
+    @staticmethod
+    def _get_local_artifact_repo_mapper() -> Mapping[str, str]:
+        """Return the mapping between purl type and its local artifact repo path if that path exists."""
+        local_artifact_mapper: dict[str, str] = {}
+
+        if global_config.local_maven_repo:
+            m2_repository_dir = os.path.join(global_config.local_maven_repo, "repository")
+            if os.path.isdir(m2_repository_dir):
+                local_artifact_mapper["maven"] = m2_repository_dir
+
+        if global_config.python_venv_path:
+            site_packages_dir_pattern = os.path.join(
+                global_config.python_venv_path,
+                "lib",
+                "python3.*",
+                "site-packages",
+            )
+            site_packages_dirs = glob.glob(site_packages_dir_pattern)
+
+            if len(site_packages_dirs) == 1:
+                local_artifact_mapper["pypi"] = site_packages_dirs.pop()
+
+        return local_artifact_mapper
 
 
 class DuplicateCmpError(DuplicateError):
