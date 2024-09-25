@@ -16,7 +16,6 @@ steps:
     command_args:
     - -purl
     - pkg:maven/io.micronaut/micronaut-core@4.2.3
-    - --skip-deps
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:

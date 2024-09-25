@@ -16,6 +16,7 @@ steps:
     command_args:
     - -c
     - config.yaml
+    - --deps-depth=1
 - name: Compare deps report
   kind: compare
   options:

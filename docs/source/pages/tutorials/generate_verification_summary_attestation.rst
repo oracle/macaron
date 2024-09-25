@@ -47,8 +47,7 @@ In order to verify the artifact with Macaron, you can follow the following steps
   ./run_macaron.sh analyze \
         --package-url pkg:maven/io.micronaut.openapi/micronaut-openapi@6.8.0?type=jar \
         --provenance-file multiple.intoto.jsonl \
-        --provenance-expectation expectation.cue \
-        --skip-deps
+        --provenance-expectation expectation.cue
 
 .. note::
 

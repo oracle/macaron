@@ -21,7 +21,6 @@ steps:
     - main
     - -d
     - e6428d7da594455a4c2b7f24907fec421a5e0e95
-    - --skip-deps
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:

@@ -22,7 +22,8 @@ Usage
     usage: ./run_macaron.sh analyze
         [-h] [-sbom SBOM_PATH] [-purl PURL] [-rp REPO_PATH] [-b BRANCH]
         [-d DIGEST] [-pe PROVENANCE_EXPECTATION]
-        [--skip-deps] [-g TEMPLATE_PATH]
+        [--skip-deps] [--deps-depth DEPS_DEPTH] [-g TEMPLATE_PATH]
+        [--python-venv PYTHON_VENV]
 
 -------
 Options
@@ -64,11 +65,19 @@ Options
 
 .. option:: --skip-deps
 
-    Skip automatic dependency analysis.
+    DEPRECATED. Dependency resolution is off by default. This flag does nothing and will be removed in the next release.
+
+.. option:: --deps-depth DEPS_DEPTH
+
+    The depth of the dependency resolution. 0: disable, 1: direct dependencies, inf: all transitive dependencies. (Default: 0)
 
 .. option:: -g TEMPLATE_PATH, --template-path TEMPLATE_PATH
 
     The path to the Jinja2 html template (please make sure to use .html or .j2 extensions).
+
+.. option::  --python-venv PYTHON_VENV
+
+    The path to the Python virtual environment of the target software component.
 
 -----------
 Environment

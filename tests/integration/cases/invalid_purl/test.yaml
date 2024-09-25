@@ -17,5 +17,4 @@ steps:
     - invalid-purl
     - --repo-path
     - https://github.com/apache/maven
-    - --skip-deps
   expect_fail: true

@@ -14,8 +14,7 @@ steps:
   options:
     command_args:
     - --repo-path
-    - https://github.com/apache/maven --skip-deps
-    - --skip-deps
+    - https://github.com/apache/maven
   env:
     GITHUB_TOKEN:
   expect_fail: true

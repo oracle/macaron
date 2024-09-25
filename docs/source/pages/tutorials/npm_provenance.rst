@@ -42,7 +42,7 @@ To perform an analysis on the latest version of semver (when this tutorial was w
 
 .. code-block:: shell
 
-    ./run_macaron.sh analyze -purl pkg:npm/semver@7.6.2 --skip-deps
+    ./run_macaron.sh analyze -purl pkg:npm/semver@7.6.2
 
 The analysis involves Macaron downloading the contents of the target repository to the configured, or default, ``output`` folder. Results from the analysis, including checks, are stored in the database found at ``output/macaron.db``  (See :ref:`Output Files Guide <output_files_guide>`). Once the analysis is complete, Macaron will also produce a report in the form of a HTML file.
 
