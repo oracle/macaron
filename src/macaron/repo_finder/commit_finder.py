@@ -499,6 +499,8 @@ def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
 
     # If any tag exactly matches the version, return it immediately.
     # Also allow for an optional 'v' prefix, and tags of the form: <release_prefix>/<artifact_name>-<version>.
+    # Generally version identifiers do not contain the `v` prefix, while tags often do. If a version does contain such
+    # a prefix, it is expected to be in the tag also. If not, the `v` prefix is left as optional.
     v_prefix = "(?:v)?" if not version.lower().startswith("v") else ""
     escaped_version = re.escape(version)
     almost_exact_pattern = re.compile(
