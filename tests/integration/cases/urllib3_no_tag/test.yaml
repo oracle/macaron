@@ -18,7 +18,6 @@ steps:
     - main
     - --digest
     - 87a0ecee6e691fe5ff93cd000c0158deebef763b
-    - --skip-deps
 - name: Run macaron verify-policy to verify failed check
   kind: verify
   options:

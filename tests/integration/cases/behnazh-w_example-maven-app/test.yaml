@@ -24,7 +24,6 @@ steps:
     - pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0-SNAPSHOT?type=jar
     - --repo-path
     - example-maven-app
-    - --skip-deps
     expectation: witness_provenance_expectation.cue
     provenance: witness_provenance.jsonl
 - name: Run macaron analyze on the remote repository with GitHub provenance.
@@ -33,7 +32,6 @@ steps:
     command_args:
     - --package-url
     - pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar
-    - --skip-deps
     expectation: github_provenance_expectation.cue
     provenance: github_provenance.jsonl
 - name: Run macaron verify-policy
@@ -60,7 +58,6 @@ steps:
     - https://github.com/behnazh-w/example-maven-app
     - -d
     - 2deca75ed5dd365eaf1558a82347b1f11306135f
-    - --skip-deps
     provenance: github_provenance.jsonl
 - name: Run macaron analyze, validate user input of repo and commit (via purl) vs provenance
   kind: analyze
@@ -68,7 +65,6 @@ steps:
     command_args:
     - -purl
     - pkg:github/behnazh-w/example-maven-app@2deca75
-    - --skip-deps
     provenance: github_provenance.jsonl
 - name: Run macaron analyze, validate user input of repo and commit (via purl with tag) vs provenance
   kind: analyze
@@ -76,5 +72,4 @@ steps:
     command_args:
     - -purl
     - pkg:github/behnazh-w/example-maven-app@1.0
-    - --skip-deps
     provenance: github_provenance.jsonl

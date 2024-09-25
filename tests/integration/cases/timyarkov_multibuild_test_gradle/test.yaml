@@ -21,6 +21,7 @@ steps:
     - main
     - -d
     - a8b0efe24298bc81f63217aaa84776c3d48976c5
+    - --deps-depth=1
 - name: Compare dependency resolution result
   kind: compare
   options:

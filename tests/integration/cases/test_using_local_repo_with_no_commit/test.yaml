@@ -21,5 +21,4 @@ steps:
     command_args:
     - -rp
     - empty_repo
-    - --skip-deps
   expect_fail: true

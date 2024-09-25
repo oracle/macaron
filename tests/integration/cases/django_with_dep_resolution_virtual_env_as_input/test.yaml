@@ -30,6 +30,7 @@ steps:
     - pkg:pypi/django@5.0.6
     - --python-venv
     - ./django_venv
+    - --deps-depth=1
 - name: Run macaron verify-policy to check the dependencies
   kind: verify
   options:
@@ -47,14 +48,12 @@ steps:
 - name: Run macaron analyze on deps recursively
   kind: analyze
   options:
-    main_args:
-    - --defaults-path
-    - configurations.ini
     command_args:
     - -purl
     - pkg:pypi/django@5.0.6
     - --python-venv
     - ./django_venv
+    - --deps-depth=inf
 - name: Run macaron verify-policy to check for all transitive dependencies.
   kind: verify
   options:

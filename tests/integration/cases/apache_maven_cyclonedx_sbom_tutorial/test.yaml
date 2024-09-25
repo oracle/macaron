@@ -15,6 +15,7 @@ steps:
     command_args:
     - -purl
     - pkg:maven/org.apache.maven/maven@3.9.7?type=pom
+    - --deps-depth=1
     sbom: sbom.json
 - name: Compare dependencies report.
   kind: compare

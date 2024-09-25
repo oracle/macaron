@@ -14,7 +14,6 @@ steps:
     command_args:
     - -rp
     - https://github.com/apache/maven
-    - --skip-deps
     - -g
     - does/not/exist
   expect_fail: true

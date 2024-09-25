@@ -17,7 +17,6 @@ steps:
     command_args:
     - -purl
     - pkg:pypi/urllib3@2.0.0a1
-    - --skip-deps
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:

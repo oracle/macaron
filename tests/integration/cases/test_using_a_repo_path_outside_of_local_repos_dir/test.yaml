@@ -21,5 +21,4 @@ steps:
     command_args:
     - -rp
     - ../
-    - --skip-deps
   expect_fail: true

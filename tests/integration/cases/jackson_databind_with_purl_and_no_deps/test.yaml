@@ -14,7 +14,6 @@ steps:
     command_args:
     - -purl
     - pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.0-rc1
-    - --skip-deps
 - name: Run verify-policy
   kind: verify
   options:

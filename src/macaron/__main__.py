@@ -31,7 +31,23 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None:
     """Run the SLSA checks against a single target repository."""
+    deps_depth = None
+    if analyzer_single_args.deps_depth == "inf":
+        deps_depth = -1
+    else:
+        try:
+            deps_depth = int(analyzer_single_args.deps_depth)
+        except ValueError:
+            logger.error("Please provide '1', '0' or 'inf' to `--deps-depth`")
+            sys.exit(os.EX_USAGE)
+
+    if deps_depth not in [-1, 0, 1]:
+        logger.error("Please provide '1', '0' or 'inf' to `--deps-depth`")
+        sys.exit(os.EX_USAGE)
+
     if not (analyzer_single_args.repo_path or analyzer_single_args.package_url):
+        # We don't mention --config-path as a possible option in this log message as it going to be move soon.
+        # See: https://github.com/oracle/macaron/issues/417
         logger.error(
             """Analysis target missing. Please provide a package url (PURL) and/or repo path.
             Examples of a PURL can be seen at https://github.com/package-url/purl-spec:
@@ -128,10 +144,16 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
             logger.error("Error while loading the input provenance file: %s", error)
             sys.exit(os.EX_DATAERR)
 
+    if analyzer_single_args.skip_deps:
+        logger.warning(
+            "The --skip-deps flag has been deprecated and WILL NOT do anything. "
+            + "Dependency resolution is off by default. This flag does nothing and will be removed in the next release."
+        )
+
     status_code = analyzer.run(
         run_config,
         analyzer_single_args.sbom_path,
-        analyzer_single_args.skip_deps,
+        deps_depth,
         provenance_payload=prov_payload,
     )
     sys.exit(status_code)
@@ -312,7 +334,10 @@ def main(argv: list[str] | None = None) -> None:
         required=False,
         type=str,
         default="",
-        help=("The path to the SBOM of the analysis target."),
+        help=(
+            "The path to the SBOM of the analysis target. If this is set, "
+            + "dependency resolution must be enabled with '--deps-depth'."
+        ),
     )
 
     single_analyze_parser.add_argument(
@@ -375,7 +400,19 @@ def main(argv: list[str] | None = None) -> None:
         required=False,
         action="store_true",
         default=False,
-        help=("Skip automatic dependency analysis."),
+        help=(
+            "DEPRECATED. Dependency resolution is off by default. This flag does nothing and will be removed in the next release."
+        ),
+    )
+
+    single_analyze_parser.add_argument(
+        "--deps-depth",
+        required=False,
+        default="0",
+        help=(
+            "The depth of the dependency resolution. 0: disable, 1: direct dependencies, "
+            + "inf: all transitive dependencies. (Default: 0)"
+        ),
     )
 
     single_analyze_parser.add_argument(
@@ -390,7 +427,10 @@ def main(argv: list[str] | None = None) -> None:
     single_analyze_parser.add_argument(
         "--python-venv",
         required=False,
-        help=("The path to the Python virtual environment of the target software component."),
+        help=(
+            "The path to the Python virtual environment of the target software component. "
+            + "If this is set, dependency resolution must be enabled with '--deps-depth'."
+        ),
     )
 
     # Dump the default values.

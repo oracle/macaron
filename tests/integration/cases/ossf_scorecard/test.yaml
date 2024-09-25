@@ -17,7 +17,6 @@ steps:
     command_args:
     - --package-url
     - pkg:github/ossf/scorecard@v4.13.1
-    - --skip-deps
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:

@@ -19,7 +19,6 @@ steps:
     - https://github.com/slsa-framework/slsa-verifier
     - -d
     - 6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6
-    - --skip-deps
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:
@@ -35,7 +34,6 @@ steps:
     - https://github.com/slsa-framework/slsa-verifier
     - -d
     - 6fb4f7e2dd9c2f5d4f55fa88f6796278a7bba6d6
-    - --skip-deps
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:
