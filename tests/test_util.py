@@ -1,14 +1,19 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
 This module test the Util methods
 """
-
+from collections.abc import Callable
 from unittest import TestCase
 from unittest.mock import call, patch
 
+from pytest_httpserver import HTTPServer
+from werkzeug import Request, Response
+
 from macaron import util
+from macaron.config.defaults import defaults
+from macaron.util import send_get_http_raw
 
 
 class TestUtil(TestCase):
@@ -78,3 +83,55 @@ class TestUtil(TestCase):
                             call("/src/path/foo/file2", "/target/path/foo/file2"),
                         ]
                     )
+
+
+def _response_generator(target_value: int) -> Callable[[Request], Response]:
+    """Return a generator with closure so a value can be tracked across multiple invocations."""
+    value = 0
+
+    def generator(request: Request) -> Response:  # pylint: disable=unused-argument
+        """Add the next value as a header and adjust the status code based on the value."""
+        nonlocal value, target_value
+        value += 1
+        response = Response()
+        response.status_code = 403 if value <= (target_value + 1) else 200
+        response.headers["X-VALUE"] = str(value)
+        return response
+
+    return generator
+
+
+def _http_setup(retries: int, httpserver: HTTPServer) -> str:
+    """Set up the http server for a GET test."""
+    # Get a localhost URL.
+    mocked_url: str = httpserver.url_for("")
+
+    # Create and assign the stateful handler.
+    handler = _response_generator(retries)
+    httpserver.expect_request("").respond_with_handler(handler)
+    return mocked_url
+
+
+def test_get_http_partial_failure(httpserver: HTTPServer) -> None:
+    """Test the http GET operation when some errors are received before the request succeeds."""
+    # Retrieve the allowed number of retries on a failed request and reduce it by 1.
+    target_value = defaults.getint("requests", "error_retries", fallback=5) - 1
+
+    mocked_url = _http_setup(target_value, httpserver)
+
+    # Test for a correct response after the expected number of retries.
+    response = send_get_http_raw(mocked_url)
+    assert response
+    assert "X-VALUE" in response.headers
+    assert response.headers["X-VALUE"] == str(target_value + 2)
+
+
+def test_get_http_complete_failure(httpserver: HTTPServer) -> None:
+    """Test the http GET operation when too many errors are received and the request fails."""
+    # Retrieve the allowed number of retries on a failed request.
+    target_value = defaults.getint("requests", "error_retries", fallback=5)
+
+    mocked_url = _http_setup(target_value, httpserver)
+
+    # Assert the request fails and returns nothing.
+    assert send_get_http_raw(mocked_url) is None
