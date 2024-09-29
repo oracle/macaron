@@ -174,8 +174,16 @@ souffle:
 .PHONY: gnu-sed
 gnu-sed:
 	if [ "$(OS_DISTRO)" == "Darwin" ]; then \
-		brew install gnu-sed; \
-	fi
+	  if ! command -v gsed; then \
+	    if command -v brew; then \
+	      brew install gnu-sed; \
+	    elif command -v port; then \
+	      sudo port install gsed; \
+	    else \
+	      echo "Unable to install GNU sed on macOS. Please install it manually." && exit 1; \
+	    fi; \
+	  fi; \
+	fi;
 
 # Install or upgrade an existing virtual environment based on the
 # package dependencies declared in pyproject.toml.
