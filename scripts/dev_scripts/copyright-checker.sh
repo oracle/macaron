@@ -52,6 +52,12 @@ for f in $files; do
     fi
 done
 
+SED="sed"
+# Use gnu-sed (gsed) on mac.
+if [[ "$(uname)" == "Darwin" ]]; then
+    SED="gsed"
+fi
+
 if [ ${#missing_copyright_files[@]} -ne 0 ]; then
     for f in "${missing_copyright_files[@]}"; do
 
@@ -86,14 +92,14 @@ if [ ${#missing_copyright_files[@]} -ne 0 ]; then
             shebang_line=$(grep -m 1 -n "#!" "$f")
             if [[ -z "$shebang_line" ]];then
                 # If there is no shebang, insert at the first line.
-                sed -i "1s/^/$expected\n\n/" "$f"
+                $SED -i "1s/^/$expected\n\n/" "$f"
             else
                 # If there is a shebang, append to the end of the line.
-                sed -i "$(echo "$shebang_line" | cut -d : -f 1)""s/$/\n\n$expected/" "$f"
+                $SED -i "$(echo "$shebang_line" | cut -d : -f 1)""s/$/\n\n$expected/" "$f"
             fi
         else
             echo "Copyright header needs update for $f."
-            sed -i "$line_number""s/^.*/$expected/" "$f"
+            $SED -i "$line_number""s/^.*/$expected/" "$f"
         fi
     done
     echo "Copyright headers have been automatically added/updated. Please review and stage the changes before running git commit again."
