@@ -4,9 +4,13 @@
 """This module contains the JavaRepoFinder class to be used for finding Java repositories."""
 import logging
 import re
+from typing import Any
 from xml.etree.ElementTree import Element  # nosec
 
+import requests
 from packageurl import PackageURL
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
 
 from macaron.config.defaults import defaults
 from macaron.parsers.pomparser import parse_pom_string
@@ -301,3 +305,46 @@ class JavaRepoFinder(BaseRepoFinder):
             resolved_values.append(value)
 
         return resolved_values
+
+    @staticmethod
+    def get_deps_dev_info(group: str, artifact: str, version: str) -> dict[str, Any]:
+        """Get additional project information from deps.dev for the given artifact.
+
+        info:
+          - dependentCount (how many other artifacts depend on this)
+          - repo_link (link to the repository)
+          - star_count (number of stars on the repository)
+          - fork_count (number of forks on the repository)
+        """
+        dd_info: dict[str, Any] = {}
+
+        dep_dev_url = f"https://deps.dev/_/s/maven/p/{group}%3A{artifact}/v/{version}"
+        session = requests.Session()
+        retry = Retry(connect=20, backoff_factor=0.5)
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount("https://", adapter)
+        response = session.get(dep_dev_url, timeout=10)
+        if response.status_code != 200:
+            logger.warning("Failed to fetch project info for %s:%s. Url: %s", group, artifact, dep_dev_url)
+            return dd_info
+
+        resp_json = response.json()
+
+        version_info = resp_json.get("version", None)
+        if version_info is None:
+            logger.warning("No version info found for %s:%s. Url: %s", group, artifact, dep_dev_url)
+            return dd_info
+
+        dd_info["dep_count"] = version_info.get("dependentCount", None)
+        links_info = version_info.get("links", None)
+        if links_info is not None:
+            dd_info["repo_link"] = links_info.get("repo", None)
+
+        projects = version_info.get("projects", None)
+        if projects:
+            projects = sorted(projects, key=lambda x: x.get("stars", 0), reverse=True)
+            prj = projects[0]
+            dd_info["star_count"] = prj.get("stars", None)
+            dd_info["fork_count"] = prj.get("forks", None)
+
+        return dd_info
