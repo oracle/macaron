@@ -42,6 +42,7 @@ from macaron.repo_finder.provenance_extractor import (
     extract_repo_and_commit_from_provenance,
 )
 from macaron.repo_finder.provenance_finder import ProvenanceFinder, find_provenance_from_ci
+from macaron.repo_finder.repo_verifier import RepoVerifier
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import VirtualReleaseAsset
@@ -448,6 +449,8 @@ class Analyzer:
         git_service = self._determine_git_service(analyze_ctx)
         self._determine_ci_services(analyze_ctx, git_service)
         self._determine_build_tools(analyze_ctx, git_service)
+        if parsed_purl is not None:
+            self._verify_repository_link(parsed_purl, analyze_ctx)
         self._determine_package_registries(analyze_ctx)
 
         if not provenance_payload:
@@ -1133,6 +1136,33 @@ class Analyzer:
                             package_registry=package_registry,
                         )
                     )
+
+    def _verify_repository_link(self, parsed_purl: PackageURL, analyze_ctx: AnalyzeContext) -> None:
+        """Verify whether the claimed repository links back to the artifact."""
+        if not analyze_ctx.component.repository:
+            logger.debug("The repository is not available. Skipping the repository verification.")
+            return
+
+        if parsed_purl.namespace is None or parsed_purl.name is None or parsed_purl.version is None:
+            logger.debug("The PURL is not complete. Skipping the repository verification.")
+            return
+
+        build_tools = (
+            analyze_ctx.dynamic_data["build_spec"]["tools"] or analyze_ctx.dynamic_data["build_spec"]["purl_tools"]
+        )
+
+        analyze_ctx.dynamic_data["repo_verification"] = []
+
+        for build_tool in build_tools:
+            repo_verifier = RepoVerifier(
+                namespace=parsed_purl.namespace,
+                name=parsed_purl.name,
+                version=parsed_purl.version,
+                claimed_repo_url=analyze_ctx.component.repository.remote_path,
+                claimed_repo_fs=analyze_ctx.component.repository.fs_path,
+                build_tool=build_tool,
+            )
+            analyze_ctx.dynamic_data["repo_verification"].append(repo_verifier.verify_claimed_repo())
 
 
 class DuplicateCmpError(DuplicateError):
