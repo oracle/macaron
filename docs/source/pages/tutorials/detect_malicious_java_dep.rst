@@ -3,9 +3,9 @@
 
 .. _detect-manual-upload-java-dep:
 
----------------------------------------------------------------
-Detecting Java dependencies manually uploaded to Maven Central.
----------------------------------------------------------------
+--------------------------------------------------------------
+Detecting Java dependencies manually uploaded to Maven Central
+--------------------------------------------------------------
 
 In this tutorial we show how Macaron can determine whether the dependencies of a Java project are built
 and published via transparent CI workflows or manually uploaded to Maven Central. You can also
