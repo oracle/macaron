@@ -1,7 +1,7 @@
 # Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This check analyzes a jar by calling a JVM-based cli tool."""
+"""A check to verify if repositories found for maven libraries can be linked backed to the artifact."""
 
 import logging
 
