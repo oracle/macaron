@@ -18,4 +18,5 @@ Policy("test_policy", component_id, "") :-
     is_repo_url(component_id, "https://github.com/micronaut-projects/micronaut-test").
 
 apply_policy_to("test_policy", component_id) :-
-    is_component(component_id, "pkg:github.com/micronaut-projects/micronaut-test@5b81340f319a2287cb2e81ddec0154c0ea2510cf").
+    is_component(component_id, purl),
+    match("pkg:maven/io.micronaut.test/micronaut-test-junit5@.*", purl).
