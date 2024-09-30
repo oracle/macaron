@@ -166,10 +166,10 @@ souffle:
 	        echo "Unable to install Souffle. Please install it manually." && exit 0; \
 	      fi;; \
 	    *) \
-	        echo "Unsupported OS distribution: $(OS_DISTRO)"; exit 0;; \
+	      echo "Unsupported OS distribution: $(OS_DISTRO)"; exit 0;; \
 	  esac; \
 	fi && \
-	command -v souffle || true
+	command -v souffle
 
 # Install gnu-sed on mac using homebrew
 .PHONY: gnu-sed
