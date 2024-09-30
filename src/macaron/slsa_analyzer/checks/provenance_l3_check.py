@@ -147,7 +147,7 @@ class ProvenanceL3Check(BaseCheck):
             )
 
             output = verifier_output.stdout.decode("utf-8")
-            if "PASSED: Verified SLSA provenance" in output:
+            if "PASSED: SLSA verification passed" in output:
                 result = _VerifyArtifactResult(_VerifyArtifactResultType.PASSED, asset_name)
             else:
                 result = _VerifyArtifactResult(_VerifyArtifactResultType.FAILED, asset_name)
