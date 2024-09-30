@@ -213,6 +213,7 @@ fail-under = 10.0
 suggestion-mode = true  # Remove this setting when pylint v4 is released.
 load-plugins = [
     "pylint.extensions.for_any_all",
+    "pylint.extensions.set_membership",
 ]
 disable = [
     "fixme",
