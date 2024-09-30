@@ -161,7 +161,4 @@ def is_valid_digest_set(digest: dict[str, JsonType]) -> TypeGuard[dict[str, str]
         ``True`` if the digest set is valid according to the spec, in which case its type
         is narrowed to a ``dict[str, str]``; ``False`` otherwise.
     """
-    for key in digest:
-        if not isinstance(digest[key], str):
-            return False
-    return True
+    return all(isinstance(digest[key], str) for key in digest)

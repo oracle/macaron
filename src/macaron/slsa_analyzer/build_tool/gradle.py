@@ -73,11 +73,7 @@ class Gradle(BaseBuildTool):
             True if this build tool is detected, else False.
         """
         gradle_config_files = self.build_configs + self.entry_conf
-        for file in gradle_config_files:
-            if file_exists(repo_path, file):
-                return True
-
-        return False
+        return any(file_exists(repo_path, file) for file in gradle_config_files)
 
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
         """Prepare the necessary wrapper files for running the build.

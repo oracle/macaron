@@ -164,10 +164,7 @@ def is_valid_digest_set(digest: JsonType) -> bool:
     """
     if not isinstance(digest, dict):
         return False
-    for key in digest:
-        if not isinstance(digest[key], str):
-            return False
-    return True
+    return all(isinstance(digest[key], str) for key in digest)
 
 
 def _validate_property(

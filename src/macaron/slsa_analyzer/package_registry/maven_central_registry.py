@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides abstractions for the Maven Central package registry."""
@@ -100,10 +100,7 @@ class MavenCentralRegistry(PackageRegistry):
             based on the given build tool.
         """
         compatible_build_tool_classes = [Maven, Gradle]
-        for build_tool_class in compatible_build_tool_classes:
-            if isinstance(build_tool, build_tool_class):
-                return True
-        return False
+        return any(isinstance(build_tool, build_tool_class) for build_tool_class in compatible_build_tool_classes)
 
     def find_publish_timestamp(self, group_id: str, artifact_id: str, version: str | None = None) -> datetime:
         """Make a search request to Maven Central to find the publishing timestamp of an artifact.
