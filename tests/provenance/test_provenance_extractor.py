@@ -9,7 +9,7 @@ from packageurl import PackageURL
 
 from macaron.errors import ProvenanceError
 from macaron.json_tools import JsonType, json_extract
-from macaron.repo_finder.provenance_extractor import (
+from macaron.provenance.provenance_extractor import (
     check_if_repository_purl_and_url_match,
     extract_repo_and_commit_from_provenance,
 )

@@ -20,6 +20,7 @@ Subpackages
    macaron.output_reporter
    macaron.parsers
    macaron.policy_engine
+   macaron.provenance
    macaron.repo_finder
    macaron.slsa_analyzer
    macaron.vsa

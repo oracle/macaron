@@ -52,6 +52,8 @@ class ChecksOutputs(TypedDict):
     """The commit digest extracted from provenance, if applicable."""
     provenance_verified: bool
     """True if the provenance exists and has been verified against a signed companion provenance."""
+    provenance_l3_verified: bool
+    """True if the provenance exists and has been verified to the SLSA level 3 standard."""
 
 
 class AnalyzeContext:
@@ -106,6 +108,7 @@ class AnalyzeContext:
             provenance_repo_url=None,
             provenance_commit_digest=None,
             provenance_verified=False,
+            provenance_l3_verified=False,
         )
 
     @property

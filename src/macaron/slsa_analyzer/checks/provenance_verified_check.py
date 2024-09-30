@@ -68,7 +68,7 @@ class ProvenanceVerifiedCheck(BaseCheck):
             The result of the check.
         """
         if ctx.dynamic_data["is_inferred_prov"] or not ctx.dynamic_data["provenance"]:
-            # Provenance is not available.
+            # 0. Provenance is not available.
             return CheckResultData(
                 result_tables=[ProvenanceVerifiedFacts(build_level=0, confidence=Confidence.HIGH)],
                 result_type=CheckResultType.FAILED,
@@ -79,22 +79,20 @@ class ProvenanceVerifiedCheck(BaseCheck):
         if predicate:
             build_type = json_extract(predicate, ["buildType"], str)
 
-        if not ctx.dynamic_data["provenance_verified"]:
-            # Provenance is not verified.
+        if (
+            build_type == "https://github.com/slsa-framework/slsa-github-generator/generic@v1"
+            and ctx.dynamic_data["provenance_l3_verified"]
+        ):
+            # 3. Provenance is created by the SLSA GitHub generator and verified.
             return CheckResultData(
                 result_tables=[
-                    ProvenanceVerifiedFacts(
-                        build_level=1,
-                        build_type=build_type,
-                        confidence=Confidence.HIGH,
-                    )
+                    ProvenanceVerifiedFacts(build_level=3, build_type=build_type, confidence=Confidence.HIGH)
                 ],
-                result_type=CheckResultType.FAILED,
+                result_type=CheckResultType.PASSED,
             )
 
-        if build_type != "https://github.com/slsa-framework/slsa-github-generator/generic@v1":
-            # Provenance is verified but the build service does not isolate generation in the control plane from the
-            # untrusted build process.
+        if ctx.dynamic_data["provenance_verified"]:
+            # 2. Provenance is verified.
             return CheckResultData(
                 result_tables=[
                     ProvenanceVerifiedFacts(
@@ -106,10 +104,16 @@ class ProvenanceVerifiedCheck(BaseCheck):
                 result_type=CheckResultType.PASSED,
             )
 
-        # Provenance is created by the SLSA GitHub generator and verified.
+        # 1. Provenance is not verified.
         return CheckResultData(
-            result_tables=[ProvenanceVerifiedFacts(build_level=3, build_type=build_type, confidence=Confidence.HIGH)],
-            result_type=CheckResultType.PASSED,
+            result_tables=[
+                ProvenanceVerifiedFacts(
+                    build_level=1,
+                    build_type=build_type,
+                    confidence=Confidence.HIGH,
+                )
+            ],
+            result_type=CheckResultType.FAILED,
         )
 
 

@@ -14,7 +14,7 @@ from packageurl import PackageURL
 from pydriller import Git
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.repo_finder.provenance_finder import find_gav_provenance, find_npm_provenance, find_provenance_from_ci
+from macaron.provenance.provenance_finder import find_gav_provenance, find_npm_provenance, find_provenance_from_ci
 from macaron.slsa_analyzer.ci_service import BaseCIService, CircleCI, GitHubActions, GitLabCI, Jenkins, Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry, NPMRegistry
@@ -165,8 +165,9 @@ def test_provenance_on_unsupported_ci(macaron_path: Path, service: BaseCIService
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     ctx.dynamic_data["ci_services"] = [ci_info]
 
-    provenance = find_provenance_from_ci(ctx, None)
-    assert provenance is None
+    with tempfile.TemporaryDirectory() as temp_dir:
+        provenance = find_provenance_from_ci(ctx, None, temp_dir)
+        assert provenance is None
 
 
 def test_provenance_on_supported_ci(macaron_path: Path, test_dir: Path) -> None:
@@ -190,13 +191,15 @@ def test_provenance_on_supported_ci(macaron_path: Path, test_dir: Path) -> None:
 
     # Test with a valid setup.
     git_obj = MockGit()
-    provenance = find_provenance_from_ci(ctx, git_obj)
-    assert provenance
+    with tempfile.TemporaryDirectory() as temp_dir:
+        provenance = find_provenance_from_ci(ctx, git_obj, temp_dir)
+        assert provenance
 
     # Test with a repo that doesn't have any accepted provenance.
     api_client.release = {"assets": [{"name": "attestation.intoto", "url": "URL", "size": 10}]}
-    provenance = find_provenance_from_ci(ctx, MockGit())
-    assert provenance is None
+    with tempfile.TemporaryDirectory() as temp_dir:
+        provenance = find_provenance_from_ci(ctx, MockGit(), temp_dir)
+        assert provenance is None
 
 
 def test_provenance_available_on_npm_registry(
