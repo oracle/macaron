@@ -202,7 +202,7 @@ class BuildAsCodeCheck(BaseCheck):
                                         confidence=Confidence.HIGH,
                                     )
                                 )
-                                overall_res = CheckResultType.PASSED
+                                overall_res = CheckResultType.PASSED  # pylint: disable=redefined-variable-type
                 try:
                     for build_command in ci_service.get_build_tool_commands(
                         callgraph=ci_info["callgraph"], build_tool=tool
@@ -263,7 +263,7 @@ class BuildAsCodeCheck(BaseCheck):
                                     confidence=confidence,
                                 )
                             )
-                            overall_res = CheckResultType.PASSED
+                            overall_res = CheckResultType.PASSED  # pylint: disable=redefined-variable-type
                 except CallGraphError as error:
                     logger.debug(error)
 
@@ -292,7 +292,7 @@ class BuildAsCodeCheck(BaseCheck):
                                     confidence=Confidence.LOW,
                                 )
                             )
-                            overall_res = CheckResultType.PASSED
+                            overall_res = CheckResultType.PASSED  # pylint: disable=redefined-variable-type
 
         # The check passing is contingent on at least one passing, if
         # one passes treat whole check as passing. We do still need to

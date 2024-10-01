@@ -212,6 +212,7 @@ ignore_missing_imports = true
 fail-under = 10.0
 suggestion-mode = true  # Remove this setting when pylint v4 is released.
 load-plugins = [
+    "pylint.extensions.redefined_variable_type",  # https://github.com/pylint-dev/pylint/issues/8955
 ]
 disable = [
     "fixme",
@@ -230,7 +231,6 @@ disable = [
     "too-many-public-methods",
     "too-many-return-statements",
     "too-many-statements",
-    "too-many-try-statements",
     "duplicate-code",
 ]
 
