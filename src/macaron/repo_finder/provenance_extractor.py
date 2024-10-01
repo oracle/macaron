@@ -483,6 +483,50 @@ class SLSAGithubActionsBuildDefinitionV1(ProvenanceBuildDefinition):
         return gha_workflow, invocation_url
 
 
+class SLSANPMCLIBuildDefinitionV2(ProvenanceBuildDefinition):
+    """Class representing the SLSA NPM CLI Build Definition (v12).
+
+    This class implements the abstract methods from the `ProvenanceBuildDefinition`
+    to extract build invocation details specific to the GitHub Actions build type.
+    """
+
+    #: Determines the expected ``buildType`` field in the provenance predicate.
+    expected_build_type = "https://github.com/npm/cli/gha/v2"
+
+    def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
+        """Retrieve the build invocation information from the given statement.
+
+        This method is intended to be implemented by subclasses to extract
+        specific invocation details from a provenance statement.
+
+        Parameters
+        ----------
+        statement : InTotoV1Statement | InTotoV01Statement
+            The provenance statement from which to extract the build invocation
+            details. This statement contains the metadata about the build process
+            and its associated artifacts.
+
+        Returns
+        -------
+        tuple[str | None, str | None]
+            A tuple containing two elements:
+            - The first element is the build invocation entry point (e.g., workflow name), or None if not found.
+            - The second element is the invocation URL or identifier (e.g., job URL), or None if not found.
+        """
+        if statement["predicate"] is None:
+            return None, None
+        gha_workflow = json_extract(statement["predicate"], ["invocation", "configSource", "entryPoint"], str)
+        gh_run_id = json_extract(statement["predicate"], ["invocation", "environment", "GITHUB_RUN_ID"], str)
+        repo_uri = json_extract(statement["predicate"], ["invocation", "configSource", "uri"], str)
+        repo = None
+        if repo_uri:
+            repo = _clean_spdx(repo_uri)
+        if repo is None:
+            return gha_workflow, repo
+        invocation_url = f"{repo}/" f"actions/runs/{gh_run_id}"
+        return gha_workflow, invocation_url
+
+
 class SLSAGCBBuildDefinitionV1(ProvenanceBuildDefinition):
     """Class representing the SLSA Google Cloud Build (GCB) Build Definition (v1).
 
@@ -654,6 +698,7 @@ class ProvenancePredicate:
         build_defs: list[ProvenanceBuildDefinition] = [
             SLSAGithubGenericBuildDefinitionV01(),
             SLSAGithubActionsBuildDefinitionV1(),
+            SLSANPMCLIBuildDefinitionV2(),
             SLSAGCBBuildDefinitionV1(),
             SLSAOCIBuildDefinitionV1(),
             WitnessGitLabBuildDefinitionV01(),

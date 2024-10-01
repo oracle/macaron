@@ -5,17 +5,13 @@
 
 import logging
 import urllib.parse
-from datetime import datetime, timezone
-
-import requests
 
 from macaron.config.defaults import defaults
-from macaron.errors import ConfigurationError, InvalidHTTPResponseError
+from macaron.errors import ConfigurationError
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
-from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 

@@ -3,9 +3,7 @@
 
 """Tests for the Maven Central registry."""
 
-import json
 import os
-import urllib.parse
 from datetime import datetime
 from pathlib import Path
 
@@ -129,148 +127,72 @@ def test_is_detected(
 
 
 @pytest.mark.parametrize(
-    ("group_id", "artifact_id", "version", "mc_json_path", "query_string", "expected_timestamp"),
+    ("purl", "mc_json_path", "expected_timestamp"),
     [
         (
-            "org.apache.logging.log4j",
-            "log4j-core",
-            "3.0.0-beta2",
+            "pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta2",
             "log4j-core@3.0.0-beta2-select.json",
-            "q=g:org.apache.logging.log4j+AND+a:log4j-core+AND+v:3.0.0-beta2&core=gav&rows=1&wt=json",
-            "2024-02-17T18:50:09+00:00",
+            "2024-02-17T18:50:10Z",
         ),
         (
-            "com.fasterxml.jackson.core",
-            "jackson-annotations",
-            "2.16.1",
+            "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.16.1",
             "jackson-annotations@2.16.1-select.json",
-            "q=g:com.fasterxml.jackson.core+AND+a:jackson-annotations+AND+v:2.16.1&core=gav&rows=1&wt=json",
-            "2023-12-24T04:02:40+00:00",
+            "2023-12-24T04:02:35Z",
         ),
     ],
 )
 def test_find_publish_timestamp(
     httpserver: HTTPServer,
-    tmp_path: Path,
-    group_id: str,
-    artifact_id: str,
-    version: str | None,
+    purl: str,
     mc_json_path: str,
-    query_string: str,
     expected_timestamp: str,
 ) -> None:
     """Test that the function finds the timestamp correctly."""
-    base_url_parsed = urllib.parse.urlparse(httpserver.url_for(""))
-
-    maven_central = MavenCentralRegistry()
-
-    # Set up responses of solrsearch endpoints using the httpserver plugin.
-    user_config_input = f"""
-    [package_registry.maven_central]
-    request_timeout = 20
-    search_netloc = {base_url_parsed.netloc}
-    search_scheme = {base_url_parsed.scheme}
-    """
-    user_config_path = os.path.join(tmp_path, "config.ini")
-    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
-        user_config_file.write(user_config_input)
-    # We don't have to worry about modifying the ``defaults`` object causing test
-    # pollution here, since we reload the ``defaults`` object before every test with the
-    # ``setup_test`` fixture.
-    load_defaults(user_config_path)
-    maven_central.load_defaults()
+    registry = MavenCentralRegistry()
 
     with open(os.path.join(RESOURCE_PATH, "maven_central_files", mc_json_path), encoding="utf8") as page:
-        mc_json_response = json.load(page)
+        response = page.read()
 
     httpserver.expect_request(
-        "/solrsearch/select",
-        query_string=query_string,
-    ).respond_with_json(mc_json_response)
+        "/".join(["/v3alpha", "purl", purl]),
+    ).respond_with_data(response)
 
-    publish_time_obj = maven_central.find_publish_timestamp(group_id=group_id, artifact_id=artifact_id, version=version)
+    publish_time_obj = registry.find_publish_timestamp(purl=purl, registry_url=httpserver.url_for(""))
     expected_time_obj = datetime.strptime(expected_timestamp, "%Y-%m-%dT%H:%M:%S%z")
     assert publish_time_obj == expected_time_obj
 
 
 @pytest.mark.parametrize(
-    ("group_id", "artifact_id", "version", "mc_json_path", "expected_msg"),
+    ("purl", "mc_json_path", "expected_msg"),
     [
         (
-            "org.apache.logging.log4j",
-            "log4j-core",
-            "3.0.0-beta1",
-            "log4j-core@3.0.0-beta2-select.json",
-            "Invalid response from Maven central for",
+            "pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta2",
+            "empty_log4j-core@3.0.0-beta2-select.json",
+            "Invalid response from deps.dev for (.)*",
         ),
         (
-            "org.apache.logging.log4j",
-            "log4j-core",
-            None,
-            "log4j-core@3.0.0-beta2-select.json",
-            "Invalid response from Maven central for",
-        ),
-        (
-            "org.apache.logging.log4j",
-            None,
-            "3.0.0-beta2",
-            "log4j-core@3.0.0-beta2-select.json",
-            "Invalid response from Maven central for",
-        ),
-        (
-            None,
-            "log4j-core",
-            "3.0.0-beta2",
-            "log4j-core@3.0.0-beta2-select.json",
-            "Invalid response from Maven central for (.)*",
-        ),
-        (
-            "org.apache.logging.log4j",
-            "log4j-core",
-            "3.0.0-beta2",
+            "pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta2",
             "invalid_log4j-core@3.0.0-beta2-select.json",
-            "The response returned by (.)* misses `response.docs` attribute or it is empty",
+            "The timestamp is missing in the response returned by",
         ),
     ],
 )
 def test_find_publish_timestamp_errors(
     httpserver: HTTPServer,
-    tmp_path: Path,
-    group_id: str,
-    artifact_id: str,
-    version: str | None,
+    purl: str,
     mc_json_path: str,
     expected_msg: str,
 ) -> None:
     """Test that the function handles errors correctly."""
-    base_url_parsed = urllib.parse.urlparse(httpserver.url_for(""))
-
-    maven_central = MavenCentralRegistry()
-
-    # Set up responses of solrsearch endpoints using the httpserver plugin.
-    user_config_input = f"""
-    [package_registry.maven_central]
-    request_timeout = 20
-    search_netloc = {base_url_parsed.netloc}
-    search_scheme = {base_url_parsed.scheme}
-    """
-    user_config_path = os.path.join(tmp_path, "config.ini")
-    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
-        user_config_file.write(user_config_input)
-    # We don't have to worry about modifying the ``defaults`` object causing test
-    # pollution here, since we reload the ``defaults`` object before every test with the
-    # ``setup_test`` fixture.
-    load_defaults(user_config_path)
-    maven_central.load_defaults()
+    registry = MavenCentralRegistry()
 
     with open(os.path.join(RESOURCE_PATH, "maven_central_files", mc_json_path), encoding="utf8") as page:
-        mc_json_response = json.load(page)
+        response = page.read()
 
     httpserver.expect_request(
-        "/solrsearch/select",
-        query_string="q=g:org.apache.logging.log4j+AND+a:log4j-core+AND+v:3.0.0-beta2&core=gav&rows=1&wt=json",
-    ).respond_with_json(mc_json_response)
+        "/".join(["/v3alpha", "purl", purl]),
+    ).respond_with_data(response)
 
     pat = f"^{expected_msg}"
     with pytest.raises(InvalidHTTPResponseError, match=pat):
-        maven_central.find_publish_timestamp(group_id=group_id, artifact_id=artifact_id, version=version)
+        registry.find_publish_timestamp(purl=purl, registry_url=httpserver.url_for(""))

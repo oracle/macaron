@@ -16,15 +16,12 @@ from macaron.errors import InvalidHTTPResponseError, ProvenanceError
 from macaron.json_tools import json_extract
 from macaron.repo_finder.provenance_extractor import ProvenancePredicate
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.build_tool.gradle import Gradle
-from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
-from macaron.slsa_analyzer.package_registry.maven_central_registry import MavenCentralRegistry
+from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
-from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -122,23 +119,10 @@ class ArtifactPipelineCheck(BaseCheck):
 
         # Look for the artifact in the corresponding registry and find the publish timestamp.
         artifact_published_date = None
-        package_registry_info_entries = ctx.dynamic_data["package_registries"]
-        for package_registry_info_entry in package_registry_info_entries:
-            match package_registry_info_entry:
-                # TODO: add package registries for other ecosystems.
-                case PackageRegistryInfo(
-                    build_tool=Gradle() | Maven(),
-                    package_registry=MavenCentralRegistry() as mvn_central_registry,
-                ):
-                    group_id = ctx.component.namespace
-                    artifact_id = ctx.component.name
-                    version = ctx.component.version
-                    try:
-                        artifact_published_date = mvn_central_registry.find_publish_timestamp(
-                            group_id, artifact_id, version
-                        )
-                    except InvalidHTTPResponseError as error:
-                        logger.debug(error)
+        try:
+            artifact_published_date = PackageRegistry.find_publish_timestamp(ctx.component.purl)
+        except InvalidHTTPResponseError as error:
+            logger.debug(error)
 
         # This check requires the timestamps of published artifact and its source-code commit to proceed.
         # If the timestamps are not found, we return with a fail result.
