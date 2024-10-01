@@ -215,6 +215,7 @@ load-plugins = [
     "pylint.extensions.for_any_all",
     "pylint.extensions.overlapping_exceptions",
     "pylint.extensions.set_membership",
+    "pylint.extensions.typing",
 ]
 disable = [
     "fixme",
