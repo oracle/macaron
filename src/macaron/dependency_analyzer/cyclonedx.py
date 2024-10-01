@@ -86,7 +86,7 @@ def deserialize_bom_json(file_path: Path) -> Bom:
             # This method is injected into the Bom class that is annotated by ``serializable`` but mypy is not
             # able to detect that.
             bom_from_json = Bom.from_json(json.loads(json_data))  # type: ignore[attr-defined]
-        except (ValueError, AttributeError, json.JSONDecodeError) as error:
+        except (ValueError, AttributeError) as error:
             raise CycloneDXParserError(f"Could not process the dependencies at {file_path}: {error}") from None
 
         if isinstance(bom_from_json, Bom):
