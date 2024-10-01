@@ -210,6 +210,9 @@ ignore_missing_imports = true
 # https://pylint.pycqa.org/en/latest/user_guide/configuration/index.html
 [tool.pylint.MASTER]
 fail-under = 10.0
+suggestion-mode = true
+load-plugins = [
+]
 disable = [
     "fixme",
     "line-too-long",  # Replaced by Flake8 Bugbear B950 check.
@@ -218,15 +221,16 @@ disable = [
     "too-many-arguments",
     "too-many-boolean-expressions",
     "too-many-branches",
+    "too-many-function-args",
     "too-many-instance-attributes",
     "too-many-lines",
     "too-many-locals",
     "too-many-nested-blocks",
+    "too-many-positional-arguments",
     "too-many-public-methods",
     "too-many-return-statements",
     "too-many-statements",
-    "too-many-function-args",
-    "too-many-positional-arguments",
+    "too-many-try-statements",
     "duplicate-code",
 ]
 
