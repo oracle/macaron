@@ -75,7 +75,18 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
     @staticmethod
     def get_project_info(project_url: str) -> dict[str, Any] | None:
-        """Retrieve project information from deps.dev."""
+        """Retrieve project information from deps.dev.
+
+        Parameters
+        ----------
+        project_url : str
+            The URL of the project.
+
+        Returns
+        -------
+        dict[str, Any] | None
+            The project information or None if the information could not be retrieved.
+        """
         clean_repo_url = clean_url(project_url)
         if clean_repo_url is None or clean_repo_url.hostname is None:
             logger.debug("Invalid project url format: %s", project_url)

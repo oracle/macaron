@@ -28,7 +28,13 @@ class RepoVerifierMaven(RepoVerifierBase):
     build_tool = Maven()
 
     def verify_repo(self) -> RepositoryVerificationResult:
-        """Verify whether the reported repository links back to the Maven artifact."""
+        """Verify whether the reported repository links back to the Maven artifact.
+
+        Returns
+        -------
+        RepositoryVerificationResult
+            The result of the repository verification
+        """
         if not self.namespace:
             logger.debug("No namespace provided for Maven verification.")
             return RepositoryVerificationResult(
@@ -82,6 +88,11 @@ class RepoVerifierMaven(RepoVerifierBase):
 
         This verification relies on the fact that Sonatype recognizes
         certain code hosting platforms for namespace verification on maven central.
+
+        Returns
+        -------
+        RepositoryVerificationResult
+            The result of the repository verification
         """
         if not self.namespace:
             return RepositoryVerificationResult(

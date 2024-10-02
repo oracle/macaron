@@ -24,7 +24,28 @@ def verify_repo(
     reported_repo_fs: str,
     build_tool: BaseBuildTool,
 ) -> RepositoryVerificationResult:
-    """Verify whether the repository links back to the artifact."""
+    """Verify whether the repository links back to the artifact.
+
+    Parameters
+    ----------
+    namespace : str | None
+        The namespace of the artifact.
+    name : str
+        The name of the artifact.
+    version : str
+        The version of the artifact.
+    reported_repo_url : str
+        The reported repository URL.
+    reported_repo_fs : str
+        The reported repository filesystem path.
+    build_tool : BaseBuildTool
+        The build tool used to build the package.
+
+    Returns
+    -------
+    RepositoryVerificationResult
+        The result of the repository verification
+    """
     # TODO: Add support for other build tools.
     verifier_map: dict[type[BaseBuildTool], type[RepoVerifierBase]] = {
         Maven: RepoVerifierMaven,
