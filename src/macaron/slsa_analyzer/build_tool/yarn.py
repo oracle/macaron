@@ -55,11 +55,7 @@ class Yarn(BaseBuildTool):
         #       cases like .yarnrc existing but not package-lock.json and whether
         #       they would still count as "detected"
         yarn_config_files = self.build_configs + self.package_lock + self.entry_conf
-        for file in yarn_config_files:
-            if file_exists(repo_path, file):
-                return True
-
-        return False
+        return any(file_exists(repo_path, file) for file in yarn_config_files)
 
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
         """Prepare the necessary wrapper files for running the build.

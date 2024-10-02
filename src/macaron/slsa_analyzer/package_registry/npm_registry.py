@@ -121,10 +121,7 @@ class NPMRegistry(PackageRegistry):
             logger.debug("Support for the npm registry is disabled.")
             return False
         compatible_build_tool_classes = [NPM, Yarn]
-        for build_tool_class in compatible_build_tool_classes:
-            if isinstance(build_tool, build_tool_class):
-                return True
-        return False
+        return any(isinstance(build_tool, build_tool_class) for build_tool_class in compatible_build_tool_classes)
 
     def download_attestation_payload(self, url: str, download_path: str) -> bool:
         """Download the npm attestation from npm registry.
