@@ -32,7 +32,21 @@ class RepoVerifierGradle(RepoVerifierBase):
         reported_repo_url: str,
         reported_repo_fs: str,
     ):
-        """Initialize a RepoVerifierGradle instance."""
+        """Initialize a RepoVerifierGradle instance.
+
+        Parameters
+        ----------
+        namespace : str
+            The namespace of the artifact.
+        name : str
+            The name of the artifact.
+        version : str
+            The version of the artifact.
+        reported_repo_url : str
+            The URL of the repository reported by the publisher.
+        reported_repo_fs : str
+            The file system path of the reported repository.
+        """
         super().__init__(namespace, name, version, reported_repo_url, reported_repo_fs)
 
         self.maven_verifier = RepoVerifierMaven(
@@ -44,7 +58,13 @@ class RepoVerifierGradle(RepoVerifierBase):
         )
 
     def verify_repo(self) -> RepositoryVerificationResult:
-        """Verify whether the reported repository links back to the artifact."""
+        """Verify whether the reported repository links back to the artifact.
+
+        Returns
+        -------
+        RepositoryVerificationResult
+            The result of the repository verification
+        """
         if not self.namespace:
             logger.debug("No namespace provided for Gradle verification.")
             return RepositoryVerificationResult(
@@ -81,7 +101,20 @@ class RepoVerifierGradle(RepoVerifierBase):
         )
 
     def _extract_group_id_from_gradle_manifest(self, file_path: Path | None, delimiter: str = "=") -> str | None:
-        """Extract the group id from a gradle build or config file."""
+        """Extract the group id from a gradle build or config file.
+
+        Parameters
+        ----------
+        file_path : Path | None
+            The path to the file.
+        delimiter : str
+            The delimiter used in the file.
+
+        Returns
+        -------
+        str | None
+            The extracted group id. None if not found.
+        """
         if not file_path:
             logger.debug("Could not find the file %s in the repository: %s", file_path, self.reported_repo_url)
             return None
@@ -99,13 +132,16 @@ class RepoVerifierGradle(RepoVerifierBase):
         return None
 
     def _extract_group_id_from_properties(self) -> str | None:
+        """Extract the group id from the gradle.properties file."""
         gradle_properties = find_file_in_repo(Path(self.reported_repo_fs), "gradle.properties")
         return self._extract_group_id_from_gradle_manifest(gradle_properties)
 
     def _extract_group_id_from_build_groovy(self) -> str | None:
+        """Extract the group id from the build.gradle file."""
         build_gradle = find_file_in_repo(Path(self.reported_repo_fs), "build.gradle")
         return self._extract_group_id_from_gradle_manifest(build_gradle, delimiter=" ")
 
     def _extract_group_id_from_build_kotlin(self) -> str | None:
+        """Extract the group id from the build.gradle.kts file."""
         build_gradle = find_file_in_repo(Path(self.reported_repo_fs), "build.gradle.kts")
         return self._extract_group_id_from_gradle_manifest(build_gradle, delimiter="=")

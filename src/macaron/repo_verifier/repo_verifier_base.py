@@ -19,6 +19,18 @@ def find_file_in_repo(root_dir: Path, filename: str) -> Path | None:
     """Find the highest level file with a given name in a local repository.
 
     This function ignores certain paths that are not under the main source code directories.
+
+    Parameters
+    ----------
+    root_dir : Path
+        The root directory of the repository.
+    filename : str
+        The name of the file to search for.
+
+    Returns
+    -------
+    Path | None
+        The path to the file if it exists, otherwise
     """
     if not os.path.exists(root_dir) or not os.path.isdir(root_dir):
         return None
@@ -106,4 +118,10 @@ class RepoVerifierBase(abc.ABC):
 
     @abc.abstractmethod
     def verify_repo(self) -> RepositoryVerificationResult:
-        """Verify whether the repository links back to the artifact."""
+        """Verify whether the repository links back to the artifact.
+
+        Returns
+        -------
+        RepositoryVerificationResult
+            The result of the repository verification
+        """
