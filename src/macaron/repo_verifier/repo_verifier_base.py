@@ -60,13 +60,13 @@ def find_file_in_repo(root_dir: Path, filename: str) -> Path | None:
 class RepositoryVerificationStatus(str, Enum):
     """A class to store the status of the repo verification."""
 
-    # We found evidence to prove that the repository can be linked back to the publisher of the artifact.
+    #: We found evidence to prove that the repository can be linked back to the publisher of the artifact.
     PASSED = "passed"
 
-    # We found evidence showing that the repository is not the publisher of the artifact.
+    #: We found evidence showing that the repository is not the publisher of the artifact.
     FAILED = "failed"
 
-    # We could not find any evidence to prove or disprove that the repository can be linked back to the artifact.
+    #: We could not find any evidence to prove or disprove that the repository can be linked back to the artifact.
     UNKNOWN = "unknown"
 
 
@@ -74,8 +74,13 @@ class RepositoryVerificationStatus(str, Enum):
 class RepositoryVerificationResult:
     """A class to store the information about repository verification."""
 
+    #: The status of the repository verification.
     status: RepositoryVerificationStatus
+
+    #: The reason for the verification result.
     reason: str
+
+    #: The build tool used to build the package.
     build_tool: BaseBuildTool
 
 
