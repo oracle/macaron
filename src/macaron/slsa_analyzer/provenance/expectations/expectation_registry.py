@@ -33,7 +33,7 @@ class ExpectationRegistry:
 
         for expectation_path in expectation_paths:
             _, ext = os.path.splitext(expectation_path)
-            if ext in (".cue",):
+            if ext == ".cue":
                 expectation = CUEExpectation.make_expectation(expectation_path)
                 if expectation and expectation.target:
                     self.expectations[expectation.target] = expectation

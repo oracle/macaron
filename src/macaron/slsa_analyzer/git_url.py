@@ -637,7 +637,7 @@ def parse_remote_url(
     res_netloc = ""
 
     # e.g., https://github.com/owner/project.git
-    if parsed_url.scheme in ("http", "https", "ftp", "ftps", "git+https"):
+    if parsed_url.scheme in {"http", "https", "ftp", "ftps", "git+https"}:
         if parsed_url.netloc not in allowed_git_service_hostnames:
             return None
         path_params = parsed_url.path.strip("/").split("/")
@@ -651,7 +651,7 @@ def parse_remote_url(
     # e.g.:
     #   ssh://git@hostname:port/owner/project.git
     #   ssh://git@hostname:owner/project.git
-    elif parsed_url.scheme in ("ssh", "git+ssh"):
+    elif parsed_url.scheme in {"ssh", "git+ssh"}:
         user_host, _, port = parsed_url.netloc.partition(":")
         user, _, host = user_host.rpartition("@")
 

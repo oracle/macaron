@@ -319,7 +319,7 @@ def build_call_graph_from_node(node: GitHubWorkflowNode, repo_path: str) -> None
                     # Right now, the script with the default shell is passed to the parser, which will fail
                     # if the runner is Windows and Powershell is used. But there is no easy way to avoid passing
                     # the script because that means we need to accurately determine the runner's OS.
-                    if step.get("run") and ("shell" not in step or step["shell"] in ["bash", "sh"]):
+                    if step.get("run") and ("shell" not in step or step["shell"] in {"bash", "sh"}):
                         try:
                             name = "UNKNOWN"
                             node_id = None

@@ -62,12 +62,12 @@ def find_repo(purl: PackageURL) -> str:
     repo_finder: BaseRepoFinder
     if purl.type == "maven":
         repo_finder = JavaRepoFinder()
-    elif defaults.getboolean("repofinder", "use_open_source_insights") and purl.type in [
+    elif defaults.getboolean("repofinder", "use_open_source_insights") and purl.type in {
         "pypi",
         "nuget",
         "cargo",
         "npm",
-    ]:
+    }:
         repo_finder = DepsDevRepoFinder()
     else:
         logger.debug("No Repo Finder found for package type: %s of %s", purl.type, purl)
