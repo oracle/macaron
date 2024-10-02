@@ -1,7 +1,8 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This DatabaseManager module handles the sqlite database connection."""
+import collections.abc
 import functools
 import logging
 import os
@@ -69,7 +70,7 @@ _P = typing.ParamSpec("_P")
 class cache_return(typing.Generic[_T, _P]):  # pylint: disable=invalid-name # noqa: N801
     """The decorator to create a singleton DB session."""
 
-    def __init__(self, function: typing.Callable[_P, _T]) -> None:
+    def __init__(self, function: collections.abc.Callable[_P, _T]) -> None:
         functools.update_wrapper(self, function)
         self.function = function
 
