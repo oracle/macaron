@@ -12,7 +12,7 @@ from collections import defaultdict
 from typing import Any, TypedDict
 
 from macaron.database.table_definitions import Component, SLSALevel
-from macaron.repo_finder.repo_verifier import RepositoryVerificationResult
+from macaron.repo_verifier.repo_verifier import RepositoryVerificationResult
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.git_service import BaseGitService
