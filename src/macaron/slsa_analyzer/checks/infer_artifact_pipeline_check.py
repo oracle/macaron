@@ -19,7 +19,6 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
-from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
 
@@ -119,10 +118,15 @@ class ArtifactPipelineCheck(BaseCheck):
 
         # Look for the artifact in the corresponding registry and find the publish timestamp.
         artifact_published_date = None
-        try:
-            artifact_published_date = PackageRegistry.find_publish_timestamp(ctx.component.purl)
-        except InvalidHTTPResponseError as error:
-            logger.debug(error)
+        for registry_info in ctx.dynamic_data["package_registries"]:
+            if registry_info.build_tool.purl_type == ctx.component.type:
+                try:
+                    artifact_published_date = registry_info.package_registry.find_publish_timestamp(ctx.component.purl)
+                    break
+                except InvalidHTTPResponseError as error:
+                    logger.debug(error)
+                except NotImplementedError:
+                    continue
 
         # This check requires the timestamps of published artifact and its source-code commit to proceed.
         # If the timestamps are not found, we return with a fail result.
@@ -304,14 +308,7 @@ class ArtifactPipelineCheck(BaseCheck):
         # We should reach here when the analysis has failed to detect any successful deploy step in a
         # CI run. In this case the check fails with a medium confidence.
         return CheckResultData(
-            result_tables=[
-                ArtifactPipelineFacts(
-                    from_provenance=False,
-                    run_deleted=False,
-                    published_before_commit=False,
-                    confidence=Confidence.MEDIUM,
-                )
-            ],
+            result_tables=[],
             result_type=CheckResultType.FAILED,
         )
 

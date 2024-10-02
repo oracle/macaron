@@ -50,9 +50,8 @@ class PackageRegistry(ABC):
             based on the given build tool.
         """
 
-    @staticmethod
-    def find_publish_timestamp(purl: str, registry_url: str | None = None) -> datetime:
-        """Retrieve the publication timestamp for a package specified by its purl from the deps.dev repository.
+    def find_publish_timestamp(self, purl: str, registry_url: str | None = None) -> datetime:
+        """Retrieve the publication timestamp for a package specified by its purl from the deps.dev repository by default.
 
         This method constructs a request URL based on the provided purl, sends an HTTP GET
         request to fetch metadata about the package, and extracts the publication timestamp
@@ -80,6 +79,8 @@ class PackageRegistry(ABC):
         InvalidHTTPResponseError
             If the URL construction fails, the HTTP response is invalid, or if the response
             cannot be parsed correctly, or if the expected timestamp is missing or invalid.
+        NotImplementedError
+            If not implemented for a registry.
         """
         # TODO: To reduce redundant calls to deps.dev, store relevant parts of the response
         # in the AnalyzeContext object retrieved by the Repo Finder. This step should be

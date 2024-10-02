@@ -5,13 +5,18 @@
 
 import logging
 import urllib.parse
+from datetime import datetime, timezone
+
+import requests
+from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
-from macaron.errors import ConfigurationError
+from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
+from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -127,35 +132,39 @@ class MavenCentralRegistry(PackageRegistry):
         compatible_build_tool_classes = [Maven, Gradle]
         return any(isinstance(build_tool, build_tool_class) for build_tool_class in compatible_build_tool_classes)
 
-    def find_publish_timestamp(self, group_id: str, artifact_id: str, version: str | None = None) -> datetime:
+    def find_publish_timestamp(self, purl: str, registry_url: str | None = None) -> datetime:
         """Make a search request to Maven Central to find the publishing timestamp of an artifact.
 
-        If version is not provided, the timestamp of the latest version will be returned.
+        The reason for directly fetching timestamps from Maven Central is that deps.dev occasionally
+        misses timestamps for Maven artifacts, making it unreliable for this purpose.
 
         To see the search API syntax see: https://central.sonatype.org/search/rest-api-guide/
 
         Parameters
         ----------
-        group_id : str
-            The group id of the artifact.
-        artifact_id: str
-            The artifact id of the artifact.
-        version: str | None
-            The version of the artifact.
+        purl: str
+            The Package URL (purl) of the package whose publication timestamp is to be retrieved.
+            This should conform to the PURL specification.
+        registry_url: str | None
+            The registry URL that can be set for testing.
 
         Returns
         -------
         datetime
-            The artifact publish timestamp as a timezone-aware datetime object.
+            A timezone-aware datetime object representing the publication timestamp
+            of the specified package.
 
         Raises
         ------
         InvalidHTTPResponseError
-            If the HTTP response is invalid or unexpected.
+            If the URL construction fails, the HTTP response is invalid, or if the response
+            cannot be parsed correctly, or if the expected timestamp is missing or invalid.
         """
-        query_params = [f"q=g:{group_id}", f"a:{artifact_id}"]
-        if version:
-            query_params.append(f"v:{version}")
+        try:
+            purl_object = PackageURL.from_string(purl)
+        except ValueError as error:
+            logger.debug("Could not parse PURL: %s", error)
+        query_params = [f"q=g:{purl_object.namespace}", f"a:{purl_object.name}", f"v:{purl_object.version}"]
 
         try:
             url = urllib.parse.urlunsplit(
