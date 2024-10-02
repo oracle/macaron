@@ -33,6 +33,18 @@ def same_organization(group_id_1: str, group_id_2: str) -> bool:
 
     Note: It is assumed that for recognized source platforms, the top level domain doesn't change the organization.
     I.e., io.github.foo and com.github.foo are assumed to be from the same organization.
+
+    Parameters
+    ----------
+    group_id_1 : str
+        The first group id.
+    group_id_2 : str
+        The second group id.
+
+    Returns
+    -------
+    bool
+        ``True`` if the two group ids are from the same organization, ``False`` otherwise.
     """
     if group_id_1 == group_id_2:
         return True
