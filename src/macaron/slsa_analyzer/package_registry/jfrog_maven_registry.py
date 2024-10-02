@@ -194,10 +194,7 @@ class JFrogMavenRegistry(PackageRegistry):
         if not self.enabled:
             return False
         compatible_build_tool_classes = [Maven, Gradle]
-        for build_tool_class in compatible_build_tool_classes:
-            if isinstance(build_tool, build_tool_class):
-                return True
-        return False
+        return any(isinstance(build_tool, build_tool_class) for build_tool_class in compatible_build_tool_classes)
 
     def construct_maven_repository_path(
         self,

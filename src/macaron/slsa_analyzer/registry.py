@@ -216,11 +216,7 @@ class Registry:
         bool
             True if all evaluated requirements are valid, else False.
         """
-        for req in eval_reqs:
-            if not isinstance(req, ReqName):
-                return False
-
-        return True
+        return all(isinstance(req, ReqName) for req in eval_reqs)
 
     @staticmethod
     def _validate_check_id_format(check_id: Any) -> bool:
