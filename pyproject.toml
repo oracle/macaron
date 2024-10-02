@@ -210,7 +210,7 @@ ignore_missing_imports = true
 # https://pylint.pycqa.org/en/latest/user_guide/configuration/index.html
 [tool.pylint.MASTER]
 fail-under = 10.0
-suggestion-mode = true
+suggestion-mode = true  # Remove this setting when pylint v4 is released.
 load-plugins = [
 ]
 disable = [
