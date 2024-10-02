@@ -55,11 +55,7 @@ def same_organization(group_id_1: str, group_id_2: str) -> bool:
             return group_id_1_parts[2] == group_id_2_parts[2]
         return False
 
-    for index in range(2):
-        if group_id_1_parts[index] != group_id_2_parts[index]:
-            return False
-
-    return True
+    return all(group_id_1_parts[index] == group_id_2_parts[index] for index in range(2))
 
 
 class MavenCentralRegistry(PackageRegistry):
