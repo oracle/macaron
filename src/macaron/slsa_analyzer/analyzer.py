@@ -42,7 +42,7 @@ from macaron.repo_finder.provenance_extractor import (
     extract_repo_and_commit_from_provenance,
 )
 from macaron.repo_finder.provenance_finder import ProvenanceFinder, find_provenance_from_ci
-from macaron.repo_finder.repo_verifier import RepoVerifier
+from macaron.repo_verifier.repo_verifier import verify_repo
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import VirtualReleaseAsset
@@ -1143,7 +1143,7 @@ class Analyzer:
             logger.debug("The repository is not available. Skipping the repository verification.")
             return
 
-        if parsed_purl.namespace is None or parsed_purl.name is None or parsed_purl.version is None:
+        if parsed_purl.namespace is None or parsed_purl.version is None:
             logger.debug("The PURL is not complete. Skipping the repository verification.")
             return
 
@@ -1154,15 +1154,15 @@ class Analyzer:
         analyze_ctx.dynamic_data["repo_verification"] = []
 
         for build_tool in build_tools:
-            repo_verifier = RepoVerifier(
+            verification_result = verify_repo(
                 namespace=parsed_purl.namespace,
                 name=parsed_purl.name,
                 version=parsed_purl.version,
-                claimed_repo_url=analyze_ctx.component.repository.remote_path,
-                claimed_repo_fs=analyze_ctx.component.repository.fs_path,
+                reported_repo_url=analyze_ctx.component.repository.remote_path,
+                reported_repo_fs=analyze_ctx.component.repository.fs_path,
                 build_tool=build_tool,
             )
-            analyze_ctx.dynamic_data["repo_verification"].append(repo_verifier.verify_claimed_repo())
+            analyze_ctx.dynamic_data["repo_verification"].append(verification_result)
 
 
 class DuplicateCmpError(DuplicateError):

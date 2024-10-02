@@ -1,16 +1,17 @@
 # Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""A check to verify if repositories found for maven libraries can be linked backed to the artifact."""
+"""A check to determine whether the source repository of a maven package can be independently verified."""
 
 import logging
 
+from packageurl import PackageURL
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.table_definitions import CheckFacts
-from macaron.repo_finder.repo_finder_java import JavaRepoFinder
-from macaron.repo_finder.repo_verifier import RepositoryVerificationStatus
+from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
+from macaron.repo_verifier.repo_verifier_base import RepositoryVerificationStatus
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence
@@ -30,14 +31,27 @@ class MavenRepoVerificationFacts(CheckFacts):
     group: Mapped[str] = mapped_column(String, nullable=False)
     artifact: Mapped[str] = mapped_column(String, nullable=False)
     version: Mapped[str] = mapped_column(String, nullable=False)
-    claimed_repo: Mapped[str] = mapped_column(String, nullable=True)
+
+    # Repository link identified by Macaron's repo finder.
+    repo_link: Mapped[str] = mapped_column(String, nullable=True)
+
+    # Repository link identified by deps.dev.
+    deps_dev_repo_link: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    # Number of stars on the repository identified by deps.dev.
+    deps_dev_stars_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    # Number of forks on the repository identified by deps.dev.
+    deps_dev_fork_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    # The status of the check: passed, failed, or unknown.
     status: Mapped[str] = mapped_column(String, nullable=False)
+
+    # The reason for the status.
     reason: Mapped[str] = mapped_column(String, nullable=False)
+
+    # The build tool used to build the package.
     build_tool: Mapped[str] = mapped_column(String, nullable=False)
-    dd_star_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    dd_fork_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    dd_dep_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    dd_repo_link: Mapped[str | None] = mapped_column(String, nullable=True)
 
     __mapper_args__ = {
         "polymorphic_identity": "_maven_repo_verification_check",
@@ -45,12 +59,15 @@ class MavenRepoVerificationFacts(CheckFacts):
 
 
 class MavenRepoVerificationCheck(BaseCheck):
-    """This check verifies that if a source repository claimed by a maven package is valid."""
+    """Check whether the claims of a source repository provenance made by a maven package can be independently verified."""
 
     def __init__(self) -> None:
         """Initialize a check instance."""
         check_id = "mcn_maven_repo_verification_1"
-        description = "Check if the source repository claimed by a maven package is valid."
+        description = (
+            "Check whether the claims of a source repository provenance"
+            " made by a maven package can be independently verified."
+        )
 
         super().__init__(
             check_id=check_id,
@@ -73,7 +90,16 @@ class MavenRepoVerificationCheck(BaseCheck):
         if ctx.component.type != "maven":
             return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-        dd_info = JavaRepoFinder.get_deps_dev_info(ctx.component.namespace, ctx.component.name, ctx.component.version)
+        deps_dev_repo_finder = DepsDevRepoFinder()
+        deps_dev_repo_link = deps_dev_repo_finder.find_repo(PackageURL.from_string(ctx.component.purl))
+        deps_dev_repo_info = deps_dev_repo_finder.get_project_info(deps_dev_repo_link)
+
+        stars_count: int | None = None
+        fork_count: int | None = None
+
+        if deps_dev_repo_info:
+            stars_count = deps_dev_repo_info.get("starsCount")
+            fork_count = deps_dev_repo_info.get("forksCount")
 
         result_type = CheckResultType.UNKNOWN
         result_tables: list[CheckFacts] = []
@@ -83,15 +109,14 @@ class MavenRepoVerificationCheck(BaseCheck):
                     group=ctx.component.namespace,
                     artifact=ctx.component.name,
                     version=ctx.component.version,
-                    claimed_repo=ctx.component.repository.remote_path if ctx.component.repository else None,
+                    repo_link=ctx.component.repository.remote_path if ctx.component.repository else None,
                     reason=verification_result.reason,
                     status=verification_result.status.value,
                     build_tool=verification_result.build_tool.name,
-                    dd_star_count=dd_info.get("star_count", None),
-                    dd_fork_count=dd_info.get("fork_count", None),
-                    dd_dep_count=dd_info.get("dep_count", None),
-                    dd_repo_link=dd_info.get("repo_link", None),
                     confidence=Confidence.MEDIUM,
+                    deps_dev_repo_link=deps_dev_repo_link,
+                    deps_dev_stars_count=stars_count,
+                    deps_dev_fork_count=fork_count,
                 )
             )
 
