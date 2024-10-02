@@ -164,7 +164,7 @@ class BuildServiceCheck(BaseCheck):
                                     confidence=confidence,
                                 )
                             )
-                            overall_res = CheckResultType.PASSED
+                            overall_res = CheckResultType.PASSED  # pylint: disable=redefined-variable-type
                 except CallGraphError as error:
                     logger.debug(error)
 
@@ -193,7 +193,7 @@ class BuildServiceCheck(BaseCheck):
                                     confidence=Confidence.LOW,
                                 )
                             )
-                            overall_res = CheckResultType.PASSED
+                            overall_res = CheckResultType.PASSED  # pylint: disable=redefined-variable-type
 
         # The check passing is contingent on at least one passing, if
         # one passes treat whole check as passing. We do still need to

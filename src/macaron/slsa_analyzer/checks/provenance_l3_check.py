@@ -451,8 +451,7 @@ class ProvenanceL3Check(BaseCheck):
                 result_value = CheckResultType.FAILED
             else:
                 result_tables.append(ProvenanceL3VerifiedFacts(confidence=Confidence.HIGH))
-                result_value = CheckResultType.PASSED
-                return CheckResultData(result_tables=result_tables, result_type=result_value)
+                return CheckResultData(result_tables=result_tables, result_type=CheckResultType.PASSED)
 
         return CheckResultData(result_tables=result_tables, result_type=result_value)
 
