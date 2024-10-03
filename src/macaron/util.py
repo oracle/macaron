@@ -126,7 +126,11 @@ def send_head_http_raw(
 
 
 def send_get_http_raw(
-    url: str, headers: dict | None = None, timeout: int | None = None, allow_redirects: bool = True
+    url: str,
+    headers: dict | None = None,
+    timeout: int | None = None,
+    allow_redirects: bool = True,
+    always_return_response: bool = False,
 ) -> Response | None:
     """Send the GET HTTP request with the given url and headers.
 
@@ -179,7 +183,7 @@ def send_get_http_raw(
         if response.status_code == 403:
             check_rate_limit(response)
         else:
-            return None
+            return None if not always_return_response else response
         retry_counter = retry_counter - 1
         response = requests.get(
             url=url,

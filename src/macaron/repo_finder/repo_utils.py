@@ -11,6 +11,9 @@ from urllib.parse import urlparse
 from packageurl import PackageURL
 
 from macaron.config.global_config import global_config
+from macaron.errors import CloneError, RepoCheckOutError
+from macaron.repo_finder.commit_finder import find_commit
+from macaron.repo_finder.repo_finder_enums import CommitFinderOutcome
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR

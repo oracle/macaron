@@ -30,6 +30,7 @@ from macaron.database.table_definitions import Component
 from macaron.errors import CycloneDXParserError, DependencyAnalyzerError
 from macaron.output_reporter.scm import SCMStatus
 from macaron.repo_finder.repo_finder import find_repo
+from macaron.repo_finder.repo_finder_enums import RepoFinderOutcome
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -465,12 +466,12 @@ class DependencyAnalyzer(ABC):
         for item in dependencies.values():
             if item["available"] != SCMStatus.MISSING_SCM:
                 continue
-
-            item["url"] = find_repo(item["purl"])
-            if item["url"] == "":
+            url, outcome = find_repo(item["purl"])
+            if outcome not in {RepoFinderOutcome.FOUND, RepoFinderOutcome.FOUND_FROM_PARENT}:
                 logger.debug("Failed to find url for purl: %s", item["purl"])
             else:
                 # TODO decide how to handle possible duplicates here
+                item["url"] = url
                 item["available"] = SCMStatus.AVAILABLE
                 item["note"] = ""
 
