@@ -776,12 +776,11 @@ def _compute_tag_version_similarity(
                         # A half value is used here as otherwise it can lead to the same score as a tag_suffix that is
                         # equal to the last part.
                         score = score - 0.5
+                    elif tag_suffix not in release_set:
+                        # The suffix does not match, and is not similar.
+                        score = score + 1
                     else:
-                        if tag_suffix not in release_set:
-                            # The suffix does not match, and is not similar.
-                            score = score + 1
-                        else:
-                            score = score + 0.2
+                        score = score + 0.2
                 else:
                     # If no suffix pattern can be created the suffix cannot be matched to the last version part.
                     score = score + 1

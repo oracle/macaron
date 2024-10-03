@@ -166,13 +166,12 @@ class Step(Generic[T]):
                     " ".join(args),
                 )
                 return 1
-        else:
-            if res.returncode != 0:
-                logger.error(
-                    "Command '%s' unexpectedly exited with non-zero code.",
-                    " ".join(args),
-                )
-                return 1
+        elif res.returncode != 0:
+            logger.error(
+                "Command '%s' unexpectedly exited with non-zero code.",
+                " ".join(args),
+            )
+            return 1
 
         time_taken = (end_time - start_time) / 1e9
         logger.info(
