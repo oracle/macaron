@@ -44,6 +44,7 @@ from macaron.repo_finder import to_domain_from_known_purl_types
 from macaron.repo_finder.commit_finder import match_tags
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
+from macaron.repo_finder.repo_finder_enums import RepoFinderOutcome
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
 from macaron.repo_finder.repo_utils import generate_report, prepare_repo
 from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR, list_remote_references
@@ -51,7 +52,7 @@ from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR, list_remote_references
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def find_repo(purl: PackageURL) -> str:
+def find_repo(purl: PackageURL) -> tuple[str, RepoFinderOutcome]:
     """Retrieve the repository URL that matches the given PURL.
 
     Parameters
@@ -61,8 +62,8 @@ def find_repo(purl: PackageURL) -> str:
 
     Returns
     -------
-    str :
-        The repository URL found for the passed package.
+    tuple[str, RepoFinderOutcome] :
+        The repository URL for the passed package, if found, and the outcome to report.
     """
     repo_finder: BaseRepoFinder
     if purl.type == "maven":
@@ -76,7 +77,7 @@ def find_repo(purl: PackageURL) -> str:
         repo_finder = DepsDevRepoFinder()
     else:
         logger.debug("No Repo Finder found for package type: %s of %s", purl.type, purl)
-        return ""
+        return "", RepoFinderOutcome.UNSUPPORTED_PACKAGE_TYPE
 
     # Call Repo Finder and return first valid URL
     logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
@@ -112,9 +113,8 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
     """
     domain = to_domain_from_known_purl_types(purl.type) or (purl.type if purl.type in available_domains else None)
     if not domain:
-        logger.info("The PURL type of %s is not valid as a repository type. Trying to find the repository...", purl)
-        # Try to find the repository
-        return find_repo(purl)
+        logger.info("The PURL type of %s is not valid as a repository type.", purl)
+        return None
 
     if not purl.namespace:
         logger.error("Expecting a non-empty namespace from %s.", purl)
