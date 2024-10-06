@@ -12,7 +12,7 @@ from sqlalchemy.sql.sqltypes import String
 
 from macaron.database.table_definitions import CheckFacts
 from macaron.errors import CallGraphError
-from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_provenance
+from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_build_info_results
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
@@ -140,7 +140,7 @@ class BuildServiceCheck(BaseCheck):
                                 not result_tables
                                 or confidence > max(result_tables, key=lambda item: item.confidence).confidence
                             ):
-                                store_inferred_provenance(
+                                store_inferred_build_info_results(
                                     ctx=ctx, ci_info=ci_info, ci_service=ci_service, trigger_link=trigger_link
                                 )
                             result_tables.append(
@@ -181,7 +181,7 @@ class BuildServiceCheck(BaseCheck):
                             if not config_name:
                                 break
 
-                            store_inferred_provenance(
+                            store_inferred_build_info_results(
                                 ctx=ctx, ci_info=ci_info, ci_service=ci_service, trigger_link=config_name
                             )
                             result_tables.append(

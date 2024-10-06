@@ -16,9 +16,11 @@ from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
 from macaron.slsa_analyzer.provenance.expectations.cue import CUEExpectation
+from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
 from tests.conftest import MockAnalyzeContext
 
 from ...macaron_testcase import MacaronTestCase
@@ -84,6 +86,7 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
             provenance_assets=[],
             release={},
             provenances=[],
+            build_info_results=InTotoV01Payload(statement=Provenance().payload),
         )
         ctx.dynamic_data["ci_services"] = [ci_info]
 

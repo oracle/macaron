@@ -307,7 +307,54 @@ class BaseBuildTool(ABC):
 
         return False
 
-    def infer_confidence_deploy_command(self, cmd: BuildToolCommand) -> Confidence:
+    def infer_confidence_deploy_workflow(self, ci_path: str, provenance_workflow: str | None = None) -> Confidence:
+        """
+        Infer the confidence level for the deploy CI workflow.
+
+        Parameters
+        ----------
+        ci_path: str
+            The path to the CI workflow.
+        provenance_workflow: str | None
+            The relative path to the root CI file that is captured in a provenance or None if provenance is not found.
+
+        Returns
+        -------
+        Confidence
+            The confidence level for the deploy command.
+        """
+        # Apply heuristics and assign weights and scores for the discovered evidence.
+        evidence_weight_map = EvidenceWeightMap(
+            [
+                Evidence(name="ci_workflow_deploy", found=False, weight=2),
+            ]
+        )
+
+        # Check if the CI workflow path for the build command is captured in a provenance file.
+        if provenance_workflow and ci_path.endswith(provenance_workflow):
+            # We add this evidence only if a provenance is found to make sure we pick the right triggering
+            # workflow in the call graph. Otherwise, lack of provenance would have always lowered the
+            # confidence score, making the rest of the heuristics less effective.
+            evidence_weight_map.add(
+                Evidence(name="workflow_in_provenance", found=True, weight=5),
+            )
+
+        # Check workflow names.
+        deploy_keywords = ["release", "deploy", "publish"]
+        test_keywords = ["test", "snapshot"]
+        for deploy_kw in deploy_keywords:
+            if deploy_kw in os.path.basename(ci_path.lower()):
+                is_test = (test_kw for test_kw in test_keywords if test_kw in os.path.basename(ci_path.lower()))
+                if any(is_test):
+                    continue
+                evidence_weight_map.update_result(name="ci_workflow_release", found=True)
+                break
+
+        return Confidence.normalize(evidence_weight_map=evidence_weight_map)
+
+    def infer_confidence_deploy_command(
+        self, cmd: BuildToolCommand, provenance_workflow: str | None = None
+    ) -> Confidence:
         """
         Infer the confidence level for the deploy command.
 
@@ -315,6 +362,8 @@ class BaseBuildTool(ABC):
         ----------
         cmd: BuildToolCommand
             The build tool command object.
+        provenance_workflow: str | None
+            The relative path to the root CI file that is captured in a provenance or None if provenance is not found.
 
         Returns
         -------
@@ -331,6 +380,15 @@ class BaseBuildTool(ABC):
                 Evidence(name="release_event", found=False, weight=2),
             ]
         )
+
+        # Check if the CI workflow path for the build command is captured in a provenance file.
+        if provenance_workflow and cmd["ci_path"].endswith(provenance_workflow):
+            # We add this evidence only if a provenance is found to make sure we pick the right triggering
+            # workflow in the call graph. Otherwise, lack of provenance would have always lowered the
+            # confidence score, making the rest of the heuristics less effective.
+            evidence_weight_map.add(
+                Evidence(name="workflow_in_provenance", found=True, weight=5),
+            )
 
         # Check if secrets are present in the caller job.
         if cmd["reachable_secrets"]:
@@ -350,7 +408,7 @@ class BaseBuildTool(ABC):
         return Confidence.normalize(evidence_weight_map=evidence_weight_map)
 
     def is_deploy_command(
-        self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None
+        self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None, provenance_workflow: str | None = None
     ) -> tuple[bool, Confidence]:
         """
         Determine if the command is a deploy command.
@@ -364,6 +422,8 @@ class BaseBuildTool(ABC):
             The build tool command object.
         excluded_configs: list[str] | None
             Build tool commands that are called from these configuration files are excluded.
+        provenance_workflow: str | None
+            The relative path to the root CI file that is captured in a provenance or None if provenance is not found.
 
         Returns
         -------
@@ -383,7 +443,7 @@ class BaseBuildTool(ABC):
         if excluded_configs and os.path.basename(cmd["ci_path"]) in excluded_configs:
             return False, Confidence.HIGH
 
-        return True, self.infer_confidence_deploy_command(cmd=cmd)
+        return True, self.infer_confidence_deploy_command(cmd=cmd, provenance_workflow=provenance_workflow)
 
     def is_package_command(
         self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None

@@ -14,7 +14,9 @@ from macaron.slsa_analyzer.checks.build_service_check import BuildServiceCheck, 
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
+from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
 from tests.conftest import MockAnalyzeContext, build_github_actions_call_graph_for_commands
 
 
@@ -46,6 +48,7 @@ def test_build_service_check_no_callgraph(
         provenance_assets=[],
         release={},
         provenances=[],
+        build_info_results=InTotoV01Payload(statement=Provenance().payload),
     )
     use_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     use_build_tool.dynamic_data["build_spec"]["tools"] = [build_tools[build_tool_name]]
@@ -96,6 +99,7 @@ def test_packaging_commands(
         provenance_assets=[],
         release={},
         provenances=[],
+        build_info_results=InTotoV01Payload(statement=Provenance().payload),
     )
     ci_info["service"] = github_actions_service
     package_ctx.dynamic_data["ci_services"] = [ci_info]
@@ -114,6 +118,7 @@ def test_multibuild_facts_saved(
         provenance_assets=[],
         release={},
         provenances=[],
+        build_info_results=InTotoV01Payload(statement=Provenance().payload),
     )
 
     multi_build = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")

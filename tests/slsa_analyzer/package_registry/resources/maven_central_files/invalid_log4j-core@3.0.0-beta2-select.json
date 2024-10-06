@@ -1,0 +1,1 @@
+{"responseHeader":{"status":0,"QTime":4,"params":{"q":"g:org.apache.logging.log4j AND a:log4j-core AND v:3.0.0-beta2","core":"gav","indent":"off","fl":"id,g,a,v,p,ec,timestamp,tags","start":"","sort":"score desc,timestamp desc,g asc,a asc,v desc","rows":"1","wt":"json","version":"2.2"}},"response":{"numFound":1,"start":0,"docs":[]}}

@@ -45,7 +45,7 @@ class ThirdPartyAction:
     action_version: str | None
 
 
-class GitHubWorkflowType(Enum):
+class GitHubWorkflowType(str, Enum):
     """This class represents different GitHub Actions workflow types."""
 
     INTERNAL = "internal"  # Workflows declared in the repo.

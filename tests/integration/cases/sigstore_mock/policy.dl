@@ -12,11 +12,28 @@ Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_provenance_derived_commit_1"),
     check_passed(component_id, "mcn_provenance_derived_repo_1"),
     check_passed(component_id, "mcn_provenance_verified_1"),
-    check_failed(component_id, "mcn_infer_artifact_pipeline_1"),
+    check_failed(component_id, "mcn_find_artifact_pipeline_1"),
     check_failed(component_id, "mcn_provenance_level_three_1"),
     check_failed(component_id, "mcn_provenance_witness_level_one_1"),
     check_failed(component_id, "mcn_trusted_builder_level_three_1"),
-    is_repo_url(component_id, "https://github.com/sigstore/sigstore-js").
+    is_repo_url(component_id, "https://github.com/sigstore/sigstore-js"),
+    // The GitHub API has a retention policy of removing CI run data after 400 days.
+    // Note that mcn_find_artifact_pipeline_1 fails because it returns UNKNOWN, in this case with low confidence.
+    // That's why we cannot rely on the check fail here only and need to also check the data gathered by
+    // the artifact_pipeline_check.
+    check_failed_with_confidence(component_id, "mcn_find_artifact_pipeline_1", confidence),
+    confidence = 0.4,
+    artifact_pipeline_check(
+        apc_check_id,
+        "https://github.com/sigstore/sigstore-js/blob/ebdcfdfbdfeb9c9aeee6df53674ef230613629f5/.github/workflows/release.yml",
+        "release",
+        "Create Release Pull Request",
+        _,
+        1,  // From provenance.
+        1,  // Run deleted.
+        0   // Published before the code was committed.
+    ),
+    check_facts(apc_check_id, confidence, component_id,_,_).
 
 apply_policy_to("test_policy", component_id) :-
     is_component(component_id, "pkg:npm/%40sigstore/mock@0.1.0").
