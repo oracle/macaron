@@ -34,10 +34,10 @@ class ArtifactPipelineFacts(CheckFacts):
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
     #: The URL of the workflow file that triggered deploy.
-    deploy_workflow: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.HREF})
+    deploy_workflow: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
     #: The workflow job that triggered deploy.
-    deploy_job: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
+    deploy_job: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
 
     #: The workflow step that triggered deploy.
     deploy_step: Mapped[str | None] = mapped_column(
