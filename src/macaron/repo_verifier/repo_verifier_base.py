@@ -32,6 +32,13 @@ def find_file_in_repo(root_dir: Path, filename: str) -> Path | None:
     Path | None
         The path to the file if it exists, otherwise
     """
+    # TODO: Consider using BaseBuildTool.get_build_dirs.
+    #   + Refactor 'get_build_dirs' to skip certain directories
+    #   that are most likely not part of the main codebase (e.g., sample).
+    #   + Need to find a way to look for other
+    #   files (e.g., gradle.properties) for the purpose of repo verification
+    #   without breaking the current logic of finding build directories.
+    #   + Add the capability to return the content/path of the file.
     if not os.path.exists(root_dir) or not os.path.isdir(root_dir):
         return None
 
