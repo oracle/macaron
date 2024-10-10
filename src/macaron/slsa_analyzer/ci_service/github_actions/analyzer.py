@@ -218,8 +218,10 @@ def resolve_matrix_variable(job_node: GitHubJobNode, var: str) -> Iterable[str]:
             # and let the caller handle it?
             if isinstance(val, str):
                 yield val
+            if isinstance(val, int):
+                yield str(val)
             if isinstance(val, float):
-                yield str(float)
+                yield str(val)
             if isinstance(val, bool):
                 yield "true" if val else "false"
     else:
