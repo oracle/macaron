@@ -40,3 +40,11 @@ macaron.parsers.github\_workflow\_model module
    :members:
    :undoc-members:
    :show-inheritance:
+
+macaron.parsers.pomparser module
+--------------------------------
+
+.. automodule:: macaron.parsers.pomparser
+   :members:
+   :undoc-members:
+   :show-inheritance:
