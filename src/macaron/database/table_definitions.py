@@ -34,7 +34,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from macaron.artifact.maven import MavenSubjectPURLMatcher
 from macaron.database.database_manager import ORMBase
-from macaron.database.db_custom_types import RFC3339DateTime
+from macaron.database.db_custom_types import DBJsonDict, RFC3339DateTime
 from macaron.errors import InvalidPURLError
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, ProvenanceSubjectPURLMatcher
 from macaron.slsa_analyzer.slsa_req import ReqName
@@ -161,7 +161,7 @@ class Component(PackageURLMixin, ORMBase):
     checkfacts: Mapped[list["CheckFacts"]] = relationship(back_populates="component", lazy="immediate")
 
     #: The one-to-many relationship with provenances.
-    provenance: Mapped[list["Provenance"]] = relationship(back_populates="component", lazy="immediate")
+    provenance: Mapped[list["ProvenanceFacts"]] = relationship(back_populates="component", lazy="immediate")
 
     #: The bidirectional many-to-many relationship for component dependencies.
     dependencies: Mapped[list["Component"]] = relationship(
@@ -464,7 +464,7 @@ class CheckFacts(ORMBase):
     }
 
 
-class Provenance(ORMBase):
+class ProvenanceFacts(ORMBase):
     """ORM class for a provenance document."""
 
     __tablename__ = "_provenance"
@@ -479,7 +479,7 @@ class Provenance(ORMBase):
     component: Mapped["Component"] = relationship(back_populates="provenance")
 
     #: The SLSA version.
-    version: Mapped[str] = mapped_column(String, nullable=False)
+    version: Mapped[str] = mapped_column(String, nullable=True)
 
     #: The release tag commit sha.
     release_commit_sha: Mapped[str] = mapped_column(String, nullable=True)
@@ -488,10 +488,187 @@ class Provenance(ORMBase):
     release_tag: Mapped[str] = mapped_column(String, nullable=True)
 
     #: The provenance payload content in JSON format.
-    provenance_json: Mapped[str] = mapped_column(String, nullable=False)
+    provenance_json: Mapped[dict] = mapped_column(DBJsonDict, nullable=False)
+
+    #: The provenance statement.
+    statement: Mapped["Statement"] = relationship(back_populates="provenance")
 
     #: A one-to-many relationship with the release artifacts.
     artifact: Mapped[list["ReleaseArtifact"]] = relationship(back_populates="provenance")
+
+
+class Statement(ORMBase):
+    """The ORM class for provenance statement."""
+
+    __tablename__ = "_statement"
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+
+    #: The foreign key to the software component.
+    provenance_id: Mapped[int] = mapped_column(Integer, ForeignKey(ProvenanceFacts.id), nullable=False)
+
+    #: A one-to-one relationship with software components.
+    provenance: Mapped["ProvenanceFacts"] = relationship(back_populates="statement")
+
+    #: Statement type.
+    _type: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: Predicate Type.
+    predicate_type: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: Provenance Subjects.
+    subject: Mapped[list["ProvenanceSubjectRaw"]] = relationship(back_populates="statement")
+
+    #: Provenance predicate.
+    predicate: Mapped["Predicate"] = relationship(back_populates="statement")
+
+
+class ProvenanceSubjectRaw(ORMBase):
+    """The ORM class for the provenance subject containing all the information."""
+
+    __tablename__ = "_subject"
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+
+    #: The foreign key to the software component.
+    statement_id: Mapped[int] = mapped_column(Integer, ForeignKey(Statement.id), nullable=False)
+
+    #: A one-to-one relationship with provenance statement.
+    statement: Mapped["Statement"] = relationship(back_populates="subject")
+
+    #: Subject name.
+    name: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: Subject digests.
+    digest: Mapped["SubjectDigest"] = relationship(back_populates="subject")
+
+
+class SubjectDigest(ORMBase):
+    """The ORM class for the provenance subject digest."""
+
+    __tablename__ = "_subject_digest"
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+
+    #: The foreign key to the provenance subject.
+    subject_id: Mapped[int] = mapped_column(Integer, ForeignKey(ProvenanceSubjectRaw.id), nullable=False)
+
+    #: A one-to-one relationship with provenance subject.
+    subject: Mapped["ProvenanceSubjectRaw"] = relationship(back_populates="digest")
+
+    #: Digest.
+    sha512: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class Predicate(ORMBase):
+    """The ORM class for provenance predicate."""
+
+    __tablename__ = "_predicate"
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+
+    #: The foreign key to the software component.
+    statement_id: Mapped[int] = mapped_column(Integer, ForeignKey(Statement.id), nullable=False)
+
+    #: A one-to-one relationship with provenance statement.
+    statement: Mapped["Statement"] = relationship(back_populates="predicate")
+
+    #: Build definition.
+    build_definition: Mapped["BuildDefinition"] = relationship(back_populates="predicate")
+
+
+class BuildDefinition(ORMBase):
+    """The ORM class for provenance predicate build definition."""
+
+    __tablename__ = "_build_definition"
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+
+    #: The foreign key to the software component.
+    predicate_id: Mapped[int] = mapped_column(Integer, ForeignKey(Predicate.id), nullable=False)
+
+    #: A one-to-one relationship with provenance predicate.
+    predicate: Mapped["Predicate"] = relationship(back_populates="build_definition")
+
+    #: Build type.
+    build_type: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: External parameters in build definitions.
+    external_parameters: Mapped["ExternalParameters"] = relationship(back_populates="build_definition")
+
+    #: Internal parameters in build definitions.
+    internal_parameters: Mapped["InternalParameters"] = relationship(back_populates="build_definition")
+
+
+class ExternalParameters(ORMBase):
+    """The ORM class for provenance predicate build definition external parameters."""
+
+    __tablename__ = "_external_parameters"
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+
+    #: The foreign key to the software component.
+    build_definition_id: Mapped[int] = mapped_column(Integer, ForeignKey(BuildDefinition.id), nullable=False)
+
+    #: A one-to-one relationship with build definition.
+    build_definition: Mapped["BuildDefinition"] = relationship(back_populates="external_parameters")
+
+    #: External parameters in build definitions.
+    workflow: Mapped["Workflow"] = relationship(back_populates="external_parameters")
+
+
+class Workflow(ORMBase):
+    """The ORM class for provenance predicate build definition external parameters workflows."""
+
+    __tablename__ = "_workflow"
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+
+    #: The foreign key to the software component.
+    external_parameters_id: Mapped[int] = mapped_column(Integer, ForeignKey(ExternalParameters.id), nullable=False)
+
+    #: A one-to-one relationship with external_parameters.
+    external_parameters: Mapped["ExternalParameters"] = relationship(back_populates="workflow")
+
+    #: Workflow reference.
+    ref: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: Workflow repository.
+    repository: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: Workflow path.
+    path: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class InternalParameters(ORMBase):
+    """The ORM class for provenance predicate build definition internal parameters."""
+
+    __tablename__ = "_internal_parameters"
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+
+    #: The foreign key to the software component.
+    build_definition_id: Mapped[int] = mapped_column(Integer, ForeignKey(BuildDefinition.id), nullable=False)
+
+    #: A one-to-one relationship with build definition.
+    build_definition: Mapped["BuildDefinition"] = relationship(back_populates="internal_parameters")
+
+    #: The GitHub event that triggered the publish.
+    github_event_name: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: The GitHub repository ID that triggered the publish.
+    github_repository_id: Mapped[str] = mapped_column(String, nullable=False)
+
+    #: The GitHub repository owner ID that triggered the publish.
+    github_repository_owner_id: Mapped[str] = mapped_column(String, nullable=False)
 
 
 class ReleaseArtifact(ORMBase):
@@ -509,10 +686,10 @@ class ReleaseArtifact(ORMBase):
     slsa_verified: Mapped[bool] = mapped_column(Boolean, nullable=True)
 
     #: The foreign key to the SLSA provenance.
-    provenance_id: Mapped[int] = mapped_column(Integer, ForeignKey(Provenance.id), nullable=True)
+    provenance_id: Mapped[int] = mapped_column(Integer, ForeignKey(ProvenanceFacts.id), nullable=True)
 
     #: A many-to-one relationship with the SLSA provenance.
-    provenance: Mapped["Provenance"] = relationship(back_populates="artifact")
+    provenance: Mapped["ProvenanceFacts"] = relationship(back_populates="artifact")
 
     #: The one-to-many relationship with the hash digests for this artifact.
     digests: Mapped[list["HashDigest"]] = relationship(back_populates="artifact")
