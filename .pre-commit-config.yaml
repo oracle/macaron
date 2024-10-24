@@ -199,7 +199,7 @@ repos:
 
 # A linter for Golang
 - repo: https://github.com/golangci/golangci-lint
-  rev: v1.59.1
+  rev: v1.61.0
   hooks:
   - id: golangci-lint
 
