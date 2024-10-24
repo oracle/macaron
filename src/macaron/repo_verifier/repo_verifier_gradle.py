@@ -100,13 +100,17 @@ class RepoVerifierGradle(RepoVerifierBase):
             status=RepositoryVerificationStatus.PASSED, reason="group_id_match", build_tool=self.build_tool
         )
 
-    def _extract_group_id_from_gradle_manifest(self, file_path: Path | None, delimiter: str = "=") -> str | None:
+    def _extract_group_id_from_gradle_manifest(
+        self, file_path: Path | None, quote_chars: set[str] | None = None, delimiter: str = "="
+    ) -> str | None:
         """Extract the group id from a gradle build or config file.
 
         Parameters
         ----------
         file_path : Path | None
             The path to the file.
+        quote_chars : set[str] | None
+            The characters used to quote the group id.
         delimiter : str
             The delimiter used in the file.
 
@@ -124,10 +128,20 @@ class RepoVerifierGradle(RepoVerifierBase):
             line_parts = list(filter(None, map(str.strip, line.strip().lower().split(delimiter))))
             if len(line_parts) != 2:
                 continue
-            if line_parts[0] == "group":
-                group_id = line_parts[1].strip('"').strip("'")
-                if is_valid_maven_group_id(group_id):
-                    return group_id
+
+            if line_parts[0] != "group":
+                continue
+
+            group_id = line_parts[1]
+
+            # Check if the value for group_id is a string literal.
+            if quote_chars:
+                if group_id[0] not in quote_chars or group_id[-1] not in quote_chars or group_id[0] != group_id[-1]:
+                    continue
+                group_id = group_id[1:-1]
+
+            if is_valid_maven_group_id(group_id):
+                return group_id
 
         return None
 
@@ -139,9 +153,9 @@ class RepoVerifierGradle(RepoVerifierBase):
     def _extract_group_id_from_build_groovy(self) -> str | None:
         """Extract the group id from the build.gradle file."""
         build_gradle = find_file_in_repo(Path(self.reported_repo_fs), "build.gradle")
-        return self._extract_group_id_from_gradle_manifest(build_gradle, delimiter=" ")
+        return self._extract_group_id_from_gradle_manifest(build_gradle, quote_chars={"'", '"'}, delimiter=" ")
 
     def _extract_group_id_from_build_kotlin(self) -> str | None:
         """Extract the group id from the build.gradle.kts file."""
         build_gradle = find_file_in_repo(Path(self.reported_repo_fs), "build.gradle.kts")
-        return self._extract_group_id_from_gradle_manifest(build_gradle, delimiter="=")
+        return self._extract_group_id_from_gradle_manifest(build_gradle, quote_chars={'"'}, delimiter="=")
