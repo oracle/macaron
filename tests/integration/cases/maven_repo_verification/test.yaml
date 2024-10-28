@@ -1,0 +1,44 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Integration tests for mcn_maven_repo_verification_1 check.
+
+tags:
+- macaron-python-package
+- macaron-docker-image
+
+steps:
+- name: Run macaron analyze on passing case 1
+  kind: analyze
+  options:
+    ini: config.ini
+    command_args:
+    - -purl
+    - pkg:maven/org.antlr/antlr4-maven-plugin@4.13.2
+- name: Verify that the check passsed
+  kind: verify
+  options:
+    policy: policy_pass_1.dl
+- name: Run macaron analyze on passing case 2
+  kind: analyze
+  options:
+    ini: config.ini
+    command_args:
+    - -purl
+    - pkg:maven/org.neo4j/cypher-parser-common@5.21.2
+- name: Verify that the check passsed
+  kind: verify
+  options:
+    policy: policy_pass_2.dl
+- name: Run macaron analyze on failing case 1
+  kind: analyze
+  options:
+    ini: config.ini
+    command_args:
+    - -purl
+    - pkg:maven/com.alibaba.ververica/flink-cep@1.17-vvr-8.0.8
+- name: Verify that the check passsed
+  kind: verify
+  options:
+    policy: policy_fail_1.dl
