@@ -39,7 +39,7 @@ def find_file_in_repo(root_dir: Path, filename: str) -> Path | None:
     #   files (e.g., gradle.properties) for the purpose of repo verification
     #   without breaking the current logic of finding build directories.
     #   + Add the capability to return the content/path of the file.
-    if not os.path.exists(root_dir) or not os.path.isdir(root_dir):
+    if not os.path.isdir(root_dir):
         return None
 
     queue: deque[Path] = deque()

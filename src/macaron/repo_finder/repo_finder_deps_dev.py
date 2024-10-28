@@ -96,7 +96,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         request_url = f"https://api.deps.dev/v3alpha/projects/{encode(project_key, safe='')}"
         response = send_get_http_raw(request_url)
-        if response is None or response.status_code != 200 or not response.text:
+        if response is None or not response.text:
             logger.debug("Failed to retrieve additional repo info for: %s", project_url)
             return None
 
