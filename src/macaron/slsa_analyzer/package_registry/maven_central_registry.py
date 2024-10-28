@@ -19,56 +19,6 @@ from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-# These are the code hosting platforms that are recognized by Sonatype for namespace verification in maven central.
-RECOGNIZED_CODE_HOSTING_SERVICES = [
-    "github",
-    "gitlab",
-    "bitbucket",
-    "gitee",
-]
-
-
-def same_organization(group_id_1: str, group_id_2: str) -> bool:
-    """Check if two maven group ids are from the same organization.
-
-    Note: It is assumed that for recognized source platforms, the top level domain doesn't change the organization.
-    I.e., io.github.foo and com.github.foo are assumed to be from the same organization.
-
-    Parameters
-    ----------
-    group_id_1 : str
-        The first group id.
-    group_id_2 : str
-        The second group id.
-
-    Returns
-    -------
-    bool
-        ``True`` if the two group ids are from the same organization, ``False`` otherwise.
-    """
-    if group_id_1 == group_id_2:
-        return True
-
-    group_id_1_parts = group_id_1.split(".")
-    group_id_2_parts = group_id_2.split(".")
-    if min(len(group_id_1_parts), len(group_id_2_parts)) < 2:
-        return False
-
-    # For groups ids that are under recognized maven namespaces, we only compare the first 3 parts.
-    # For example, io.github.foo.bar and io.github.foo are from the same organization (foo).
-    # Also, io.github.foo and com.github.foo are from the same organization.
-    if (
-        group_id_1_parts[0] in {"io", "com"}
-        and group_id_1_parts[1] in RECOGNIZED_CODE_HOSTING_SERVICES
-        and group_id_2_parts[0] in {"io", "com"}
-        and group_id_2_parts[1] in RECOGNIZED_CODE_HOSTING_SERVICES
-    ):
-        if len(group_id_1_parts) >= 3 and len(group_id_2_parts) >= 3:
-            return group_id_1_parts[2] == group_id_2_parts[2]
-        return False
-
-    return all(group_id_1_parts[index] == group_id_2_parts[index] for index in range(2))
-
 
 class MavenCentralRegistry(PackageRegistry):
     """This class implements a Maven Central package registry."""

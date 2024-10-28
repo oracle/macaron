@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module declares types and utilities for Maven artifacts."""
-import re
+
 from collections.abc import Sequence
 
 from packageurl import PackageURL
@@ -140,21 +140,3 @@ def create_maven_purl_from_artifact_filename(
             )
 
     return None
-
-
-def is_valid_maven_group_id(group_id: str) -> bool:
-    """Check if the provided string is a valid maven group id.
-
-    Parameters
-    ----------
-    group_id : str
-        The group id to check.
-
-    Returns
-    -------
-    bool
-        True if the group id is valid, False otherwise
-    """
-    # Should match strings like org.example.foo, org.example-2.foo.bar_1.
-    pattern = r"^[a-zA-Z][a-zA-Z0-9-]*\.([a-zA-Z][a-zA-Z0-9-]*\.)*[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]$"
-    return re.match(pattern, group_id) is not None
