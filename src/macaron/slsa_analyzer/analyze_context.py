@@ -12,6 +12,7 @@ from collections import defaultdict
 from typing import Any, TypedDict
 
 from macaron.database.table_definitions import Component, SLSALevel
+from macaron.repo_verifier.repo_verifier import RepositoryVerificationResult
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.git_service import BaseGitService
@@ -34,6 +35,8 @@ class ChecksOutputs(TypedDict):
 
     git_service: BaseGitService
     """The git service information for the target software component."""
+    repo_verification: list[RepositoryVerificationResult]
+    """The repository verification info."""
     build_spec: BuildSpec
     """The build spec inferred for the target software component."""
     ci_services: list[CIInfo]
@@ -97,6 +100,7 @@ class AnalyzeContext:
         # This attribute should be accessed via the `dynamic_data` property.
         self._dynamic_data: ChecksOutputs = ChecksOutputs(
             git_service=NoneGitService(),
+            repo_verification=[],
             build_spec=BuildSpec(tools=[], purl_tools=[]),
             ci_services=[],
             package_registries=[],
