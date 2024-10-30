@@ -29,7 +29,7 @@ class RepoVerificationFacts(CheckFacts):
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
     #: Repository link identified by Macaron's repo finder.
-    repo_link: Mapped[str] = mapped_column(String, nullable=True)
+    repo_link: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
     #: Repository link identified by deps.dev.
     deps_dev_repo_link: Mapped[str | None] = mapped_column(
