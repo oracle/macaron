@@ -5,7 +5,6 @@
 
 import logging
 
-from packageurl import PackageURL
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -31,22 +30,17 @@ class RepoVerificationFacts(CheckFacts):
     #: Repository link identified by Macaron's repo finder.
     repo_link: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
-    #: Repository link identified by deps.dev.
-    deps_dev_repo_link: Mapped[str | None] = mapped_column(
-        String, nullable=True, info={"justification": JustificationType.HREF}
-    )
-
-    #: Number of stars on the repository identified by deps.dev.
-    deps_dev_stars_count: Mapped[int | None] = mapped_column(
+    #: Number of stars on the repository.
+    stars_count: Mapped[int | None] = mapped_column(
         Integer, nullable=True, info={"justification": JustificationType.TEXT}
     )
 
-    #: Number of forks on the repository identified by deps.dev.
-    deps_dev_fork_count: Mapped[int | None] = mapped_column(
+    #: Number of forks on the repository.
+    fork_count: Mapped[int | None] = mapped_column(
         Integer, nullable=True, info={"justification": JustificationType.TEXT}
     )
 
-    #: The status of the check: passed, failed, or unknown.
+    #: The status of repo verification: passed, failed, or unknown.
     status: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     #: The reason for the status.
@@ -96,12 +90,13 @@ class RepoVerificationCheck(BaseCheck):
         if ctx.component.type != "maven":
             return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-        deps_dev_repo_finder = DepsDevRepoFinder()
-        deps_dev_repo_link = deps_dev_repo_finder.find_repo(PackageURL.from_string(ctx.component.purl))
-        deps_dev_repo_info = deps_dev_repo_finder.get_project_info(deps_dev_repo_link)
-
         stars_count: int | None = None
         fork_count: int | None = None
+        deps_dev_repo_info: dict | None = None
+
+        repo_link = ctx.component.repository.remote_path if ctx.component.repository else None
+        if repo_link:
+            deps_dev_repo_info = DepsDevRepoFinder.get_project_info(repo_link)
 
         if deps_dev_repo_info:
             stars_count = deps_dev_repo_info.get("starsCount")
@@ -112,14 +107,13 @@ class RepoVerificationCheck(BaseCheck):
         for verification_result in ctx.dynamic_data.get("repo_verification", []):
             result_tables.append(
                 RepoVerificationFacts(
-                    repo_link=ctx.component.repository.remote_path if ctx.component.repository else None,
+                    repo_link=repo_link,
                     reason=verification_result.reason,
                     status=verification_result.status.value,
                     build_tool=verification_result.build_tool.name,
                     confidence=Confidence.MEDIUM,
-                    deps_dev_repo_link=deps_dev_repo_link,
-                    deps_dev_stars_count=stars_count,
-                    deps_dev_fork_count=fork_count,
+                    stars_count=stars_count,
+                    fork_count=fork_count,
                 )
             )
 
