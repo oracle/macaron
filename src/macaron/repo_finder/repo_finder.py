@@ -48,6 +48,7 @@ from macaron.repo_finder.commit_finder import find_commit
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
+from macaron.repo_finder.report import generate_report
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_url import (
@@ -146,15 +147,15 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
     )
 
 
-def find_source(purl_string: str, repo: str | None) -> bool:
+def find_source(purl_string: str, input_repo: str | None) -> bool:
     """Perform repo and commit finding for a passed PURL, or commit finding for a passed PURL and repo.
 
     Parameters
     ----------
     purl_string: str
         The PURL string of the target.
-    repo: str | None
-        The optional repository path.
+    input_repo: str | None
+        The repository path optionally provided by the user.
 
     Returns
     -------
@@ -167,8 +168,8 @@ def find_source(purl_string: str, repo: str | None) -> bool:
         logger.error("Could not parse PURL: %s", error)
         return False
 
-    found_repo = repo
-    if not repo:
+    found_repo = input_repo
+    if not input_repo:
         logger.debug("Searching for repo of PURL: %s", purl)
         found_repo = find_repo(purl)
 
@@ -206,11 +207,13 @@ def find_source(purl_string: str, repo: str | None) -> bool:
         logger.error("Could not find commit for purl / repository: %s / %s", purl, found_repo)
         return False
 
-    if not repo:
+    if not input_repo:
         logger.info("Found repository for PURL: %s", found_repo)
+
     logger.info("Found commit for PURL: %s", digest)
 
-    logger.info("%s/commit/%s", found_repo, digest)
+    if not generate_report(purl_string, digest, found_repo, os.path.join(global_config.output_path, "reports")):
+        return False
 
     return True
 
