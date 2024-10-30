@@ -1,7 +1,7 @@
 # Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""A check to determine whether the source repository of a maven package can be independently verified."""
+"""A check to determine whether the source repository of a package can be independently verified."""
 
 import logging
 
@@ -14,59 +14,63 @@ from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_verifier.repo_verifier_base import RepositoryVerificationStatus
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
-from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence
+from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.registry import registry
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class MavenRepoVerificationFacts(CheckFacts):
-    """The ORM mapping for justifications in maven source repo check."""
+class RepoVerificationFacts(CheckFacts):
+    """The ORM mapping for justifications in repo verification check."""
 
-    __tablename__ = "_maven_repo_verification_check"
+    __tablename__ = "_repo_verification_check"
 
     #: The primary key.
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
-    group: Mapped[str] = mapped_column(String, nullable=False)
-    artifact: Mapped[str] = mapped_column(String, nullable=False)
-    version: Mapped[str] = mapped_column(String, nullable=False)
-
-    # Repository link identified by Macaron's repo finder.
+    #: Repository link identified by Macaron's repo finder.
     repo_link: Mapped[str] = mapped_column(String, nullable=True)
 
-    # Repository link identified by deps.dev.
-    deps_dev_repo_link: Mapped[str | None] = mapped_column(String, nullable=True)
+    #: Repository link identified by deps.dev.
+    deps_dev_repo_link: Mapped[str | None] = mapped_column(
+        String, nullable=True, info={"justification": JustificationType.HREF}
+    )
 
-    # Number of stars on the repository identified by deps.dev.
-    deps_dev_stars_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: Number of stars on the repository identified by deps.dev.
+    deps_dev_stars_count: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, info={"justification": JustificationType.TEXT}
+    )
 
-    # Number of forks on the repository identified by deps.dev.
-    deps_dev_fork_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: Number of forks on the repository identified by deps.dev.
+    deps_dev_fork_count: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, info={"justification": JustificationType.TEXT}
+    )
 
-    # The status of the check: passed, failed, or unknown.
-    status: Mapped[str] = mapped_column(String, nullable=False)
+    #: The status of the check: passed, failed, or unknown.
+    status: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
-    # The reason for the status.
-    reason: Mapped[str] = mapped_column(String, nullable=False)
+    #: The reason for the status.
+    reason: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
-    # The build tool used to build the package.
-    build_tool: Mapped[str] = mapped_column(String, nullable=False)
+    #: The build tool used to build the package.
+    build_tool: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     __mapper_args__ = {
-        "polymorphic_identity": "_maven_repo_verification_check",
+        "polymorphic_identity": "_repo_verification_check",
     }
 
 
-class MavenRepoVerificationCheck(BaseCheck):
-    """Check whether the claims of a source repository provenance made by a maven package can be independently verified."""
+class RepoVerificationCheck(BaseCheck):
+    """Check whether the claims of a source repository provenance made by a package can be independently verified."""
 
     def __init__(self) -> None:
         """Initialize a check instance."""
-        check_id = "mcn_maven_repo_verification_1"
+        check_id = "mcn_repo_verification_1"
         description = (
             "Check whether the claims of a source repository provenance"
-            " made by a maven package can be independently verified."
+            " made by a package can be independently verified."
+            " At this moment, this check only supports Maven packages"
+            " and returns UNKNOWN for others."
         )
 
         super().__init__(
@@ -87,6 +91,8 @@ class MavenRepoVerificationCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
+        # Only support Maven at the moment.
+        # TODO: Add support for other systems.
         if ctx.component.type != "maven":
             return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
@@ -105,10 +111,7 @@ class MavenRepoVerificationCheck(BaseCheck):
         result_tables: list[CheckFacts] = []
         for verification_result in ctx.dynamic_data.get("repo_verification", []):
             result_tables.append(
-                MavenRepoVerificationFacts(
-                    group=ctx.component.namespace,
-                    artifact=ctx.component.name,
-                    version=ctx.component.version,
+                RepoVerificationFacts(
                     repo_link=ctx.component.repository.remote_path if ctx.component.repository else None,
                     reason=verification_result.reason,
                     status=verification_result.status.value,
@@ -129,4 +132,4 @@ class MavenRepoVerificationCheck(BaseCheck):
         return CheckResultData(result_tables=result_tables, result_type=result_type)
 
 
-registry.register(MavenRepoVerificationCheck())
+registry.register(RepoVerificationCheck())
