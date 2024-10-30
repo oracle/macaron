@@ -1,0 +1,16 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing the find source command on the avaje artifact.
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Run macaron find source
+  kind: find-source
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.avaje/avaje-prisms@1.1
