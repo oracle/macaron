@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import sqlalchemy.exc
-from git import InvalidGitRepositoryError
 from packageurl import PackageURL
 from pydriller.git import Git
 from sqlalchemy.orm import Session
@@ -24,18 +23,15 @@ from macaron.database.database_manager import DatabaseManager, get_db_manager, g
 from macaron.database.table_definitions import Analysis, Component, ProvenanceSubject, Repository
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, DependencyInfo
 from macaron.errors import (
-    CloneError,
     DuplicateError,
     InvalidAnalysisTargetError,
     InvalidPURLError,
     ProvenanceError,
     PURLNotFoundError,
-    RepoCheckOutError,
 )
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.repo_finder import repo_finder
-from macaron.repo_finder.commit_finder import find_commit
 from macaron.repo_finder.provenance_extractor import (
     check_if_input_purl_provenance_conflict,
     check_if_input_repo_provenance_conflict,
@@ -850,7 +846,7 @@ class Analyzer:
     def _determine_git_service(self, analyze_ctx: AnalyzeContext) -> BaseGitService:
         """Determine the Git service used by the software component."""
         remote_path = analyze_ctx.component.repository.remote_path if analyze_ctx.component.repository else None
-        git_service = self.get_git_service(remote_path)
+        git_service = get_git_service(remote_path)
 
         if isinstance(git_service, NoneGitService):
             logger.info("Unable to find repository or unsupported git service for %s", analyze_ctx.component.purl)
@@ -908,8 +904,8 @@ class Analyzer:
             ci_service.set_api_client()
 
             if ci_service.is_detected(
-                    repo_path=analyze_ctx.component.repository.fs_path,
-                    git_service=analyze_ctx.dynamic_data["git_service"],
+                repo_path=analyze_ctx.component.repository.fs_path,
+                git_service=analyze_ctx.dynamic_data["git_service"],
             ):
                 logger.info("The repo uses %s CI service.", ci_service.name)
 
@@ -937,7 +933,7 @@ class Analyzer:
     def _determine_package_registries(self, analyze_ctx: AnalyzeContext) -> None:
         """Determine the package registries used by the software component based on its build tools."""
         build_tools = (
-                analyze_ctx.dynamic_data["build_spec"]["tools"] or analyze_ctx.dynamic_data["build_spec"]["purl_tools"]
+            analyze_ctx.dynamic_data["build_spec"]["tools"] or analyze_ctx.dynamic_data["build_spec"]["purl_tools"]
         )
         for package_registry in PACKAGE_REGISTRIES:
             for build_tool in build_tools:
