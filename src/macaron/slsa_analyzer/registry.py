@@ -147,10 +147,13 @@ class Registry:
             True if check is valid, else False.
         """
         if not isinstance(check, BaseCheck):
-            logger.error(
-                "The registered Check is of type %s. Please register a child class of BaseCheck.",
-                type(check).__name__,
-            )
+            if hasattr(check, __name__):
+                logger.error(
+                    "The registered Check %s is not a valid instance of BaseCheck.",
+                    check.__name__,
+                )
+            else:
+                logger.error("The registered Check is not a valid instance of BaseCheck.")
             return False
 
         # Try to get the path to the check module file
