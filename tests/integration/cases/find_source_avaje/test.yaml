@@ -14,3 +14,10 @@ steps:
     command_args:
     - -purl
     - pkg:maven/io.avaje/avaje-prisms@1.1
+- name: Run macaron find source with cloning enabled
+  kind: find-source
+  options:
+    ini: config.ini
+    command_args:
+    - -purl
+    - pkg:maven/io.avaje/avaje-prisms@1.1
