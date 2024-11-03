@@ -90,8 +90,8 @@ the requirements that are currently supported by Macaron.
      - **Provenance derived commit** - Check if the analysis target's commit matches the commit in the provenance.
      - If there is no commit, this check will fail.
    * - ``mcn_scm_authenticity_check_1``
-     - **Source repo authenticity** - Check whether the claims of a source repository provenance made by a package can be corroborated.
-     - If the source code repository contains conflicting evidence regarding its claim of provenance, this check will fail. If no source repository or corroborating evidence is found, or if the build system is unsupported, the check will return UNKNOWN as the result. This check currently supports only Maven artifacts.
+     - **Source repo authenticity** - Check whether the claims of a source code repository made by a package can be corroborated.
+     - If the source code repository contains conflicting evidence regarding its claim of the source code repository, this check will fail. If no source code repository or corroborating evidence is found, or if the build system is unsupported, the check will return ``UNKNOWN`` as the result. This check currently supports only Maven artifacts.
 
 ****************************************************************************************
 Macaron checks that report integrity issues but do not map to SLSA requirements directly
