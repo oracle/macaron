@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Integration tests for mcn_repo_verification_1 check.
+  Integration tests for mcn_scm_authenticity_1 check.
 
 tags:
 - macaron-python-package

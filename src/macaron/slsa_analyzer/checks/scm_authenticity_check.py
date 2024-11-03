@@ -19,10 +19,10 @@ from macaron.slsa_analyzer.registry import registry
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class RepoVerificationFacts(CheckFacts):
-    """The ORM mapping for justifications in repo verification check."""
+class ScmAuthenticityFacts(CheckFacts):
+    """The ORM mapping for justifications in scm authenticity check."""
 
-    __tablename__ = "_repo_verification_check"
+    __tablename__ = "_scm_authenticity_check"
 
     #: The primary key.
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
@@ -50,19 +50,19 @@ class RepoVerificationFacts(CheckFacts):
     build_tool: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
     __mapper_args__ = {
-        "polymorphic_identity": "_repo_verification_check",
+        "polymorphic_identity": __tablename__,
     }
 
 
-class RepoVerificationCheck(BaseCheck):
-    """Check whether the claims of a source repository provenance made by a package can be independently verified."""
+class ScmAuthenticityCheck(BaseCheck):
+    """Check whether the claims of a source repository provenance made by a package can be corroborated."""
 
     def __init__(self) -> None:
         """Initialize a check instance."""
-        check_id = "mcn_repo_verification_1"
+        check_id = "mcn_scm_authenticity_1"
         description = (
             "Check whether the claims of a source repository provenance"
-            " made by a package can be independently verified."
+            " made by a package can be corroborated."
             " At this moment, this check only supports Maven packages"
             " and returns UNKNOWN for others."
         )
@@ -106,7 +106,7 @@ class RepoVerificationCheck(BaseCheck):
         result_tables: list[CheckFacts] = []
         for verification_result in ctx.dynamic_data.get("repo_verification", []):
             result_tables.append(
-                RepoVerificationFacts(
+                ScmAuthenticityFacts(
                     repo_link=repo_link,
                     reason=verification_result.reason,
                     status=verification_result.status.value,
@@ -126,4 +126,4 @@ class RepoVerificationCheck(BaseCheck):
         return CheckResultData(result_tables=result_tables, result_type=result_type)
 
 
-registry.register(RepoVerificationCheck())
+registry.register(ScmAuthenticityCheck())

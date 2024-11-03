@@ -8,7 +8,7 @@ from pathlib import Path
 from macaron.repo_verifier.repo_verifier_base import RepositoryVerificationResult, RepositoryVerificationStatus
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
-from macaron.slsa_analyzer.checks.repo_verification_check import RepoVerificationCheck
+from macaron.slsa_analyzer.checks.scm_authenticity_check import ScmAuthenticityCheck
 from macaron.slsa_analyzer.package_registry import PyPIRegistry
 from macaron.slsa_analyzer.package_registry.maven_central_registry import MavenCentralRegistry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -19,7 +19,7 @@ RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
 
 def test_repo_verification_pass(maven_tool: BaseBuildTool, macaron_path: Path) -> None:
     """Test that the check passes when the repository is verified."""
-    check = RepoVerificationCheck()
+    check = ScmAuthenticityCheck()
 
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl="pkg:maven/test/test")
     maven_registry = MavenCentralRegistry()
@@ -37,7 +37,7 @@ def test_repo_verification_pass(maven_tool: BaseBuildTool, macaron_path: Path) -
 
 def test_repo_verification_fail(maven_tool: BaseBuildTool, macaron_path: Path) -> None:
     """Test that the check fails when the repository verification is failed."""
-    check = RepoVerificationCheck()
+    check = ScmAuthenticityCheck()
 
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl="pkg:maven/test/test")
     maven_registry = MavenCentralRegistry()
@@ -53,9 +53,9 @@ def test_repo_verification_fail(maven_tool: BaseBuildTool, macaron_path: Path) -
     assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
 
-def test_repo_verification_unknown_for_unknown_repo_verification(maven_tool: BaseBuildTool, macaron_path: Path) -> None:
+def test_check_unknown_for_unknown_repo_verification(maven_tool: BaseBuildTool, macaron_path: Path) -> None:
     """Test that the check returns unknown when the repository verification is unknown."""
-    check = RepoVerificationCheck()
+    check = ScmAuthenticityCheck()
 
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl="pkg:maven/test/test")
     maven_registry = MavenCentralRegistry()
@@ -71,9 +71,9 @@ def test_repo_verification_unknown_for_unknown_repo_verification(maven_tool: Bas
     assert check.run_check(ctx).result_type == CheckResultType.UNKNOWN
 
 
-def test_repo_verification_unknown_for_unsupported_build_tools(pip_tool: BaseBuildTool, macaron_path: Path) -> None:
+def test_check_unknown_for_unsupported_build_tools(pip_tool: BaseBuildTool, macaron_path: Path) -> None:
     """Test that the check returns unknown for unsupported build tools."""
-    check = RepoVerificationCheck()
+    check = ScmAuthenticityCheck()
 
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl="pkg:pypi/test/test")
     pypi_registry = PyPIRegistry()
