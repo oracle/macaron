@@ -121,6 +121,14 @@ macaron.slsa\_analyzer.checks.provenance\_witness\_l1\_check module
    :undoc-members:
    :show-inheritance:
 
+macaron.slsa\_analyzer.checks.scm\_authenticity\_check module
+-------------------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.checks.scm_authenticity_check
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.slsa\_analyzer.checks.trusted\_builder\_l3\_check module
 ----------------------------------------------------------------
 
