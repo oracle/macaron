@@ -152,6 +152,7 @@ class Registry:
                 "The registered Check %s is not a valid instance of BaseCheck.",
                 class_name,
             )
+            return False
 
         # Try to get the path to the check module file
         check_module = inspect.getmodule(check)
