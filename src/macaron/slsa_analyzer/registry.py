@@ -147,14 +147,11 @@ class Registry:
             True if check is valid, else False.
         """
         if not isinstance(check, BaseCheck):
-            if hasattr(check, __name__):
-                logger.error(
-                    "The registered Check %s is not a valid instance of BaseCheck.",
-                    check.__name__,
-                )
-            else:
-                logger.error("The registered Check is not a valid instance of BaseCheck.")
-            return False
+            class_name = check.__name__ if isinstance(check, type) else type(check).__name__
+            logger.error(
+                "The registered Check %s is not a valid instance of BaseCheck.",
+                class_name,
+            )
 
         # Try to get the path to the check module file
         check_module = inspect.getmodule(check)
