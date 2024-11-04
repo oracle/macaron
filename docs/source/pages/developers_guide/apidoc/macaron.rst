@@ -21,6 +21,7 @@ Subpackages
    macaron.parsers
    macaron.policy_engine
    macaron.repo_finder
+   macaron.repo_verifier
    macaron.slsa_analyzer
    macaron.vsa
 
