@@ -53,6 +53,9 @@ the requirements that are currently supported by Macaron.
    * - Check ID
      - SLSA requirement
      - Concrete check
+   * - ``mcn_build_tool_1``
+     - **Build tool exists** - The source code repository includes configurations for a supported build tool used to produce the software component.
+     - Detect the build tool used in the source code repository to build the software component.
    * - ``mcn_build_script_1``
      - **Scripted build** - All build steps were fully defined in a “build script”.
      - Identify and validate build script(s).
