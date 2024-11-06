@@ -103,7 +103,7 @@ class PackageRegistry(ABC):
             raise InvalidHTTPResponseError("Failed to construct the API URL.") from error
 
         response = send_get_http_raw(url)
-        if response and response.text and response.status_code == 200:
+        if response and response.text:
             try:
                 metadata: dict = json.loads(response.text)
             except requests.exceptions.JSONDecodeError as error:

@@ -290,8 +290,7 @@ class GitHubActions(BaseCIService):
                     return False
                 return True
 
-        # Handle errors for calls to `fromisoformat()` and the time comparison.
-        except (ValueError, OverflowError, OSError, TypeError) as error:
+        except (ValueError, OverflowError, TypeError) as error:
             logger.debug(error)
 
         return False

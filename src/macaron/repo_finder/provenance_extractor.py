@@ -634,7 +634,7 @@ class WitnessGitLabBuildDefinitionV01(ProvenanceBuildDefinition):
             return None, None
 
         attestation_type = json_extract(statement["predicate"], ["attestations", "type"], str)
-        if not self.expected_attestation_type == attestation_type:
+        if self.expected_attestation_type != attestation_type:
             return None, None
         gl_workflow = json_extract(statement["predicate"], ["attestations", "attestation", "ciconfigpath"], str)
         gl_job_url = json_extract(statement["predicate"], ["attestations", "attestation", "joburl"], str)
