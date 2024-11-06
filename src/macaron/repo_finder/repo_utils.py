@@ -2,6 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the utility functions for repo and commit finder operations."""
+import json
 import logging
 import os
 import string
@@ -13,7 +14,6 @@ from pydriller import Git
 from macaron.config.global_config import global_config
 from macaron.errors import CloneError, RepoCheckOutError
 from macaron.repo_finder.commit_finder import find_commit
-from macaron.repo_finder.report_schema import create_report
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_url import (
@@ -99,6 +99,29 @@ def generate_report(purl: str, commit: str, repo: str, target_dir: str) -> bool:
     logger.info("Report written to: %s", fullpath)
 
     return True
+
+
+def create_report(purl: str, commit: str, repo: str) -> str:
+    """Generate report for standalone uses of the repo / commit finder.
+
+    Parameters
+    ----------
+    purl: str
+        The PackageURL of the target artifact, as a string.
+    commit: str
+        The commit hash to report.
+    repo: str
+        The repository to report.
+
+    Returns
+    -------
+    str
+        The report as a JSON string.
+    """
+    data = {"purl": purl, "commit": commit, "repo": repo, "repo_validated": False, "commit_validated": False, "url": ""}
+    if "github.com" in repo:
+        data["url"] = f"{repo}/commit/{commit}"
+    return json.dumps(data, indent=4)
 
 
 def prepare_repo(
