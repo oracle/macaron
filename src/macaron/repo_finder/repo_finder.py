@@ -248,7 +248,12 @@ def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
         if len(split) != 2:
             continue
         possible_tag = split[1]
-        if "{" in possible_tag or "}" in possible_tag:
+        if possible_tag.endswith("^{}"):
+            possible_tag = possible_tag[:-3]
+        elif possible_tag in tags:
+            # If a tag already exists, it must be the annotated reference of an annotated tag.
+            # In that case we skip the tag as it does not point to the proper source commit.
+            # Note that this should only happen if the tags are received out of standard order.
             continue
         possible_tag = possible_tag.replace("refs/tags/", "")
         if not possible_tag:

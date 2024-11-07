@@ -87,6 +87,7 @@ VALIDATE_SCHEMA_SCRIPTS: dict[str, Sequence[str]] = {
 
 DEFAULT_SCHEMAS: dict[str, Sequence[str]] = {
     "output_json_report": ["tests", "schema_validation", "report_schema.json"],
+    "find_source_json_report": ["tests", "repo_finder", "resources", "find_source_report_schema.json"],
 }
 
 
@@ -533,6 +534,7 @@ class FindSourceStepOptions(TypedDict):
 
     main_args: Sequence[str]
     command_args: Sequence[str]
+    ini: str | None
 
 
 @dataclass
@@ -540,7 +542,7 @@ class FindSourceStep(Step[FindSourceStepOptions]):
     """A step running the ``macaron find-source`` command."""
 
     @staticmethod
-    def options_schema() -> cfgv.Map:
+    def options_schema(cwd: str) -> cfgv.Map:
         """Generate the schema of a find-source step."""
         return cfgv.Map(
             "find source options",
@@ -556,6 +558,11 @@ class FindSourceStep(Step[FindSourceStepOptions]):
                     check_fn=cfgv.check_array(cfgv.check_string),
                     default=[],
                 ),
+                cfgv.Optional(
+                    key="ini",
+                    check_fn=check_required_file(cwd),
+                    default=None,
+                ),
             ],
         )
 
@@ -563,6 +570,9 @@ class FindSourceStep(Step[FindSourceStepOptions]):
         """Generate the command of the step."""
         args = [macaron_cmd]
         args.extend(self.options["main_args"])
+        ini_file = self.options.get("ini", None)
+        if ini_file is not None:
+            args.extend(["--defaults-path", ini_file])
         args.append("find-source")
         args.extend(self.options["command_args"])
         return args
@@ -631,7 +641,7 @@ def gen_step_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
                 condition_key="kind",
                 condition_value="find-source",
                 key="options",
-                schema=FindSourceStep.options_schema(),
+                schema=FindSourceStep.options_schema(cwd=cwd),
             ),
             cfgv.Optional(
                 key="env",

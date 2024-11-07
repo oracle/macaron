@@ -14,6 +14,12 @@ steps:
     command_args:
     - -purl
     - pkg:maven/io.avaje/avaje-prisms@1.1
+- name: Validate the produced report
+  kind: validate_schema
+  options:
+    kind: json_schema
+    schema: find_source_json_report
+    result: output/reports/maven/io_avaje/avaje-prisms/avaje-prisms.source.json
 - name: Run macaron find source with cloning enabled
   kind: find-source
   options:
@@ -21,3 +27,7 @@ steps:
     command_args:
     - -purl
     - pkg:maven/io.avaje/avaje-prisms@1.1
+- name: Check that the repository was cloned
+  kind: shell
+  options:
+    cmd: ls output/git_repos/github_com/avaje/avaje-prisms/

@@ -75,13 +75,13 @@ def generate_report(purl: str, commit: str, repo: str, target_dir: str) -> bool:
     bool
         True if the report was created. False otherwise.
     """
-    report_json = create_report(purl, commit, repo)
-
     try:
         purl_object = PackageURL.from_string(purl)
     except ValueError as error:
         logger.debug("Failed to parse purl string as PURL: %s", error)
         return False
+
+    report_json = create_report(purl, commit, repo)
 
     filename = create_filename(purl_object)
     fullpath = f"{target_dir}/{filename}"
