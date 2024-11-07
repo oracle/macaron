@@ -273,10 +273,10 @@ class GitHubActions(BaseCIService):
             True if the commit date is within the acceptable range from the publish start time,
                 False otherwise. Returns False in case of any errors during timestamp comparisons.
         """
+        # Make sure the source-code commit date is also within acceptable range.
+        acceptable_range = time_range / 2
         try:
             if started_at < publish_date_time:
-                # Make sure the source-code commit date is also within acceptable range.
-                acceptable_range = time_range / 2
                 if timedelta.total_seconds(abs(started_at - commit_date_time)) > acceptable_range:
                     logger.debug(
                         (
