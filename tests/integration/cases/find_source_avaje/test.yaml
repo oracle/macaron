@@ -21,6 +21,11 @@ steps:
     kind: json_schema
     schema: find_source_json_report
     result: output/reports/maven/io_avaje/avaje-prisms/avaje-prisms.source.json
+- name: Check that the repository was not cloned
+  kind: shell
+  options:
+    cmd: ls output/git_repos/github_com/avaje/avaje-prisms/
+  expect_fail: true
 - name: Run macaron find source with cloning enabled
   kind: find-source
   options:
