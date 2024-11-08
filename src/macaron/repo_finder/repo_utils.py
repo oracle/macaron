@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import string
+from urllib.parse import urlparse
 
 from git import InvalidGitRepositoryError
 from packageurl import PackageURL
@@ -119,7 +120,7 @@ def create_report(purl: str, commit: str, repo: str) -> str:
         The report as a JSON string.
     """
     data = {"purl": purl, "commit": commit, "repo": repo, "repo_validated": False, "commit_validated": False, "url": ""}
-    if "github.com" in repo:
+    if urlparse(repo).hostname == "github.com":
         data["url"] = f"{repo}/commit/{commit}"
     return json.dumps(data, indent=4)
 
