@@ -36,12 +36,18 @@ import logging
 import os
 from urllib.parse import ParseResult, urlunparse
 
+import git
 from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
+from macaron.config.global_config import global_config
+from macaron.repo_finder import to_domain_from_known_purl_types
+from macaron.repo_finder.commit_finder import match_tags
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
+from macaron.repo_finder.repo_utils import generate_report, prepare_repo
+from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -76,28 +82,6 @@ def find_repo(purl: PackageURL) -> str:
     # Call Repo Finder and return first valid URL
     logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
     return repo_finder.find_repo(purl)
-
-
-def to_domain_from_known_purl_types(purl_type: str) -> str | None:
-    """Return the git service domain from a known web-based purl type.
-
-    This method is used to handle cases where the purl type value is not the git domain but a pre-defined
-    repo-based type in https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst.
-
-    Note that this method will be updated when there are new pre-defined types as per the PURL specification.
-
-    Parameters
-    ----------
-    purl_type : str
-        The type field of the PURL.
-
-    Returns
-    -------
-    str | None
-        The git service domain corresponding to the purl type or None if the purl type is unknown.
-    """
-    known_types = {"github": "github.com", "bitbucket": "bitbucket.org"}
-    return known_types.get(purl_type, None)
 
 
 def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
@@ -148,3 +132,134 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
             fragment="",
         )
     )
+
+
+def find_source(purl_string: str, input_repo: str | None) -> bool:
+    """Perform repo and commit finding for a passed PURL, or commit finding for a passed PURL and repo.
+
+    Parameters
+    ----------
+    purl_string: str
+        The PURL string of the target.
+    input_repo: str | None
+        The repository path optionally provided by the user.
+
+    Returns
+    -------
+    bool
+        True if the source was found.
+    """
+    try:
+        purl = PackageURL.from_string(purl_string)
+    except ValueError as error:
+        logger.error("Could not parse PURL: %s", error)
+        return False
+
+    if not purl.version:
+        logger.debug("PURL is missing version.")
+        return False
+
+    found_repo = input_repo
+    if not input_repo:
+        logger.debug("Searching for repo of PURL: %s", purl)
+        found_repo = find_repo(purl)
+
+    if not found_repo:
+        logger.error("Could not find repo for PURL: %s", purl)
+        return False
+
+    # Disable other loggers for cleaner output.
+    logging.getLogger("macaron.slsa_analyzer.analyzer").disabled = True
+    logging.getLogger("macaron.slsa_analyzer.git_url").disabled = True
+
+    if defaults.getboolean("repofinder", "find_source_should_clone"):
+        logger.debug("Preparing repo: %s", found_repo)
+        repo_dir = os.path.join(global_config.output_path, GIT_REPOS_DIR)
+        git_obj = prepare_repo(
+            repo_dir,
+            found_repo,
+            purl=purl,
+        )
+
+        if not git_obj:
+            # TODO expand this message to cover cases where the obj was not created due to lack of correct tag.
+            logger.error("Could not resolve repository: %s", found_repo)
+            return False
+
+        try:
+            digest = git_obj.get_head().hash
+        except ValueError:
+            logger.debug("Could not retrieve commit hash from repository.")
+            return False
+    else:
+        # Retrieve the tags.
+        tags = get_tags_via_git_remote(found_repo)
+        if not tags:
+            return False
+
+        matches = match_tags(list(tags.keys()), purl.name, purl.version)
+
+        if not matches:
+            return False
+
+        matched_tag = matches[0]
+        digest = tags[matched_tag]
+
+    if not digest:
+        logger.error("Could not find commit for purl / repository: %s / %s", purl, found_repo)
+        return False
+
+    if not input_repo:
+        logger.info("Found repository for PURL: %s", found_repo)
+
+    logger.info("Found commit for PURL: %s", digest)
+
+    if not generate_report(purl_string, digest, found_repo, os.path.join(global_config.output_path, "reports")):
+        return False
+
+    return True
+
+
+def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
+    """Retrieve all tags from a given repository using ls-remote.
+
+    Parameters
+    ----------
+    repo: str
+        The repository to perform the operation on.
+
+    Returns
+    -------
+    dict[str]
+        A dictionary of tags mapped to their commits, or None if the operation failed..
+    """
+    tags = {}
+    try:
+        tag_data = git.cmd.Git().ls_remote("--tags", repo)
+    except git.exc.GitCommandError as error:
+        logger.debug("Failed to retrieve tags: %s", error)
+        return None
+
+    for tag_line in tag_data.splitlines():
+        tag_line = tag_line.strip()
+        if not tag_line:
+            continue
+        split = tag_line.split("\t")
+        if len(split) != 2:
+            continue
+        possible_tag = split[1]
+        if possible_tag.endswith("^{}"):
+            possible_tag = possible_tag[:-3]
+        elif possible_tag in tags:
+            # If a tag already exists, it must be the annotated reference of an annotated tag.
+            # In that case we skip the tag as it does not point to the proper source commit.
+            # Note that this should only happen if the tags are received out of standard order.
+            continue
+        possible_tag = possible_tag.replace("refs/tags/", "")
+        if not possible_tag:
+            continue
+        tags[possible_tag] = split[0]
+
+    logger.debug("Found %s tags via ls-remote of %s", len(tags), repo)
+
+    return tags

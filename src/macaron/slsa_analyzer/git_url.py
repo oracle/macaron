@@ -25,6 +25,10 @@ from macaron.errors import CloneError
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+GIT_REPOS_DIR = "git_repos"
+"""The directory in the output dir to store all cloned repositories."""
+
+
 def parse_git_branch_output(content: str) -> list[str]:
     """Return the list of branch names from a string that has a format similar to the output of ``git branch --list``.
 
@@ -370,6 +374,40 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
         )
 
     return Repo(path=clone_dir)
+
+
+def resolve_local_path(start_dir: str, local_path: str) -> str:
+    """Resolve the local path and check if it's within a directory.
+
+    This method returns an empty string if there are errors with resolving ``local_path``
+    (e.g. non-existed dir, broken symlinks, etc.) or ``start_dir`` does not exist.
+
+    Parameters
+    ----------
+    start_dir : str
+        The directory to look for the existence of path.
+    local_path: str
+        The local path to resolve within start_dir.
+
+    Returns
+    -------
+    str
+        The resolved path in canonical form or an empty string if errors.
+    """
+    # Resolve the path by joining dir and path.
+    # Because strict mode is enabled, if a path doesn't exist or a symlink loop
+    # is encountered, OSError is raised.
+    # ValueError is raised if we use both relative and absolute paths in os.path.commonpath.
+    try:
+        dir_real = os.path.realpath(start_dir, strict=True)
+        resolve_path = os.path.realpath(os.path.join(start_dir, local_path), strict=True)
+        if os.path.commonpath([resolve_path, dir_real]) != dir_real:
+            return ""
+
+        return resolve_path
+    except (OSError, ValueError) as error:
+        logger.error(error)
+        return ""
 
 
 def get_repo_name_from_url(url: str) -> str:

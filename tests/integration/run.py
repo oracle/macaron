@@ -87,6 +87,7 @@ VALIDATE_SCHEMA_SCRIPTS: dict[str, Sequence[str]] = {
 
 DEFAULT_SCHEMAS: dict[str, Sequence[str]] = {
     "output_json_report": ["tests", "schema_validation", "report_schema.json"],
+    "find_source_json_report": ["tests", "repo_finder", "resources", "find_source_report_schema.json"],
 }
 
 
@@ -528,6 +529,55 @@ class VerifyStep(Step[VerifyStepOptions]):
         return args
 
 
+class FindSourceStepOptions(TypedDict):
+    """The configuration options of a find source step."""
+
+    main_args: Sequence[str]
+    command_args: Sequence[str]
+    ini: str | None
+
+
+@dataclass
+class FindSourceStep(Step[FindSourceStepOptions]):
+    """A step running the ``macaron find-source`` command."""
+
+    @staticmethod
+    def options_schema(cwd: str) -> cfgv.Map:
+        """Generate the schema of a find-source step."""
+        return cfgv.Map(
+            "find source options",
+            None,
+            *[
+                cfgv.Optional(
+                    key="main_args",
+                    check_fn=cfgv.check_array(cfgv.check_string),
+                    default=[],
+                ),
+                cfgv.Optional(
+                    key="command_args",
+                    check_fn=cfgv.check_array(cfgv.check_string),
+                    default=[],
+                ),
+                cfgv.Optional(
+                    key="ini",
+                    check_fn=check_required_file(cwd),
+                    default=None,
+                ),
+            ],
+        )
+
+    def cmd(self, macaron_cmd: str) -> list[str]:
+        """Generate the command of the step."""
+        args = [macaron_cmd]
+        args.extend(self.options["main_args"])
+        ini_file = self.options.get("ini", None)
+        if ini_file is not None:
+            args.extend(["--defaults-path", ini_file])
+        args.append("find-source")
+        args.extend(self.options["command_args"])
+        return args
+
+
 def gen_step_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
     """Generate schema for a step."""
     return cfgv.Map(
@@ -547,6 +597,7 @@ def gen_step_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
                         "analyze",
                         "verify",
                         "validate_schema",
+                        "find-source",
                     ),
                 ),
             ),
@@ -585,6 +636,12 @@ def gen_step_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
                 condition_value="verify",
                 key="options",
                 schema=VerifyStep.options_schema(cwd=cwd),
+            ),
+            cfgv.ConditionalRecurse(
+                condition_key="kind",
+                condition_value="find-source",
+                key="options",
+                schema=FindSourceStep.options_schema(cwd=cwd),
             ),
             cfgv.Optional(
                 key="env",
@@ -783,6 +840,7 @@ def parse_step_config(step_id: int, step_config: Mapping) -> Step:
         "shell": ShellStep,
         "compare": CompareStep,
         "validate_schema": ValidateSchemaStep,
+        "find-source": FindSourceStep,
     }[kind]
     return step_cls(  # type: ignore  # https://github.com/python/mypy/issues/3115
         step_id=step_id,
@@ -890,13 +948,12 @@ def do_run(
     macaron_cmd: str,
     include_tags: list[str],
     exclude_tags: list[str],
-    interactive: bool,
-    dry: bool,
+    run_options: RunOptions,
 ) -> int:
     """Execute the run command."""
     test_cases = load_test_cases(
         test_case_dirs,
-        check_expected_result_files=not interactive,
+        check_expected_result_files=not run_options.interactive,
         include_tags=include_tags,
         exclude_tags=exclude_tags,
     )
@@ -914,8 +971,8 @@ def do_run(
     for test_case in test_cases:
         case_exit = test_case.run(
             macaron_cmd=macaron_cmd,
-            interactive=interactive,
-            dry=dry,
+            interactive=run_options.interactive,
+            dry=run_options.dry,
         )
         if case_exit != 0:
             # Do not exit here, but let all test cases run and aggregate the result.
@@ -1109,13 +1166,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     macaron_cmd = os.path.abspath(path)
 
     if args.command == "run":
+        run_options = RunOptions(args.interactive, args.dry)
         return do_run(
             test_case_dirs=test_case_dirs,
             macaron_cmd=macaron_cmd,
             include_tags=args.include_tag,
             exclude_tags=args.exclude_tag,
-            interactive=args.interactive,
-            dry=args.dry,
+            run_options=run_options,
         )
     if args.command == "update":
         return do_update(
@@ -1126,6 +1183,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
 
     return 0
+
+
+@dataclass
+class RunOptions:
+    """A class that exists to reduce the argument count of the run function."""
+
+    interactive: bool
+    dry: bool
 
 
 if __name__ == "__main__":

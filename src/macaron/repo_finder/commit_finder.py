@@ -12,8 +12,7 @@ from gitdb.exc import BadName
 from packageurl import PackageURL
 from pydriller import Commit, Git
 
-from macaron.repo_finder import repo_finder_deps_dev
-from macaron.repo_finder.repo_finder import to_domain_from_known_purl_types
+from macaron.repo_finder import repo_finder_deps_dev, to_domain_from_known_purl_types
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
 
 logger: logging.Logger = logging.getLogger(__name__)
