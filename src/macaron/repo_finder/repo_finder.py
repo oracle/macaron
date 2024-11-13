@@ -235,7 +235,9 @@ def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
     """
     tags = {}
     try:
-        tag_data = git.cmd.Git().ls_remote("--tags", repo)
+        command = git.cmd.Git()
+        command.update_environment(GIT_TERMINAL_PROMPT="")
+        tag_data = command.ls_remote("--tags", repo)
     except git.exc.GitCommandError as error:
         logger.debug("Failed to retrieve tags: %s", error)
         return None
