@@ -1,0 +1,20 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Performing the examples provided within the related tutorial.
+
+tags:
+- tutorial
+
+steps:
+- name: Run macaron find source
+  kind: find-source
+  options:
+    command_args:
+    - -purl
+    - pkg:npm/semver@7.6.2
+- name: Check the report contents
+  kind: shell
+  options:
+    cmd: ./check_output.sh
