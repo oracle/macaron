@@ -413,7 +413,7 @@ def list_remote_references(arguments: list[str], repo: str) -> str | None:
             logger.error("Could not access repository: %s", repo)
         return None
 
-    return str(result.stdout)
+    return result.stdout.decode("utf-8")
 
 
 def resolve_local_path(start_dir: str, local_path: str) -> str:
