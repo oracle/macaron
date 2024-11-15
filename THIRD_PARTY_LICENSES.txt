@@ -13058,4 +13058,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 Google deps.dev
 
-As well as aggregating data, deps.dev generates additional data, including resolved dependencies, advisory statistics, associations between entities, etc. This generated data is available under a CC-BY 4.0 license.
+As well as aggregating data, deps.dev generates additional data, including resolved dependencies, advisory statistics, associations between entities, etc. This generated data is available under a CC-BY 4.0 license - https://creativecommons.org/licenses/by/4.0/.
