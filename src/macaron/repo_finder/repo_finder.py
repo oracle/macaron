@@ -236,13 +236,6 @@ def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
     if not tag_data:
         return None
     tags = {}
-    # try:
-    #    command = git.cmd.Git()
-    # command.update_environment(GIT_TERMINAL_PROMPT="")
-    #    tag_data = command.ls_remote("--tags", repo)
-    # except git.exc.GitCommandError as error:
-    #    logger.debug("Failed to retrieve tags: %s", error)
-    #    return None
 
     for tag_line in tag_data.splitlines():
         tag_line = tag_line.strip()

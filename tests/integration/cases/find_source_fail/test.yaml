@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Analyzing the find source command on the a non-existent repository.
+  Analyzing the find source command on a non-existent repository.
 
 tags:
 - macaron-python-package

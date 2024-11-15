@@ -408,9 +408,11 @@ def list_remote_references(arguments: list[str], repo: str) -> str | None:
     if result.returncode != 0:
         error_string = result.stderr.decode("utf-8").strip()
         if error_string.startswith("fatal: could not read Username"):
-            # Occurs when a repository cannot be accesses either because it does not exist, or it requires a login
+            # Occurs when a repository cannot be accessed either because it does not exist, or it requires a login
             # that is blocked.
             logger.error("Could not access repository: %s", repo)
+        else:
+            logger.error("Failed to retrieve remote references from repo: %s", repo)
         return None
 
     return result.stdout.decode("utf-8")
