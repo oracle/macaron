@@ -169,7 +169,7 @@ class BuildAsCodeCheck(BaseCheck):
                                 job = callee.caller
 
                                 # We always expect the caller of the node that calls a third-party
-                                # or Reusable GitHub Action to be be a GitHubJobNode.
+                                # or Reusable GitHub Action to be a GitHubJobNode.
                                 if not isinstance(job, GitHubJobNode):
                                     continue
 

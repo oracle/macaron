@@ -451,7 +451,7 @@ class GitHubActions(BaseCIService):
         # TODO: change this check if this issue is resolved:
         # https://github.com/orgs/community/discussions/138249
         if datetime.now(timezone.utc) - timedelta(days=400) > timestamp:
-            logger.debug("Artifact published at %s is older than 410 days.", timestamp)
+            logger.debug("Artifact published at %s is older than 400 days.", timestamp)
             return True
 
         return False

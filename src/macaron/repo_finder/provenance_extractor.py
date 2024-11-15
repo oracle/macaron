@@ -412,9 +412,6 @@ class SLSAGithubGenericBuildDefinitionV01(ProvenanceBuildDefinition):
     def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
         """Retrieve the build invocation information from the given statement.
 
-        This method is intended to be implemented by subclasses to extract
-        specific invocation details from a provenance statement.
-
         Parameters
         ----------
         statement : InTotoV1Statement | InTotoV01Statement
@@ -456,9 +453,6 @@ class SLSAGithubActionsBuildDefinitionV1(ProvenanceBuildDefinition):
     def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
         """Retrieve the build invocation information from the given statement.
 
-        This method is intended to be implemented by subclasses to extract
-        specific invocation details from a provenance statement.
-
         Parameters
         ----------
         statement : InTotoV1Statement | InTotoV01Statement
@@ -495,9 +489,6 @@ class SLSANPMCLIBuildDefinitionV2(ProvenanceBuildDefinition):
 
     def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
         """Retrieve the build invocation information from the given statement.
-
-        This method is intended to be implemented by subclasses to extract
-        specific invocation details from a provenance statement.
 
         Parameters
         ----------
@@ -540,9 +531,6 @@ class SLSAGCBBuildDefinitionV1(ProvenanceBuildDefinition):
     def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
         """Retrieve the build invocation information from the given statement.
 
-        This method is intended to be implemented by subclasses to extract
-        specific invocation details from a provenance statement.
-
         Parameters
         ----------
         statement : InTotoV1Statement | InTotoV01Statement
@@ -575,9 +563,6 @@ class SLSAOCIBuildDefinitionV1(ProvenanceBuildDefinition):
 
     def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
         """Retrieve the build invocation information from the given statement.
-
-        This method is intended to be implemented by subclasses to extract
-        specific invocation details from a provenance statement.
 
         Parameters
         ----------
@@ -612,9 +597,6 @@ class WitnessGitLabBuildDefinitionV01(ProvenanceBuildDefinition):
 
     def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
         """Retrieve the build invocation information from the given statement.
-
-        This method is intended to be implemented by subclasses to extract
-        specific invocation details from a provenance statement.
 
         Parameters
         ----------
@@ -666,6 +648,7 @@ class ProvenancePredicate:
         if statement["predicate"] is None:
             return None
 
+        # Different build provenances might store the buildType field in different sections.
         if build_type := json_extract(statement["predicate"], ["buildType"], str):
             return build_type
 
@@ -695,6 +678,9 @@ class ProvenancePredicate:
             Raised when the build definition cannot be found in the provenance statement.
         """
         build_type = ProvenancePredicate.get_build_type(statement)
+        if build_type is None:
+            raise ProvenanceError("Unable to find buildType in the provenance statement.")
+
         build_defs: list[ProvenanceBuildDefinition] = [
             SLSAGithubGenericBuildDefinitionV01(),
             SLSAGithubActionsBuildDefinitionV1(),

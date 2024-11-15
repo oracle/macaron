@@ -88,7 +88,7 @@ class PackageRegistry(ABC):
         # is available for subsequent processing.
 
         base_url_parsed = urllib.parse.urlparse(registry_url or "https://api.deps.dev")
-        path_params = "/".join(["v3alpha", "purl", encode(purl).replace("/", "%2F")])
+        path_params = "/".join(["v3alpha", "purl", encode(purl, safe="")])
         try:
             url = urllib.parse.urlunsplit(
                 urllib.parse.SplitResult(
@@ -118,8 +118,8 @@ class PackageRegistry(ABC):
             logger.debug("Found timestamp: %s.", timestamp)
 
             try:
-                return datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-            except (OverflowError, OSError) as error:
+                return datetime.fromisoformat(timestamp)
+            except ValueError as error:
                 raise InvalidHTTPResponseError(f"The timestamp returned by {url} is invalid") from error
 
         raise InvalidHTTPResponseError(f"Invalid response from deps.dev for {url}.")

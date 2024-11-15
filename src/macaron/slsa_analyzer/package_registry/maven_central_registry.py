@@ -214,6 +214,10 @@ class MavenCentralRegistry(PackageRegistry):
             purl_object = PackageURL.from_string(purl)
         except ValueError as error:
             logger.debug("Could not parse PURL: %s", error)
+
+        if not purl_object.version:
+            raise InvalidHTTPResponseError("The PackageURL of the software component misses version.")
+
         query_params = [f"q=g:{purl_object.namespace}", f"a:{purl_object.name}", f"v:{purl_object.version}"]
 
         try:
@@ -230,7 +234,7 @@ class MavenCentralRegistry(PackageRegistry):
             raise InvalidHTTPResponseError("Failed to construct the search URL for Maven Central.") from error
 
         response = send_get_http_raw(url, headers=None, timeout=self.request_timeout)
-        if response and response.status_code == 200:
+        if response:
             try:
                 res_obj = response.json()
             except requests.exceptions.JSONDecodeError as error:
