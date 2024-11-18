@@ -65,6 +65,14 @@ macaron.repo\_finder.repo\_finder\_java module
    :undoc-members:
    :show-inheritance:
 
+macaron.repo\_finder.repo\_utils module
+---------------------------------------
+
+.. automodule:: macaron.repo_finder.repo_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.repo\_finder.repo\_validator module
 -------------------------------------------
 
