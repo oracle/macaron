@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime
 from typing import NamedTuple
 from urllib.parse import SplitResult, urlunsplit
 
@@ -851,3 +852,35 @@ class JFrogMavenRegistry(PackageRegistry):
             return False
 
         return True
+
+    def find_publish_timestamp(self, purl: str, registry_url: str | None = None) -> datetime:
+        """Make a search request to Maven Central to find the publishing timestamp of an artifact.
+
+        The reason for directly fetching timestamps from Maven Central is that deps.dev occasionally
+        misses timestamps for Maven artifacts, making it unreliable for this purpose.
+
+        To see the search API syntax see: https://central.sonatype.org/search/rest-api-guide/
+
+        Parameters
+        ----------
+        purl: str
+            The Package URL (purl) of the package whose publication timestamp is to be retrieved.
+            This should conform to the PURL specification.
+        registry_url: str | None
+            The registry URL that can be set for testing.
+
+        Returns
+        -------
+        datetime
+            A timezone-aware datetime object representing the publication timestamp
+            of the specified package.
+
+        Raises
+        ------
+        InvalidHTTPResponseError
+            If the URL construction fails, the HTTP response is invalid, or if the response
+            cannot be parsed correctly, or if the expected timestamp is missing or invalid.
+        NotImplementedError
+            If not implemented for a registry.
+        """
+        raise NotImplementedError("Fetching timestamps for artifacts on JFrog is not currently supported.")

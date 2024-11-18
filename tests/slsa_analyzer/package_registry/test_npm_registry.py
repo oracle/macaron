@@ -4,15 +4,23 @@
 """Tests for the npm registry."""
 
 import os
+from datetime import datetime
 from pathlib import Path
 
 import pytest
+from pytest_httpserver import HTTPServer
 
 from macaron.config.defaults import load_defaults
-from macaron.errors import ConfigurationError
+from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.npm import NPM
 from macaron.slsa_analyzer.package_registry.npm_registry import NPMAttestationAsset, NPMRegistry
+
+
+@pytest.fixture(name="resources_path")
+def resources() -> Path:
+    """Create the resources path."""
+    return Path(__file__).parent.joinpath("resources")
 
 
 @pytest.fixture(name="npm_registry")
@@ -123,3 +131,72 @@ def test_npm_attestation_asset_url(
     )
     assert asset.name == artifact_id
     assert asset.url == f"https://{npm_registry.hostname}/{npm_registry.attestation_endpoint}/{expected}"
+
+
+@pytest.mark.parametrize(
+    ("purl", "npm_json_path", "expected_timestamp"),
+    [
+        (
+            "pkg:npm/@sigstore/mock@0.7.5",
+            "_sigstore.mock@0.7.5.json",
+            "2024-06-11T23:49:17Z",
+        ),
+    ],
+)
+def test_find_publish_timestamp(
+    resources_path: Path,
+    httpserver: HTTPServer,
+    purl: str,
+    npm_json_path: str,
+    expected_timestamp: str,
+) -> None:
+    """Test that the function finds the timestamp correctly."""
+    registry = NPMRegistry()
+
+    with open(os.path.join(resources_path, "npm_registry_files", npm_json_path), encoding="utf8") as page:
+        response = page.read()
+
+    httpserver.expect_request(
+        "/".join(["/v3alpha", "purl", purl]),
+    ).respond_with_data(response)
+
+    publish_time_obj = registry.find_publish_timestamp(purl=purl, registry_url=httpserver.url_for(""))
+    expected_time_obj = datetime.strptime(expected_timestamp, "%Y-%m-%dT%H:%M:%S%z")
+    assert publish_time_obj == expected_time_obj
+
+
+@pytest.mark.parametrize(
+    ("purl", "npm_json_path", "expected_msg"),
+    [
+        (
+            "pkg:npm/@sigstore/mock@0.7.5",
+            "empty_sigstore.mock@0.7.5.json",
+            "Invalid response from deps.dev for (.)*",
+        ),
+        (
+            "pkg:npm/@sigstore/mock@0.7.5",
+            "invalid_sigstore.mock@0.7.5.json",
+            "The timestamp is missing in the response returned by",
+        ),
+    ],
+)
+def test_find_publish_timestamp_errors(
+    resources_path: Path,
+    httpserver: HTTPServer,
+    purl: str,
+    npm_json_path: str,
+    expected_msg: str,
+) -> None:
+    """Test that the function handles errors correctly."""
+    registry = NPMRegistry()
+
+    with open(os.path.join(resources_path, "npm_registry_files", npm_json_path), encoding="utf8") as page:
+        response = page.read()
+
+    httpserver.expect_request(
+        "/".join(["/v3alpha", "purl", purl]),
+    ).respond_with_data(response)
+
+    pat = f"^{expected_msg}"
+    with pytest.raises(InvalidHTTPResponseError, match=pat):
+        registry.find_publish_timestamp(purl=purl, registry_url=httpserver.url_for(""))

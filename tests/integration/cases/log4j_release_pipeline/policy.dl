@@ -1,0 +1,23 @@
+/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("test_policy", component_id, "") :-
+    check_passed(component_id, "mcn_build_as_code_1"),
+    check_passed(component_id, "mcn_build_script_1"),
+    check_passed(component_id, "mcn_build_service_1"),
+    check_passed_with_confidence(component_id, "mcn_find_artifact_pipeline_1", confidence),
+    confidence = 0.7, // Medium confidence because the pipeline was not found from a provenance.
+    check_passed(component_id, "mcn_version_control_system_1"),
+    check_failed(component_id, "mcn_provenance_available_1"),
+    check_failed(component_id, "mcn_provenance_derived_commit_1"),
+    check_failed(component_id, "mcn_provenance_derived_repo_1"),
+    check_failed(component_id, "mcn_provenance_expectation_1"),
+    check_failed(component_id, "mcn_provenance_level_three_1"),
+    check_failed(component_id, "mcn_provenance_witness_level_one_1"),
+    check_failed(component_id, "mcn_trusted_builder_level_three_1"),
+    is_repo_url(component_id, "https://github.com/apache/logging-log4j2").
+
+apply_policy_to("test_policy", component_id) :-
+    is_component(component_id, "pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta2").

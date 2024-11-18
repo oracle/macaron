@@ -2,6 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module implements SLSA provenance abstractions."""
+
 from typing import NamedTuple
 
 from macaron.slsa_analyzer.asset import AssetLocator

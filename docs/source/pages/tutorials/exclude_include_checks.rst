@@ -24,7 +24,7 @@ This tutorial will show how you can configure Macaron to:
 Prerequisites
 -------------
 
-* You are expected to have gone through :ref:`this tutorial <detect-malicious-java-dep>`.
+* You are expected to have gone through :ref:`this tutorial <detect-manual-upload-java-dep>`.
 * This tutorial requires a high-level understanding of checks in Macaron and how they depend on each other. Please see this :ref:`page <macaron-developer-guide>` for more information.
 
 ------------------

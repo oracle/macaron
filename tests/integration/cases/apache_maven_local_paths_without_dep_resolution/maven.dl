@@ -8,7 +8,7 @@ Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_build_service_1"),
     check_passed(component_id, "mcn_version_control_system_1"),
     check_failed(component_id, "mcn_build_as_code_1"),
-    check_failed(component_id, "mcn_infer_artifact_pipeline_1"),
+    check_failed(component_id, "mcn_find_artifact_pipeline_1"),
     check_failed(component_id, "mcn_provenance_available_1"),
     check_failed(component_id, "mcn_provenance_derived_commit_1"),
     check_failed(component_id, "mcn_provenance_derived_repo_1"),

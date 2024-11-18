@@ -927,6 +927,7 @@ class Analyzer:
                                 asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0),
                             )
                         ],
+                        build_info_results=InTotoV01Payload(statement=Provenance().payload),
                     )
                 )
 

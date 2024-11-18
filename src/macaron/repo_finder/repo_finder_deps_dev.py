@@ -125,7 +125,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
             The list of created URLs.
         """
         # See https://docs.deps.dev/api/v3alpha/
-        base_url = f"https://api.deps.dev/v3alpha/purl/{encode(str(purl)).replace('/', '%2F')}"
+        base_url = f"https://api.deps.dev/v3alpha/purl/{encode(str(purl), safe='')}"
 
         if not base_url:
             return []
