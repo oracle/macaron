@@ -161,7 +161,7 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
     found_repo = input_repo
     if not input_repo:
         logger.debug("Searching for repo of PURL: %s", purl)
-        found_repo = find_repo(purl)
+        found_repo, _ = find_repo(purl)
 
     if not found_repo:
         logger.error("Could not find repo for PURL: %s", purl)
@@ -174,7 +174,7 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
         logger.debug("Preparing repo: %s", found_repo)
         repo_dir = os.path.join(global_config.output_path, GIT_REPOS_DIR)
         logging.getLogger("macaron.slsa_analyzer.git_url").disabled = True
-        git_obj = prepare_repo(
+        git_obj, _, digest = prepare_repo(
             repo_dir,
             found_repo,
             purl=purl,
@@ -185,9 +185,7 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
             logger.error("Could not resolve repository: %s", found_repo)
             return False
 
-        try:
-            digest = git_obj.get_head().hash
-        except ValueError:
+        if not digest:
             logger.debug("Could not retrieve commit hash from repository.")
             return False
     else:
@@ -196,7 +194,7 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
         if not tags:
             return False
 
-        matches = match_tags(list(tags.keys()), purl.name, purl.version)
+        matches, _ = match_tags(list(tags.keys()), purl.name, purl.version)
 
         if not matches:
             return False
