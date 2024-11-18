@@ -9,6 +9,7 @@ from typing import TypedDict
 from macaron.code_analyzer.call_graph import CallGraph
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
+from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.provenance.provenance import DownloadedProvenanceData
 
 
@@ -36,3 +37,6 @@ class CIInfo(TypedDict):
 
     provenances: Sequence[DownloadedProvenanceData]
     """The provenances data."""
+
+    build_info_results: InTotoV01Payload
+    """The build information results computed for a build step. We use the in-toto 0.1 as the spec."""

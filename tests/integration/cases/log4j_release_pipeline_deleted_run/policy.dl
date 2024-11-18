@@ -1,0 +1,38 @@
+/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("test_policy", component_id, "") :-
+    check_passed(component_id, "mcn_build_as_code_1"),
+    check_passed(component_id, "mcn_build_script_1"),
+    check_passed(component_id, "mcn_build_service_1"),
+    check_passed(component_id, "mcn_version_control_system_1"),
+    check_failed(component_id, "mcn_provenance_available_1"),
+    check_failed(component_id, "mcn_provenance_derived_commit_1"),
+    check_failed(component_id, "mcn_provenance_derived_repo_1"),
+    check_failed(component_id, "mcn_provenance_expectation_1"),
+    check_failed(component_id, "mcn_provenance_level_three_1"),
+    check_failed(component_id, "mcn_provenance_witness_level_one_1"),
+    check_failed(component_id, "mcn_trusted_builder_level_three_1"),
+    is_repo_url(component_id, "https://github.com/apache/logging-log4j2"),
+    // The GitHub API has a retention policy of removing CI run data after 400 days.
+    // Note that mcn_find_artifact_pipeline_1 fails because it returns UNKNOWN, in this case with low confidence.
+    // That's why we cannot rely on the check fail here only and need to also check the data gathered by
+    // the artifact_pipeline_check.
+    check_failed_with_confidence(component_id, "mcn_find_artifact_pipeline_1", confidence),
+    confidence = 0.4,
+    artifact_pipeline_check(
+        apc_check_id,
+        "https://github.com/apache/logging-log4j2/blob/5a5d3aefdc75045bb66f55a16c40a9a07a463738/.github/workflows/build.yml",
+        "deploy",
+        "Maven \"deploy\"",
+        _,
+        0,  // From provenance.
+        1,  // Run deleted.
+        0   // Published before the code was committed.
+    ),
+    check_facts(apc_check_id, confidence, component_id,_,_).
+
+apply_policy_to("test_policy", component_id) :-
+    is_component(component_id, "pkg:maven/org.apache.logging.log4j/log4j-core@2.19.0").

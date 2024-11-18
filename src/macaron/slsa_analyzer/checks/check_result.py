@@ -201,7 +201,7 @@ class CheckResultData:
             # Look for columns that are have "justification" metadata.
             for col in result.__table__.columns:
                 column_value = getattr(result, col.name)
-                if col.info.get("justification") and column_value:
+                if col.info.get("justification") and column_value is not None:
                     if col.info.get("justification") == JustificationType.HREF:
                         dict_elements[col.name] = column_value
                     elif col.info.get("justification") == JustificationType.TEXT:
