@@ -41,6 +41,14 @@ macaron.slsa\_analyzer.checks.build\_service\_check module
    :undoc-members:
    :show-inheritance:
 
+macaron.slsa\_analyzer.checks.build\_tool\_check module
+-------------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.checks.build_tool_check
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.slsa\_analyzer.checks.check\_result module
 --------------------------------------------------
 
