@@ -66,11 +66,6 @@ class JavaRepoFinder(BaseRepoFinder):
         last_outcome = RepoFinderOutcome.FOUND
         check_parents = defaults.getboolean("repofinder.java", "find_parents")
 
-        if not version:
-            logger.info("Version missing for maven artifact: %s:%s", group, artifact)
-            # TODO add support for Java artifacts without a version
-            return ""
-
         while group and artifact and version and limit > 0:
             # Create the URLs for retrieving the artifact's POM.
             group = group.replace(".", "/")

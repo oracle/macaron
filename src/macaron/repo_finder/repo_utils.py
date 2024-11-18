@@ -209,7 +209,7 @@ def prepare_repo(
 
     # Find the digest and branch if a version has been specified
     if not digest and purl and purl.version:
-        found_digest = find_commit(git_obj, purl)
+        found_digest, commit_finder_outcome = find_commit(git_obj, purl)
         if not found_digest:
             logger.error("Could not map the input purl string to a specific commit in the corresponding repository.")
             return None, commit_finder_outcome, digest
