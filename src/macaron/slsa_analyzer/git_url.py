@@ -19,6 +19,7 @@ from git.repo import Repo
 from pydriller.git import Git
 
 from macaron.config.defaults import defaults
+from macaron.config.global_config import global_config
 from macaron.environment_variables import get_patched_env
 from macaron.errors import CloneError
 
@@ -374,6 +375,47 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
         )
 
     return Repo(path=clone_dir)
+
+
+def list_remote_references(arguments: list[str], repo: str) -> str | None:
+    """Retrieve references from a remote repository using Git's ``ls-remote``.
+
+    Parameters
+    ----------
+    arguments: list[str]
+        The arguments to pass into the command.
+    repo: str
+        The repository to run the command on.
+
+    Returns
+    -------
+    str
+        The result of the command.
+    """
+    try:
+        result = subprocess.run(  # nosec B603
+            args=["git", "ls-remote"] + arguments + [repo],
+            capture_output=True,
+            # By setting stdin to /dev/null and using a new session, we prevent all possible user input prompts.
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,
+            cwd=global_config.output_path,
+            check=False,
+        )
+    except (subprocess.CalledProcessError, OSError):
+        return None
+
+    if result.returncode != 0:
+        error_string = result.stderr.decode("utf-8").strip()
+        if error_string.startswith("fatal: could not read Username"):
+            # Occurs when a repository cannot be accessed either because it does not exist, or it requires a login
+            # that is blocked.
+            logger.error("Could not access repository: %s", repo)
+        else:
+            logger.error("Failed to retrieve remote references from repo: %s", repo)
+        return None
+
+    return result.stdout.decode("utf-8")
 
 
 def resolve_local_path(start_dir: str, local_path: str) -> str:

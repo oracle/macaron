@@ -1,0 +1,20 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing the find source command on a non-existent repository.
+
+tags:
+- macaron-python-package
+- macaron-docker-image
+
+steps:
+- name: Run macaron find source on private repository
+  kind: find-source
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/com.example/example@1.0.0
+    - -rp
+    - https://github.com/oracle/hopefully-this-repository-will-never-exist-0
+    expect_fail: true
