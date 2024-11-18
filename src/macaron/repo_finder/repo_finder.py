@@ -36,7 +36,6 @@ import logging
 import os
 from urllib.parse import ParseResult, urlunparse
 
-import git
 from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
@@ -47,7 +46,7 @@ from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
 from macaron.repo_finder.repo_utils import generate_report, prepare_repo
-from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR
+from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR, list_remote_references
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -170,11 +169,11 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
 
     # Disable other loggers for cleaner output.
     logging.getLogger("macaron.slsa_analyzer.analyzer").disabled = True
-    logging.getLogger("macaron.slsa_analyzer.git_url").disabled = True
 
     if defaults.getboolean("repofinder", "find_source_should_clone"):
         logger.debug("Preparing repo: %s", found_repo)
         repo_dir = os.path.join(global_config.output_path, GIT_REPOS_DIR)
+        logging.getLogger("macaron.slsa_analyzer.git_url").disabled = True
         git_obj = prepare_repo(
             repo_dir,
             found_repo,
@@ -233,12 +232,10 @@ def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
     dict[str]
         A dictionary of tags mapped to their commits, or None if the operation failed..
     """
-    tags = {}
-    try:
-        tag_data = git.cmd.Git().ls_remote("--tags", repo)
-    except git.exc.GitCommandError as error:
-        logger.debug("Failed to retrieve tags: %s", error)
+    tag_data = list_remote_references(["--tags"], repo)
+    if not tag_data:
         return None
+    tags = {}
 
     for tag_line in tag_data.splitlines():
         tag_line = tag_line.strip()
