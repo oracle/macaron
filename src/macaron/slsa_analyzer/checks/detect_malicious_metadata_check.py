@@ -5,12 +5,13 @@
 
 import logging
 
-from sqlalchemy import ForeignKey
+import requests
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.db_custom_types import DBJsonDict
 from macaron.database.table_definitions import CheckFacts
-from macaron.json_tools import JsonType
+from macaron.json_tools import JsonType, json_extract
 from macaron.malware_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult, Heuristics
 from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
@@ -28,6 +29,7 @@ from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResu
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset, PyPIRegistry
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
+from macaron.util import send_post_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -40,13 +42,16 @@ class MaliciousMetadataFacts(CheckFacts):
     #: The primary key.
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
+    #: Known malware.
+    known_malware: Mapped[str | None] = mapped_column(
+        String, nullable=True, info={"justification": JustificationType.HREF}
+    )
+
     #: Detailed information about the analysis.
     detail_information: Mapped[dict[str, JsonType]] = mapped_column(DBJsonDict, nullable=False)
 
-    #: The result of analysis, which is of dict[Heuristics, HeuristicResult] type.
-    result: Mapped[dict[Heuristics, HeuristicResult]] = mapped_column(
-        DBJsonDict, nullable=False, info={"justification": JustificationType.TEXT}
-    )
+    #: The result of analysis, which can be an empty dictionary.
+    result: Mapped[dict] = mapped_column(DBJsonDict, nullable=False, info={"justification": JustificationType.TEXT})
 
     __mapper_args__ = {
         "polymorphic_identity": "_detect_malicious_metadata_check",
@@ -223,6 +228,36 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
+        result_tables: list[CheckFacts] = []
+        # First check if this package is a known malware
+
+        url = "https://api.osv.dev/v1/query"
+        data = {"package": {"purl": ctx.component.purl}}
+        response = send_post_http_raw(url, json_data=data, headers=None)
+        res_obj = None
+        if response:
+            try:
+                res_obj = response.json()
+            except requests.exceptions.JSONDecodeError as error:
+                logger.debug("Unable to get a valid response from %s: %s", url, error)
+        if res_obj:
+            for vuln in res_obj.get("vulns", {}):
+                v_id = json_extract(vuln, ["id"], str)
+                if v_id and v_id.startswith("MAL-"):
+                    result_tables.append(
+                        MaliciousMetadataFacts(
+                            known_malware=f"https://osv.dev/vulnerability/{v_id}",
+                            result={},
+                            detail_information=vuln,
+                            confidence=Confidence.HIGH,
+                        )
+                    )
+            if result_tables:
+                return CheckResultData(
+                    result_tables=result_tables,
+                    result_type=CheckResultType.FAILED,
+                )
+
         package_registry_info_entries = ctx.dynamic_data["package_registries"]
         for package_registry_info_entry in package_registry_info_entries:
             match package_registry_info_entry:
@@ -230,7 +265,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                     build_tool=Pip() | Poetry(),
                     package_registry=PyPIRegistry() as pypi_registry,
                 ) as pypi_registry_info:
-                    result_tables: list[CheckFacts] = []
 
                     # Create an AssetLocator object for the PyPI package JSON object.
                     pypi_package_json = PyPIPackageJsonAsset(

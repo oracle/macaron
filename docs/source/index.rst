@@ -107,7 +107,7 @@ Macaron checks that report integrity issues but do not map to SLSA requirements 
    * - Check ID
      - Description
    * - ``mcn_detect_malicious_metadata_1``
-     - This check analyzes the metadata of a package and reports malicious behavior. This check currently supports PyPI packages.
+     - This check performs analysis on PyPI package metadata to detect malicious behavior. It also reports known malware from other ecosystems, but the analysis is currently limited to PyPI packages.
 
 ----------------------
 How does Macaron work?
