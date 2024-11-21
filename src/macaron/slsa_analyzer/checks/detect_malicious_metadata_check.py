@@ -51,7 +51,9 @@ class MaliciousMetadataFacts(CheckFacts):
     detail_information: Mapped[dict[str, JsonType]] = mapped_column(DBJsonDict, nullable=False)
 
     #: The result of analysis, which can be an empty dictionary.
-    result: Mapped[dict] = mapped_column(DBJsonDict, nullable=False, info={"justification": JustificationType.TEXT})
+    result: Mapped[dict[Heuristics, HeuristicResult]] = mapped_column(
+        DBJsonDict, nullable=False, info={"justification": JustificationType.TEXT}
+    )
 
     __mapper_args__ = {
         "polymorphic_identity": "_detect_malicious_metadata_check",
