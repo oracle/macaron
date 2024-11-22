@@ -13,8 +13,10 @@ In this tutorial we show how to use Macaron to find malicious packages. Imagine 
    :widths: 25
    :header-rows: 1
 
-   * - Supported packages
+   * - Supported packages for analysis
    * - Python packages (PyPI)
+
+Note that known malware is reported for packages across all ecosystems.
 
 .. contents:: :local:
 
