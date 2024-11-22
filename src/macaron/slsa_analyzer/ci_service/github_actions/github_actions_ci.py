@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.errors import CallGraphError, ParseError
+from macaron.errors import CallGraphError, GitHubActionsValueError, ParseError
 from macaron.parsers.bashparser import BashNode, BashScriptType
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
@@ -333,6 +333,11 @@ class GitHubActions(BaseCIService):
         -------
         set[str]
             The set of URLs found for the workflow within the time range.
+
+        Raises
+        ------
+        GitHubActionsValueError
+            This error is raised when the GitHub Action workflow run misses values.
         """
         logger.debug(
             "Getting the latest workflow run of %s at publishing time %s and source commit date %s within time range %s.",
@@ -377,6 +382,8 @@ class GitHubActions(BaseCIService):
 
                     # Find the matching step and check its `conclusion` and `started_at` attributes.
                     html_url = None
+                    if not run_jobs["jobs"]:
+                        raise GitHubActionsValueError("GitHub Actions workflow run misses jobs information.")
                     for job in run_jobs["jobs"]:
                         # If the deploy step is a Reusable Workflow, there won't be any steps in the caller job.
                         if callee_node_type == GitHubWorkflowType.REUSABLE.value:
@@ -392,6 +399,11 @@ class GitHubActions(BaseCIService):
                                 run_id = item["id"]
                                 html_url = item["html_url"]
                                 break
+
+                        if not job["steps"]:
+                            raise GitHubActionsValueError(
+                                f"GitHub Actions workflow run misses steps information for the {job_id} job ID."
+                            )
 
                         for step in job["steps"]:
                             if step["name"] not in [step_name, step_id] or step["conclusion"] != "success":

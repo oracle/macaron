@@ -12,7 +12,7 @@ from sqlalchemy.sql.sqltypes import String
 
 from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
-from macaron.errors import InvalidHTTPResponseError, ProvenanceError
+from macaron.errors import GitHubActionsValueError, InvalidHTTPResponseError, ProvenanceError
 from macaron.json_tools import json_extract
 from macaron.repo_finder.provenance_extractor import ProvenancePredicate
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -219,17 +219,22 @@ class ArtifactPipelineCheck(BaseCheck):
                 return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
 
             # Find the workflow runs that have potentially triggered the artifact publishing.
-            html_urls = ci_service.workflow_run_in_date_time_range(
-                repo_full_name=ctx.component.repository.full_name,
-                workflow=build_entry_point,
-                publish_date_time=artifact_published_date,
-                commit_date_time=commit_date,
-                job_id=job_id,
-                step_name=step_name,
-                step_id=step_id,
-                time_range=publish_time_range,
-                callee_node_type=callee_node_type,
-            )
+            html_urls = set()
+            try:
+                html_urls = ci_service.workflow_run_in_date_time_range(
+                    repo_full_name=ctx.component.repository.full_name,
+                    workflow=build_entry_point,
+                    publish_date_time=artifact_published_date,
+                    commit_date_time=commit_date,
+                    job_id=job_id,
+                    step_name=step_name,
+                    step_id=step_id,
+                    time_range=publish_time_range,
+                    callee_node_type=callee_node_type,
+                )
+            except GitHubActionsValueError as error:
+                logger.debug(error)
+                ci_run_deleted = True
 
             # If provenance exists, we expect the timestamp of the reported triggered run
             # to be within an acceptable range, have succeeded, and called the deploy command.
