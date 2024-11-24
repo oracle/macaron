@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "macaron-json-report-schema",
-    "title": "Macaron JSON Report",
+    "$id": "macaron-source-finder-json-report-schema",
+    "title": "Macaron Source Finder JSON Report",
     "$comment": "For any details about the schema specification and validation documentation, see https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-00 and https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-validation-00.",
     "type": "object",
     "properties": {

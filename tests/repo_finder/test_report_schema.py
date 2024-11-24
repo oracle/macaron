@@ -3,19 +3,22 @@
 
 """This module tests the report schema of the repo finder."""
 import json
-from pathlib import Path
+import os
 from typing import Any
 
 import jsonschema
 import pytest
 
+from macaron import MACARON_PATH
 from macaron.repo_finder.repo_utils import create_report
 
 
 @pytest.fixture(name="json_schema")
 def json_schema_() -> Any:
     """Load and return the JSON schema."""
-    with open(Path(__file__).parent.joinpath("resources", "find_source_report_schema.json"), encoding="utf-8") as file:
+    with open(
+        os.path.join(MACARON_PATH, "resources", "schemastore", "find_source_report_schema.json"), encoding="utf-8"
+    ) as file:
         return json.load(file)
 
 
