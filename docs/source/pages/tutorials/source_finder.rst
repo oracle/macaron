@@ -7,7 +7,7 @@ Source Finder
 
 This tutorial demonstrates how Macaron can find the source commit of a given artifact, and optionally the source repository, while performing no analyses. This operation exists as a standalone feature, using the ``find-source`` command, for users that wish to utilise only these features of Macaron without spending time performing additional unnecessary steps.
 
-Unlike the integrated commit finder (demonstrated in another tutorial :doc:`here </pages/tutorials/source_finder>`), the ``find-source`` command does not require cloning the target repository, thereby saving time in many cases, and disk space in all cases. For those who still wish to clone the repository as part of the process, a configuration option exists and will be explained below.
+Unlike the integrated commit finder (demonstrated in another tutorial :doc:`here </pages/tutorials/commit_finder>`), the ``find-source`` command does not require cloning the target repository, thereby saving time in many cases, and disk space in all cases. For those who still wish to clone the repository as part of the process, a configuration option exists and will be explained below.
 
 ******************************
 Installation and Prerequisites
@@ -52,7 +52,7 @@ To open the report and view the contents, you can use the following:
 
   open output/reports/npm/semver/semver.source.json
 
-Inside you will find the ``repo`` and ``commit`` properties have been populated with ``https://github.com/npm/node-semver`` and ``eb1380b1ecd74f6572831294d55ef4537dfe1a2a`` respectively. As this is a GitHub repository, Macaron also creates a URL that leads directly to the reported commit, found under the ``url`` property.
+Inside you will find the ``repo`` and ``commit`` properties have been populated with ``https://github.com/npm/node-semver`` and ``eb1380b1ecd74f6572831294d55ef4537dfe1a2a`` respectively. As this is a GitHub repository, Macaron also creates a URL that leads directly to the reported commit, found under the ``url`` property. You can find the JSON schema for this output file :download:`here <../../_static/schemastore/find_source_report_schema.json>`.
 
 If the repository for an artifact is already known, the ``find-source`` command can be given it to save looking it up again. To do this, the command changes to:
 
@@ -66,7 +66,7 @@ If the repository for an artifact is already known, the ``find-source`` command 
 Execution with Clone
 ********************
 
-For the case where cloning the repository is desirable, perhaps because further use of the contents are planned, Macaron requires this to be specified in a custom ``ini`` configuration file that is passed as input. See `How to change the default configuration </pages/using#change-config>`_ for more details. Within the configuration file the following option should be set:
+For the case where cloning the repository is desirable, perhaps because further use of the contents are planned, Macaron requires this to be specified in a custom ``ini`` configuration file that is passed as input. See :ref:`How to change the default configuration <change-config>` for more details. Within the configuration file the following option should be set:
 
 .. code-block:: ini
 
