@@ -103,7 +103,7 @@ class PackageURLMixin:
     name: Mapped[str] = mapped_column(String(100), nullable=False, comment="Name of the package.")
 
     #: Version of the package.
-    version: Mapped[str] | None = mapped_column(String(100), nullable=True, comment="Version of the package.")
+    version: Mapped[str | None] = mapped_column(String(100), nullable=True, comment="Version of the package.")
 
     #: Extra qualifying data for a package such as the name of an OS.
     qualifiers: Mapped[str] = mapped_column(
