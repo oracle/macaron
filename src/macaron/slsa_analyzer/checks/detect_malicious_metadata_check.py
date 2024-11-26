@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.db_custom_types import DBJsonDict
 from macaron.database.table_definitions import CheckFacts
+from macaron.errors import HeuristicAnalyzerValueError
 from macaron.json_tools import JsonType, json_extract
 from macaron.malware_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult, Heuristics
@@ -20,6 +21,7 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency im
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unreachable_project_links import UnreachableProjectLinksAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_presence import WheelPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.pip import Pip
@@ -70,11 +72,13 @@ ANALYZERS: list = [
     UnchangedReleaseAnalyzer,
     CloserReleaseJoinDateAnalyzer,
     SuspiciousSetupAnalyzer,
+    WheelPresenceAnalyzer,
 ]
 
 # The HeuristicResult sequence is aligned with the sequence of ANALYZERS list
 SUSPICIOUS_COMBO: dict[
     tuple[
+        HeuristicResult,
         HeuristicResult,
         HeuristicResult,
         HeuristicResult,
@@ -93,9 +97,10 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.SKIP,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
+        HeuristicResult.FAIL,  # Wheel Presence
         # No project link, only one release, and the maintainer released it shortly
         # after account registration.
-        # The setup.py file contains suspicious imports.
+        # The setup.py file contains suspicious imports and .whl file isn't present.
     ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,  # Empty Project
@@ -105,9 +110,10 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
+        HeuristicResult.FAIL,  # Wheel Presence
         # No project link, frequent releases of multiple versions without modifying the content,
         # and the maintainer released it shortly after account registration.
-        # The setup.py file contains suspicious imports.
+        # The setup.py file contains suspicious imports and .whl file isn't present.
     ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,  # Empty Project
@@ -117,9 +123,10 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.PASS,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
+        HeuristicResult.FAIL,  # Wheel Presence
         # No project link, frequent releases of multiple versions,
         # and the maintainer released it shortly after account registration.
-        # The setup.py file contains suspicious imports.
+        # The setup.py file contains suspicious imports and .whl file isn't present.
     ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,  # Empty Project
@@ -129,8 +136,23 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.PASS,  # Suspicious Setup
+        HeuristicResult.PASS,  # Wheel Presence
         # No project link, frequent releases of multiple versions without modifying the content,
-        # and the maintainer released it shortly after account registration.
+        # and the maintainer released it shortly after account registration. Presence of .whl file
+        # has no effect
+    ): Confidence.MEDIUM,
+    (
+        HeuristicResult.FAIL,  # Empty Project
+        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.PASS,  # One Release
+        HeuristicResult.FAIL,  # High Release Frequency
+        HeuristicResult.FAIL,  # Unchanged Release
+        HeuristicResult.FAIL,  # Closer Release Join Date
+        HeuristicResult.PASS,  # Suspicious Setup
+        HeuristicResult.FAIL,  # Wheel Presence
+        # No project link, frequent releases of multiple versions without modifying the content,
+        # and the maintainer released it shortly after account registration. Presence of .whl file
+        # has no effect
     ): Confidence.MEDIUM,
     (
         HeuristicResult.PASS,  # Empty Project
@@ -140,9 +162,10 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.PASS,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
+        HeuristicResult.FAIL,  # Wheel Presence
         # All project links are unreachable, frequent releases of multiple versions,
         # and the maintainer released it shortly after account registration.
-        # The setup.py file contains suspicious imports.
+        # The setup.py file contains suspicious imports and .whl file isn't present.
     ): Confidence.HIGH,
 }
 
@@ -197,6 +220,11 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         -------
         tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]
             Containing the analysis results and relevant metadata.
+
+        Raises
+        ------
+        HeuristicAnalyzerValueError
+            If a heuristic analysis fails due to malformed package information.
         """
         results: dict[Heuristics, HeuristicResult] = {}
         detail_info: dict[str, JsonType] = {}
@@ -277,7 +305,11 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
                     # Download the PyPI package JSON, but no need to persist it to the filesystem.
                     if pypi_package_json.download(dest=""):
-                        result, detail_info = self.run_heuristics(pypi_package_json)
+                        try:
+                            result, detail_info = self.run_heuristics(pypi_package_json)
+                        except HeuristicAnalyzerValueError:
+                            return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
+
                         result_combo: tuple = tuple(result.values())
                         confidence: float | None = SUSPICIOUS_COMBO.get(result_combo, None)
                         result_type = CheckResultType.FAILED
