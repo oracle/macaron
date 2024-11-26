@@ -1,3 +1,24 @@
+## v0.14.0 (2024-11-26)
+
+### Feat
+
+- report known malware for all ecosystems (#922)
+- add command to run repo and commit finder without analysis (#827)
+- add a new check to report the build tool (#914)
+- verify whether the reported repository can be linked back to the artifact (#873)
+- allow specifying the dependency depth resolution through CLI and make dependency resolution off by default (#840)
+
+### Fix
+
+- block terminal prompts in find source (#918)
+- fix a bug in GitHub Actions matrix variable resolution (#896)
+- prevent endless loop on 403 GitHub response (#866)
+
+### Refactor
+
+- accept provenance data in artifact pipeline check (#872)
+- remove --config-path from CLI (#844)
+
 ## v0.13.0 (2024-09-16)
 
 ### Feat
