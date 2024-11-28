@@ -15,6 +15,7 @@ from pydriller import Git
 from macaron.config.global_config import global_config
 from macaron.errors import CloneError, RepoCheckOutError
 from macaron.repo_finder.commit_finder import find_commit
+from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_url import (
@@ -131,6 +132,7 @@ def prepare_repo(
     branch_name: str = "",
     digest: str = "",
     purl: PackageURL | None = None,
+    latest_version_fallback: bool = True,
 ) -> Git | None:
     """Prepare the target repository for analysis.
 
@@ -154,6 +156,8 @@ def prepare_repo(
         The hash of the commit that we want to checkout in the branch.
     purl : PackageURL | None
         The PURL of the analysis target.
+    latest_version_fallback: bool
+        A flag that determines whether the latest version of the same artifact can be checked as a fallback option.
 
     Returns
     -------
@@ -210,7 +214,12 @@ def prepare_repo(
         found_digest = find_commit(git_obj, purl)
         if not found_digest:
             logger.error("Could not map the input purl string to a specific commit in the corresponding repository.")
-            return None
+            if not latest_version_fallback:
+                return None
+            # If the commit could not be found, check if the latest version of the artifact has a different repository.
+            git_obj, repo_path, found_digest = check_latest_version(purl, repo_path, target_dir)
+            if not git_obj:
+                return None
         digest = found_digest
 
     # Checking out the specific branch or commit. This operation varies depends on the git service that the
@@ -278,3 +287,70 @@ def get_git_service(remote_path: str | None) -> BaseGitService:
                 return git_service
 
     return NoneGitService()
+
+
+def check_latest_version(purl: PackageURL, repo_path: str, target_dir: str) -> tuple[Git | None, str, str]:
+    """Check the latest version of an artifact to see if it has a different repository URL.
+
+    Parameters
+    ----------
+    purl : PackageURL | None
+        The PURL of the analysis target.
+    repo_path : str
+        The path to the repository, can be either local or remote.
+    target_dir : str
+        The directory where all remote repository will be cloned.
+
+    Returns
+    -------
+    tuple[Git | None, str, str]
+        A tuple of: the pydriller.Git object of the repository (or None if error), the repository path, the commit.
+    """
+    namespace = purl.namespace + "/" if purl.namespace else ""
+    no_version_purl = PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}")
+
+    latest_version_purl = DepsDevRepoFinder.get_latest_version(no_version_purl)
+    if latest_version_purl == purl:
+        return None, "", ""
+
+    latest_repo = DepsDevRepoFinder().find_repo(latest_version_purl)
+    if not latest_repo:
+        return None, "", ""
+
+    if check_repo_urls_are_equal(repo_path, latest_repo):
+        return None, "", ""
+
+    # Try to prepare the new repo.
+    git_obj = prepare_repo(target_dir, latest_repo, "", "", purl, False)
+    if not git_obj:
+        return None, "", ""
+
+    # Try to find the commit in the new repo.
+    digest = find_commit(git_obj, purl)
+    if not digest:
+        return None, "", ""
+
+    return git_obj, latest_repo, digest
+
+
+def check_repo_urls_are_equal(repo_1: str, repo_2: str) -> bool:
+    """Check if the two passed repo URLs are equal.
+
+    Parameters
+    ----------
+    repo_1: str
+        The first repository URL as a string.
+    repo_2: str
+        The second repository URL as a string.
+
+    Returns
+    -------
+    bool
+        True if the repository URLs have equal hostnames and paths, otherwise False.
+    """
+    repo_url_1 = urlparse(repo_1)
+    repo_url_2 = urlparse(repo_2)
+    if repo_url_1.hostname != repo_url_2.hostname or repo_url_1.path != repo_url_2.path:
+        return False
+
+    return True

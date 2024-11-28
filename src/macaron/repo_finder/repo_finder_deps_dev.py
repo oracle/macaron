@@ -36,6 +36,9 @@ class DepsDevType(StrEnum):
 class DepsDevRepoFinder(BaseRepoFinder):
     """This class is used to find repositories using Google's Open Source Insights A.K.A. deps.dev."""
 
+    # See https://docs.deps.dev/api/v3alpha/
+    BASE_URL = "https://api.deps.dev/v3alpha/purl/"
+
     def find_repo(self, purl: PackageURL) -> str:
         """
         Attempt to retrieve a repository URL that matches the passed artifact.
@@ -108,6 +111,37 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         return response_json
 
+    @staticmethod
+    def get_latest_version(purl: PackageURL) -> PackageURL:
+        """Return a PURL representing the latest version of the passed artifact."""
+        original_purl = purl
+        if purl.version:
+            namespace = purl.namespace + "/" if purl.namespace else ""
+            purl = PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}")
+
+        url = f"{DepsDevRepoFinder.BASE_URL}{encode(str(purl), safe='')}"
+        response = send_get_http_raw(url)
+
+        if not response:
+            return original_purl
+
+        try:
+            metadata: dict = json.loads(response.text)
+        except ValueError as error:
+            logger.debug("Failed to parse response from deps.dev: %s", error)
+            return original_purl
+
+        versions_keys = ["package", "versions"] if "package" in metadata else ["version"]
+        versions = json_extract(metadata, versions_keys, list)
+        if not versions:
+            return original_purl
+        latest_version = json_extract(versions[-1], ["versionKey", "version"], str)
+        if not latest_version:
+            return original_purl
+
+        namespace = purl.namespace + "/" if purl.namespace else ""
+        return PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}@{latest_version}")
+
     def _create_urls(self, purl: PackageURL) -> list[str]:
         """
         Create the urls to search for the metadata relating to the passed artifact.
@@ -124,37 +158,13 @@ class DepsDevRepoFinder(BaseRepoFinder):
         list[str]
             The list of created URLs.
         """
-        # See https://docs.deps.dev/api/v3alpha/
-        base_url = f"https://api.deps.dev/v3alpha/purl/{encode(str(purl), safe='')}"
+        if not purl.version:
+            purl = DepsDevRepoFinder.get_latest_version(purl)
 
-        if not base_url:
+        if not purl.version:
             return []
 
-        if purl.version:
-            return [base_url]
-
-        # Find the latest version.
-        response = send_get_http_raw(base_url, {})
-
-        if not response:
-            return []
-
-        try:
-            metadata: dict = json.loads(response.text)
-        except ValueError as error:
-            logger.debug("Failed to parse response from deps.dev: %s", error)
-            return []
-
-        versions_keys = ["package", "versions"] if "package" in metadata else ["version"]
-        versions = json_extract(metadata, versions_keys, list)
-        if not versions:
-            return []
-        latest_version = json_extract(versions[-1], ["versionKey", "version"], str)
-        if not latest_version:
-            return []
-
-        logger.debug("Found latest version: %s", latest_version)
-        return [f"{base_url}%40{latest_version}"]
+        return [f"{DepsDevRepoFinder.BASE_URL}{encode(str(purl), safe='')}"]
 
     def _retrieve_json(self, url: str) -> str:
         """

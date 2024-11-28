@@ -45,7 +45,7 @@ from macaron.repo_finder.commit_finder import match_tags
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
-from macaron.repo_finder.repo_utils import generate_report, prepare_repo
+from macaron.repo_finder.repo_utils import check_repo_urls_are_equal, generate_report, prepare_repo
 from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR, list_remote_references
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -133,7 +133,7 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
     )
 
 
-def find_source(purl_string: str, input_repo: str | None) -> bool:
+def find_source(purl_string: str, input_repo: str | None, latest_version_fallback: bool = True) -> bool:
     """Perform repo and commit finding for a passed PURL, or commit finding for a passed PURL and repo.
 
     Parameters
@@ -142,6 +142,8 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
         The PURL string of the target.
     input_repo: str | None
         The repository path optionally provided by the user.
+    latest_version_fallback: bool
+        A flag that determines whether the latest version of the same artifact can be checked as a fallback option.
 
     Returns
     -------
@@ -151,12 +153,14 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
     try:
         purl = PackageURL.from_string(purl_string)
     except ValueError as error:
-        logger.error("Could not parse PURL: %s", error)
+        logger.error("Could not parse PURL: '%s'. Error: %s", purl_string, error)
         return False
 
     if not purl.version:
-        logger.debug("PURL is missing version.")
-        return False
+        purl = DepsDevRepoFinder().get_latest_version(purl)
+        if not purl.version:
+            logger.debug("PURL is missing version.")
+            return False
 
     found_repo = input_repo
     if not input_repo:
@@ -165,11 +169,24 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
 
     if not found_repo:
         logger.error("Could not find repo for PURL: %s", purl)
-        return False
+        if not latest_version_fallback:
+            return False
+
+        # Try to find the latest version repo.
+        latest_version_purl = get_latest_version(purl)
+        if latest_version_purl == purl:
+            logger.error("Latest version PURL is the same as original: %s", purl)
+            return False
+
+        found_repo = DepsDevRepoFinder().find_repo(latest_version_purl)
+        if not found_repo:
+            logger.error("Could not find repo from latest version of PURL: %s >> %s.", latest_version_purl, purl)
+            return False
 
     # Disable other loggers for cleaner output.
     logging.getLogger("macaron.slsa_analyzer.analyzer").disabled = True
 
+    digest = None
     if defaults.getboolean("repofinder", "find_source_should_clone"):
         logger.debug("Preparing repo: %s", found_repo)
         repo_dir = os.path.join(global_config.output_path, GIT_REPOS_DIR)
@@ -180,33 +197,41 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
             purl=purl,
         )
 
-        if not git_obj:
-            # TODO expand this message to cover cases where the obj was not created due to lack of correct tag.
-            logger.error("Could not resolve repository: %s", found_repo)
-            return False
-
-        try:
-            digest = git_obj.get_head().hash
-        except ValueError:
-            logger.debug("Could not retrieve commit hash from repository.")
-            return False
+        if git_obj:
+            try:
+                digest = git_obj.get_head().hash
+            except ValueError:
+                logger.debug("Could not retrieve commit hash from repository.")
     else:
         # Retrieve the tags.
         tags = get_tags_via_git_remote(found_repo)
-        if not tags:
-            return False
-
-        matches = match_tags(list(tags.keys()), purl.name, purl.version)
-
-        if not matches:
-            return False
-
-        matched_tag = matches[0]
-        digest = tags[matched_tag]
+        if tags:
+            matches = match_tags(list(tags.keys()), purl.name, purl.version)
+            if matches:
+                matched_tag = matches[0]
+                digest = tags[matched_tag]
 
     if not digest:
         logger.error("Could not find commit for purl / repository: %s / %s", purl, found_repo)
-        return False
+        if not latest_version_fallback:
+            return False
+
+        # Try to use the latest version of the artifact.
+        latest_version_purl = get_latest_version(purl)
+        if latest_version_purl == purl:
+            logger.error("Latest version PURL is the same as original: %s", purl)
+            return False
+
+        latest_repo = DepsDevRepoFinder().find_repo(latest_version_purl)
+        if not latest_repo:
+            logger.error("Could not find repo from latest version of PURL: %s >> %s.", latest_version_purl, purl)
+            return False
+
+        if check_repo_urls_are_equal(found_repo, latest_repo):
+            logger.error("Latest version repo is the same as original: %s", latest_repo)
+            return False
+
+        return find_source(str(purl), latest_repo, False)
 
     if not input_repo:
         logger.info("Found repository for PURL: %s", found_repo)
@@ -217,6 +242,24 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
         return False
 
     return True
+
+
+def get_latest_version(purl: PackageURL) -> PackageURL:
+    """Get the latest version of the passed artifact.
+
+    Parameters
+    ----------
+    purl: PackageURL
+        The artifact as a PURL.
+
+    Returns
+    -------
+    PackageURL
+        The latest version of the same artifact.
+    """
+    namespace = purl.namespace + "/" if purl.namespace else ""
+    no_version_purl = PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}")
+    return DepsDevRepoFinder.get_latest_version(no_version_purl)
 
 
 def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
