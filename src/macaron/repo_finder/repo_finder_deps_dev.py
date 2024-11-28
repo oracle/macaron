@@ -4,7 +4,6 @@
 """This module contains the PythonRepoFinderDD class to be used for finding repositories using deps.dev."""
 import json
 import logging
-import urllib.parse
 from enum import StrEnum
 from typing import Any
 from urllib.parse import quote as encode
