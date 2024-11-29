@@ -51,6 +51,7 @@ class MaliciousMetadataFacts(CheckFacts):
 
     #: Detailed information about the analysis.
     detail_information: Mapped[dict[str, JsonType]] = mapped_column(DBJsonDict, nullable=False)
+    # TODO: add in the pypi inspector link to the package
 
     #: The result of analysis, which can be an empty dictionary.
     result: Mapped[dict[Heuristics, HeuristicResult]] = mapped_column(
