@@ -21,7 +21,7 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency im
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unreachable_project_links import UnreachableProjectLinksAnalyzer
-from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_presence import WheelPresenceAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.pip import Pip
@@ -72,7 +72,7 @@ ANALYZERS: list = [
     UnchangedReleaseAnalyzer,
     CloserReleaseJoinDateAnalyzer,
     SuspiciousSetupAnalyzer,
-    WheelPresenceAnalyzer,
+    WheelAbsenceAnalyzer,
 ]
 
 # The HeuristicResult sequence is aligned with the sequence of ANALYZERS list
@@ -97,7 +97,7 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.SKIP,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
-        HeuristicResult.FAIL,  # Wheel Presence
+        HeuristicResult.FAIL,  # Wheel Absence
         # No project link, only one release, and the maintainer released it shortly
         # after account registration.
         # The setup.py file contains suspicious imports and .whl file isn't present.
@@ -110,7 +110,7 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
-        HeuristicResult.FAIL,  # Wheel Presence
+        HeuristicResult.FAIL,  # Wheel Absence
         # No project link, frequent releases of multiple versions without modifying the content,
         # and the maintainer released it shortly after account registration.
         # The setup.py file contains suspicious imports and .whl file isn't present.
@@ -123,7 +123,7 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.PASS,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
-        HeuristicResult.FAIL,  # Wheel Presence
+        HeuristicResult.FAIL,  # Wheel Absence
         # No project link, frequent releases of multiple versions,
         # and the maintainer released it shortly after account registration.
         # The setup.py file contains suspicious imports and .whl file isn't present.
@@ -136,10 +136,10 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.PASS,  # Suspicious Setup
-        HeuristicResult.PASS,  # Wheel Presence
+        HeuristicResult.PASS,  # Wheel Absence
         # No project link, frequent releases of multiple versions without modifying the content,
-        # and the maintainer released it shortly after account registration. Presence of .whl file
-        # has no effect
+        # and the maintainer released it shortly after account registration. Presence/Absence of
+        # .whl file has no effect
     ): Confidence.MEDIUM,
     (
         HeuristicResult.FAIL,  # Empty Project
@@ -149,10 +149,10 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.PASS,  # Suspicious Setup
-        HeuristicResult.FAIL,  # Wheel Presence
+        HeuristicResult.FAIL,  # Wheel Absence
         # No project link, frequent releases of multiple versions without modifying the content,
-        # and the maintainer released it shortly after account registration. Presence of .whl file
-        # has no effect
+        # and the maintainer released it shortly after account registration. Presence/Absence of
+        # .whl file has no effect
     ): Confidence.MEDIUM,
     (
         HeuristicResult.PASS,  # Empty Project
@@ -162,7 +162,7 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.PASS,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
-        HeuristicResult.FAIL,  # Wheel Presence
+        HeuristicResult.FAIL,  # Wheel Absence
         # All project links are unreachable, frequent releases of multiple versions,
         # and the maintainer released it shortly after account registration.
         # The setup.py file contains suspicious imports and .whl file isn't present.
