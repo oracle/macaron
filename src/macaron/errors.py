@@ -86,3 +86,7 @@ class CycloneDXParserError(MacaronError):
 
 class DependencyAnalyzerError(MacaronError):
     """The DependencyAnalyzer error class."""
+
+
+class HeuristicAnalyzerValueError(MacaronError):
+    """Error class for BaseHeuristicAnalyzer errors when parsing data."""
