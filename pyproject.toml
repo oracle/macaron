@@ -63,7 +63,7 @@ macaron = 'macaron.__main__:main'
 # We keep them listed here to ensure the infrastructure BOM is consistent with what's
 # installed. Make sure to keep the requirements in sync with the workflows!
 actions = [
-    "commitizen >=3.13.0,<4.0.0",
+    "commitizen >=3.13.0,<5.0.0",
     "twine >=5.0.0,<6.0.0",
 ]
 dev = [
