@@ -45,7 +45,7 @@ from macaron.repo_finder.commit_finder import match_tags
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
-from macaron.repo_finder.repo_utils import check_repo_urls_are_equal, generate_report, prepare_repo
+from macaron.repo_finder.repo_utils import check_repo_urls_are_equivalent, generate_report, prepare_repo
 from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR, list_remote_references
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -227,7 +227,7 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
             logger.error("Could not find repo from latest version of PURL: %s >> %s.", latest_version_purl, purl)
             return False
 
-        if check_repo_urls_are_equal(found_repo, latest_repo):
+        if check_repo_urls_are_equivalent(found_repo, latest_repo):
             logger.error("Latest version repo is the same as original: %s", latest_repo)
             return False
 
