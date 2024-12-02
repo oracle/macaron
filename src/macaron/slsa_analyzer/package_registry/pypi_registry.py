@@ -5,12 +5,16 @@
 
 import logging
 import os
+import tarfile
+import tempfile
 import urllib.parse
+import zipfile
 from dataclasses import dataclass
 from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup, Tag
+from requests import RequestException
 
 from macaron.config.defaults import defaults
 from macaron.database.table_definitions import Component
@@ -164,6 +168,78 @@ class PyPIRegistry(PackageRegistry):
             raise InvalidHTTPResponseError(f"Empty response returned by {url} .")
 
         return res_obj
+
+    def fetch_sourcecode(self, src_url: str) -> dict[str, str] | None:
+        """Get the source code of the package.
+
+        Returns
+        -------
+        str | None
+            The source code.
+        """
+        # Get name of file.
+        _, _, file_name = src_url.rpartition("/")
+
+        # Create a temporary directory to store the downloaded source.
+        with tempfile.TemporaryDirectory() as temp_dir:
+            try:
+                response = requests.get(src_url, stream=True, timeout=40)
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as http_err:
+                logger.debug("HTTP error occurred: %s", http_err)
+                return None
+
+            if response.status_code != 200:
+                return None
+
+            source_file = os.path.join(temp_dir, file_name)
+            with open(source_file, "wb") as file:
+                try:
+                    for chunk in response.iter_content():
+                        file.write(chunk)
+                except RequestException as error:
+                    # Something went wrong with the request, abort.
+                    logger.debug("Error while streaming source file: %s", error)
+                    response.close()
+                    return None
+            logger.debug("Begin fetching the source code from PyPI")
+            py_files_content: dict[str, str] = {}
+            if tarfile.is_tarfile(source_file):
+                try:
+                    with tarfile.open(source_file, "r:gz") as tar:
+                        for member in tar.getmembers():
+                            if member.isfile() and member.name.endswith(".py") and member.size > 0:
+                                file_obj = tar.extractfile(member)
+                                if file_obj:
+                                    content = file_obj.read().decode("utf-8")
+                                    py_files_content[member.name] = content
+                except tarfile.ReadError as exception:
+                    logger.debug("Error reading tar file: %s", exception)
+                    return None
+            elif zipfile.is_zipfile(source_file):
+                try:
+                    with zipfile.ZipFile(source_file, "r") as zip_ref:
+                        for info in zip_ref.infolist():
+                            if info.filename.endswith(".py") and not info.is_dir() and info.file_size > 0:
+                                with zip_ref.open(info) as file_obj:
+                                    content = file_obj.read().decode("utf-8")
+                                    py_files_content[info.filename] = content
+                except zipfile.BadZipFile as bad_zip_exception:
+                    logger.debug("Error reading zip file: %s", bad_zip_exception)
+                    return None
+                except zipfile.LargeZipFile as large_zip_exception:
+                    logger.debug("Zip file too large to read: %s", large_zip_exception)
+                    return None
+                # except KeyError as zip_key_exception:
+                #     logger.debug(
+                #         "Error finding target '%s' in zip file '%s': %s", archive_target, source_file, zip_key_exception
+                #     )
+                #     return None
+            else:
+                logger.debug("Unable to extract file: %s", file_name)
+
+            logger.debug("Successfully fetch the source code from PyPI")
+            return py_files_content
 
     def get_package_page(self, package_name: str) -> str | None:
         """Implement custom API to get package main page.
@@ -410,4 +486,18 @@ class PyPIPackageJsonAsset:
         if urls is not None and urls:
             upload_time: str | None = urls[0].get("upload_time")
             return upload_time
+        return None
+
+    def get_sourcecode(self) -> dict[str, str] | None:
+        """Get source code of the package.
+
+        Returns
+        -------
+        dict[str, str] | None
+            The source code of each script in the package
+        """
+        url: str | None = self.get_sourcecode_url()
+        if url:
+            source_code: dict[str, str] | None = self.pypi_registry.fetch_sourcecode(url)
+            return source_code
         return None
