@@ -64,7 +64,7 @@ macaron = 'macaron.__main__:main'
 # installed. Make sure to keep the requirements in sync with the workflows!
 actions = [
     "commitizen >=3.13.0,<4.0.0",
-    "twine >=5.0.0,<6.0.0",
+    "twine >=5.0.0,<7.0.0",
 ]
 dev = [
     "flit >=3.2.0,<4.0.0",
