@@ -317,7 +317,7 @@ def check_latest_version(purl: PackageURL, repo_path: str, target_dir: str) -> t
     if not latest_repo:
         return None, "", ""
 
-    if check_repo_urls_are_equal(repo_path, latest_repo):
+    if check_repo_urls_are_equivalent(repo_path, latest_repo):
         return None, "", ""
 
     # Try to prepare the new repo.
@@ -333,8 +333,8 @@ def check_latest_version(purl: PackageURL, repo_path: str, target_dir: str) -> t
     return git_obj, latest_repo, digest
 
 
-def check_repo_urls_are_equal(repo_1: str, repo_2: str) -> bool:
-    """Check if the two passed repo URLs are equal.
+def check_repo_urls_are_equivalent(repo_1: str, repo_2: str) -> bool:
+    """Check if the two passed repo URLs are equivalent.
 
     Parameters
     ----------
