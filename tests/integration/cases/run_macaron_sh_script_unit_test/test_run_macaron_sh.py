@@ -81,7 +81,7 @@ def test_macaron_command_help() -> int:
     return exit_code
 
 
-def test_macaron_command_no_home_m2() -> int:
+def test_macaron_command_no_home_m2_on_host() -> int:
     """Test if the ``macaron`` command in the container receives the correct arguments."""
     test_cases = [
         TestCase(
@@ -103,11 +103,11 @@ def test_macaron_command_no_home_m2() -> int:
     return exit_code
 
 
-def test_macaron_command_home_m2_available() -> int:
+def test_macaron_command_host_home_m2_available() -> int:
     """Test if the ``macaron`` command in the container receives the correct arguments."""
     test_cases = [
         TestCase(
-            name="no --local-maven-repo and host $HOME/.m2 is available",
+            name="no --local-maven-repo provided by the user and host $HOME/.m2 is available",
             script_args=["analyze"],
             expected_macaron_args=["analyze", "--local-maven-repo", "/home/macaron/analyze_local_maven_repo_readonly"],
         ),
@@ -130,7 +130,7 @@ def test_macaron_command_home_m2_available() -> int:
     return exit_code
 
 
-def test_macaron_provide_local_maven_repo() -> int:
+def test_macaron_user_provide_valid_local_maven_repo() -> int:
     """Test if the ``macaron`` command in the container receives the correct arguments."""
     with tempfile.TemporaryDirectory() as temp_dir:
         test_cases = [
@@ -159,9 +159,9 @@ def main() -> int:
     """Run all tests."""
     return (
         test_macaron_command_help()
-        | test_macaron_command_no_home_m2()
-        | test_macaron_command_home_m2_available()
-        | test_macaron_provide_local_maven_repo()
+        | test_macaron_command_no_home_m2_on_host()
+        | test_macaron_command_host_home_m2_available()
+        | test_macaron_user_provide_valid_local_maven_repo()
     )
 
 
