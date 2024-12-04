@@ -71,12 +71,13 @@ def test_repo_finder() -> int:
     if not parsed_url or not repo_validator.resolve_redirects(parsed_url):
         return os.EX_UNAVAILABLE
 
-    # Test Java package whose SCM metadata only points to the repo in the later versions than is provided here.
+    # Test Java package whose SCM metadata only points to the repo in later versions than is provided here.
     purl = PackageURL.from_string("pkg:maven/io.vertx/vertx-auth-common@3.8.0")
     repo = find_repo(purl)
     if repo == "https://github.com/eclipse-vertx/vertx-auth":
         return os.EX_UNAVAILABLE
     latest_purl = DepsDevRepoFinder().get_latest_version(purl)
+    assert latest_purl
     repo = find_repo(latest_purl)
     if repo != "https://github.com/eclipse-vertx/vertx-auth":
         return os.EX_UNAVAILABLE
