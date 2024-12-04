@@ -52,13 +52,13 @@ class JavaRepoFinder(BaseRepoFinder):
 
         if not version:
             logger.info("Version missing for maven artifact: %s:%s", group, artifact)
-            purl = DepsDevRepoFinder().get_latest_version(purl)
-            if not purl.version:
+            latest_purl = DepsDevRepoFinder().get_latest_version(purl)
+            if not latest_purl or not latest_purl.version:
                 logger.debug("Could not find version for artifact: %s:%s", purl.namespace, purl.name)
                 return ""
-            group = purl.namespace or ""
-            artifact = purl.name
-            version = purl.version
+            group = latest_purl.namespace or ""
+            artifact = latest_purl.name
+            version = latest_purl.version
 
         while group and artifact and version and limit > 0:
             # Create the URLs for retrieving the artifact's POM
