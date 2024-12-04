@@ -112,9 +112,19 @@ class DepsDevRepoFinder(BaseRepoFinder):
         return response_json
 
     @staticmethod
-    def get_latest_version(purl: PackageURL) -> PackageURL:
-        """Return a PURL representing the latest version of the passed artifact."""
-        original_purl = purl
+    def get_latest_version(purl: PackageURL) -> PackageURL | None:
+        """Return a PURL representing the latest version of the passed artifact.
+
+        Parameters
+        ----------
+        purl : PackageURL
+            The current PURL.
+
+        Returns
+        -------
+        PackageURL | None
+            The latest version of the PURL, or None if it could not be found.
+        """
         if purl.version:
             namespace = purl.namespace + "/" if purl.namespace else ""
             purl = PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}")
@@ -123,21 +133,21 @@ class DepsDevRepoFinder(BaseRepoFinder):
         response = send_get_http_raw(url)
 
         if not response:
-            return original_purl
+            return None
 
         try:
             metadata: dict = json.loads(response.text)
         except ValueError as error:
             logger.debug("Failed to parse response from deps.dev: %s", error)
-            return original_purl
+            return None
 
         versions_keys = ["package", "versions"] if "package" in metadata else ["version"]
         versions = json_extract(metadata, versions_keys, list)
         if not versions:
-            return original_purl
+            return None
         latest_version = json_extract(versions[-1], ["versionKey", "version"], str)
         if not latest_version:
-            return original_purl
+            return None
 
         namespace = purl.namespace + "/" if purl.namespace else ""
         return PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}@{latest_version}")
@@ -159,10 +169,10 @@ class DepsDevRepoFinder(BaseRepoFinder):
             The list of created URLs.
         """
         if not purl.version:
-            purl = DepsDevRepoFinder.get_latest_version(purl)
-
-        if not purl.version:
-            return []
+            latest_purl = DepsDevRepoFinder.get_latest_version(purl)
+            if not latest_purl:
+                return []
+            purl = latest_purl
 
         return [f"{DepsDevRepoFinder.BASE_URL}{encode(str(purl), safe='')}"]
 
