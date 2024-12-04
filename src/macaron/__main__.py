@@ -74,7 +74,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
             sys.exit(os.EX_OSFILE)
         global_config.load_python_venv(analyzer_single_args.python_venv)
 
-    # Set Python virtual environment path.
+    # Set local maven repo path.
     if analyzer_single_args.local_maven_repo is None:
         # Load the default user local .m2 directory.
         # Exit on error if $HOME is not set or empty.
