@@ -43,7 +43,8 @@ from macaron.repo_finder.provenance_extractor import (
     extract_repo_and_commit_from_provenance,
 )
 from macaron.repo_finder.provenance_finder import ProvenanceFinder, find_provenance_from_ci
-from macaron.repo_finder.repo_utils import get_git_service, prepare_repo
+from macaron.repo_finder.repo_finder import prepare_repo
+from macaron.repo_finder.repo_utils import get_git_service
 from macaron.repo_verifier.repo_verifier import verify_repo
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
