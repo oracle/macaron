@@ -12,6 +12,7 @@ from packageurl import PackageURL
 from macaron.config.defaults import defaults
 from macaron.repo_finder import repo_validator
 from macaron.repo_finder.repo_finder import find_repo
+from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.slsa_analyzer.git_url import clean_url
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -68,6 +69,21 @@ def test_repo_finder() -> int:
     # Test redirecting URL from Apache commons-io package.
     parsed_url = clean_url("https://git-wip-us.apache.org/repos/asf?p=commons-io.git")
     if not parsed_url or not repo_validator.resolve_redirects(parsed_url):
+        return os.EX_UNAVAILABLE
+
+    # Test Java package whose SCM metadata only points to the repo in later versions than is provided here.
+    purl = PackageURL.from_string("pkg:maven/io.vertx/vertx-auth-common@3.8.0")
+    repo = find_repo(purl)
+    if repo == "https://github.com/eclipse-vertx/vertx-auth":
+        return os.EX_UNAVAILABLE
+    latest_purl = DepsDevRepoFinder().get_latest_version(purl)
+    assert latest_purl
+    repo = find_repo(latest_purl)
+    if repo != "https://github.com/eclipse-vertx/vertx-auth":
+        return os.EX_UNAVAILABLE
+
+    # Test Java package that has no version.
+    if not find_repo(PackageURL.from_string("pkg:maven/io.vertx/vertx-auth-common")):
         return os.EX_UNAVAILABLE
 
     return os.EX_OK
