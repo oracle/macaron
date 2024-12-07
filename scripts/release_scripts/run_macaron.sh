@@ -328,6 +328,10 @@ if [[ $command == "analyze" ]]; then
                 python_venv_path="$2"
                 shift
                 ;;
+            --local-maven-repo)
+                local_maven_repo="$2"
+                shift
+                ;;
             *)
                 rest_command+=("$1")
                 ;;
@@ -335,7 +339,7 @@ if [[ $command == "analyze" ]]; then
         shift
     done
 elif [[ $command == "verify-policy" ]]; then
-     while [[ $# -gt 0 ]]; do
+    while [[ $# -gt 0 ]]; do
         case $1 in
             -d|--database)
                 arg_database="$2"
@@ -345,6 +349,15 @@ elif [[ $command == "verify-policy" ]]; then
                 arg_datalog_policy_file="$2"
                 shift
                 ;;
+            *)
+                rest_command+=("$1")
+                ;;
+        esac
+        shift
+    done
+elif [[ $command == "dump-defaults" ]]; then
+    while [[ $# -gt 0 ]]; do
+        case $1 in
             *)
                 rest_command+=("$1")
                 ;;
@@ -453,6 +466,47 @@ if [[ -n "${python_venv_path:-}" ]]; then
     argv_command+=("--python-venv" "${MACARON_WORKSPACE}/analyze_python_venv_editable")
 
     mount_dir_ro "--python-venv" "$python_venv_path" "$python_venv_in_container"
+fi
+
+# Mount the local Maven repo from the
+# host file system into the container's
+# ${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly.
+if [[ -n "${local_maven_repo:-}" ]]; then
+    local_maven_repo_in_container="${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly"
+    argv_command+=("--local-maven-repo" "${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly")
+
+    mount_dir_ro "--local-maven-repo" "$local_maven_repo" "$local_maven_repo_in_container"
+else
+    # Mounting default local maven repo only
+    # when the user doesn't provide --local-maven-repo AND `analyze` command is used.
+    if [[ "$command" == "analyze" ]]; then
+        # We mount the host's $HOME/.m2 into the container's
+        # ${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly ONLY IF $HOME/.m2 directory exists.
+        if [[ -d "$HOME/.m2" ]]; then
+            local_maven_repo_in_container="${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly"
+            argv_command+=("--local-maven-repo" "${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly")
+
+            mount_dir_ro "--local-maven-repo" "$HOME/.m2" "$local_maven_repo_in_container"
+        # If the host's $HOME/.m2 doesn't exist, we create and mount an empty directory ${output}/analyze_local_maven_repo_readonly
+        # into ${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly. And then provide
+        # ${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly into the --local-maven-repo
+        # flag.
+        # This is because:
+        #   - By default if --local-maven-repo is not used, Macaron uses $HOME/.m2 of the current
+        #     environment as the local maven repo.
+        #   - If --local-maven-repo is not set when Macaron is running in the Docker container, it will try to
+        #     use $HOME/.m2 WITHIN the container. This is not desirable as this $HOME/.m2 is being used
+        #     by the cyclonedx plugins for dependency resolution, which requires read write. We treat the local
+        #     maven repo as a read only directory, hence they cannot share.
+        else
+            local_maven_repo_in_container="${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly"
+            output_local_maven_repo="${output}/analyze_local_maven_repo_readonly"
+            mkdir -p "$output_local_maven_repo"
+            argv_command+=("--local-maven-repo" "${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly")
+
+            mount_dir_ro "--local-maven-repo" "$output_local_maven_repo" "$local_maven_repo_in_container"
+        fi
+    fi
 fi
 
 # MACARON entrypoint - verify-policy command argvs
