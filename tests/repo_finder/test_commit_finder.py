@@ -97,6 +97,9 @@ def test_commit_finder() -> None:
             "initial_branch": "master",
         },
     )
+    # Disable gpg signing of tags for this repository to prevent input prompt hang.
+    with git_obj.repo.config_writer() as git_config:
+        git_config.set_value("tag", "gpgsign", "false")
 
     # Create a commit from a newly created file.
     with open(os.path.join(REPO_DIR, "file_1"), "w", encoding="utf-8") as file:
