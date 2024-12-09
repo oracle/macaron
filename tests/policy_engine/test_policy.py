@@ -40,7 +40,7 @@ def test_eval_policy(database_setup) -> None:  # type: ignore # pylint: disable=
         "component_satisfies_policy": [
             [
                 "1",
-                "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac",
+                "pkg:github.com/slsa-framework/slsa-verifier@v2.6.0",
                 "trusted_builder",
             ]
         ],
@@ -48,12 +48,12 @@ def test_eval_policy(database_setup) -> None:  # type: ignore # pylint: disable=
         "component_violates_policy": [
             [
                 "1",
-                "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac",
+                "pkg:github.com/slsa-framework/slsa-verifier@v2.6.0",
                 "aggregate_l4",
             ],
             [
                 "1",
-                "pkg:github.com/slsa-framework/slsa-verifier@fc50b662fcfeeeb0e97243554b47d9b20b14efac",
+                "pkg:github.com/slsa-framework/slsa-verifier@v2.6.0",
                 "aggregate_l2",
             ],
         ],
