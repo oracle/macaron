@@ -56,7 +56,7 @@ def construct_local_artifact_paths_glob_pattern_pypi_purl(pypi_purl: PackageURL)
 
     Parameters
     ----------
-    maven_purl : PackageURL
+    pypi_purl : PackageURL
         A pypi type PackageURL instance.
 
     Returns
