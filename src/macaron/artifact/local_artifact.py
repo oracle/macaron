@@ -35,7 +35,7 @@ def construct_local_artifact_paths_glob_pattern_maven_purl(maven_purl: PackageUR
     >>> construct_local_artifact_paths_glob_pattern_maven_purl(purl)
     ['com/oracle/macaron/macaron/0.13.0']
     """
-    if not maven_purl.type == "maven":
+    if maven_purl.type != "maven":
         return None
 
     group = maven_purl.namespace
@@ -71,7 +71,7 @@ def construct_local_artifact_paths_glob_pattern_pypi_purl(pypi_purl: PackageURL)
     >>> construct_local_artifact_paths_glob_pattern_pypi_purl(purl)
     ['django', 'django-1.11.1.dist-info', 'django-1.11.1.data']
     """
-    if not pypi_purl.type == "pypi":
+    if pypi_purl.type != "pypi":
         return None
 
     name = pypi_purl.name
