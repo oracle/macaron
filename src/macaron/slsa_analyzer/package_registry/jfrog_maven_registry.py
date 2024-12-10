@@ -13,6 +13,7 @@ from urllib.parse import SplitResult, urlunsplit
 
 import requests
 
+from macaron.artifact.maven import construct_maven_repository_path
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError
 from macaron.json_tools import JsonType
@@ -197,44 +198,6 @@ class JFrogMavenRegistry(PackageRegistry):
         compatible_build_tool_classes = [Maven, Gradle]
         return any(isinstance(build_tool, build_tool_class) for build_tool_class in compatible_build_tool_classes)
 
-    def construct_maven_repository_path(
-        self,
-        group_id: str,
-        artifact_id: str | None = None,
-        version: str | None = None,
-        asset_name: str | None = None,
-    ) -> str:
-        """Construct a path to a folder or file on the registry, assuming Maven repository layout.
-
-        For more details regarding Maven repository layout, see the following:
-        - https://maven.apache.org/repository/layout.html
-        - https://maven.apache.org/guides/mini/guide-naming-conventions.html
-
-        Parameters
-        ----------
-        group_id : str
-            The group id of a Maven package.
-        artifact_id : str
-            The artifact id of a Maven package.
-        version : str
-            The version of a Maven package.
-        asset_name : str
-            The asset name.
-
-        Returns
-        -------
-        str
-            The path to a folder or file on the registry.
-        """
-        path = group_id.replace(".", "/")
-        if artifact_id:
-            path = "/".join([path, artifact_id])
-        if version:
-            path = "/".join([path, version])
-        if asset_name:
-            path = "/".join([path, asset_name])
-        return path
-
     def fetch_artifact_ids(self, group_id: str) -> list[str]:
         """Get all artifact ids under a group id.
 
@@ -251,7 +214,7 @@ class JFrogMavenRegistry(PackageRegistry):
             The artifacts ids under the group.
         """
         folder_info_url = self.construct_folder_info_url(
-            folder_path=self.construct_maven_repository_path(group_id),
+            folder_path=construct_maven_repository_path(group_id),
         )
 
         try:
@@ -440,7 +403,7 @@ class JFrogMavenRegistry(PackageRegistry):
         list[str]
             The list of asset names.
         """
-        folder_path = self.construct_maven_repository_path(
+        folder_path = construct_maven_repository_path(
             group_id=group_id,
             artifact_id=artifact_id,
             version=version,
@@ -615,7 +578,7 @@ class JFrogMavenRegistry(PackageRegistry):
         JFrogMavenAssetMetadata | None
             The asset's metadata, or ``None`` if the metadata cannot be retrieved.
         """
-        file_path = self.construct_maven_repository_path(
+        file_path = construct_maven_repository_path(
             group_id=group_id,
             artifact_id=artifact_id,
             version=version,
@@ -798,7 +761,7 @@ class JFrogMavenRegistry(PackageRegistry):
         str
             The URL to the asset, which can be use for downloading the asset.
         """
-        group_path = self.construct_maven_repository_path(group_id)
+        group_path = construct_maven_repository_path(group_id)
         return urlunsplit(
             SplitResult(
                 scheme="https",
