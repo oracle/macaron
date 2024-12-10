@@ -160,7 +160,7 @@ def test_get_local_artifact_paths_empty(
             "pkg:pypi/django@5.0.3",
             [],
             {},
-            id="A maven type PURL where no build tool is discovered",
+            id="A pypi type PURL where no build tool is discovered",
         ),
     ],
 )
