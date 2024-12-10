@@ -91,7 +91,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         global_config.local_maven_repo = local_maven_repo
     else:
         user_provided_local_maven_repo = analyzer_single_args.local_maven_repo
-        if not os.path.exists(user_provided_local_maven_repo) or not os.path.isdir(user_provided_local_maven_repo):
+        if not os.path.isdir(user_provided_local_maven_repo):
             logger.error("The user provided local Maven repo at %s is not valid.", user_provided_local_maven_repo)
             sys.exit(os.EX_USAGE)
 
