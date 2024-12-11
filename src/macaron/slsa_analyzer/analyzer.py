@@ -19,7 +19,7 @@ from pydriller.git import Git
 from sqlalchemy.orm import Session
 
 from macaron import __version__
-from macaron.artifact.local_artifact import get_local_artifact_paths
+from macaron.artifact.local_artifact import get_local_artifact_dirs
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
@@ -482,7 +482,7 @@ class Analyzer:
         if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
             local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
             analyze_ctx.dynamic_data["local_artifact_paths"].extend(
-                get_local_artifact_paths(
+                get_local_artifact_dirs(
                     purl=parsed_purl,
                     local_artifact_repo_path=local_artifact_repo_path,
                 )

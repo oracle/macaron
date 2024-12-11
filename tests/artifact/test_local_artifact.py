@@ -12,8 +12,8 @@ from packageurl import PackageURL
 from macaron.artifact.local_artifact import (
     construct_local_artifact_dirs_glob_pattern_maven_purl,
     construct_local_artifact_dirs_glob_pattern_pypi_purl,
-    find_artifact_paths_from_python_venv,
-    get_local_artifact_paths,
+    find_artifact_dirs_from_python_venv,
+    get_local_artifact_dirs,
 )
 from macaron.errors import LocalArtifactFinderError
 
@@ -103,7 +103,7 @@ def test_construct_local_artifact_paths_glob_pattern_pypi_purl_error(purl_str: s
 def test_find_artifact_paths_from_invalid_python_venv() -> None:
     """Test find_artifact_paths_from_python_venv method with invalid venv path"""
     with pytest.raises(LocalArtifactFinderError):
-        find_artifact_paths_from_python_venv("./does-not-exist", ["django", "django-5.0.6.dist-info"])
+        find_artifact_dirs_from_python_venv("./does-not-exist", ["django", "django-5.0.6.dist-info"])
 
 
 @pytest.mark.parametrize(
@@ -130,7 +130,7 @@ def test_get_local_artifact_paths_not_available(
     purl = PackageURL.from_string(purl_str)
 
     assert (
-        get_local_artifact_paths(
+        get_local_artifact_dirs(
             purl=purl,
             local_artifact_repo_path=str(tmp_path),
         )
@@ -171,7 +171,7 @@ def test_get_local_artifact_paths_invalid_purl(
     purl = PackageURL.from_string(purl_str)
 
     with pytest.raises(LocalArtifactFinderError):
-        get_local_artifact_paths(
+        get_local_artifact_dirs(
             purl=purl,
             local_artifact_repo_path=str(tmp_path),
         )
@@ -188,7 +188,7 @@ def test_get_local_artifact_paths_succeeded_maven(tmp_path: Path) -> None:
     os.makedirs(maven_local_repo_path)
     os.makedirs(target_artifact_path)
 
-    result = get_local_artifact_paths(
+    result = get_local_artifact_dirs(
         purl=purl,
         local_artifact_repo_path=maven_local_repo_path,
     )
@@ -218,7 +218,7 @@ def test_get_local_artifact_paths_succeeded_pypi(tmp_path: Path) -> None:
     for artifact_path in pypi_artifact_paths:
         os.makedirs(artifact_path)
 
-    result = get_local_artifact_paths(
+    result = get_local_artifact_dirs(
         purl=purl,
         local_artifact_repo_path=python_venv_path,
     )

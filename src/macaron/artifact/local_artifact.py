@@ -32,7 +32,7 @@ def construct_local_artifact_dirs_glob_pattern_maven_purl(maven_purl: PackageURL
     --------
     >>> from packageurl import PackageURL
     >>> purl = PackageURL.from_string("pkg:maven/com.oracle.macaron/macaron@0.13.0")
-    >>> construct_local_artifact_paths_glob_pattern_maven_purl(purl)
+    >>> construct_local_artifact_dirs_glob_pattern_maven_purl(purl)
     ['com/oracle/macaron/macaron/0.13.0']
     """
     if maven_purl.type != "maven":
@@ -68,7 +68,7 @@ def construct_local_artifact_dirs_glob_pattern_pypi_purl(pypi_purl: PackageURL) 
     --------
     >>> from packageurl import PackageURL
     >>> purl = PackageURL.from_string("pkg:pypi/django@1.11.1")
-    >>> construct_local_artifact_paths_glob_pattern_pypi_purl(purl)
+    >>> construct_local_artifact_dirs_glob_pattern_pypi_purl(purl)
     ['django', 'django-1.11.1.dist-info', 'django-1.11.1.data']
     """
     if pypi_purl.type != "pypi":
@@ -91,11 +91,11 @@ def construct_local_artifact_dirs_glob_pattern_pypi_purl(pypi_purl: PackageURL) 
     return glob_patterns
 
 
-def find_artifact_paths_from_local_maven_repo(
+def find_artifact_dirs_from_local_maven_repo(
     local_maven_repo: str,
     glob_patterns: list[str],
 ) -> list[str]:
-    """Find maven artifacts within a local maven repository directory.
+    """Find directories that contains maven artifacts within a maven local repository.
 
     ``local_maven_repo`` should be in format `<...>/.m2/repository`.
 
@@ -104,13 +104,13 @@ def find_artifact_paths_from_local_maven_repo(
     local_maven_repo: str
         The path to the directory to find artifacts.
     glob_patterns: list[str]
-        The list of glob patterns that matches to artifact file names.
+        The list of glob patterns that matches to artifact directory names.
 
     Returns
     -------
     list[str]
-        The list of path to found artifacts in the form of ``local_maven_repo``/<artifact_specific_path>.
-        If no artifact is found, this list will be empty.
+        The list of paths to artifact directories in the form of ``venv_site_package_path``/path/to/artifact_dir
+        If no artifact directory is found, this list will be empty.
 
     Raises
     ------
@@ -135,11 +135,11 @@ def find_artifact_paths_from_local_maven_repo(
     return artifact_paths
 
 
-def find_artifact_paths_from_python_venv(
+def find_artifact_dirs_from_python_venv(
     venv_site_package_path: str,
     glob_patterns: list[str],
 ) -> list[str]:
-    """Find python artifacts within a python virtual environment directory.
+    """Find directories within a python virtual environment.
 
     For packages in the virtual environment, we will treat their name case-insensitively.
     https://packaging.python.org/en/latest/specifications/name-normalization/
@@ -151,13 +151,13 @@ def find_artifact_paths_from_python_venv(
     venv_path: str
         The path to the local directory to find artifacts.
     glob_patterns: list[str]
-        The list of glob patterns that matches to artifact file names.
+        The list of glob patterns that matches to artifact directory names.
 
     Returns
     -------
     list[str]
-        The list of path to found artifacts in the form of ``venv_site_package_path``/<artifact_specific_path>
-        If no artifact is found, this list will be empty.
+        The list of paths to artifact directories in the form of ``venv_site_package_path``/path/to/artifact_dir
+        If no artifact directory is found, this list will be empty.
 
     Raises
     ------
@@ -190,7 +190,7 @@ def find_artifact_paths_from_python_venv(
     return artifact_paths
 
 
-def get_local_artifact_paths(
+def get_local_artifact_dirs(
     purl: PackageURL,
     local_artifact_repo_path: str,
 ) -> list[str]:
@@ -217,7 +217,7 @@ def get_local_artifact_paths(
     Returns
     -------
     list[str]
-        The list contains the found artifact paths. It will be empty if no artifact can be found.
+        The list contains the artifact directory paths. It will be empty if no artifact can be found.
 
     Raises
     ------
@@ -231,7 +231,7 @@ def get_local_artifact_paths(
         if not maven_artifact_patterns:
             raise LocalArtifactFinderError(f"Cannot generate maven artifact patterns for {purl}")
 
-        return find_artifact_paths_from_local_maven_repo(
+        return find_artifact_dirs_from_local_maven_repo(
             local_maven_repo=local_artifact_repo_path,
             glob_patterns=maven_artifact_patterns,
         )
@@ -241,7 +241,7 @@ def get_local_artifact_paths(
         if not pypi_artifact_patterns:
             raise LocalArtifactFinderError(f"Cannot generate Python package patterns for {purl}")
 
-        return find_artifact_paths_from_python_venv(
+        return find_artifact_dirs_from_python_venv(
             venv_site_package_path=local_artifact_repo_path,
             glob_patterns=pypi_artifact_patterns,
         )
