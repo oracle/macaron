@@ -90,3 +90,7 @@ class DependencyAnalyzerError(MacaronError):
 
 class HeuristicAnalyzerValueError(MacaronError):
     """Error class for BaseHeuristicAnalyzer errors when parsing data."""
+
+
+class LocalArtifactFinderError(MacaronError):
+    """Happens when there is an error looking for local artifacts."""

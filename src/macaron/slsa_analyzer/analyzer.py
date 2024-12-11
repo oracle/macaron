@@ -115,6 +115,8 @@ class Analyzer:
         # Create database tables: all checks have been registered so all tables should be mapped now
         self.db_man.create_tables()
 
+        self.local_artifact_repo_mapper = Analyzer._get_local_artifact_repo_mapper()
+
     def run(
         self,
         user_config: dict,
@@ -477,15 +479,14 @@ class Analyzer:
         analyze_ctx.dynamic_data["provenance_repo_url"] = provenance_repo_url
         analyze_ctx.dynamic_data["provenance_commit_digest"] = provenance_commit_digest
 
-        discovered_build_tools = (
-            analyze_ctx.dynamic_data["build_spec"]["tools"] + analyze_ctx.dynamic_data["build_spec"]["purl_tools"]
-        )
-        build_tools_purl_types = [build_tool.purl_type for build_tool in discovered_build_tools]
-        analyze_ctx.dynamic_data["local_artifact_paths"] = get_local_artifact_paths(
-            PackageURL.from_string(analyze_ctx.component.purl),
-            build_tools_purl_types,
-            local_artifact_repo_mapper=self._get_local_artifact_repo_mapper(),
-        )
+        if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
+            local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
+            analyze_ctx.dynamic_data["local_artifact_paths"].extend(
+                get_local_artifact_paths(
+                    purl=parsed_purl,
+                    local_artifact_repo_path=local_artifact_repo_path,
+                )
+            )
 
         analyze_ctx.check_results = registry.scan(analyze_ctx)
 

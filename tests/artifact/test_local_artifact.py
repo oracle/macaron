@@ -15,6 +15,7 @@ from macaron.artifact.local_artifact import (
     find_artifact_paths_from_python_venv,
     get_local_artifact_paths,
 )
+from macaron.errors import LocalArtifactFinderError
 
 
 @pytest.mark.parametrize(
@@ -101,154 +102,125 @@ def test_construct_local_artifact_paths_glob_pattern_pypi_purl_error(purl_str: s
 
 def test_find_artifact_paths_from_invalid_python_venv() -> None:
     """Test find_artifact_paths_from_python_venv method with invalid venv path"""
-    assert not find_artifact_paths_from_python_venv("./does-not-exist", ["django", "django-5.0.6.dist-info"])
+    with pytest.raises(LocalArtifactFinderError):
+        find_artifact_paths_from_python_venv("./does-not-exist", ["django", "django-5.0.6.dist-info"])
 
 
 @pytest.mark.parametrize(
-    ("purl_str", "build_tool_purl_types", "local_artifact_repo_mapper", "expectation"),
+    ("purl_str", "expectation"),
     [
         pytest.param(
             "pkg:maven/com.google.guava/guava@33.2.1-jre",
-            ["maven", "pypi"],
-            {},
-            {},
-            id="A maven type PURL where multiple build tool types are discovered. But no local repository is available.",
-        ),
-        pytest.param(
-            "pkg:maven/com.google.guava/guava@33.2.1-jre",
             [],
-            {},
-            {},
-            id="A maven type PURL where no build tool types are discovered and no local repository is available.",
-        ),
-    ],
-)
-def test_get_local_artifact_paths_empty(
-    purl_str: str,
-    build_tool_purl_types: list[str],
-    local_artifact_repo_mapper: dict[str, str],
-    expectation: dict[str, list[str]],
-) -> None:
-    """Test getting local artifact paths where the result is empty."""
-    purl = PackageURL.from_string(purl_str)
-    assert (
-        get_local_artifact_paths(
-            purl=purl,
-            build_tool_purl_types=build_tool_purl_types,
-            local_artifact_repo_mapper=local_artifact_repo_mapper,
-        )
-        == expectation
-    )
-
-
-@pytest.mark.parametrize(
-    ("purl_str", "build_tool_purl_types", "expectation"),
-    [
-        pytest.param(
-            "pkg:maven/com.google.guava/guava@33.2.1-jre",
-            ["maven", "pypi"],
-            {},
-            id="A maven type PURL where multiple build tool types are discovered",
-        ),
-        pytest.param(
-            "pkg:maven/com.google.guava/guava@33.2.1-jre",
-            [],
-            {},
-            id="A maven type PURL where no build tool is discovered",
+            id="A maven type PURL",
         ),
         pytest.param(
             "pkg:pypi/django@5.0.3",
             [],
-            {},
-            id="A pypi type PURL where no build tool is discovered",
+            id="A pypi type PURL",
         ),
     ],
 )
 def test_get_local_artifact_paths_not_available(
     purl_str: str,
-    build_tool_purl_types: list[str],
-    expectation: dict[str, list[str]],
+    expectation: list[str],
     tmp_path: Path,
 ) -> None:
-    """Test getting local artifact paths where the artifact paths are not available."""
+    """Test getting local artifact paths where we cannot find local artifacts for the PURL."""
     purl = PackageURL.from_string(purl_str)
-    local_artifact_repo_mapper = {
-        "maven": str(tmp_path),
-        "pypi": str(tmp_path),
-    }
 
     assert (
         get_local_artifact_paths(
             purl=purl,
-            build_tool_purl_types=build_tool_purl_types,
-            local_artifact_repo_mapper=local_artifact_repo_mapper,
+            local_artifact_repo_path=str(tmp_path),
         )
         == expectation
     )
 
 
+@pytest.mark.parametrize(
+    ("purl_str"),
+    [
+        pytest.param(
+            "pkg:maven/com.google.guava/guava",
+            id="A maven type PURL with no version",
+        ),
+        pytest.param(
+            "pkg:maven/guava@33.2.1-jre",
+            id="A maven type PURL with no group",
+        ),
+        pytest.param(
+            "pkg:maven/guava",
+            id="A maven type PURL with no group and no version",
+        ),
+        pytest.param(
+            "pkg:pypi/django",
+            id="A pypi type PURL without version",
+        ),
+        pytest.param(
+            "pkg:github/oracle/macaron",
+            id="A github type PURL (unsupported)",
+        ),
+    ],
+)
+def test_get_local_artifact_paths_invalid_purl(
+    purl_str: str,
+    tmp_path: Path,
+) -> None:
+    """Test getting local artifact paths where the input PURL is invalid."""
+    purl = PackageURL.from_string(purl_str)
+
+    with pytest.raises(LocalArtifactFinderError):
+        get_local_artifact_paths(
+            purl=purl,
+            local_artifact_repo_path=str(tmp_path),
+        )
+
+
 def test_get_local_artifact_paths_succeeded_maven(tmp_path: Path) -> None:
     """Test getting local artifact paths succeeded with maven purl."""
     purl = PackageURL.from_string("pkg:maven/com.oracle.macaron/macaron@0.13.0")
-    build_tool_purl_types = ["maven", "pypi"]
 
     tmp_path_str = str(tmp_path)
 
-    local_artifact_repo_mapper = {
-        "maven": f"{tmp_path_str}/.m2/repository",
-        "pypi": f"{tmp_path_str}/.venv/lib/python3.11/site-packages",
-    }
-    maven_artifact_path = f"{local_artifact_repo_mapper['maven']}/com/oracle/macaron/macaron/0.13.0"
-    os.makedirs(local_artifact_repo_mapper["maven"])
-    os.makedirs(local_artifact_repo_mapper["pypi"])
-    os.makedirs(maven_artifact_path)
-
-    expectation = {
-        "maven": [maven_artifact_path],
-    }
+    maven_local_repo_path = f"{tmp_path_str}/.m2/repository"
+    target_artifact_path = f"{maven_local_repo_path}/com/oracle/macaron/macaron/0.13.0"
+    os.makedirs(maven_local_repo_path)
+    os.makedirs(target_artifact_path)
 
     result = get_local_artifact_paths(
         purl=purl,
-        build_tool_purl_types=build_tool_purl_types,
-        local_artifact_repo_mapper=local_artifact_repo_mapper,
+        local_artifact_repo_path=maven_local_repo_path,
     )
 
-    assert result == expectation
+    assert result == [target_artifact_path]
 
 
 def test_get_local_artifact_paths_succeeded_pypi(tmp_path: Path) -> None:
     """Test getting local artifact paths succeeded with pypi purl."""
     purl = PackageURL.from_string("pkg:pypi/macaron@0.13.0")
-    build_tool_purl_types = ["maven", "pypi"]
 
     tmp_path_str = str(tmp_path)
 
-    local_artifact_repo_mapper = {
-        "maven": f"{tmp_path_str}/.m2/repository",
-        "pypi": f"{tmp_path_str}/.venv/lib/python3.11/site-packages",
-    }
+    python_venv_path = f"{tmp_path_str}/.venv/lib/python3.11/site-packages"
+
+    # We are also testing if the patterns match case-insensitively.
     pypi_artifact_paths = [
-        f"{local_artifact_repo_mapper['pypi']}/macaron",
-        f"{local_artifact_repo_mapper['pypi']}/macaron-0.13.0.dist-info",
-        f"{local_artifact_repo_mapper['pypi']}/Macaron-0.13.0.dist-info",
+        f"{python_venv_path}/macaron",
+        f"{python_venv_path}/macaron-0.13.0.dist-info",
+        f"{python_venv_path}/Macaron-0.13.0.dist-info",
+        f"{python_venv_path}/macaron-0.13.0.data",
+        f"{python_venv_path}/Macaron-0.13.0.data",
     ]
 
-    os.makedirs(local_artifact_repo_mapper["maven"])
-    os.makedirs(local_artifact_repo_mapper["pypi"])
+    os.makedirs(python_venv_path)
 
     for artifact_path in pypi_artifact_paths:
         os.makedirs(artifact_path)
 
-    expectation = {
-        "pypi": sorted(pypi_artifact_paths),
-    }
-
     result = get_local_artifact_paths(
         purl=purl,
-        build_tool_purl_types=build_tool_purl_types,
-        local_artifact_repo_mapper=local_artifact_repo_mapper,
+        local_artifact_repo_path=python_venv_path,
     )
-    for value in result.values():
-        value.sort()
 
-    assert result == expectation
+    assert sorted(result) == sorted(pypi_artifact_paths)

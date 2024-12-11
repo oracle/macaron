@@ -6,11 +6,11 @@
 import fnmatch
 import glob
 import os
-from collections.abc import Mapping
 
 from packageurl import PackageURL
 
 from macaron.artifact.maven import construct_maven_repository_path
+from macaron.errors import LocalArtifactFinderError
 
 
 def construct_local_artifact_paths_glob_pattern_maven_purl(maven_purl: PackageURL) -> list[str] | None:
@@ -94,7 +94,7 @@ def construct_local_artifact_paths_glob_pattern_pypi_purl(pypi_purl: PackageURL)
 def find_artifact_paths_from_local_maven_repo(
     local_maven_repo: str,
     glob_patterns: list[str],
-) -> list[str] | None:
+) -> list[str]:
     """Find maven artifacts within a local maven repository directory.
 
     ``local_maven_repo`` should be in format `<...>/.m2/repository`.
@@ -102,17 +102,23 @@ def find_artifact_paths_from_local_maven_repo(
     Parameters
     ----------
     local_maven_repo: str
-        The path to the directories to find artifacts.
+        The path to the directory to find artifacts.
     glob_patterns: list[str]
         The list of glob patterns that matches to artifact file names.
 
     Returns
     -------
-    list[str] | None
-        The list of path to found artifacts in the form of ``local_maven_repo``/<artifact_specific_path>
+    list[str]
+        The list of path to found artifacts in the form of ``local_maven_repo``/<artifact_specific_path>.
+        If no artifact is found, this list will be empty.
+
+    Raises
+    ------
+    LocalArtifactFinderError
+        If ``local_maven_repo`` doesn't exist.
     """
     if not os.path.isdir(local_maven_repo):
-        return None
+        raise LocalArtifactFinderError(f"{local_maven_repo} doesn't exist.")
 
     artifact_paths = []
     for pattern in glob_patterns:
@@ -130,146 +136,110 @@ def find_artifact_paths_from_local_maven_repo(
 
 
 def find_artifact_paths_from_python_venv(
-    venv_path: str,
+    venv_site_package_path: str,
     glob_patterns: list[str],
-) -> list[str] | None:
+) -> list[str]:
     """Find python artifacts within a python virtual environment directory.
 
     For packages in the virtual environment, we will treat their name case-insensitively.
     https://packaging.python.org/en/latest/specifications/name-normalization/
 
+    ``venv_site_package_path`` should be in format `<...>/lib/python3.*/site-packages/`.
+
     Parameters
     ----------
-    local_maven_repo: str
-        The path to the directories to find artifacts.
+    venv_path: str
+        The path to the local directory to find artifacts.
     glob_patterns: list[str]
         The list of glob patterns that matches to artifact file names.
 
     Returns
     -------
-    list[str] | None
-        The list of path to found artifacts in the form of ``local_maven_repo``/<artifact_specific_path>
+    list[str]
+        The list of path to found artifacts in the form of ``venv_site_package_path``/<artifact_specific_path>
+        If no artifact is found, this list will be empty.
+
+    Raises
+    ------
+    LocalArtifactFinderError
+        If ``venv_site_package_path`` doesn't exist or if we cannot view the sub-directory of it.
     """
-    if not os.path.isdir(venv_path):
-        return None
+    if not os.path.isdir(venv_site_package_path):
+        raise LocalArtifactFinderError(f"{venv_site_package_path} doesn't exist.")
 
     artifact_paths = []
 
     try:
-        venv_path_entries = os.listdir(venv_path)
-    except (NotADirectoryError, PermissionError, FileNotFoundError):
-        return None
+        venv_path_entries = os.listdir(venv_site_package_path)
+    except (NotADirectoryError, PermissionError, FileNotFoundError) as error:
+        error_msg = f"Cannot view the sub-directory of venv {venv_site_package_path}"
+        raise LocalArtifactFinderError(error_msg) from error
 
     all_package_dirs: list[str] = []
     for entry in venv_path_entries:
-        entry_path = os.path.join(venv_path, entry)
+        entry_path = os.path.join(venv_site_package_path, entry)
         if os.path.isdir(entry_path):
             all_package_dirs.append(entry)
 
     for package_dir in all_package_dirs:
         for pattern in glob_patterns:
             if fnmatch.fnmatch(package_dir.lower(), pattern.lower()):
-                full_path = os.path.join(venv_path, package_dir)
+                full_path = os.path.join(venv_site_package_path, package_dir)
                 artifact_paths.append(full_path)
 
     return artifact_paths
 
 
-def _get_local_artifact_path_for_build_tool_purl_type(
-    purl: PackageURL,
-    build_tool_purl_type: str,
-    local_artifact_repo: str,
-) -> list[str] | None:
-    """Find local artifacts within ``local_artifact_repo`` depending on the purl type."""
-    if build_tool_purl_type == "maven":
-        maven_artifact_patterns = construct_local_artifact_paths_glob_pattern_maven_purl(purl)
-        if not maven_artifact_patterns:
-            return None
-
-        artifact_paths = find_artifact_paths_from_local_maven_repo(
-            local_maven_repo=local_artifact_repo,
-            glob_patterns=maven_artifact_patterns,
-        )
-
-        if artifact_paths:
-            return artifact_paths
-
-    if build_tool_purl_type == "pypi":
-        pypi_artifact_patterns = construct_local_artifact_paths_glob_pattern_pypi_purl(purl)
-        if not pypi_artifact_patterns:
-            return None
-
-        artifact_paths = find_artifact_paths_from_python_venv(
-            venv_path=local_artifact_repo,
-            glob_patterns=pypi_artifact_patterns,
-        )
-
-        if artifact_paths:
-            return artifact_paths
-
-    return None
-
-
 def get_local_artifact_paths(
     purl: PackageURL,
-    build_tool_purl_types: list[str],
-    local_artifact_repo_mapper: Mapping[str, str],
-) -> dict[str, list[str]]:
+    local_artifact_repo_path: str,
+) -> list[str]:
     """Return the path to local artifacts for a PackageURL.
 
-    We look for local artifacts of this PURL in all local repos corresponding to each purl
-    type in ``build_tool_purl_types`` (e.g a pypi build tool type will map to the python virtual
-    environment, if available).
+    We look for local artifacts of this PURL in ``local_artifact_repo_path``.
 
-    This function returns a dictionary with:
-    - keys: The purl type
-    - values: The list of aritfact paths corresponding to a purl type
+    This function returns a list of paths (as strings), each has the format
+        ``local_artifact_repo_path``/path/to/artifact``
 
-    If a key doesn't exist, we cannot construct the artifact paths for that purl type. This can
-    happen because of:
-    - no local artifact repo found or given from user OR
-    - not enough information from PURL type OR
-    - build PURL type is not supported OR
-    - no valid artifact paths found
-
-    We assume that all paths in ``local_artifact_repo_mapper`` exist.
+    We assume that ``local_artifact_repo_path`` exists.
 
     Parameters
     ----------
     purl : PackageURL
         The purl we want to find local artifacts
-    build_tool_purl_types : list[str]
-        The list of build tool purl type to look for local artifacts.
-    local_artifact_repo_mapper: Mapping[str, str]
-        The mapping between each build purl type and the local artifact repo directory.
+    local_artifact_repo_path : str
+        The local artifact repo directory.
 
     Returns
     -------
-    dict[str, list[str]]
-        A mapping between build purl type and the paths to local artifacts if found.
+    list[str]
+        The list contains the found artifact paths. It will be empty if no artifact can be found.
+
+    Raises
+    ------
+    LocalArtifactFinderError
+        If an error happens when looking for local artifacts.
     """
-    result = {}
+    purl_type = purl.type
 
-    for build_tool_purl_type in build_tool_purl_types:
-        local_artifact_repo = local_artifact_repo_mapper.get(build_tool_purl_type)
-        if not local_artifact_repo:
-            continue
+    if purl_type == "maven":
+        maven_artifact_patterns = construct_local_artifact_paths_glob_pattern_maven_purl(purl)
+        if not maven_artifact_patterns:
+            raise LocalArtifactFinderError(f"Cannot generate maven artifact patterns for {purl}")
 
-        # ``local_artifact_repo`` here correspond to ``build_tool_purl_type`` already
-        # However, because for each build tool purl type, we have different ways of:
-        # - Generating glob patterns
-        # - Applying the glob patterns
-        # I still put ``local_artifact_repo`` in _get_local_artifact_path_for_build_tool_purl_type
-        # to further handle those tasks.
-        artifact_paths = _get_local_artifact_path_for_build_tool_purl_type(
-            purl=purl,
-            build_tool_purl_type=build_tool_purl_type,
-            local_artifact_repo=local_artifact_repo,
+        return find_artifact_paths_from_local_maven_repo(
+            local_maven_repo=local_artifact_repo_path,
+            glob_patterns=maven_artifact_patterns,
         )
 
-        if not artifact_paths:
-            continue
+    if purl_type == "pypi":
+        pypi_artifact_patterns = construct_local_artifact_paths_glob_pattern_pypi_purl(purl)
+        if not pypi_artifact_patterns:
+            raise LocalArtifactFinderError(f"Cannot generate Python package patterns for {purl}")
 
-        result[build_tool_purl_type] = artifact_paths
+        return find_artifact_paths_from_python_venv(
+            venv_site_package_path=local_artifact_repo_path,
+            glob_patterns=pypi_artifact_patterns,
+        )
 
-    return result
+    raise LocalArtifactFinderError(f"Unsupported PURL type {purl_type}")

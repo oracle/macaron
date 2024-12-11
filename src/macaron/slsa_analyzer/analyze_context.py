@@ -55,8 +55,8 @@ class ChecksOutputs(TypedDict):
     """The commit digest extracted from provenance, if applicable."""
     provenance_verified: bool
     """True if the provenance exists and has been verified against a signed companion provenance."""
-    local_artifact_paths: dict[str, list[str]]
-    """The mapping between purl types and the local artifact absolute paths."""
+    local_artifact_paths: list[str]
+    """The local artifact absolute paths."""
 
 
 class AnalyzeContext:
@@ -112,7 +112,7 @@ class AnalyzeContext:
             provenance_repo_url=None,
             provenance_commit_digest=None,
             provenance_verified=False,
-            local_artifact_paths={},
+            local_artifact_paths=[],
         )
 
     @property
