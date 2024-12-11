@@ -30,6 +30,7 @@ from macaron.errors import (
     DuplicateError,
     InvalidAnalysisTargetError,
     InvalidPURLError,
+    LocalArtifactFinderError,
     ProvenanceError,
     PURLNotFoundError,
 )
@@ -481,12 +482,14 @@ class Analyzer:
 
         if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
             local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
-            analyze_ctx.dynamic_data["local_artifact_paths"].extend(
-                get_local_artifact_dirs(
+            try:
+                local_artifact_dirs = get_local_artifact_dirs(
                     purl=parsed_purl,
                     local_artifact_repo_path=local_artifact_repo_path,
                 )
-            )
+                analyze_ctx.dynamic_data["local_artifact_paths"].extend(local_artifact_dirs)
+            except LocalArtifactFinderError as error:
+                logger.debug(error)
 
         analyze_ctx.check_results = registry.scan(analyze_ctx)
 
