@@ -1012,6 +1012,11 @@ class Analyzer:
 
             if len(site_packages_dirs) == 1:
                 local_artifact_mapper["pypi"] = site_packages_dirs.pop()
+            else:
+                logger.info(
+                    "There are multiple python3.* directories in the input Python venv. "
+                    + "This venv will NOT be used for local artifact findings."
+                )
 
         return local_artifact_mapper
 
