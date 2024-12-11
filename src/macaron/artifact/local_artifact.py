@@ -13,8 +13,8 @@ from macaron.artifact.maven import construct_maven_repository_path
 from macaron.errors import LocalArtifactFinderError
 
 
-def construct_local_artifact_paths_glob_pattern_maven_purl(maven_purl: PackageURL) -> list[str] | None:
-    """Return a list of glob pattern(s) representing maven artifacts in a local maven repository.
+def construct_local_artifact_dirs_glob_pattern_maven_purl(maven_purl: PackageURL) -> list[str] | None:
+    """Return a list of glob pattern(s) representing the directory that contains the local maven artifacts for ``maven_purl``.
 
     The glob pattern(s) can be used to search in `<...>/.m2/repository` directory.
 
@@ -48,8 +48,8 @@ def construct_local_artifact_paths_glob_pattern_maven_purl(maven_purl: PackageUR
     return [construct_maven_repository_path(group, artifact, version)]
 
 
-def construct_local_artifact_paths_glob_pattern_pypi_purl(pypi_purl: PackageURL) -> list[str] | None:
-    """Return a list of glob pattern(s) representing python artifacts in a virtual environment.
+def construct_local_artifact_dirs_glob_pattern_pypi_purl(pypi_purl: PackageURL) -> list[str] | None:
+    """Return a list of glob pattern(s) representing directories that contains the artifacts in a Python virtual environment.
 
     The glob pattern(s) can be used to search in `<...>/<python_venv>/lib/python3.x/site-packages`
     directory.
@@ -194,12 +194,16 @@ def get_local_artifact_paths(
     purl: PackageURL,
     local_artifact_repo_path: str,
 ) -> list[str]:
-    """Return the path to local artifacts for a PackageURL.
+    """Return the paths to directories that store local artifacts for a PackageURL.
 
-    We look for local artifacts of this PURL in ``local_artifact_repo_path``.
+    We look for local artifacts of ``purl`` in ``local_artifact_repo_path``.
 
     This function returns a list of paths (as strings), each has the format
-        ``local_artifact_repo_path``/path/to/artifact``
+        ``local_artifact_repo_path``/path/to/artifact_dir``
+
+    This will mean that no path to an artifact is returned. Therefore, it's the responsibility
+    of this function caller to inspect the artifact directory to obtain the required
+    artifact.
 
     We assume that ``local_artifact_repo_path`` exists.
 
@@ -223,7 +227,7 @@ def get_local_artifact_paths(
     purl_type = purl.type
 
     if purl_type == "maven":
-        maven_artifact_patterns = construct_local_artifact_paths_glob_pattern_maven_purl(purl)
+        maven_artifact_patterns = construct_local_artifact_dirs_glob_pattern_maven_purl(purl)
         if not maven_artifact_patterns:
             raise LocalArtifactFinderError(f"Cannot generate maven artifact patterns for {purl}")
 
@@ -233,7 +237,7 @@ def get_local_artifact_paths(
         )
 
     if purl_type == "pypi":
-        pypi_artifact_patterns = construct_local_artifact_paths_glob_pattern_pypi_purl(purl)
+        pypi_artifact_patterns = construct_local_artifact_dirs_glob_pattern_pypi_purl(purl)
         if not pypi_artifact_patterns:
             raise LocalArtifactFinderError(f"Cannot generate Python package patterns for {purl}")
 
