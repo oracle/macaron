@@ -11,6 +11,7 @@ from packageurl import PackageURL
 
 from macaron.config.target_config import Configuration
 from macaron.errors import InvalidAnalysisTargetError, InvalidPURLError
+from macaron.repo_finder.repo_finder_enums import RepoFinderOutcome
 from macaron.slsa_analyzer.analyzer import Analyzer
 
 
@@ -25,13 +26,18 @@ from macaron.slsa_analyzer.analyzer import Analyzer
                 repo_path="https://github.com/apache/maven",
                 branch="",
                 digest="",
+                repo_finder_outcome=RepoFinderOutcome.NOT_USED,
             ),
         ),
         (
             Configuration({"purl": "", "path": "https://github.com/apache/maven"}),
             ["github.com", "gitlab.com", "bitbucket.org"],
             Analyzer.AnalysisTarget(
-                parsed_purl=None, repo_path="https://github.com/apache/maven", branch="", digest=""
+                parsed_purl=None,
+                repo_path="https://github.com/apache/maven",
+                branch="",
+                digest="",
+                repo_finder_outcome=RepoFinderOutcome.NOT_USED,
             ),
         ),
         (
@@ -42,6 +48,7 @@ from macaron.slsa_analyzer.analyzer import Analyzer
                 repo_path="https://github.com/apache/maven",
                 branch="",
                 digest="",
+                repo_finder_outcome=RepoFinderOutcome.NOT_USED,
             ),
         ),
         (
@@ -59,6 +66,7 @@ from macaron.slsa_analyzer.analyzer import Analyzer
                 repo_path="https://github.com/apache/maven",
                 branch="master",
                 digest="abcxyz",
+                repo_finder_outcome=RepoFinderOutcome.NOT_USED,
             ),
         ),
     ],

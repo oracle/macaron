@@ -10,7 +10,7 @@ import pytest
 import macaron
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.config.defaults import create_defaults, defaults, load_defaults
-from macaron.database.table_definitions import Analysis, Component, Repository
+from macaron.database.table_definitions import Analysis, Component, RepoFinderMetadata, Repository
 from macaron.parsers.bashparser import BashScriptType, create_bash_node
 from macaron.parsers.github_workflow_model import Identified, Job, NormalJob, RunStep, Workflow
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -413,6 +413,7 @@ class MockAnalyzeContext(AnalyzeContext):
                 # Must match test_provenance_finder.MockGit.MockTag.commit.
                 commit_sha="dig",
             ),
+            repo_finder_metadata=RepoFinderMetadata(),
         )
         super().__init__(component, *args, **kwargs)
 

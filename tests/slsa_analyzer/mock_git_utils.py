@@ -11,7 +11,7 @@ import git
 from git.exc import GitError
 from pydriller.git import Git
 
-from macaron.database.table_definitions import Analysis, Component, Repository
+from macaron.database.table_definitions import Analysis, Component, RepoFinderMetadata, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 
 
@@ -111,6 +111,7 @@ def prepare_repo_for_testing(
             files=git_repo.files(),
             fs_path=str(repo_path),
         ),
+        repo_finder_metadata=RepoFinderMetadata(),
     )
 
     analyze_ctx = AnalyzeContext(component=component, macaron_path=str(macaron_path), output_dir=str(output_dir))
