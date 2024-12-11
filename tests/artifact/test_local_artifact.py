@@ -10,8 +10,8 @@ import pytest
 from packageurl import PackageURL
 
 from macaron.artifact.local_artifact import (
-    construct_local_artifact_paths_glob_pattern_maven_purl,
-    construct_local_artifact_paths_glob_pattern_pypi_purl,
+    construct_local_artifact_dirs_glob_pattern_maven_purl,
+    construct_local_artifact_dirs_glob_pattern_pypi_purl,
     find_artifact_paths_from_python_venv,
     get_local_artifact_paths,
 )
@@ -39,7 +39,7 @@ def test_construct_local_artifact_paths_glob_pattern_maven_purl(
 ) -> None:
     """Test constructing a local artifact patterns from a given maven purl."""
     maven_purl = PackageURL.from_string(purl_str)
-    result = construct_local_artifact_paths_glob_pattern_maven_purl(maven_purl=maven_purl)
+    result = construct_local_artifact_dirs_glob_pattern_maven_purl(maven_purl=maven_purl)
     assert result is not None
     assert sorted(result) == sorted(expectation)
 
@@ -55,7 +55,7 @@ def test_construct_local_artifact_paths_glob_pattern_maven_purl(
 def test_construct_local_artifact_paths_glob_pattern_maven_purl_error(purl_str: str) -> None:
     """Test constructing a local artifact patterns from a given maven purl with error."""
     maven_purl = PackageURL.from_string(purl_str)
-    result = construct_local_artifact_paths_glob_pattern_maven_purl(maven_purl=maven_purl)
+    result = construct_local_artifact_dirs_glob_pattern_maven_purl(maven_purl=maven_purl)
     assert result is None
 
 
@@ -75,7 +75,7 @@ def test_construct_local_artifact_paths_glob_pattern_pypi_purl(
 ) -> None:
     """Test constructing a local artifact patterns from a given pypi purl."""
     pypi_purl = PackageURL.from_string(purl_str)
-    result = construct_local_artifact_paths_glob_pattern_pypi_purl(pypi_purl=pypi_purl)
+    result = construct_local_artifact_dirs_glob_pattern_pypi_purl(pypi_purl=pypi_purl)
     assert result is not None
     assert sorted(result) == sorted(expectation)
 
@@ -96,7 +96,7 @@ def test_construct_local_artifact_paths_glob_pattern_pypi_purl(
 def test_construct_local_artifact_paths_glob_pattern_pypi_purl_error(purl_str: str) -> None:
     """Test constructing a local artifact patterns from a given pypi purl with error."""
     pypi_purl = PackageURL.from_string(purl_str)
-    result = construct_local_artifact_paths_glob_pattern_pypi_purl(pypi_purl=pypi_purl)
+    result = construct_local_artifact_dirs_glob_pattern_pypi_purl(pypi_purl=pypi_purl)
     assert result is None
 
 
