@@ -8,25 +8,12 @@ import os
 import string
 from urllib.parse import urlparse
 
-from git import InvalidGitRepositoryError
 from packageurl import PackageURL
-from pydriller import Git
 
 from macaron.config.global_config import global_config
-from macaron.errors import CloneError, RepoCheckOutError
-from macaron.repo_finder.commit_finder import find_commit
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
-from macaron.slsa_analyzer.git_url import (
-    GIT_REPOS_DIR,
-    check_out_repo_target,
-    get_remote_origin_of_local_repo,
-    get_remote_vcs_url,
-    get_repo_dir_name,
-    is_empty_repo,
-    is_remote_repo,
-    resolve_local_path,
-)
+from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -125,125 +112,6 @@ def create_report(purl: str, commit: str, repo: str) -> str:
     return json.dumps(data, indent=4)
 
 
-def prepare_repo(
-    target_dir: str,
-    repo_path: str,
-    branch_name: str = "",
-    digest: str = "",
-    purl: PackageURL | None = None,
-) -> Git | None:
-    """Prepare the target repository for analysis.
-
-    If ``repo_path`` is a remote path, the target repo is cloned to ``{target_dir}/{unique_path}``.
-    The ``unique_path`` of a repository will depend on its remote url.
-    For example, if given the ``repo_path`` https://github.com/org/name.git, it will
-    be cloned to ``{target_dir}/github_com/org/name``.
-
-    If ``repo_path`` is a local path, this method will check if ``repo_path`` resolves to a directory inside
-    ``local_repos_path`` and to a valid git repository.
-
-    Parameters
-    ----------
-    target_dir : str
-        The directory where all remote repository will be cloned.
-    repo_path : str
-        The path to the repository, can be either local or remote.
-    branch_name : str
-        The name of the branch we want to checkout.
-    digest : str
-        The hash of the commit that we want to checkout in the branch.
-    purl : PackageURL | None
-        The PURL of the analysis target.
-
-    Returns
-    -------
-    Git | None
-        The pydriller.Git object of the repository or None if error.
-    """
-    # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
-    logger.info(
-        "Preparing the repository for the analysis (path=%s, branch=%s, digest=%s)",
-        repo_path,
-        branch_name,
-        digest,
-    )
-
-    resolved_local_path = ""
-    is_remote = is_remote_repo(repo_path)
-
-    if is_remote:
-        logger.info("The path to repo %s is a remote path.", repo_path)
-        resolved_remote_path = get_remote_vcs_url(repo_path)
-        if not resolved_remote_path:
-            logger.error("The provided path to repo %s is not a valid remote path.", repo_path)
-            return None
-
-        git_service = get_git_service(resolved_remote_path)
-        repo_unique_path = get_repo_dir_name(resolved_remote_path)
-        resolved_local_path = os.path.join(target_dir, repo_unique_path)
-        logger.info("Cloning the repository.")
-        try:
-            git_service.clone_repo(resolved_local_path, resolved_remote_path)
-        except CloneError as error:
-            logger.error("Cannot clone %s: %s", resolved_remote_path, str(error))
-            return None
-    else:
-        logger.info("Checking if the path to repo %s is a local path.", repo_path)
-        resolved_local_path = resolve_local_path(get_local_repos_path(), repo_path)
-
-    if resolved_local_path:
-        try:
-            git_obj = Git(resolved_local_path)
-        except InvalidGitRepositoryError:
-            logger.error("No git repo exists at %s.", resolved_local_path)
-            return None
-    else:
-        logger.error("Error happened while preparing the repo.")
-        return None
-
-    if is_empty_repo(git_obj):
-        logger.error("The target repository does not have any commit.")
-        return None
-
-    # Find the digest and branch if a version has been specified
-    if not digest and purl and purl.version:
-        found_digest = find_commit(git_obj, purl)
-        if not found_digest:
-            logger.error("Could not map the input purl string to a specific commit in the corresponding repository.")
-            return None
-        digest = found_digest
-
-    # Checking out the specific branch or commit. This operation varies depends on the git service that the
-    # repository uses.
-    if not is_remote:
-        # If the repo path provided by the user is a local path, we need to get the actual origin remote URL of
-        # the repo to decide on the suitable git service.
-        origin_remote_url = get_remote_origin_of_local_repo(git_obj)
-        if is_remote_repo(origin_remote_url):
-            # The local repo's origin remote url is a remote URL (e.g https://host.com/a/b): In this case, we obtain
-            # the corresponding git service using ``self.get_git_service``.
-            git_service = get_git_service(origin_remote_url)
-        else:
-            # The local repo's origin remote url is a local path (e.g /path/to/local/...). This happens when the
-            # target repository is a clone from another local repo or is a clone from a git archive -
-            # https://git-scm.com/docs/git-archive: In this case, we fall-back to the generic function
-            # ``git_url.check_out_repo_target``.
-            if not check_out_repo_target(git_obj, branch_name, digest, not is_remote):
-                logger.error("Cannot checkout the specific branch or commit of the target repo.")
-                return None
-
-            return git_obj
-
-    try:
-        git_service.check_out_repo(git_obj, branch_name, digest, not is_remote)
-    except RepoCheckOutError as error:
-        logger.error("Failed to check out repository at %s", resolved_local_path)
-        logger.error(error)
-        return None
-
-    return git_obj
-
-
 def get_local_repos_path() -> str:
     """Get the local repos path from global config or use default.
 
@@ -278,3 +146,26 @@ def get_git_service(remote_path: str | None) -> BaseGitService:
                 return git_service
 
     return NoneGitService()
+
+
+def check_repo_urls_are_equivalent(repo_1: str, repo_2: str) -> bool:
+    """Check if the two passed repo URLs are equivalent.
+
+    Parameters
+    ----------
+    repo_1: str
+        The first repository URL as a string.
+    repo_2: str
+        The second repository URL as a string.
+
+    Returns
+    -------
+    bool
+        True if the repository URLs have equal hostnames and paths, otherwise False.
+    """
+    repo_url_1 = urlparse(repo_1)
+    repo_url_2 = urlparse(repo_2)
+    if repo_url_1.hostname != repo_url_2.hostname or repo_url_1.path != repo_url_2.path:
+        return False
+
+    return True

@@ -36,28 +36,48 @@ import logging
 import os
 from urllib.parse import ParseResult, urlunparse
 
+from git import InvalidGitRepositoryError
 from packageurl import PackageURL
+from pydriller import Git
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
+from macaron.errors import CloneError, RepoCheckOutError
 from macaron.repo_finder import to_domain_from_known_purl_types
-from macaron.repo_finder.commit_finder import match_tags
+from macaron.repo_finder.commit_finder import find_commit, match_tags
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
-from macaron.repo_finder.repo_utils import generate_report, prepare_repo
-from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR, list_remote_references
+from macaron.repo_finder.repo_utils import (
+    check_repo_urls_are_equivalent,
+    generate_report,
+    get_git_service,
+    get_local_repos_path,
+)
+from macaron.slsa_analyzer.git_url import (
+    GIT_REPOS_DIR,
+    check_out_repo_target,
+    get_remote_origin_of_local_repo,
+    get_remote_vcs_url,
+    get_repo_dir_name,
+    is_empty_repo,
+    is_remote_repo,
+    list_remote_references,
+    resolve_local_path,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def find_repo(purl: PackageURL) -> str:
+def find_repo(purl: PackageURL, check_latest_version: bool = True) -> str:
     """Retrieve the repository URL that matches the given PURL.
 
     Parameters
     ----------
     purl : PackageURL
         The parsed PURL to convert to the repository path.
+    check_latest_version: bool
+        A flag that determines whether the latest version of the PURL is also checked.
 
     Returns
     -------
@@ -80,7 +100,22 @@ def find_repo(purl: PackageURL) -> str:
 
     # Call Repo Finder and return first valid URL
     logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
-    return repo_finder.find_repo(purl)
+    found_repo = repo_finder.find_repo(purl)
+
+    if found_repo or not check_latest_version:
+        return found_repo
+
+    # Try to find the latest version repo.
+    logger.error("Could not find repo for PURL: %s", purl)
+    latest_version_purl = get_latest_purl_if_different(purl)
+    if not latest_version_purl:
+        logger.debug("Could not find newer PURL than provided: %s", purl)
+        return ""
+
+    found_repo = DepsDevRepoFinder().find_repo(latest_version_purl)
+    if not found_repo:
+        logger.debug("Could not find repo from latest version of PURL: %s", latest_version_purl)
+    return found_repo
 
 
 def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
@@ -113,8 +148,7 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
     domain = to_domain_from_known_purl_types(purl.type) or (purl.type if purl.type in available_domains else None)
     if not domain:
         logger.info("The PURL type of %s is not valid as a repository type. Trying to find the repository...", purl)
-        # Try to find the repository
-        return find_repo(purl)
+        return None
 
     if not purl.namespace:
         logger.error("Expecting a non-empty namespace from %s.", purl)
@@ -133,7 +167,7 @@ def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
     )
 
 
-def find_source(purl_string: str, input_repo: str | None) -> bool:
+def find_source(purl_string: str, input_repo: str | None, latest_version_fallback: bool = True) -> bool:
     """Perform repo and commit finding for a passed PURL, or commit finding for a passed PURL and repo.
 
     Parameters
@@ -142,6 +176,8 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
         The PURL string of the target.
     input_repo: str | None
         The repository path optionally provided by the user.
+    latest_version_fallback: bool
+        A flag that determines whether the latest version of the same artifact can be checked as a fallback option.
 
     Returns
     -------
@@ -149,17 +185,25 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
         True if the source was found.
     """
     try:
-        purl = PackageURL.from_string(purl_string)
+        purl: PackageURL | None = PackageURL.from_string(purl_string)
     except ValueError as error:
-        logger.error("Could not parse PURL: %s", error)
+        logger.error("Could not parse PURL: '%s'. Error: %s", purl_string, error)
         return False
 
-    if not purl.version:
-        logger.debug("PURL is missing version.")
+    if not purl:
+        # Unreachable.
         return False
+
+    checked_latest_purl = False
+    if not purl.version:
+        purl = get_latest_purl_if_different(purl)
+        if not purl or not purl.version:
+            logger.error("PURL is missing version.")
+            return False
+        checked_latest_purl = True
 
     found_repo = input_repo
-    if not input_repo:
+    if not found_repo:
         logger.debug("Searching for repo of PURL: %s", purl)
         found_repo = find_repo(purl)
 
@@ -170,43 +214,47 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
     # Disable other loggers for cleaner output.
     logging.getLogger("macaron.slsa_analyzer.analyzer").disabled = True
 
+    digest = None
     if defaults.getboolean("repofinder", "find_source_should_clone"):
+        # Clone the repo to retrieve the tags.
         logger.debug("Preparing repo: %s", found_repo)
         repo_dir = os.path.join(global_config.output_path, GIT_REPOS_DIR)
         logging.getLogger("macaron.slsa_analyzer.git_url").disabled = True
-        git_obj = prepare_repo(
-            repo_dir,
-            found_repo,
-            purl=purl,
-        )
+        # The prepare_repo function will also check the latest version of the artifact if required.
+        git_obj = prepare_repo(repo_dir, found_repo, purl=purl, latest_version_fallback=not checked_latest_purl)
 
-        if not git_obj:
-            # TODO expand this message to cover cases where the obj was not created due to lack of correct tag.
-            logger.error("Could not resolve repository: %s", found_repo)
-            return False
+        if git_obj:
+            try:
+                digest = git_obj.get_head().hash
+            except ValueError:
+                logger.debug("Could not retrieve commit hash from repository.")
 
-        try:
-            digest = git_obj.get_head().hash
-        except ValueError:
-            logger.debug("Could not retrieve commit hash from repository.")
+        if not digest:
             return False
     else:
-        # Retrieve the tags.
+        # Retrieve the tags using a remote git operation.
         tags = get_tags_via_git_remote(found_repo)
-        if not tags:
-            return False
+        if tags:
+            matches = match_tags(list(tags.keys()), purl.name, purl.version)
+            if matches:
+                matched_tag = matches[0]
+                digest = tags[matched_tag]
 
-        matches = match_tags(list(tags.keys()), purl.name, purl.version)
+        if not digest:
+            logger.error("Could not find commit for purl / repository: %s / %s", purl, found_repo)
+            if not latest_version_fallback or checked_latest_purl:
+                return False
 
-        if not matches:
-            return False
+            # When not cloning the latest version must be checked here.
+            latest_version_purl = get_latest_purl_if_different(purl)
+            if not latest_version_purl:
+                return False
 
-        matched_tag = matches[0]
-        digest = tags[matched_tag]
+            latest_repo = get_latest_repo_if_different(latest_version_purl, found_repo)
+            if not latest_repo:
+                return False
 
-    if not digest:
-        logger.error("Could not find commit for purl / repository: %s / %s", purl, found_repo)
-        return False
+            return find_source(str(purl), latest_repo, False)
 
     if not input_repo:
         logger.info("Found repository for PURL: %s", found_repo)
@@ -217,6 +265,68 @@ def find_source(purl_string: str, input_repo: str | None) -> bool:
         return False
 
     return True
+
+
+def get_latest_purl_if_different(purl: PackageURL) -> PackageURL | None:
+    """Return the latest version of an artifact represented by a PURL, if it is different.
+
+    Parameters
+    ----------
+    purl : PackageURL | None
+        The PURL of the analysis target.
+
+    Returns
+    -------
+    PackageURL | None
+        The latest PURL, or None if they are the same or an error occurs.
+    """
+    if purl.version:
+        namespace = purl.namespace + "/" if purl.namespace else ""
+        no_version_purl = PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}")
+    else:
+        no_version_purl = purl
+
+    latest_version_purl = DepsDevRepoFinder.get_latest_version(no_version_purl)
+    if not latest_version_purl:
+        logger.error("Latest version PURL could not be found.")
+        return None
+
+    if latest_version_purl == purl:
+        logger.error("Latest version PURL is the same as the current.")
+        return None
+
+    logger.debug("Found new version of PURL: %s", latest_version_purl)
+    return latest_version_purl
+
+
+def get_latest_repo_if_different(latest_version_purl: PackageURL, original_repo: str) -> str:
+    """Return the repository of the passed PURL if it is different to the passed repository.
+
+    Parameters
+    ----------
+    latest_version_purl: PackageURL
+        The PURL to use.
+    original_repo: str
+        The repository to compare against.
+
+    Returns
+    -------
+    str
+        The latest repository, or an empty string if not found.
+    """
+    latest_repo = find_repo(latest_version_purl, False)
+    if not latest_repo:
+        logger.error("Could not find repository from latest PURL: %s", latest_version_purl)
+        return ""
+
+    if check_repo_urls_are_equivalent(original_repo, latest_repo):
+        logger.error(
+            "Repository from latest PURL is equivalent to original repository: %s ~= %s", latest_repo, original_repo
+        )
+        return ""
+
+    logger.debug("Found new repository from latest PURL: %s", latest_repo)
+    return latest_repo
 
 
 def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
@@ -260,3 +370,135 @@ def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
     logger.debug("Found %s tags via ls-remote of %s", len(tags), repo)
 
     return tags
+
+
+def prepare_repo(
+    target_dir: str,
+    repo_path: str,
+    branch_name: str = "",
+    digest: str = "",
+    purl: PackageURL | None = None,
+    latest_version_fallback: bool = True,
+) -> Git | None:
+    """Prepare the target repository for analysis.
+
+    If ``repo_path`` is a remote path, the target repo is cloned to ``{target_dir}/{unique_path}``.
+    The ``unique_path`` of a repository will depend on its remote url.
+    For example, if given the ``repo_path`` https://github.com/org/name.git, it will
+    be cloned to ``{target_dir}/github_com/org/name``.
+
+    If ``repo_path`` is a local path, this method will check if ``repo_path`` resolves to a directory inside
+    ``local_repos_path`` and to a valid git repository.
+
+    Parameters
+    ----------
+    target_dir : str
+        The directory where all remote repository will be cloned.
+    repo_path : str
+        The path to the repository, can be either local or remote.
+    branch_name : str
+        The name of the branch we want to checkout.
+    digest : str
+        The hash of the commit that we want to checkout in the branch.
+    purl : PackageURL | None
+        The PURL of the analysis target.
+    latest_version_fallback: bool
+        A flag that determines whether the latest version of the same artifact can be checked as a fallback option.
+
+    Returns
+    -------
+    Git | None
+        The pydriller.Git object of the repository or None if error.
+    """
+    # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
+    logger.info(
+        "Preparing the repository for the analysis (path=%s, branch=%s, digest=%s)",
+        repo_path,
+        branch_name,
+        digest,
+    )
+
+    resolved_local_path = ""
+    is_remote = is_remote_repo(repo_path)
+
+    if is_remote:
+        logger.info("The path to repo %s is a remote path.", repo_path)
+        resolved_remote_path = get_remote_vcs_url(repo_path)
+        if not resolved_remote_path:
+            logger.error("The provided path to repo %s is not a valid remote path.", repo_path)
+            return None
+
+        git_service = get_git_service(resolved_remote_path)
+        repo_unique_path = get_repo_dir_name(resolved_remote_path)
+        resolved_local_path = os.path.join(target_dir, repo_unique_path)
+        logger.info("Cloning the repository.")
+        try:
+            git_service.clone_repo(resolved_local_path, resolved_remote_path)
+        except CloneError as error:
+            logger.error("Cannot clone %s: %s", resolved_remote_path, str(error))
+            return None
+    else:
+        logger.info("Checking if the path to repo %s is a local path.", repo_path)
+        resolved_local_path = resolve_local_path(get_local_repos_path(), repo_path)
+
+    if resolved_local_path:
+        try:
+            git_obj = Git(resolved_local_path)
+        except InvalidGitRepositoryError:
+            logger.error("No git repo exists at %s.", resolved_local_path)
+            return None
+    else:
+        logger.error("Error happened while preparing the repo.")
+        return None
+
+    if is_empty_repo(git_obj):
+        logger.error("The target repository does not have any commit.")
+        return None
+
+    # Find the digest and branch if a version has been specified
+    if not digest and purl and purl.version:
+        found_digest = find_commit(git_obj, purl)
+        if not found_digest:
+            logger.error("Could not map the input purl string to a specific commit in the corresponding repository.")
+            if not latest_version_fallback:
+                return None
+            # If the commit could not be found, check if the latest version of the artifact has a different repository.
+            latest_purl = get_latest_purl_if_different(purl)
+            if not latest_purl:
+                return None
+            latest_repo = get_latest_repo_if_different(latest_purl, repo_path)
+            if not latest_repo:
+                return None
+            return prepare_repo(latest_repo, latest_repo, target_dir, latest_version_fallback=False)
+
+        digest = found_digest
+
+    # Checking out the specific branch or commit. This operation varies depends on the git service that the
+    # repository uses.
+    if not is_remote:
+        # If the repo path provided by the user is a local path, we need to get the actual origin remote URL of
+        # the repo to decide on the suitable git service.
+        origin_remote_url = get_remote_origin_of_local_repo(git_obj)
+        if is_remote_repo(origin_remote_url):
+            # The local repo's origin remote url is a remote URL (e.g https://host.com/a/b): In this case, we obtain
+            # the corresponding git service using ``self.get_git_service``.
+            git_service = get_git_service(origin_remote_url)
+        else:
+            # The local repo's origin remote url is a local path (e.g /path/to/local/...). This happens when the
+            # target repository is a clone from another local repo or is a clone from a git archive -
+            # https://git-scm.com/docs/git-archive: In this case, we fall-back to the generic function
+            # ``git_url.check_out_repo_target``.
+            if not check_out_repo_target(git_obj, branch_name, digest, not is_remote):
+                logger.error("Cannot checkout the specific branch or commit of the target repo.")
+                return None
+
+            return git_obj
+
+    try:
+        git_service.check_out_repo(git_obj, branch_name, digest, not is_remote)
+    except RepoCheckOutError as error:
+        logger.error("Failed to check out repository at %s", resolved_local_path)
+        logger.error(error)
+        return None
+
+    return git_obj
