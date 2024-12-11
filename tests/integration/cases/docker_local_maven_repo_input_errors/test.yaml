@@ -27,7 +27,7 @@ steps:
     - --local-maven-repo
     - invalid_dir
   expect_fail: true
-- name: Create a test file.
+- name: Create a test file to mimick user input. Therefore, this test file will be outside of the output dir.
   kind: shell
   options:
     cmd: touch test.txt
@@ -40,7 +40,7 @@ steps:
     - --local-maven-repo
     - ./test.txt
   expect_fail: true
-- name: Clean up the test file.
+- name: Clean up the test file because it's not automatically cleaned up by the test script as it's outside of the output directory.
   kind: shell
   options:
     cmd: rm test.txt
