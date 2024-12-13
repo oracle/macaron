@@ -22,7 +22,7 @@ Usage
     usage: ./run_macaron.sh analyze
         [-h] [-sbom SBOM_PATH] [-purl PURL] [-rp REPO_PATH] [-b BRANCH]
         [-d DIGEST] [-pe PROVENANCE_EXPECTATION]
-        [--skip-deps] [--deps-depth DEPS_DEPTH] [-g TEMPLATE_PATH]
+        [--deps-depth DEPS_DEPTH] [-g TEMPLATE_PATH]
         [--python-venv PYTHON_VENV]
         [--local-maven-repo LOCAL_MAVEN_REPO]
 
@@ -63,10 +63,6 @@ Options
 .. option:: -pf PROVENANCE_FILE, --provenance-file PROVENANCE_FILE
 
     The path to the provenance file in in-toto format.
-
-.. option:: --skip-deps
-
-    DEPRECATED. Dependency resolution is off by default. This flag does nothing and will be removed in the next release.
 
 .. option:: --deps-depth DEPS_DEPTH
 
