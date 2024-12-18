@@ -15,6 +15,7 @@ from pydriller import Git
 from macaron.config.global_config import global_config
 from macaron.errors import CloneError, RepoCheckOutError
 from macaron.repo_finder.commit_finder import find_commit
+from macaron.repo_finder.repo_finder_enums import CommitFinderOutcome
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_url import (
@@ -131,7 +132,7 @@ def prepare_repo(
     branch_name: str = "",
     digest: str = "",
     purl: PackageURL | None = None,
-) -> Git | None:
+) -> tuple[Git | None, CommitFinderOutcome, str]:
     """Prepare the target repository for analysis.
 
     If ``repo_path`` is a remote path, the target repo is cloned to ``{target_dir}/{unique_path}``.
@@ -157,8 +158,9 @@ def prepare_repo(
 
     Returns
     -------
-    Git | None
-        The pydriller.Git object of the repository or None if error.
+    tuple[Git | None, CommitFinderOutcome, str]
+            The pydriller.Git object of the repository or None if error; the outcome of the Commit Finder; and the final
+            digest.
     """
     # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
     logger.info(
@@ -168,15 +170,15 @@ def prepare_repo(
         digest,
     )
 
-    resolved_local_path = ""
     is_remote = is_remote_repo(repo_path)
+    commit_finder_outcome = CommitFinderOutcome.NOT_USED
 
     if is_remote:
         logger.info("The path to repo %s is a remote path.", repo_path)
         resolved_remote_path = get_remote_vcs_url(repo_path)
         if not resolved_remote_path:
             logger.error("The provided path to repo %s is not a valid remote path.", repo_path)
-            return None
+            return None, commit_finder_outcome, digest
 
         git_service = get_git_service(resolved_remote_path)
         repo_unique_path = get_repo_dir_name(resolved_remote_path)
@@ -186,7 +188,7 @@ def prepare_repo(
             git_service.clone_repo(resolved_local_path, resolved_remote_path)
         except CloneError as error:
             logger.error("Cannot clone %s: %s", resolved_remote_path, str(error))
-            return None
+            return None, commit_finder_outcome, digest
     else:
         logger.info("Checking if the path to repo %s is a local path.", repo_path)
         resolved_local_path = resolve_local_path(get_local_repos_path(), repo_path)
@@ -196,21 +198,21 @@ def prepare_repo(
             git_obj = Git(resolved_local_path)
         except InvalidGitRepositoryError:
             logger.error("No git repo exists at %s.", resolved_local_path)
-            return None
+            return None, commit_finder_outcome, digest
     else:
         logger.error("Error happened while preparing the repo.")
-        return None
+        return None, commit_finder_outcome, digest
 
     if is_empty_repo(git_obj):
         logger.error("The target repository does not have any commit.")
-        return None
+        return None, commit_finder_outcome, digest
 
     # Find the digest and branch if a version has been specified
     if not digest and purl and purl.version:
-        found_digest = find_commit(git_obj, purl)
+        found_digest, commit_finder_outcome = find_commit(git_obj, purl)
         if not found_digest:
             logger.error("Could not map the input purl string to a specific commit in the corresponding repository.")
-            return None
+            return None, commit_finder_outcome, digest
         digest = found_digest
 
     # Checking out the specific branch or commit. This operation varies depends on the git service that the
@@ -230,18 +232,18 @@ def prepare_repo(
             # ``git_url.check_out_repo_target``.
             if not check_out_repo_target(git_obj, branch_name, digest, not is_remote):
                 logger.error("Cannot checkout the specific branch or commit of the target repo.")
-                return None
+                return None, commit_finder_outcome, digest
 
-            return git_obj
+            return git_obj, commit_finder_outcome, digest
 
     try:
         git_service.check_out_repo(git_obj, branch_name, digest, not is_remote)
     except RepoCheckOutError as error:
         logger.error("Failed to check out repository at %s", resolved_local_path)
         logger.error(error)
-        return None
+        return None, commit_finder_outcome, digest
 
-    return git_obj
+    return git_obj, commit_finder_outcome, digest
 
 
 def get_local_repos_path() -> str:

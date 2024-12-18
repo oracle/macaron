@@ -3,7 +3,7 @@
 
 """This module contains an end-to-end test for the check registry."""
 
-from macaron.database.table_definitions import Analysis, Component, Repository
+from macaron.database.table_definitions import Analysis, Component, RepoFinderMetadata, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType
@@ -118,6 +118,7 @@ class TestRegistryE2E(MacaronTestCase):
             purl="pkg:github.com/package-url/purl-spec@244fd47e07d1004f0aed9c",
             analysis=Analysis(),
             repository=Repository(complete_name="github.com/package-url/purl-spec", fs_path=""),
+            repo_finder_metadata=RepoFinderMetadata(),
         )
         target = AnalyzeContext(component=component)
         results = registry.scan(target)

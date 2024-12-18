@@ -12,6 +12,7 @@ from packageurl import PackageURL
 from macaron.config.defaults import defaults
 from macaron.repo_finder import repo_validator
 from macaron.repo_finder.repo_finder import find_repo
+from macaron.repo_finder.repo_finder_enums import RepoFinderOutcome
 from macaron.slsa_analyzer.git_url import clean_url
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -42,27 +43,33 @@ def test_repo_finder() -> int:
     defaults.set("git_service.gitlab", "hostname", "gitlab.com")
 
     # Test Java package with SCM metadata in artifact POM.
-    if not find_repo(PackageURL.from_string("pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2")):
+    match, outcome = find_repo(PackageURL.from_string("pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"))
+    if not match or outcome != RepoFinderOutcome.FOUND:
         return os.EX_UNAVAILABLE
 
     # Test Java package with SCM metadata in artifact's parent POM.
-    if not find_repo(PackageURL.from_string("pkg:maven/commons-cli/commons-cli@1.5.0")):
+    match, outcome = find_repo(PackageURL.from_string("pkg:maven/commons-cli/commons-cli@1.5.0"))
+    if not match or outcome != RepoFinderOutcome.FOUND:
         return os.EX_UNAVAILABLE
 
     # Test deps.dev API for a Python package.
-    if not find_repo(PackageURL.from_string("pkg:pypi/packageurl-python@0.11.1")):
+    match, outcome = find_repo(PackageURL.from_string("pkg:pypi/packageurl-python@0.11.1"))
+    if not match or outcome != RepoFinderOutcome.FOUND:
         return os.EX_UNAVAILABLE
 
     # Test deps.dev API for a Nuget package.
-    if not find_repo(PackageURL.from_string("pkg:nuget/azure.core")):
+    match, outcome = find_repo(PackageURL.from_string("pkg:nuget/azure.core"))
+    if not match or outcome != RepoFinderOutcome.FOUND:
         return os.EX_UNAVAILABLE
 
     # Test deps.dev API for an NPM package.
-    if not find_repo(PackageURL.from_string("pkg:npm/@colors/colors")):
+    match, outcome = find_repo(PackageURL.from_string("pkg:npm/@colors/colors"))
+    if not match or outcome != RepoFinderOutcome.FOUND:
         return os.EX_UNAVAILABLE
 
     # Test deps.dev API for Cargo package.
-    if not find_repo(PackageURL.from_string("pkg:cargo/rand_core")):
+    match, outcome = find_repo(PackageURL.from_string("pkg:cargo/rand_core"))
+    if not match or outcome != RepoFinderOutcome.FOUND:
         return os.EX_UNAVAILABLE
 
     # Test redirecting URL from Apache commons-io package.
