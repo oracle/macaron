@@ -2,10 +2,13 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles the cloning and analyzing a Git repo."""
+
+import glob
 import logging
 import os
 import re
 import sys
+from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -16,6 +19,7 @@ from pydriller.git import Git
 from sqlalchemy.orm import Session
 
 from macaron import __version__
+from macaron.artifact.local_artifact import get_local_artifact_dirs
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
@@ -26,6 +30,7 @@ from macaron.errors import (
     DuplicateError,
     InvalidAnalysisTargetError,
     InvalidPURLError,
+    LocalArtifactFinderError,
     ProvenanceError,
     PURLNotFoundError,
 )
@@ -110,6 +115,8 @@ class Analyzer:
 
         # Create database tables: all checks have been registered so all tables should be mapped now
         self.db_man.create_tables()
+
+        self.local_artifact_repo_mapper = Analyzer._get_local_artifact_repo_mapper()
 
     def run(
         self,
@@ -472,6 +479,17 @@ class Analyzer:
             analyze_ctx.dynamic_data["provenance_verified"] = provenance_is_verified
         analyze_ctx.dynamic_data["provenance_repo_url"] = provenance_repo_url
         analyze_ctx.dynamic_data["provenance_commit_digest"] = provenance_commit_digest
+
+        if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
+            local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
+            try:
+                local_artifact_dirs = get_local_artifact_dirs(
+                    purl=parsed_purl,
+                    local_artifact_repo_path=local_artifact_repo_path,
+                )
+                analyze_ctx.dynamic_data["local_artifact_paths"].extend(local_artifact_dirs)
+            except LocalArtifactFinderError as error:
+                logger.debug(error)
 
         analyze_ctx.check_results = registry.scan(analyze_ctx)
 
@@ -972,6 +990,35 @@ class Analyzer:
                 build_tool=build_tool,
             )
             analyze_ctx.dynamic_data["repo_verification"].append(verification_result)
+
+    @staticmethod
+    def _get_local_artifact_repo_mapper() -> Mapping[str, str]:
+        """Return the mapping between purl type and its local artifact repo path if that path exists."""
+        local_artifact_mapper: dict[str, str] = {}
+
+        if global_config.local_maven_repo:
+            m2_repository_dir = os.path.join(global_config.local_maven_repo, "repository")
+            if os.path.isdir(m2_repository_dir):
+                local_artifact_mapper["maven"] = m2_repository_dir
+
+        if global_config.python_venv_path:
+            site_packages_dir_pattern = os.path.join(
+                global_config.python_venv_path,
+                "lib",
+                "python3.*",
+                "site-packages",
+            )
+            site_packages_dirs = glob.glob(site_packages_dir_pattern)
+
+            if len(site_packages_dirs) == 1:
+                local_artifact_mapper["pypi"] = site_packages_dirs.pop()
+            else:
+                logger.info(
+                    "There are multiple python3.* directories in the input Python venv. "
+                    + "This venv will NOT be used for local artifact findings."
+                )
+
+        return local_artifact_mapper
 
 
 class DuplicateCmpError(DuplicateError):

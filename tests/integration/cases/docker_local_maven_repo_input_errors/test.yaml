@@ -1,0 +1,46 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Test invalid usecases for --local-maven-repo.
+
+tags:
+- macaron-docker-image
+- macaron-python-package
+
+steps:
+- name: HOME environment variable is not set and --local-maven-repo is not used.
+  kind: analyze
+  env:
+    HOME:
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar
+  expect_fail: true
+- name: Providing a directory that doesn't exist to --local-maven-repo.
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar
+    - --local-maven-repo
+    - invalid_dir
+  expect_fail: true
+- name: Create a test file to mimick user input. Therefore, this test file will be outside of the output dir.
+  kind: shell
+  options:
+    cmd: touch test.txt
+- name: Providing a file path to --local-maven-repo.
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar
+    - --local-maven-repo
+    - ./test.txt
+  expect_fail: true
+- name: Clean up the test file because it's not automatically cleaned up by the test script as it's outside of the output directory.
+  kind: shell
+  options:
+    cmd: rm test.txt

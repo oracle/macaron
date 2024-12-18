@@ -24,6 +24,7 @@ Usage
         [-d DIGEST] [-pe PROVENANCE_EXPECTATION]
         [--skip-deps] [--deps-depth DEPS_DEPTH] [-g TEMPLATE_PATH]
         [--python-venv PYTHON_VENV]
+        [--local-maven-repo LOCAL_MAVEN_REPO]
 
 -------
 Options
@@ -78,6 +79,10 @@ Options
 .. option::  --python-venv PYTHON_VENV
 
     The path to the Python virtual environment of the target software component.
+
+.. option:: --local-maven-repo LOCAL_MAVEN_REPO
+
+    The path to the local .m2 directory. If this option is not used, Macaron will use the default location at $HOME/.m2
 
 -----------
 Environment
