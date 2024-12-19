@@ -166,35 +166,12 @@ def check_out_repo_target(
     bool
         True if succeed else False.
     """
-    if not offline_mode:
-        # Fetch from remote origin by running ``git fetch origin --force --tags --prune --prune-tags`` inside the target
-        # repository.
-        # The flags `--force --tags --prune --prune-tags` are used to make sure we analyze the most up-to-date version
-        # of the repo.
-        #   - Any modified tags in the remote repository is updated locally.
-        #   - Prune deleted branches and tags in the remote from the local repository.
-        # References:
-        #   https://git-scm.com/docs/git-fetch
-        #   https://github.com/oracle/macaron/issues/547
+    if not offline_mode and not branch_name and not digest:
         try:
-            git_obj.repo.git.fetch(
-                "origin",
-                "--force",
-                "--tags",
-                "--prune",
-                "--prune-tags",
-            )
+            git_obj.repo.git.checkout("--force", "origin/HEAD")
         except GitCommandError:
-            logger.error("Unable to fetch from the origin remote of the repository.")
+            logger.debug("Cannot checkout the default branch at origin/HEAD")
             return False
-
-        # By default check out the commit at origin/HEAD only when offline_mode is False.
-        if not branch_name and not digest:
-            try:
-                git_obj.repo.git.checkout("--force", "origin/HEAD")
-            except GitCommandError:
-                logger.debug("Cannot checkout the default branch at origin/HEAD")
-                return False
 
     # The following checkout operations will be done whether offline_mode is False or not.
     if branch_name and not digest:
@@ -337,11 +314,34 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
             os.rmdir(clone_dir)
             logger.debug("The clone dir %s is empty. It has been deleted for cloning the repo.", clone_dir)
         except OSError:
-            logger.debug(
-                "The clone dir %s is not empty. Cloning will not be proceeded.",
-                clone_dir,
-            )
-            return None
+            # Update the existing repository by running ``git fetch`` inside the existing directory.
+            # The flags `--force --tags --prune --prune-tags` are used to make sure we analyze the most up-to-date
+            # version of the repo.
+            #   - Any modified tags in the remote repository are updated locally.
+            #   - Deleted branches and tags in the remote repository are pruned from the local copy.
+            # References:
+            #   https://git-scm.com/docs/git-fetch
+            #   https://github.com/oracle/macaron/issues/547
+            try:
+                git_env_patch = {
+                    # Setting the GIT_TERMINAL_PROMPT environment variable to ``0`` stops
+                    # ``git clone`` from prompting for login credentials.
+                    "GIT_TERMINAL_PROMPT": "0",
+                }
+                subprocess.run(  # nosec B603
+                    args=["git", "fetch", "origin", "--force", "--tags", "--prune", "--prune-tags"],
+                    capture_output=True,
+                    cwd=clone_dir,
+                    # If `check=True` and return status code is not zero, subprocess.CalledProcessError is
+                    # raised, which we don't want. We want to check the return status code of the subprocess
+                    # later on.
+                    check=False,
+                    env=get_patched_env(git_env_patch),
+                )
+                return Repo(path=clone_dir)
+            except (subprocess.CalledProcessError, OSError):
+                logger.debug("The clone dir %s is not empty. An attempt to update it failed.")
+                return None
 
     # Ensure that the parent directory where the repo is cloned into exists.
     parent_dir = Path(clone_dir).parent
