@@ -11,6 +11,7 @@ from packageurl import PackageURL
 from macaron.config.defaults import defaults
 from macaron.parsers.pomparser import parse_pom_string
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
+from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 from macaron.util import send_get_http_raw
 
@@ -51,8 +52,13 @@ class JavaRepoFinder(BaseRepoFinder):
 
         if not version:
             logger.info("Version missing for maven artifact: %s:%s", group, artifact)
-            # TODO add support for Java artifacts without a version
-            return ""
+            latest_purl = DepsDevRepoFinder().get_latest_version(purl)
+            if not latest_purl or not latest_purl.version:
+                logger.debug("Could not find version for artifact: %s:%s", purl.namespace, purl.name)
+                return ""
+            group = latest_purl.namespace or ""
+            artifact = latest_purl.name
+            version = latest_purl.version
 
         while group and artifact and version and limit > 0:
             # Create the URLs for retrieving the artifact's POM

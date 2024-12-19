@@ -1,0 +1,36 @@
+# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Check that the find-source and analyze commands behave the same for a given artifact.
+
+tags:
+- macaron-python-package
+- macaron-docker-image
+
+steps:
+- name: Run macaron find source
+  kind: find-source
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.avaje/avaje-prisms@1.1
+- name: Check that the repository was not cloned
+  kind: shell
+  options:
+    cmd: ls output/git_repos/github_com/avaje/avaje-prisms/
+  expect_fail: true
+- name: Check the report contents
+  kind: shell
+  options:
+    cmd: ./check_output.sh
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.avaje/avaje-prisms@1.1
+- name: Check that correct repository was cloned
+  kind: shell
+  options:
+    cmd: ls output/git_repos/github_com/avaje/avaje-prisms/
