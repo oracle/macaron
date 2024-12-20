@@ -124,10 +124,6 @@ def check_out_repo_target(
 
     This function assumes that a remote "origin" exist and checkout from that remote ONLY.
 
-    If ``offline_mode`` is False, this function will fetch new changes from origin remote. The fetching operation
-    will prune and update all references (e.g. tags, branches) to make sure that the local repository is up-to-date
-    with the repository specified by origin remote.
-
     If ``offline_mode`` is True and neither ``branch_name`` nor commit are provided, this function will not do anything
     and the HEAD commit will be analyzed. If there are uncommitted local changes, the HEAD commit will
     appear in the report but the repo with local changes will be analyzed. We leave it up to the user to decide
@@ -277,9 +273,9 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
     """Clone the remote repository and return the `git.Repo` object for that repository.
 
     If there is an existing non-empty ``clone_dir``, Macaron assumes the repository has
-    been cloned already and cancels the clone.
-    This could happen when multiple runs of Macaron use the same `<output_dir>`, leading
-    to Macaron potentially trying to clone a repository multiple times.
+    been cloned already and will attempt to fetch the latest changes. The fetching operation
+    will prune and update all references (e.g. tags, branches) to make sure that the local
+    repository is up-to-date with the repository specified by origin remote.
 
     We use treeless partial clone to reduce clone time, by retrieving trees and blobs lazily.
     For more details, see the following:
