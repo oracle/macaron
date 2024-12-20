@@ -22,6 +22,7 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneRel
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unreachable_project_links import UnreachableProjectLinksAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.pip import Pip
@@ -74,6 +75,7 @@ ANALYZERS: list = [
     SuspiciousSetupAnalyzer,
     WheelAbsenceAnalyzer,
 ]
+
 
 # The HeuristicResult sequence is aligned with the sequence of ANALYZERS list
 SUSPICIOUS_COMBO: dict[
@@ -206,6 +208,27 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 return True
         return False
 
+    def validate_malware(self, pypi_package_json: PyPIPackageJsonAsset) -> tuple[bool, dict[str, JsonType] | None]:
+        """Validate the package is malicious.
+
+        Parameters
+        ----------
+        pypi_package_json: PyPIPackageJsonAsset
+
+        Returns
+        -------
+        tuple[bool, dict[str, JsonType] | None]
+            Returns True if the source code includes suspicious pattern.
+            Returns the result of the validation including the line number
+            and the suspicious arguments.
+            e.g. requests.get("http://malicious.com")
+            return the "http://malicious.com"
+        """
+        # TODO: This redundant function might be removed
+        sourcecode_analyzer = PyPISourcecodeAnalyzer(pypi_package_json)
+        is_malware, detail_info = sourcecode_analyzer.analyze()
+        return is_malware, detail_info
+
     def run_heuristics(
         self, pypi_package_json: PyPIPackageJsonAsset
     ) -> tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]:
@@ -228,9 +251,11 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         """
         results: dict[Heuristics, HeuristicResult] = {}
         detail_info: dict[str, JsonType] = {}
+
         for _analyzer in ANALYZERS:
             analyzer: BaseHeuristicAnalyzer = _analyzer()
             logger.debug("Instantiating %s", _analyzer.__name__)
+
             depends_on: list[tuple[Heuristics, HeuristicResult]] | None = analyzer.depends_on
 
             if depends_on:
@@ -243,6 +268,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             if analyzer.heuristic:
                 results[analyzer.heuristic] = result
                 detail_info.update(result_info)
+
         return results, detail_info
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
@@ -316,6 +342,13 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                         if confidence is None:
                             confidence = Confidence.HIGH
                             result_type = CheckResultType.PASSED
+                        elif ctx.dynamic_data["validate_malware_switch"]:
+                            is_malware, validation_result = self.validate_malware(pypi_package_json)
+                            if is_malware:  # Find source code block matched the malicious pattern
+                                confidence = Confidence.HIGH
+                            elif validation_result:  # Find suspicious source code, but cannot be confirmed
+                                confidence = Confidence.MEDIUM
+                            logger.debug(validation_result)
 
                         result_tables.append(
                             MaliciousMetadataFacts(

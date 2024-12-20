@@ -179,6 +179,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         analyzer_single_args.sbom_path,
         deps_depth,
         provenance_payload=prov_payload,
+        validate_malware_switch=analyzer_single_args.validate_malware_switch,
     )
     sys.exit(status_code)
 
@@ -482,6 +483,13 @@ def main(argv: list[str] | None = None) -> None:
         help=(
             "The path to the local .m2 directory. If this option is not used, Macaron will use the default location at $HOME/.m2"
         ),
+    )
+
+    single_analyze_parser.add_argument(
+        "--validate-malware-switch",
+        required=False,
+        action="store_true",
+        help=("Enable malware validation."),
     )
 
     # Dump the default values.
