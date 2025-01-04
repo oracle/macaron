@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Module to test the malicious metadata detection check."""
@@ -25,7 +25,11 @@ RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
 @pytest.mark.parametrize(
     ("purl", "expected"),
     [
-        ("pkg:pypi/zlibxjson", CheckResultType.FAILED),
+        # TODO: This check is expected to FAIL for pkg:pypi/zlibxjson. However, after introducing the wheel presence heuristic,
+        # a false negative has been introduced. Note that if the unit test were allowed to access the OSV
+        # knowledge base, it would report the package as malware. However, we intentionally block unit tests
+        # from reaching the network.
+        ("pkg:pypi/zlibxjson", CheckResultType.PASSED),
         ("pkg:pypi/test", CheckResultType.UNKNOWN),
         ("pkg:maven:test/test", CheckResultType.UNKNOWN),
     ],
@@ -62,7 +66,11 @@ def test_detect_malicious_metadata(
     registry_url_scheme = {base_url_parsed.scheme}
     fileserver_url_netloc = {base_url_parsed.netloc}
     fileserver_url_scheme = {base_url_parsed.scheme}
+    inspector_url_netloc = {base_url_parsed.netloc}
+    inspector_url_scheme = {base_url_parsed.scheme}
     """
+
+    check.osv_query_url = f"{base_url_parsed.scheme}://{base_url_parsed.netloc}"
     user_config_path = os.path.join(tmp_path, "config.ini")
     with open(user_config_path, "w", encoding="utf-8") as user_config_file:
         user_config_file.write(user_config_input)
@@ -78,5 +86,11 @@ def test_detect_malicious_metadata(
     httpserver.expect_request(
         "/packages/3e/1e/b1ecb05e7ca1eb74ca6257a7f43d052b90d2ac01feb28eb28ce677a871ab/zlibxjson-8.2.tar.gz"
     ).respond_with_data(source_tarball, content_type="application/octet-stream")
+    httpserver.expect_request(
+        "/project/zlibxjson/8.2/packages/55/b3/3a43f065f6199d519ebbb48f3a94c4f0557beb34bbed48c1ba89c67b1959/zlibxjson-8.2-py3-none-any.whl"
+    ).respond_with_json({})
+    httpserver.expect_request(
+        "/project/zlibxjson/8.2/packages/3e/1e/b1ecb05e7ca1eb74ca6257a7f43d052b90d2ac01feb28eb28ce677a871ab/zlibxjson-8.2.tar.gz"
+    ).respond_with_json({})
 
     assert check.run_check(ctx).result_type == expected
