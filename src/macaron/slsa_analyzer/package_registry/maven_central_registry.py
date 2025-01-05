@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides abstractions for the Maven Central package registry."""
@@ -182,7 +182,7 @@ class MavenCentralRegistry(PackageRegistry):
         compatible_build_tool_classes = [Maven, Gradle]
         return any(isinstance(build_tool, build_tool_class) for build_tool_class in compatible_build_tool_classes)
 
-    def find_publish_timestamp(self, purl: str, registry_url: str | None = None) -> datetime:
+    def find_publish_timestamp(self, purl: str) -> datetime:
         """Make a search request to Maven Central to find the publishing timestamp of an artifact.
 
         The reason for directly fetching timestamps from Maven Central is that deps.dev occasionally
@@ -195,8 +195,6 @@ class MavenCentralRegistry(PackageRegistry):
         purl: str
             The Package URL (purl) of the package whose publication timestamp is to be retrieved.
             This should conform to the PURL specification.
-        registry_url: str | None
-            The registry URL that can be set for testing.
 
         Returns
         -------

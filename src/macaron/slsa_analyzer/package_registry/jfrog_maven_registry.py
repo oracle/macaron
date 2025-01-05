@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Assets on a package registry."""
@@ -816,7 +816,7 @@ class JFrogMavenRegistry(PackageRegistry):
 
         return True
 
-    def find_publish_timestamp(self, purl: str, registry_url: str | None = None) -> datetime:
+    def find_publish_timestamp(self, purl: str) -> datetime:
         """Make a search request to Maven Central to find the publishing timestamp of an artifact.
 
         The reason for directly fetching timestamps from Maven Central is that deps.dev occasionally
@@ -829,8 +829,6 @@ class JFrogMavenRegistry(PackageRegistry):
         purl: str
             The Package URL (purl) of the package whose publication timestamp is to be retrieved.
             This should conform to the PURL specification.
-        registry_url: str | None
-            The registry URL that can be set for testing.
 
         Returns
         -------

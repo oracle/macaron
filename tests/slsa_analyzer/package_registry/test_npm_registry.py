@@ -1,9 +1,10 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for the npm registry."""
 
 import os
+import urllib
 from datetime import datetime
 from pathlib import Path
 
@@ -146,12 +147,27 @@ def test_npm_attestation_asset_url(
 def test_find_publish_timestamp(
     resources_path: Path,
     httpserver: HTTPServer,
+    tmp_path: Path,
     purl: str,
     npm_json_path: str,
     expected_timestamp: str,
 ) -> None:
     """Test that the function finds the timestamp correctly."""
     registry = NPMRegistry()
+
+    base_url_parsed = urllib.parse.urlparse(httpserver.url_for(""))
+    user_config_input = f"""
+    [deps_dev]
+    url_netloc = {base_url_parsed.netloc}
+    url_scheme = {base_url_parsed.scheme}
+    """
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(user_config_input)
+    # We don't have to worry about modifying the ``defaults`` object causing test
+    # pollution here, since we reload the ``defaults`` object before every test with the
+    # ``setup_test`` fixture.
+    load_defaults(user_config_path)
 
     with open(os.path.join(resources_path, "npm_registry_files", npm_json_path), encoding="utf8") as page:
         response = page.read()
@@ -160,7 +176,7 @@ def test_find_publish_timestamp(
         "/".join(["/v3alpha", "purl", purl]),
     ).respond_with_data(response)
 
-    publish_time_obj = registry.find_publish_timestamp(purl=purl, registry_url=httpserver.url_for(""))
+    publish_time_obj = registry.find_publish_timestamp(purl=purl)
     expected_time_obj = datetime.strptime(expected_timestamp, "%Y-%m-%dT%H:%M:%S%z")
     assert publish_time_obj == expected_time_obj
 
@@ -176,19 +192,34 @@ def test_find_publish_timestamp(
         (
             "pkg:npm/@sigstore/mock@0.7.5",
             "invalid_sigstore.mock@0.7.5.json",
-            "The timestamp is missing in the response returned by",
+            "The timestamp is missing in the response returned for",
         ),
     ],
 )
 def test_find_publish_timestamp_errors(
     resources_path: Path,
     httpserver: HTTPServer,
+    tmp_path: Path,
     purl: str,
     npm_json_path: str,
     expected_msg: str,
 ) -> None:
     """Test that the function handles errors correctly."""
     registry = NPMRegistry()
+
+    base_url_parsed = urllib.parse.urlparse(httpserver.url_for(""))
+    user_config_input = f"""
+    [deps_dev]
+    url_netloc = {base_url_parsed.netloc}
+    url_scheme = {base_url_parsed.scheme}
+    """
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(user_config_input)
+    # We don't have to worry about modifying the ``defaults`` object causing test
+    # pollution here, since we reload the ``defaults`` object before every test with the
+    # ``setup_test`` fixture.
+    load_defaults(user_config_path)
 
     with open(os.path.join(resources_path, "npm_registry_files", npm_json_path), encoding="utf8") as page:
         response = page.read()
@@ -199,4 +230,4 @@ def test_find_publish_timestamp_errors(
 
     pat = f"^{expected_msg}"
     with pytest.raises(InvalidHTTPResponseError, match=pat):
-        registry.find_publish_timestamp(purl=purl, registry_url=httpserver.url_for(""))
+        registry.find_publish_timestamp(purl=purl)

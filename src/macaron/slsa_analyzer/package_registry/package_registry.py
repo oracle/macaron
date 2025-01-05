@@ -1,21 +1,16 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module defines package registries."""
 
-import json
 import logging
-import urllib.parse
 from abc import ABC, abstractmethod
 from datetime import datetime
-from urllib.parse import quote as encode
-
-import requests
 
 from macaron.errors import InvalidHTTPResponseError
 from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
-from macaron.util import send_get_http_raw
+from macaron.slsa_analyzer.package_registry.deps_dev import DepsDevService
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -50,7 +45,7 @@ class PackageRegistry(ABC):
             based on the given build tool.
         """
 
-    def find_publish_timestamp(self, purl: str, registry_url: str | None = None) -> datetime:
+    def find_publish_timestamp(self, purl: str) -> datetime:
         """Retrieve the publication timestamp for a package specified by its purl from the deps.dev repository by default.
 
         This method constructs a request URL based on the provided purl, sends an HTTP GET
@@ -65,8 +60,6 @@ class PackageRegistry(ABC):
         purl: str
             The Package URL (purl) of the package whose publication timestamp is to be retrieved.
             This should conform to the PURL specification.
-        registry_url: str | None
-            The registry URL that can be set for testing.
 
         Returns
         -------
@@ -86,40 +79,20 @@ class PackageRegistry(ABC):
         # in the AnalyzeContext object retrieved by the Repo Finder. This step should be
         # implemented at the beginning of the analyze command to ensure that the data
         # is available for subsequent processing.
-
-        base_url_parsed = urllib.parse.urlparse(registry_url or "https://api.deps.dev")
-        path_params = "/".join(["v3alpha", "purl", encode(purl, safe="")])
         try:
-            url = urllib.parse.urlunsplit(
-                urllib.parse.SplitResult(
-                    scheme=base_url_parsed.scheme,
-                    netloc=base_url_parsed.netloc,
-                    path=path_params,
-                    query="",
-                    fragment="",
-                )
-            )
-        except ValueError as error:
-            raise InvalidHTTPResponseError("Failed to construct the API URL.") from error
-
-        response = send_get_http_raw(url)
-        if response and response.text:
-            try:
-                metadata: dict = json.loads(response.text)
-            except requests.exceptions.JSONDecodeError as error:
-                raise InvalidHTTPResponseError(f"Failed to process response from deps.dev for {url}.") from error
-            if not metadata:
-                raise InvalidHTTPResponseError(f"Empty response returned by {url} .")
-
+            metadata = DepsDevService.get_package_info(purl)
+        except InvalidHTTPResponseError as error:
+            raise InvalidHTTPResponseError(f"Invalid response from deps.dev for {purl}.") from error
+        if metadata:
             timestamp = json_extract(metadata, ["version", "publishedAt"], str)
             if not timestamp:
-                raise InvalidHTTPResponseError(f"The timestamp is missing in the response returned by {url}.")
+                raise InvalidHTTPResponseError(f"The timestamp is missing in the response returned for {purl}.")
 
             logger.debug("Found timestamp: %s.", timestamp)
 
             try:
                 return datetime.fromisoformat(timestamp)
             except ValueError as error:
-                raise InvalidHTTPResponseError(f"The timestamp returned by {url} is invalid") from error
+                raise InvalidHTTPResponseError(f"The timestamp returned for {purl} is invalid") from error
 
-        raise InvalidHTTPResponseError(f"Invalid response from deps.dev for {url}.")
+        raise InvalidHTTPResponseError(f"Invalid response from deps.dev for {purl}.")
