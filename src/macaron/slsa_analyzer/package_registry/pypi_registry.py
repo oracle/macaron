@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides abstractions for the pypi package registry."""
@@ -34,6 +34,8 @@ class PyPIRegistry(PackageRegistry):
         registry_url_scheme: str | None = None,
         fileserver_url_netloc: str | None = None,
         fileserver_url_scheme: str | None = None,
+        inspector_url_netloc: str | None = None,
+        inspector_url_scheme: str | None = None,
         request_timeout: int | None = None,
         enabled: bool = True,
     ) -> None:
@@ -50,6 +52,10 @@ class PyPIRegistry(PackageRegistry):
             The netloc of the server url that stores package source files, which contains the hostname and port.
         fileserver_url_scheme: str | None
             The scheme of the server url that stores package source files.
+        inspector_url_netloc: str | None
+            The netloc of the inspector server url, which contains the hostname and port.
+        inspector_url_scheme: str | None
+            The scheme of the inspector server url.
         request_timeout: int | None
             The timeout (in seconds) for requests made to the package registry.
         enabled: bool
@@ -60,6 +66,8 @@ class PyPIRegistry(PackageRegistry):
         self.registry_url_scheme = registry_url_scheme or ""
         self.fileserver_url_netloc = fileserver_url_netloc or ""
         self.fileserver_url_scheme = fileserver_url_scheme or ""
+        self.inspector_url_netloc = inspector_url_netloc or ""
+        self.inspector_url_scheme = inspector_url_scheme or ""
         self.request_timeout = request_timeout or 10
         self.enabled = enabled
         self.registry_url = ""
@@ -100,6 +108,14 @@ class PyPIRegistry(PackageRegistry):
             )
         self.fileserver_url_netloc = fileserver_url_netloc
         self.fileserver_url_scheme = section.get("fileserver_url_scheme", "https")
+
+        inspector_url_netloc = section.get("inspector_url_netloc")
+        if not inspector_url_netloc:
+            raise ConfigurationError(
+                f'The "inspector_url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
+            )
+        self.inspector_url_netloc = inspector_url_netloc
+        self.inspector_url_scheme = section.get("inspector_url_scheme", "https")
 
         try:
             self.request_timeout = section.getint("request_timeout", fallback=10)

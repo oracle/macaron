@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This check examines the metadata of pypi packages with seven heuristics."""
@@ -173,6 +173,9 @@ SUSPICIOUS_COMBO: dict[
 class DetectMaliciousMetadataCheck(BaseCheck):
     """This check analyzes the metadata of a package for malicious behavior."""
 
+    # The OSV knowledge base query database.
+    osv_query_url = "https://api.osv.dev/v1/query"
+
     def __init__(self) -> None:
         """Initialize a check instance."""
         check_id = "mcn_detect_malicious_metadata_1"
@@ -261,15 +264,14 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         result_tables: list[CheckFacts] = []
         # First check if this package is a known malware
 
-        url = "https://api.osv.dev/v1/query"
         data = {"package": {"purl": ctx.component.purl}}
-        response = send_post_http_raw(url, json_data=data, headers=None)
+        response = send_post_http_raw(self.osv_query_url, json_data=data, headers=None)
         res_obj = None
         if response:
             try:
                 res_obj = response.json()
             except requests.exceptions.JSONDecodeError as error:
-                logger.debug("Unable to get a valid response from %s: %s", url, error)
+                logger.debug("Unable to get a valid response from %s: %s", self.osv_query_url, error)
         if res_obj:
             for vuln in res_obj.get("vulns", {}):
                 v_id = json_extract(vuln, ["id"], str)
