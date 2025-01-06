@@ -11,7 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.db_custom_types import DBJsonDict
 from macaron.database.table_definitions import CheckFacts
-from macaron.errors import HeuristicAnalyzerValueError, InvalidHTTPResponseError
+from macaron.errors import HeuristicAnalyzerValueError
 from macaron.json_tools import JsonType, json_extract
 from macaron.malware_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult, Heuristics
@@ -29,7 +29,7 @@ from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
-from macaron.slsa_analyzer.package_registry.deps_dev import DepsDevService
+from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset, PyPIRegistry
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -296,7 +296,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         try:
             package_exists = bool(DepsDevService.get_package_info(ctx.component.purl))
-        except InvalidHTTPResponseError as error:
+        except APIAccessError as error:
             logger.debug(error)
 
         # Known malicious packages must have been removed.

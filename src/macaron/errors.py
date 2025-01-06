@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains error classes for Macaron."""
@@ -54,6 +54,17 @@ class DuplicateError(MacaronError):
 
 class InvalidHTTPResponseError(MacaronError):
     """Happens when the HTTP response is invalid or unexpected."""
+
+
+class APIAccessError(MacaronError):
+    """Happens when a service API cannot be accessed.
+
+    Reasons can include:
+        * misconfiguration issues
+        * invalid API request
+        * network errors
+        * unexpected response returned by the API
+    """
 
 
 class CheckRegistryError(MacaronError):

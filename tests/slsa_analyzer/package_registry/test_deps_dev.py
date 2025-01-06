@@ -12,8 +12,7 @@ from pytest_httpserver import HTTPServer
 from werkzeug import Response
 
 from macaron.config.defaults import load_defaults
-from macaron.errors import InvalidHTTPResponseError
-from macaron.slsa_analyzer.package_registry.deps_dev import DepsDevService
+from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
 
 
 @pytest.mark.parametrize(
@@ -65,5 +64,5 @@ def test_get_package_info_exception(httpserver: HTTPServer, tmp_path: Path) -> N
     purl = "pkg%3Apypi%2Fexample"
     httpserver.expect_request(f"/v3alpha/purl/{purl}").respond_with_data("Not Valid")
 
-    with pytest.raises(InvalidHTTPResponseError):
+    with pytest.raises(APIAccessError):
         DepsDevService.get_package_info(purl)

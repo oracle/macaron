@@ -10,7 +10,7 @@ from json.decoder import JSONDecodeError
 from urllib.parse import quote as encode
 
 from macaron.config.defaults import defaults
-from macaron.errors import ConfigurationError, InvalidHTTPResponseError
+from macaron.errors import APIAccessError
 from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -35,8 +35,9 @@ class DepsDevService:
 
         Raises
         ------
-        InvalidHTTPResponseError
-            If a network error happens or unexpected response is returned by the API.
+        APIAccessError
+            If the service is misconfigured, the API is invalid, a network error happens,
+            or unexpected response is returned by the API.
         """
         section_name = "deps_dev"
         if not defaults.has_section(section_name):
@@ -45,17 +46,17 @@ class DepsDevService:
 
         url_netloc = section.get("url_netloc")
         if not url_netloc:
-            raise ConfigurationError(
+            raise APIAccessError(
                 f'The "url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
             )
         url_scheme = section.get("url_scheme", "https")
-        v3alpha_purl_endpoint = section.get("v3alpha_purl_endpoint")
-        if not v3alpha_purl_endpoint:
-            raise ConfigurationError(
-                f'The "v3alpha_purl_endpoint" key is missing in section [{section_name}] of the .ini configuration file.'
+        purl_endpoint = section.get("purl_endpoint")
+        if not purl_endpoint:
+            raise APIAccessError(
+                f'The "purl_endpoint" key is missing in section [{section_name}] of the .ini configuration file.'
             )
 
-        path_params = "/".join([v3alpha_purl_endpoint, encode(purl, safe="")])
+        path_params = "/".join([purl_endpoint, encode(purl, safe="")])
         try:
             url = urllib.parse.urlunsplit(
                 urllib.parse.SplitResult(
@@ -67,16 +68,16 @@ class DepsDevService:
                 )
             )
         except ValueError as error:
-            raise InvalidHTTPResponseError("Failed to construct the API URL.") from error
+            raise APIAccessError("Failed to construct the API URL.") from error
 
         response = send_get_http_raw(url)
         if response and response.text:
             try:
                 metadata: dict = json.loads(response.text)
             except JSONDecodeError as error:
-                raise InvalidHTTPResponseError(f"Failed to process response from deps.dev for {url}.") from error
+                raise APIAccessError(f"Failed to process response from deps.dev for {url}.") from error
             if not metadata:
-                raise InvalidHTTPResponseError(f"Empty response returned by {url} .")
+                raise APIAccessError(f"Empty response returned by {url} .")
             return metadata
 
         return None

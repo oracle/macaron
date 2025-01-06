@@ -10,7 +10,7 @@ from datetime import datetime
 from macaron.errors import InvalidHTTPResponseError
 from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
-from macaron.slsa_analyzer.package_registry.deps_dev import DepsDevService
+from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class PackageRegistry(ABC):
         # is available for subsequent processing.
         try:
             metadata = DepsDevService.get_package_info(purl)
-        except InvalidHTTPResponseError as error:
+        except APIAccessError as error:
             raise InvalidHTTPResponseError(f"Invalid response from deps.dev for {purl}.") from error
         if metadata:
             timestamp = json_extract(metadata, ["version", "publishedAt"], str)
