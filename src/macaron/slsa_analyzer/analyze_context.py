@@ -57,6 +57,8 @@ class ChecksOutputs(TypedDict):
     """True if the provenance exists and has been verified against a signed companion provenance."""
     local_artifact_paths: list[str]
     """The local artifact absolute paths."""
+    validate_malware_switch: bool
+    """True when the malware validation is enabled."""
 
 
 class AnalyzeContext:
@@ -113,6 +115,7 @@ class AnalyzeContext:
             provenance_commit_digest=None,
             provenance_verified=False,
             local_artifact_paths=[],
+            validate_malware_switch=False,
         )
 
     @property

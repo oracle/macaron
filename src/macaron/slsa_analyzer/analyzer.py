@@ -125,6 +125,7 @@ class Analyzer:
         sbom_path: str = "",
         deps_depth: int = 0,
         provenance_payload: InTotoPayload | None = None,
+        validate_malware_switch: bool = False,
     ) -> int:
         """Run the analysis and write results to the output path.
 
@@ -173,6 +174,7 @@ class Analyzer:
                     main_config,
                     analysis,
                     provenance_payload=provenance_payload,
+                    validate_malware_switch=validate_malware_switch,
                 )
 
                 if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
@@ -290,6 +292,7 @@ class Analyzer:
         analysis: Analysis,
         existing_records: dict[str, Record] | None = None,
         provenance_payload: InTotoPayload | None = None,
+        validate_malware_switch: bool = False,
     ) -> Record:
         """Run the checks for a single repository target.
 
@@ -480,6 +483,7 @@ class Analyzer:
             analyze_ctx.dynamic_data["provenance_verified"] = provenance_is_verified
         analyze_ctx.dynamic_data["provenance_repo_url"] = provenance_repo_url
         analyze_ctx.dynamic_data["provenance_commit_digest"] = provenance_commit_digest
+        analyze_ctx.dynamic_data["validate_malware_switch"] = validate_malware_switch
 
         if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
             local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
