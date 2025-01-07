@@ -310,15 +310,15 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                     logger.debug("Unable to get a valid response from %s: %s", self.osv_query_url, error)
             if res_obj:
                 for vuln in res_obj.get("vulns", {}):
-                    v_id = json_extract(vuln, ["id"], str)
-                    result_tables.append(
-                        MaliciousMetadataFacts(
-                            known_malware=f"https://osv.dev/vulnerability/{v_id}",
-                            result={},
-                            detail_information=vuln,
-                            confidence=Confidence.HIGH,
+                    if v_id := json_extract(vuln, ["id"], str):
+                        result_tables.append(
+                            MaliciousMetadataFacts(
+                                known_malware=f"https://osv.dev/vulnerability/{v_id}",
+                                result={},
+                                detail_information=vuln,
+                                confidence=Confidence.HIGH,
+                            )
                         )
-                    )
                 if result_tables:
                     return CheckResultData(
                         result_tables=result_tables,
