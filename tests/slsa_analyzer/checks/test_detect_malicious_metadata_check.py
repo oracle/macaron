@@ -68,6 +68,10 @@ def test_detect_malicious_metadata(
     fileserver_url_scheme = {base_url_parsed.scheme}
     inspector_url_netloc = {base_url_parsed.netloc}
     inspector_url_scheme = {base_url_parsed.scheme}
+
+    [deps_dev]
+    url_netloc = {base_url_parsed.netloc}
+    url_scheme = {base_url_parsed.scheme}
     """
 
     check.osv_query_url = f"{base_url_parsed.scheme}://{base_url_parsed.netloc}"

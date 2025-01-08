@@ -29,6 +29,7 @@ from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
+from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset, PyPIRegistry
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -182,7 +183,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         """Initialize a check instance."""
         check_id = "mcn_detect_malicious_metadata_1"
         description = """This check analyzes the metadata of a package based on reports malicious behavior.
-        Supported ecosystem: PyPI.
+        Supported ecosystem for unknown malware: PyPI.
         """
         super().__init__(check_id=check_id, description=description, eval_reqs=[])
 
@@ -288,37 +289,46 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             The result of the check.
         """
         result_tables: list[CheckFacts] = []
-        # First check if this package is a known malware
-
-        data = {"package": {"purl": ctx.component.purl}}
-        response = send_post_http_raw(self.osv_query_url, json_data=data, headers=None)
-        res_obj = None
-        if response:
-            try:
-                res_obj = response.json()
-            except requests.exceptions.JSONDecodeError as error:
-                logger.debug("Unable to get a valid response from %s: %s", self.osv_query_url, error)
-        if res_obj:
-            for vuln in res_obj.get("vulns", {}):
-                v_id = json_extract(vuln, ["id"], str)
-                if v_id and v_id.startswith("MAL-"):
-                    result_tables.append(
-                        MaliciousMetadataFacts(
-                            known_malware=f"https://osv.dev/vulnerability/{v_id}",
-                            result={},
-                            detail_information=vuln,
-                            confidence=Confidence.HIGH,
-                        )
-                    )
-            if result_tables:
-                return CheckResultData(
-                    result_tables=result_tables,
-                    result_type=CheckResultType.FAILED,
-                )
-
         package_registry_info_entries = ctx.dynamic_data["package_registries"]
+
+        # First check if this package is a known malware
+        data = {"package": {"purl": ctx.component.purl}}
+
+        try:
+            package_exists = bool(DepsDevService.get_package_info(ctx.component.purl))
+        except APIAccessError as error:
+            logger.debug(error)
+
+        # Known malicious packages must have been removed.
+        if not package_exists:
+            response = send_post_http_raw(self.osv_query_url, json_data=data, headers=None)
+            res_obj = None
+            if response:
+                try:
+                    res_obj = response.json()
+                except requests.exceptions.JSONDecodeError as error:
+                    logger.debug("Unable to get a valid response from %s: %s", self.osv_query_url, error)
+            if res_obj:
+                for vuln in res_obj.get("vulns", {}):
+                    if v_id := json_extract(vuln, ["id"], str):
+                        result_tables.append(
+                            MaliciousMetadataFacts(
+                                known_malware=f"https://osv.dev/vulnerability/{v_id}",
+                                result={},
+                                detail_information=vuln,
+                                confidence=Confidence.HIGH,
+                            )
+                        )
+                if result_tables:
+                    return CheckResultData(
+                        result_tables=result_tables,
+                        result_type=CheckResultType.FAILED,
+                    )
+
+        # If the package is not a known malware, run malware analysis heuristics.
         for package_registry_info_entry in package_registry_info_entries:
             match package_registry_info_entry:
+                # Currently, only PyPI packages are supported.
                 case PackageRegistryInfo(
                     build_tool=Pip() | Poetry(),
                     package_registry=PyPIRegistry() as pypi_registry,
