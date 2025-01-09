@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the repo finder."""
@@ -115,7 +115,7 @@ def test_repo_finder_java_invalid_config(tmp_path: Path, test_config: str, expec
         test_config_file.write(test_config)
     load_defaults(test_config_path)
 
-    found_repo, outcome = repo_finder.find_repo(PackageURL.from_string("pkg:maven/test/test@1"))
+    found_repo, outcome = repo_finder.find_repo(PackageURL.from_string("pkg:maven/test/test@1"), False)
     assert not found_repo
     assert outcome == expected
 
@@ -129,7 +129,7 @@ def test_repo_finder_java_invalid_config(tmp_path: Path, test_config: str, expec
 )
 def test_repo_finder_java_invalid_input(purl_string: str, expected: RepoFinderOutcome) -> None:
     """Test the Repo Finder when invalid input is provided."""
-    found_repo, outcome = repo_finder.find_repo(PackageURL.from_string(purl_string))
+    found_repo, outcome = repo_finder.find_repo(PackageURL.from_string(purl_string), False)
     assert not found_repo
     assert outcome == expected
 
@@ -175,7 +175,9 @@ def test_repo_finder_java_invalid_pom_or_scm(
     target_url = "/" + "/".join([group, artifact, version, f"{artifact}-{version}.pom"])
     httpserver_java.expect_request(target_url).respond_with_data(test_pom)
 
-    found_repo, outcome = repo_finder.find_repo(PackageURL.from_string(f"pkg:maven/{group}/{artifact}@{version}"))
+    found_repo, outcome = repo_finder.find_repo(
+        PackageURL.from_string(f"pkg:maven/{group}/{artifact}@{version}"), False
+    )
     assert not found_repo
     assert outcome == expected
 

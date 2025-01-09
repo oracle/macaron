@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles the cloning and analyzing a Git repo."""
@@ -43,8 +43,8 @@ from macaron.repo_finder.provenance_extractor import (
     extract_repo_and_commit_from_provenance,
 )
 from macaron.repo_finder.provenance_finder import ProvenanceFinder, find_provenance_from_ci
-from macaron.repo_finder.repo_finder_enums import CommitFinderOutcome, RepoFinderOutcome
 from macaron.repo_finder.repo_finder import prepare_repo
+from macaron.repo_finder.repo_finder_enums import CommitFinderOutcome, RepoFinderOutcome
 from macaron.repo_finder.repo_utils import get_git_service
 from macaron.repo_verifier.repo_verifier import verify_repo
 from macaron.slsa_analyzer import git_url

@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the JavaRepoFinder class to be used for finding Java repositories."""
@@ -12,8 +12,8 @@ from packageurl import PackageURL
 from macaron.config.defaults import defaults
 from macaron.parsers.pomparser import parse_pom_string
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
-from macaron.repo_finder.repo_finder_enums import RepoFinderOutcome
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
+from macaron.repo_finder.repo_finder_enums import RepoFinderOutcome
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 from macaron.util import send_get_http_raw
 

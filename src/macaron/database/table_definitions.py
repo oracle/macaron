@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -179,9 +179,7 @@ class Component(PackageURLMixin, ORMBase):
     )
 
     #: The one-to-one relationship with Repo Finder metadata.
-    repo_finder_metadata: Mapped["RepoFinderMetadata"] = relationship(
-        uselist=False, back_populates="component", lazy="immediate"
-    )
+    repo_finder_metadata: Mapped["RepoFinderMetadata"] = relationship(back_populates="component", lazy="immediate")
 
     def __init__(
         self, purl: str, analysis: Analysis, repository: "Repository | None", repo_finder_metadata: "RepoFinderMetadata"

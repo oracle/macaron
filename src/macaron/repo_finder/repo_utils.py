@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the utility functions for repo and commit finder operations."""
@@ -11,9 +11,6 @@ from urllib.parse import urlparse
 from packageurl import PackageURL
 
 from macaron.config.global_config import global_config
-from macaron.errors import CloneError, RepoCheckOutError
-from macaron.repo_finder.commit_finder import find_commit
-from macaron.repo_finder.repo_finder_enums import CommitFinderOutcome
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR

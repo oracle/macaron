@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -47,7 +47,7 @@ from macaron.repo_finder import to_domain_from_known_purl_types
 from macaron.repo_finder.commit_finder import find_commit, match_tags
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
-from macaron.repo_finder.repo_finder_enums import RepoFinderOutcome, CommitFinderOutcome
+from macaron.repo_finder.repo_finder_enums import CommitFinderOutcome, RepoFinderOutcome
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
 from macaron.repo_finder.repo_utils import (
     check_repo_urls_are_equivalent,
@@ -101,10 +101,10 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
 
     # Call Repo Finder and return first valid URL
     logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
-    found_repo = repo_finder.find_repo(purl)
+    found_repo, outcome = repo_finder.find_repo(purl)
 
     if found_repo or not check_latest_version:
-        return found_repo
+        return found_repo, outcome
 
     # Try to find the latest version repo.
     logger.error("Could not find repo for PURL: %s", purl)
@@ -113,10 +113,10 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
         logger.debug("Could not find newer PURL than provided: %s", purl)
         return "", RepoFinderOutcome.NO_NEWER_VERSION
 
-    found_repo = DepsDevRepoFinder().find_repo(latest_version_purl)
+    found_repo, outcome = DepsDevRepoFinder().find_repo(latest_version_purl)
     if not found_repo:
         logger.debug("Could not find repo from latest version of PURL: %s", latest_version_purl)
-    return found_repo
+    return found_repo, outcome
 
 
 def to_repo_path(purl: PackageURL, available_domains: list[str]) -> str | None:
@@ -206,7 +206,7 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
     found_repo = input_repo
     if not found_repo:
         logger.debug("Searching for repo of PURL: %s", purl)
-        found_repo = find_repo(purl)
+        found_repo, _ = find_repo(purl)
 
     if not found_repo:
         logger.error("Could not find repo for PURL: %s", purl)
@@ -215,25 +215,29 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
     # Disable other loggers for cleaner output.
     logging.getLogger("macaron.slsa_analyzer.analyzer").disabled = True
 
-    digest = None
     if defaults.getboolean("repofinder", "find_source_should_clone"):
         # Clone the repo to retrieve the tags.
         logger.debug("Preparing repo: %s", found_repo)
         repo_dir = os.path.join(global_config.output_path, GIT_REPOS_DIR)
         logging.getLogger("macaron.slsa_analyzer.git_url").disabled = True
         # The prepare_repo function will also check the latest version of the artifact if required.
-        git_obj, outcome, digest = prepare_repo(repo_dir, found_repo, purl=purl, latest_version_fallback=not checked_latest_purl)
+        _, _, digest = prepare_repo(repo_dir, found_repo, purl=purl, latest_version_fallback=not checked_latest_purl)
 
         if not digest:
             return False
     else:
         # Retrieve the tags using a remote git operation.
         tags = get_tags_via_git_remote(found_repo)
-        if tags:
-            matches, outcome = match_tags(list(tags.keys()), purl.name, purl.version)
-            if matches:
-                matched_tag = matches[0]
-                digest = tags[matched_tag]
+        if not tags:
+            return False
+
+        matches, _ = match_tags(list(tags.keys()), purl.name, purl.version)
+
+        if not matches:
+            return False
+
+        matched_tag = matches[0]
+        digest = tags[matched_tag]
 
         if not digest:
             logger.error("Could not find commit for purl / repository: %s / %s", purl, found_repo)

@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the PythonRepoFinderDD class to be used for finding repositories using deps.dev."""
@@ -151,7 +151,10 @@ class DepsDevRepoFinder(BaseRepoFinder):
             return None, RepoFinderOutcome.DDEV_JSON_INVALID
 
         namespace = purl.namespace + "/" if purl.namespace else ""
-        return PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}@{latest_version}"), RepoFinderOutcome.FOUND_FROM_LATEST
+        return (
+            PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}@{latest_version}"),
+            RepoFinderOutcome.FOUND_FROM_LATEST,
+        )
 
     def _create_urls(self, purl: PackageURL) -> tuple[list[str], RepoFinderOutcome]:
         """
