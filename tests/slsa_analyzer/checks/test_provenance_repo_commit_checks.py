@@ -51,7 +51,7 @@ def test_provenance_repo_commit_checks_pass(
 ) -> None:
     """Test combinations of Repository objects and provenance strings against check."""
     context = _prepare_context(macaron_path, repository)
-    context.dynamic_data["provenance_info"] = Provenance(repo_url=repo_url, commit_sha=commit_digest)
+    context.dynamic_data["provenance_info"] = Provenance(repository_url=repo_url, commit_sha=commit_digest)
 
     # Check Repo
     repo_result = _perform_check_assert_result_return_result(
