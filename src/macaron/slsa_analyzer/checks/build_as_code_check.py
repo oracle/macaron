@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildAsCodeCheck class."""
@@ -15,7 +15,7 @@ from macaron.database.table_definitions import CheckFacts
 from macaron.errors import CallGraphError, ProvenanceError
 from macaron.parsers.bashparser import BashNode
 from macaron.parsers.github_workflow_model import ActionStep
-from macaron.repo_finder.provenance_extractor import ProvenancePredicate
+from macaron.provenance.provenance_extractor import ProvenancePredicate
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_build_info_results
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
@@ -124,7 +124,9 @@ class BuildAsCodeCheck(BaseCheck):
 
         # If a provenance is found, obtain the workflow that has triggered the artifact release.
         prov_workflow = None
-        prov_payload = ctx.dynamic_data["provenance"]
+        prov_payload = None
+        if ctx.dynamic_data["provenance_info"]:
+            prov_payload = ctx.dynamic_data["provenance_info"].provenance_payload
         if not ctx.dynamic_data["is_inferred_prov"] and prov_payload:
             try:
                 build_def = ProvenancePredicate.find_build_def(prov_payload.statement)

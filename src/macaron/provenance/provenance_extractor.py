@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains methods for extracting repository and commit metadata from provenance files."""
@@ -7,16 +7,11 @@ import urllib.parse
 from abc import ABC, abstractmethod
 
 from packageurl import PackageURL
-from pydriller import Git
 
 from macaron.errors import ProvenanceError
 from macaron.json_tools import JsonType, json_extract
 from macaron.repo_finder import to_domain_from_known_purl_types
-from macaron.repo_finder.commit_finder import (
-    AbstractPurlType,
-    determine_abstract_purl_type,
-    extract_commit_from_version,
-)
+from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV1Payload, InTotoV01Payload
 from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Statement
 from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1Statement
@@ -278,27 +273,18 @@ def check_if_input_repo_provenance_conflict(
 
 
 def check_if_input_purl_provenance_conflict(
-    git_obj: Git,
     repo_path_input: bool,
-    digest_input: bool,
     provenance_repo_url: str | None,
-    provenance_commit_digest: str | None,
     purl: PackageURL,
 ) -> bool:
     """Test if the input repository type PURL's repo and commit match the contents of the provenance.
 
     Parameters
     ----------
-    git_obj: Git
-        The Git object.
     repo_path_input: bool
         True if there is a repo as input.
-    digest_input: str
-        True if there is a commit as input.
     provenance_repo_url: str | None
         The repo url from provenance.
-    provenance_commit_digest: str | None
-        The commit digest from provenance.
     purl: PackageURL
         The input repository PURL.
 
@@ -318,18 +304,6 @@ def check_if_input_purl_provenance_conflict(
                 "Purl: %s, Provenance: %s.",
                 purl,
                 provenance_repo_url,
-            )
-            return True
-
-    # Check the PURL commit against the provenance.
-    if not digest_input and provenance_commit_digest and purl.version:
-        purl_commit, _ = extract_commit_from_version(git_obj, purl.version)
-        if purl_commit and purl_commit != provenance_commit_digest:
-            logger.debug(
-                "The commit digest passed via purl input does not match what exists in the "
-                "provenance. Purl Commit: %s, Provenance Commit: %s.",
-                purl_commit,
-                provenance_commit_digest,
             )
             return True
 

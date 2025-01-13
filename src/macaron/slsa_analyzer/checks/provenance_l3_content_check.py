@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module checks if a SLSA provenance conforms to a given expectation."""
@@ -58,8 +58,8 @@ class ProvenanceL3ContentCheck(BaseCheck):
             logger.info("%s check was unable to find any expectations.", self.check_info.check_id)
             return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-        if ctx.dynamic_data["provenance"]:
-            if expectation.validate(ctx.dynamic_data["provenance"]):
+        if ctx.dynamic_data["provenance_info"] and ctx.dynamic_data["provenance_info"].provenance_payload:
+            if expectation.validate(ctx.dynamic_data["provenance_info"].provenance_payload):
                 return CheckResultData(
                     result_tables=[expectation],
                     result_type=CheckResultType.PASSED,

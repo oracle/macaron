@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module implements SQLAlchemy type for converting date format to RFC3339 string representation."""
@@ -7,6 +7,8 @@ import datetime
 from typing import Any
 
 from sqlalchemy import JSON, String, TypeDecorator
+
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
 
 
 class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
@@ -36,7 +38,7 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
         if the provided ``datetime`` is a naive ``datetime`` object then UTC is added.
 
         value: None | datetime.datetime
-            The value being stored
+            The value being stored.
         """
         if value is None:
             return None
@@ -52,7 +54,7 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
         If the deserialized ``datetime`` has a timezone then return it, otherwise add UTC as its timezone.
 
         value: None | str
-            The value being loaded
+            The value being loaded.
         """
         if value is None:
             return None
@@ -76,7 +78,7 @@ class DBJsonDict(TypeDecorator):  # pylint: disable=W0223
         """Process when storing a dict object to the SQLite db.
 
         value: None | dict
-            The value being stored
+            The value being stored.
         """
         if not isinstance(value, dict):
             raise TypeError("DBJsonDict type expects a dict.")
@@ -87,8 +89,47 @@ class DBJsonDict(TypeDecorator):  # pylint: disable=W0223
         """Process when loading a dict object from the SQLite db.
 
         value: None | dict
-            The value being loaded
+            The value being loaded.
         """
         if not isinstance(value, dict):
             raise TypeError("DBJsonDict type expects a dict.")
         return value
+
+
+class ProvenancePayload(TypeDecorator):  # pylint: disable=W0223
+    """SQLAlchemy column type to serialize InTotoProvenance."""
+
+    # It is stored in the database as a json value.
+    impl = JSON
+
+    # To prevent Sphinx from rendering the docstrings for `cache_ok`, make this docstring private.
+    #: :meta private:
+    cache_ok = True
+
+    def process_bind_param(self, value: None | InTotoPayload, dialect: Any) -> None | Any:
+        """Process when storing a dict object to the SQLite db.
+
+        value: None | InTotoPayload
+            The value being stored.
+        """
+        if value is None:
+            return None
+
+        if not isinstance(value, InTotoPayload):
+            raise TypeError("ProvenancePayload type expects an InTotoPayload.")
+
+        return value.statement.get("payload")
+
+    def process_result_value(self, value: None | dict, dialect: Any) -> None | InTotoPayload:
+        """Process when loading a dict object from the SQLite db.
+
+        value: None | dict
+            The value being loaded.
+        """
+        if value is None:
+            return None
+
+        if not isinstance(value, dict):
+            raise TypeError("ProvenancePayload type expects a dict.")
+
+        return validate_intoto_payload(value)
