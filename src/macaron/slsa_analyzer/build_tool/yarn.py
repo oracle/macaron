@@ -55,11 +55,7 @@ class Yarn(BaseBuildTool):
         #       cases like .yarnrc existing but not package-lock.json and whether
         #       they would still count as "detected"
         yarn_config_files = self.build_configs + self.package_lock + self.entry_conf
-        for file in yarn_config_files:
-            if file_exists(repo_path, file):
-                return True
-
-        return False
+        return any(file_exists(repo_path, file) for file in yarn_config_files)
 
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
         """Prepare the necessary wrapper files for running the build.
@@ -92,7 +88,7 @@ class Yarn(BaseBuildTool):
         return NoneDependencyAnalyzer()
 
     def is_deploy_command(
-        self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None
+        self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None, provenance_workflow: str | None = None
     ) -> tuple[bool, Confidence]:
         """
         Determine if the command is a deploy command.
@@ -106,6 +102,8 @@ class Yarn(BaseBuildTool):
             The build tool command object.
         excluded_configs: list[str] | None
             Build tool commands that are called from these configuration files are excluded.
+        provenance_workflow: str | None
+            The relative path to the root CI file that is captured in a provenance or None if provenance is not found.
 
         Returns
         -------
@@ -136,7 +134,7 @@ class Yarn(BaseBuildTool):
         if excluded_configs and os.path.basename(cmd["ci_path"]) in excluded_configs:
             return False, Confidence.HIGH
 
-        return True, self.infer_confidence_deploy_command(cmd)
+        return True, self.infer_confidence_deploy_command(cmd, provenance_workflow)
 
     def is_package_command(
         self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None

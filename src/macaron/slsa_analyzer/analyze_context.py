@@ -12,6 +12,7 @@ from collections import defaultdict
 from typing import Any, TypedDict
 
 from macaron.database.table_definitions import Component, SLSALevel
+from macaron.repo_verifier.repo_verifier import RepositoryVerificationResult
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.git_service import BaseGitService
@@ -34,6 +35,8 @@ class ChecksOutputs(TypedDict):
 
     git_service: BaseGitService
     """The git service information for the target software component."""
+    repo_verification: list[RepositoryVerificationResult]
+    """The repository verification info."""
     build_spec: BuildSpec
     """The build spec inferred for the target software component."""
     ci_services: list[CIInfo]
@@ -97,6 +100,7 @@ class AnalyzeContext:
         # This attribute should be accessed via the `dynamic_data` property.
         self._dynamic_data: ChecksOutputs = ChecksOutputs(
             git_service=NoneGitService(),
+            repo_verification=[],
             build_spec=BuildSpec(tools=[], purl_tools=[]),
             ci_services=[],
             package_registries=[],
@@ -309,7 +313,7 @@ class AnalyzeContext:
         return output
 
 
-def store_inferred_provenance(
+def store_inferred_build_info_results(
     ctx: AnalyzeContext,
     ci_info: CIInfo,
     ci_service: BaseCIService,
@@ -317,8 +321,9 @@ def store_inferred_provenance(
     job_id: str | None = None,
     step_id: str | None = None,
     step_name: str | None = None,
+    callee_node_type: str | None = None,
 ) -> None:
-    """Store the data related to the build provenance when the project does not generate provenances.
+    """Store the data related to the build.
 
     Parameters
     ----------
@@ -336,15 +341,13 @@ def store_inferred_provenance(
         The CI step ID.
     step_name: str | None
         The CI step name.
+    callee_node_type: str | None
+        The callee node type in the call graph.
     """
     # TODO: This data is potentially duplicated in the check result tables. Instead of storing the data
     # in the context object, retrieve it from the result tables and remove this function.
-    if (
-        ctx.dynamic_data["is_inferred_prov"]
-        and ci_info["provenances"]
-        and isinstance(ci_info["provenances"][0].payload, InTotoV01Payload)
-    ):
-        predicate: Any = ci_info["provenances"][0].payload.statement["predicate"]
+    if isinstance(ci_info["build_info_results"], InTotoV01Payload):
+        predicate: Any = ci_info["build_info_results"].statement["predicate"]
         predicate["buildType"] = f"Custom {ci_service.name}"
         predicate["builder"]["id"] = trigger_link
         predicate["invocation"]["configSource"]["uri"] = (
@@ -355,3 +358,4 @@ def store_inferred_provenance(
         predicate["buildConfig"]["jobID"] = job_id or ""
         predicate["buildConfig"]["stepID"] = step_id or ""
         predicate["buildConfig"]["stepName"] = step_name or ""
+        predicate["buildConfig"]["calleeType"] = callee_node_type

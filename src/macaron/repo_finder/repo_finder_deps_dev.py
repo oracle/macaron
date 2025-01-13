@@ -5,6 +5,7 @@
 import json
 import logging
 from enum import StrEnum
+from typing import Any
 from urllib.parse import quote as encode
 
 from packageurl import PackageURL
@@ -12,6 +13,7 @@ from packageurl import PackageURL
 from macaron.json_tools import json_extract
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_validator import find_valid_repository_url
+from macaron.slsa_analyzer.git_url import clean_url
 from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -71,6 +73,41 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         return ""
 
+    @staticmethod
+    def get_project_info(project_url: str) -> dict[str, Any] | None:
+        """Retrieve project information from deps.dev.
+
+        Parameters
+        ----------
+        project_url : str
+            The URL of the project.
+
+        Returns
+        -------
+        dict[str, Any] | None
+            The project information or None if the information could not be retrieved.
+        """
+        clean_repo_url = clean_url(project_url)
+        if clean_repo_url is None or clean_repo_url.hostname is None:
+            logger.debug("Invalid project url format: %s", project_url)
+            return None
+
+        project_key = clean_repo_url.hostname + clean_repo_url.path
+
+        request_url = f"https://api.deps.dev/v3alpha/projects/{encode(project_key, safe='')}"
+        response = send_get_http_raw(request_url)
+        if not (response and response.text):
+            logger.debug("Failed to retrieve additional repo info for: %s", project_url)
+            return None
+
+        try:
+            response_json: dict = json.loads(response.text)
+        except ValueError as error:
+            logger.debug("Failed to parse response from deps.dev: %s", error)
+            return None
+
+        return response_json
+
     def _create_urls(self, purl: PackageURL) -> list[str]:
         """
         Create the urls to search for the metadata relating to the passed artifact.
@@ -88,7 +125,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
             The list of created URLs.
         """
         # See https://docs.deps.dev/api/v3alpha/
-        base_url = f"https://api.deps.dev/v3alpha/purl/{encode(str(purl)).replace('/', '%2F')}"
+        base_url = f"https://api.deps.dev/v3alpha/purl/{encode(str(purl), safe='')}"
 
         if not base_url:
             return []

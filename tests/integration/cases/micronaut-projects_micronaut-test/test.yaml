@@ -13,41 +13,15 @@ steps:
   kind: analyze
   options:
     command_args:
-    - -rp
-    - https://github.com/micronaut-projects/micronaut-test
-    - -d
-    - 5b81340f319a2287cb2e81ddec0154c0ea2510cf
+    - -purl
+    - pkg:maven/io.micronaut.test/micronaut-test-junit5@4.5.0
 - name: Validate JSON report schema
   kind: validate_schema
   options:
     kind: json_schema
     schema: output_json_report
-    result: output/reports/github_com/micronaut-projects/micronaut-test/micronaut-test.json
-- name: Run macaron analyze qos-ch/slf4j
-  kind: analyze
-  options:
-    command_args:
-    - -rp
-    - https://github.com/qos-ch/slf4j
-    - -d
-    - e9ee55cca93c2bf26f14482a9bdf961c750d2a56
-- name: Run macaron analyze ben-manes/caffeine
-  kind: analyze
-  options:
-    command_args:
-    - -rp
-    - https://github.com/ben-manes/caffeine
-    - -d
-    - 05a040c2478341bab8a58a02b3dc1fe14d626d72
+    result: output/reports/maven/io_micronaut_test/micronaut-test-junit5/micronaut-test-junit5.json
 - name: Run macaron verify-policy for micronaut-test
   kind: verify
   options:
     policy: micronaut-test.dl
-- name: Run macaron verify-policy for caffeine
-  kind: verify
-  options:
-    policy: caffeine.dl
-- name: Run macaron verify-policy for slf4j
-  kind: verify
-  options:
-    policy: slf4j.dl

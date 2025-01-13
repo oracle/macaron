@@ -147,9 +147,10 @@ class Registry:
             True if check is valid, else False.
         """
         if not isinstance(check, BaseCheck):
+            class_name = check.__name__ if isinstance(check, type) else type(check).__name__
             logger.error(
-                "The registered Check is of type %s. Please register a child class of BaseCheck.",
-                type(check).__name__,
+                "The registered Check %s is not a valid instance of BaseCheck.",
+                class_name,
             )
             return False
 
@@ -216,11 +217,7 @@ class Registry:
         bool
             True if all evaluated requirements are valid, else False.
         """
-        for req in eval_reqs:
-            if not isinstance(req, ReqName):
-                return False
-
-        return True
+        return all(isinstance(req, ReqName) for req in eval_reqs)
 
     @staticmethod
     def _validate_check_id_format(check_id: Any) -> bool:

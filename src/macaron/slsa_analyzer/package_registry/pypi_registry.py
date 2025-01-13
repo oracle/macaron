@@ -130,10 +130,7 @@ class PyPIRegistry(PackageRegistry):
             based on the given build tool.
         """
         compatible_build_tool_classes = [Pip, Poetry]
-        for build_tool_class in compatible_build_tool_classes:
-            if isinstance(build_tool, build_tool_class):
-                return True
-        return False
+        return any(isinstance(build_tool, build_tool_class) for build_tool_class in compatible_build_tool_classes)
 
     def download_package_json(self, url: str) -> dict:
         """Download the package JSON metadata from pypi registry.

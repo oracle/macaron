@@ -45,7 +45,7 @@ class ThirdPartyAction:
     action_version: str | None
 
 
-class GitHubWorkflowType(Enum):
+class GitHubWorkflowType(str, Enum):
     """This class represents different GitHub Actions workflow types."""
 
     INTERNAL = "internal"  # Workflows declared in the repo.
@@ -218,8 +218,10 @@ def resolve_matrix_variable(job_node: GitHubJobNode, var: str) -> Iterable[str]:
             # and let the caller handle it?
             if isinstance(val, str):
                 yield val
+            if isinstance(val, int):
+                yield str(val)
             if isinstance(val, float):
-                yield str(float)
+                yield str(val)
             if isinstance(val, bool):
                 yield "true" if val else "false"
     else:
@@ -311,37 +313,37 @@ def build_call_graph_from_node(node: GitHubWorkflowNode, repo_path: str) -> None
                     )
                     external_node.model = create_third_party_action_model(external_node)
                     job_node.add_callee(external_node)
-                else:
-                    # Check the shell type configuration. We currently can support `bash`` and `sh`.
-                    # By default `bash`` is used on non-Windows runners, which we support.
-                    # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#defaultsrunshell
-                    # TODO: support Powershell for Windows runners, which is the default shell in GitHub Actions.
-                    # Right now, the script with the default shell is passed to the parser, which will fail
-                    # if the runner is Windows and Powershell is used. But there is no easy way to avoid passing
-                    # the script because that means we need to accurately determine the runner's OS.
-                    if step.get("run") and ("shell" not in step or step["shell"] in ["bash", "sh"]):
-                        try:
-                            name = "UNKNOWN"
-                            node_id = None
-                            if "id" in step:
-                                node_id = step["id"]
-                            if "name" in step:
-                                name = step["name"]
 
-                            callee = create_bash_node(
-                                name=name,
-                                node_id=node_id,
-                                node_type=BashScriptType.INLINE,
-                                source_path=node.source_path,
-                                ci_step_ast=step,
-                                repo_path=repo_path,
-                                caller=job_node,
-                                recursion_depth=0,
-                            )
-                        except CallGraphError as error:
-                            logger.debug(error)
-                            continue
-                        job_node.add_callee(callee)
+                # Check the shell type configuration. We currently can support `bash`` and `sh`.
+                # By default `bash`` is used on non-Windows runners, which we support.
+                # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#defaultsrunshell
+                # TODO: support Powershell for Windows runners, which is the default shell in GitHub Actions.
+                # Right now, the script with the default shell is passed to the parser, which will fail
+                # if the runner is Windows and Powershell is used. But there is no easy way to avoid passing
+                # the script because that means we need to accurately determine the runner's OS.
+                elif step.get("run") and ("shell" not in step or step["shell"] in {"bash", "sh"}):
+                    try:
+                        name = "UNKNOWN"
+                        node_id = None
+                        if "id" in step:
+                            node_id = step["id"]
+                        if "name" in step:
+                            name = step["name"]
+
+                        callee = create_bash_node(
+                            name=name,
+                            node_id=node_id,
+                            node_type=BashScriptType.INLINE,
+                            source_path=node.source_path,
+                            ci_step_ast=step,
+                            repo_path=repo_path,
+                            caller=job_node,
+                            recursion_depth=0,
+                        )
+                    except CallGraphError as error:
+                        logger.debug(error)
+                        continue
+                    job_node.add_callee(callee)
 
         elif is_reusable_workflow_call_job(job):
             workflow_call_job_with_id = Identified[ReusableWorkflowCallJob](job_name, job)

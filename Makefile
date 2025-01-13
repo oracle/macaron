@@ -96,7 +96,7 @@ setup-go:
 	go build -o $(PACKAGE_PATH)/bin/cuevalidate.so -buildmode=c-shared $(REPO_PATH)/golang/internal/cue_validator/cue_validator.go
 setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier $(PACKAGE_PATH)/resources/mvnw $(PACKAGE_PATH)/resources/gradlew souffle gnu-sed
 $(PACKAGE_PATH)/bin/slsa-verifier:
-	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.5.1
+	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.6.0
 	cd slsa-verifier/cli/slsa-verifier && go build -o $(PACKAGE_PATH)/bin/
 	cd $(REPO_PATH) && rm -rf slsa-verifier
 $(PACKAGE_PATH)/resources/mvnw:
@@ -143,39 +143,48 @@ else
     OS_DISTRO := "$(shell grep '^NAME=' /etc/os-release | sed 's/^NAME=//' | sed 's/"//g')"
   endif
 endif
+# If Souffle cannot be installed, we advise the user to install it manually
+# and return status code 0, which is not considered a failure.
 .PHONY: souffle
 souffle:
 	if ! command -v souffle; then \
-		echo "Installing system dependency: souffle" && \
-	    case $(OS_DISTRO) in \
-	        "Oracle Linux") \
-                sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.4/x86_64-oraclelinux-8-souffle-2.4-Linux.rpm \
-                ;; \
-	        "Fedora Linux") \
-                sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.4/x86_64-fedora-34-souffle-2.4-Linux.rpm \
-                ;; \
-            "Ubuntu") \
-                sudo wget https://souffle-lang.github.io/ppa/souffle-key.public -O /usr/share/keyrings/souffle-archive-keyring.gpg; \
-                echo "deb [signed-by=/usr/share/keyrings/souffle-archive-keyring.gpg] https://souffle-lang.github.io/ppa/ubuntu/ stable main" | sudo tee /etc/apt/sources.list.d/souffle.list; \
-                sudo apt update; \
-                sudo apt install souffle; \
-                ;; \
-            "Darwin") \
-                if command -v brew; then \
-                    brew install --HEAD souffle-lang/souffle/souffle; \
-                else \
-                    echo "Unable to install Souffle. Please install it manually." && exit 0; \
-                fi ;; \
-	esac;                                                                                                                                                  \
+	  echo "Installing system dependency: souffle" && \
+	  case $(OS_DISTRO) in \
+	    "Oracle Linux") \
+	      sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.4/x86_64-oraclelinux-8-souffle-2.4-Linux.rpm;; \
+	    "Fedora Linux") \
+	      sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.4/x86_64-fedora-34-souffle-2.4-Linux.rpm;; \
+	    "Ubuntu") \
+	      sudo wget https://souffle-lang.github.io/ppa/souffle-key.public -O /usr/share/keyrings/souffle-archive-keyring.gpg; \
+	      echo "deb [signed-by=/usr/share/keyrings/souffle-archive-keyring.gpg] https://souffle-lang.github.io/ppa/ubuntu/ stable main" | sudo tee /etc/apt/sources.list.d/souffle.list; \
+	      sudo apt update; \
+	      sudo apt install souffle;; \
+	    "Darwin") \
+	      if command -v brew; then \
+	        brew install --HEAD souffle-lang/souffle/souffle; \
+	      else \
+	        echo "Unable to install Souffle. Please install it manually." && exit 0; \
+	      fi;; \
+	    *) \
+	      echo "Unsupported OS distribution: $(OS_DISTRO)"; exit 0;; \
+	  esac; \
 	fi && \
-    command -v souffle || true
+	command -v souffle
 
 # Install gnu-sed on mac using homebrew
 .PHONY: gnu-sed
 gnu-sed:
 	if [ "$(OS_DISTRO)" == "Darwin" ]; then \
-		brew install gnu-sed; \
-	fi
+	  if ! command -v gsed; then \
+	    if command -v brew; then \
+	      brew install gnu-sed; \
+	    elif command -v port; then \
+	      sudo port install gsed; \
+	    else \
+	      echo "Unable to install GNU sed on macOS. Please install it manually." && exit 1; \
+	    fi; \
+	  fi; \
+	fi;
 
 # Install or upgrade an existing virtual environment based on the
 # package dependencies declared in pyproject.toml.

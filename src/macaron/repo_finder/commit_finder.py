@@ -12,8 +12,7 @@ from gitdb.exc import BadName
 from packageurl import PackageURL
 from pydriller import Commit, Git
 
-from macaron.repo_finder import repo_finder_deps_dev
-from macaron.repo_finder.repo_finder import to_domain_from_known_purl_types
+from macaron.repo_finder import repo_finder_deps_dev, to_domain_from_known_purl_types
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -776,12 +775,11 @@ def _compute_tag_version_similarity(
                         # A half value is used here as otherwise it can lead to the same score as a tag_suffix that is
                         # equal to the last part.
                         score = score - 0.5
+                    elif tag_suffix not in release_set:
+                        # The suffix does not match, and is not similar.
+                        score = score + 1
                     else:
-                        if tag_suffix not in release_set:
-                            # The suffix does not match, and is not similar.
-                            score = score + 1
-                        else:
-                            score = score + 0.2
+                        score = score + 0.2
                 else:
                     # If no suffix pattern can be created the suffix cannot be matched to the last version part.
                     score = score + 1

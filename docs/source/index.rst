@@ -53,6 +53,9 @@ the requirements that are currently supported by Macaron.
    * - Check ID
      - SLSA requirement
      - Concrete check
+   * - ``mcn_build_tool_1``
+     - **Build tool exists** - The source code repository includes configurations for a supported build tool used to produce the software component.
+     - Detect the build tool used in the source code repository to build the software component.
    * - ``mcn_build_script_1``
      - **Scripted build** - All build steps were fully defined in a “build script”.
      - Identify and validate build script(s).
@@ -74,7 +77,7 @@ the requirements that are currently supported by Macaron.
    * - ``mcn_build_as_code_1``
      - **Build as code** - If a trusted builder is not present, this requirement determines that the build definition and configuration executed by the build service is verifiably derived from text file definitions stored in a version control system.
      - Identify and validate the CI service(s) used to build and deploy/publish an artifact.
-   * - ``mcn_infer_artifact_pipeline_1``
+   * - ``mcn_find_artifact_pipeline_1``
      - **Infer artifact publish pipeline** - When a provenance is not available, checks whether a CI workflow run has automatically published the artifact.
      - Identify a workflow run that has triggered the deploy step determined by the ``Build as code`` check.
    * - ``mcn_provenance_level_three_1``
@@ -89,6 +92,9 @@ the requirements that are currently supported by Macaron.
    * - ``mcn_provenance_derived_commit_1``
      - **Provenance derived commit** - Check if the analysis target's commit matches the commit in the provenance.
      - If there is no commit, this check will fail.
+   * - ``mcn_scm_authenticity_check_1``
+     - **Source repo authenticity** - Check whether the claims of a source code repository made by a package can be corroborated.
+     - If the source code repository contains conflicting evidence regarding its claim of the source code repository, this check will fail. If no source code repository or corroborating evidence is found, or if the build system is unsupported, the check will return ``UNKNOWN`` as the result. This check currently supports only Maven artifacts.
 
 ****************************************************************************************
 Macaron checks that report integrity issues but do not map to SLSA requirements directly
@@ -101,7 +107,7 @@ Macaron checks that report integrity issues but do not map to SLSA requirements 
    * - Check ID
      - Description
    * - ``mcn_detect_malicious_metadata_1``
-     - This check analyzes the metadata of a package and reports malicious behavior. This check currently supports PyPI packages.
+     - This check performs analysis on PyPI package metadata to detect malicious behavior. It also reports known malware from other ecosystems, but the analysis is currently limited to PyPI packages.
 
 ----------------------
 How does Macaron work?

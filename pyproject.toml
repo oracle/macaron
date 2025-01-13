@@ -68,7 +68,7 @@ actions = [
 ]
 dev = [
     "flit >=3.2.0,<4.0.0",
-    "mypy >=1.0.0,<1.12",
+    "mypy >=1.0.0,<1.14",
     "types-pyyaml >=6.0.4,<7.0.0",
     "types-requests >=2.25.6,<3.0.0",
     "types-jsonschema >=4.22.0,<5.0.0",
@@ -137,7 +137,7 @@ version_files = [
     "src/macaron/__init__.py:__version__",
 ]
 major_version_zero = true
-version = "0.13.0"
+version = "0.14.0"
 
 
 # https://github.com/pytest-dev/pytest-cov
@@ -210,6 +210,14 @@ ignore_missing_imports = true
 # https://pylint.pycqa.org/en/latest/user_guide/configuration/index.html
 [tool.pylint.MASTER]
 fail-under = 10.0
+suggestion-mode = true  # Remove this setting when pylint v4 is released.
+load-plugins = [
+    "pylint.extensions.check_elif",
+    "pylint.extensions.for_any_all",
+    "pylint.extensions.overlapping_exceptions",
+    "pylint.extensions.set_membership",
+    "pylint.extensions.typing",
+]
 disable = [
     "fixme",
     "line-too-long",  # Replaced by Flake8 Bugbear B950 check.
@@ -218,15 +226,15 @@ disable = [
     "too-many-arguments",
     "too-many-boolean-expressions",
     "too-many-branches",
+    "too-many-function-args",
     "too-many-instance-attributes",
     "too-many-lines",
     "too-many-locals",
     "too-many-nested-blocks",
+    "too-many-positional-arguments",
     "too-many-public-methods",
     "too-many-return-statements",
     "too-many-statements",
-    "too-many-function-args",
-    "too-many-positional-arguments",
     "duplicate-code",
 ]
 

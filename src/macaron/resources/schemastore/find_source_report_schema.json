@@ -1,0 +1,27 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "macaron-source-finder-json-report-schema",
+    "title": "Macaron Source Finder JSON Report",
+    "$comment": "For any details about the schema specification and validation documentation, see https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-00 and https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-validation-00.",
+    "type": "object",
+    "properties": {
+        "purl": {
+            "type": "string"
+        },
+        "commit": {
+            "type": "string"
+        },
+        "repo": {
+            "type": "string"
+        },
+        "repo_validated": {
+            "type": "boolean"
+        },
+        "commit_validated": {
+            "type": "boolean"
+        },
+        "url": {
+            "type": "string"
+        }
+    }
+}

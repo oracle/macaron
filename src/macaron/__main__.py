@@ -19,6 +19,7 @@ from macaron.config.global_config import global_config
 from macaron.errors import ConfigurationError
 from macaron.output_reporter.reporter import HTMLReporter, JSONReporter, PolicyReporter
 from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
+from macaron.repo_finder import repo_finder
 from macaron.slsa_analyzer.analyzer import Analyzer
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
@@ -212,6 +213,14 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
     return os.EX_USAGE
 
 
+def find_source(find_args: argparse.Namespace) -> int:
+    """Perform repo and commit finding for a passed PURL, or commit finding for a passed PURL and repo."""
+    if repo_finder.find_source(find_args.package_url, find_args.repo_path or None):
+        return os.EX_OK
+
+    return os.EX_DATAERR
+
+
 def perform_action(action_args: argparse.Namespace) -> None:
     """Perform the indicated action of Macaron."""
     match action_args.action:
@@ -239,6 +248,17 @@ def perform_action(action_args: argparse.Namespace) -> None:
                 sys.exit(os.EX_USAGE)
 
             analyze_slsa_levels_single(action_args)
+
+        case "find-source":
+            try:
+                for git_service in GIT_SERVICES:
+                    git_service.load_defaults()
+            except ConfigurationError as error:
+                logger.error(error)
+                sys.exit(os.EX_USAGE)
+
+            find_source(action_args)
+
         case _:
             logger.error("Macaron does not support command option %s.", action_args.action)
             sys.exit(os.EX_USAGE)
@@ -443,6 +463,28 @@ def main(argv: list[str] | None = None) -> None:
     vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
     vp_group.add_argument("-f", "--file", type=str, help="Path to the Datalog policy.")
     vp_group.add_argument("-s", "--show-prelude", action="store_true", help="Show policy prelude.")
+
+    # Find the repo and commit of a passed PURL, or the commit of a passed PURL and repo.
+    find_parser = sub_parser.add_parser(name="find-source")
+
+    find_parser.add_argument(
+        "-purl",
+        "--package-url",
+        required=True,
+        type=str,
+        help=("The PURL string to perform repository and commit finding for."),
+    )
+
+    find_parser.add_argument(
+        "-rp",
+        "--repo-path",
+        required=False,
+        type=str,
+        help=(
+            "The path to a repository that matches the provided PURL, can be local or remote. "
+            "This argument is only required in cases where the repository cannot be discovered automatically."
+        ),
+    )
 
     args = main_parser.parse_args(argv)
 

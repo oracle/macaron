@@ -55,10 +55,7 @@ class Pip(BaseBuildTool):
         bool
             True if this build tool is detected, else False.
         """
-        for file in self.build_configs:
-            if file_exists(repo_path, file):
-                return True
-        return False
+        return any(file_exists(repo_path, file) for file in self.build_configs)
 
     def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
         """Prepare the necessary wrapper files for running the build.
@@ -101,7 +98,7 @@ class Pip(BaseBuildTool):
         )
 
     def is_deploy_command(
-        self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None
+        self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None, provenance_workflow: str | None = None
     ) -> tuple[bool, Confidence]:
         """
         Determine if the command is a deploy command.
@@ -115,6 +112,8 @@ class Pip(BaseBuildTool):
             The build tool command object.
         excluded_configs: list[str] | None
             Build tool commands that are called from these configuration files are excluded.
+        provenance_workflow: str | None
+            The relative path to the root CI file that is captured in a provenance or None if provenance is not found.
 
         Returns
         -------
@@ -144,7 +143,7 @@ class Pip(BaseBuildTool):
         if excluded_configs and os.path.basename(cmd["ci_path"]) in excluded_configs:
             return False, Confidence.HIGH
 
-        return True, self.infer_confidence_deploy_command(cmd)
+        return True, self.infer_confidence_deploy_command(cmd, provenance_workflow)
 
     def is_package_command(
         self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None

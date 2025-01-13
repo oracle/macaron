@@ -50,7 +50,7 @@ class JavaRepoFinder(BaseRepoFinder):
         limit = defaults.getint("repofinder.java", "parent_limit", fallback=10)
 
         if not version:
-            logger.debug("Version missing for maven artifact: %s:%s", group, artifact)
+            logger.info("Version missing for maven artifact: %s:%s", group, artifact)
             # TODO add support for Java artifacts without a version
             return ""
 

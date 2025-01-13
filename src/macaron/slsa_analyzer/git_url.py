@@ -19,10 +19,15 @@ from git.repo import Repo
 from pydriller.git import Git
 
 from macaron.config.defaults import defaults
+from macaron.config.global_config import global_config
 from macaron.environment_variables import get_patched_env
 from macaron.errors import CloneError
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+GIT_REPOS_DIR = "git_repos"
+"""The directory in the output dir to store all cloned repositories."""
 
 
 def parse_git_branch_output(content: str) -> list[str]:
@@ -372,6 +377,81 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
     return Repo(path=clone_dir)
 
 
+def list_remote_references(arguments: list[str], repo: str) -> str | None:
+    """Retrieve references from a remote repository using Git's ``ls-remote``.
+
+    Parameters
+    ----------
+    arguments: list[str]
+        The arguments to pass into the command.
+    repo: str
+        The repository to run the command on.
+
+    Returns
+    -------
+    str
+        The result of the command.
+    """
+    try:
+        result = subprocess.run(  # nosec B603
+            args=["git", "ls-remote"] + arguments + [repo],
+            capture_output=True,
+            # By setting stdin to /dev/null and using a new session, we prevent all possible user input prompts.
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,
+            cwd=global_config.output_path,
+            check=False,
+        )
+    except (subprocess.CalledProcessError, OSError):
+        return None
+
+    if result.returncode != 0:
+        error_string = result.stderr.decode("utf-8").strip()
+        if error_string.startswith("fatal: could not read Username"):
+            # Occurs when a repository cannot be accessed either because it does not exist, or it requires a login
+            # that is blocked.
+            logger.error("Could not access repository: %s", repo)
+        else:
+            logger.error("Failed to retrieve remote references from repo: %s", repo)
+        return None
+
+    return result.stdout.decode("utf-8")
+
+
+def resolve_local_path(start_dir: str, local_path: str) -> str:
+    """Resolve the local path and check if it's within a directory.
+
+    This method returns an empty string if there are errors with resolving ``local_path``
+    (e.g. non-existed dir, broken symlinks, etc.) or ``start_dir`` does not exist.
+
+    Parameters
+    ----------
+    start_dir : str
+        The directory to look for the existence of path.
+    local_path: str
+        The local path to resolve within start_dir.
+
+    Returns
+    -------
+    str
+        The resolved path in canonical form or an empty string if errors.
+    """
+    # Resolve the path by joining dir and path.
+    # Because strict mode is enabled, if a path doesn't exist or a symlink loop
+    # is encountered, OSError is raised.
+    # ValueError is raised if we use both relative and absolute paths in os.path.commonpath.
+    try:
+        dir_real = os.path.realpath(start_dir, strict=True)
+        resolve_path = os.path.realpath(os.path.join(start_dir, local_path), strict=True)
+        if os.path.commonpath([resolve_path, dir_real]) != dir_real:
+            return ""
+
+        return resolve_path
+    except (OSError, ValueError) as error:
+        logger.error(error)
+        return ""
+
+
 def get_repo_name_from_url(url: str) -> str:
     """Extract the repo name of the repository from the remote url.
 
@@ -637,7 +717,7 @@ def parse_remote_url(
     res_netloc = ""
 
     # e.g., https://github.com/owner/project.git
-    if parsed_url.scheme in ("http", "https", "ftp", "ftps", "git+https"):
+    if parsed_url.scheme in {"http", "https", "ftp", "ftps", "git+https"}:
         if parsed_url.netloc not in allowed_git_service_hostnames:
             return None
         path_params = parsed_url.path.strip("/").split("/")
@@ -651,7 +731,7 @@ def parse_remote_url(
     # e.g.:
     #   ssh://git@hostname:port/owner/project.git
     #   ssh://git@hostname:owner/project.git
-    elif parsed_url.scheme in ("ssh", "git+ssh"):
+    elif parsed_url.scheme in {"ssh", "git+ssh"}:
         user_host, _, port = parsed_url.netloc.partition(":")
         user, _, host = user_host.rpartition("@")
 
