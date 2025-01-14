@@ -41,6 +41,7 @@ from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.provenance.provenance_extractor import (
     check_if_input_purl_provenance_conflict,
     check_if_input_repo_provenance_conflict,
+    extract_predicate_version,
     extract_repo_and_commit_from_provenance,
 )
 from macaron.provenance.provenance_finder import ProvenanceFinder, find_provenance_from_ci
@@ -500,6 +501,9 @@ class Analyzer:
         slsa_level = determine_provenance_slsa_level(
             analyze_ctx, provenance_payload, provenance_is_verified, provenance_l3_verified
         )
+        slsa_version = None
+        if provenance_payload:
+            slsa_version = extract_predicate_version(provenance_payload)
 
         analyze_ctx.dynamic_data["provenance_info"] = table_definitions.Provenance(
             component=component,
@@ -508,7 +512,8 @@ class Analyzer:
             verified=provenance_is_verified,
             provenance_payload=provenance_payload,
             slsa_level=slsa_level,
-            # TODO Add SLSA version, release tag, release digest.
+            slsa_version=slsa_version,
+            # TODO Add release tag, release digest.
         )
         if provenance_payload:
             analyze_ctx.dynamic_data["is_inferred_prov"] = False

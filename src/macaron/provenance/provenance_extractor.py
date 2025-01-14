@@ -43,10 +43,10 @@ def extract_repo_and_commit_from_provenance(payload: InTotoPayload) -> tuple[str
         If the extraction process fails for any reason.
     """
     predicate_type = payload.statement.get("predicateType")
-    if isinstance(payload, InTotoV1Payload):
-        if predicate_type == "https://slsa.dev/provenance/v1":
-            return _extract_from_slsa_v1(payload)
-    elif isinstance(payload, InTotoV01Payload):
+    if isinstance(payload, InTotoV1Payload) and predicate_type == "https://slsa.dev/provenance/v1":
+        return _extract_from_slsa_v1(payload)
+
+    if isinstance(payload, InTotoV01Payload):
         if predicate_type == "https://slsa.dev/provenance/v0.2":
             return _extract_from_slsa_v02(payload)
         if predicate_type == "https://slsa.dev/provenance/v0.1":
@@ -56,10 +56,38 @@ def extract_repo_and_commit_from_provenance(payload: InTotoPayload) -> tuple[str
 
     msg = (
         f"Extraction from provenance not supported for versions: "
-        f"predicate_type {predicate_type}, in-toto {str(type(payload))}."
+        f"predicate_type {payload.statement.get('predicateType')}, in-toto {str(type(payload))}."
     )
     logger.debug(msg)
     raise ProvenanceError(msg)
+
+
+def extract_predicate_version(payload: InTotoPayload) -> str | None:
+    """Extract and return the SLSA version from the passed payload.
+
+    Parameters
+    ----------
+    payload: InTotoPayload
+        The payload to extract from.
+
+    Returns
+    -------
+    str | None
+        The SLSA version, or None if .
+    """
+    predicate_type = payload.statement.get("predicateType")
+    if isinstance(payload, InTotoV1Payload) and predicate_type == "https://slsa.dev/provenance/v1":
+        return "SLSA-1.0"
+
+    if isinstance(payload, InTotoV01Payload):
+        if predicate_type == "https://slsa.dev/provenance/v0.2":
+            return "SLSA-0.2"
+        if predicate_type == "https://slsa.dev/provenance/v0.1":
+            return "SLSA-0.1"
+        if predicate_type == "https://witness.testifysec.com/attestation-collection/v0.1":
+            return "WITNESS-0.1"
+
+    return None
 
 
 def _extract_from_slsa_v01(payload: InTotoV01Payload) -> tuple[str | None, str | None]:
