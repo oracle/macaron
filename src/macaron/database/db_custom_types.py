@@ -106,8 +106,8 @@ class ProvenancePayload(TypeDecorator):  # pylint: disable=W0223
     #: :meta private:
     cache_ok = True
 
-    def process_bind_param(self, value: None | InTotoPayload, dialect: Any) -> None | Any:
-        """Process when storing a dict object to the SQLite db.
+    def process_bind_param(self, value: None | InTotoPayload, dialect: Any) -> None | dict:
+        """Process when storing an InTotoPayload object to the SQLite db.
 
         value: None | InTotoPayload
             The value being stored.
@@ -118,10 +118,10 @@ class ProvenancePayload(TypeDecorator):  # pylint: disable=W0223
         if not isinstance(value, InTotoPayload):
             raise TypeError("ProvenancePayload type expects an InTotoPayload.")
 
-        return value.statement.get("payload")
+        return value.statement.get("predicate")
 
     def process_result_value(self, value: None | dict, dialect: Any) -> None | InTotoPayload:
-        """Process when loading a dict object from the SQLite db.
+        """Process when loading an InTotoPayload object from the SQLite db.
 
         value: None | dict
             The value being loaded.
