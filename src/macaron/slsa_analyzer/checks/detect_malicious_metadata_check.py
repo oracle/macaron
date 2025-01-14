@@ -15,6 +15,7 @@ from macaron.errors import HeuristicAnalyzerValueError
 from macaron.json_tools import JsonType, json_extract
 from macaron.malware_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult, Heuristics
+from macaron.malware_analyzer.pypi_heuristics.metadata.anomalous_version import AnomalousVersionAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
@@ -75,12 +76,14 @@ ANALYZERS: list = [
     CloserReleaseJoinDateAnalyzer,
     SuspiciousSetupAnalyzer,
     WheelAbsenceAnalyzer,
+    AnomalousVersionAnalyzer,
 ]
 
 
 # The HeuristicResult sequence is aligned with the sequence of ANALYZERS list
 SUSPICIOUS_COMBO: dict[
     tuple[
+        HeuristicResult,
         HeuristicResult,
         HeuristicResult,
         HeuristicResult,
@@ -101,9 +104,26 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
         HeuristicResult.FAIL,  # Wheel Absence
+        HeuristicResult.FAIL,  # Anomalous Version
         # No project link, only one release, and the maintainer released it shortly
         # after account registration.
         # The setup.py file contains suspicious imports and .whl file isn't present.
+        # Anomalous version has no effect.
+    ): Confidence.HIGH,
+    (
+        HeuristicResult.FAIL,  # Empty Project
+        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.FAIL,  # One Release
+        HeuristicResult.SKIP,  # High Release Frequency
+        HeuristicResult.SKIP,  # Unchanged Release
+        HeuristicResult.FAIL,  # Closer Release Join Date
+        HeuristicResult.FAIL,  # Suspicious Setup
+        HeuristicResult.FAIL,  # Wheel Absence
+        HeuristicResult.PASS,  # Anomalous Version
+        # No project link, only one release, and the maintainer released it shortly
+        # after account registration.
+        # The setup.py file contains suspicious imports and .whl file isn't present.
+        # Anomalous version has no effect.
     ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,  # Empty Project
@@ -114,6 +134,7 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
         HeuristicResult.FAIL,  # Wheel Absence
+        HeuristicResult.SKIP,  # Anomalous Version
         # No project link, frequent releases of multiple versions without modifying the content,
         # and the maintainer released it shortly after account registration.
         # The setup.py file contains suspicious imports and .whl file isn't present.
@@ -127,6 +148,7 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
         HeuristicResult.FAIL,  # Wheel Absence
+        HeuristicResult.SKIP,  # Anomalous Version
         # No project link, frequent releases of multiple versions,
         # and the maintainer released it shortly after account registration.
         # The setup.py file contains suspicious imports and .whl file isn't present.
@@ -140,6 +162,7 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.PASS,  # Suspicious Setup
         HeuristicResult.PASS,  # Wheel Absence
+        HeuristicResult.SKIP,  # Anomalous Version
         # No project link, frequent releases of multiple versions without modifying the content,
         # and the maintainer released it shortly after account registration. Presence/Absence of
         # .whl file has no effect
@@ -153,6 +176,7 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.PASS,  # Suspicious Setup
         HeuristicResult.FAIL,  # Wheel Absence
+        HeuristicResult.SKIP,  # Anomalous Version
         # No project link, frequent releases of multiple versions without modifying the content,
         # and the maintainer released it shortly after account registration. Presence/Absence of
         # .whl file has no effect
@@ -166,10 +190,56 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
         HeuristicResult.FAIL,  # Wheel Absence
+        HeuristicResult.SKIP,  # Anomalous Version
         # All project links are unreachable, frequent releases of multiple versions,
         # and the maintainer released it shortly after account registration.
         # The setup.py file contains suspicious imports and .whl file isn't present.
     ): Confidence.HIGH,
+    (
+        HeuristicResult.FAIL,  # Empty Project
+        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.FAIL,  # One Release
+        HeuristicResult.SKIP,  # High Release Frequency
+        HeuristicResult.SKIP,  # Unchanged Release
+        HeuristicResult.FAIL,  # Closer Release Join Date
+        HeuristicResult.PASS,  # Suspicious Setup
+        HeuristicResult.PASS,  # Wheel Absence
+        HeuristicResult.FAIL,  # Anomalous Version
+        # No project link, only one release, and the maintainer released it shortly
+        # after account registration.
+        # The setup.py file has no effect and .whl file is present.
+        # The version number is anomalous.
+    ): Confidence.MEDIUM,
+    (
+        HeuristicResult.FAIL,  # Empty Project
+        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.FAIL,  # One Release
+        HeuristicResult.SKIP,  # High Release Frequency
+        HeuristicResult.SKIP,  # Unchanged Release
+        HeuristicResult.FAIL,  # Closer Release Join Date
+        HeuristicResult.FAIL,  # Suspicious Setup
+        HeuristicResult.PASS,  # Wheel Absence
+        HeuristicResult.FAIL,  # Anomalous Version
+        # No project link, only one release, and the maintainer released it shortly
+        # after account registration.
+        # The setup.py file has no effect and .whl file is present.
+        # The version number is anomalous.
+    ): Confidence.MEDIUM,
+    (
+        HeuristicResult.FAIL,  # Empty Project
+        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.FAIL,  # One Release
+        HeuristicResult.SKIP,  # High Release Frequency
+        HeuristicResult.SKIP,  # Unchanged Release
+        HeuristicResult.FAIL,  # Closer Release Join Date
+        HeuristicResult.SKIP,  # Suspicious Setup
+        HeuristicResult.PASS,  # Wheel Absence
+        HeuristicResult.FAIL,  # Anomalous Version
+        # No project link, only one release, and the maintainer released it shortly
+        # after account registration.
+        # The setup.py file has no effect and .whl file is present.
+        # The version number is anomalous.
+    ): Confidence.MEDIUM,
 }
 
 
