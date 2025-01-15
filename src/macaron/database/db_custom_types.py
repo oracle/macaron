@@ -8,7 +8,12 @@ from typing import Any
 
 from sqlalchemy import JSON, String, TypeDecorator
 
-from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
+from macaron.slsa_analyzer.provenance.intoto import (
+    InTotoPayload,
+    InTotoV01Payload,
+    InTotoV1Payload,
+    validate_intoto_payload,
+)
 
 
 class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
@@ -118,7 +123,8 @@ class ProvenancePayload(TypeDecorator):  # pylint: disable=W0223
         if not isinstance(value, InTotoPayload):
             raise TypeError("ProvenancePayload type expects an InTotoPayload.")
 
-        return value.statement.get("predicate")
+        payload_type = value.__class__.__name__
+        return {"payload_type": payload_type, "payload": value.statement}
 
     def process_result_value(self, value: None | dict, dialect: Any) -> None | InTotoPayload:
         """Process when loading an InTotoPayload object from the SQLite db.
@@ -131,5 +137,14 @@ class ProvenancePayload(TypeDecorator):  # pylint: disable=W0223
 
         if not isinstance(value, dict):
             raise TypeError("ProvenancePayload type expects a dict.")
+
+        if "payload_type" not in value or "payload" not in value:
+            raise TypeError("Missing keys in dict for ProvenancePayload type.")
+
+        payload = value["payload"]
+        if value["payload_type"] == "InTotoV01Payload":
+            return InTotoV01Payload(statement=payload)
+        if value["payload_type"] == "InTotoV1Payload":
+            return InTotoV1Payload(statement=payload)
 
         return validate_intoto_payload(value)

@@ -72,7 +72,7 @@ class ProvenanceVerifiedCheck(BaseCheck):
         if provenance_info and provenance_info.provenance_payload:
             predicate = provenance_info.provenance_payload.statement.get("predicate")
             if predicate:
-                build_type = json_extract(predicate, ["buildType"], str)
+                build_type = json_extract(predicate, ["buildDefinition", "buildType"], str)
 
         slsa_level = 0
         if provenance_info:

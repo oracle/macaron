@@ -498,12 +498,14 @@ class Analyzer:
                     if verified and all(verified):
                         provenance_l3_verified = True
 
+        slsa_version = None
+        if provenance_payload:
+            analyze_ctx.dynamic_data["is_inferred_prov"] = False
+            slsa_version = extract_predicate_version(provenance_payload)
+
         slsa_level = determine_provenance_slsa_level(
             analyze_ctx, provenance_payload, provenance_is_verified, provenance_l3_verified
         )
-        slsa_version = None
-        if provenance_payload:
-            slsa_version = extract_predicate_version(provenance_payload)
 
         analyze_ctx.dynamic_data["provenance_info"] = table_definitions.Provenance(
             component=component,
@@ -515,8 +517,7 @@ class Analyzer:
             slsa_version=slsa_version,
             # TODO Add release tag, release digest.
         )
-        if provenance_payload:
-            analyze_ctx.dynamic_data["is_inferred_prov"] = False
+
         analyze_ctx.dynamic_data["validate_malware_switch"] = validate_malware_switch
 
         if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:

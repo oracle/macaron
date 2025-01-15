@@ -91,9 +91,10 @@ def verify_npm_provenance(purl: PackageURL, provenance: list[InTotoPayload]) -> 
     found_signed_subject = None
     for signed_subject in signed_subjects:
         name = signed_subject.get("name")
-        if name and name == str(purl):
-            found_signed_subject = signed_subject
-            break
+        if not name or not check_purls_equivalent(purl, PackageURL.from_string(name)):
+            continue
+        found_signed_subject = signed_subject
+        break
 
     if not found_signed_subject:
         return False
@@ -101,9 +102,10 @@ def verify_npm_provenance(purl: PackageURL, provenance: list[InTotoPayload]) -> 
     found_unsigned_subject = None
     for unsigned_subject in unsigned_subjects:
         name = unsigned_subject.get("name")
-        if name and name == str(purl):
-            found_unsigned_subject = unsigned_subject
-            break
+        if not name or not check_purls_equivalent(purl, PackageURL.from_string(name)):
+            continue
+        found_unsigned_subject = unsigned_subject
+        break
 
     if not found_unsigned_subject:
         return False
@@ -124,6 +126,19 @@ def verify_npm_provenance(purl: PackageURL, provenance: list[InTotoPayload]) -> 
         unsigned_digest[key][:7],
     )
 
+    return True
+
+
+def check_purls_equivalent(original_purl: PackageURL, new_purl: PackageURL) -> bool:
+    """Check if `new_purl` is equivalent to `original_purl`, excluding versions if the original has none."""
+    if (
+        original_purl.type != new_purl.type
+        or original_purl.name != new_purl.name
+        or original_purl.namespace != new_purl.namespace
+    ):
+        return False
+    if original_purl.version and original_purl.version != new_purl.version:
+        return False
     return True
 
 
@@ -370,7 +385,9 @@ def determine_provenance_slsa_level(
     predicate = provenance_payload.statement.get("predicate")
     build_type = None
     if predicate:
-        build_type = json_extract(predicate, ["buildType"], str)
+        build_type = json_extract(predicate, ["buildDefinition", "buildType"], str)
+        if not build_type:
+            build_type = json_extract(predicate, ["buildType"], str)
 
     if build_type == "https://github.com/slsa-framework/slsa-github-generator/generic@v1" and verified_l3:
         # 3. Provenance is created by the SLSA GitHub generator and verified.

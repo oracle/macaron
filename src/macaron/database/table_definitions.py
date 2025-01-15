@@ -491,7 +491,7 @@ class Provenance(ORMBase):
     component: Mapped["Component"] = relationship(back_populates="provenance")
 
     #: The SLSA version.
-    version: Mapped[str] = mapped_column(String, nullable=True)
+    slsa_version: Mapped[str] = mapped_column(String, nullable=True)
 
     #: The SLSA level.
     slsa_level: Mapped[int] = mapped_column(Integer, default=0)
