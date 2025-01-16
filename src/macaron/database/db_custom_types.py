@@ -149,9 +149,9 @@ class ProvenancePayload(TypeDecorator):  # pylint: disable=W0223
             raise TypeError("Missing keys in dict for ProvenancePayload type.")
 
         payload = payload_dict["payload"]
-        if payload["payload_type"] == "InTotoV01Payload":
+        if payload_dict["payload_type"] == "InTotoV01Payload":
             return InTotoV01Payload(statement=payload)
-        if payload["payload_type"] == "InTotoV1Payload":
+        if payload_dict["payload_type"] == "InTotoV1Payload":
             return InTotoV1Payload(statement=payload)
 
         return validate_intoto_payload(payload)

@@ -68,7 +68,12 @@ class ProvenanceL3Check(BaseCheck):
         """
         result_tables: list[CheckFacts] = []
         result_value = CheckResultType.FAILED
-        if ctx.dynamic_data["provenance_info"] and ctx.dynamic_data["provenance_info"].slsa_level == 3:
+        prov = ctx.dynamic_data["provenance_info"] or None
+        slsa = 0
+        if prov:
+            slsa = prov.slsa_level
+
+        if prov and slsa == 3:
             result_tables.append(ProvenanceL3VerifiedFacts(confidence=Confidence.HIGH))
             result_value = CheckResultType.PASSED
 

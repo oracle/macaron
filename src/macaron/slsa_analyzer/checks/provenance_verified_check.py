@@ -8,7 +8,7 @@ from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.table_definitions import CheckFacts
-from macaron.json_tools import json_extract
+from macaron.provenance.provenance_extractor import ProvenancePredicate
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
@@ -69,10 +69,9 @@ class ProvenanceVerifiedCheck(BaseCheck):
         """
         build_type = None
         provenance_info = ctx.dynamic_data["provenance_info"]
+
         if provenance_info and provenance_info.provenance_payload:
-            predicate = provenance_info.provenance_payload.statement.get("predicate")
-            if predicate:
-                build_type = json_extract(predicate, ["buildDefinition", "buildType"], str)
+            build_type = ProvenancePredicate.get_build_type(provenance_info.provenance_payload.statement)
 
         slsa_level = 0
         if provenance_info:

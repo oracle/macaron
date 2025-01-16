@@ -16,7 +16,7 @@ from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.json_tools import json_extract
+from macaron.provenance.provenance_extractor import ProvenancePredicate
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import AssetLocator
@@ -199,6 +199,7 @@ def verify_ci_provenance(analyze_ctx: AnalyzeContext, ci_info: CIInfo, download_
             )
 
             if not sub_verified:
+                logger.info("Sub asset not verified: %s", sub_asset["name"])
                 return False
 
             if sub_verified:
@@ -322,10 +323,8 @@ def _verify_slsa(
             cwd=download_path,
             timeout=defaults.getint("slsa.verifier", "timeout", fallback=120),
         )
-
         output = verifier_output.stdout.decode("utf-8")
-        verified = "PASSED: Verified SLSA provenance" in output
-
+        verified = "PASSED: SLSA verification passed" in output
         log_path = os.path.join(global_config.build_log_path, f"{os.path.basename(source_path)}.slsa_verifier.log")
         with open(log_path, mode="a", encoding="utf-8") as log_file:
             logger.info("Storing SLSA verifier output for %s to %s", asset_name, log_path)
@@ -385,9 +384,7 @@ def determine_provenance_slsa_level(
     predicate = provenance_payload.statement.get("predicate")
     build_type = None
     if predicate:
-        build_type = json_extract(predicate, ["buildDefinition", "buildType"], str)
-        if not build_type:
-            build_type = json_extract(predicate, ["buildType"], str)
+        build_type = ProvenancePredicate.get_build_type(provenance_payload.statement)
 
     if build_type == "https://github.com/slsa-framework/slsa-github-generator/generic@v1" and verified_l3:
         # 3. Provenance is created by the SLSA GitHub generator and verified.
