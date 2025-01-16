@@ -4,6 +4,7 @@
 """This module implements SQLAlchemy type for converting date format to RFC3339 string representation."""
 
 import datetime
+import json
 from typing import Any
 
 from sqlalchemy import JSON, String, TypeDecorator
@@ -105,16 +106,16 @@ class ProvenancePayload(TypeDecorator):  # pylint: disable=W0223
     """SQLAlchemy column type to serialize InTotoProvenance."""
 
     # It is stored in the database as a json value.
-    impl = JSON
+    impl = String
 
     # To prevent Sphinx from rendering the docstrings for `cache_ok`, make this docstring private.
     #: :meta private:
     cache_ok = True
 
-    def process_bind_param(self, value: None | InTotoPayload, dialect: Any) -> None | dict:
+    def process_bind_param(self, value: None | InTotoPayload, dialect: Any) -> str | None:
         """Process when storing an InTotoPayload object to the SQLite db.
 
-        value: None | InTotoPayload
+        value: InTotoPayload | None
             The value being stored.
         """
         if value is None:
@@ -124,27 +125,33 @@ class ProvenancePayload(TypeDecorator):  # pylint: disable=W0223
             raise TypeError("ProvenancePayload type expects an InTotoPayload.")
 
         payload_type = value.__class__.__name__
-        return {"payload_type": payload_type, "payload": value.statement}
+        payload_dict = {"payload_type": payload_type, "payload": value.statement}
+        return json.dumps(payload_dict)
 
-    def process_result_value(self, value: None | dict, dialect: Any) -> None | InTotoPayload:
+    def process_result_value(self, value: str | None, dialect: Any) -> InTotoPayload | None:
         """Process when loading an InTotoPayload object from the SQLite db.
 
-        value: None | dict
+        value: str | None
             The value being loaded.
         """
         if value is None:
             return None
 
-        if not isinstance(value, dict):
-            raise TypeError("ProvenancePayload type expects a dict.")
+        try:
+            payload_dict = json.loads(value)
+        except ValueError as error:
+            raise TypeError(f"Error parsing str as JSON: {error}") from error
 
-        if "payload_type" not in value or "payload" not in value:
+        if not isinstance(payload_dict, dict):
+            raise TypeError("Parsed data is not a dict.")
+
+        if "payload_type" not in payload_dict or "payload" not in payload_dict:
             raise TypeError("Missing keys in dict for ProvenancePayload type.")
 
-        payload = value["payload"]
-        if value["payload_type"] == "InTotoV01Payload":
+        payload = payload_dict["payload"]
+        if payload["payload_type"] == "InTotoV01Payload":
             return InTotoV01Payload(statement=payload)
-        if value["payload_type"] == "InTotoV1Payload":
+        if payload["payload_type"] == "InTotoV1Payload":
             return InTotoV1Payload(statement=payload)
 
-        return validate_intoto_payload(value)
+        return validate_intoto_payload(payload)

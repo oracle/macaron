@@ -498,25 +498,24 @@ class Analyzer:
                     if verified and all(verified):
                         provenance_l3_verified = True
 
-        slsa_version = None
         if provenance_payload:
             analyze_ctx.dynamic_data["is_inferred_prov"] = False
             slsa_version = extract_predicate_version(provenance_payload)
 
-        slsa_level = determine_provenance_slsa_level(
-            analyze_ctx, provenance_payload, provenance_is_verified, provenance_l3_verified
-        )
+            slsa_level = determine_provenance_slsa_level(
+                analyze_ctx, provenance_payload, provenance_is_verified, provenance_l3_verified
+            )
 
-        analyze_ctx.dynamic_data["provenance_info"] = table_definitions.Provenance(
-            component=component,
-            repository_url=provenance_repo_url,
-            commit_sha=provenance_commit_digest,
-            verified=provenance_is_verified,
-            provenance_payload=provenance_payload,
-            slsa_level=slsa_level,
-            slsa_version=slsa_version,
-            # TODO Add release tag, release digest.
-        )
+            analyze_ctx.dynamic_data["provenance_info"] = table_definitions.Provenance(
+                component=component,
+                repository_url=provenance_repo_url,
+                commit_sha=provenance_commit_digest,
+                verified=provenance_is_verified,
+                provenance_payload=provenance_payload,
+                slsa_level=slsa_level,
+                slsa_version=slsa_version,
+                # TODO Add release tag, release digest.
+            )
 
         analyze_ctx.dynamic_data["validate_malware_switch"] = validate_malware_switch
 
