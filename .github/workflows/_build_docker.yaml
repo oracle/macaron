@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This is a reuseable workflow to build and test the Docker image. Note that this workflow does not
@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   build-docker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       packages: read
     steps:
