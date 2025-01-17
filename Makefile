@@ -160,6 +160,7 @@ souffle:
 	      sudo apt update; \
 	      sudo wget http://archive.ubuntu.com/ubuntu/pool/main/libf/libffi/libffi7_3.3-4_amd64.deb; \
 		  sudo dpkg -i libffi7_3.3-4_amd64.deb; \
+	      rm libffi7_3.3-4_amd64.deb; \
 	      sudo apt install souffle;; \
 	    "Darwin") \
 	      if command -v brew; then \
