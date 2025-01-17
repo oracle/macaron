@@ -185,77 +185,73 @@ class PyPIRegistry(PackageRegistry):
 
         return res_obj
 
-    def fetch_sourcecode(self, src_url: str) -> dict[str, str] | None:
-        """Get the source code of the package.
+    def download_package_sourcecode(self, url: str) -> dict:
+        """Download the package source code from pypi registry.
+
+        Parameters
+        ----------
+        url: str
+            The package source code url.
 
         Returns
         -------
-        str | None
-            The source code.
+        dict[str: bytes]
+            A dictionary of filenames and file contents.
         """
+        sourcecode: dict = {}
+
         # Get name of file.
-        _, _, file_name = src_url.rpartition("/")
+        _, _, file_name = url.rpartition("/")
 
-        # Create a temporary directory to store the downloaded source.
+        # temporary directory to unzip and read all source files
         with tempfile.TemporaryDirectory() as temp_dir:
-            try:
-                response = requests.get(src_url, stream=True, timeout=40)
-                response.raise_for_status()
-            except requests.exceptions.HTTPError as http_err:
-                logger.debug("HTTP error occurred: %s", http_err)
-                return None
-
-            if response.status_code != 200:
-                return None
+            response = send_get_http_raw(url, stream=True)
+            if response is None:
+                error_msg = f"Unable to find package source code using URL: {url}"
+                logger.debug(error_msg)
+                raise InvalidHTTPResponseError(error_msg)
 
             source_file = os.path.join(temp_dir, file_name)
             with open(source_file, "wb") as file:
                 try:
                     for chunk in response.iter_content():
                         file.write(chunk)
-                except RequestException as error:
-                    # Something went wrong with the request, abort.
-                    logger.debug("Error while streaming source file: %s", error)
-                    response.close()
-                    return None
-            logger.debug("Begin fetching the source code from PyPI")
-            py_files_content: dict[str, str] = {}
+                except RequestException as stream_error:
+                    error_msg = f"Error while streaming source file: {stream_error}"
+                    logger.debug(error_msg)
+                    raise InvalidHTTPResponseError from RequestException
+
             if tarfile.is_tarfile(source_file):
                 try:
-                    with tarfile.open(source_file, "r:gz") as tar:
-                        for member in tar.getmembers():
-                            if member.isfile() and member.name.endswith(".py") and member.size > 0:
-                                file_obj = tar.extractfile(member)
-                                if file_obj:
-                                    content = file_obj.read().decode("utf-8")
-                                    py_files_content[member.name] = content
-                except tarfile.ReadError as exception:
-                    logger.debug("Error reading tar file: %s", exception)
-                    return None
+                    with tarfile.open(source_file, "r:gz") as sourcecode_tar:
+                        for member in sourcecode_tar.getmembers():
+                            if member.isfile() and (file_obj := sourcecode_tar.extractfile(member)):
+                                sourcecode[member.name] = file_obj.read()
+
+                except tarfile.ReadError as read_error:
+                    error_msg = f"Error reading source code tar file: {read_error}"
+                    logger.debug(error_msg)
+                    raise InvalidHTTPResponseError(error_msg) from read_error
+
             elif zipfile.is_zipfile(source_file):
                 try:
-                    with zipfile.ZipFile(source_file, "r") as zip_ref:
-                        for info in zip_ref.infolist():
-                            if info.filename.endswith(".py") and not info.is_dir() and info.file_size > 0:
-                                with zip_ref.open(info) as file_obj:
-                                    content = file_obj.read().decode("utf-8")
-                                    py_files_content[info.filename] = content
-                except zipfile.BadZipFile as bad_zip_exception:
-                    logger.debug("Error reading zip file: %s", bad_zip_exception)
-                    return None
-                except zipfile.LargeZipFile as large_zip_exception:
-                    logger.debug("Zip file too large to read: %s", large_zip_exception)
-                    return None
-                # except KeyError as zip_key_exception:
-                #     logger.debug(
-                #         "Error finding target '%s' in zip file '%s': %s", archive_target, source_file, zip_key_exception
-                #     )
-                #     return None
-            else:
-                logger.debug("Unable to extract file: %s", file_name)
+                    with zipfile.ZipFile(source_file, "r") as sourcecode_zipfile:
+                        for info in sourcecode_zipfile.infolist():
+                            if not info.is_dir():
+                                with sourcecode_zipfile.open(info) as file_obj:
+                                    sourcecode[info.filename] = file_obj.read()
 
-            logger.debug("Successfully fetch the source code from PyPI")
-            return py_files_content
+                except (zipfile.BadZipFile, zipfile.LargeZipFile) as zipfile_error:
+                    error_msg = f"Error reading source code zip file: {zipfile_error}"
+                    logger.debug(error_msg)
+                    raise InvalidHTTPResponseError(error_msg) from zipfile_error
+
+            else:
+                error_msg = f"Unable to extract source code from file {file_name}"
+                logger.debug(error_msg)
+                raise InvalidHTTPResponseError(error_msg)
+
+            return sourcecode
 
     def get_package_page(self, package_name: str) -> str | None:
         """Implement custom API to get package main page.
@@ -374,6 +370,9 @@ class PyPIPackageJsonAsset:
 
     #: The asset content.
     package_json: dict
+
+    #: The source code of the package hosted on PyPI
+    package_sourcecode: dict
 
     #: The size of the asset (in bytes). This attribute is added to match the AssetLocator
     #: protocol and is not used because pypi API registry does not provide it.
@@ -504,16 +503,19 @@ class PyPIPackageJsonAsset:
             return upload_time
         return None
 
-    def get_sourcecode(self) -> dict[str, str] | None:
-        """Get source code of the package.
+    def download_sourcecode(self) -> bool:
+        """Get the source code of the package and store it in the package_sourcecode attribute.
 
         Returns
         -------
-        dict[str, str] | None
-            The source code of each script in the package
+        bool
+            ``True`` if the source code is downloaded successfully; ``False`` if not.
         """
-        url: str | None = self.get_sourcecode_url()
+        url = self.get_sourcecode_url()
         if url:
-            source_code: dict[str, str] | None = self.pypi_registry.fetch_sourcecode(url)
-            return source_code
-        return None
+            try:
+                self.package_sourcecode = self.pypi_registry.download_package_sourcecode(url)
+                return True
+            except InvalidHTTPResponseError as error:
+                logger.debug(error)
+        return False
