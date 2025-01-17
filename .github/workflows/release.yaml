@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # We run checks on pushing to the specified branches.
@@ -13,7 +13,7 @@ on:
 permissions:
   contents: read
 env:
-  ARTIFACT_NAME: artifact-ubuntu-latest-python-3.11
+  ARTIFACT_NAME: artifact-ubuntu-22.04-python-3.11
   # This is the username and email for the user who commits and pushes the release
   # commit. In an organisation that should be a dedicated devops account.
   USER_NAME: behnazh-w
@@ -33,7 +33,7 @@ jobs:
   bump:
     needs: check
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
@@ -108,7 +108,7 @@ jobs:
       release-url: ${{ steps.release-info.outputs.release-url }}
       image-name: ${{ steps.push-docker.outputs.image-name }}
       image-digest: ${{ steps.push-docker.outputs.image-digest }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write # To publish release notes.
       packages: write # To push the Docker image.
@@ -299,7 +299,7 @@ jobs:
   # publish_provenance:
   #   needs: [release, provenance]
   #   name: Publish provenance
-  #   runs-on: ubuntu-latest
+  #   runs-on: ubuntu-22.04
   #   permissions:
   #     contents: write # To publish release notes.
   #   steps:
@@ -331,7 +331,7 @@ jobs:
     with:
       # TODO: use ${{ env.ARTIFACT_NAME }} when this issue is addressed:
       # https://github.com/actions/runner/issues/2394.
-      artifact-name: artifact-ubuntu-latest-python-3.11
+      artifact-name: artifact-ubuntu-22.04-python-3.11
       artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
 
   # Send out release notifications after the Release was published on GitHub.

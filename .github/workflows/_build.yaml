@@ -9,7 +9,7 @@
 #
 # Even though we run the build in a matrix to check against different platforms, due to a known
 # limitation of reusable workflows that do not support setting strategy property from the caller
-# workflow, we only generate artifacts for ubuntu-latest and Python 3.11, which can be used to
+# workflow, we only generate artifacts for ubuntu-22.04 and Python 3.11, which can be used to
 # create a release. For details see:
 #
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows#limitations
@@ -148,4 +148,4 @@ jobs:
       artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
       # TODO: use ${{ env.ARTIFACT_OS }} and ${{ env.ARTIFACT_PYTHON }}
       # when this issue is addressed: https://github.com/actions/runner/issues/2394.
-      artifact-name: artifact-ubuntu-latest-python-3.11
+      artifact-name: artifact-ubuntu-22.04-python-3.11

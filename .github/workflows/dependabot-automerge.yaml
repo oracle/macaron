@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # Automatically merge Dependabot PRs upon approval by leaving
@@ -15,7 +15,7 @@ permissions:
 jobs:
   comment:
     if: ${{ github.event.review.state == 'approved' && github.event.pull_request.user.login == 'dependabot[bot]' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - name: Merge Dependabot PR
       run: gh pr comment --body "@dependabot squash and merge" "$PR_URL"
