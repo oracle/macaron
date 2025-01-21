@@ -145,6 +145,8 @@ else
 endif
 # If Souffle cannot be installed, we advise the user to install it manually
 # and return status code 0, which is not considered a failure.
+# Souffle depends upon the libffiX library, where X is the current version it requires. Depending on the version of Ubuntu being used, the exact library
+# may not be present. In this script, we manually download and install version 7 on Ubuntu 24.04.
 .PHONY: souffle
 souffle:
 	if ! command -v souffle; then \
