@@ -155,7 +155,7 @@ souffle:
 	    "Fedora Linux") \
 	      sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.4/x86_64-fedora-34-souffle-2.4-Linux.rpm;; \
 	    "Ubuntu") \
-	      wget https://github.com/quentin/souffle/actions/runs/12889334318/artifacts/2462173784; \
+	      curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -L -o x86_64-ubuntu-2404-souffle-2.5-Linux.deb.zip "https://api.github.com/repos/quentin/souffle/actions/artifacts/2462173784/zip"; \
 		  unzip -o x86_64-ubuntu-2404-souffle-2.5-Linux.deb.zip; \
 		  sudo dpkg -i x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
 	      sudo rm x86_64-ubuntu-2404-souffle-2.5-Linux.d*;; \
