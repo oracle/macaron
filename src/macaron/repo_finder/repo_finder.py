@@ -116,6 +116,8 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
     found_repo, outcome = DepsDevRepoFinder().find_repo(latest_version_purl)
     if not found_repo:
         logger.debug("Could not find repo from latest version of PURL: %s", latest_version_purl)
+        return "", RepoFinderOutcome.LATEST_VERSION_INVALID
+
     return found_repo, outcome
 
 
