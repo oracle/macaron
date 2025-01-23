@@ -288,7 +288,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                             has_repository=ctx.component.repository is not None,
                             pypi_registry=pypi_registry,
                             package_json={},
-                            package_sourcecode={}
+                            package_sourcecode={},
+                            package_sourcecode_path=""
                         )
 
                     pypi_registry_info.metadata.append(pypi_package_json)
@@ -318,6 +319,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                                     # heuristics determined it benign, so lower the confidence
                                     confidence = Confidence.LOW
                                 result_type = CheckResultType.FAILED
+
+                            pypi_package_json.cleanup_sourcecode()
 
                         result_tables.append(
                             MaliciousMetadataFacts(
