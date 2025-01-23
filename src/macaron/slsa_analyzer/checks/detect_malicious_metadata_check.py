@@ -266,7 +266,11 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
                     # Create an AssetLocator object for the PyPI package JSON object.
                     pypi_package_json = PyPIPackageJsonAsset(
-                        component=ctx.component, pypi_registry=pypi_registry, package_json={}, package_sourcecode={}
+                        component=ctx.component,
+                        pypi_registry=pypi_registry,
+                        package_json={},
+                        package_sourcecode={},
+                        package_sourcecode_path="",
                     )
 
                     pypi_registry_info.metadata.append(pypi_package_json)
@@ -295,6 +299,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                                     # heuristics determined it benign, so lower the confidence
                                     confidence = Confidence.LOW
                                 result_type = CheckResultType.FAILED
+
+                            pypi_package_json.cleanup_sourcecode()
 
                         result_tables.append(
                             MaliciousMetadataFacts(
