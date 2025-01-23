@@ -275,7 +275,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                         component=ctx.component,
                         pypi_registry=pypi_registry,
                         package_json={},
-                        package_sourcecode={},
                         package_sourcecode_path="",
                     )
 
