@@ -86,7 +86,7 @@ docs = [
     "sphinx-togglebutton >=0.3.2,<1.0.0",
 ]
 hooks = [
-    "pre-commit >=3.0.0,<3.8.0",
+    "pre-commit >=3.0.0,<4.2.0",
 ]
 # Note that the `custom_exit_code` and `env` plugins may currently be unmaintained.
 test = [
