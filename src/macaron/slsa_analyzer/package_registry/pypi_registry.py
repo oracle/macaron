@@ -267,7 +267,7 @@ class PyPIRegistry(PackageRegistry):
                     raise InvalidHTTPResponseError(error_msg) from read_error
 
                 extracted_dir = os.listdir(temp_dir)
-                if len(extracted_dir) == 1 and re.sub(".tar.gz$", "", file_name) == extracted_dir[0]:
+                if len(extracted_dir) == 1 and package_name == extracted_dir[0]:
                     # structure used package name and version as top-level directory
                     temp_dir = os.path.join(temp_dir, extracted_dir[0])
 
