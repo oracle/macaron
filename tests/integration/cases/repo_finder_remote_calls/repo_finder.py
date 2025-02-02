@@ -13,7 +13,7 @@ from macaron.config.defaults import defaults
 from macaron.repo_finder import repo_validator
 from macaron.repo_finder.repo_finder import find_repo
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
-from macaron.repo_finder.repo_finder_enums import RepoFinderOutcome
+from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
 from macaron.slsa_analyzer.git_url import clean_url
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -45,32 +45,32 @@ def test_repo_finder() -> int:
 
     # Test Java package with SCM metadata in artifact POM.
     match, outcome = find_repo(PackageURL.from_string("pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"))
-    if not match or outcome != RepoFinderOutcome.FOUND:
+    if not match or outcome != RepoFinderInfo.FOUND:
         return os.EX_UNAVAILABLE
 
     # Test Java package with SCM metadata in artifact's parent POM.
     match, outcome = find_repo(PackageURL.from_string("pkg:maven/commons-cli/commons-cli@1.5.0"))
-    if not match or outcome != RepoFinderOutcome.FOUND:
+    if not match or outcome != RepoFinderInfo.FOUND:
         return os.EX_UNAVAILABLE
 
     # Test deps.dev API for a Python package.
     match, outcome = find_repo(PackageURL.from_string("pkg:pypi/packageurl-python@0.11.1"))
-    if not match or outcome != RepoFinderOutcome.FOUND:
+    if not match or outcome != RepoFinderInfo.FOUND:
         return os.EX_UNAVAILABLE
 
     # Test deps.dev API for a Nuget package.
     match, outcome = find_repo(PackageURL.from_string("pkg:nuget/azure.core"))
-    if not match or outcome != RepoFinderOutcome.FOUND:
+    if not match or outcome != RepoFinderInfo.FOUND:
         return os.EX_UNAVAILABLE
 
     # Test deps.dev API for an NPM package.
     match, outcome = find_repo(PackageURL.from_string("pkg:npm/@colors/colors"))
-    if not match or outcome != RepoFinderOutcome.FOUND:
+    if not match or outcome != RepoFinderInfo.FOUND:
         return os.EX_UNAVAILABLE
 
     # Test deps.dev API for Cargo package.
     match, outcome = find_repo(PackageURL.from_string("pkg:cargo/rand_core"))
-    if not match or outcome != RepoFinderOutcome.FOUND:
+    if not match or outcome != RepoFinderInfo.FOUND:
         return os.EX_UNAVAILABLE
 
     # Test redirecting URL from Apache commons-io package.
@@ -80,18 +80,20 @@ def test_repo_finder() -> int:
 
     # Test Java package whose SCM metadata only points to the repo in later versions than is provided here.
     purl = PackageURL.from_string("pkg:maven/io.vertx/vertx-auth-common@3.8.0")
-    repo, _ = find_repo(purl)
-    if repo == "https://github.com/eclipse-vertx/vertx-auth":
+    repo, outcome = find_repo(purl)
+    if outcome != RepoFinderInfo.FOUND_FROM_PARENT or repo == "https://github.com/eclipse-vertx/vertx-auth":
         return os.EX_UNAVAILABLE
-    latest_purl, _ = DepsDevRepoFinder().get_latest_version(purl)
+    latest_purl, outcome = DepsDevRepoFinder().get_latest_version(purl)
     assert latest_purl
-    repo, _ = find_repo(latest_purl)
-    if repo != "https://github.com/eclipse-vertx/vertx-auth":
+    if outcome != RepoFinderInfo.FOUND_FROM_LATEST:
+        return os.EX_UNAVAILABLE
+    repo, outcome = find_repo(latest_purl)
+    if outcome != RepoFinderInfo.FOUND_FROM_PARENT or repo != "https://github.com/eclipse-vertx/vertx-auth":
         return os.EX_UNAVAILABLE
 
     # Test Java package that has no version.
     match, outcome = find_repo(PackageURL.from_string("pkg:maven/io.vertx/vertx-auth-common"))
-    if not match or outcome != RepoFinderOutcome.FOUND:
+    if not match or outcome != RepoFinderInfo.FOUND:
         return os.EX_UNAVAILABLE
 
     return os.EX_OK

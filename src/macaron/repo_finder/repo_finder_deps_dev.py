@@ -158,7 +158,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
     def _create_urls(self, purl: PackageURL) -> tuple[list[str], RepoFinderInfo]:
         """
-        Create the urls to search for the metadata relating to the passed artifact.
+        Create the urls to search for the metadata relating to the passed artifact, and report on that process.
 
         If a version is not specified, remote API calls will be used to try and find one.
 
@@ -169,8 +169,8 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         Returns
         -------
-        list[str]
-            The list of created URLs.
+        tuple[list[str], RepoFinderInfo]
+            A tuple of: the list of created URLs, and the information on the Repo Finder outcome.
         """
         outcome = None
         if not purl.version:

@@ -179,7 +179,7 @@ class JavaRepoFinder(BaseRepoFinder):
         tuple[str, RepoFinderOutcome] :
             The retrieved file data or an empty string, and the outcome to report.
         """
-        response = send_get_http_raw(url, always_return_response=True)
+        response = send_get_http_raw(url, check_response_fails=True)
 
         if not response:
             return "", RepoFinderInfo.HTTP_INVALID

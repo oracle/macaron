@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module includes utilities functions for Macaron."""
@@ -130,7 +130,7 @@ def send_get_http_raw(
     headers: dict | None = None,
     timeout: int | None = None,
     allow_redirects: bool = True,
-    always_return_response: bool = False,
+    check_response_fails: bool = True,
 ) -> Response | None:
     """Send the GET HTTP request with the given url and headers.
 
@@ -146,13 +146,16 @@ def send_get_http_raw(
         The request timeout (optional).
     allow_redirects: bool
         Whether to allow redirects. Default: True.
+    check_response_fails: bool
+        When True, check if the response fails. Otherwise, return the response.
 
     Returns
     -------
     Response | None
         If a Response object is returned and ``allow_redirects`` is ``True`` (the default) it will have a status code of
         200 (OK). If ``allow_redirects`` is ``False`` the response can instead have a status code of 302. Otherwise, the
-        request has failed and ``None`` will be returned.
+        request has failed and ``None`` will be returned. If ``check_response_fails`` is False, the response will be
+        returned regardless of its status code.
     """
     logger.debug("GET - %s", url)
     if not timeout:
@@ -183,7 +186,7 @@ def send_get_http_raw(
         if response.status_code == 403:
             check_rate_limit(response)
         else:
-            return None if not always_return_response else response
+            return None if not check_response_fails else response
         retry_counter = retry_counter - 1
         response = requests.get(
             url=url,
