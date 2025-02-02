@@ -5,19 +5,19 @@
 from enum import Enum
 
 
-class RepoFinderOutcome(Enum):
-    """An Enum of all outcomes of the Repo Finder being run for a software component."""
+class RepoFinderInfo(Enum):
+    """An Enum providing information on the outcomes of the Repo Finder being run for a software component."""
 
     #: Reported if the URL that serves requested Maven packages is not provided by the user in Macaron's config.
-    # E.g. Maven central.
+    #: E.g. Maven central.
     NO_MAVEN_HOST_PROVIDED = "No maven host provided"
 
     #: Reported if the list of period separated tags that point to the SCM within the POM is not provided by the user in
-    # Macaron's config. E.g. scm.url, scm.connection
+    #: Macaron's config. E.g. scm.url, scm.connection
     NO_POM_TAGS_PROVIDED = "No POM tags provided"
 
-    #: Reported if the user does not provide a version for the Repo Finder via the command line, or allow the version to
-    # be automatically discovered.
+    #: Reported if the user does not provide a version for the Repo Finder via the command line, and does not allow the
+    #: version to be automatically discovered.
     NO_VERSION_PROVIDED = "No version provided"
 
     #: Reported if the user provides an unsupported type in the PURL command line argument.
@@ -30,7 +30,7 @@ class RepoFinderOutcome(Enum):
     SCM_NO_URLS = "SCM no URLs"
 
     #: Reported if the POM file contains no VALID URLs within the SCM found at the provided tag locations. Validity is
-    # defined as any URL that resolves to a recognised version control system.
+    #: defined as any URL that resolves to a recognised version control system.
     SCM_NO_VALID_URLS = "SCM no valid URLs"
 
     #: Reported if the URL of the repository could not be reached.
@@ -76,41 +76,41 @@ class RepoFinderOutcome(Enum):
     NOT_USED = "Not used"
 
 
-class CommitFinderOutcome(Enum):
-    """An Enum of all outcomes of the Commit Finder being run for a software component."""
+class CommitFinderInfo(Enum):
+    """An Enum providing information on the outcomes of the Commit Finder being run for a software component."""
 
-    #: Reported if the user does not provide a version for the Repo Finder via the command line, or allow the version to
-    # be automatically discovered.
+    #: Reported if the user does not provide a version for the Repo Finder via the command line, and does not allow the
+    #: version to be automatically discovered.
     NO_VERSION_PROVIDED = "No version provided"
 
     #: Reported if the user provides an unsupported type in the PURL command line argument.
     UNSUPPORTED_PURL_TYPE = "Unsupported PURL type"
 
     #: Reported if the user provided a repository type PURL with the tag or commit in the version, but neither were
-    # valid.
+    #: valid.
     REPO_PURL_FAILURE = "Repository PURL failure"
 
-    #: Reported if the repository has no tags.
-    NO_TAGS = "No tags"
+    #: Reported if the repository has no Git tags.
+    NO_TAGS = "No Git tags"
 
-    #: Reported if the repository has no tags with associated commits.
-    NO_TAGS_WITH_COMMITS = "No tags with commits"
+    #: Reported if the repository has no Git tags with associated commits.
+    NO_TAGS_WITH_COMMITS = "No Git tags with commits"
 
     #: Reported if the tag selected from the repository fails to resolve to a commit despite having one associated with
     # it.
-    NO_TAG_COMMIT = "No tag commit"
+    NO_TAG_COMMIT = "No valid commit found for Git tag"
 
     #: Reported if the version part of the user provided PURL is invalid.
-    INVALID_PURL = "No valid parts"
+    INVALID_VERSION = "No valid version parts in PURL"
 
     #: Reported if the Regex pattern to be created from parts of the user provided PURL fails to compile.
     REGEX_COMPILE_FAILURE = "Regex compile failure"
 
-    #: Reported if no tags from the repository could be matched to the sought version.
-    NO_TAGS_MATCHED = "No tags matched"
+    #: Reported if no tags from the Git repository could be matched to the sought version.
+    NO_TAGS_MATCHED = "No Git tags matched"
 
     #: Reported if a match was found.
     MATCHED = "Matched"
 
-    # Default state. Reported if the commit finder was not called. E.g. Because the Repo Finder failed.
+    #: Default state. Reported if the commit finder was not called. E.g. Because the Repo Finder failed.
     NOT_USED = "Not used"

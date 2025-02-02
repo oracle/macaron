@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the commit finder."""
@@ -17,7 +17,7 @@ from pydriller.git import Git
 
 from macaron.repo_finder import commit_finder
 from macaron.repo_finder.commit_finder import AbstractPurlType
-from macaron.repo_finder.repo_finder_enums import CommitFinderOutcome
+from macaron.repo_finder.repo_finder_enums import CommitFinderInfo
 from tests.slsa_analyzer.mock_git_utils import commit_files, initiate_repo
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ def test_get_commit_from_version(version: str, name: str, tag_list_index: int, t
     matched_tags, outcome = commit_finder.match_tags(tag_list, name, version)
     assert matched_tags
     assert matched_tags[0] == tag_list[tag_list_index]
-    assert outcome == CommitFinderOutcome.MATCHED
+    assert outcome == CommitFinderInfo.MATCHED
 
 
 @pytest.mark.parametrize(
@@ -152,18 +152,16 @@ def mocked_repo_expanded_(mocked_repo: Git, mocked_repo_commit: Any, mocked_repo
     ("purl_string", "expected_outcome"),
     [
         # No version in PURL.
-        ("pkg:maven/apache/maven", CommitFinderOutcome.NO_VERSION_PROVIDED),
+        ("pkg:maven/apache/maven", CommitFinderInfo.NO_VERSION_PROVIDED),
         # Unsupported PURL type.
-        ("pkg:gem/ruby-artifact@1", CommitFinderOutcome.UNSUPPORTED_PURL_TYPE),
+        ("pkg:gem/ruby-artifact@1", CommitFinderInfo.UNSUPPORTED_PURL_TYPE),
         # Hash not present in repository.
-        ("pkg:github/apache/maven@ab4ce3e", CommitFinderOutcome.REPO_PURL_FAILURE),
+        ("pkg:github/apache/maven@ab4ce3e", CommitFinderInfo.REPO_PURL_FAILURE),
         # Valid PURL but repository has no tags yet.
-        ("pkg:maven/apache/maven@1.0", CommitFinderOutcome.NO_TAGS),
+        ("pkg:maven/apache/maven@1.0", CommitFinderInfo.NO_TAGS),
     ],
 )
-def test_commit_finder_tagless_failure(
-    mocked_repo: Git, purl_string: str, expected_outcome: CommitFinderOutcome
-) -> None:
+def test_commit_finder_tagless_failure(mocked_repo: Git, purl_string: str, expected_outcome: CommitFinderInfo) -> None:
     """Test commit finder using mocked repository with no tags."""
     match, outcome = commit_finder.find_commit(mocked_repo, PackageURL.from_string(purl_string))
     assert not match
@@ -174,15 +172,15 @@ def test_commit_finder_tagless_failure(
     ("purl_string", "expected_outcome"),
     [
         # Invalid PURL.
-        ("pkg:maven/[]@()", CommitFinderOutcome.INVALID_PURL),
+        ("pkg:maven/[]@()", CommitFinderInfo.INVALID_VERSION),
         # Version with a suffix and no matching tag.
-        ("pkg:maven/apache/maven@1-JRE", CommitFinderOutcome.NO_TAGS_MATCHED),
+        ("pkg:maven/apache/maven@1-JRE", CommitFinderInfo.NO_TAGS_MATCHED),
         # Version with only one digit and no matching tag.
-        ("pkg:maven/apache/maven@1", CommitFinderOutcome.NO_TAGS_MATCHED),
+        ("pkg:maven/apache/maven@1", CommitFinderInfo.NO_TAGS_MATCHED),
     ],
 )
 def test_commit_finder_tag_failure(
-    mocked_repo_expanded: Git, purl_string: str, expected_outcome: CommitFinderOutcome
+    mocked_repo_expanded: Git, purl_string: str, expected_outcome: CommitFinderInfo
 ) -> None:
     """Test commit finder using mocked repository with tags."""
     match, outcome = commit_finder.find_commit(mocked_repo_expanded, PackageURL.from_string(purl_string))
@@ -206,7 +204,7 @@ def test_commit_finder_success_commit(
     """Test Commit Finder on mocked repository that should match valid PURLs."""
     match, outcome = commit_finder.find_commit(mocked_repo_expanded, PackageURL.from_string(purl_string))
     assert match == mocked_repo_commit.hexsha
-    assert outcome == CommitFinderOutcome.MATCHED
+    assert outcome == CommitFinderInfo.MATCHED
 
 
 @pytest.mark.parametrize(
@@ -228,7 +226,7 @@ def test_commit_finder_success_empty_commit(
     """Test Commit Finder on mocked repository that should match value PURLs."""
     match, outcome = commit_finder.find_commit(mocked_repo_expanded, PackageURL.from_string(purl_string))
     assert match == mocked_repo_empty_commit.hexsha
-    assert outcome == CommitFinderOutcome.MATCHED
+    assert outcome == CommitFinderInfo.MATCHED
 
 
 def test_commit_finder_repo_purl_success(mocked_repo_expanded: Git, mocked_repo_commit: Any) -> None:
@@ -237,7 +235,7 @@ def test_commit_finder_repo_purl_success(mocked_repo_expanded: Git, mocked_repo_
         mocked_repo_expanded, PackageURL.from_string(f"pkg:github/apache/maven@{mocked_repo_commit.hexsha}")
     )
     assert match == mocked_repo_commit.hexsha
-    assert outcome == CommitFinderOutcome.MATCHED
+    assert outcome == CommitFinderInfo.MATCHED
 
 
 def test_commit_finder_tag_no_commit(mocked_repo: Git) -> None:
@@ -245,7 +243,7 @@ def test_commit_finder_tag_no_commit(mocked_repo: Git) -> None:
     mocked_repo.repo.create_tag("TEST", ref=mocked_repo.repo.heads.master.commit.tree)
     match, outcome = commit_finder.find_commit(mocked_repo, PackageURL.from_string("pkg:maven/apache/maven@TEST"))
     assert not match
-    assert outcome == CommitFinderOutcome.NO_TAGS_WITH_COMMITS
+    assert outcome == CommitFinderInfo.NO_TAGS_WITH_COMMITS
 
 
 @given(text())

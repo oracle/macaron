@@ -13,7 +13,7 @@ from macaron.config.defaults import defaults
 from macaron.parsers.pomparser import parse_pom_string
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
-from macaron.repo_finder.repo_finder_enums import RepoFinderOutcome
+from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 from macaron.util import send_get_http_raw
 
@@ -27,7 +27,7 @@ class JavaRepoFinder(BaseRepoFinder):
         """Initialise the Java repository finder instance."""
         self.pom_element: Element | None = None
 
-    def find_repo(self, purl: PackageURL) -> tuple[str, RepoFinderOutcome]:
+    def find_repo(self, purl: PackageURL) -> tuple[str, RepoFinderInfo]:
         """
         Attempt to retrieve a repository URL that matches the passed artifact.
 
@@ -45,7 +45,7 @@ class JavaRepoFinder(BaseRepoFinder):
         tags = defaults.get_list("repofinder.java", "repo_pom_paths")
         if not tags:
             logger.debug("No POM tags found for URL discovery.")
-            return "", RepoFinderOutcome.NO_POM_TAGS_PROVIDED
+            return "", RepoFinderInfo.NO_POM_TAGS_PROVIDED
 
         group = purl.namespace or ""
         artifact = purl.name
@@ -54,7 +54,7 @@ class JavaRepoFinder(BaseRepoFinder):
         if not version:
             logger.debug("Version missing for maven artifact: %s:%s", group, artifact)
             # TODO add support for Java artifacts without a version
-            return "", RepoFinderOutcome.NO_VERSION_PROVIDED
+            return "", RepoFinderInfo.NO_VERSION_PROVIDED
 
         # Perform the following in a loop:
         # - Create URLs for the current artifact POM
@@ -64,7 +64,7 @@ class JavaRepoFinder(BaseRepoFinder):
         # - Repeat
         limit = defaults.getint("repofinder.java", "parent_limit", fallback=10)
         initial_limit = limit
-        last_outcome = RepoFinderOutcome.FOUND
+        last_outcome = RepoFinderInfo.FOUND
         check_parents = defaults.getboolean("repofinder.java", "find_parents")
 
         if not version:
@@ -84,11 +84,11 @@ class JavaRepoFinder(BaseRepoFinder):
             if not request_urls:
                 # Abort if no URLs were created.
                 logger.debug("Failed to create request URLs for %s:%s:%s", group, artifact, version)
-                return "", RepoFinderOutcome.NO_MAVEN_HOST_PROVIDED
+                return "", RepoFinderInfo.NO_MAVEN_HOST_PROVIDED
 
             # Try each POM URL in order, terminating early if a match is found.
             pom = ""
-            pom_outcome = RepoFinderOutcome.FOUND
+            pom_outcome = RepoFinderInfo.FOUND
             for request_url in request_urls:
                 pom, pom_outcome = self._retrieve_pom(request_url)
                 if pom != "":
@@ -107,12 +107,10 @@ class JavaRepoFinder(BaseRepoFinder):
                 url = find_valid_repository_url(urls)
                 if url:
                     logger.debug("Found valid url: %s", url)
-                    return url, (
-                        RepoFinderOutcome.FOUND if initial_limit == limit else RepoFinderOutcome.FOUND_FROM_PARENT
-                    )
+                    return url, (RepoFinderInfo.FOUND if initial_limit == limit else RepoFinderInfo.FOUND_FROM_PARENT)
 
                 # No valid URLs were found from this POM.
-                last_outcome = RepoFinderOutcome.SCM_NO_VALID_URLS
+                last_outcome = RepoFinderInfo.SCM_NO_VALID_URLS
             else:
                 last_outcome = read_outcome
 
@@ -167,7 +165,7 @@ class JavaRepoFinder(BaseRepoFinder):
             urls.append(pom_url)
         return urls
 
-    def _retrieve_pom(self, url: str) -> tuple[str, RepoFinderOutcome]:
+    def _retrieve_pom(self, url: str) -> tuple[str, RepoFinderInfo]:
         """
         Attempt to retrieve the file located at the passed URL.
 
@@ -184,20 +182,20 @@ class JavaRepoFinder(BaseRepoFinder):
         response = send_get_http_raw(url, always_return_response=True)
 
         if not response:
-            return "", RepoFinderOutcome.HTTP_INVALID
+            return "", RepoFinderInfo.HTTP_INVALID
 
         if response.status_code == 404:
-            return "", RepoFinderOutcome.HTTP_NOT_FOUND
+            return "", RepoFinderInfo.HTTP_NOT_FOUND
         if response.status_code == 403:
-            return "", RepoFinderOutcome.HTTP_FORBIDDEN
+            return "", RepoFinderInfo.HTTP_FORBIDDEN
         if response.status_code != 200:
             logger.debug("Failed to retrieve POM: HTTP %s", response.status_code)
-            return "", RepoFinderOutcome.HTTP_OTHER
+            return "", RepoFinderInfo.HTTP_OTHER
 
         logger.debug("Found artifact POM at: %s", url)
-        return response.text, RepoFinderOutcome.FOUND
+        return response.text, RepoFinderInfo.FOUND
 
-    def _read_pom(self, pom: str, tags: list[str]) -> tuple[list[str], RepoFinderOutcome]:
+    def _read_pom(self, pom: str, tags: list[str]) -> tuple[list[str], RepoFinderInfo]:
         """
         Parse the passed pom and extract the relevant tags.
 
@@ -214,12 +212,12 @@ class JavaRepoFinder(BaseRepoFinder):
         # Parse POM using defusedxml.
         pom_element = parse_pom_string(pom)
         if pom_element is None:
-            return [], RepoFinderOutcome.POM_READ_ERROR
+            return [], RepoFinderInfo.POM_READ_ERROR
         self.pom_element = pom_element
 
         # Attempt to extract SCM data and return URL.
         results = self._find_scm(pom_element, tags)
-        return results, RepoFinderOutcome.FOUND if results else RepoFinderOutcome.SCM_NO_URLS
+        return results, RepoFinderInfo.FOUND if results else RepoFinderInfo.SCM_NO_URLS
 
     def _find_scm(self, pom: Element, tags: list[str], resolve_properties: bool = True) -> list[str]:
         """

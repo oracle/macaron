@@ -11,7 +11,7 @@ from pytest_httpserver import HTTPServer
 
 from macaron.config.defaults import load_defaults
 from macaron.repo_finder import repo_finder
-from macaron.repo_finder.repo_finder_enums import RepoFinderOutcome
+from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
 
 
 @pytest.fixture(name="httpserver_java")
@@ -84,7 +84,7 @@ def test_pom_extraction_ordering(tmp_path: Path, test_config: str, expected: str
     found_repo, outcome = repo_finder.find_repo(PackageURL.from_string(f"pkg:maven/{group}/{artifact}@{version}"))
     assert found_repo
     assert found_repo == expected
-    assert outcome == RepoFinderOutcome.FOUND
+    assert outcome == RepoFinderInfo.FOUND
 
 
 @pytest.mark.parametrize(
@@ -96,7 +96,7 @@ def test_pom_extraction_ordering(tmp_path: Path, test_config: str, expected: str
             artifact_repositories =
                  
             """,
-            RepoFinderOutcome.NO_MAVEN_HOST_PROVIDED,
+            RepoFinderInfo.NO_MAVEN_HOST_PROVIDED,
         ),
         (
             """
@@ -104,11 +104,11 @@ def test_pom_extraction_ordering(tmp_path: Path, test_config: str, expected: str
             repo_pom_paths =
                  
             """,
-            RepoFinderOutcome.NO_POM_TAGS_PROVIDED,
+            RepoFinderInfo.NO_POM_TAGS_PROVIDED,
         ),
     ],
 )
-def test_repo_finder_java_invalid_config(tmp_path: Path, test_config: str, expected: RepoFinderOutcome) -> None:
+def test_repo_finder_java_invalid_config(tmp_path: Path, test_config: str, expected: RepoFinderInfo) -> None:
     """Test the Repo Finder when inputs are invalid: a non-breaking space."""
     test_config_path = os.path.join(tmp_path, "config.ini")
     with open(test_config_path, "w", encoding="utf-8") as test_config_file:
@@ -123,11 +123,11 @@ def test_repo_finder_java_invalid_config(tmp_path: Path, test_config: str, expec
 @pytest.mark.parametrize(
     ("purl_string", "expected"),
     [
-        ("pkg:maven/test/test", RepoFinderOutcome.NO_VERSION_PROVIDED),
-        ("pkg:test/test@test", RepoFinderOutcome.UNSUPPORTED_PACKAGE_TYPE),
+        ("pkg:maven/test/test", RepoFinderInfo.NO_VERSION_PROVIDED),
+        ("pkg:test/test@test", RepoFinderInfo.UNSUPPORTED_PACKAGE_TYPE),
     ],
 )
-def test_repo_finder_java_invalid_input(purl_string: str, expected: RepoFinderOutcome) -> None:
+def test_repo_finder_java_invalid_input(purl_string: str, expected: RepoFinderInfo) -> None:
     """Test the Repo Finder when invalid input is provided."""
     found_repo, outcome = repo_finder.find_repo(PackageURL.from_string(purl_string), False)
     assert not found_repo
@@ -142,7 +142,7 @@ def test_repo_finder_java_invalid_input(purl_string: str, expected: RepoFinderOu
             #####<project>
             </project
             """,
-            RepoFinderOutcome.POM_READ_ERROR,
+            RepoFinderInfo.POM_READ_ERROR,
         ),
         (
             """
@@ -151,7 +151,7 @@ def test_repo_finder_java_invalid_input(purl_string: str, expected: RepoFinderOu
                 </scm>
             </project>
             """,
-            RepoFinderOutcome.SCM_NO_URLS,
+            RepoFinderInfo.SCM_NO_URLS,
         ),
         (
             """
@@ -161,12 +161,12 @@ def test_repo_finder_java_invalid_input(purl_string: str, expected: RepoFinderOu
                 </scm>
             </project>
             """,
-            RepoFinderOutcome.SCM_NO_VALID_URLS,
+            RepoFinderInfo.SCM_NO_VALID_URLS,
         ),
     ],
 )
 def test_repo_finder_java_invalid_pom_or_scm(
-    httpserver_java: HTTPServer, test_pom: str, expected: RepoFinderOutcome
+    httpserver_java: HTTPServer, test_pom: str, expected: RepoFinderInfo
 ) -> None:
     """Test the Repo Finder when the POM or SCM metadata is invalid."""
     group = "oracle"
@@ -200,7 +200,7 @@ def test_repo_finder_java_success(httpserver_java: HTTPServer) -> None:
 
     found_repo, outcome = repo_finder.find_repo(PackageURL.from_string(f"pkg:maven/{group}/{artifact}@{version}"))
     assert found_repo
-    assert outcome == RepoFinderOutcome.FOUND
+    assert outcome == RepoFinderInfo.FOUND
 
 
 def test_repo_finder_java_success_via_parent(httpserver_java: HTTPServer) -> None:
@@ -235,4 +235,4 @@ def test_repo_finder_java_success_via_parent(httpserver_java: HTTPServer) -> Non
 
     found_repo, outcome = repo_finder.find_repo(PackageURL.from_string(f"pkg:maven/{group}/{artifact}@{version}"))
     assert found_repo
-    assert outcome == RepoFinderOutcome.FOUND_FROM_PARENT
+    assert outcome == RepoFinderInfo.FOUND_FROM_PARENT

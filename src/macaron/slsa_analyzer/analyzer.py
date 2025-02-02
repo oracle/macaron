@@ -44,7 +44,7 @@ from macaron.repo_finder.provenance_extractor import (
 )
 from macaron.repo_finder.provenance_finder import ProvenanceFinder, find_provenance_from_ci
 from macaron.repo_finder.repo_finder import prepare_repo
-from macaron.repo_finder.repo_finder_enums import CommitFinderOutcome, RepoFinderOutcome
+from macaron.repo_finder.repo_finder_enums import CommitFinderInfo, RepoFinderInfo
 from macaron.repo_finder.repo_utils import get_git_service
 from macaron.repo_verifier.repo_verifier import verify_repo
 from macaron.slsa_analyzer import git_url
@@ -379,7 +379,7 @@ class Analyzer:
 
         # Prepare the repo.
         git_obj = None
-        commit_finder_outcome = CommitFinderOutcome.NOT_USED
+        commit_finder_outcome = CommitFinderInfo.NOT_USED
         final_digest = analysis_target.digest
         if analysis_target.repo_path:
             git_obj, commit_finder_outcome, final_digest = prepare_repo(
@@ -626,7 +626,7 @@ class Analyzer:
         digest: str
 
         #: The outcome of the Repo Finder on this analysis target.
-        repo_finder_outcome: RepoFinderOutcome
+        repo_finder_outcome: RepoFinderInfo
 
     def add_component(
         self,
@@ -795,7 +795,7 @@ class Analyzer:
         repo_path_input: str = config.get_value("path")
         input_branch: str = config.get_value("branch")
         input_digest: str = config.get_value("digest")
-        repo_finder_outcome = RepoFinderOutcome.NOT_USED
+        repo_finder_outcome = RepoFinderInfo.NOT_USED
 
         match (parsed_purl, repo_path_input):
             case (None, ""):

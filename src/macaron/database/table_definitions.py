@@ -36,7 +36,7 @@ from macaron.artifact.maven import MavenSubjectPURLMatcher
 from macaron.database.database_manager import ORMBase
 from macaron.database.db_custom_types import RFC3339DateTime
 from macaron.errors import InvalidPURLError
-from macaron.repo_finder.repo_finder_enums import CommitFinderOutcome, RepoFinderOutcome
+from macaron.repo_finder.repo_finder_enums import CommitFinderInfo, RepoFinderInfo
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, ProvenanceSubjectPURLMatcher
 from macaron.slsa_analyzer.slsa_req import ReqName
 
@@ -635,12 +635,12 @@ class RepoFinderMetadata(ORMBase):
 
     #: The outcome of the Repo Finder.
     repo_finder_outcome: Mapped[Enum] = mapped_column(
-        Enum(RepoFinderOutcome), nullable=False  # pylint: disable=protected-access,no-member
+        Enum(RepoFinderInfo), nullable=False  # pylint: disable=protected-access,no-member
     )
 
     #: The outcome of the Commit Finder.
     commit_finder_outcome: Mapped[Enum] = mapped_column(
-        Enum(CommitFinderOutcome), nullable=False  # pylint: disable=protected-access,no-member
+        Enum(CommitFinderInfo), nullable=False  # pylint: disable=protected-access,no-member
     )
 
     #: The URL found by the Repo Finder (if applicable).

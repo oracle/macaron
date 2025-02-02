@@ -47,7 +47,7 @@ from macaron.repo_finder import to_domain_from_known_purl_types
 from macaron.repo_finder.commit_finder import find_commit, match_tags
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
-from macaron.repo_finder.repo_finder_enums import CommitFinderOutcome, RepoFinderOutcome
+from macaron.repo_finder.repo_finder_enums import CommitFinderInfo, RepoFinderInfo
 from macaron.repo_finder.repo_finder_java import JavaRepoFinder
 from macaron.repo_finder.repo_utils import (
     check_repo_urls_are_equivalent,
@@ -70,7 +70,7 @@ from macaron.slsa_analyzer.git_url import (
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str, RepoFinderOutcome]:
+def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str, RepoFinderInfo]:
     """Retrieve the repository URL that matches the given PURL.
 
     Parameters
@@ -97,7 +97,7 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
         repo_finder = DepsDevRepoFinder()
     else:
         logger.debug("No Repo Finder found for package type: %s of %s", purl.type, purl)
-        return "", RepoFinderOutcome.UNSUPPORTED_PACKAGE_TYPE
+        return "", RepoFinderInfo.UNSUPPORTED_PACKAGE_TYPE
 
     # Call Repo Finder and return first valid URL
     logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
@@ -111,12 +111,12 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
     latest_version_purl = get_latest_purl_if_different(purl)
     if not latest_version_purl:
         logger.debug("Could not find newer PURL than provided: %s", purl)
-        return "", RepoFinderOutcome.NO_NEWER_VERSION
+        return "", RepoFinderInfo.NO_NEWER_VERSION
 
     found_repo, outcome = DepsDevRepoFinder().find_repo(latest_version_purl)
     if not found_repo:
         logger.debug("Could not find repo from latest version of PURL: %s", latest_version_purl)
-        return "", RepoFinderOutcome.LATEST_VERSION_INVALID
+        return "", RepoFinderInfo.LATEST_VERSION_INVALID
 
     return found_repo, outcome
 
@@ -380,7 +380,7 @@ def prepare_repo(
     digest: str = "",
     purl: PackageURL | None = None,
     latest_version_fallback: bool = True,
-) -> tuple[Git | None, CommitFinderOutcome, str]:
+) -> tuple[Git | None, CommitFinderInfo, str]:
     """Prepare the target repository for analysis.
 
     If ``repo_path`` is a remote path, the target repo is cloned to ``{target_dir}/{unique_path}``.
@@ -408,7 +408,7 @@ def prepare_repo(
 
     Returns
     -------
-    tuple[Git | None, CommitFinderOutcome, str]
+    tuple[Git | None, CommitFinderInfo, str]
             The pydriller.Git object of the repository or None if error; the outcome of the Commit Finder; and the final
             digest.
     """
@@ -421,7 +421,7 @@ def prepare_repo(
     )
 
     is_remote = is_remote_repo(repo_path)
-    commit_finder_outcome = CommitFinderOutcome.NOT_USED
+    commit_finder_outcome = CommitFinderInfo.NOT_USED
 
     if is_remote:
         logger.info("The path to repo %s is a remote path.", repo_path)
@@ -457,7 +457,7 @@ def prepare_repo(
         logger.error("The target repository does not have any commit.")
         return None, commit_finder_outcome, digest
 
-    # Find the digest and branch if a version has been specified
+    # Find the digest if a version has been specified.
     if not digest and purl and purl.version:
         found_digest, commit_finder_outcome = find_commit(git_obj, purl)
         if not found_digest:

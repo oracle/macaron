@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains helper functions to process CycloneDX SBOM."""
@@ -30,7 +30,7 @@ from macaron.database.table_definitions import Component
 from macaron.errors import CycloneDXParserError, DependencyAnalyzerError
 from macaron.output_reporter.scm import SCMStatus
 from macaron.repo_finder.repo_finder import find_repo
-from macaron.repo_finder.repo_finder_enums import RepoFinderOutcome
+from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -467,7 +467,7 @@ class DependencyAnalyzer(ABC):
             if item["available"] != SCMStatus.MISSING_SCM:
                 continue
             url, outcome = find_repo(item["purl"])
-            if outcome not in {RepoFinderOutcome.FOUND, RepoFinderOutcome.FOUND_FROM_PARENT}:
+            if outcome not in {RepoFinderInfo.FOUND, RepoFinderInfo.FOUND_FROM_PARENT}:
                 logger.debug("Failed to find url for purl: %s", item["purl"])
             else:
                 # TODO decide how to handle possible duplicates here
