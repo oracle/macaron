@@ -73,7 +73,7 @@ def extract_predicate_version(payload: InTotoPayload) -> str | None:
     Returns
     -------
     str | None
-        The SLSA version, or None if .
+        The SLSA version, or None if the payload does contain a supported version number.
     """
     predicate_type = payload.statement.get("predicateType")
     if isinstance(payload, InTotoV1Payload) and predicate_type == "https://slsa.dev/provenance/v1":

@@ -1,7 +1,7 @@
 # Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module implements SQLAlchemy type for converting date format to RFC3339 string representation."""
+"""This module implements SQLAlchemy types for Python data types that cannot be automatically stored."""
 
 import datetime
 import json
@@ -105,14 +105,14 @@ class DBJsonDict(TypeDecorator):  # pylint: disable=W0223
 class ProvenancePayload(TypeDecorator):  # pylint: disable=W0223
     """SQLAlchemy column type to serialize InTotoProvenance."""
 
-    # It is stored in the database as a json value.
+    # It is stored in the database as a String value.
     impl = String
 
     # To prevent Sphinx from rendering the docstrings for `cache_ok`, make this docstring private.
     #: :meta private:
     cache_ok = True
 
-    def process_bind_param(self, value: None | InTotoPayload, dialect: Any) -> str | None:
+    def process_bind_param(self, value: InTotoPayload | None, dialect: Any) -> str | None:
         """Process when storing an InTotoPayload object to the SQLite db.
 
         value: InTotoPayload | None
