@@ -116,7 +116,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         logger.debug("Instantiating %s", PyPISourcecodeAnalyzer.__name__)
         try:
             sourcecode_analyzer = PyPISourcecodeAnalyzer()
-            return sourcecode_analyzer.analyze_patterns(pypi_package_json)
+            return sourcecode_analyzer.analyze(pypi_package_json)
         except (ConfigurationError, HeuristicAnalyzerValueError) as source_code_error:
             logger.debug("Unable to perform source code analysis: %s", source_code_error)
             return HeuristicResult.SKIP, {}
