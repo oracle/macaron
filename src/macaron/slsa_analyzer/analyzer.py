@@ -382,13 +382,15 @@ class Analyzer:
         commit_finder_outcome = CommitFinderInfo.NOT_USED
         final_digest = analysis_target.digest
         if analysis_target.repo_path:
-            git_obj, commit_finder_outcome, final_digest = prepare_repo(
+            git_obj, commit_finder_outcome = prepare_repo(
                 os.path.join(self.output_path, GIT_REPOS_DIR),
                 analysis_target.repo_path,
                 analysis_target.branch,
                 analysis_target.digest,
                 analysis_target.parsed_purl,
             )
+            if git_obj:
+                final_digest = git_obj.get_head().hash
 
         repo_finder_metadata = RepoFinderMetadata(
             repo_finder_outcome=analysis_target.repo_finder_outcome,
