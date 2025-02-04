@@ -323,7 +323,7 @@ def check_if_input_purl_provenance_conflict(
 
     # Check the PURL commit against the provenance.
     if not digest_input and provenance_commit_digest and purl.version:
-        purl_commit = extract_commit_from_version(git_obj, purl.version)
+        purl_commit, _ = extract_commit_from_version(git_obj, purl.version)
         if purl_commit and purl_commit != provenance_commit_digest:
             logger.debug(
                 "The commit digest passed via purl input does not match what exists in the "

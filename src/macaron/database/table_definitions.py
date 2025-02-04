@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -36,6 +36,7 @@ from macaron.artifact.maven import MavenSubjectPURLMatcher
 from macaron.database.database_manager import ORMBase
 from macaron.database.db_custom_types import RFC3339DateTime
 from macaron.errors import InvalidPURLError
+from macaron.repo_finder.repo_finder_enums import CommitFinderInfo, RepoFinderInfo
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, ProvenanceSubjectPURLMatcher
 from macaron.slsa_analyzer.slsa_req import ReqName
 
@@ -177,7 +178,12 @@ class Component(PackageURLMixin, ORMBase):
         lazy="immediate",
     )
 
-    def __init__(self, purl: str, analysis: Analysis, repository: "Repository | None"):
+    #: The one-to-one relationship with Repo Finder metadata.
+    repo_finder_metadata: Mapped["RepoFinderMetadata"] = relationship(back_populates="component", lazy="immediate")
+
+    def __init__(
+        self, purl: str, analysis: Analysis, repository: "Repository | None", repo_finder_metadata: "RepoFinderMetadata"
+    ):
         """
         Instantiate the software component using PURL identifier.
 
@@ -204,7 +210,13 @@ class Component(PackageURLMixin, ORMBase):
         # TODO: Explore the ``dbm`` or ``shelve`` packages to support dict type, which are part of the Python standard library.
         purl_kwargs = purl_parts.to_dict(encode=True)
 
-        super().__init__(purl=purl, analysis=analysis, repository=repository, **purl_kwargs)
+        super().__init__(
+            purl=purl,
+            analysis=analysis,
+            repository=repository,
+            repo_finder_metadata=repo_finder_metadata,
+            **purl_kwargs,
+        )
 
     @property
     def report_file_name(self) -> str:
@@ -605,3 +617,34 @@ class ProvenanceSubject(ORMBase):
             return cls(sha256=sha256)
 
         return None
+
+
+class RepoFinderMetadata(ORMBase):
+    """Metadata from the Repo Finder and Commit Finder runs for an associated Component."""
+
+    __tablename__ = "_repo_finder_metadata"
+
+    #: The primary key.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+
+    #: The foreign key to the software component.
+    component_id: Mapped[int] = mapped_column(Integer, ForeignKey(Component.id), nullable=False)
+
+    #: A one-to-one relationship with software components.
+    component: Mapped["Component"] = relationship(back_populates="repo_finder_metadata")
+
+    #: The outcome of the Repo Finder.
+    repo_finder_outcome: Mapped[Enum] = mapped_column(
+        Enum(RepoFinderInfo), nullable=False  # pylint: disable=protected-access,no-member
+    )
+
+    #: The outcome of the Commit Finder.
+    commit_finder_outcome: Mapped[Enum] = mapped_column(
+        Enum(CommitFinderInfo), nullable=False  # pylint: disable=protected-access,no-member
+    )
+
+    #: The URL found by the Repo Finder (if applicable).
+    found_url: Mapped[str] = mapped_column(String)
+
+    #: The commit of the tag matched by the Commit Finder.
+    found_commit: Mapped[str] = mapped_column(String)

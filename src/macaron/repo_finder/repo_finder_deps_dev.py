@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the PythonRepoFinderDD class to be used for finding repositories using deps.dev."""
@@ -12,6 +12,7 @@ from packageurl import PackageURL
 
 from macaron.json_tools import json_extract
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
+from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 from macaron.slsa_analyzer.git_url import clean_url
 from macaron.util import send_get_http_raw
@@ -39,7 +40,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
     # See https://docs.deps.dev/api/v3alpha/
     BASE_URL = "https://api.deps.dev/v3alpha/purl/"
 
-    def find_repo(self, purl: PackageURL) -> str:
+    def find_repo(self, purl: PackageURL) -> tuple[str, RepoFinderInfo]:
         """
         Attempt to retrieve a repository URL that matches the passed artifact.
 
@@ -50,31 +51,31 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         Returns
         -------
-        str :
-            The URL of the found repository.
+        tuple[str, RepoFinderOutcome] :
+            A tuple of the found URL (or an empty string), and the outcome of the Repo Finder.
         """
-        request_urls = self._create_urls(purl)
+        request_urls, outcome = self._create_urls(purl)
         if not request_urls:
             logger.debug("No urls found for: %s", purl)
-            return ""
+            return "", outcome
 
         json_data = self._retrieve_json(request_urls[0])
         if not json_data:
             logger.debug("Failed to retrieve json data for: %s", purl)
-            return ""
+            return "", RepoFinderInfo.DDEV_JSON_FETCH_ERROR
 
-        urls = self._read_json(json_data)
+        urls, outcome = self._read_json(json_data)
         if not urls:
             logger.debug("Failed to extract repository URLs from json data: %s", purl)
-            return ""
+            return "", outcome
 
         logger.debug("Found %s urls: %s", len(urls), urls)
         url = find_valid_repository_url(urls)
         if url:
             logger.debug("Found valid url: %s", url)
-            return url
+            return url, RepoFinderInfo.FOUND
 
-        return ""
+        return "", RepoFinderInfo.DDEV_NO_URLS
 
     @staticmethod
     def get_project_info(project_url: str) -> dict[str, Any] | None:
@@ -112,7 +113,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
         return response_json
 
     @staticmethod
-    def get_latest_version(purl: PackageURL) -> PackageURL | None:
+    def get_latest_version(purl: PackageURL) -> tuple[PackageURL | None, RepoFinderInfo]:
         """Return a PURL representing the latest version of the passed artifact.
 
         Parameters
@@ -122,8 +123,8 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         Returns
         -------
-        PackageURL | None
-            The latest version of the PURL, or None if it could not be found.
+        tuple[PackageURL | None, RepoFinderInfo]
+            The latest version of the PURL, or None if it could not be found, and the outcome to report.
         """
         if purl.version:
             namespace = purl.namespace + "/" if purl.namespace else ""
@@ -133,28 +134,31 @@ class DepsDevRepoFinder(BaseRepoFinder):
         response = send_get_http_raw(url)
 
         if not response:
-            return None
+            return None, RepoFinderInfo.DDEV_BAD_RESPONSE
 
         try:
             metadata: dict = json.loads(response.text)
         except ValueError as error:
             logger.debug("Failed to parse response from deps.dev: %s", error)
-            return None
+            return None, RepoFinderInfo.DDEV_JSON_FETCH_ERROR
 
         versions_keys = ["package", "versions"] if "package" in metadata else ["version"]
         versions = json_extract(metadata, versions_keys, list)
         if not versions:
-            return None
+            return None, RepoFinderInfo.DDEV_JSON_INVALID
         latest_version = json_extract(versions[-1], ["versionKey", "version"], str)
         if not latest_version:
-            return None
+            return None, RepoFinderInfo.DDEV_JSON_INVALID
 
         namespace = purl.namespace + "/" if purl.namespace else ""
-        return PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}@{latest_version}")
+        return (
+            PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}@{latest_version}"),
+            RepoFinderInfo.FOUND_FROM_LATEST,
+        )
 
-    def _create_urls(self, purl: PackageURL) -> list[str]:
+    def _create_urls(self, purl: PackageURL) -> tuple[list[str], RepoFinderInfo]:
         """
-        Create the urls to search for the metadata relating to the passed artifact.
+        Create the urls to search for the metadata relating to the passed artifact, and report on that process.
 
         If a version is not specified, remote API calls will be used to try and find one.
 
@@ -165,16 +169,17 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         Returns
         -------
-        list[str]
-            The list of created URLs.
+        tuple[list[str], RepoFinderInfo]
+            A tuple of: the list of created URLs, and the information on the Repo Finder outcome.
         """
+        outcome = None
         if not purl.version:
-            latest_purl = DepsDevRepoFinder.get_latest_version(purl)
+            latest_purl, outcome = DepsDevRepoFinder.get_latest_version(purl)
             if not latest_purl:
-                return []
+                return [], outcome
             purl = latest_purl
 
-        return [f"{DepsDevRepoFinder.BASE_URL}{encode(str(purl), safe='')}"]
+        return [f"{DepsDevRepoFinder.BASE_URL}{encode(str(purl), safe='')}"], outcome or RepoFinderInfo.FOUND
 
     def _retrieve_json(self, url: str) -> str:
         """
@@ -197,7 +202,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         return response.text
 
-    def _read_json(self, json_data: str) -> list[str]:
+    def _read_json(self, json_data: str) -> tuple[list[str], RepoFinderInfo]:
         """
         Parse the deps.dev json file and extract the repository links.
 
@@ -208,20 +213,20 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         Returns
         -------
-        list[str] :
-            The extracted contents as a list of strings.
+        tuple[list[str], RepoFinderOutcome] :
+            The extracted contents as a list, and the outcome to report.
         """
         try:
             parsed = json.loads(json_data)
         except ValueError as error:
             logger.debug("Failed to parse response from deps.dev: %s", error)
-            return []
+            return [], RepoFinderInfo.DDEV_JSON_FETCH_ERROR
 
         links_keys = ["version", "links"] if "version" in parsed else ["links"]
         links = json_extract(parsed, links_keys, list)
         if not links:
             logger.debug("Could not extract 'version' or 'links' from deps.dev response.")
-            return []
+            return [], RepoFinderInfo.DDEV_JSON_INVALID
 
         result = []
         for item in links:
@@ -229,4 +234,4 @@ class DepsDevRepoFinder(BaseRepoFinder):
             if url and isinstance(url, str):
                 result.append(url)
 
-        return result
+        return result, RepoFinderInfo.FOUND
