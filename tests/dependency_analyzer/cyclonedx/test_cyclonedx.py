@@ -9,7 +9,7 @@ import pytest
 from cyclonedx.model.component import Component as CDXComponent
 
 from macaron.config.defaults import defaults, load_defaults
-from macaron.database.table_definitions import Analysis, Component, Repository
+from macaron.database.table_definitions import Analysis, Component, RepoFinderMetadata, Repository
 from macaron.dependency_analyzer.cyclonedx import CycloneDXParserError, DependencyInfo, deserialize_bom_json
 from macaron.dependency_analyzer.cyclonedx_mvn import CycloneDxMaven
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
@@ -65,6 +65,7 @@ def test_get_dep_components_java(
         purl="pkg:maven/io.micronaut.aws/aws-parent@4.0.0-SNAPSHOT?type=pom",
         analysis=Analysis(),
         repository=Repository(complete_name="github.com/micronaut-projects/micronaut-aws", fs_path=""),
+        repo_finder_metadata=RepoFinderMetadata(),
     )
 
     # Path to the sub-project bom.json files.
@@ -107,6 +108,7 @@ def test_get_dep_components_python(
         purl="pkg:pypi/requests@2.31.0",
         analysis=Analysis(),
         repository=Repository(complete_name="github.com/psf/requests", fs_path=""),
+        repo_finder_metadata=RepoFinderMetadata(),
     )
 
     # Path to the sub-project bom.json files.
@@ -144,6 +146,7 @@ def test_convert_components_to_artifacts_java(
         purl="pkg:maven/io.micronaut.aws/aws-parent@4.0.0-SNAPSHOT?type=pom",
         analysis=Analysis(),
         repository=Repository(complete_name="github.com/micronaut-projects/micronaut-aws", fs_path=""),
+        repo_finder_metadata=RepoFinderMetadata(),
     )
 
     # Path to the sub-project bom.json files.
@@ -177,6 +180,7 @@ def test_convert_components_to_artifacts_python(
         purl="pkg:pypi/requests@2.31.0",
         analysis=Analysis(),
         repository=Repository(complete_name="github.com/psf/requests", fs_path=""),
+        repo_finder_metadata=RepoFinderMetadata(),
     )
 
     # Pass the root bom.json.
@@ -210,6 +214,7 @@ def test_low_quality_bom(
         purl="pkg:maven/com.amazonaws/aws-lambda-java-events@3.11.0?type=jar",
         analysis=Analysis(),
         repository=Repository(complete_name="github.com/aws/aws-lambda-java-libs", fs_path=""),
+        repo_finder_metadata=RepoFinderMetadata(),
     )
     result = dep_analyzer.get_deps_from_sbom(bom_path, target_component=component)
     assert snapshot == result
@@ -236,6 +241,7 @@ def test_multiple_versions(
         purl="pkg:maven/com.amazonaws/aws-lambda-java-events@3.11.0?type=jar",
         analysis=Analysis(),
         repository=Repository(complete_name="github.com/aws/aws-lambda-java-libs", fs_path=""),
+        repo_finder_metadata=RepoFinderMetadata(),
     )
     result = dep_analyzer.get_deps_from_sbom(bom_path, target_component=component)
     assert snapshot == result
@@ -250,6 +256,7 @@ def test_custom_sbom_name_with_maven() -> None:
         purl="pkg:maven/com.example/cyclonedx-test@1.0-SNAPSHOT?type=jar",
         analysis=Analysis(),
         repository=None,
+        repo_finder_metadata=RepoFinderMetadata(),
     )
     custom_bom_dir = RESOURCES_DIR.joinpath("sbom_name_tests")
     assert cyclonedx.collect_dependencies(str(custom_bom_dir.joinpath("single_named_sbom")), target_component=component)

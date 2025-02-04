@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the logic for matching PackageURL versions to repository commits via the tags they contain."""
@@ -13,6 +13,7 @@ from packageurl import PackageURL
 from pydriller import Commit, Git
 
 from macaron.repo_finder import repo_finder_deps_dev, to_domain_from_known_purl_types
+from macaron.repo_finder.repo_finder_enums import CommitFinderInfo
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -121,7 +122,7 @@ class AbstractPurlType(Enum):
     UNSUPPORTED = (2,)
 
 
-def find_commit(git_obj: Git, purl: PackageURL) -> str | None:
+def find_commit(git_obj: Git, purl: PackageURL) -> tuple[str | None, CommitFinderInfo]:
     """Try to find the commit matching the passed PURL.
 
     The PURL may be a repository type, e.g. GitHub, in which case the commit might be in its version part.
@@ -137,13 +138,13 @@ def find_commit(git_obj: Git, purl: PackageURL) -> str | None:
 
     Returns
     -------
-    str | None
-        The digest, or None if the commit cannot be correctly retrieved.
+    tuple[str | None, CommitFinderInfo]
+        The digest, or None if the commit cannot be correctly retrieved, and the outcome to report.
     """
     version = purl.version
     if not version:
         logger.debug("Missing version for analysis target: %s", purl.name)
-        return None
+        return None, CommitFinderInfo.NO_VERSION_PROVIDED
 
     repo_type = determine_abstract_purl_type(purl)
     if repo_type == AbstractPurlType.REPOSITORY:
@@ -151,7 +152,7 @@ def find_commit(git_obj: Git, purl: PackageURL) -> str | None:
     if repo_type == AbstractPurlType.ARTIFACT:
         return find_commit_from_version_and_name(git_obj, purl.name, version)
     logger.debug("Type of PURL is not supported for commit finding: %s", purl.type)
-    return None
+    return None, CommitFinderInfo.UNSUPPORTED_PURL_TYPE
 
 
 def determine_abstract_purl_type(purl: PackageURL) -> AbstractPurlType:
@@ -181,7 +182,7 @@ def determine_abstract_purl_type(purl: PackageURL) -> AbstractPurlType:
         return AbstractPurlType.UNSUPPORTED
 
 
-def extract_commit_from_version(git_obj: Git, version: str) -> str | None:
+def extract_commit_from_version(git_obj: Git, version: str) -> tuple[str | None, CommitFinderInfo]:
     """Try to extract the commit from the PURL's version parameter.
 
     E.g.
@@ -197,8 +198,8 @@ def extract_commit_from_version(git_obj: Git, version: str) -> str | None:
 
     Returns
     -------
-    str | None
-        The digest, or None if the commit cannot be correctly retrieved.
+    tuple[str | None, CommitFinderInfo]
+        The digest, or None if the commit cannot be correctly retrieved, and the outcome to report.
     """
     # A commit hash is 40 characters in length, but commits are often referenced using only some of those.
     commit: Commit | None = None
@@ -218,12 +219,12 @@ def extract_commit_from_version(git_obj: Git, version: str) -> str | None:
             logger.debug("Failed to retrieve commit: %s", error)
 
     if not commit:
-        return None
+        return None, CommitFinderInfo.REPO_PURL_FAILURE
 
-    return commit.hash if commit else None
+    return commit.hash if commit else None, CommitFinderInfo.MATCHED
 
 
-def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> str | None:
+def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> tuple[str | None, CommitFinderInfo]:
     """Try to find the matching commit in a repository of a given version (and name) via tags.
 
     The passed version is used to match with the tags in the target repository. The passed name is used in cases where
@@ -240,14 +241,19 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
 
     Returns
     -------
-    str | None
-        The digest, or None if the commit cannot be correctly retrieved.
+    tuple[str | None, CommitFinderInfo]
+        The digest, or None if the commit cannot be correctly retrieved, and the outcome to report.
     """
     logger.debug("Searching for commit of artifact version using tags: %s@%s", name, version)
 
     # Only consider tags that have a commit.
+    repo_tags = git_obj.repo.tags
+    if not repo_tags:
+        logger.debug("No tags found for %s", name)
+        return None, CommitFinderInfo.NO_TAGS
+
     valid_tags = {}
-    for tag in git_obj.repo.tags:
+    for tag in repo_tags:
         commit = _get_tag_commit(tag)
         if not commit:
             logger.debug("No commit found for tag: %s", tag)
@@ -258,14 +264,14 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
 
     if not valid_tags:
         logger.debug("No tags with commits found for %s", name)
-        return None
+        return None, CommitFinderInfo.NO_TAGS_WITH_COMMITS
 
     # Match tags.
-    matched_tags = match_tags(list(valid_tags.keys()), name, version)
+    matched_tags, outcome = match_tags(list(valid_tags.keys()), name, version)
 
     if not matched_tags:
         logger.debug("No tags matched for %s", name)
-        return None
+        return None, outcome
 
     if len(matched_tags) > 1:
         logger.debug("Tags found for %s: %s", name, len(matched_tags))
@@ -282,7 +288,7 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
         hexsha = tag.commit.hexsha
     except ValueError:
         logger.debug("Error trying to retrieve digest of commit: %s", tag.commit)
-        return None
+        return None, CommitFinderInfo.NO_TAG_COMMIT
 
     logger.debug(
         "Found tag %s with commit %s for artifact version %s@%s",
@@ -291,7 +297,7 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
         name,
         version,
     )
-    return hexsha if hexsha else None
+    return hexsha if hexsha else None, CommitFinderInfo.MATCHED
 
 
 def _split_name(name: str) -> list[str]:
@@ -349,7 +355,7 @@ def _split_separators(version: str) -> list[str]:
     return [item for item in split if item]
 
 
-def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, list[str]]:
+def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, list[str], CommitFinderInfo]:
     """Build a version pattern to match the passed version string.
 
     Parameters
@@ -362,12 +368,12 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
     Returns
     -------
     tuple[Pattern | None, list[str]]
-        The tuple of the regex pattern that will match the version, and the list of version parts that were extracted.
-        If an exception occurs from any regex operation, the pattern will be returned as None.
+        The tuple of the regex pattern that will match the version, the list of version parts that were extracted, and
+        the outcome to report. If an exception occurs from any regex operation, the pattern will be returned as None.
 
     """
     if not version:
-        return None, []
+        return None, [], CommitFinderInfo.NO_VERSION_PROVIDED
 
     # Escape input to prevent it being treated as regex.
     name = re.escape(name)
@@ -376,7 +382,7 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
 
     if not parts:
         logger.debug("Version contained no valid parts: %s", version)
-        return None, []
+        return None, [], CommitFinderInfo.INVALID_VERSION
 
     logger.debug("Final version parts: %s", parts)
 
@@ -470,14 +476,14 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
 
     # Compile the pattern.
     try:
-        return re.compile(this_version_pattern, flags=re.IGNORECASE), parts
+        return re.compile(this_version_pattern, flags=re.IGNORECASE), parts, CommitFinderInfo.MATCHED
     except Exception as error:  # pylint: disable=broad-exception-caught
         # The regex library uses an internal error that cannot be used here to satisfy pylint.
         logger.debug("Error while compiling version regex: %s", error)
-        return None, []
+        return None, [], CommitFinderInfo.REGEX_COMPILE_FAILURE
 
 
-def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
+def match_tags(tag_list: list[str], name: str, version: str) -> tuple[list[str], CommitFinderInfo]:
     """Return items of the passed tag list that match the passed artifact name and version.
 
     Parameters
@@ -491,8 +497,8 @@ def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
 
     Returns
     -------
-    list[str]
-        The list of tags that matched the pattern.
+    tuple[list[str], CommitFinderInfo]
+        The list of tags that matched the pattern, if any, and the outcome to report.
     """
     logger.debug("Tag Sample: %s", tag_list[:5])
 
@@ -518,14 +524,14 @@ def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
             if match.group(1):
                 prefix_match = tag
     if prefix_match:
-        return [prefix_match]
+        return [prefix_match], CommitFinderInfo.MATCHED
     if last_match:
-        return [last_match]
+        return [last_match], CommitFinderInfo.MATCHED
 
     # Create the more complicated pattern for the passed version.
-    pattern, parts = _build_version_pattern(name, version)
+    pattern, parts, outcome = _build_version_pattern(name, version)
     if not pattern:
-        return []
+        return [], outcome
 
     # Match the tags.
     matched_tags = []
@@ -546,8 +552,12 @@ def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
 
     matched_tags = _fix_misaligned_tag_matches(matched_tags, version)
 
-    if len(matched_tags) <= 1:
-        return [_["tag"] for _ in matched_tags]
+    if not matched_tags:
+        logger.debug("Failed to match any tags.")
+        return [], CommitFinderInfo.NO_TAGS_MATCHED
+
+    if len(matched_tags) == 1:
+        return [_["tag"] for _ in matched_tags], CommitFinderInfo.MATCHED
 
     # In the case of multiple matches, further work must be done.
 
@@ -588,7 +598,7 @@ def match_tags(tag_list: list[str], name: str, version: str) -> list[str]:
             )
         )
 
-    return [_["tag"] for _ in matched_tags]
+    return [_["tag"] for _ in matched_tags], CommitFinderInfo.MATCHED
 
 
 def _fix_misaligned_tag_matches(matched_tags: list[dict[str, str]], version: str) -> list[dict[str, str]]:

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the slsa_analyzer.Gh module."""
@@ -11,6 +11,7 @@ from packageurl import PackageURL
 
 from macaron.config.target_config import Configuration
 from macaron.errors import InvalidAnalysisTargetError, InvalidPURLError
+from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
 from macaron.slsa_analyzer.analyzer import Analyzer
 
 
@@ -25,13 +26,18 @@ from macaron.slsa_analyzer.analyzer import Analyzer
                 repo_path="https://github.com/apache/maven",
                 branch="",
                 digest="",
+                repo_finder_outcome=RepoFinderInfo.NOT_USED,
             ),
         ),
         (
             Configuration({"purl": "", "path": "https://github.com/apache/maven"}),
             ["github.com", "gitlab.com", "bitbucket.org"],
             Analyzer.AnalysisTarget(
-                parsed_purl=None, repo_path="https://github.com/apache/maven", branch="", digest=""
+                parsed_purl=None,
+                repo_path="https://github.com/apache/maven",
+                branch="",
+                digest="",
+                repo_finder_outcome=RepoFinderInfo.NOT_USED,
             ),
         ),
         (
@@ -42,6 +48,7 @@ from macaron.slsa_analyzer.analyzer import Analyzer
                 repo_path="https://github.com/apache/maven",
                 branch="",
                 digest="",
+                repo_finder_outcome=RepoFinderInfo.NOT_USED,
             ),
         ),
         (
@@ -59,6 +66,7 @@ from macaron.slsa_analyzer.analyzer import Analyzer
                 repo_path="https://github.com/apache/maven",
                 branch="master",
                 digest="abcxyz",
+                repo_finder_outcome=RepoFinderInfo.NOT_USED,
             ),
         ),
     ],
