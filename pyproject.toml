@@ -122,14 +122,10 @@ Issues = "https://github.com/oracle/macaron/issues"
 [tool.bandit]
 tests = []
 skips = ["B101"]
-exclude_dirs = ['tests/malware_analyzer/pypi/resources/sourcecode_samples']
 
 # https://github.com/psf/black#configuration
 [tool.black]
 line-length = 120
-force-exclude = '''
-tests/malware_analyzer/pypi/resources/sourcecode_samples/
-'''
 
 # https://github.com/commitizen-tools/commitizen
 # https://commitizen-tools.github.io/commitizen/bump/
@@ -242,7 +238,6 @@ disable = [
     "too-many-statements",
     "duplicate-code",
 ]
-ignore-paths = "tests/malware_analyzer/pypi/resources/sourcecode_samples"
 
 [tool.pylint.MISCELLANEOUS]
 notes = [
