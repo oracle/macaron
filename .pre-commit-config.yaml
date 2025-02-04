@@ -30,6 +30,7 @@ repos:
   - id: isort
     name: Sort import statements
     args: [--settings-path, pyproject.toml]
+    exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
 
 # Add Black code formatters.
 - repo: https://github.com/ambv/black
@@ -38,6 +39,7 @@ repos:
   - id: black
     name: Format code
     args: [--config, pyproject.toml]
+    exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
 - repo: https://github.com/asottile/blacken-docs
   rev: 1.19.1
   hooks:
@@ -83,6 +85,7 @@ repos:
     entry: pylint
     language: python
     files: ^src/macaron/|^tests/
+    exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
     types: [text, python]
     args: [--rcfile, pyproject.toml]
 
@@ -108,6 +111,7 @@ repos:
     files: ^src/macaron/|^tests/
     types: [text, python]
     additional_dependencies: ['bandit[toml]']
+    exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
 
 # Enable a whole bunch of useful helper hooks, too.
 # See https://pre-commit.com/hooks.html for more hooks.
