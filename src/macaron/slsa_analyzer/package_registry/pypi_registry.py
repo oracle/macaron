@@ -10,7 +10,8 @@ import shutil
 import tarfile
 import tempfile
 import urllib.parse
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -537,6 +538,14 @@ class PyPIPackageJsonAsset:
             upload_time: str | None = urls[0].get("upload_time")
             return upload_time
         return None
+
+    @contextmanager
+    def sourcecode(self) -> Generator[None]:
+        """Download and cleanup source code of the package with a context manager."""
+        if not self.download_sourcecode():
+            raise SourceCodeError("Unable to download package source code.")
+        yield
+        self.cleanup_sourcecode()
 
     def download_sourcecode(self) -> bool:
         """Get the source code of the package and store it in a temporary directory.
