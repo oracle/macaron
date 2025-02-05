@@ -203,6 +203,18 @@ repos:
     always_run: true
     pass_filenames: false
 
+# Checks that tests/malware_analyzer/pypi/resources/sourcecode_samples files do not have executable permissions
+# This is another measure to make sure the files can't be accidentally executed
+- repo: local
+  hooks:
+  - id: sourcecode-sample-permissions
+    name: Sourcecode sample executable permissions checker
+    entry: scripts/dev_scripts/samples_permissions_checker.sh
+    language: system
+    always_run: true
+    pass_filenames: false
+
+
 # A linter for Golang
 - repo: https://github.com/golangci/golangci-lint
   rev: v1.64.6
