@@ -14,7 +14,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.db_custom_types import DBJsonDict
 from macaron.database.table_definitions import CheckFacts
-from macaron.errors import ConfigurationError, HeuristicAnalyzerValueError
+from macaron.errors import ConfigurationError, HeuristicAnalyzerValueError, SourceCodeError
 from macaron.json_tools import JsonType, json_extract
 from macaron.malware_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult, Heuristics
@@ -107,26 +107,44 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 return True
         return False
 
-    def analyze_source(self, pypi_package_json: PyPIPackageJsonAsset) -> tuple[HeuristicResult, dict[str, JsonType]]:
+    def analyze_source(
+        self, pypi_package_json: PyPIPackageJsonAsset, results: dict[Heuristics, HeuristicResult]
+    ) -> tuple[HeuristicResult, dict[str, JsonType]]:
         """Analyze the source code of the package with a textual scan, looking for malicious code patterns.
 
         Parameters
         ----------
         pypi_package_json: PyPIPackageJsonAsset
             The PyPI package JSON asset object.
+        results: dict[Heuristics, HeuristicResult]
+            Containing all heuristics' results (excluding this one), where the key is the heuristic and the value is the result
+            associated with that heuristic.
 
         Returns
         -------
         tuple[HeuristicResult, dict[str, JsonType]]
             Containing the analysis results and relevant patterns identified.
+
+        Raises
+        ------
+        HeuristicAnalyzerValueError
+            If the analyzer fails due to malformed package information.
+        ConfigurationError
+            If the configuration of the analyzer encountered a problem.
         """
         logger.debug("Instantiating %s", PyPISourcecodeAnalyzer.__name__)
-        try:
-            sourcecode_analyzer = PyPISourcecodeAnalyzer()
-            return sourcecode_analyzer.analyze(pypi_package_json)
-        except (ConfigurationError, HeuristicAnalyzerValueError) as source_code_error:
-            logger.debug("Unable to perform source code analysis: %s", source_code_error)
+        analyzer = PyPISourcecodeAnalyzer()
+
+        if analyzer.depends_on and self._should_skip(results, analyzer.depends_on):
             return HeuristicResult.SKIP, {}
+
+        try:
+            with pypi_package_json.sourcecode():
+                return analyzer.analyze(pypi_package_json)
+        except SourceCodeError as error:
+            error_msg = f"Unable to perform analysis, source code not available: {error}"
+            logger.debug(error_msg)
+            raise HeuristicAnalyzerValueError(error_msg) from error
 
     def evaluate_heuristic_results(self, heuristic_results: dict[Heuristics, HeuristicResult]) -> float | None:
         """Analyse the heuristic results to determine the maliciousness of the package.
@@ -287,9 +305,15 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                             confidence = Confidence.HIGH
                             result_type = CheckResultType.PASSED
 
-                        # experimental analyze sourcecode feature
-                        if ctx.dynamic_data["analyze_source"] and pypi_package_json.download_sourcecode():
-                            sourcecode_result, sourcecode_detail_info = self.analyze_source(pypi_package_json)
+                        # experimental sourcecode analysis feature
+                        if ctx.dynamic_data["analyze_source"]:
+                            try:
+                                sourcecode_result, sourcecode_detail_info = self.analyze_source(
+                                    pypi_package_json, heuristic_results
+                                )
+                            except (HeuristicAnalyzerValueError, ConfigurationError):
+                                return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
+
                             heuristic_results[Heuristics.SUSPICIOUS_PATTERNS] = sourcecode_result
                             heuristics_detail_info.update(sourcecode_detail_info)
 
@@ -298,8 +322,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                                     # heuristics determined it benign, so lower the confidence
                                     confidence = Confidence.LOW
                                 result_type = CheckResultType.FAILED
-
-                            pypi_package_json.cleanup_sourcecode()
 
                         result_tables.append(
                             MaliciousMetadataFacts(
