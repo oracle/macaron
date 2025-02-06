@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseBuildTool class to be inherited by other specific Build Tools."""
@@ -44,7 +44,7 @@ class BuildToolCommand(TypedDict):
     ci_path: str
 
     #: The CI step object that calls the command.
-    step_node: BaseNode
+    step_node: BaseNode | None
 
     #: The list of name of reachable variables that contain secrets."""
     reachable_secrets: list[str]
