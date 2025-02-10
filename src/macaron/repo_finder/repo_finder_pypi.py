@@ -10,6 +10,7 @@ from packageurl import PackageURL
 from macaron.errors import InvalidHTTPResponseError
 from macaron.json_tools import json_extract
 from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
+from macaron.slsa_analyzer.package_registry import PyPIRegistry
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -27,9 +28,6 @@ def find_repo(purl: PackageURL) -> tuple[str, RepoFinderInfo]:
     tuple[str, RepoFinderOutcome] :
         The repository URL for the passed package, if found, and the outcome to report.
     """
-    # TODO solve circular dependency
-    from macaron.slsa_analyzer.package_registry import PyPIRegistry  # pylint: disable=import-outside-toplevel
-
     pypi_registry = PyPIRegistry()
     pypi_registry.load_defaults()
     json_endpoint = f"pypi/{purl.name}/json"
@@ -52,14 +50,15 @@ def find_repo(purl: PackageURL) -> tuple[str, RepoFinderInfo]:
             continue
         if not parsed_url.hostname.lower() == "github.com":
             continue
-        split_path = parsed_url.path.split("/")
-        if not split_path or len(split_path) < 3:
+        # The path starts with a "/".
+        split_path = parsed_url.path[1:].split("/")
+        if not split_path or len(split_path) < 2:
             continue
         # Fix the URL so that it is the base GitHub URL. E.g. github.com/{owner}/{repo}
         fixed_url = urllib.parse.ParseResult(
             scheme=parsed_url.scheme,
             netloc=parsed_url.netloc,
-            path=f"{split_path[1]}/{split_path[2]}",
+            path=f"{split_path[0]}/{split_path[1]}",
             params=parsed_url.params,
             query=parsed_url.query,
             fragment=parsed_url.fragment,
