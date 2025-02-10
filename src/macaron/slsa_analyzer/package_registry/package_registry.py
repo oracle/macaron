@@ -17,9 +17,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 class PackageRegistry(ABC):
     """Base package registry class."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, build_tool_names: set[str]) -> None:
         self.name = name
-        self.build_tool_names: set[str] = set()
+        self.build_tool_names = build_tool_names
         self.enabled: bool = True
 
     @abstractmethod
@@ -44,6 +44,9 @@ class PackageRegistry(ABC):
             ``True`` if the repo under analysis can be published to this package registry,
             based on the given build tool.
         """
+        print()
+        print(f"{build_tool_name} in {self.build_tool_names} ?")
+        print()
         if not self.enabled:
             return False
         return build_tool_name in self.build_tool_names
