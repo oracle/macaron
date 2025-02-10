@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for the ``JFrogMavenRegistry`` class."""
@@ -129,12 +129,12 @@ def test_is_detected(
     expected_result: bool,
 ) -> None:
     """Test the ``is_detected`` method."""
-    assert jfrog_maven.is_detected(build_tool) == expected_result
+    assert jfrog_maven.is_detected(build_tool.name) == expected_result
 
     # The method always returns False when the jfrog_maven instance is not enabled
     # (in the ini config).
     jfrog_maven.enabled = False
-    assert jfrog_maven.is_detected(build_tool) is False
+    assert jfrog_maven.is_detected(build_tool.name) is False
 
 
 @pytest.mark.parametrize(

@@ -13,7 +13,6 @@ from pytest_httpserver import HTTPServer
 
 from macaron.config.defaults import load_defaults
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.npm import NPM
 from macaron.slsa_analyzer.package_registry.npm_registry import NPMAttestationAsset, NPMRegistry
 
@@ -45,7 +44,7 @@ def test_disable_npm_registry(npm_registry: NPMRegistry, tmp_path: Path, npm_too
     npm_registry.load_defaults()
 
     assert npm_registry.enabled is False
-    assert npm_registry.is_detected(build_tool=npm_tool) is False
+    assert npm_registry.is_detected(npm_tool.name) is False
 
 
 @pytest.mark.parametrize(
@@ -87,12 +86,10 @@ def test_npm_registry_invalid_config(npm_registry: NPMRegistry, tmp_path: Path, 
         ("maven", False),
     ],
 )
-def test_is_detected(
-    npm_registry: NPMRegistry, build_tools: dict[str, BaseBuildTool], build_tool_name: str, expected: bool
-) -> None:
+def test_is_detected(npm_registry: NPMRegistry, build_tool_name: str, expected: bool) -> None:
     """Test that the registry is correctly detected for a build tool."""
     npm_registry.load_defaults()
-    assert npm_registry.is_detected(build_tool=build_tools[build_tool_name]) == expected
+    assert npm_registry.is_detected(build_tool_name) == expected
 
 
 @pytest.mark.parametrize(
