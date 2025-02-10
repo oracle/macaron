@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for the Maven Central registry."""
@@ -14,7 +14,6 @@ from pytest_httpserver import HTTPServer
 
 from macaron.config.defaults import load_defaults
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.package_registry.maven_central_registry import MavenCentralRegistry
 
 
@@ -124,12 +123,11 @@ def test_load_defaults_with_invalid_config(tmp_path: Path, user_config_input: st
 )
 def test_is_detected(
     maven_central: MavenCentralRegistry,
-    build_tools: dict[str, BaseBuildTool],
     build_tool_name: str,
     expected_result: bool,
 ) -> None:
     """Test the ``is_detected`` method."""
-    assert maven_central.is_detected(build_tools[build_tool_name]) == expected_result
+    assert maven_central.is_detected(build_tool_name) == expected_result
 
 
 @pytest.mark.parametrize(
