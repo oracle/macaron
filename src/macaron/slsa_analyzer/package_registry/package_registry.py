@@ -9,7 +9,6 @@ from datetime import datetime
 
 from macaron.errors import InvalidHTTPResponseError
 from macaron.json_tools import json_extract
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -20,13 +19,14 @@ class PackageRegistry(ABC):
 
     def __init__(self, name: str) -> None:
         self.name = name
+        self.build_tool_names: set[str] = set()
+        self.enabled: bool = True
 
     @abstractmethod
     def load_defaults(self) -> None:
         """Load the .ini configuration for the current package registry."""
 
-    @abstractmethod
-    def is_detected(self, build_tool: BaseBuildTool) -> bool:
+    def is_detected(self, build_tool_name: str) -> bool:
         """Detect if artifacts of the repo under analysis can possibly be published to this package registry.
 
         The detection here is based on the repo's detected build tool.
@@ -35,8 +35,8 @@ class PackageRegistry(ABC):
 
         Parameters
         ----------
-        build_tool : BaseBuildTool
-            A detected build tool of the repository under analysis.
+        build_tool_name: str
+            The name of a detected build tool of the repository under analysis.
 
         Returns
         -------
@@ -44,6 +44,9 @@ class PackageRegistry(ABC):
             ``True`` if the repo under analysis can be published to this package registry,
             based on the given build tool.
         """
+        if not self.enabled:
+            return False
+        return build_tool_name in self.build_tool_names
 
     def find_publish_timestamp(self, purl: str) -> datetime:
         """Retrieve the publication timestamp for a package specified by its purl from the deps.dev repository by default.
