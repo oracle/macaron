@@ -73,8 +73,7 @@ class PyPIRegistry(PackageRegistry):
         self.request_timeout = request_timeout or 10
         self.enabled = enabled
         self.registry_url = ""
-        self.build_tool_names = {"pip", "poetry"}
-        super().__init__("PyPI Registry")
+        super().__init__("PyPI Registry", {"pip", "poetry"})
 
     def load_defaults(self) -> None:
         """Load the .ini configuration for the current package registry.
