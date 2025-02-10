@@ -103,10 +103,8 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
     logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
     found_repo, outcome = repo_finder.find_repo(purl)
 
-    if not found_repo and purl.type == "pypi":
-        found_repo, outcome = repo_finder_pypi.find_repo(purl)
-        if not found_repo:
-            logger.debug("Could not find repository from PyPI registry for PURL: %s", purl)
+    if not found_repo:
+        found_repo, outcome = find_repo_alternative(purl, outcome)
 
     if check_latest_version and not defaults.getboolean("repofinder", "try_latest_purl", fallback=True):
         check_latest_version = False
@@ -122,9 +120,27 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
         return "", RepoFinderInfo.NO_NEWER_VERSION
 
     found_repo, outcome = DepsDevRepoFinder().find_repo(latest_version_purl)
+    if found_repo:
+        return found_repo, outcome
+
+    if not found_repo:
+        found_repo, outcome = find_repo_alternative(latest_version_purl, outcome)
+
     if not found_repo:
         logger.debug("Could not find repo from latest version of PURL: %s", latest_version_purl)
         return "", RepoFinderInfo.LATEST_VERSION_INVALID
+
+    return found_repo, outcome
+
+
+def find_repo_alternative(purl: PackageURL, outcome: RepoFinderInfo) -> tuple[str, RepoFinderInfo]:
+    """Use PURL type specific methods to find the repository when the standard methods have failed."""
+    found_repo = ""
+    if purl.type == "pypi":
+        found_repo, outcome = repo_finder_pypi.find_repo(purl)
+
+    if not found_repo:
+        logger.debug("Could not find repository using type specific (%s) methods for PURL: %s", purl.type, purl)
 
     return found_repo, outcome
 
