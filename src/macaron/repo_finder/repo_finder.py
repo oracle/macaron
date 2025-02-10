@@ -43,7 +43,7 @@ from pydriller import Git
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.errors import CloneError, RepoCheckOutError
-from macaron.repo_finder import to_domain_from_known_purl_types
+from macaron.repo_finder import repo_finder_pypi, to_domain_from_known_purl_types
 from macaron.repo_finder.commit_finder import find_commit, match_tags
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
@@ -102,6 +102,11 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
     # Call Repo Finder and return first valid URL
     logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
     found_repo, outcome = repo_finder.find_repo(purl)
+
+    if not found_repo and purl.type == "pypi":
+        found_repo, outcome = repo_finder_pypi.find_repo(purl)
+        if not found_repo:
+            logger.debug("Could not find repository from PyPI registry for PURL: %s", purl)
 
     if check_latest_version and not defaults.getboolean("repofinder", "try_latest_purl", fallback=True):
         check_latest_version = False
