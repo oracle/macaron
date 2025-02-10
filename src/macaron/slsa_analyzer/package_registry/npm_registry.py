@@ -50,8 +50,7 @@ class NPMRegistry(PackageRegistry):
         self.attestation_endpoint = attestation_endpoint or ""
         self.request_timeout = request_timeout or 10
         self.enabled = enabled
-        self.build_tool_names = {"npm", "yarn"}
-        super().__init__("npm Registry")
+        super().__init__("npm Registry", {"npm", "yarn"})
 
     def load_defaults(self) -> None:
         """Load the .ini configuration for the current package registry.
