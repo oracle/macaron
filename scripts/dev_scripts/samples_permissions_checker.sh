@@ -12,7 +12,7 @@ MACARON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd ../.. && pwd)"
 SAMPLES_PATH="${MACARON_DIR}/tests/malware_analyzer/pypi/resources/sourcecode_samples"
 
 # any files have any of the executable bits set
-executables=$(find "$SAMPLES_PATH" -type f -perm -u+x -o -type f -perm -g+x -o -type f -perm -o+x)
+executables=$( ( find "$SAMPLES_PATH" -type f -perm -u+x -o -type f -perm -g+x -o -type f -perm -o+x | sed "s|$MACARON_DIR/||"; git ls-files "$SAMPLES_PATH" --full-name) | sort | uniq -d)
 if [ -n "$executables" ]; then
     echo "The following files should not have any executable permissions:"
     echo "$executables"
