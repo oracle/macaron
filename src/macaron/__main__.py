@@ -168,12 +168,6 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
             logger.error("Error while loading the input provenance file: %s", error)
             sys.exit(os.EX_DATAERR)
 
-    if analyzer_single_args.skip_deps:
-        logger.warning(
-            "The --skip-deps flag has been deprecated and WILL NOT do anything. "
-            + "Dependency resolution is off by default. This flag does nothing and will be removed in the next release."
-        )
-
     status_code = analyzer.run(
         run_config,
         analyzer_single_args.sbom_path,
@@ -437,16 +431,6 @@ def main(argv: list[str] | None = None) -> None:
         "--provenance-file",
         required=False,
         help=("The path to the provenance file in in-toto format."),
-    )
-
-    single_analyze_parser.add_argument(
-        "--skip-deps",
-        required=False,
-        action="store_true",
-        default=False,
-        help=(
-            "DEPRECATED. Dependency resolution is off by default. This flag does nothing and will be removed in the next release."
-        ),
     )
 
     single_analyze_parser.add_argument(
