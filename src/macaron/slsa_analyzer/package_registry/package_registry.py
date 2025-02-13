@@ -44,9 +44,6 @@ class PackageRegistry(ABC):
             ``True`` if the repo under analysis can be published to this package registry,
             based on the given build tool.
         """
-        print()
-        print(f"{build_tool_name} in {self.build_tool_names} ?")
-        print()
         if not self.enabled:
             return False
         return build_tool_name in self.build_tool_names

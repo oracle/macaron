@@ -66,6 +66,9 @@ class RepoFinderInfo(Enum):
     #: Reported if there was no matching URLs in the JSON returned by the PyPI registry.
     PYPI_NO_URLS = "PyPI no matching URLs"
 
+    #: Reported if the PyPI registry is disabled or not present in the list of package registries.
+    PYPI_NO_REGISTRY = "PyPI registry disabled or absent"
+
     #: Reported if the provided PURL did not produce a result, but a more recent version could not be found.
     NO_NEWER_VERSION = "No newer version than provided which failed"
 

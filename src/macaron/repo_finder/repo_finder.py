@@ -66,11 +66,14 @@ from macaron.slsa_analyzer.git_url import (
     list_remote_references,
     resolve_local_path,
 )
+from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str, RepoFinderInfo]:
+def find_repo(
+    purl: PackageURL, check_latest_version: bool = True, all_package_registries: list[PackageRegistryInfo] | None = None
+) -> tuple[str, RepoFinderInfo]:
     """Retrieve the repository URL that matches the given PURL.
 
     Parameters
@@ -79,6 +82,8 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
         The parsed PURL to convert to the repository path.
     check_latest_version: bool
         A flag that determines whether the latest version of the PURL is also checked.
+    all_package_registries: list[PackageRegistryInfo] | None
+        The list of package registries, if any.
 
     Returns
     -------
@@ -104,7 +109,7 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
     found_repo, outcome = repo_finder.find_repo(purl)
 
     if not found_repo:
-        found_repo, outcome = find_repo_alternative(purl, outcome)
+        found_repo, outcome = find_repo_alternative(purl, outcome, all_package_registries)
 
     if check_latest_version and not defaults.getboolean("repofinder", "try_latest_purl", fallback=True):
         check_latest_version = False
@@ -133,11 +138,28 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
     return found_repo, outcome
 
 
-def find_repo_alternative(purl: PackageURL, outcome: RepoFinderInfo) -> tuple[str, RepoFinderInfo]:
-    """Use PURL type specific methods to find the repository when the standard methods have failed."""
+def find_repo_alternative(
+    purl: PackageURL, outcome: RepoFinderInfo, all_package_registries: list[PackageRegistryInfo] | None = None
+) -> tuple[str, RepoFinderInfo]:
+    """Use PURL type specific methods to find the repository when the standard methods have failed.
+
+    Parameters
+    ----------
+    purl : PackageURL
+        The parsed PURL to convert to the repository path.
+    outcome: RepoFinderInfo
+        A previous outcome to report if this method does nothing.
+    all_package_registries: list[PackageRegistryInfo] | None
+        The list of package registries, if any.
+
+    Returns
+    -------
+    tuple[str, RepoFinderOutcome] :
+        The repository URL for the passed package, if found, and the outcome to report.
+    """
     found_repo = ""
     if purl.type == "pypi":
-        found_repo, outcome = repo_finder_pypi.find_repo(purl)
+        found_repo, outcome = repo_finder_pypi.find_repo(purl, all_package_registries)
 
     if not found_repo:
         logger.debug("Could not find repository using type specific (%s) methods for PURL: %s", purl.type, purl)

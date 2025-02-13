@@ -7,39 +7,55 @@ import urllib.parse
 
 from packageurl import PackageURL
 
-from macaron.errors import InvalidHTTPResponseError
-from macaron.json_tools import json_extract
 from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
-from macaron.slsa_analyzer.package_registry import PyPIRegistry
+from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, PyPIRegistry
+from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset
+from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def find_repo(purl: PackageURL) -> tuple[str, RepoFinderInfo]:
+def find_repo(
+    purl: PackageURL, all_package_registries: list[PackageRegistryInfo] | None = None
+) -> tuple[str, RepoFinderInfo]:
     """Retrieve the repository URL that matches the given PyPI PURL.
 
     Parameters
     ----------
     purl : PackageURL
         The parsed PURL to convert to the repository path.
+    all_package_registries: list[PackageRegistryInfo] | None
+        The context of the current analysis, if any.
 
     Returns
     -------
     tuple[str, RepoFinderOutcome] :
         The repository URL for the passed package, if found, and the outcome to report.
     """
-    pypi_registry = PyPIRegistry()
+    pypi_registry = next((registry for registry in PACKAGE_REGISTRIES if isinstance(registry, PyPIRegistry)), None)
+    if not pypi_registry:
+        return "", RepoFinderInfo.PYPI_NO_REGISTRY
+
     pypi_registry.load_defaults()
-    json_endpoint = f"pypi/{purl.name}/json"
-    url = urllib.parse.urljoin(pypi_registry.registry_url, json_endpoint)
-    try:
-        json = pypi_registry.download_package_json(url)
-    except InvalidHTTPResponseError as error:
-        logger.debug(error)
-        # TODO improve accuracy of this outcome.
+    pypi_asset = PyPIPackageJsonAsset(purl.name, purl.version, pypi_registry, {})
+    if not pypi_asset.download(dest=""):
         return "", RepoFinderInfo.PYPI_HTTP_ERROR
 
-    url_dict = json_extract(json, ["info", "project_urls"], dict)
+    if all_package_registries:
+        # Find the package registry info object that contains the PyPI registry and has the pypi build tool.
+        registry_info = next(
+            (
+                info
+                for info in all_package_registries
+                if info.package_registry == pypi_registry and info.build_tool_name == "pypi"
+            ),
+            None,
+        )
+        if registry_info:
+            # Save the asset for later use.
+            registry_info.metadata.append(pypi_asset)
+
+    url_dict = pypi_asset.get_project_links()
     if not url_dict:
         return "", RepoFinderInfo.PYPI_JSON_ERROR
 
