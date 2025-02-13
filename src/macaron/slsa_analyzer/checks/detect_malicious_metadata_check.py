@@ -29,8 +29,6 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import Whee
 from macaron.malware_analyzer.pypi_heuristics.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.build_tool.pip import Pip
-from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
@@ -266,14 +264,23 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             match package_registry_info_entry:
                 # Currently, only PyPI packages are supported.
                 case PackageRegistryInfo(
-                    build_tool=Pip() | Poetry(),
+                    build_tool_name="pip" | "poetry",
                     package_registry=PyPIRegistry() as pypi_registry,
                 ) as pypi_registry_info:
 
-                    # Create an AssetLocator object for the PyPI package JSON object.
-                    pypi_package_json = PyPIPackageJsonAsset(
-                        component=ctx.component, pypi_registry=pypi_registry, package_json={}
+                    # Retrieve the pre-existing AssetLocator object for the PyPI package JSON object, if it exists.
+                    pypi_package_json = next(
+                        (asset for asset in pypi_registry_info.metadata if isinstance(asset, PyPIPackageJsonAsset)),
+                        None,
                     )
+                    if not pypi_package_json:
+                        # Create an AssetLocator object for the PyPI package JSON object.
+                        pypi_package_json = PyPIPackageJsonAsset(
+                            component_name=ctx.component.name,
+                            component_version=ctx.component.version,
+                            pypi_registry=pypi_registry,
+                            package_json={},
+                        )
 
                     pypi_registry_info.metadata.append(pypi_package_json)
 

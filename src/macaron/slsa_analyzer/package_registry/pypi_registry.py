@@ -17,7 +17,6 @@ from bs4 import BeautifulSoup, Tag
 from requests import RequestException
 
 from macaron.config.defaults import defaults
-from macaron.database.table_definitions import Component
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
@@ -341,8 +340,11 @@ class PyPIRegistry(PackageRegistry):
 class PyPIPackageJsonAsset:
     """The package JSON hosted on the PyPI registry."""
 
-    #: The target pypi software component.
-    component: Component
+    #: The target pypi software component name.
+    component_name: str
+
+    #: The target pypi software component version.
+    component_version: str | None
 
     #: The pypi registry.
     pypi_registry: PyPIRegistry
@@ -372,7 +374,7 @@ class PyPIPackageJsonAsset:
         -------
         str
         """
-        json_endpoint = f"pypi/{self.component.name}/json"
+        json_endpoint = f"pypi/{self.component_name}/json"
         return urllib.parse.urljoin(self.pypi_registry.registry_url, json_endpoint)
 
     def download(self, dest: str) -> bool:  # pylint: disable=unused-argument
@@ -434,8 +436,8 @@ class PyPIPackageJsonAsset:
             The URL of the source distribution.
         """
         urls: list | None = None
-        if self.component.version:
-            urls = json_extract(self.package_json, ["releases", self.component.version], list)
+        if self.component_version:
+            urls = json_extract(self.package_json, ["releases", self.component_version], list)
         else:
             # Get the latest version.
             urls = json_extract(self.package_json, ["urls"], list)
