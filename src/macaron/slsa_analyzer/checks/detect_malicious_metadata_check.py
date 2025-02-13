@@ -265,6 +265,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 # Currently, only PyPI packages are supported.
                 case PackageRegistryInfo(
                     build_tool_name="pip" | "poetry",
+                    build_tool_purl_type="pypi",
                     package_registry=PyPIRegistry() as pypi_registry,
                 ) as pypi_registry_info:
 

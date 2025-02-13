@@ -43,7 +43,7 @@ def test_detect_malicious_metadata(
     # Set up the context object with PyPIRegistry instance.
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl=purl)
     pypi_registry = PyPIRegistry()
-    ctx.dynamic_data["package_registries"] = [PackageRegistryInfo("pip", pypi_registry)]
+    ctx.dynamic_data["package_registries"] = [PackageRegistryInfo("pip", "pypi", pypi_registry)]
 
     # Set up responses of PyPI endpoints using the httpserver plugin.
     with open(os.path.join(RESOURCE_PATH, "pypi_files", "zlibxjson.html"), encoding="utf8") as page:

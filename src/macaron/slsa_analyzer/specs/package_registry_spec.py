@@ -15,8 +15,10 @@ from macaron.slsa_analyzer.provenance.provenance import DownloadedProvenanceData
 class PackageRegistryInfo:
     """This class contains data for one package registry that is matched against a repository."""
 
-    #: The build tool matched against the repository.
+    #: The name of the build tool matched against the repository.
     build_tool_name: str
+    #: The purl type of the build tool matched against the repository.
+    build_tool_purl_type: str
     #: The package registry matched against the repository. This is dependent on the build tool detected.
     package_registry: PackageRegistry
     #: The provenances matched against the current repo.
