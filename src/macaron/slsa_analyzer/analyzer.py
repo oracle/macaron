@@ -1035,6 +1035,7 @@ class Analyzer:
                 package_registries.append(
                     PackageRegistryInfo(
                         build_tool_name=build_tool_name,
+                        build_tool_purl_type=build_tool.purl_type,
                         package_registry=package_registry,
                     )
                 )
