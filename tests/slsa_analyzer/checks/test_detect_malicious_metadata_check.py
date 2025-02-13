@@ -13,7 +13,6 @@ from pytest_httpserver import HTTPServer
 
 from macaron.config.defaults import load_defaults
 from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult, Heuristics
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.detect_malicious_metadata_check import DetectMaliciousMetadataCheck
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
@@ -26,8 +25,8 @@ RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
 @pytest.mark.parametrize(
     ("purl", "expected"),
     [
-        # TODO: This check is expected to FAIL for pkg:pypi/zlibxjson. However, after introducing the wheel presence heuristic,
-        # a false negative has been introduced. Note that if the unit test were allowed to access the OSV
+        # TODO: This check is expected to FAIL for pkg:pypi/zlibxjson. However, after introducing the wheel presence
+        # heuristic, a false negative has been introduced. Note that if the unit test were allowed to access the OSV
         # knowledge base, it would report the package as malware. However, we intentionally block unit tests
         # from reaching the network.
         ("pkg:pypi/zlibxjson", CheckResultType.PASSED),
@@ -36,7 +35,7 @@ RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
     ],
 )
 def test_detect_malicious_metadata(
-    httpserver: HTTPServer, tmp_path: Path, pip_tool: BaseBuildTool, macaron_path: Path, purl: str, expected: str
+    httpserver: HTTPServer, tmp_path: Path, macaron_path: Path, purl: str, expected: str
 ) -> None:
     """Test that the check handles repositories correctly."""
     check = DetectMaliciousMetadataCheck()
@@ -44,7 +43,7 @@ def test_detect_malicious_metadata(
     # Set up the context object with PyPIRegistry instance.
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl=purl)
     pypi_registry = PyPIRegistry()
-    ctx.dynamic_data["package_registries"] = [PackageRegistryInfo(pip_tool, pypi_registry)]
+    ctx.dynamic_data["package_registries"] = [PackageRegistryInfo("pip", pypi_registry)]
 
     # Set up responses of PyPI endpoints using the httpserver plugin.
     with open(os.path.join(RESOURCE_PATH, "pypi_files", "zlibxjson.html"), encoding="utf8") as page:
@@ -102,12 +101,12 @@ def test_detect_malicious_metadata(
 
 
 @pytest.mark.parametrize(
-    ("combination"),
+    "combination",
     [
         pytest.param(
             {
-                # similar to rule ID malware_high_confidence_1, but SUSPICIOUS_SETUP is skipped since the file does not exist,
-                # so the rule should not trigger.
+                # similar to rule ID malware_high_confidence_1, but SUSPICIOUS_SETUP is skipped since the file does not
+                # exist, so the rule should not trigger.
                 Heuristics.EMPTY_PROJECT_LINK: HeuristicResult.FAIL,
                 Heuristics.SOURCE_CODE_REPO: HeuristicResult.SKIP,
                 Heuristics.ONE_RELEASE: HeuristicResult.FAIL,
