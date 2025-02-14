@@ -24,6 +24,7 @@ from macaron.artifact.local_artifact import get_local_artifact_dirs
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
+from macaron.database import table_definitions
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
 from macaron.database.table_definitions import Analysis, Component, ProvenanceSubject, RepoFinderMetadata, Repository
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, DependencyInfo
@@ -503,13 +504,18 @@ class Analyzer:
         logger.debug("Provenance L3 Verified: %s", provenance_l3_verified)
         logger.debug("SLSA level: %s", slsa_level)
 
-        analyze_ctx.dynamic_data["provenance"] = provenance_payload
+        analyze_ctx.dynamic_data["provenance_info"] = table_definitions.Provenance(
+            component=component,
+            repository_url=provenance_repo_url,
+            commit_sha=provenance_commit_digest,
+            verified=provenance_is_verified,
+            provenance_payload=provenance_payload,
+            slsa_level=slsa_level,
+            # TODO Add SLSA version, release tag, release digest.
+        )
 
         if provenance_payload:
             analyze_ctx.dynamic_data["is_inferred_prov"] = False
-            analyze_ctx.dynamic_data["provenance_verified"] = provenance_is_verified
-        analyze_ctx.dynamic_data["provenance_repo_url"] = provenance_repo_url
-        analyze_ctx.dynamic_data["provenance_commit_digest"] = provenance_commit_digest
         analyze_ctx.dynamic_data["validate_malware_switch"] = validate_malware_switch
 
         if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
