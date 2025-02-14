@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the InferArtifactPipelineCheck class to check if an artifact is published from a pipeline automatically."""
@@ -14,7 +14,7 @@ from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
 from macaron.errors import GitHubActionsValueError, InvalidHTTPResponseError, ProvenanceError
 from macaron.json_tools import json_extract
-from macaron.repo_finder.provenance_extractor import ProvenancePredicate
+from macaron.provenance.provenance_extractor import ProvenancePredicate
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
@@ -155,7 +155,9 @@ class ArtifactPipelineCheck(BaseCheck):
         # If a provenance is found, obtain the workflow and the pipeline that has triggered the artifact release.
         prov_workflow = None
         prov_trigger_run = None
-        prov_payload = ctx.dynamic_data["provenance"]
+        prov_payload = None
+        if ctx.dynamic_data["provenance_info"]:
+            prov_payload = ctx.dynamic_data["provenance_info"].provenance_payload
         if not ctx.dynamic_data["is_inferred_prov"] and prov_payload:
             # Obtain the build-related fields from the provenance.
             try:
