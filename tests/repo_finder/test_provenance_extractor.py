@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the provenance extractor on valid example provenances."""
@@ -9,7 +9,7 @@ from packageurl import PackageURL
 
 from macaron.errors import ProvenanceError
 from macaron.json_tools import JsonType, json_extract
-from macaron.repo_finder.provenance_extractor import (
+from macaron.provenance.provenance_extractor import (
     check_if_repository_purl_and_url_match,
     extract_repo_and_commit_from_provenance,
 )
