@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains tests for the provenance available check."""
@@ -7,7 +7,7 @@ from typing import TypeVar
 
 import pytest
 
-from macaron.database.table_definitions import CheckFacts, Repository
+from macaron.database.table_definitions import CheckFacts, Provenance, Repository
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType
@@ -51,8 +51,7 @@ def test_provenance_repo_commit_checks_pass(
 ) -> None:
     """Test combinations of Repository objects and provenance strings against check."""
     context = _prepare_context(macaron_path, repository)
-    context.dynamic_data["provenance_repo_url"] = repo_url
-    context.dynamic_data["provenance_commit_digest"] = commit_digest
+    context.dynamic_data["provenance_info"] = Provenance(repository_url=repo_url, commit_sha=commit_digest)
 
     # Check Repo
     repo_result = _perform_check_assert_result_return_result(
