@@ -20,8 +20,8 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date 
 from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
-from macaron.malware_analyzer.pypi_heuristics.metadata.unreachable_project_links import UnreachableProjectLinksAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
@@ -69,7 +69,7 @@ class MaliciousMetadataFacts(CheckFacts):
 # When implementing new analyzer, appending the classes to this list
 ANALYZERS: list = [
     EmptyProjectLinkAnalyzer,
-    UnreachableProjectLinksAnalyzer,
+    SourceCodeRepoAnalyzer,
     OneReleaseAnalyzer,
     HighReleaseFrequencyAnalyzer,
     UnchangedReleaseAnalyzer,
@@ -97,7 +97,7 @@ SUSPICIOUS_COMBO: dict[
 ] = {
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.FAIL,  # One Release
         HeuristicResult.SKIP,  # High Release Frequency
         HeuristicResult.SKIP,  # Unchanged Release
@@ -112,7 +112,7 @@ SUSPICIOUS_COMBO: dict[
     ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.FAIL,  # One Release
         HeuristicResult.SKIP,  # High Release Frequency
         HeuristicResult.SKIP,  # Unchanged Release
@@ -127,7 +127,7 @@ SUSPICIOUS_COMBO: dict[
     ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.PASS,  # One Release
         HeuristicResult.FAIL,  # High Release Frequency
         HeuristicResult.FAIL,  # Unchanged Release
@@ -141,7 +141,7 @@ SUSPICIOUS_COMBO: dict[
     ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.PASS,  # One Release
         HeuristicResult.FAIL,  # High Release Frequency
         HeuristicResult.PASS,  # Unchanged Release
@@ -155,7 +155,7 @@ SUSPICIOUS_COMBO: dict[
     ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.PASS,  # One Release
         HeuristicResult.FAIL,  # High Release Frequency
         HeuristicResult.FAIL,  # Unchanged Release
@@ -169,7 +169,7 @@ SUSPICIOUS_COMBO: dict[
     ): Confidence.MEDIUM,
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.PASS,  # One Release
         HeuristicResult.FAIL,  # High Release Frequency
         HeuristicResult.FAIL,  # Unchanged Release
@@ -183,7 +183,7 @@ SUSPICIOUS_COMBO: dict[
     ): Confidence.MEDIUM,
     (
         HeuristicResult.PASS,  # Empty Project
-        HeuristicResult.FAIL,  # Unreachable Project Links
+        HeuristicResult.FAIL,  # Source Code Repo
         HeuristicResult.PASS,  # One Release
         HeuristicResult.FAIL,  # High Release Frequency
         HeuristicResult.PASS,  # Unchanged Release
@@ -191,13 +191,13 @@ SUSPICIOUS_COMBO: dict[
         HeuristicResult.FAIL,  # Suspicious Setup
         HeuristicResult.FAIL,  # Wheel Absence
         HeuristicResult.SKIP,  # Anomalous Version
-        # All project links are unreachable, frequent releases of multiple versions,
+        # No source code repo, frequent releases of multiple versions,
         # and the maintainer released it shortly after account registration.
         # The setup.py file contains suspicious imports and .whl file isn't present.
     ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.FAIL,  # One Release
         HeuristicResult.SKIP,  # High Release Frequency
         HeuristicResult.SKIP,  # Unchanged Release
@@ -212,7 +212,7 @@ SUSPICIOUS_COMBO: dict[
     ): Confidence.MEDIUM,
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.FAIL,  # One Release
         HeuristicResult.SKIP,  # High Release Frequency
         HeuristicResult.SKIP,  # Unchanged Release
@@ -227,7 +227,7 @@ SUSPICIOUS_COMBO: dict[
     ): Confidence.MEDIUM,
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.FAIL,  # One Release
         HeuristicResult.SKIP,  # High Release Frequency
         HeuristicResult.SKIP,  # Unchanged Release
