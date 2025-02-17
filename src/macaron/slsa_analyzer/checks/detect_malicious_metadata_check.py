@@ -42,8 +42,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 class MaliciousMetadataFacts(CheckFacts):
     """The ORM mapping for justifications in pypi heuristic check."""
 
-    # pylint: disable=unsubscriptable-object
-
     __tablename__ = "_detect_malicious_metadata_check"
 
     #: The primary key.
