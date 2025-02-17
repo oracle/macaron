@@ -4,7 +4,6 @@
 """Test the local artifact utilities."""
 
 import os
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -21,14 +20,21 @@ from macaron.errors import LocalArtifactFinderError
 
 def is_case_sensitive_filesystem() -> bool:
     """Check if current filesystem is case-sensitive."""
-    with tempfile.NamedTemporaryFile(prefix="Tmp") as tmp:
-        base = tmp.name
-        lower = base.lower()
-        upper = base.upper()
+    tmp_path = Path(".")
 
-        return not (os.path.exists(lower) or os.path.exists(upper)) or (
-            os.path.exists(lower) and os.path.exists(upper) and os.stat(lower).st_ino != os.stat(upper).st_ino
-        )
+    # using "/" overloaded operator as __truediv__ in Path class to build a lower and upper path
+    lower = tmp_path / "a"
+    upper = tmp_path / "A"
+
+    try:
+        lower.touch()
+        upper.touch()
+        return not upper.exists()
+    finally:
+        if lower.exists():
+            lower.unlink()
+        if upper.exists():
+            upper.unlink()
 
 
 @pytest.mark.parametrize(
