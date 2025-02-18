@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains tests for the provenance l3 check."""
@@ -15,7 +15,7 @@ from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient, GitHubReleaseAsset
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
+from macaron.slsa_analyzer.specs.inferred_provenance import InferredProvenance
 from tests.conftest import MockAnalyzeContext
 
 from ...macaron_testcase import MacaronTestCase
@@ -74,7 +74,7 @@ class TestProvL3Check(MacaronTestCase):
             provenance_assets=[],
             release={},
             provenances=[],
-            build_info_results=InTotoV01Payload(statement=Provenance().payload),
+            build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
         )
 
         # Repo has provenances but no downloaded files.

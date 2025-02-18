@@ -21,7 +21,7 @@ from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry, NPMRegist
 from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAsset, JFrogMavenAssetMetadata
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
+from macaron.slsa_analyzer.specs.inferred_provenance import InferredProvenance
 from tests.conftest import MockAnalyzeContext
 
 
@@ -161,7 +161,7 @@ def test_provenance_on_unsupported_ci(macaron_path: Path, service: BaseCIService
         provenance_assets=[],
         release={},
         provenances=[],
-        build_info_results=InTotoV01Payload(statement=Provenance().payload),
+        build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
     )
 
     # Set up the context object with provenances.
@@ -186,7 +186,7 @@ def test_provenance_on_supported_ci(macaron_path: Path, test_dir: Path) -> None:
         provenance_assets=[],
         release={},
         provenances=[],
-        build_info_results=InTotoV01Payload(statement=Provenance().payload),
+        build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
     )
 
     # Set up the context object with provenances.

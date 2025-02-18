@@ -24,9 +24,15 @@ from macaron.artifact.local_artifact import get_local_artifact_dirs
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
-from macaron.database import table_definitions
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
-from macaron.database.table_definitions import Analysis, Component, ProvenanceSubject, RepoFinderMetadata, Repository
+from macaron.database.table_definitions import (
+    Analysis,
+    Component,
+    Provenance,
+    ProvenanceSubject,
+    RepoFinderMetadata,
+    Repository,
+)
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, DependencyInfo
 from macaron.errors import (
     DuplicateError,
@@ -73,7 +79,7 @@ from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payl
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
+from macaron.slsa_analyzer.specs.inferred_provenance import InferredProvenance
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -506,7 +512,7 @@ class Analyzer:
                 analyze_ctx, provenance_payload, provenance_is_verified, provenance_l3_verified
             )
 
-            analyze_ctx.dynamic_data["provenance_info"] = table_definitions.Provenance(
+            analyze_ctx.dynamic_data["provenance_info"] = Provenance(
                 component=component,
                 repository_url=provenance_repo_url,
                 commit_sha=provenance_commit_digest,
@@ -992,11 +998,11 @@ class Analyzer:
                         release={},
                         provenances=[
                             SLSAProvenanceData(
-                                payload=InTotoV01Payload(statement=Provenance().payload),
+                                payload=InTotoV01Payload(statement=InferredProvenance().payload),
                                 asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0),
                             )
                         ],
-                        build_info_results=InTotoV01Payload(statement=Provenance().payload),
+                        build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
                     )
                 )
 
