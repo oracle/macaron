@@ -4,6 +4,7 @@
 """Test the local artifact utilities."""
 
 import os
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,23 @@ from macaron.artifact.local_artifact import (
     get_local_artifact_dirs,
 )
 from macaron.errors import LocalArtifactFinderError
+
+
+def is_case_sensitive_filesystem() -> bool:
+    """Check if the filesystem is case-sensitive."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        lower = os.path.join(temp_dir, "a")
+        upper = os.path.join(temp_dir, "A")
+
+        os.mkdir(lower)
+
+        try:
+            os.mkdir(upper)
+            # if upper is not treated the same as lower -> case sensitive
+            return True
+        except FileExistsError:
+            # upper is treated the same as lower -> case insensitive
+            return False
 
 
 @pytest.mark.parametrize(
@@ -205,11 +223,7 @@ def test_get_local_artifact_paths_succeeded_pypi(tmp_path: Path) -> None:
     python_venv_path = f"{tmp_path_str}/.venv/lib/python3.11/site-packages"
 
     # We are also testing if the patterns match case-insensitively.
-    lower = tmp_path / "a"
-    upper = tmp_path / "A"
-
-    is_fs_case_sensitive: bool = lower.exists() and not upper.exists()
-    if not is_fs_case_sensitive:
+    if not is_case_sensitive_filesystem():
         pypi_artifact_paths = [
             f"{python_venv_path}/macaron",
             f"{python_venv_path}/macaron-0.13.0.dist-info",
