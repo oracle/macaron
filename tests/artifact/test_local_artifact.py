@@ -1,9 +1,10 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Test the local artifact utilities."""
 
 import os
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,23 @@ from macaron.artifact.local_artifact import (
     get_local_artifact_dirs,
 )
 from macaron.errors import LocalArtifactFinderError
+
+
+def is_case_sensitive_filesystem() -> bool:
+    """Check if the filesystem is case-sensitive."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        lower = os.path.join(temp_dir, "a")
+        upper = os.path.join(temp_dir, "A")
+
+        os.mkdir(lower)
+
+        try:
+            os.mkdir(upper)
+            # if upper is not treated the same as lower -> case sensitive
+            return True
+        except FileExistsError:
+            # upper is treated the same as lower -> case insensitive
+            return False
 
 
 @pytest.mark.parametrize(
@@ -205,13 +223,20 @@ def test_get_local_artifact_paths_succeeded_pypi(tmp_path: Path) -> None:
     python_venv_path = f"{tmp_path_str}/.venv/lib/python3.11/site-packages"
 
     # We are also testing if the patterns match case-insensitively.
-    pypi_artifact_paths = [
-        f"{python_venv_path}/macaron",
-        f"{python_venv_path}/macaron-0.13.0.dist-info",
-        f"{python_venv_path}/Macaron-0.13.0.dist-info",
-        f"{python_venv_path}/macaron-0.13.0.data",
-        f"{python_venv_path}/Macaron-0.13.0.data",
-    ]
+    if not is_case_sensitive_filesystem():
+        pypi_artifact_paths = [
+            f"{python_venv_path}/macaron",
+            f"{python_venv_path}/macaron-0.13.0.dist-info",
+            f"{python_venv_path}/macaron-0.13.0.data",
+        ]
+    else:
+        pypi_artifact_paths = [
+            f"{python_venv_path}/macaron",
+            f"{python_venv_path}/macaron-0.13.0.dist-info",
+            f"{python_venv_path}/Macaron-0.13.0.dist-info",
+            f"{python_venv_path}/macaron-0.13.0.data",
+            f"{python_venv_path}/Macaron-0.13.0.data",
+        ]
 
     os.makedirs(python_venv_path)
 
