@@ -5,7 +5,6 @@
 
 import glob
 import hashlib
-import json
 import logging
 import os
 import subprocess  # nosec B404
@@ -22,7 +21,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.database.table_definitions import CheckFacts, HashDigest, Provenance, ReleaseArtifact
+from macaron.database.table_definitions import CheckFacts, HashDigest, ProvenanceFacts, ReleaseArtifact
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
@@ -350,12 +349,12 @@ class ProvenanceL3Check(BaseCheck):
                         downloaded_provs.append(provenance_payload.statement)
 
                         # Output provenance
-                        prov = Provenance()
+                        prov = ProvenanceFacts()
                         # TODO: fix commit reference for provenance when release/artifact as an analysis entrypoint is
                         #  implemented ensure the provenance commit matches the actual release analyzed
                         prov.version = "0.2"
                         prov.release_commit_sha = ""
-                        prov.provenance_json = json.dumps(provenance_payload.statement)
+                        prov.provenance_json = provenance_payload.statement["predicate"] or {}
                         prov.release_tag = ci_info["release"]["tag_name"]
                         prov.component = ctx.component
 
