@@ -129,7 +129,7 @@ jobs:
     # Currently reusable workflows do not support setting strategy property from the caller workflow.
     - name: Upload the package artifact for debugging and release
       if: matrix.os == env.ARTIFACT_OS && matrix.python == env.ARTIFACT_PYTHON
-      uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
       with:
         name: artifact-${{ matrix.os }}-python-${{ matrix.python }}
         path: dist
