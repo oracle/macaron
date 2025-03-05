@@ -173,6 +173,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         deps_depth,
         provenance_payload=prov_payload,
         validate_malware=analyzer_single_args.validate_malware,
+        verify_provenance=analyzer_single_args.verify_provenance,
     )
     sys.exit(status_code)
 
@@ -469,7 +470,7 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     single_analyze_parser.add_argument(
-        "--validate-malware-switch",
+        "--validate-malware",
         required=False,
         action="store_true",
         help=("Enable malware validation."),
