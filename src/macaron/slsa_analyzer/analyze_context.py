@@ -51,7 +51,7 @@ class ChecksOutputs(TypedDict):
     """The provenance and related information."""
     local_artifact_paths: list[str]
     """The local artifact absolute paths."""
-    validate_malware_switch: bool
+    validate_malware: bool
     """True when the malware validation is enabled."""
 
 
@@ -106,7 +106,7 @@ class AnalyzeContext:
             expectation=None,
             provenance_info=None,
             local_artifact_paths=[],
-            validate_malware_switch=False,
+            validate_malware=False,
         )
 
     @property

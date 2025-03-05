@@ -21,7 +21,6 @@ from sqlalchemy.orm import Session
 
 from macaron import __version__
 from macaron.artifact.local_artifact import get_local_artifact_dirs
-from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
@@ -44,6 +43,7 @@ from macaron.errors import (
 )
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
+from macaron.provenance import provenance_verifier
 from macaron.provenance.provenance_extractor import (
     check_if_input_purl_provenance_conflict,
     check_if_input_repo_provenance_conflict,
@@ -51,11 +51,7 @@ from macaron.provenance.provenance_extractor import (
     extract_repo_and_commit_from_provenance,
 )
 from macaron.provenance.provenance_finder import ProvenanceFinder, find_provenance_from_ci
-from macaron.provenance.provenance_verifier import (
-    determine_provenance_slsa_level,
-    verify_ci_provenance,
-    verify_provenance,
-)
+from macaron.provenance.provenance_verifier import determine_provenance_slsa_level, verify_ci_provenance
 from macaron.repo_finder import repo_finder
 from macaron.repo_finder.repo_finder import prepare_repo
 from macaron.repo_finder.repo_finder_enums import CommitFinderInfo, RepoFinderInfo
@@ -140,7 +136,8 @@ class Analyzer:
         sbom_path: str = "",
         deps_depth: int = 0,
         provenance_payload: InTotoPayload | None = None,
-        validate_malware_switch: bool = False,
+        validate_malware: bool = False,
+        verify_provenance: bool = False,
     ) -> int:
         """Run the analysis and write results to the output path.
 
@@ -157,6 +154,10 @@ class Analyzer:
             The depth of dependency resolution. Default: 0.
         provenance_payload : InToToPayload | None
             The provenance intoto payload for the main software component.
+        validate_malware: bool
+            Enable malware validation if True.
+        verify_provenance: bool
+            Enable provenance verification if True.
 
         Returns
         -------
@@ -189,7 +190,8 @@ class Analyzer:
                     main_config,
                     analysis,
                     provenance_payload=provenance_payload,
-                    validate_malware_switch=validate_malware_switch,
+                    validate_malware=validate_malware,
+                    verify_provenance=verify_provenance,
                 )
 
                 if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
@@ -307,7 +309,8 @@ class Analyzer:
         analysis: Analysis,
         existing_records: dict[str, Record] | None = None,
         provenance_payload: InTotoPayload | None = None,
-        validate_malware_switch: bool = False,
+        validate_malware: bool = False,
+        verify_provenance: bool = False,
     ) -> Record:
         """Run the checks for a single repository target.
 
@@ -324,6 +327,10 @@ class Analyzer:
             The mapping of existing records that the analysis has run successfully.
         provenance_payload : InToToPayload | None
             The provenance intoto payload for the analyzed software component.
+        validate_malware: bool
+            Enable malware validation if True.
+        verify_provenance: bool
+            Enable provenance verification if True.
 
         Returns
         -------
@@ -353,8 +360,8 @@ class Analyzer:
             provenances = provenance_finder.find_provenance(parsed_purl)
             if provenances:
                 provenance_payload = provenances[0]
-                if defaults.getboolean("analyzer", "verify_provenance"):
-                    provenance_is_verified = verify_provenance(parsed_purl, provenances)
+                if verify_provenance:
+                    provenance_is_verified = provenance_verifier.verify_provenance(parsed_purl, provenances)
 
         # Try to extract the repository URL and commit digest from the Provenance, if it exists.
         repo_path_input: str | None = config.get_value("path")
@@ -523,7 +530,7 @@ class Analyzer:
                 # TODO Add release tag, release digest.
             )
 
-        analyze_ctx.dynamic_data["validate_malware_switch"] = validate_malware_switch
+        analyze_ctx.dynamic_data["validate_malware"] = validate_malware
 
         if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
             local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
