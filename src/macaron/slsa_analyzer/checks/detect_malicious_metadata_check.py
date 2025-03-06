@@ -85,47 +85,38 @@ ANALYZERS: list = [
 RESULT = "result"
 
 STATIC_PROBLOG_MODEL = f"""
-{Confidence.HIGH.value}::high :-
-    not {Heuristics.EMPTY_PROJECT_LINK.value},
-    not {Heuristics.ONE_RELEASE.value},
-    not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value},
-    not {Heuristics.SUSPICIOUS_SETUP.value},
-    not {Heuristics.WHEEL_ABSENCE.value}.
-{Confidence.HIGH.value}::high :-
-    not {Heuristics.EMPTY_PROJECT_LINK.value},
-    {Heuristics.ONE_RELEASE.value},
-    not {Heuristics.HIGH_RELEASE_FREQUENCY.value},
-    not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value},
-    not {Heuristics.SUSPICIOUS_SETUP.value},
-    not {Heuristics.WHEEL_ABSENCE.value}.
-{Confidence.HIGH.value}::high :-
-    {Heuristics.EMPTY_PROJECT_LINK.value},
-    not {Heuristics.SOURCE_CODE_REPO.value},
-    {Heuristics.ONE_RELEASE.value},
-    not {Heuristics.HIGH_RELEASE_FREQUENCY.value},
-    {Heuristics.UNCHANGED_RELEASE.value},
-    not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value},
-    not {Heuristics.SUSPICIOUS_SETUP.value},
-    not {Heuristics.WHEEL_ABSENCE.value}.
+% Heuristic groupings
 
-{Confidence.MEDIUM.value}::medium :-
-    not {Heuristics.EMPTY_PROJECT_LINK.value},
-    {Heuristics.ONE_RELEASE.value},
+% Maintainer has recently joined, publishing an undetailed page with no links.
+quickUndetailed :- not {Heuristics.EMPTY_PROJECT_LINK.value}, not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value}.
+
+% Maintainer releases a suspicious setup.py and forces it to run by omitting a .whl file.
+forceSetup :- not {Heuristics.SUSPICIOUS_SETUP.value}, {Heuristics.WHEEL_ABSENCE.value}.
+
+% Suspicious Combinations
+
+% Package released recently with little detail, forcing the setup.py to run.
+{Confidence.HIGH.value}::high :- quickUndetailed, forceSetup, not {Heuristics.ONE_RELEASE.value}.
+{Confidence.HIGH.value}::high :- quickUndetailed, forceSetup, not {Heuristics.HIGH_RELEASE_FREQUENCY.value}.
+
+% Package released recently with little detail, with some more refined trust markers introduced: project links,
+% multiple different releases, but there is no source code repository matching it and the setup is suspicious.
+{Confidence.HIGH.value}::high :- not {Heuristics.SOURCE_CODE_REPO.value},
+    not {Heuristics.HIGH_RELEASE_FREQUENCY.value},
+    not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value},
+    {Heuristics.UNCHANGED_RELEASE.value},
+    forceSetup.
+
+% Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
+% the same code.
+{Confidence.MEDIUM.value}::medium :- quickUndetailed,
     not {Heuristics.HIGH_RELEASE_FREQUENCY.value},
     not {Heuristics.UNCHANGED_RELEASE.value},
-    not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value},
     {Heuristics.SUSPICIOUS_SETUP.value}.
-{Confidence.MEDIUM.value}::medium :-
-    not {Heuristics.EMPTY_PROJECT_LINK.value},
+
+% Package released recently with little detail and an anomalous version number for a single-release package.
+{Confidence.MEDIUM.value}::medium :- quickUndetailed,
     not {Heuristics.ONE_RELEASE.value},
-    not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value},
-    {Heuristics.SUSPICIOUS_SETUP.value},
-    {Heuristics.WHEEL_ABSENCE.value},
-    not {Heuristics.ANOMALOUS_VERSION.value}.
-{Confidence.MEDIUM.value}::medium :-
-    not {Heuristics.EMPTY_PROJECT_LINK.value},
-    not {Heuristics.ONE_RELEASE.value},
-    not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value},
     {Heuristics.WHEEL_ABSENCE.value},
     not {Heuristics.ANOMALOUS_VERSION.value}.
 
