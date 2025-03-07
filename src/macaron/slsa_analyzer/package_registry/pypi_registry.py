@@ -90,7 +90,7 @@ class PyPIRegistry(PackageRegistry):
             return
         section = defaults[section_name]
 
-        self.registry_url_netloc = section.get("registry_url_netloc")
+        self.registry_url_netloc = section.get("registry_url_netloc", "")
         if not self.registry_url_netloc:
             raise ConfigurationError(
                 f'The "registry_url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
@@ -105,7 +105,7 @@ class PyPIRegistry(PackageRegistry):
             fragment="",
         ).geturl()
 
-        fileserver_url_netloc = section.get("fileserver_url_netloc")
+        fileserver_url_netloc = section.get("fileserver_url_netloc", "")
         if not fileserver_url_netloc:
             raise ConfigurationError(
                 f'The "fileserver_url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
