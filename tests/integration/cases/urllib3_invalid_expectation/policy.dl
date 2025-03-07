@@ -11,7 +11,6 @@ Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_provenance_available_1"),
     check_passed(component_id, "mcn_provenance_derived_commit_1"),
     check_passed(component_id, "mcn_provenance_derived_repo_1"),
-    check_passed(component_id, "mcn_provenance_level_three_1"),
     check_passed(component_id, "mcn_provenance_verified_1"),
     provenance_verified_check(_, build_level, _),
     build_level = 3,
