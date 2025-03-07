@@ -1,4 +1,4 @@
-/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 #include "prelude.dl"
@@ -13,7 +13,6 @@ Policy("test_policy", component_id, "") :-
     check_failed(component_id, "mcn_provenance_derived_commit_1"),
     check_failed(component_id, "mcn_provenance_derived_repo_1"),
     check_failed(component_id, "mcn_provenance_expectation_1"),
-    check_failed(component_id, "mcn_provenance_level_three_1"),
     check_failed(component_id, "mcn_provenance_witness_level_one_1"),
     check_failed(component_id, "mcn_trusted_builder_level_three_1"),
     is_repo_url(component_id, "https://github.com/mockito/mockito").
