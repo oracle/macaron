@@ -42,7 +42,7 @@ To perform an analysis on the latest version of semver (when this tutorial was w
 
 .. code-block:: shell
 
-    ./run_macaron.sh analyze -purl pkg:npm/semver@7.6.2
+    ./run_macaron.sh analyze -purl pkg:npm/semver@7.6.2 --verify-provenance
 
 The analysis involves Macaron downloading the contents of the target repository to the configured, or default, ``output`` folder. Results from the analysis, including checks, are stored in the database found at ``output/macaron.db``  (See :ref:`Output Files Guide <output_files_guide>`). Once the analysis is complete, Macaron will also produce a report in the form of a HTML file.
 
@@ -52,7 +52,7 @@ During this analysis, Macaron will retrieve two provenance files from the npm re
 
 .. note:: Most of the details from the two provenance files can be found through the links provided on the artifacts page on the npm website. In particular: `Sigstore Rekor <https://search.sigstore.dev/?logIndex=92391688>`_. The provenance file itself can be found at: `npm registry <https://registry.npmjs.org/-/npm/v1/attestations/semver@7.6.2>`_.
 
-Of course to reliably say the above does what is claimed here, proof is needed. For this we can rely on the check results produced from the analysis run. In particular, we want to know the results of three checks: ``mcn_provenance_derived_repo_1``, ``mcn_provenance_derived_commit_1``, and ``mcn_provenance_verified_1``. The first two to ensure that the commit and the repository being analyzed match those found in the provenance file, and the last check to ensure that the provenance file has been verified.
+Of course to reliably say the above does what is claimed here, proof is needed. For this we can rely on the check results produced from the analysis run. In particular, we want to know the results of three checks: ``mcn_provenance_derived_repo_1``, ``mcn_provenance_derived_commit_1``, and ``mcn_provenance_verified_1``. The first two to ensure that the commit and the repository being analyzed match those found in the provenance file, and the last check to ensure that the provenance file has been verified. In order for the third of these three checks to succeed, we must tell Macaron to perform provenance verification via the ``--verify provenance`` command line argument, as shown above. This is disable by default as it can be quite time consuming in some cases.
 
 .. _fig_semver_7.6.2_report:
 
