@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # https://flit.pypa.io/en/latest/pyproject_toml.html
@@ -86,7 +86,7 @@ docs = [
     "sphinx-togglebutton >=0.3.2,<1.0.0",
 ]
 hooks = [
-    "pre-commit >=3.0.0,<3.8.0",
+    "pre-commit >=4.0.0,<4.2.0",
 ]
 # Note that the `custom_exit_code` and `env` plugins may currently be unmaintained.
 test = [
