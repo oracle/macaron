@@ -503,13 +503,14 @@ class Analyzer:
                         )
 
                     # Also try to verify CI provenance contents.
-                    verified = []
-                    for ci_info in analyze_ctx.dynamic_data["ci_services"]:
-                        verified.append(verify_ci_provenance(analyze_ctx, ci_info, temp_dir))
-                        if not verified:
-                            break
-                    if verified and all(verified):
-                        provenance_l3_verified = True
+                    if verify_provenance:
+                        verified = []
+                        for ci_info in analyze_ctx.dynamic_data["ci_services"]:
+                            verified.append(verify_ci_provenance(analyze_ctx, ci_info, temp_dir))
+                            if not verified:
+                                break
+                        if verified and all(verified):
+                            provenance_l3_verified = True
 
         if provenance_payload:
             analyze_ctx.dynamic_data["is_inferred_prov"] = False
