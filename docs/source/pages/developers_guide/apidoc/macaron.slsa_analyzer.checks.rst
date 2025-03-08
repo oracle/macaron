@@ -89,14 +89,6 @@ macaron.slsa\_analyzer.checks.provenance\_commit\_check module
    :undoc-members:
    :show-inheritance:
 
-macaron.slsa\_analyzer.checks.provenance\_l3\_check module
-----------------------------------------------------------
-
-.. automodule:: macaron.slsa_analyzer.checks.provenance_l3_check
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 macaron.slsa\_analyzer.checks.provenance\_l3\_content\_check module
 -------------------------------------------------------------------
 
