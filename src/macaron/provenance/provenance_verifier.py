@@ -16,7 +16,7 @@ from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.provenance.provenance_extractor import ProvenancePredicate
+from macaron.provenance.provenance_extractor import ProvenancePredicate, SLSAGithubGenericBuildDefinitionV01
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import AssetLocator
@@ -386,7 +386,7 @@ def determine_provenance_slsa_level(
     if predicate:
         build_type = ProvenancePredicate.get_build_type(provenance_payload.statement)
 
-    if build_type == "https://github.com/slsa-framework/slsa-github-generator/generic@v1" and verified_l3:
+    if build_type in {SLSAGithubGenericBuildDefinitionV01.expected_build_type} and verified_l3:
         # 3. Provenance is created by the SLSA GitHub generator and verified.
         return 3
 
