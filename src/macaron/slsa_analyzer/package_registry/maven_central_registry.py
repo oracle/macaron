@@ -123,20 +123,20 @@ class MavenCentralRegistry(PackageRegistry):
             return
         section = defaults[section_name]
 
-        self.search_netloc = section.get("search_netloc")
+        self.search_netloc = section.get("search_netloc", "")
         if not self.search_netloc:
             raise ConfigurationError(
                 f'The "search_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
             )
 
         self.search_scheme = section.get("search_scheme", "https")
-        self.search_endpoint = section.get("search_endpoint")
+        self.search_endpoint = section.get("search_endpoint", "")
         if not self.search_endpoint:
             raise ConfigurationError(
                 f'The "search_endpoint" key is missing in section [{section_name}] of the .ini configuration file.'
             )
 
-        self.registry_url_netloc = section.get("registry_url_netloc")
+        self.registry_url_netloc = section.get("registry_url_netloc", "")
         if not self.registry_url_netloc:
             raise ConfigurationError(
                 f'The "registry_url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'

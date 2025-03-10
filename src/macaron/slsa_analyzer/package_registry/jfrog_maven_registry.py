@@ -141,13 +141,13 @@ class JFrogMavenRegistry(PackageRegistry):
             return
         section = defaults[section_name]
 
-        self.hostname = section.get("hostname")
+        self.hostname = section.get("hostname", "")
         if not self.hostname:
             raise ConfigurationError(
                 f'The "hostname" key is missing in section [{section_name}] of the .ini configuration file.'
             )
 
-        self.repo = section.get("repo")
+        self.repo = section.get("repo", "")
         if not self.repo:
             raise ConfigurationError(
                 f'The "repo" key is missing in section [{section_name}] of the .ini configuration file.'

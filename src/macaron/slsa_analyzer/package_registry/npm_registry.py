@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides abstractions for the npm package registry."""
@@ -74,13 +74,13 @@ class NPMRegistry(PackageRegistry):
             logger.debug("npm registry is disabled in section [%s] of the .ini configuration file.", section_name)
             return
 
-        self.hostname = section.get("hostname")
+        self.hostname = section.get("hostname", "")
         if not self.hostname:
             raise ConfigurationError(
                 f'The "hostname" key is missing in section [{section_name}] of the .ini configuration file.'
             )
 
-        self.attestation_endpoint = section.get("attestation_endpoint")
+        self.attestation_endpoint = section.get("attestation_endpoint", "")
 
         if not self.attestation_endpoint:
             raise ConfigurationError(
