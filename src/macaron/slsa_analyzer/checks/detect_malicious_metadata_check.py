@@ -228,6 +228,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         # First check if this package is a known malware
         data = {"package": {"purl": ctx.component.purl}}
 
+        package_exists = False
         try:
             package_exists = bool(DepsDevService.get_package_info(ctx.component.purl))
         except APIAccessError as error:
@@ -279,6 +280,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                         pypi_package_json = PyPIPackageJsonAsset(
                             component_name=ctx.component.name,
                             component_version=ctx.component.version,
+                            has_repository=ctx.component.repository is not None,
                             pypi_registry=pypi_registry,
                             package_json={},
                         )
