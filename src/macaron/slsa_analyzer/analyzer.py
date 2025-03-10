@@ -472,7 +472,7 @@ class Analyzer:
         logger.info("With PURL: %s", component.purl)
         logger.info("=====================================")
 
-        analyze_ctx = self.get_analyze_ctx(component)
+        analyze_ctx = self.create_analyze_ctx(component)
         analyze_ctx.dynamic_data["expectation"] = self.expectations.get_expectation_for_target(
             analyze_ctx.component.purl.split("@")[0]
         )
@@ -917,8 +917,8 @@ class Analyzer:
                     "Cannot determine the analysis target: PURL and repository path are missing."
                 )
 
-    def get_analyze_ctx(self, component: Component) -> AnalyzeContext:
-        """Return the analyze context for a target component.
+    def create_analyze_ctx(self, component: Component) -> AnalyzeContext:
+        """Create and return an analysis context for the passed component.
 
         Parameters
         ----------
