@@ -37,7 +37,7 @@ def find_repo(
         return "", RepoFinderInfo.PYPI_NO_REGISTRY
 
     pypi_registry.load_defaults()
-    pypi_asset = PyPIPackageJsonAsset(purl.name, purl.version, pypi_registry, {})
+    pypi_asset = PyPIPackageJsonAsset(purl.name, purl.version, False, pypi_registry, {})
     if not pypi_asset.download(dest=""):
         return "", RepoFinderInfo.PYPI_HTTP_ERROR
 
@@ -80,6 +80,7 @@ def find_repo(
             fragment=parsed_url.fragment,
         ).geturl()
         logger.debug("Found repository URL from PyPI: %s", fixed_url)
+        pypi_asset.has_repository = True
         return fixed_url, RepoFinderInfo.FOUND_FROM_PYPI
 
     return "", RepoFinderInfo.PYPI_NO_URLS
