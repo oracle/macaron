@@ -346,6 +346,9 @@ class PyPIPackageJsonAsset:
     #: The target pypi software component version.
     component_version: str | None
 
+    #: Whether the component of this asset has a related repository.
+    has_repository: bool
+
     #: The pypi registry.
     pypi_registry: PyPIRegistry
 
