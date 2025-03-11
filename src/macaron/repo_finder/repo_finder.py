@@ -103,6 +103,9 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
     logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
     found_repo, outcome = repo_finder.find_repo(purl)
 
+    if check_latest_version and not defaults.getboolean("repofinder", "try_latest_purl"):
+        check_latest_version = False
+
     if found_repo or not check_latest_version:
         return found_repo, outcome
 
