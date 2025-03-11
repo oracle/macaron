@@ -1,12 +1,20 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module implements SQLAlchemy type for converting date format to RFC3339 string representation."""
+"""This module implements SQLAlchemy types for Python data types that cannot be automatically stored."""
 
 import datetime
+import json
 from typing import Any
 
 from sqlalchemy import JSON, String, TypeDecorator
+
+from macaron.slsa_analyzer.provenance.intoto import (
+    InTotoPayload,
+    InTotoV01Payload,
+    InTotoV1Payload,
+    validate_intoto_payload,
+)
 
 
 class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
@@ -36,7 +44,7 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
         if the provided ``datetime`` is a naive ``datetime`` object then UTC is added.
 
         value: None | datetime.datetime
-            The value being stored
+            The value being stored.
         """
         if value is None:
             return None
@@ -52,7 +60,7 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
         If the deserialized ``datetime`` has a timezone then return it, otherwise add UTC as its timezone.
 
         value: None | str
-            The value being loaded
+            The value being loaded.
         """
         if value is None:
             return None
@@ -76,7 +84,7 @@ class DBJsonDict(TypeDecorator):  # pylint: disable=W0223
         """Process when storing a dict object to the SQLite db.
 
         value: None | dict
-            The value being stored
+            The value being stored.
         """
         if not isinstance(value, dict):
             raise TypeError("DBJsonDict type expects a dict.")
@@ -87,8 +95,63 @@ class DBJsonDict(TypeDecorator):  # pylint: disable=W0223
         """Process when loading a dict object from the SQLite db.
 
         value: None | dict
-            The value being loaded
+            The value being loaded.
         """
         if not isinstance(value, dict):
             raise TypeError("DBJsonDict type expects a dict.")
         return value
+
+
+class ProvenancePayload(TypeDecorator):  # pylint: disable=W0223
+    """SQLAlchemy column type to serialize InTotoProvenance."""
+
+    # It is stored in the database as a String value.
+    impl = String
+
+    # To prevent Sphinx from rendering the docstrings for `cache_ok`, make this docstring private.
+    #: :meta private:
+    cache_ok = True
+
+    def process_bind_param(self, value: InTotoPayload | None, dialect: Any) -> str | None:
+        """Process when storing an InTotoPayload object to the SQLite db.
+
+        value: InTotoPayload | None
+            The value being stored.
+        """
+        if value is None:
+            return None
+
+        if not isinstance(value, InTotoPayload):
+            raise TypeError("ProvenancePayload type expects an InTotoPayload.")
+
+        payload_type = value.__class__.__name__
+        payload_dict = {"payload_type": payload_type, "payload": value.statement}
+        return json.dumps(payload_dict)
+
+    def process_result_value(self, value: str | None, dialect: Any) -> InTotoPayload | None:
+        """Process when loading an InTotoPayload object from the SQLite db.
+
+        value: str | None
+            The value being loaded.
+        """
+        if value is None:
+            return None
+
+        try:
+            payload_dict = json.loads(value)
+        except ValueError as error:
+            raise TypeError(f"Error parsing str as JSON: {error}") from error
+
+        if not isinstance(payload_dict, dict):
+            raise TypeError("Parsed data is not a dict.")
+
+        if "payload_type" not in payload_dict or "payload" not in payload_dict:
+            raise TypeError("Missing keys in dict for ProvenancePayload type.")
+
+        payload = payload_dict["payload"]
+        if payload_dict["payload_type"] == "InTotoV01Payload":
+            return InTotoV01Payload(statement=payload)
+        if payload_dict["payload_type"] == "InTotoV1Payload":
+            return InTotoV1Payload(statement=payload)
+
+        return validate_intoto_payload(payload)

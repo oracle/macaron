@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the provenance finder."""
@@ -14,14 +14,14 @@ from packageurl import PackageURL
 from pydriller import Git
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.repo_finder.provenance_finder import find_gav_provenance, find_npm_provenance, find_provenance_from_ci
+from macaron.provenance.provenance_finder import find_gav_provenance, find_npm_provenance, find_provenance_from_ci
 from macaron.slsa_analyzer.ci_service import BaseCIService, CircleCI, GitHubActions, GitLabCI, Jenkins, Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry, NPMRegistry
 from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAsset, JFrogMavenAssetMetadata
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
+from macaron.slsa_analyzer.specs.inferred_provenance import InferredProvenance
 from tests.conftest import MockAnalyzeContext
 
 
@@ -161,15 +161,16 @@ def test_provenance_on_unsupported_ci(macaron_path: Path, service: BaseCIService
         provenance_assets=[],
         release={},
         provenances=[],
-        build_info_results=InTotoV01Payload(statement=Provenance().payload),
+        build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
     )
 
     # Set up the context object with provenances.
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     ctx.dynamic_data["ci_services"] = [ci_info]
 
-    provenance = find_provenance_from_ci(ctx, None)
-    assert provenance is None
+    with tempfile.TemporaryDirectory() as temp_dir:
+        provenance = find_provenance_from_ci(ctx, None, temp_dir)
+        assert provenance is None
 
 
 def test_provenance_on_supported_ci(macaron_path: Path, test_dir: Path) -> None:
@@ -185,7 +186,7 @@ def test_provenance_on_supported_ci(macaron_path: Path, test_dir: Path) -> None:
         provenance_assets=[],
         release={},
         provenances=[],
-        build_info_results=InTotoV01Payload(statement=Provenance().payload),
+        build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
     )
 
     # Set up the context object with provenances.
@@ -194,13 +195,15 @@ def test_provenance_on_supported_ci(macaron_path: Path, test_dir: Path) -> None:
 
     # Test with a valid setup.
     git_obj = MockGit()
-    provenance = find_provenance_from_ci(ctx, git_obj)
-    assert provenance
+    with tempfile.TemporaryDirectory() as temp_dir:
+        provenance = find_provenance_from_ci(ctx, git_obj, temp_dir)
+        assert provenance
 
     # Test with a repo that doesn't have any accepted provenance.
     api_client.release = {"assets": [{"name": "attestation.intoto", "url": "URL", "size": 10}]}
-    provenance = find_provenance_from_ci(ctx, MockGit())
-    assert provenance is None
+    with tempfile.TemporaryDirectory() as temp_dir:
+        provenance = find_provenance_from_ci(ctx, MockGit(), temp_dir)
+        assert provenance is None
 
 
 def test_provenance_available_on_npm_registry(

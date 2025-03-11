@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This is the main entrypoint to run Macaron."""
@@ -32,7 +32,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None:
     """Run the SLSA checks against a single target repository."""
-    deps_depth = None
     if analyzer_single_args.deps_depth == "inf":
         deps_depth = -1
     else:
@@ -173,7 +172,8 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         analyzer_single_args.sbom_path,
         deps_depth,
         provenance_payload=prov_payload,
-        validate_malware_switch=analyzer_single_args.validate_malware_switch,
+        validate_malware=analyzer_single_args.validate_malware,
+        verify_provenance=analyzer_single_args.verify_provenance,
     )
     sys.exit(status_code)
 
@@ -360,7 +360,7 @@ def main(argv: list[str] | None = None) -> None:
         help="The directory where Macaron looks for already cloned repositories.",
     )
 
-    # Add sub parsers for each action
+    # Add sub parsers for each action.
     sub_parser = main_parser.add_subparsers(dest="action", help="Run macaron <action> --help for help")
 
     # Use Macaron to analyze one single repository.
@@ -470,10 +470,17 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     single_analyze_parser.add_argument(
-        "--validate-malware-switch",
+        "--validate-malware",
         required=False,
         action="store_true",
         help=("Enable malware validation."),
+    )
+
+    single_analyze_parser.add_argument(
+        "--verify-provenance",
+        required=False,
+        action="store_true",
+        help=("Allow the analysis to attempt to verify provenance files as part of its normal operations."),
     )
 
     # Dump the default values.

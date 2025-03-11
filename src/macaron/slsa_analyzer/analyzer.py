@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import sys
+import tempfile
 from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,11 +21,17 @@ from sqlalchemy.orm import Session
 
 from macaron import __version__
 from macaron.artifact.local_artifact import get_local_artifact_dirs
-from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
-from macaron.database.table_definitions import Analysis, Component, ProvenanceSubject, RepoFinderMetadata, Repository
+from macaron.database.table_definitions import (
+    Analysis,
+    Component,
+    Provenance,
+    ProvenanceSubject,
+    RepoFinderMetadata,
+    Repository,
+)
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, DependencyInfo
 from macaron.errors import (
     DuplicateError,
@@ -36,13 +43,16 @@ from macaron.errors import (
 )
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
-from macaron.repo_finder import repo_finder
-from macaron.repo_finder.provenance_extractor import (
+from macaron.provenance import provenance_verifier
+from macaron.provenance.provenance_extractor import (
     check_if_input_purl_provenance_conflict,
     check_if_input_repo_provenance_conflict,
+    extract_predicate_version,
     extract_repo_and_commit_from_provenance,
 )
-from macaron.repo_finder.provenance_finder import ProvenanceFinder, find_provenance_from_ci
+from macaron.provenance.provenance_finder import ProvenanceFinder, find_provenance_from_ci
+from macaron.provenance.provenance_verifier import determine_provenance_slsa_level, verify_ci_provenance
+from macaron.repo_finder import repo_finder
 from macaron.repo_finder.repo_finder import prepare_repo
 from macaron.repo_finder.repo_finder_enums import CommitFinderInfo, RepoFinderInfo
 from macaron.repo_finder.repo_utils import get_git_service
@@ -65,7 +75,7 @@ from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payl
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
+from macaron.slsa_analyzer.specs.inferred_provenance import InferredProvenance
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -126,7 +136,8 @@ class Analyzer:
         sbom_path: str = "",
         deps_depth: int = 0,
         provenance_payload: InTotoPayload | None = None,
-        validate_malware_switch: bool = False,
+        validate_malware: bool = False,
+        verify_provenance: bool = False,
     ) -> int:
         """Run the analysis and write results to the output path.
 
@@ -143,6 +154,10 @@ class Analyzer:
             The depth of dependency resolution. Default: 0.
         provenance_payload : InToToPayload | None
             The provenance intoto payload for the main software component.
+        validate_malware: bool
+            Enable malware validation if True.
+        verify_provenance: bool
+            Enable provenance verification if True.
 
         Returns
         -------
@@ -175,7 +190,8 @@ class Analyzer:
                     main_config,
                     analysis,
                     provenance_payload=provenance_payload,
-                    validate_malware_switch=validate_malware_switch,
+                    validate_malware=validate_malware,
+                    verify_provenance=verify_provenance,
                 )
 
                 if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
@@ -293,7 +309,8 @@ class Analyzer:
         analysis: Analysis,
         existing_records: dict[str, Record] | None = None,
         provenance_payload: InTotoPayload | None = None,
-        validate_malware_switch: bool = False,
+        validate_malware: bool = False,
+        verify_provenance: bool = False,
     ) -> Record:
         """Run the checks for a single repository target.
 
@@ -310,6 +327,10 @@ class Analyzer:
             The mapping of existing records that the analysis has run successfully.
         provenance_payload : InToToPayload | None
             The provenance intoto payload for the analyzed software component.
+        validate_malware: bool
+            Enable malware validation if True.
+        verify_provenance: bool
+            Enable provenance verification if True.
 
         Returns
         -------
@@ -339,12 +360,11 @@ class Analyzer:
             provenances = provenance_finder.find_provenance(parsed_purl)
             if provenances:
                 provenance_payload = provenances[0]
-                if defaults.getboolean("analyzer", "verify_provenance"):
-                    provenance_is_verified = provenance_finder.verify_provenance(parsed_purl, provenances)
+                if verify_provenance:
+                    provenance_is_verified = provenance_verifier.verify_provenance(parsed_purl, provenances)
 
         # Try to extract the repository URL and commit digest from the Provenance, if it exists.
         repo_path_input: str | None = config.get_value("path")
-        digest_input: str | None = config.get_value("digest")
         provenance_repo_url = provenance_commit_digest = None
         if provenance_payload:
             try:
@@ -352,10 +372,8 @@ class Analyzer:
                     provenance_payload
                 )
             except ProvenanceError as error:
-                logger.debug("Failed to extract repo or commit from provenance: %s", error)
-
-            # Try to validate the input repo against provenance contents.
-            if provenance_repo_url and check_if_input_repo_provenance_conflict(repo_path_input, provenance_repo_url):
+                logger.debug("Failed to extract from provenance: %s", error)
+            if check_if_input_repo_provenance_conflict(repo_path_input, provenance_repo_url):
                 return Record(
                     record_id=repo_id,
                     description="Input mismatch between repo and provenance.",
@@ -400,18 +418,15 @@ class Analyzer:
         )
 
         # Check if only one of the repo or digest came from direct input.
-        if git_obj and (provenance_repo_url or provenance_commit_digest) and parsed_purl:
+        if parsed_purl:
             if check_if_input_purl_provenance_conflict(
-                git_obj,
                 bool(repo_path_input),
-                bool(digest_input),
                 provenance_repo_url,
-                provenance_commit_digest,
                 parsed_purl,
             ):
                 return Record(
                     record_id=repo_id,
-                    description="Input mismatch between repo/commit (purl) and provenance.",
+                    description="Input mismatch between repo (purl) and provenance.",
                     pre_config=config,
                     status=SCMStatus.ANALYSIS_FAILED,
                 )
@@ -461,42 +476,62 @@ class Analyzer:
             self._verify_repository_link(parsed_purl, analyze_ctx)
         self._determine_package_registries(analyze_ctx)
 
+        provenance_l3_verified = False
         if not provenance_payload:
             # Look for provenance using the CI.
-            provenance_payload = find_provenance_from_ci(analyze_ctx, git_obj)
-            # If found, verify analysis target against new provenance
-            if provenance_payload:
-                # If repository URL was not provided as input, check the one found during analysis.
-                if not repo_path_input and component.repository:
-                    repo_path_input = component.repository.remote_path
+            with tempfile.TemporaryDirectory() as temp_dir:
+                provenance_payload = find_provenance_from_ci(analyze_ctx, git_obj, temp_dir)
+                # If found, validate analysis target against new provenance.
+                if provenance_payload:
+                    # If repository URL was not provided as input, check the one found during analysis.
+                    if not repo_path_input and component.repository:
+                        repo_path_input = component.repository.remote_path
+                    provenance_repo_url = provenance_commit_digest = None
+                    try:
+                        provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
+                            provenance_payload
+                        )
+                    except ProvenanceError as error:
+                        logger.debug("Failed to extract from provenance: %s", error)
 
-                # Extract the digest and repository URL from provenance.
-                provenance_repo_url = provenance_commit_digest = None
-                try:
-                    provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
-                        provenance_payload
-                    )
-                except ProvenanceError as error:
-                    logger.debug("Failed to extract repo or commit from provenance: %s", error)
+                    if check_if_input_repo_provenance_conflict(repo_path_input, provenance_repo_url):
+                        return Record(
+                            record_id=repo_id,
+                            description="Input mismatch between repo/commit and provenance.",
+                            pre_config=config,
+                            status=SCMStatus.ANALYSIS_FAILED,
+                        )
 
-                # Try to validate the input repo against provenance contents.
-                if provenance_repo_url and check_if_input_repo_provenance_conflict(
-                    repo_path_input, provenance_repo_url
-                ):
-                    return Record(
-                        record_id=repo_id,
-                        description="Input mismatch between repo/commit and provenance.",
-                        pre_config=config,
-                        status=SCMStatus.ANALYSIS_FAILED,
-                    )
+                    # Also try to verify CI provenance contents.
+                    if verify_provenance:
+                        verified = []
+                        for ci_info in analyze_ctx.dynamic_data["ci_services"]:
+                            verified.append(verify_ci_provenance(analyze_ctx, ci_info, temp_dir))
+                            if not verified:
+                                break
+                        if verified and all(verified):
+                            provenance_l3_verified = True
 
-        analyze_ctx.dynamic_data["provenance"] = provenance_payload
         if provenance_payload:
             analyze_ctx.dynamic_data["is_inferred_prov"] = False
-            analyze_ctx.dynamic_data["provenance_verified"] = provenance_is_verified
-        analyze_ctx.dynamic_data["provenance_repo_url"] = provenance_repo_url
-        analyze_ctx.dynamic_data["provenance_commit_digest"] = provenance_commit_digest
-        analyze_ctx.dynamic_data["validate_malware_switch"] = validate_malware_switch
+            slsa_version = extract_predicate_version(provenance_payload)
+
+            slsa_level = determine_provenance_slsa_level(
+                analyze_ctx, provenance_payload, provenance_is_verified, provenance_l3_verified
+            )
+
+            analyze_ctx.dynamic_data["provenance_info"] = Provenance(
+                component=component,
+                repository_url=provenance_repo_url,
+                commit_sha=provenance_commit_digest,
+                verified=provenance_is_verified,
+                provenance_payload=provenance_payload,
+                slsa_level=slsa_level,
+                slsa_version=slsa_version,
+                # TODO Add release tag, release digest.
+            )
+
+        analyze_ctx.dynamic_data["validate_malware"] = validate_malware
 
         if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
             local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
@@ -971,11 +1006,11 @@ class Analyzer:
                         release={},
                         provenances=[
                             SLSAProvenanceData(
-                                payload=InTotoV01Payload(statement=Provenance().payload),
+                                payload=InTotoV01Payload(statement=InferredProvenance().payload),
                                 asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0),
                             )
                         ],
-                        build_info_results=InTotoV01Payload(statement=Provenance().payload),
+                        build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
                     )
                 )
 

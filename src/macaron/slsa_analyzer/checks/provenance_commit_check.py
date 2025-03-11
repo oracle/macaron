@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module adds a check that determines whether the repository URL came from provenance."""
@@ -21,6 +21,10 @@ class ProvenanceDerivedCommitFacts(CheckFacts):
     """The ORM mapping for justifications in the commit from provenance check."""
 
     __tablename__ = "_provenance_derived_commit_check"
+
+    # This check is disabled here due to a bug in pylint. The Mapped class triggers a false positive.
+    # It may arbitrarily become true that this is no longer needed in this check, or will be needed in another check.
+    # pylint: disable=unsubscriptable-object
 
     #: The primary key.
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
@@ -63,7 +67,7 @@ class ProvenanceDerivedCommitCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        if ctx.dynamic_data["provenance_commit_digest"]:
+        if ctx.dynamic_data["provenance_info"] and ctx.dynamic_data["provenance_info"].commit_sha:
             if not ctx.component.repository:
                 return CheckResultData(
                     result_tables=[],
@@ -72,7 +76,7 @@ class ProvenanceDerivedCommitCheck(BaseCheck):
 
             current_commit = ctx.component.repository.commit_sha
 
-            if current_commit == ctx.dynamic_data["provenance_commit_digest"]:
+            if current_commit == ctx.dynamic_data["provenance_info"].commit_sha:
                 return CheckResultData(
                     result_tables=[
                         ProvenanceDerivedCommitFacts(

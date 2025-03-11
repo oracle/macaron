@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module adds a check that determines whether the repository URL came from provenance."""
@@ -63,7 +63,7 @@ class ProvenanceDerivedRepoCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        if ctx.dynamic_data["provenance_repo_url"]:
+        if ctx.dynamic_data["provenance_info"] and ctx.dynamic_data["provenance_info"].repository_url:
             if not ctx.component.repository:
                 return CheckResultData(
                     result_tables=[],
@@ -72,7 +72,7 @@ class ProvenanceDerivedRepoCheck(BaseCheck):
 
             current_repository = ctx.component.repository.remote_path
 
-            if current_repository == ctx.dynamic_data["provenance_repo_url"]:
+            if current_repository == ctx.dynamic_data["provenance_info"].repository_url:
                 return CheckResultData(
                     result_tables=[
                         ProvenanceDerivedRepoFacts(

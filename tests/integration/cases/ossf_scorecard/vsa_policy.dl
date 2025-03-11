@@ -1,8 +1,13 @@
-/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 
 #include "prelude.dl"
 
-Policy("auth-provenance", component_id, "") :- check_passed(component_id, "mcn_provenance_level_three_1").
-apply_policy_to("auth-provenance", component_id) :- is_component(component_id, "pkg:github/ossf/scorecard@v4.13.1").
+Policy("auth-provenance", component_id, "") :-
+    check_passed(component_id, "mcn_provenance_verified_1"),
+    provenance_verified_check(_, build_level, _),
+    build_level = 3.
+
+apply_policy_to("auth-provenance", component_id) :-
+    is_component(component_id, "pkg:github/ossf/scorecard@v4.13.1").

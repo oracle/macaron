@@ -80,6 +80,11 @@ Options
 
     The path to the local .m2 directory. If this option is not used, Macaron will use the default location at $HOME/.m2
 
+.. option:: --verify-provenance
+
+    Allow the analysis to attempt to verify provenance files as part of its normal operations.
+
+
 -----------
 Environment
 -----------

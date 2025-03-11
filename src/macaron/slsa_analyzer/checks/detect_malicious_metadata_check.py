@@ -424,7 +424,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                         if confidence is None:
                             confidence = Confidence.HIGH
                             result_type = CheckResultType.PASSED
-                        elif ctx.dynamic_data["validate_malware_switch"]:
+                        elif ctx.dynamic_data["validate_malware"]:
                             is_malware, validation_result = self.validate_malware(pypi_package_json)
                             if is_malware:  # Find source code block matched the malicious pattern
                                 confidence = Confidence.HIGH

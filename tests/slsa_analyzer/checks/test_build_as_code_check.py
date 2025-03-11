@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for the Build As Code Check."""
@@ -26,7 +26,7 @@ from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import Gi
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
+from macaron.slsa_analyzer.specs.inferred_provenance import InferredProvenance
 from tests.conftest import MockAnalyzeContext, build_github_actions_call_graph_for_commands
 
 
@@ -58,7 +58,7 @@ def test_build_as_code_check_no_callgraph(
         provenance_assets=[],
         release={},
         provenances=[],
-        build_info_results=InTotoV01Payload(statement=Provenance().payload),
+        build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
     )
     use_build_tool = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     use_build_tool.dynamic_data["build_spec"]["tools"] = [build_tools[build_tool_name]]
@@ -109,7 +109,7 @@ def test_deploy_commands(
         provenance_assets=[],
         release={},
         provenances=[],
-        build_info_results=InTotoV01Payload(statement=Provenance().payload),
+        build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
     )
     ci_info["service"] = github_actions_service
     deploy_ctx.dynamic_data["ci_services"] = [ci_info]
@@ -147,7 +147,7 @@ def test_gha_workflow_deployment(
         provenance_assets=[],
         release={},
         provenances=[],
-        build_info_results=InTotoV01Payload(statement=Provenance().payload),
+        build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
     )
 
     workflows_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "github", "workflow_files")
@@ -193,7 +193,7 @@ def test_travis_ci_deploy(
         provenance_assets=[],
         release={},
         provenances=[],
-        build_info_results=InTotoV01Payload(statement=Provenance().payload),
+        build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
     )
     gradle_deploy = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     gradle_deploy.component.repository.fs_path = str(repo_path.absolute())
@@ -214,7 +214,7 @@ def test_multibuild_facts_saved(
         provenance_assets=[],
         release={},
         provenances=[],
-        build_info_results=InTotoV01Payload(statement=Provenance().payload),
+        build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
     )
 
     multi_build = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")

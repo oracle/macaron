@@ -1,4 +1,4 @@
-/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 #include "prelude.dl"
@@ -9,7 +9,6 @@ Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_build_service_1"),
     check_passed(component_id, "mcn_version_control_system_1"),
     check_passed(component_id, "mcn_provenance_available_1"),
-    check_passed(component_id, "mcn_provenance_level_three_1"),
     check_passed(component_id, "mcn_provenance_derived_commit_1"),
     check_passed(component_id, "mcn_provenance_derived_repo_1"),
     check_passed(component_id, "mcn_provenance_expectation_1"),
@@ -17,6 +16,9 @@ Policy("test_policy", component_id, "") :-
     build_tool_check(pip_id, "pip", "python"),
     check_facts(pip_id, _, component_id,_,_),
     check_failed(component_id, "mcn_find_artifact_pipeline_1"),
+    check_passed(component_id, "mcn_provenance_verified_1"),
+    provenance_verified_check(_, build_level, _),
+    build_level = 3,
     check_failed(component_id, "mcn_provenance_witness_level_one_1"),
     check_failed(component_id, "mcn_trusted_builder_level_three_1"),
     is_repo_url(component_id, "https://github.com/urllib3/urllib3"),

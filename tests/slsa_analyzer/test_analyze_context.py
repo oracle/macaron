@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains tests for the AnalyzeContext module."""
@@ -14,7 +14,7 @@ from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload, validate_i
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
+from macaron.slsa_analyzer.specs.inferred_provenance import InferredProvenance
 from tests.conftest import MockAnalyzeContext
 
 
@@ -101,7 +101,7 @@ class TestAnalyzeContext(TestCase):
                     payload=expected_payload, asset=VirtualReleaseAsset(name="No_ASSET", url="NO_URL", size_in_bytes=0)
                 ),
             ],
-            build_info_results=InTotoV01Payload(statement=Provenance().payload),
+            build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
         )
 
         self.analyze_ctx.dynamic_data["ci_services"].append(gh_actions_ci_info)

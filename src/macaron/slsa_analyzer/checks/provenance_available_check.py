@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the implementation of the Provenance Available check."""
@@ -74,7 +74,11 @@ class ProvenanceAvailableCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        available = ctx.dynamic_data["provenance"] and not ctx.dynamic_data["is_inferred_prov"]
+        available = (
+            ctx.dynamic_data["provenance_info"]
+            and ctx.dynamic_data["provenance_info"].provenance_payload
+            and not ctx.dynamic_data["is_inferred_prov"]
+        )
         return CheckResultData(
             result_tables=[
                 ProvenanceAvailableFacts(

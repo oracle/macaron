@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Analyze Context class.
@@ -11,7 +11,7 @@ import os
 from collections import defaultdict
 from typing import Any, TypedDict
 
-from macaron.database.table_definitions import Component, SLSALevel
+from macaron.database.table_definitions import Component, Provenance, SLSALevel
 from macaron.repo_verifier.repo_verifier import RepositoryVerificationResult
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
@@ -19,7 +19,7 @@ from macaron.slsa_analyzer.git_service import BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.levels import SLSALevels
 from macaron.slsa_analyzer.provenance.expectations.expectation import Expectation
-from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payload
+from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Statement
 from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1Statement
 from macaron.slsa_analyzer.slsa_req import ReqName, SLSAReqStatus, create_requirement_status_dict
@@ -47,17 +47,11 @@ class ChecksOutputs(TypedDict):
     """The expectation to verify the provenance for the target software component."""
     package_registries: list[PackageRegistryInfo]
     """The package registries for the target software component."""
-    provenance: InTotoPayload | None
-    """The provenance payload for the target software component."""
-    provenance_repo_url: str | None
-    """The repository URL extracted from provenance, if applicable."""
-    provenance_commit_digest: str | None
-    """The commit digest extracted from provenance, if applicable."""
-    provenance_verified: bool
-    """True if the provenance exists and has been verified against a signed companion provenance."""
+    provenance_info: Provenance | None
+    """The provenance and related information."""
     local_artifact_paths: list[str]
     """The local artifact absolute paths."""
-    validate_malware_switch: bool
+    validate_malware: bool
     """True when the malware validation is enabled."""
 
 
@@ -110,12 +104,9 @@ class AnalyzeContext:
             package_registries=[],
             is_inferred_prov=True,
             expectation=None,
-            provenance=None,
-            provenance_repo_url=None,
-            provenance_commit_digest=None,
-            provenance_verified=False,
+            provenance_info=None,
             local_artifact_paths=[],
-            validate_malware_switch=False,
+            validate_malware=False,
         )
 
     @property

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for the Trusted Builder Level three check."""
@@ -20,7 +20,7 @@ from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
 from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
-from macaron.slsa_analyzer.specs.inferred_provenance import Provenance
+from macaron.slsa_analyzer.specs.inferred_provenance import InferredProvenance
 from tests.conftest import MockAnalyzeContext
 
 
@@ -51,7 +51,7 @@ def test_trusted_builder_l3_check(
         provenance_assets=[],
         release={},
         provenances=[],
-        build_info_results=InTotoV01Payload(statement=Provenance().payload),
+        build_info_results=InTotoV01Payload(statement=InferredProvenance().payload),
     )
 
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
