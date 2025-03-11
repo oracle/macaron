@@ -91,7 +91,7 @@ STATIC_PROBLOG_MODEL = f"""
 quickUndetailed :- not {Heuristics.EMPTY_PROJECT_LINK.value}, not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value}.
 
 % Maintainer releases a suspicious setup.py and forces it to run by omitting a .whl file.
-forceSetup :- not {Heuristics.SUSPICIOUS_SETUP.value}, {Heuristics.WHEEL_ABSENCE.value}.
+forceSetup :- not {Heuristics.SUSPICIOUS_SETUP.value}, not {Heuristics.WHEEL_ABSENCE.value}.
 
 % Suspicious Combinations
 
