@@ -216,7 +216,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         problog_model = PrologString(problog_code)
         problog_results: dict[Term, float] = get_evaluatable().create_from(problog_model).evaluate()
 
-        confidence = problog_results.get(Term(RESULT))
+        confidence: float | None = problog_results.get(Term(RESULT))
         if confidence == 0.0:
             return None  # no rules were triggered
         return confidence
