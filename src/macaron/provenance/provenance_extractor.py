@@ -159,13 +159,13 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str | None, str | N
 
     # Extract the repository URL.
     match build_type:
-        case "https://slsa-framework.github.io/gcb-buildtypes/triggered-build/v1":
+        case SLSAGCBBuildDefinitionV1.expected_build_type:
             repo = json_extract(build_def, ["externalParameters", "sourceToBuild", "repository"], str)
             if not repo:
                 repo = json_extract(build_def, ["externalParameters", "configSource", "repository"], str)
-        case "https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1":
+        case SLSAGithubActionsBuildDefinitionV1.expected_build_type:
             repo = json_extract(build_def, ["externalParameters", "workflow", "repository"], str)
-        case "https://github.com/oracle/macaron/tree/main/src/macaron/resources/provenance-buildtypes/oci/v1":
+        case SLSAOCIBuildDefinitionV1.expected_build_type:
             repo = json_extract(build_def, ["externalParameters", "source"], str)
         case _:
             logger.debug("Unsupported build type for SLSA v1: %s", build_type)
@@ -177,7 +177,7 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str | None, str | N
 
     # Extract the commit hash.
     commit = None
-    if build_type == "https://github.com/oracle/macaron/tree/main/src/macaron/resources/provenance-buildtypes/oci/v1":
+    if build_type == SLSAOCIBuildDefinitionV1.expected_build_type:
         commit = json_extract(build_def, ["internalParameters", "buildEnvVar", "BLD_COMMIT_HASH"], str)
     else:
         deps = json_extract(build_def, ["resolvedDependencies"], list)
