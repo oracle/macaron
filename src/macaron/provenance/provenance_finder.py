@@ -5,6 +5,7 @@
 import logging
 import os
 import tempfile
+from dataclasses import dataclass
 from functools import partial
 
 from packageurl import PackageURL
@@ -28,6 +29,15 @@ from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class ProvenanceAsset:
+    """This class exists to hold a provenance payload with the original asset's name and URL."""
+
+    payload: InTotoPayload
+    name: str
+    url: str
+
+
 class ProvenanceFinder:
     """This class is used to find and retrieve provenance files from supported registries."""
 
@@ -42,7 +52,7 @@ class ProvenanceFinder:
                 elif isinstance(registry, JFrogMavenRegistry):
                     self.jfrog_registry = registry
 
-    def find_provenance(self, purl: PackageURL) -> list[InTotoPayload]:
+    def find_provenance(self, purl: PackageURL) -> list[ProvenanceAsset]:
         """Find the provenance file(s) of the passed PURL.
 
         Parameters
@@ -52,8 +62,8 @@ class ProvenanceFinder:
 
         Returns
         -------
-        list[InTotoPayload]
-            The provenance payload, or an empty list if not found.
+        list[ProvenanceAsset]
+            The provenance asset, or an empty list if not found.
         """
         logger.debug("Seeking provenance of: %s", purl)
 
@@ -82,7 +92,7 @@ class ProvenanceFinder:
         logger.debug("Provenance finding not supported for PURL type: %s", purl.type)
         return []
 
-    def _find_provenance(self, discovery_functions: list[partial[list[InTotoPayload]]]) -> list[InTotoPayload]:
+    def _find_provenance(self, discovery_functions: list[partial[list[ProvenanceAsset]]]) -> list[ProvenanceAsset]:
         """Find the provenance file(s) using the passed discovery functions.
 
         Parameters
@@ -93,7 +103,7 @@ class ProvenanceFinder:
         Returns
         -------
         list[InTotoPayload]
-            The provenance payload(s) from the first successful function, or an empty list if none were.
+            The provenance asset(s) from the first successful function, or an empty list if none were.
         """
         if not discovery_functions:
             return []
@@ -108,7 +118,7 @@ class ProvenanceFinder:
         return []
 
 
-def find_npm_provenance(purl: PackageURL, registry: NPMRegistry) -> list[InTotoPayload]:
+def find_npm_provenance(purl: PackageURL, registry: NPMRegistry) -> list[ProvenanceAsset]:
     """Find and download the NPM based provenance for the passed PURL.
 
     Two kinds of attestation can be retrieved from npm: "Provenance" and "Publish". The "Provenance" attestation
@@ -125,8 +135,8 @@ def find_npm_provenance(purl: PackageURL, registry: NPMRegistry) -> list[InTotoP
 
     Returns
     -------
-    list[InTotoPayload]
-        The provenance payload(s), or an empty list if not found.
+    list[ProvenanceAsset]
+        The provenance asset(s), or an empty list if not found.
     """
     if not registry.enabled:
         logger.debug("The npm registry is not enabled.")
@@ -172,16 +182,19 @@ def find_npm_provenance(purl: PackageURL, registry: NPMRegistry) -> list[InTotoP
                 publish_payload = load_provenance_payload(signed_download_path)
             except LoadIntotoAttestationError as error:
                 logger.error("Error while loading publish attestation: %s", error)
-                return [provenance_payload]
+                return [ProvenanceAsset(provenance_payload, npm_provenance_asset.name, npm_provenance_asset.url)]
 
-            return [provenance_payload, publish_payload]
+            return [
+                ProvenanceAsset(provenance_payload, npm_provenance_asset.name, npm_provenance_asset.url),
+                ProvenanceAsset(publish_payload, npm_provenance_asset.name, npm_provenance_asset.url),
+            ]
 
     except OSError as error:
         logger.error("Error while storing provenance in the temporary directory: %s", error)
         return []
 
 
-def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[InTotoPayload]:
+def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[ProvenanceAsset]:
     """Find and download the GAV based provenance for the passed PURL.
 
     Parameters
@@ -193,8 +206,8 @@ def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[
 
     Returns
     -------
-    list[InTotoPayload] | None
-        The provenance payload if found, or an empty list otherwise.
+    list[ProvenanceAsset] | None
+        The provenance asset if found, or an empty list otherwise.
 
     Raises
     ------
@@ -263,7 +276,7 @@ def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[
                 if not is_witness_provenance_payload(provenance_payload, witness_verifier_config.predicate_types):
                     continue
 
-                provenances.append(provenance_payload)
+                provenances.append(ProvenanceAsset(provenance_payload, provenance_asset.name, provenance_asset.url))
     except OSError as error:
         logger.error("Error while storing provenance in the temporary directory: %s", error)
 
@@ -277,7 +290,7 @@ def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[
 
 def find_provenance_from_ci(
     analyze_ctx: AnalyzeContext, git_obj: Git | None, download_path: str
-) -> InTotoPayload | None:
+) -> ProvenanceAsset | None:
     """Try to find provenance from CI services of the repository.
 
     Note that we stop going through the CI services once we encounter a CI service
@@ -372,7 +385,10 @@ def find_provenance_from_ci(
                 download_provenances_from_ci_service(ci_info, download_path)
 
                 # TODO consider how to handle multiple payloads here.
-                return ci_info["provenances"][0].payload if ci_info["provenances"] else None
+                if ci_info["provenances"]:
+                    provenance = ci_info["provenances"][0]
+                    return ProvenanceAsset(provenance.payload, provenance.asset.name, provenance.asset.url)
+                return None
 
         else:
             logger.debug("CI service not supported for provenance finding: %s", ci_service.name)
