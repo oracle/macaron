@@ -6,6 +6,9 @@
 import logging
 
 import requests
+from problog import get_evaluatable
+from problog.logic import Term
+from problog.program import PrologString
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -63,184 +66,6 @@ class MaliciousMetadataFacts(CheckFacts):
     __mapper_args__ = {
         "polymorphic_identity": "_detect_malicious_metadata_check",
     }
-
-
-# This list contains the heuristic analyzer classes
-# When implementing new analyzer, appending the classes to this list
-ANALYZERS: list = [
-    EmptyProjectLinkAnalyzer,
-    SourceCodeRepoAnalyzer,
-    OneReleaseAnalyzer,
-    HighReleaseFrequencyAnalyzer,
-    UnchangedReleaseAnalyzer,
-    CloserReleaseJoinDateAnalyzer,
-    SuspiciousSetupAnalyzer,
-    WheelAbsenceAnalyzer,
-    AnomalousVersionAnalyzer,
-]
-
-
-# The HeuristicResult sequence is aligned with the sequence of ANALYZERS list
-SUSPICIOUS_COMBO: dict[
-    tuple[
-        HeuristicResult,
-        HeuristicResult,
-        HeuristicResult,
-        HeuristicResult,
-        HeuristicResult,
-        HeuristicResult,
-        HeuristicResult,
-        HeuristicResult,
-        HeuristicResult,
-    ],
-    float,
-] = {
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Source Code Repo
-        HeuristicResult.FAIL,  # One Release
-        HeuristicResult.SKIP,  # High Release Frequency
-        HeuristicResult.SKIP,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.FAIL,  # Suspicious Setup
-        HeuristicResult.FAIL,  # Wheel Absence
-        HeuristicResult.FAIL,  # Anomalous Version
-        # No project link, only one release, and the maintainer released it shortly
-        # after account registration.
-        # The setup.py file contains suspicious imports and .whl file isn't present.
-        # Anomalous version has no effect.
-    ): Confidence.HIGH,
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Source Code Repo
-        HeuristicResult.FAIL,  # One Release
-        HeuristicResult.SKIP,  # High Release Frequency
-        HeuristicResult.SKIP,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.FAIL,  # Suspicious Setup
-        HeuristicResult.FAIL,  # Wheel Absence
-        HeuristicResult.PASS,  # Anomalous Version
-        # No project link, only one release, and the maintainer released it shortly
-        # after account registration.
-        # The setup.py file contains suspicious imports and .whl file isn't present.
-        # Anomalous version has no effect.
-    ): Confidence.HIGH,
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Source Code Repo
-        HeuristicResult.PASS,  # One Release
-        HeuristicResult.FAIL,  # High Release Frequency
-        HeuristicResult.FAIL,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.FAIL,  # Suspicious Setup
-        HeuristicResult.FAIL,  # Wheel Absence
-        HeuristicResult.SKIP,  # Anomalous Version
-        # No project link, frequent releases of multiple versions without modifying the content,
-        # and the maintainer released it shortly after account registration.
-        # The setup.py file contains suspicious imports and .whl file isn't present.
-    ): Confidence.HIGH,
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Source Code Repo
-        HeuristicResult.PASS,  # One Release
-        HeuristicResult.FAIL,  # High Release Frequency
-        HeuristicResult.PASS,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.FAIL,  # Suspicious Setup
-        HeuristicResult.FAIL,  # Wheel Absence
-        HeuristicResult.SKIP,  # Anomalous Version
-        # No project link, frequent releases of multiple versions,
-        # and the maintainer released it shortly after account registration.
-        # The setup.py file contains suspicious imports and .whl file isn't present.
-    ): Confidence.HIGH,
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Source Code Repo
-        HeuristicResult.PASS,  # One Release
-        HeuristicResult.FAIL,  # High Release Frequency
-        HeuristicResult.FAIL,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.PASS,  # Suspicious Setup
-        HeuristicResult.PASS,  # Wheel Absence
-        HeuristicResult.SKIP,  # Anomalous Version
-        # No project link, frequent releases of multiple versions without modifying the content,
-        # and the maintainer released it shortly after account registration. Presence/Absence of
-        # .whl file has no effect
-    ): Confidence.MEDIUM,
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Source Code Repo
-        HeuristicResult.PASS,  # One Release
-        HeuristicResult.FAIL,  # High Release Frequency
-        HeuristicResult.FAIL,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.PASS,  # Suspicious Setup
-        HeuristicResult.FAIL,  # Wheel Absence
-        HeuristicResult.SKIP,  # Anomalous Version
-        # No project link, frequent releases of multiple versions without modifying the content,
-        # and the maintainer released it shortly after account registration. Presence/Absence of
-        # .whl file has no effect
-    ): Confidence.MEDIUM,
-    (
-        HeuristicResult.PASS,  # Empty Project
-        HeuristicResult.FAIL,  # Source Code Repo
-        HeuristicResult.PASS,  # One Release
-        HeuristicResult.FAIL,  # High Release Frequency
-        HeuristicResult.PASS,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.FAIL,  # Suspicious Setup
-        HeuristicResult.FAIL,  # Wheel Absence
-        HeuristicResult.SKIP,  # Anomalous Version
-        # No source code repo, frequent releases of multiple versions,
-        # and the maintainer released it shortly after account registration.
-        # The setup.py file contains suspicious imports and .whl file isn't present.
-    ): Confidence.HIGH,
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Source Code Repo
-        HeuristicResult.FAIL,  # One Release
-        HeuristicResult.SKIP,  # High Release Frequency
-        HeuristicResult.SKIP,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.PASS,  # Suspicious Setup
-        HeuristicResult.PASS,  # Wheel Absence
-        HeuristicResult.FAIL,  # Anomalous Version
-        # No project link, only one release, and the maintainer released it shortly
-        # after account registration.
-        # The setup.py file has no effect and .whl file is present.
-        # The version number is anomalous.
-    ): Confidence.MEDIUM,
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Source Code Repo
-        HeuristicResult.FAIL,  # One Release
-        HeuristicResult.SKIP,  # High Release Frequency
-        HeuristicResult.SKIP,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.FAIL,  # Suspicious Setup
-        HeuristicResult.PASS,  # Wheel Absence
-        HeuristicResult.FAIL,  # Anomalous Version
-        # No project link, only one release, and the maintainer released it shortly
-        # after account registration.
-        # The setup.py file has no effect and .whl file is present.
-        # The version number is anomalous.
-    ): Confidence.MEDIUM,
-    (
-        HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Source Code Repo
-        HeuristicResult.FAIL,  # One Release
-        HeuristicResult.SKIP,  # High Release Frequency
-        HeuristicResult.SKIP,  # Unchanged Release
-        HeuristicResult.FAIL,  # Closer Release Join Date
-        HeuristicResult.SKIP,  # Suspicious Setup
-        HeuristicResult.PASS,  # Wheel Absence
-        HeuristicResult.FAIL,  # Anomalous Version
-        # No project link, only one release, and the maintainer released it shortly
-        # after account registration.
-        # The setup.py file has no effect and .whl file is present.
-        # The version number is anomalous.
-    ): Confidence.MEDIUM,
-}
 
 
 class DetectMaliciousMetadataCheck(BaseCheck):
@@ -303,6 +128,41 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         is_malware, detail_info = sourcecode_analyzer.analyze()
         return is_malware, detail_info
 
+    def evaluate_heuristic_results(self, heuristic_results: dict[Heuristics, HeuristicResult]) -> float | None:
+        """Analyse the heuristic results to determine the maliciousness of the package.
+
+        Parameters
+        ----------
+        heuristic_results: dict[Heuristics, HeuristicResult]
+            Dictionary of Heuristic keys with HeuristicResult values, results of each heuristic scan.
+
+        Returns
+        -------
+        float | None
+            Returns the confidence associated with the detected malicious combination, otherwise None if no associated
+            malicious combination was triggered.
+        """
+        facts_list: list[str] = []
+        for heuristic, result in heuristic_results.items():
+            if result == HeuristicResult.SKIP:
+                facts_list.append(f"0.0::{heuristic.value}.")
+            elif result == HeuristicResult.PASS:
+                facts_list.append(f"{heuristic.value} :- true.")
+            else:  # HeuristicResult.FAIL
+                facts_list.append(f"{heuristic.value} :- false.")
+
+        facts = "\n".join(facts_list)
+        problog_code = f"{facts}\n\n{self.malware_rules_problog_model}"
+        logger.debug("Problog model used for evaluation:\n %s", problog_code)
+
+        problog_model = PrologString(problog_code)
+        problog_results: dict[Term, float] = get_evaluatable().create_from(problog_model).evaluate()
+
+        confidence: float | None = problog_results.get(Term(self.problog_result_access))
+        if confidence == 0.0:
+            return None  # no rules were triggered
+        return confidence
+
     def run_heuristics(
         self, pypi_package_json: PyPIPackageJsonAsset
     ) -> tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]:
@@ -326,7 +186,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         results: dict[Heuristics, HeuristicResult] = {}
         detail_info: dict[str, JsonType] = {}
 
-        for _analyzer in ANALYZERS:
+        for _analyzer in self.analyzers:
             analyzer: BaseHeuristicAnalyzer = _analyzer()
             logger.debug("Instantiating %s", _analyzer.__name__)
 
@@ -418,8 +278,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                         except HeuristicAnalyzerValueError:
                             return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-                        result_combo: tuple = tuple(result.values())
-                        confidence: float | None = SUSPICIOUS_COMBO.get(result_combo, None)
+                        confidence = self.evaluate_heuristic_results(result)
                         result_type = CheckResultType.FAILED
                         if confidence is None:
                             confidence = Confidence.HIGH
@@ -447,6 +306,67 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         # Return UNKNOWN result for unsupported ecosystems.
         return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
+
+    # This list contains the heuristic analyzer classes
+    # When implementing new analyzer, appending the classes to this list
+    analyzers: list = [
+        EmptyProjectLinkAnalyzer,
+        SourceCodeRepoAnalyzer,
+        OneReleaseAnalyzer,
+        HighReleaseFrequencyAnalyzer,
+        UnchangedReleaseAnalyzer,
+        CloserReleaseJoinDateAnalyzer,
+        SuspiciousSetupAnalyzer,
+        WheelAbsenceAnalyzer,
+        AnomalousVersionAnalyzer,
+    ]
+
+    problog_result_access = "result"
+
+    malware_rules_problog_model = f"""
+    % Heuristic groupings
+    % These are common combinations of heuristics that are used in many of the rules, thus themselves representing
+    % certain behaviors. When changing or adding rules here, if there are frequent combinations of particular
+    % heuristics, group them together here.
+
+    % Maintainer has recently joined, publishing an undetailed page with no links.
+    quickUndetailed :- not {Heuristics.EMPTY_PROJECT_LINK.value}, not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value}.
+
+    % Maintainer releases a suspicious setup.py and forces it to run by omitting a .whl file.
+    forceSetup :- not {Heuristics.SUSPICIOUS_SETUP.value}, not {Heuristics.WHEEL_ABSENCE.value}.
+
+    % Suspicious Combinations
+
+    % Package released recently with little detail, forcing the setup.py to run.
+    {Confidence.HIGH.value}::high :- quickUndetailed, forceSetup, not {Heuristics.ONE_RELEASE.value}.
+    {Confidence.HIGH.value}::high :- quickUndetailed, forceSetup, not {Heuristics.HIGH_RELEASE_FREQUENCY.value}.
+
+    % Package released recently with little detail, with some more refined trust markers introduced: project links,
+    % multiple different releases, but there is no source code repository matching it and the setup is suspicious.
+    {Confidence.HIGH.value}::high :- not {Heuristics.SOURCE_CODE_REPO.value},
+        not {Heuristics.HIGH_RELEASE_FREQUENCY.value},
+        not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value},
+        {Heuristics.UNCHANGED_RELEASE.value},
+        forceSetup.
+
+    % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
+    % the same code.
+    {Confidence.MEDIUM.value}::medium :- quickUndetailed,
+        not {Heuristics.HIGH_RELEASE_FREQUENCY.value},
+        not {Heuristics.UNCHANGED_RELEASE.value},
+        {Heuristics.SUSPICIOUS_SETUP.value}.
+
+    % Package released recently with little detail and an anomalous version number for a single-release package.
+    {Confidence.MEDIUM.value}::medium :- quickUndetailed,
+        not {Heuristics.ONE_RELEASE.value},
+        {Heuristics.WHEEL_ABSENCE.value},
+        not {Heuristics.ANOMALOUS_VERSION.value}.
+
+    {problog_result_access} :- high.
+    {problog_result_access} :- medium.
+
+    query({problog_result_access}).
+    """
 
 
 registry.register(DetectMaliciousMetadataCheck())
