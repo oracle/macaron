@@ -205,7 +205,7 @@ upgrade: .venv/upgraded-on
 .venv/upgraded-on: pyproject.toml
 	python -m pip install --upgrade pip
 	python -m pip install --upgrade wheel
-	python -m pip install --upgrade --upgrade-strategy eager --editable .[actions,dev,docs,hooks,test,test-docker]
+	python -m pip install --upgrade --upgrade-strategy eager --editable .[actions,dev,docs,hooks,test,test-docker,experimental]
 	$(MAKE) upgrade-quiet
 force-upgrade:
 	rm -f .venv/upgraded-on
