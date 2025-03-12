@@ -149,27 +149,20 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str | None, str | N
         logger.debug("No predicate in payload statement.")
         return None, None
 
-    build_def = json_extract(predicate, ["buildDefinition"], dict)
-    if not build_def:
-        return None, None
-
-    build_type = json_extract(build_def, ["buildType"], str)
-    if not build_type:
-        return None, None
+    build_def = ProvenancePredicate.find_build_def(payload.statement)
 
     # Extract the repository URL.
-    match build_type:
-        case SLSAGCBBuildDefinitionV1.expected_build_type:
-            repo = json_extract(build_def, ["externalParameters", "sourceToBuild", "repository"], str)
-            if not repo:
-                repo = json_extract(build_def, ["externalParameters", "configSource", "repository"], str)
-        case SLSAGithubActionsBuildDefinitionV1.expected_build_type:
-            repo = json_extract(build_def, ["externalParameters", "workflow", "repository"], str)
-        case SLSAOCIBuildDefinitionV1.expected_build_type:
-            repo = json_extract(build_def, ["externalParameters", "source"], str)
-        case _:
-            logger.debug("Unsupported build type for SLSA v1: %s", build_type)
-            return None, None
+    if isinstance(build_def, SLSAGCBBuildDefinitionV1):
+        repo = json_extract(predicate, ["buildDefinition", "externalParameters", "sourceToBuild", "repository"], str)
+        if not repo:
+            repo = json_extract(predicate, ["buildDefinition", "externalParameters", "configSource", "repository"], str)
+    elif isinstance(build_def, SLSAGithubActionsBuildDefinitionV1):
+        repo = json_extract(predicate, ["buildDefinition", "externalParameters", "workflow", "repository"], str)
+    elif isinstance(build_def, SLSAOCIBuildDefinitionV1):
+        repo = json_extract(predicate, ["buildDefinition", "externalParameters", "source"], str)
+    else:
+        logger.debug("Unsupported build type for SLSA v1: %s", type(build_def))
+        return None, None
 
     if not repo:
         logger.debug("Repo URL not found in SLSA v1 payload.")
@@ -177,10 +170,12 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str | None, str | N
 
     # Extract the commit hash.
     commit = None
-    if build_type == SLSAOCIBuildDefinitionV1.expected_build_type:
-        commit = json_extract(build_def, ["internalParameters", "buildEnvVar", "BLD_COMMIT_HASH"], str)
+    if isinstance(build_def, SLSAOCIBuildDefinitionV1):
+        commit = json_extract(
+            predicate, ["buildDefinition", "internalParameters", "buildEnvVar", "BLD_COMMIT_HASH"], str
+        )
     else:
-        deps = json_extract(build_def, ["resolvedDependencies"], list)
+        deps = json_extract(predicate, ["buildDefinition", "resolvedDependencies"], list)
         if not deps:
             return repo, None
         for dep in deps:
