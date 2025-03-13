@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module includes utilities functions for Macaron."""
@@ -59,10 +59,10 @@ def send_get_http(url: str, headers: dict) -> dict:
     return dict(response.json())
 
 
-def send_get_http_raw(
+def send_head_http_raw(
     url: str, headers: dict | None = None, timeout: int | None = None, allow_redirects: bool = True
 ) -> Response | None:
-    """Send the GET HTTP request with the given url and headers.
+    """Send the HEAD HTTP request with the given url and headers.
 
     This method also handle logging when the API server return error status code.
 
@@ -83,6 +83,79 @@ def send_get_http_raw(
         If a Response object is returned and ``allow_redirects`` is ``True`` (the default) it will have a status code of
         200 (OK). If ``allow_redirects`` is ``False`` the response can instead have a status code of 302. Otherwise, the
         request has failed and ``None`` will be returned.
+    """
+    logger.debug("HEAD - %s", url)
+    if not timeout:
+        timeout = defaults.getint("requests", "timeout", fallback=10)
+    error_retries = defaults.getint("requests", "error_retries", fallback=5)
+    retry_counter = error_retries
+    try:
+        response = requests.head(
+            url=url,
+            headers=headers,
+            timeout=timeout,
+            allow_redirects=allow_redirects,
+        )
+    except requests.exceptions.RequestException as error:
+        logger.debug(error)
+        return None
+    if not allow_redirects and response.status_code == 302:
+        # Found, most likely because a redirect is about to happen.
+        return response
+    while response.status_code != 200:
+        logger.debug(
+            "Receiving error code %s from server.",
+            response.status_code,
+        )
+        if retry_counter <= 0:
+            logger.debug("Maximum retries reached: %s", error_retries)
+            return None
+        if response.status_code == 403:
+            check_rate_limit(response)
+        else:
+            return None
+        retry_counter = retry_counter - 1
+        response = requests.head(
+            url=url,
+            headers=headers,
+            timeout=timeout,
+            allow_redirects=allow_redirects,
+        )
+
+    return response
+
+
+def send_get_http_raw(
+    url: str,
+    headers: dict | None = None,
+    timeout: int | None = None,
+    allow_redirects: bool = True,
+    check_response_fails: bool = True,
+) -> Response | None:
+    """Send the GET HTTP request with the given url and headers.
+
+    This method also handle logging when the API server return error status code.
+
+    Parameters
+    ----------
+    url : str
+        The url of the request.
+    headers : dict | None
+        The dict that describes the headers of the request.
+    timeout: int | None
+        The request timeout (optional).
+    allow_redirects: bool
+        Whether to allow redirects. Default: True.
+    check_response_fails: bool
+        When True, check if the response fails. Otherwise, return the response.
+
+    Returns
+    -------
+    Response | None
+        If a Response object is returned and ``allow_redirects`` is ``True`` (the default) it will have a status code of
+        200 (OK). If ``allow_redirects`` is ``False`` the response can instead have a status code of 302. Otherwise, the
+        request has failed and ``None`` will be returned. If ``check_response_fails`` is False, the response will be
+        returned regardless of its status code.
     """
     logger.debug("GET - %s", url)
     if not timeout:
@@ -113,7 +186,7 @@ def send_get_http_raw(
         if response.status_code == 403:
             check_rate_limit(response)
         else:
-            return None
+            return None if not check_response_fails else response
         retry_counter = retry_counter - 1
         response = requests.get(
             url=url,

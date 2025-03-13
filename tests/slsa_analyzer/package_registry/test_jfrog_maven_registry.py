@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for the ``JFrogMavenRegistry`` class."""
@@ -135,83 +135,6 @@ def test_is_detected(
     # (in the ini config).
     jfrog_maven.enabled = False
     assert jfrog_maven.is_detected(build_tool) is False
-
-
-@pytest.mark.parametrize(
-    ("args", "expected_path"),
-    [
-        pytest.param(
-            {
-                "group_id": "io.micronaut",
-            },
-            "io/micronaut",
-            id="Only group_id 1",
-        ),
-        pytest.param(
-            {
-                "group_id": "com.fasterxml.jackson.core",
-            },
-            "com/fasterxml/jackson/core",
-            id="Only group_id 2",
-        ),
-        pytest.param(
-            {
-                "group_id": "com.fasterxml.jackson.core",
-                "artifact_id": "jackson-annotations",
-            },
-            "com/fasterxml/jackson/core/jackson-annotations",
-            id="group_id and artifact_id",
-        ),
-        pytest.param(
-            {
-                "group_id": "com.fasterxml.jackson.core",
-                "artifact_id": "jackson-annotations",
-                "version": "2.9.9",
-            },
-            "com/fasterxml/jackson/core/jackson-annotations/2.9.9",
-            id="group_id and artifact_id and version",
-        ),
-        pytest.param(
-            {
-                "group_id": "com.fasterxml.jackson.core",
-                "artifact_id": "jackson-annotations",
-                "version": "2.9.9",
-                "asset_name": "jackson-annotations-2.9.9.jar",
-            },
-            "com/fasterxml/jackson/core/jackson-annotations/2.9.9/jackson-annotations-2.9.9.jar",
-            id="group_id and artifact_id and version and asset_name,",
-        ),
-    ],
-)
-def test_construct_maven_repository_path(
-    jfrog_maven: JFrogMavenRegistry,
-    args: dict,
-    expected_path: str,
-) -> None:
-    """Test the ``construct_maven_repository_path`` method."""
-    assert jfrog_maven.construct_maven_repository_path(**args) == expected_path
-
-
-@pytest.mark.parametrize(
-    ("group_id", "expected_group_path"),
-    [
-        (
-            "io.micronaut",
-            "io/micronaut",
-        ),
-        (
-            "com.fasterxml.jackson.core",
-            "com/fasterxml/jackson/core",
-        ),
-    ],
-)
-def test_to_group_folder_path(
-    jfrog_maven: JFrogMavenRegistry,
-    group_id: str,
-    expected_group_path: str,
-) -> None:
-    """Test the ``to_gorup_folder_path`` method."""
-    assert jfrog_maven.construct_maven_repository_path(group_id) == expected_group_path
 
 
 @pytest.mark.parametrize(

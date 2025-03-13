@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # Use bash as the shell when executing a rule's recipe. For more details:
@@ -145,6 +145,8 @@ else
 endif
 # If Souffle cannot be installed, we advise the user to install it manually
 # and return status code 0, which is not considered a failure.
+# Souffle depends upon the libffiX library, where X is the current version it requires. Depending on the version of Ubuntu being used, the exact library
+# may not be present. In this script, we manually download and install version 7 on the Ubuntu operating system.
 .PHONY: souffle
 souffle:
 	if ! command -v souffle; then \
@@ -158,6 +160,9 @@ souffle:
 	      sudo wget https://souffle-lang.github.io/ppa/souffle-key.public -O /usr/share/keyrings/souffle-archive-keyring.gpg; \
 	      echo "deb [signed-by=/usr/share/keyrings/souffle-archive-keyring.gpg] https://souffle-lang.github.io/ppa/ubuntu/ stable main" | sudo tee /etc/apt/sources.list.d/souffle.list; \
 	      sudo apt update; \
+	      sudo wget http://archive.ubuntu.com/ubuntu/pool/main/libf/libffi/libffi7_3.3-4_amd64.deb; \
+		  sudo dpkg -i libffi7_3.3-4_amd64.deb; \
+	      rm libffi7_3.3-4_amd64.deb; \
 	      sudo apt install souffle;; \
 	    "Darwin") \
 	      if command -v brew; then \

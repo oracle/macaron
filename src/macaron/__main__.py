@@ -74,6 +74,29 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
             sys.exit(os.EX_OSFILE)
         global_config.load_python_venv(analyzer_single_args.python_venv)
 
+    # Set local maven repo path.
+    if analyzer_single_args.local_maven_repo is None:
+        # Load the default user local .m2 directory.
+        # Exit on error if $HOME is not set or empty.
+        home_dir = os.getenv("HOME")
+        if not home_dir:
+            logger.critical("Environment variable HOME is not set.")
+            sys.exit(os.EX_USAGE)
+
+        local_maven_repo = os.path.join(home_dir, ".m2")
+        if not os.path.isdir(local_maven_repo):
+            logger.debug("The default local Maven repo at %s does not exist. Ignore ...")
+            global_config.local_maven_repo = None
+
+        global_config.local_maven_repo = local_maven_repo
+    else:
+        user_provided_local_maven_repo = analyzer_single_args.local_maven_repo
+        if not os.path.isdir(user_provided_local_maven_repo):
+            logger.error("The user provided local Maven repo at %s is not valid.", user_provided_local_maven_repo)
+            sys.exit(os.EX_USAGE)
+
+        global_config.local_maven_repo = user_provided_local_maven_repo
+
     analyzer = Analyzer(global_config.output_path, global_config.build_log_path)
 
     # Initiate reporters.
@@ -145,17 +168,12 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
             logger.error("Error while loading the input provenance file: %s", error)
             sys.exit(os.EX_DATAERR)
 
-    if analyzer_single_args.skip_deps:
-        logger.warning(
-            "The --skip-deps flag has been deprecated and WILL NOT do anything. "
-            + "Dependency resolution is off by default. This flag does nothing and will be removed in the next release."
-        )
-
     status_code = analyzer.run(
         run_config,
         analyzer_single_args.sbom_path,
         deps_depth,
         provenance_payload=prov_payload,
+        validate_malware_switch=analyzer_single_args.validate_malware_switch,
     )
     sys.exit(status_code)
 
@@ -416,16 +434,6 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     single_analyze_parser.add_argument(
-        "--skip-deps",
-        required=False,
-        action="store_true",
-        default=False,
-        help=(
-            "DEPRECATED. Dependency resolution is off by default. This flag does nothing and will be removed in the next release."
-        ),
-    )
-
-    single_analyze_parser.add_argument(
         "--deps-depth",
         required=False,
         default="0",
@@ -451,6 +459,21 @@ def main(argv: list[str] | None = None) -> None:
             "The path to the Python virtual environment of the target software component. "
             + "If this is set, dependency resolution must be enabled with '--deps-depth'."
         ),
+    )
+
+    single_analyze_parser.add_argument(
+        "--local-maven-repo",
+        required=False,
+        help=(
+            "The path to the local .m2 directory. If this option is not used, Macaron will use the default location at $HOME/.m2"
+        ),
+    )
+
+    single_analyze_parser.add_argument(
+        "--validate-malware-switch",
+        required=False,
+        action="store_true",
+        help=("Enable malware validation."),
     )
 
     # Dump the default values.

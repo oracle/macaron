@@ -57,6 +57,14 @@ macaron.repo\_finder.repo\_finder\_deps\_dev module
    :undoc-members:
    :show-inheritance:
 
+macaron.repo\_finder.repo\_finder\_enums module
+-----------------------------------------------
+
+.. automodule:: macaron.repo_finder.repo_finder_enums
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.repo\_finder.repo\_finder\_java module
 ----------------------------------------------
 

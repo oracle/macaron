@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This check examines the metadata of pypi packages with seven heuristics."""
@@ -11,21 +11,26 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.db_custom_types import DBJsonDict
 from macaron.database.table_definitions import CheckFacts
+from macaron.errors import HeuristicAnalyzerValueError
 from macaron.json_tools import JsonType, json_extract
 from macaron.malware_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult, Heuristics
+from macaron.malware_analyzer.pypi_heuristics.metadata.anomalous_version import AnomalousVersionAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
-from macaron.malware_analyzer.pypi_heuristics.metadata.unreachable_project_links import UnreachableProjectLinksAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
+from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset, PyPIRegistry
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -64,17 +69,22 @@ class MaliciousMetadataFacts(CheckFacts):
 # When implementing new analyzer, appending the classes to this list
 ANALYZERS: list = [
     EmptyProjectLinkAnalyzer,
-    UnreachableProjectLinksAnalyzer,
+    SourceCodeRepoAnalyzer,
     OneReleaseAnalyzer,
     HighReleaseFrequencyAnalyzer,
     UnchangedReleaseAnalyzer,
     CloserReleaseJoinDateAnalyzer,
     SuspiciousSetupAnalyzer,
+    WheelAbsenceAnalyzer,
+    AnomalousVersionAnalyzer,
 ]
+
 
 # The HeuristicResult sequence is aligned with the sequence of ANALYZERS list
 SUSPICIOUS_COMBO: dict[
     tuple[
+        HeuristicResult,
+        HeuristicResult,
         HeuristicResult,
         HeuristicResult,
         HeuristicResult,
@@ -87,74 +97,163 @@ SUSPICIOUS_COMBO: dict[
 ] = {
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.FAIL,  # One Release
         HeuristicResult.SKIP,  # High Release Frequency
         HeuristicResult.SKIP,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
+        HeuristicResult.FAIL,  # Wheel Absence
+        HeuristicResult.FAIL,  # Anomalous Version
         # No project link, only one release, and the maintainer released it shortly
         # after account registration.
-        # The setup.py file contains suspicious imports.
+        # The setup.py file contains suspicious imports and .whl file isn't present.
+        # Anomalous version has no effect.
     ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
+        HeuristicResult.FAIL,  # One Release
+        HeuristicResult.SKIP,  # High Release Frequency
+        HeuristicResult.SKIP,  # Unchanged Release
+        HeuristicResult.FAIL,  # Closer Release Join Date
+        HeuristicResult.FAIL,  # Suspicious Setup
+        HeuristicResult.FAIL,  # Wheel Absence
+        HeuristicResult.PASS,  # Anomalous Version
+        # No project link, only one release, and the maintainer released it shortly
+        # after account registration.
+        # The setup.py file contains suspicious imports and .whl file isn't present.
+        # Anomalous version has no effect.
+    ): Confidence.HIGH,
+    (
+        HeuristicResult.FAIL,  # Empty Project
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.PASS,  # One Release
         HeuristicResult.FAIL,  # High Release Frequency
         HeuristicResult.FAIL,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
+        HeuristicResult.FAIL,  # Wheel Absence
+        HeuristicResult.SKIP,  # Anomalous Version
         # No project link, frequent releases of multiple versions without modifying the content,
         # and the maintainer released it shortly after account registration.
-        # The setup.py file contains suspicious imports.
+        # The setup.py file contains suspicious imports and .whl file isn't present.
     ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.PASS,  # One Release
         HeuristicResult.FAIL,  # High Release Frequency
         HeuristicResult.PASS,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
+        HeuristicResult.FAIL,  # Wheel Absence
+        HeuristicResult.SKIP,  # Anomalous Version
         # No project link, frequent releases of multiple versions,
         # and the maintainer released it shortly after account registration.
-        # The setup.py file contains suspicious imports.
+        # The setup.py file contains suspicious imports and .whl file isn't present.
     ): Confidence.HIGH,
     (
         HeuristicResult.FAIL,  # Empty Project
-        HeuristicResult.SKIP,  # Unreachable Project Links
+        HeuristicResult.SKIP,  # Source Code Repo
         HeuristicResult.PASS,  # One Release
         HeuristicResult.FAIL,  # High Release Frequency
         HeuristicResult.FAIL,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.PASS,  # Suspicious Setup
+        HeuristicResult.PASS,  # Wheel Absence
+        HeuristicResult.SKIP,  # Anomalous Version
         # No project link, frequent releases of multiple versions without modifying the content,
-        # and the maintainer released it shortly after account registration.
+        # and the maintainer released it shortly after account registration. Presence/Absence of
+        # .whl file has no effect
+    ): Confidence.MEDIUM,
+    (
+        HeuristicResult.FAIL,  # Empty Project
+        HeuristicResult.SKIP,  # Source Code Repo
+        HeuristicResult.PASS,  # One Release
+        HeuristicResult.FAIL,  # High Release Frequency
+        HeuristicResult.FAIL,  # Unchanged Release
+        HeuristicResult.FAIL,  # Closer Release Join Date
+        HeuristicResult.PASS,  # Suspicious Setup
+        HeuristicResult.FAIL,  # Wheel Absence
+        HeuristicResult.SKIP,  # Anomalous Version
+        # No project link, frequent releases of multiple versions without modifying the content,
+        # and the maintainer released it shortly after account registration. Presence/Absence of
+        # .whl file has no effect
     ): Confidence.MEDIUM,
     (
         HeuristicResult.PASS,  # Empty Project
-        HeuristicResult.FAIL,  # Unreachable Project Links
+        HeuristicResult.FAIL,  # Source Code Repo
         HeuristicResult.PASS,  # One Release
         HeuristicResult.FAIL,  # High Release Frequency
         HeuristicResult.PASS,  # Unchanged Release
         HeuristicResult.FAIL,  # Closer Release Join Date
         HeuristicResult.FAIL,  # Suspicious Setup
-        # All project links are unreachable, frequent releases of multiple versions,
+        HeuristicResult.FAIL,  # Wheel Absence
+        HeuristicResult.SKIP,  # Anomalous Version
+        # No source code repo, frequent releases of multiple versions,
         # and the maintainer released it shortly after account registration.
-        # The setup.py file contains suspicious imports.
+        # The setup.py file contains suspicious imports and .whl file isn't present.
     ): Confidence.HIGH,
+    (
+        HeuristicResult.FAIL,  # Empty Project
+        HeuristicResult.SKIP,  # Source Code Repo
+        HeuristicResult.FAIL,  # One Release
+        HeuristicResult.SKIP,  # High Release Frequency
+        HeuristicResult.SKIP,  # Unchanged Release
+        HeuristicResult.FAIL,  # Closer Release Join Date
+        HeuristicResult.PASS,  # Suspicious Setup
+        HeuristicResult.PASS,  # Wheel Absence
+        HeuristicResult.FAIL,  # Anomalous Version
+        # No project link, only one release, and the maintainer released it shortly
+        # after account registration.
+        # The setup.py file has no effect and .whl file is present.
+        # The version number is anomalous.
+    ): Confidence.MEDIUM,
+    (
+        HeuristicResult.FAIL,  # Empty Project
+        HeuristicResult.SKIP,  # Source Code Repo
+        HeuristicResult.FAIL,  # One Release
+        HeuristicResult.SKIP,  # High Release Frequency
+        HeuristicResult.SKIP,  # Unchanged Release
+        HeuristicResult.FAIL,  # Closer Release Join Date
+        HeuristicResult.FAIL,  # Suspicious Setup
+        HeuristicResult.PASS,  # Wheel Absence
+        HeuristicResult.FAIL,  # Anomalous Version
+        # No project link, only one release, and the maintainer released it shortly
+        # after account registration.
+        # The setup.py file has no effect and .whl file is present.
+        # The version number is anomalous.
+    ): Confidence.MEDIUM,
+    (
+        HeuristicResult.FAIL,  # Empty Project
+        HeuristicResult.SKIP,  # Source Code Repo
+        HeuristicResult.FAIL,  # One Release
+        HeuristicResult.SKIP,  # High Release Frequency
+        HeuristicResult.SKIP,  # Unchanged Release
+        HeuristicResult.FAIL,  # Closer Release Join Date
+        HeuristicResult.SKIP,  # Suspicious Setup
+        HeuristicResult.PASS,  # Wheel Absence
+        HeuristicResult.FAIL,  # Anomalous Version
+        # No project link, only one release, and the maintainer released it shortly
+        # after account registration.
+        # The setup.py file has no effect and .whl file is present.
+        # The version number is anomalous.
+    ): Confidence.MEDIUM,
 }
 
 
 class DetectMaliciousMetadataCheck(BaseCheck):
     """This check analyzes the metadata of a package for malicious behavior."""
 
+    # The OSV knowledge base query database.
+    osv_query_url = "https://api.osv.dev/v1/query"
+
     def __init__(self) -> None:
         """Initialize a check instance."""
         check_id = "mcn_detect_malicious_metadata_1"
         description = """This check analyzes the metadata of a package based on reports malicious behavior.
-        Supported ecosystem: PyPI.
+        Supported ecosystem for unknown malware: PyPI.
         """
         super().__init__(check_id=check_id, description=description, eval_reqs=[])
 
@@ -183,6 +282,27 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 return True
         return False
 
+    def validate_malware(self, pypi_package_json: PyPIPackageJsonAsset) -> tuple[bool, dict[str, JsonType] | None]:
+        """Validate the package is malicious.
+
+        Parameters
+        ----------
+        pypi_package_json: PyPIPackageJsonAsset
+
+        Returns
+        -------
+        tuple[bool, dict[str, JsonType] | None]
+            Returns True if the source code includes suspicious pattern.
+            Returns the result of the validation including the line number
+            and the suspicious arguments.
+            e.g. requests.get("http://malicious.com")
+            return the "http://malicious.com"
+        """
+        # TODO: This redundant function might be removed
+        sourcecode_analyzer = PyPISourcecodeAnalyzer(pypi_package_json)
+        is_malware, detail_info = sourcecode_analyzer.analyze()
+        return is_malware, detail_info
+
     def run_heuristics(
         self, pypi_package_json: PyPIPackageJsonAsset
     ) -> tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]:
@@ -197,12 +317,19 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         -------
         tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]
             Containing the analysis results and relevant metadata.
+
+        Raises
+        ------
+        HeuristicAnalyzerValueError
+            If a heuristic analysis fails due to malformed package information.
         """
         results: dict[Heuristics, HeuristicResult] = {}
         detail_info: dict[str, JsonType] = {}
+
         for _analyzer in ANALYZERS:
             analyzer: BaseHeuristicAnalyzer = _analyzer()
             logger.debug("Instantiating %s", _analyzer.__name__)
+
             depends_on: list[tuple[Heuristics, HeuristicResult]] | None = analyzer.depends_on
 
             if depends_on:
@@ -215,6 +342,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             if analyzer.heuristic:
                 results[analyzer.heuristic] = result
                 detail_info.update(result_info)
+
         return results, detail_info
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
@@ -231,38 +359,46 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             The result of the check.
         """
         result_tables: list[CheckFacts] = []
-        # First check if this package is a known malware
-
-        url = "https://api.osv.dev/v1/query"
-        data = {"package": {"purl": ctx.component.purl}}
-        response = send_post_http_raw(url, json_data=data, headers=None)
-        res_obj = None
-        if response:
-            try:
-                res_obj = response.json()
-            except requests.exceptions.JSONDecodeError as error:
-                logger.debug("Unable to get a valid response from %s: %s", url, error)
-        if res_obj:
-            for vuln in res_obj.get("vulns", {}):
-                v_id = json_extract(vuln, ["id"], str)
-                if v_id and v_id.startswith("MAL-"):
-                    result_tables.append(
-                        MaliciousMetadataFacts(
-                            known_malware=f"https://osv.dev/vulnerability/{v_id}",
-                            result={},
-                            detail_information=vuln,
-                            confidence=Confidence.HIGH,
-                        )
-                    )
-            if result_tables:
-                return CheckResultData(
-                    result_tables=result_tables,
-                    result_type=CheckResultType.FAILED,
-                )
-
         package_registry_info_entries = ctx.dynamic_data["package_registries"]
+
+        # First check if this package is a known malware
+        data = {"package": {"purl": ctx.component.purl}}
+
+        try:
+            package_exists = bool(DepsDevService.get_package_info(ctx.component.purl))
+        except APIAccessError as error:
+            logger.debug(error)
+
+        # Known malicious packages must have been removed.
+        if not package_exists:
+            response = send_post_http_raw(self.osv_query_url, json_data=data, headers=None)
+            res_obj = None
+            if response:
+                try:
+                    res_obj = response.json()
+                except requests.exceptions.JSONDecodeError as error:
+                    logger.debug("Unable to get a valid response from %s: %s", self.osv_query_url, error)
+            if res_obj:
+                for vuln in res_obj.get("vulns", {}):
+                    if v_id := json_extract(vuln, ["id"], str):
+                        result_tables.append(
+                            MaliciousMetadataFacts(
+                                known_malware=f"https://osv.dev/vulnerability/{v_id}",
+                                result={},
+                                detail_information=vuln,
+                                confidence=Confidence.HIGH,
+                            )
+                        )
+                if result_tables:
+                    return CheckResultData(
+                        result_tables=result_tables,
+                        result_type=CheckResultType.FAILED,
+                    )
+
+        # If the package is not a known malware, run malware analysis heuristics.
         for package_registry_info_entry in package_registry_info_entries:
             match package_registry_info_entry:
+                # Currently, only PyPI packages are supported.
                 case PackageRegistryInfo(
                     build_tool=Pip() | Poetry(),
                     package_registry=PyPIRegistry() as pypi_registry,
@@ -277,13 +413,24 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
                     # Download the PyPI package JSON, but no need to persist it to the filesystem.
                     if pypi_package_json.download(dest=""):
-                        result, detail_info = self.run_heuristics(pypi_package_json)
+                        try:
+                            result, detail_info = self.run_heuristics(pypi_package_json)
+                        except HeuristicAnalyzerValueError:
+                            return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
+
                         result_combo: tuple = tuple(result.values())
                         confidence: float | None = SUSPICIOUS_COMBO.get(result_combo, None)
                         result_type = CheckResultType.FAILED
                         if confidence is None:
                             confidence = Confidence.HIGH
                             result_type = CheckResultType.PASSED
+                        elif ctx.dynamic_data["validate_malware_switch"]:
+                            is_malware, validation_result = self.validate_malware(pypi_package_json)
+                            if is_malware:  # Find source code block matched the malicious pattern
+                                confidence = Confidence.HIGH
+                            elif validation_result:  # Find suspicious source code, but cannot be confirmed
+                                confidence = Confidence.MEDIUM
+                            logger.debug(validation_result)
 
                         result_tables.append(
                             MaliciousMetadataFacts(

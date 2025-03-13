@@ -22,8 +22,9 @@ Usage
     usage: ./run_macaron.sh analyze
         [-h] [-sbom SBOM_PATH] [-purl PURL] [-rp REPO_PATH] [-b BRANCH]
         [-d DIGEST] [-pe PROVENANCE_EXPECTATION]
-        [--skip-deps] [--deps-depth DEPS_DEPTH] [-g TEMPLATE_PATH]
+        [--deps-depth DEPS_DEPTH] [-g TEMPLATE_PATH]
         [--python-venv PYTHON_VENV]
+        [--local-maven-repo LOCAL_MAVEN_REPO]
 
 -------
 Options
@@ -63,10 +64,6 @@ Options
 
     The path to the provenance file in in-toto format.
 
-.. option:: --skip-deps
-
-    DEPRECATED. Dependency resolution is off by default. This flag does nothing and will be removed in the next release.
-
 .. option:: --deps-depth DEPS_DEPTH
 
     The depth of the dependency resolution. 0: disable, 1: direct dependencies, inf: all transitive dependencies. (Default: 0)
@@ -78,6 +75,10 @@ Options
 .. option::  --python-venv PYTHON_VENV
 
     The path to the Python virtual environment of the target software component.
+
+.. option:: --local-maven-repo LOCAL_MAVEN_REPO
+
+    The path to the local .m2 directory. If this option is not used, Macaron will use the default location at $HOME/.m2
 
 -----------
 Environment

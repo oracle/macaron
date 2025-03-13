@@ -1,3 +1,24 @@
+## v0.15.0 (2025-03-10)
+
+### Feat
+
+- add Repo Finder and Commit Finder outcomes to database (#892)
+- add in new metadata-based heuristic to pypi malware analyzer (#944)
+- find repo from latest artifact when provided artifact has none (#931)
+- obtain Java and Python artifacts from .m2 or Python virtual environment from input (#864)
+- include inspector package urls as part of the malicious metadata facts for pypi packages (#935)
+- add a new setup.py related heuristic in the pypi malware analyzer (#932)
+
+### Fix
+
+- update already present repositories (#949)
+- report known malware even when not labeled (#956)
+
+### Refactor
+
+- replace unreachable project links heuristic with source code repo heuristic (#983)
+- remove the deprecated --skip-deps command-line option. (#943)
+
 ## v0.14.0 (2024-11-26)
 
 ### Feat

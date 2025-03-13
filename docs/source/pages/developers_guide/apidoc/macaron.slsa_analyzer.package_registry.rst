@@ -9,6 +9,14 @@ macaron.slsa\_analyzer.package\_registry package
 Submodules
 ----------
 
+macaron.slsa\_analyzer.package\_registry.deps\_dev module
+---------------------------------------------------------
+
+.. automodule:: macaron.slsa_analyzer.package_registry.deps_dev
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 macaron.slsa\_analyzer.package\_registry.jfrog\_maven\_registry module
 ----------------------------------------------------------------------
 

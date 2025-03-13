@@ -30,7 +30,7 @@ def test_commit_finder() -> int:
         artifacts = item["artifacts"]
         for artifact in artifacts:
             purl = PackageURL.from_string(artifact["purl"])
-            matched_tags = commit_finder.match_tags(item["tags"], purl.name, purl.version or "")
+            matched_tags, _ = commit_finder.match_tags(item["tags"], purl.name, purl.version or "")
             matched_tag = matched_tags[0] if matched_tags else ""
             expected = str(artifact["match"])
             if matched_tag != expected:

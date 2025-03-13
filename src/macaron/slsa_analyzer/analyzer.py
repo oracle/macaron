@@ -1,11 +1,14 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles the cloning and analyzing a Git repo."""
+
+import glob
 import logging
 import os
 import re
 import sys
+from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -16,16 +19,18 @@ from pydriller.git import Git
 from sqlalchemy.orm import Session
 
 from macaron import __version__
+from macaron.artifact.local_artifact import get_local_artifact_dirs
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
-from macaron.database.table_definitions import Analysis, Component, ProvenanceSubject, Repository
+from macaron.database.table_definitions import Analysis, Component, ProvenanceSubject, RepoFinderMetadata, Repository
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, DependencyInfo
 from macaron.errors import (
     DuplicateError,
     InvalidAnalysisTargetError,
     InvalidPURLError,
+    LocalArtifactFinderError,
     ProvenanceError,
     PURLNotFoundError,
 )
@@ -38,7 +43,9 @@ from macaron.repo_finder.provenance_extractor import (
     extract_repo_and_commit_from_provenance,
 )
 from macaron.repo_finder.provenance_finder import ProvenanceFinder, find_provenance_from_ci
-from macaron.repo_finder.repo_utils import get_git_service, prepare_repo
+from macaron.repo_finder.repo_finder import prepare_repo
+from macaron.repo_finder.repo_finder_enums import CommitFinderInfo, RepoFinderInfo
+from macaron.repo_finder.repo_utils import get_git_service
 from macaron.repo_verifier.repo_verifier import verify_repo
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -111,12 +118,15 @@ class Analyzer:
         # Create database tables: all checks have been registered so all tables should be mapped now
         self.db_man.create_tables()
 
+        self.local_artifact_repo_mapper = Analyzer._get_local_artifact_repo_mapper()
+
     def run(
         self,
         user_config: dict,
         sbom_path: str = "",
         deps_depth: int = 0,
         provenance_payload: InTotoPayload | None = None,
+        validate_malware_switch: bool = False,
     ) -> int:
         """Run the analysis and write results to the output path.
 
@@ -165,6 +175,7 @@ class Analyzer:
                     main_config,
                     analysis,
                     provenance_payload=provenance_payload,
+                    validate_malware_switch=validate_malware_switch,
                 )
 
                 if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
@@ -282,6 +293,7 @@ class Analyzer:
         analysis: Analysis,
         existing_records: dict[str, Record] | None = None,
         provenance_payload: InTotoPayload | None = None,
+        validate_malware_switch: bool = False,
     ) -> Record:
         """Run the checks for a single repository target.
 
@@ -367,14 +379,25 @@ class Analyzer:
 
         # Prepare the repo.
         git_obj = None
+        commit_finder_outcome = CommitFinderInfo.NOT_USED
+        final_digest = analysis_target.digest
         if analysis_target.repo_path:
-            git_obj = prepare_repo(
+            git_obj, commit_finder_outcome = prepare_repo(
                 os.path.join(self.output_path, GIT_REPOS_DIR),
                 analysis_target.repo_path,
                 analysis_target.branch,
                 analysis_target.digest,
                 analysis_target.parsed_purl,
             )
+            if git_obj:
+                final_digest = git_obj.get_head().hash
+
+        repo_finder_metadata = RepoFinderMetadata(
+            repo_finder_outcome=analysis_target.repo_finder_outcome,
+            commit_finder_outcome=commit_finder_outcome,
+            found_url=analysis_target.repo_path,
+            found_commit=final_digest,
+        )
 
         # Check if only one of the repo or digest came from direct input.
         if git_obj and (provenance_repo_url or provenance_commit_digest) and parsed_purl:
@@ -399,6 +422,7 @@ class Analyzer:
                 analysis,
                 analysis_target,
                 git_obj,
+                repo_finder_metadata,
                 existing_records,
                 provenance_payload,
             )
@@ -472,6 +496,18 @@ class Analyzer:
             analyze_ctx.dynamic_data["provenance_verified"] = provenance_is_verified
         analyze_ctx.dynamic_data["provenance_repo_url"] = provenance_repo_url
         analyze_ctx.dynamic_data["provenance_commit_digest"] = provenance_commit_digest
+        analyze_ctx.dynamic_data["validate_malware_switch"] = validate_malware_switch
+
+        if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
+            local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
+            try:
+                local_artifact_dirs = get_local_artifact_dirs(
+                    purl=parsed_purl,
+                    local_artifact_repo_path=local_artifact_repo_path,
+                )
+                analyze_ctx.dynamic_data["local_artifact_paths"].extend(local_artifact_dirs)
+            except LocalArtifactFinderError as error:
+                logger.debug(error)
 
         analyze_ctx.check_results = registry.scan(analyze_ctx)
 
@@ -591,11 +627,15 @@ class Analyzer:
         #: The digest of the commit to analyze.
         digest: str
 
+        #: The outcome of the Repo Finder on this analysis target.
+        repo_finder_outcome: RepoFinderInfo
+
     def add_component(
         self,
         analysis: Analysis,
         analysis_target: AnalysisTarget,
         git_obj: Git | None,
+        repo_finder_metadata: RepoFinderMetadata,
         existing_records: dict[str, Record] | None = None,
         provenance_payload: InTotoPayload | None = None,
     ) -> Component:
@@ -612,6 +652,8 @@ class Analyzer:
             The target of this analysis.
         git_obj: Git | None
             The pydriller.Git object of the repository.
+        repo_finder_metadata: RepoFinderMetadata
+            The Repo Finder metadata for this component.
         existing_records : dict[str, Record] | None
             The mapping of existing records that the analysis has run successfully.
         provenance_payload: InTotoVPayload | None
@@ -671,6 +713,7 @@ class Analyzer:
             purl=str(purl),
             analysis=analysis,
             repository=repository,
+            repo_finder_metadata=repo_finder_metadata,
         )
 
         if provenance_payload:
@@ -754,6 +797,7 @@ class Analyzer:
         repo_path_input: str = config.get_value("path")
         input_branch: str = config.get_value("branch")
         input_digest: str = config.get_value("digest")
+        repo_finder_outcome = RepoFinderInfo.NOT_USED
 
         match (parsed_purl, repo_path_input):
             case (None, ""):
@@ -774,19 +818,21 @@ class Analyzer:
                             repo_path=provenance_repo_url or "",
                             branch="",
                             digest=provenance_commit_digest or "",
+                            repo_finder_outcome=repo_finder_outcome,
                         )
 
                     # As there is no repo or commit from provenance, use the Repo Finder to find the repo.
                     converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)
                     if converted_repo_path is None:
                         # Try to find repo from PURL
-                        repo = repo_finder.find_repo(parsed_purl)
+                        repo, repo_finder_outcome = repo_finder.find_repo(parsed_purl)
 
                 return Analyzer.AnalysisTarget(
                     parsed_purl=parsed_purl,
                     repo_path=converted_repo_path or repo or "",
                     branch=input_branch,
                     digest=input_digest,
+                    repo_finder_outcome=repo_finder_outcome,
                 )
 
             case (_, _) | (None, _):
@@ -805,6 +851,7 @@ class Analyzer:
                         repo_path=repo_path_input,
                         branch=input_branch,
                         digest=input_digest,
+                        repo_finder_outcome=repo_finder_outcome,
                     )
 
                 return Analyzer.AnalysisTarget(
@@ -812,6 +859,7 @@ class Analyzer:
                     repo_path=repo_path_input,
                     branch=input_branch,
                     digest=provenance_commit_digest or "",
+                    repo_finder_outcome=repo_finder_outcome,
                 )
 
             case _:
@@ -972,6 +1020,35 @@ class Analyzer:
                 build_tool=build_tool,
             )
             analyze_ctx.dynamic_data["repo_verification"].append(verification_result)
+
+    @staticmethod
+    def _get_local_artifact_repo_mapper() -> Mapping[str, str]:
+        """Return the mapping between purl type and its local artifact repo path if that path exists."""
+        local_artifact_mapper: dict[str, str] = {}
+
+        if global_config.local_maven_repo:
+            m2_repository_dir = os.path.join(global_config.local_maven_repo, "repository")
+            if os.path.isdir(m2_repository_dir):
+                local_artifact_mapper["maven"] = m2_repository_dir
+
+        if global_config.python_venv_path:
+            site_packages_dir_pattern = os.path.join(
+                global_config.python_venv_path,
+                "lib",
+                "python3.*",
+                "site-packages",
+            )
+            site_packages_dirs = glob.glob(site_packages_dir_pattern)
+
+            if len(site_packages_dirs) == 1:
+                local_artifact_mapper["pypi"] = site_packages_dirs.pop()
+            else:
+                logger.info(
+                    "There are multiple python3.* directories in the input Python venv. "
+                    + "This venv will NOT be used for local artifact findings."
+                )
+
+        return local_artifact_mapper
 
 
 class DuplicateCmpError(DuplicateError):
