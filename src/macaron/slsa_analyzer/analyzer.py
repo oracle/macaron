@@ -994,10 +994,7 @@ class Analyzer:
 
                 # Parse configuration files and generate IRs.
                 # Add the bash commands to the context object to be used by other checks.
-                callgraph = ci_service.build_call_graph(
-                    analyze_ctx.component.repository.fs_path,
-                    os.path.relpath(analyze_ctx.component.repository.fs_path, analyze_ctx.output_dir),
-                )
+                callgraph = ci_service.build_call_graph(analyze_ctx.component.repository.fs_path)
                 analyze_ctx.dynamic_data["ci_services"].append(
                     CIInfo(
                         service=ci_service,

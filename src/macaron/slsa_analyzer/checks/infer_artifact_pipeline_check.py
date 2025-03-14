@@ -196,7 +196,7 @@ class ArtifactPipelineCheck(BaseCheck):
             # Obtain the job and step calling the deploy command.
             # This data must have been found already by the build-as-code check.
             build_predicate = ci_info["build_info_results"].statement["predicate"]
-            if build_predicate is None:
+            if build_predicate is None or build_predicate["buildType"] != f"Custom {ci_service.name}":
                 continue
             build_entry_point = json_extract(build_predicate, ["invocation", "configSource", "entryPoint"], str)
 

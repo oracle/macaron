@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildServiceCheck class."""
@@ -18,7 +18,6 @@ from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResu
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
-from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
@@ -170,7 +169,7 @@ class BuildServiceCheck(BaseCheck):
 
                 # We currently don't parse these CI configuration files.
                 # We just look for a keyword for now.
-                for unparsed_ci in (Jenkins, Travis, CircleCI, GitLabCI):
+                for unparsed_ci in (Travis, CircleCI, GitLabCI):
                     if isinstance(ci_service, unparsed_ci):
                         if tool.ci_build_kws[ci_service.name]:
                             build_kw, config_name = ci_service.has_kws_in_config(
