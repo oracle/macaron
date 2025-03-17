@@ -231,3 +231,18 @@ some examples.
 
    style_guide
    apidoc/index
+
+-----------------------------
+Updating the database diagram
+-----------------------------
+
+Macaron uses a visual representation of its database to better help developers understand the relationships between the tables within it.
+This diagram is created using the `eralchemy2 <https://pypi.org/project/eralchemy2/>`_ an entity relation diagrams generator Python library.
+When modifications have been made to Macaron's database, the representative diagram needs to be regenerated to match.
+This can be done using the following command:
+
+.. code-block:: bash
+
+    eralchemy2 -i 'sqlite:///<path_to_output>/macaron.db' -o er-diagram.svg
+
+Where ``<path_to_output>`` is the location of Macaron's output folder. The resulting diagram can then replace the previous version found at ``docs/source/assets/er-diagram.svg``
