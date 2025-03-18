@@ -4,7 +4,8 @@
 #include "prelude.dl"
 
 Policy("test_policy", component_id, "") :-
-    check_passed(component_id, "mcn_version_control_system_1").
+    check_passed(component_id, "mcn_version_control_system_1"),
+    is_repo_url(component_id, "https://github.com/google/guava").
 
 apply_policy_to("test_policy", component_id) :-
     is_component(component_id, "pkg:maven/com.google.guava/guava@14.0.1?type=jar").
