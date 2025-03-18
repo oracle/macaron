@@ -88,7 +88,7 @@ class Jenkins(BaseCIService):
         call_graph = CallGraph(root, repo_path)
 
         # To match lines that start with sh '' or sh ''' ''' (either single or triple quotes)
-        # we need to account for both the single-line and multi-line cases.
+        # TODO: we need to support multi-line cases.
         pattern = r"^\s*sh\s+'{1,3}(.*?)'{1,3}$"
         workflow_files = self.get_workflows(repo_path)
 
