@@ -146,7 +146,13 @@ class DepsDevRepoFinder(BaseRepoFinder):
         versions = json_extract(metadata, versions_keys, list)
         if not versions:
             return None, RepoFinderInfo.DDEV_JSON_INVALID
-        latest_version = json_extract(versions[-1], ["versionKey", "version"], str)
+
+        latest_version = None
+        for index, version_result in enumerate(versions):
+            if version_result["isDefault"] or (index == (len(versions) - 1) and not latest_version):
+                latest_version = json_extract(version_result, ["versionKey", "version"], str)
+                break
+
         if not latest_version:
             return None, RepoFinderInfo.DDEV_JSON_INVALID
 
