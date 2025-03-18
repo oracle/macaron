@@ -6,10 +6,13 @@
 import logging
 import urllib.parse
 from datetime import datetime, timezone
+from typing import Any
 
 import requests
 from packageurl import PackageURL
+from requests import RequestException
 
+from macaron.artifact.maven import construct_maven_repository_path
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
@@ -236,3 +239,72 @@ class MavenCentralRegistry(PackageRegistry):
                 raise InvalidHTTPResponseError(f"The timestamp returned by {url} is invalid") from error
 
         raise InvalidHTTPResponseError(f"Invalid response from Maven central for {url}.")
+
+    @staticmethod
+    def get_artifact_file_name(purl: PackageURL) -> str | None:
+        """Return the artifact file name of the passed PURL based on the Maven registry standard.
+
+        Parameters
+        ----------
+        purl: PackageURL
+            The PURL of the artifact.
+
+        Returns
+        -------
+        str | None
+            The artifact file name, or None if invalid.
+        """
+        if not purl.version:
+            return None
+
+        return purl.name + "-" + purl.version + ".jar"
+
+    def get_artifact_hash(self, purl: PackageURL, hash_algorithm: Any) -> str | None:
+        """Return the hash of the artifact found by the passed purl relevant to the registry's URL.
+
+        Parameters
+        ----------
+        purl: PackageURL
+            The purl of the artifact.
+        hash_algorithm: Any
+            The hash algorithm to use.
+
+        Returns
+        -------
+        str | None
+            The hash of the artifact, or None if not found.
+        """
+        if not (purl.namespace and purl.version):
+            return None
+
+        artifact_path = construct_maven_repository_path(purl.namespace, purl.name, purl.version)
+        file_name = MavenCentralRegistry.get_artifact_file_name(purl)
+        if not file_name:
+            return None
+
+        artifact_url = self.registry_url + "/" + artifact_path + "/" + file_name
+        logger.debug("Search for artifact using URL: %s", artifact_url)
+
+        try:
+            response = requests.get(artifact_url, stream=True, timeout=40)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as http_err:
+            logger.debug("HTTP error occurred: %s", http_err)
+            return None
+
+        if response.status_code != 200:
+            return None
+
+        # Download file and compute hash as chunks are received.
+        try:
+            for chunk in response.iter_content():
+                hash_algorithm.update(chunk)
+        except RequestException as error:
+            # Something went wrong with the request, abort.
+            logger.debug("Error while streaming target file: %s", error)
+            response.close()
+            return None
+
+        artifact_hash: str = hash_algorithm.hexdigest()
+        logger.debug("Computed hash of artifact: %s", artifact_hash)
+        return artifact_hash
