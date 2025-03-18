@@ -148,12 +148,14 @@ class DepsDevRepoFinder(BaseRepoFinder):
             return None, RepoFinderInfo.DDEV_JSON_INVALID
 
         latest_version = None
-        for index, version_result in enumerate(versions):
-            if version_result["isDefault"] or (index == (len(versions) - 1) and not latest_version):
+        for version_result in reversed(versions):
+            if version_result["isDefault"]:
+                # Accept the version as the latest if it is marked with the "isDefault" property.
                 latest_version = json_extract(version_result, ["versionKey", "version"], str)
                 break
 
         if not latest_version:
+            logger.debug("No latest version found in version list: %s", len(versions))
             return None, RepoFinderInfo.DDEV_JSON_INVALID
 
         namespace = purl.namespace + "/" if purl.namespace else ""
