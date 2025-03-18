@@ -1,0 +1,10 @@
+/* Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("test_policy", component_id, "") :-
+    check_failed(component_id, "mcn_provenance_available_1").
+
+apply_policy_to("test_policy", component_id) :-
+    is_component(component_id, "pkg:maven/io.liftwizard/liftwizard-checkstyle@2.1.22").

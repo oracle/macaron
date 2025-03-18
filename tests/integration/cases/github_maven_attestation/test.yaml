@@ -1,0 +1,22 @@
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Discovering attestation of a Maven artifact on GitHub
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.liftwizard/liftwizard-checkstyle@2.1.22
+    - -rp
+    - https://github.com/liftwizard/liftwizard
+- name: Run macaron verify-policy to verify passed/failed checks
+  kind: verify
+  options:
+    policy: policy.dl

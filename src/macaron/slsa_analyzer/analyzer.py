@@ -4,11 +4,14 @@
 """This module handles the cloning and analyzing a Git repo."""
 
 import glob
+import hashlib
+import json
 import logging
 import os
 import re
 import sys
 import tempfile
+import urllib.parse
 from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,7 +23,10 @@ from pydriller.git import Git
 from sqlalchemy.orm import Session
 
 from macaron import __version__
-from macaron.artifact.local_artifact import get_local_artifact_dirs
+from macaron.artifact.local_artifact import (
+    get_local_artifact_dirs,
+    get_local_artifact_hash,
+)
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
@@ -41,6 +47,7 @@ from macaron.errors import (
     ProvenanceError,
     PURLNotFoundError,
 )
+from macaron.json_tools import json_extract
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.provenance import provenance_verifier
@@ -66,12 +73,14 @@ from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.database_store import store_analyze_context_to_db
-from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
+from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService, GitHub
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR
-from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
+from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, MavenCentralRegistry
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payload
+from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError
+from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
@@ -414,6 +423,17 @@ class Analyzer:
                 status=SCMStatus.ANALYSIS_FAILED,
             )
 
+        local_artifact_dirs = None
+        if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
+            local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
+            try:
+                local_artifact_dirs = get_local_artifact_dirs(
+                    purl=parsed_purl,
+                    local_artifact_repo_path=local_artifact_repo_path,
+                )
+            except LocalArtifactFinderError as error:
+                logger.debug(error)
+
         # Prepare the repo.
         git_obj = None
         commit_finder_outcome = CommitFinderInfo.NOT_USED
@@ -491,6 +511,37 @@ class Analyzer:
         git_service = self._determine_git_service(analyze_ctx)
         self._determine_ci_services(analyze_ctx, git_service)
         self._determine_build_tools(analyze_ctx, git_service)
+
+        # Try to find an attestation from GitHub, if applicable.
+        if parsed_purl and not provenance_payload and analysis_target.repo_path and isinstance(git_service, GitHub):
+            # Try to discover GitHub attestation for the target software component.
+            url = None
+            try:
+                url = urllib.parse.urlparse(analysis_target.repo_path)
+            except TypeError as error:
+                logger.debug("Failed to parse repository path as URL: %s", error)
+            if url and url.hostname == "github.com":
+                artifact_hash = self.get_artifact_hash(parsed_purl, local_artifact_dirs, hashlib.sha256())
+                if artifact_hash:
+                    git_attestation_dict = git_service.api_client.get_attestation(
+                        analyze_ctx.component.repository.full_name, artifact_hash
+                    )
+                    if git_attestation_dict:
+                        git_attestation_list = json_extract(git_attestation_dict, ["attestations"], list)
+                        if git_attestation_list:
+                            git_attestation = git_attestation_list[0]
+
+                            with tempfile.TemporaryDirectory() as temp_dir:
+                                attestation_file = os.path.join(temp_dir, "attestation")
+                                with open(attestation_file, "w", encoding="UTF-8") as file:
+                                    json.dump(git_attestation, file)
+
+                                try:
+                                    payload = load_provenance_payload(attestation_file)
+                                    provenance_payload = payload
+                                except LoadIntotoAttestationError as error:
+                                    logger.debug("Failed to load provenance payload: %s", error)
+
         if parsed_purl is not None:
             self._verify_repository_link(parsed_purl, analyze_ctx)
         self._determine_package_registries(analyze_ctx, package_registries_info)
@@ -556,16 +607,8 @@ class Analyzer:
         analyze_ctx.dynamic_data["analyze_source"] = analyze_source
         analyze_ctx.dynamic_data["force_analyze_source"] = force_analyze_source
 
-        if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
-            local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
-            try:
-                local_artifact_dirs = get_local_artifact_dirs(
-                    purl=parsed_purl,
-                    local_artifact_repo_path=local_artifact_repo_path,
-                )
-                analyze_ctx.dynamic_data["local_artifact_paths"].extend(local_artifact_dirs)
-            except LocalArtifactFinderError as error:
-                logger.debug(error)
+        if local_artifact_dirs:
+            analyze_ctx.dynamic_data["local_artifact_paths"].extend(local_artifact_dirs)
 
         analyze_ctx.check_results = registry.scan(analyze_ctx)
 
@@ -954,6 +997,54 @@ class Analyzer:
         )
 
         return analyze_ctx
+
+    def get_artifact_hash(
+        self, purl: PackageURL, cached_artifacts: list[str] | None, hash_algorithm: Any
+    ) -> str | None:
+        """Get the hash of the artifact found from the passed PURL using local or remote files.
+
+        Parameters
+        ----------
+        purl: PackageURL
+            The PURL of the artifact.
+        cached_artifacts: list[str] | None
+            The list of local files that match the PURL.
+        hash_algorithm: Any
+            The hash algorithm to use.
+
+        Returns
+        -------
+        str | None
+            The hash of the artifact, or None if not found.
+        """
+        if cached_artifacts:
+            # Try to get the hash from a local file.
+            artifact_hash = get_local_artifact_hash(purl, cached_artifacts, hash_algorithm.name)
+
+            if artifact_hash:
+                return artifact_hash
+
+        # Download the artifact.
+        if purl.type == "maven":
+            maven_registry = next(
+                (
+                    package_registry
+                    for package_registry in PACKAGE_REGISTRIES
+                    if isinstance(package_registry, MavenCentralRegistry)
+                ),
+                None,
+            )
+            if not maven_registry:
+                return None
+
+            return maven_registry.get_artifact_hash(purl, hash_algorithm)
+
+        if purl.type == "pypi":
+            # TODO implement
+            return None
+
+        logger.debug("Purl type '%s' not yet supported for GitHub attestation discovery.", purl.type)
+        return None
 
     def _determine_git_service(self, analyze_ctx: AnalyzeContext) -> BaseGitService:
         """Determine the Git service used by the software component."""
