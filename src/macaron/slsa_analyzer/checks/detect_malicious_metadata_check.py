@@ -32,7 +32,11 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
-from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset, PyPIRegistry
+from macaron.slsa_analyzer.package_registry.pypi_registry import (
+    PyPIPackageJsonAsset,
+    PyPIRegistry,
+    find_or_create_pypi_asset,
+)
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 from macaron.util import send_post_http_raw
@@ -261,23 +265,16 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 case PackageRegistryInfo(
                     build_tool_name="pip" | "poetry",
                     build_tool_purl_type="pypi",
-                    package_registry=PyPIRegistry() as pypi_registry,
+                    package_registry=PyPIRegistry(),
                 ) as pypi_registry_info:
-
-                    # Retrieve the pre-existing AssetLocator object for the PyPI package JSON object, if it exists.
-                    pypi_package_json = next(
-                        (asset for asset in pypi_registry_info.metadata if isinstance(asset, PyPIPackageJsonAsset)),
-                        None,
+                    # Retrieve the pre-existing asset, or create a new one.
+                    pypi_package_json = find_or_create_pypi_asset(
+                        ctx.component.name, ctx.component.version, pypi_registry_info
                     )
-                    if not pypi_package_json:
-                        # Create an AssetLocator object for the PyPI package JSON object.
-                        pypi_package_json = PyPIPackageJsonAsset(
-                            component_name=ctx.component.name,
-                            component_version=ctx.component.version,
-                            has_repository=ctx.component.repository is not None,
-                            pypi_registry=pypi_registry,
-                            package_json={},
-                        )
+                    if pypi_package_json is None:
+                        return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
+
+                    pypi_package_json.has_repository = ctx.component.repository is not None
 
                     pypi_registry_info.metadata.append(pypi_package_json)
 
