@@ -14,6 +14,7 @@ from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 import requests
 from bs4 import BeautifulSoup, Tag
@@ -24,6 +25,7 @@ from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceC
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
+from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -263,6 +265,45 @@ class PyPIRegistry(PackageRegistry):
         logger.debug("Temporary download and unzip of %s stored in %s", file_name, temp_dir)
         return temp_dir
 
+    def get_artifact_hash(self, artifact_url: str, hash_algorithm: Any) -> str | None:
+        """Return the hash of the artifact found at the passed URL.
+
+        Parameters
+        ----------
+        artifact_url
+            The URL of the artifact.
+        hash_algorithm: Any
+            The hash algorithm to use.
+
+        Returns
+        -------
+        str | None
+            The hash of the artifact, or None if not found.
+        """
+        try:
+            response = requests.get(artifact_url, stream=True, timeout=40)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as http_err:
+            logger.debug("HTTP error occurred: %s", http_err)
+            return None
+
+        if response.status_code != 200:
+            logger.debug("Invalid response: %s", response.status_code)
+            return None
+
+        try:
+            for chunk in response.iter_content():
+                hash_algorithm.update(chunk)
+        except RequestException as error:
+            # Something went wrong with the request, abort.
+            logger.debug("Error while streaming source file: %s", error)
+            response.close()
+            return None
+
+        artifact_hash: str = hash_algorithm.hexdigest()
+        logger.debug("Computed artifact hash: %s", artifact_hash)
+        return artifact_hash
+
     def get_package_page(self, package_name: str) -> str | None:
         """Implement custom API to get package main page.
 
@@ -499,15 +540,19 @@ class PyPIPackageJsonAsset:
         """
         return json_extract(self.package_json, ["info", "version"], str)
 
-    def get_sourcecode_url(self) -> str | None:
+    def get_sourcecode_url(self, package_type: str = "sdist") -> str | None:
         """Get the url of the source distribution.
+
+        Parameters
+        ----------
+        package_type: str
+            The package type to retrieve the URL of.
 
         Returns
         -------
         str | None
             The URL of the source distribution.
         """
-        urls: list | None = None
         if self.component_version:
             urls = json_extract(self.package_json, ["releases", self.component_version], list)
         else:
@@ -516,7 +561,7 @@ class PyPIPackageJsonAsset:
         if not urls:
             return None
         for distribution in urls:
-            if distribution.get("packagetype") != "sdist":
+            if distribution.get("packagetype") != package_type:
                 continue
             # We intentionally check if the url is None and use empty string if that's the case.
             source_url: str = distribution.get("url") or ""
@@ -670,3 +715,39 @@ class PyPIPackageJsonAsset:
                     contents = handle.read()
 
                 yield filepath, contents
+
+
+def find_or_create_pypi_asset(
+    asset_name: str, asset_version: str | None, pypi_registry_info: PackageRegistryInfo
+) -> PyPIPackageJsonAsset | None:
+    """Find the asset in the provided package registry information, or create it.
+
+    Parameters
+    ----------
+    asset_name: str
+        The name of the asset.
+    asset_version: str | None
+        The version of the asset.
+    pypi_registry_info:
+        The package registry information.
+
+    Returns
+    -------
+    PyPIPackageJsonAsset | None
+        The asset, or None if not found.
+    """
+    pypi_package_json = next(
+        (asset for asset in pypi_registry_info.metadata if isinstance(asset, PyPIPackageJsonAsset)),
+        None,
+    )
+    if pypi_package_json:
+        return pypi_package_json
+
+    package_registry = pypi_registry_info.package_registry
+    if not isinstance(package_registry, PyPIRegistry):
+        logger.debug("Failed to create PyPIPackageJson asset.")
+        return None
+
+    asset = PyPIPackageJsonAsset(asset_name, asset_version, False, package_registry, {}, "")
+    pypi_registry_info.metadata.append(asset)
+    return asset

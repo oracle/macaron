@@ -76,7 +76,8 @@ from macaron.slsa_analyzer.database_store import store_analyze_context_to_db
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService, GitHub
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR
-from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, MavenCentralRegistry
+from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, MavenCentralRegistry, PyPIRegistry
+from macaron.slsa_analyzer.package_registry.pypi_registry import find_or_create_pypi_asset
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payload
 from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError
@@ -521,7 +522,9 @@ class Analyzer:
             except TypeError as error:
                 logger.debug("Failed to parse repository path as URL: %s", error)
             if url and url.hostname == "github.com":
-                artifact_hash = self.get_artifact_hash(parsed_purl, local_artifact_dirs, hashlib.sha256())
+                artifact_hash = self.get_artifact_hash(
+                    parsed_purl, local_artifact_dirs, hashlib.sha256(), all_package_registries
+                )
                 if artifact_hash:
                     git_attestation_dict = git_service.api_client.get_attestation(
                         analyze_ctx.component.repository.full_name, artifact_hash
@@ -999,7 +1002,11 @@ class Analyzer:
         return analyze_ctx
 
     def get_artifact_hash(
-        self, purl: PackageURL, cached_artifacts: list[str] | None, hash_algorithm: Any
+        self,
+        purl: PackageURL,
+        cached_artifacts: list[str] | None,
+        hash_algorithm: Any,
+        all_package_registries: list[PackageRegistryInfo],
     ) -> str | None:
         """Get the hash of the artifact found from the passed PURL using local or remote files.
 
@@ -1011,6 +1018,8 @@ class Analyzer:
             The list of local files that match the PURL.
         hash_algorithm: Any
             The hash algorithm to use.
+        all_package_registries: list[PackageRegistryInfo]
+            The list of package registry information.
 
         Returns
         -------
@@ -1040,8 +1049,43 @@ class Analyzer:
             return maven_registry.get_artifact_hash(purl, hash_algorithm)
 
         if purl.type == "pypi":
-            # TODO implement
-            return None
+            pypi_registry = next(
+                (
+                    package_registry
+                    for package_registry in PACKAGE_REGISTRIES
+                    if isinstance(package_registry, PyPIRegistry)
+                ),
+                None,
+            )
+            if not pypi_registry:
+                logger.debug("Missing registry for PyPI")
+                return None
+
+            registry_info = next(
+                (
+                    info
+                    for info in all_package_registries
+                    if info.package_registry == pypi_registry and info.build_tool_name in {"pip", "poetry"}
+                ),
+                None,
+            )
+            if not registry_info:
+                logger.debug("Missing registry information for PyPI")
+                return None
+
+            pypi_asset = find_or_create_pypi_asset(purl.name, purl.version, registry_info)
+            if not pypi_asset:
+                return None
+
+            pypi_asset.has_repository = True
+            if not pypi_asset.download(""):
+                return None
+
+            source_url = pypi_asset.get_sourcecode_url("bdist_wheel")
+            if not source_url:
+                return None
+
+            return pypi_registry.get_artifact_hash(source_url, hash_algorithm)
 
         logger.debug("Purl type '%s' not yet supported for GitHub attestation discovery.", purl.type)
         return None
