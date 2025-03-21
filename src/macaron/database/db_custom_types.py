@@ -80,25 +80,115 @@ class DBJsonDict(TypeDecorator):  # pylint: disable=W0223
     #: :meta private:
     cache_ok = True
 
-    def process_bind_param(self, value: None | dict, dialect: Any) -> None | dict:
+    def process_bind_param(self, value: None | dict, dialect: Any) -> dict:
         """Process when storing a dict object to the SQLite db.
 
-        value: None | dict
-            The value being stored.
+        Parameters
+        ----------
+        value : None | dict
+            The value to be stored in the database. This should be a dict; otherwise, a TypeError is raised.
+        dialect : Any
+            The dialect in use (not directly used in this method).
+
+        Returns
+        -------
+        dict
+            The processed value, which must be a dict.
+
+        Raises
+        ------
+        TypeError
+            If the value is not a dict.
         """
         if not isinstance(value, dict):
             raise TypeError("DBJsonDict type expects a dict.")
 
         return value
 
-    def process_result_value(self, value: None | dict, dialect: Any) -> None | dict:
+    def process_result_value(self, value: None | dict, dialect: Any) -> dict:
         """Process when loading a dict object from the SQLite db.
 
-        value: None | dict
-            The value being loaded.
+        Parameters
+        ----------
+        value : None | dict
+            The value loaded from the database. This should be a dictionary; otherwise, a TypeError is raised.
+        dialect : Any
+            The dialect in use (not directly used in this method).
+
+        Returns
+        -------
+        dict
+            The processed value, which must be a dictionary.
+
+        Raises
+        ------
+        TypeError
+            If the value is not a dictionary.
         """
         if not isinstance(value, dict):
             raise TypeError("DBJsonDict type expects a dict.")
+
+        return value
+
+
+class DBJsonList(TypeDecorator):  # pylint: disable=W0223
+    """SQLAlchemy column type to serialize lists."""
+
+    # It is stored in the database as a json value.
+    impl = JSON
+
+    # To prevent Sphinx from rendering the docstrings for `cache_ok`, make this docstring private.
+    #: :meta private:
+    cache_ok = True
+
+    def process_bind_param(self, value: None | list, dialect: Any) -> list:
+        """Process when storing a list object to the SQLite db.
+
+        Parameters
+        ----------
+        value : None | list
+            The value to be stored in the database. This should be a list; otherwise, a TypeError is raised.
+        dialect : Any
+            The dialect in use (not directly used in this method).
+
+        Returns
+        -------
+        list
+            The processed value, which must be a list.
+
+        Raises
+        ------
+        TypeError
+            If the value is not a list.
+        """
+        if not isinstance(value, list):
+            raise TypeError("DBJsonList type expects a list.")
+
+        return value
+
+    def process_result_value(self, value: None | list, dialect: Any) -> list:
+        """Process when loading a list object from the SQLite db.
+
+        Parameters
+        ----------
+        value : None | list
+            The value loaded from the database. This should be a list; otherwise, a TypeError is raised.
+        dialect : Any
+            The dialect in use (not directly used in this method).
+
+        Returns
+        -------
+        list
+            The processed value, which must be a list.
+
+        Raises
+        ------
+        TypeError
+            If the value is not a list.
+        """
+        if not isinstance(value, list):
+            raise TypeError("DBJsonList type expects a list.")
+
         return value
 
 

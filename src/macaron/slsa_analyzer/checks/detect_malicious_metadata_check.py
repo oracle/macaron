@@ -5,7 +5,6 @@
 
 import logging
 
-import requests
 from problog import get_evaluatable
 from problog.logic import Term
 from problog.program import PrologString
@@ -32,16 +31,16 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
+from macaron.slsa_analyzer.package_registry.osv_dev import OSVDevService
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset, PyPIRegistry
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
-from macaron.util import send_post_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
 class MaliciousMetadataFacts(CheckFacts):
-    """The ORM mapping for justifications in pypi heuristic check."""
+    """The ORM mapping for justifications in malicious metadata check."""
 
     __tablename__ = "_detect_malicious_metadata_check"
 
@@ -69,14 +68,10 @@ class MaliciousMetadataFacts(CheckFacts):
 class DetectMaliciousMetadataCheck(BaseCheck):
     """This check analyzes the metadata of a package for malicious behavior."""
 
-    # The OSV knowledge base query database.
-    osv_query_url = "https://api.osv.dev/v1/query"
-
     def __init__(self) -> None:
         """Initialize a check instance."""
         check_id = "mcn_detect_malicious_metadata_1"
         description = """This check analyzes the metadata of a package based on reports malicious behavior.
-        Supported ecosystem for unknown malware: PyPI.
         """
         super().__init__(check_id=check_id, description=description, eval_reqs=[])
 
@@ -226,8 +221,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         package_registry_info_entries = ctx.dynamic_data["package_registries"]
 
         # First check if this package is a known malware
-        data = {"package": {"purl": ctx.component.purl}}
-
         package_exists = False
         try:
             package_exists = bool(DepsDevService.get_package_info(ctx.component.purl))
@@ -236,29 +229,27 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         # Known malicious packages must have been removed.
         if not package_exists:
-            response = send_post_http_raw(self.osv_query_url, json_data=data, headers=None)
-            res_obj = None
-            if response:
-                try:
-                    res_obj = response.json()
-                except requests.exceptions.JSONDecodeError as error:
-                    logger.debug("Unable to get a valid response from %s: %s", self.osv_query_url, error)
-            if res_obj:
-                for vuln in res_obj.get("vulns", {}):
-                    if v_id := json_extract(vuln, ["id"], str):
-                        result_tables.append(
-                            MaliciousMetadataFacts(
-                                known_malware=f"https://osv.dev/vulnerability/{v_id}",
-                                result={},
-                                detail_information=vuln,
-                                confidence=Confidence.HIGH,
-                            )
+            vulns: list = []
+            try:
+                vulns = OSVDevService.get_vulnerabilities_purl(ctx.component.purl)
+            except APIAccessError as error:
+                logger.debug(error)
+
+            for vuln in vulns:
+                if v_id := json_extract(vuln, ["id"], str):
+                    result_tables.append(
+                        MaliciousMetadataFacts(
+                            known_malware=f"https://osv.dev/vulnerability/{v_id}",
+                            result={},
+                            detail_information=vuln,
+                            confidence=Confidence.HIGH,
                         )
-                if result_tables:
-                    return CheckResultData(
-                        result_tables=result_tables,
-                        result_type=CheckResultType.FAILED,
                     )
+            if result_tables:
+                return CheckResultData(
+                    result_tables=result_tables,
+                    result_type=CheckResultType.FAILED,
+                )
 
         # If the package is not a known malware, run malware analysis heuristics.
         for package_registry_info_entry in package_registry_info_entries:
