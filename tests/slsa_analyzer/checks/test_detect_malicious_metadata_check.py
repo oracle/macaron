@@ -72,9 +72,11 @@ def test_detect_malicious_metadata(
     [deps_dev]
     url_netloc = {base_url_parsed.netloc}
     url_scheme = {base_url_parsed.scheme}
-    """
 
-    check.osv_query_url = f"{base_url_parsed.scheme}://{base_url_parsed.netloc}"
+    [osv_dev]
+    url_netloc = {base_url_parsed.netloc}
+    url_scheme = {base_url_parsed.scheme}
+    """
     user_config_path = os.path.join(tmp_path, "config.ini")
     with open(user_config_path, "w", encoding="utf-8") as user_config_file:
         user_config_file.write(user_config_input)

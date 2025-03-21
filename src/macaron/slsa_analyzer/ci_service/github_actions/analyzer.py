@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides the intermediate representations and analysis functions for GitHub Actions."""
@@ -368,8 +368,8 @@ def build_call_graph_from_path(root: BaseNode, workflow_path: str, repo_path: st
 
     Parameters
     ----------
-    repo_path : str
-        The path to the repo.
+    root : BaseNode
+        The root call graph node.
     workflow_path: str
         The path to the CI workflow file.
     repo_path: str
