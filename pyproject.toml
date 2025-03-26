@@ -32,8 +32,8 @@ dependencies = [
     "packageurl-python >= 0.11.1,<1.0.0",
     "ruamel.yaml >= 0.18.6,<1.0.0",
     "jsonschema >= 4.22.0,<5.0.0",
-    "cyclonedx-bom >=4.0.0,<5.0.0",
-    "cyclonedx-python-lib[validation] >=7.3.4,<8.0.0",
+    "cyclonedx-bom >=5.3.0,<6.0.0",
+    "cyclonedx-python-lib[validation] >=8.0.0,<10.0.0",
     "beautifulsoup4 >= 4.12.0,<5.0.0",
     "problog >= 2.2.6,<3.0.0",
 ]
@@ -73,9 +73,8 @@ dev = [
     "types-pyyaml >=6.0.4,<7.0.0",
     "types-requests >=2.25.6,<3.0.0",
     "types-jsonschema >=4.22.0,<5.0.0",
-    "pip-audit >=2.5.6,<3.0.0",
+    "pip-audit >=2.8.0,<3.0.0",
     "pylint >=3.0.3,<4.0.0",
-    "cyclonedx-bom >=4.0.0,<5.0.0",
     "types-beautifulsoup4 >= 4.12.0,<5.0.0",
 ]
 docs = [
