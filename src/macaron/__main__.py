@@ -544,9 +544,9 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(os.EX_USAGE)
 
     if os.path.isdir(args.output_dir):
-        logger.info("Setting the output directory to %s", args.output_dir)
+        logger.info("Setting the output directory to %s", os.path.relpath(args.output_dir, os.getcwd()))
     else:
-        logger.info("No directory at %s. Creating one ...", args.output_dir)
+        logger.info("No directory at %s. Creating one ...", os.path.relpath(args.output_dir, os.getcwd()))
         os.makedirs(args.output_dir)
 
     # Add file handler to the root logger. Remove stream handler from the

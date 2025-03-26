@@ -75,7 +75,7 @@ def generate_report(purl: str, commit: str, repo: str, target_dir: str) -> bool:
     fullpath = f"{target_dir}/{filename}"
 
     os.makedirs(os.path.dirname(fullpath), exist_ok=True)
-    logger.info("Writing report to: %s", fullpath)
+    logger.info("Writing report to: %s", os.path.relpath(fullpath, os.getcwd()))
 
     try:
         with open(fullpath, "w", encoding="utf-8") as file:
@@ -84,7 +84,7 @@ def generate_report(purl: str, commit: str, repo: str, target_dir: str) -> bool:
         logger.debug("Failed to write report to file: %s", error)
         return False
 
-    logger.info("Report written to: %s", fullpath)
+    logger.info("Report written to: %s", os.path.relpath(fullpath, os.getcwd()))
 
     return True
 
