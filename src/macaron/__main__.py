@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This is the main entrypoint to run Macaron."""
@@ -537,9 +537,9 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(os.EX_USAGE)
 
     if os.path.isdir(args.output_dir):
-        logger.info("Setting the output directory to %s", args.output_dir)
+        logger.info("Setting the output directory to %s", os.path.relpath(args.output_dir, os.getcwd()))
     else:
-        logger.info("No directory at %s. Creating one ...", args.output_dir)
+        logger.info("No directory at %s. Creating one ...", os.path.relpath(args.output_dir, os.getcwd()))
         os.makedirs(args.output_dir)
 
     # Add file handler to the root logger. Remove stream handler from the
