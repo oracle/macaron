@@ -81,7 +81,7 @@ def find_repo(
         return "", RepoFinderInfo.PYPI_JSON_ERROR
 
     # Look for the repository URL.
-    fixed_url = find_valid_repository_url(url_dict.values(), ["github.com"])
+    fixed_url = find_valid_repository_url(url_dict.values())
     if not fixed_url:
         return "", RepoFinderInfo.PYPI_NO_URLS
 
