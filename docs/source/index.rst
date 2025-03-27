@@ -136,6 +136,7 @@ intermediate representations as abstractions. Using such abstractions, Macaron i
    pages/output_files
    pages/checks/slsa_builds
    pages/vsa
+   pages/security_policy
    pages/supported_technologies/index
    pages/developers_guide/index
    glossary
