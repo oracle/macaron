@@ -6,21 +6,17 @@ import urllib.parse
 from collections.abc import Iterable
 
 from macaron.config.defaults import defaults
-from macaron.slsa_analyzer.git_url import get_remote_vcs_url, parse_remote_url
+from macaron.slsa_analyzer.git_url import clean_url, get_remote_vcs_url
 from macaron.util import send_get_http_raw
 
 
-def find_valid_repository_url(urls: Iterable[str], allowed_git_service_hostnames: list[str] | None = None) -> str:
+def find_valid_repository_url(urls: Iterable[str]) -> str:
     """Find a valid URL from the provided URLs.
 
     Parameters
     ----------
     urls : Iterable[str]
         An Iterable object containing urls.
-    allowed_git_service_hostnames: list[str] | None
-        The list of allowed git service hostnames.
-        If this is ``None``, fall back to the  ``.ini`` configuration.
-        (Default: None).
 
     Returns
     -------
@@ -28,12 +24,12 @@ def find_valid_repository_url(urls: Iterable[str], allowed_git_service_hostnames
         The first valid URL from the iterable, or an empty string if none can be found.
     """
     for url in urls:
-        result = parse_remote_url(url, allowed_git_service_hostnames)
-        if not result:
+        parsed_url = clean_url(url)
+        if not parsed_url:
+            # URLs that fail to parse can be rejected here.
             continue
-
-        redirect_url = resolve_redirects(result)
-        checked_url = get_remote_vcs_url(redirect_url if redirect_url else result.geturl())
+        redirect_url = resolve_redirects(parsed_url)
+        checked_url = get_remote_vcs_url(redirect_url if redirect_url else parsed_url.geturl())
         if checked_url:
             return checked_url
 
