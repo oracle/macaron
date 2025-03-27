@@ -336,9 +336,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     % ----- Heuristic groupings -----
     % These are common combinations of heuristics that are used in many of the rules, thus themselves representing
     % certain behaviors. When changing or adding rules here, if there are frequent combinations of particular
-    % heuristics, group them together here. Note, these should only be used to check if a grouping statement
-    % is true. Evaluating 'not quickUndetailed' would be true if empty project link and closer release join
-    % date passed, or if they were both skipped, which is not desired behaviour.
+    % heuristics, group them together here.
 
     % Maintainer has recently joined, publishing an undetailed page with no links.
     quickUndetailed :- failed({Heuristics.EMPTY_PROJECT_LINK.value}), failed({Heuristics.CLOSER_RELEASE_JOIN_DATE.value}).
