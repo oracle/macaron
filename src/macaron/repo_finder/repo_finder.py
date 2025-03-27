@@ -72,7 +72,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def find_repo(
-    purl: PackageURL, check_latest_version: bool = True, all_package_registries: list[PackageRegistryInfo] | None = None
+    purl: PackageURL,
+    check_latest_version: bool = True,
+    package_registries_info: list[PackageRegistryInfo] | None = None,
 ) -> tuple[str, RepoFinderInfo]:
     """Retrieve the repository URL that matches the given PURL.
 
@@ -82,8 +84,9 @@ def find_repo(
         The parsed PURL to convert to the repository path.
     check_latest_version: bool
         A flag that determines whether the latest version of the PURL is also checked.
-    all_package_registries: list[PackageRegistryInfo] | None
-        The list of package registries, if any.
+    package_registries_info: list[PackageRegistryInfo] | None
+        The list of package registry information if available.
+        If no package registries are loaded, this can be set to None.
 
     Returns
     -------
@@ -109,7 +112,7 @@ def find_repo(
     found_repo, outcome = repo_finder.find_repo(purl)
 
     if not found_repo:
-        found_repo, outcome = find_repo_alternative(purl, outcome, all_package_registries)
+        found_repo, outcome = find_repo_alternative(purl, outcome, package_registries_info)
 
     if check_latest_version and not defaults.getboolean("repofinder", "try_latest_purl", fallback=True):
         check_latest_version = False
@@ -129,7 +132,7 @@ def find_repo(
         return found_repo, outcome
 
     if not found_repo:
-        found_repo, outcome = find_repo_alternative(latest_version_purl, outcome)
+        found_repo, outcome = find_repo_alternative(latest_version_purl, outcome, package_registries_info)
 
     if not found_repo:
         logger.debug("Could not find repo from latest version of PURL: %s", latest_version_purl)
@@ -139,7 +142,7 @@ def find_repo(
 
 
 def find_repo_alternative(
-    purl: PackageURL, outcome: RepoFinderInfo, all_package_registries: list[PackageRegistryInfo] | None = None
+    purl: PackageURL, outcome: RepoFinderInfo, package_registries_info: list[PackageRegistryInfo] | None = None
 ) -> tuple[str, RepoFinderInfo]:
     """Use PURL type specific methods to find the repository when the standard methods have failed.
 
@@ -149,8 +152,9 @@ def find_repo_alternative(
         The parsed PURL to convert to the repository path.
     outcome: RepoFinderInfo
         A previous outcome to report if this method does nothing.
-    all_package_registries: list[PackageRegistryInfo] | None
-        The list of package registries, if any.
+    package_registries_info: list[PackageRegistryInfo] | None
+        The list of package registry information if available.
+        If no package registries are loaded, this can be set to None.
 
     Returns
     -------
@@ -159,7 +163,7 @@ def find_repo_alternative(
     """
     found_repo = ""
     if purl.type == "pypi":
-        found_repo, outcome = repo_finder_pypi.find_repo(purl, all_package_registries)
+        found_repo, outcome = repo_finder_pypi.find_repo(purl, package_registries_info)
 
     if not found_repo:
         logger.debug("Could not find repository using type specific (%s) methods for PURL: %s", purl.type, purl)
