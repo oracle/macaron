@@ -347,14 +347,14 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     % ----- Suspicious Combinations -----
 
     % Package released recently with little detail, forcing the setup.py to run.
-    {Confidence.HIGH.value}::result("high_confidence_1") :-
+    {Confidence.HIGH.value}::result("malware_high_confidence_1") :-
         quickUndetailed, forceSetup, failed({Heuristics.ONE_RELEASE.value}).
-    {Confidence.HIGH.value}::result("high_confidence_2") :-
+    {Confidence.HIGH.value}::result("malware_high_confidence_2") :-
         quickUndetailed, forceSetup, failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}).
 
     % Package released recently with little detail, with some more refined trust markers introduced: project links,
     % multiple different releases, but there is no source code repository matching it and the setup is suspicious.
-    {Confidence.HIGH.value}::result("high_confidence_3") :-
+    {Confidence.HIGH.value}::result("malware_high_confidence_3") :-
         failed({Heuristics.SOURCE_CODE_REPO.value}),
         failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
         passed({Heuristics.UNCHANGED_RELEASE.value}),
@@ -363,14 +363,14 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
     % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
     % the same code.
-    {Confidence.MEDIUM.value}::result("medium_confidence_1") :-
+    {Confidence.MEDIUM.value}::result("malware_medium_confidence_1") :-
         quickUndetailed,
         failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
         failed({Heuristics.UNCHANGED_RELEASE.value}),
         passed({Heuristics.SUSPICIOUS_SETUP.value}).
 
     % Package released recently with little detail and an anomalous version number for a single-release package.
-    {Confidence.MEDIUM.value}::result("medium_confidence_2") :-
+    {Confidence.MEDIUM.value}::result("malware_medium_confidence_2") :-
         quickUndetailed,
         failed({Heuristics.ONE_RELEASE.value}),
         passed({Heuristics.WHEEL_ABSENCE.value}),
