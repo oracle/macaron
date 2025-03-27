@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # Use bash as the shell when executing a rule's recipe. For more details:
@@ -151,13 +151,16 @@ souffle:
 	  echo "Installing system dependency: souffle" && \
 	  case $(OS_DISTRO) in \
 	    "Oracle Linux") \
-	      sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.4/x86_64-oraclelinux-8-souffle-2.4-Linux.rpm;; \
+	      sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.5/x86_64-oraclelinux-9-souffle-2.5-Linux.rpm;; \
 	    "Fedora Linux") \
-	      sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.4/x86_64-fedora-34-souffle-2.4-Linux.rpm;; \
+	      sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.5/x86_64-fedora-41-souffle-2.5-Linux.rpm;; \
 	    "Ubuntu") \
 	      sudo wget https://souffle-lang.github.io/ppa/souffle-key.public -O /usr/share/keyrings/souffle-archive-keyring.gpg; \
 	      echo "deb [signed-by=/usr/share/keyrings/souffle-archive-keyring.gpg] https://souffle-lang.github.io/ppa/ubuntu/ stable main" | sudo tee /etc/apt/sources.list.d/souffle.list; \
 	      sudo apt update; \
+          sudo wget https://github.com/souffle-lang/souffle/releases/download/2.5/x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
+		  sudo apt install ./x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
+		  rm x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
 	      sudo apt install souffle;; \
 	    "Darwin") \
 	      if command -v brew; then \
