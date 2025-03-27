@@ -276,6 +276,8 @@ def perform_action(action_args: argparse.Namespace) -> None:
             try:
                 for git_service in GIT_SERVICES:
                     git_service.load_defaults()
+                for package_registry in PACKAGE_REGISTRIES:
+                    package_registry.load_defaults()
             except ConfigurationError as error:
                 logger.error(error)
                 sys.exit(os.EX_USAGE)

@@ -293,7 +293,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                     pypi_registry_info.metadata.append(pypi_package_json)
 
                     # Download the PyPI package JSON, but no need to persist it to the filesystem.
-                    if pypi_package_json.download(dest=""):
+                    if pypi_package_json.package_json or pypi_package_json.download(dest=""):
                         try:
                             result, detail_info = self.run_heuristics(pypi_package_json)
                         except HeuristicAnalyzerValueError:
