@@ -269,10 +269,15 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                     build_tool_purl_type="pypi",
                     package_registry=PyPIRegistry() as pypi_registry,
                 ) as pypi_registry_info:
-
                     # Retrieve the pre-existing AssetLocator object for the PyPI package JSON object, if it exists.
                     pypi_package_json = next(
-                        (asset for asset in pypi_registry_info.metadata if isinstance(asset, PyPIPackageJsonAsset)),
+                        (
+                            asset
+                            for asset in pypi_registry_info.metadata
+                            if isinstance(asset, PyPIPackageJsonAsset)
+                            and asset.component_name == ctx.component.name
+                            and asset.component_version == ctx.component.version
+                        ),
                         None,
                     )
                     if not pypi_package_json:

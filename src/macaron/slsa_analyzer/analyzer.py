@@ -354,7 +354,7 @@ class Analyzer:
             )
 
         # Pre-populate all package registries so assets can be stored for later.
-        all_package_registries = self._populate_package_registry_info()
+        package_registries_info = self._populate_package_registry_info()
 
         provenance_is_verified = False
         if not provenance_payload and parsed_purl:
@@ -393,7 +393,7 @@ class Analyzer:
                 parsed_purl,
                 provenance_repo_url,
                 provenance_commit_digest,
-                all_package_registries,
+                package_registries_info,
             )
         except InvalidAnalysisTargetError as error:
             return Record(
@@ -482,7 +482,7 @@ class Analyzer:
         self._determine_build_tools(analyze_ctx, git_service)
         if parsed_purl is not None:
             self._verify_repository_link(parsed_purl, analyze_ctx)
-        self._determine_package_registries(analyze_ctx, all_package_registries)
+        self._determine_package_registries(analyze_ctx, package_registries_info)
 
         provenance_l3_verified = False
         if not provenance_payload:
@@ -810,7 +810,7 @@ class Analyzer:
         parsed_purl: PackageURL | None,
         provenance_repo_url: str | None = None,
         provenance_commit_digest: str | None = None,
-        all_package_registries: list[PackageRegistryInfo] | None = None,
+        package_registries_info: list[PackageRegistryInfo] | None = None,
     ) -> AnalysisTarget:
         """Resolve the details of a software component from user input.
 
@@ -827,8 +827,9 @@ class Analyzer:
             The repository URL extracted from provenance, or None if not found or no provenance.
         provenance_commit_digest: str | None
             The commit extracted from provenance, or None if not found or no provenance.
-        all_package_registries: list[PackageRegistryInfo] | None
-            The list of all package registries.
+        package_registries_info: list[PackageRegistryInfo] | None
+            The list of package registry information if available.
+            If no package registries are loaded, this can be set to None.
 
         Returns
         -------
@@ -872,7 +873,7 @@ class Analyzer:
                     if converted_repo_path is None:
                         # Try to find repo from PURL
                         repo, repo_finder_outcome = repo_finder.find_repo(
-                            parsed_purl, all_package_registries=all_package_registries
+                            parsed_purl, package_registries_info=package_registries_info
                         )
 
                 return Analyzer.AnalysisTarget(
@@ -1042,7 +1043,7 @@ class Analyzer:
         return package_registries
 
     def _determine_package_registries(
-        self, analyze_ctx: AnalyzeContext, all_package_registries: list[PackageRegistryInfo]
+        self, analyze_ctx: AnalyzeContext, package_registries_info: list[PackageRegistryInfo]
     ) -> None:
         """Determine the package registries used by the software component based on its build tools."""
         build_tools = (
@@ -1050,7 +1051,7 @@ class Analyzer:
         )
         build_tool_names = {build_tool.name for build_tool in build_tools}
         relevant_package_registries = []
-        for package_registry in all_package_registries:
+        for package_registry in package_registries_info:
             if package_registry.build_tool_name not in build_tool_names:
                 continue
             relevant_package_registries.append(package_registry)
