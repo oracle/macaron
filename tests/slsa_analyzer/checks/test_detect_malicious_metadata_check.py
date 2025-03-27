@@ -12,6 +12,7 @@ import pytest
 from pytest_httpserver import HTTPServer
 
 from macaron.config.defaults import load_defaults
+from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult, Heuristics
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.detect_malicious_metadata_check import DetectMaliciousMetadataCheck
@@ -98,3 +99,33 @@ def test_detect_malicious_metadata(
     ).respond_with_json({})
 
     assert check.run_check(ctx).result_type == expected
+
+
+@pytest.mark.parametrize(
+    ("combination"),
+    [
+        pytest.param(
+            {
+                # similar to rule ID high_confidence_1, but SUSPICIOUS_SETUP is skipped since the file does not exist,
+                # so the rule should not trigger.
+                Heuristics.EMPTY_PROJECT_LINK: HeuristicResult.FAIL,
+                Heuristics.SOURCE_CODE_REPO: HeuristicResult.SKIP,
+                Heuristics.ONE_RELEASE: HeuristicResult.FAIL,
+                Heuristics.HIGH_RELEASE_FREQUENCY: HeuristicResult.SKIP,
+                Heuristics.UNCHANGED_RELEASE: HeuristicResult.SKIP,
+                Heuristics.CLOSER_RELEASE_JOIN_DATE: HeuristicResult.FAIL,
+                Heuristics.SUSPICIOUS_SETUP: HeuristicResult.SKIP,
+                Heuristics.WHEEL_ABSENCE: HeuristicResult.FAIL,
+                Heuristics.ANOMALOUS_VERSION: HeuristicResult.PASS,
+            },
+            id="test_skipped_evaluation",
+        )
+    ],
+)
+def test_evaluations(combination: dict[Heuristics, HeuristicResult]) -> None:
+    """Test heuristic combinations to ensure they evaluate as expected."""
+    check = DetectMaliciousMetadataCheck()
+
+    confidence, _ = check.evaluate_heuristic_results(combination)
+
+    assert confidence == 0

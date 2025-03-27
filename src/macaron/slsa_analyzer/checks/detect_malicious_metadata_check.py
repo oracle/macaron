@@ -128,7 +128,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         is_malware, detail_info = sourcecode_analyzer.analyze()
         return is_malware, detail_info
 
-    def evaluate_heuristic_results(self, heuristic_results: dict[Heuristics, HeuristicResult]) -> float | None:
+    def evaluate_heuristic_results(
+        self, heuristic_results: dict[Heuristics, HeuristicResult]
+    ) -> tuple[float, JsonType]:
         """Analyse the heuristic results to determine the maliciousness of the package.
 
         Parameters
@@ -138,18 +140,17 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         Returns
         -------
-        float | None
-            Returns the confidence associated with the detected malicious combination, otherwise None if no associated
-            malicious combination was triggered.
+        tuple[float, JsonType]
+            Returns the confidence associated with the detected malicious combination, and associated rule IDs detailing
+            what rules were triggered.
         """
         facts_list: list[str] = []
         for heuristic, result in heuristic_results.items():
-            if result == HeuristicResult.SKIP:
-                facts_list.append(f"0.0::{heuristic.value}.")
-            elif result == HeuristicResult.PASS:
+            if result == HeuristicResult.PASS:
                 facts_list.append(f"{heuristic.value} :- true.")
-            else:  # HeuristicResult.FAIL
+            elif result == HeuristicResult.FAIL:
                 facts_list.append(f"{heuristic.value} :- false.")
+            # Do not define for HeuristicResult.SKIP
 
         facts = "\n".join(facts_list)
         problog_code = f"{facts}\n\n{self.malware_rules_problog_model}"
@@ -158,10 +159,12 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         problog_model = PrologString(problog_code)
         problog_results: dict[Term, float] = get_evaluatable().create_from(problog_model).evaluate()
 
-        confidence: float | None = problog_results.get(Term(self.problog_result_access))
-        if confidence == 0.0:
-            return None  # no rules were triggered
-        return confidence
+        confidence = sum(conf for conf in problog_results.values() if conf is not None)
+        triggered_rules: JsonType = ["No malicious rules triggered"]
+        if confidence > 0:
+            triggered_rules = [term.args[0] for term in problog_results]
+
+        return confidence, triggered_rules
 
     def run_heuristics(
         self, pypi_package_json: PyPIPackageJsonAsset
@@ -278,9 +281,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                         except HeuristicAnalyzerValueError:
                             return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-                        confidence = self.evaluate_heuristic_results(result)
+                        confidence, triggered_rules = self.evaluate_heuristic_results(result)
+                        detail_info["triggered_rules"] = triggered_rules
                         result_type = CheckResultType.FAILED
-                        if confidence is None:
+                        if not confidence:
                             confidence = Confidence.HIGH
                             result_type = CheckResultType.PASSED
                         elif ctx.dynamic_data["validate_malware"]:
@@ -321,51 +325,61 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         AnomalousVersionAnalyzer,
     ]
 
-    problog_result_access = "result"
-
     malware_rules_problog_model = f"""
-    % Heuristic groupings
+    % ----- Wrappers ------
+    % These should be used to logically check for a pass or fail on a heuristic for the rest of the model. They exist since,
+    % when a heuristic is skipped, it is ommitted from being defined in the ProbLog model, and as such these try_call statements
+    % are needed to handle referencing an undefined fact.
+    passed(H) :- try_call(H).
+    failed(H) :- try_call(not H).
+
+    % ----- Heuristic groupings -----
     % These are common combinations of heuristics that are used in many of the rules, thus themselves representing
     % certain behaviors. When changing or adding rules here, if there are frequent combinations of particular
-    % heuristics, group them together here.
+    % heuristics, group them together here. Note, these should only be used to check if a grouping statement
+    % is true. Evaluating 'not quickUndetailed' would be true if empty project link and closer release join
+    % date passed, or if they were both skipped, which is not desired behaviour.
 
     % Maintainer has recently joined, publishing an undetailed page with no links.
-    quickUndetailed :- not {Heuristics.EMPTY_PROJECT_LINK.value}, not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value}.
+    quickUndetailed :- failed({Heuristics.EMPTY_PROJECT_LINK.value}), failed({Heuristics.CLOSER_RELEASE_JOIN_DATE.value}).
 
     % Maintainer releases a suspicious setup.py and forces it to run by omitting a .whl file.
-    forceSetup :- not {Heuristics.SUSPICIOUS_SETUP.value}, not {Heuristics.WHEEL_ABSENCE.value}.
+    forceSetup :- failed({Heuristics.SUSPICIOUS_SETUP.value}), failed({Heuristics.WHEEL_ABSENCE.value}).
 
-    % Suspicious Combinations
+    % ----- Suspicious Combinations -----
 
     % Package released recently with little detail, forcing the setup.py to run.
-    {Confidence.HIGH.value}::high :- quickUndetailed, forceSetup, not {Heuristics.ONE_RELEASE.value}.
-    {Confidence.HIGH.value}::high :- quickUndetailed, forceSetup, not {Heuristics.HIGH_RELEASE_FREQUENCY.value}.
+    {Confidence.HIGH.value}::result("high_confidence_1") :-
+        quickUndetailed, forceSetup, failed({Heuristics.ONE_RELEASE.value}).
+    {Confidence.HIGH.value}::result("high_confidence_2") :-
+        quickUndetailed, forceSetup, failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}).
 
     % Package released recently with little detail, with some more refined trust markers introduced: project links,
     % multiple different releases, but there is no source code repository matching it and the setup is suspicious.
-    {Confidence.HIGH.value}::high :- not {Heuristics.SOURCE_CODE_REPO.value},
-        not {Heuristics.HIGH_RELEASE_FREQUENCY.value},
-        not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value},
-        {Heuristics.UNCHANGED_RELEASE.value},
+    {Confidence.HIGH.value}::result("high_confidence_3") :-
+        failed({Heuristics.SOURCE_CODE_REPO.value}),
+        failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
+        passed({Heuristics.UNCHANGED_RELEASE.value}),
+        failed({Heuristics.CLOSER_RELEASE_JOIN_DATE.value}),
         forceSetup.
 
     % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
     % the same code.
-    {Confidence.MEDIUM.value}::medium :- quickUndetailed,
-        not {Heuristics.HIGH_RELEASE_FREQUENCY.value},
-        not {Heuristics.UNCHANGED_RELEASE.value},
-        {Heuristics.SUSPICIOUS_SETUP.value}.
+    {Confidence.MEDIUM.value}::result("medium_confidence_1") :-
+        quickUndetailed,
+        failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
+        failed({Heuristics.UNCHANGED_RELEASE.value}),
+        passed({Heuristics.SUSPICIOUS_SETUP.value}).
 
     % Package released recently with little detail and an anomalous version number for a single-release package.
-    {Confidence.MEDIUM.value}::medium :- quickUndetailed,
-        not {Heuristics.ONE_RELEASE.value},
-        {Heuristics.WHEEL_ABSENCE.value},
-        not {Heuristics.ANOMALOUS_VERSION.value}.
+    {Confidence.MEDIUM.value}::result("medium_confidence_2") :-
+        quickUndetailed,
+        failed({Heuristics.ONE_RELEASE.value}),
+        passed({Heuristics.WHEEL_ABSENCE.value}),
+        failed({Heuristics.ANOMALOUS_VERSION.value}).
 
-    {problog_result_access} :- high.
-    {problog_result_access} :- medium.
-
-    query({problog_result_access}).
+    % ----- Evaluation -----
+    query(result(_)).
     """
 
 
