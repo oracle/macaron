@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the GlobalConfig class to be used globally."""
@@ -97,7 +97,7 @@ class GlobalConfig:
                 policy_file_path = os.path.join(exp_path, policy_path)
                 if os.path.isfile(policy_file_path):
                     exp_files.append(policy_file_path)
-                    logger.info("Added provenance expectation file %s", policy_file_path)
+                    logger.info("Added provenance expectation file %s", os.path.relpath(policy_file_path, os.getcwd()))
         elif os.path.isfile(exp_path):
             exp_files.append(exp_path)
             logger.info("Added provenance expectation file %s", exp_path)

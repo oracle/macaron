@@ -206,16 +206,21 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
         vsa = generate_vsa(policy_content=policy_content, policy_result=result)
         if vsa is not None:
             vsa_filepath = os.path.join(global_config.output_path, "vsa.intoto.jsonl")
-            logger.info("Generating the Verification Summary Attestation (VSA) to %s.", vsa_filepath)
+            logger.info(
+                "Generating the Verification Summary Attestation (VSA) to %s.",
+                os.path.relpath(vsa_filepath, os.getcwd()),
+            )
             logger.info(
                 "To decode and inspect the payload, run `cat %s | jq -r '.payload' | base64 -d | jq`.",
-                vsa_filepath,
+                os.path.relpath(vsa_filepath, os.getcwd()),
             )
             try:
                 with open(vsa_filepath, mode="w", encoding="utf-8") as file:
                     file.write(json.dumps(vsa))
             except OSError as err:
-                logger.error("Could not generate the VSA to %s. Error: %s", vsa_filepath, err)
+                logger.error(
+                    "Could not generate the VSA to %s. Error: %s", os.path.relpath(vsa_filepath, os.getcwd()), err
+                )
 
         policy_reporter = PolicyReporter()
         policy_reporter.generate(global_config.output_path, result)

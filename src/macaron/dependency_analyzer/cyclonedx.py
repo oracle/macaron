@@ -381,7 +381,9 @@ class DependencyAnalyzer(ABC):
                 continue
 
             if sbom_path:
-                logger.info("Getting the dependencies from the SBOM defined at %s.", sbom_path)
+                logger.info(
+                    "Getting the dependencies from the SBOM defined at %s.", os.path.relpath(sbom_path, os.getcwd())
+                )
 
                 deps_resolved = dep_analyzer.get_deps_from_sbom(
                     sbom_path,
