@@ -145,15 +145,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             what rules were triggered.
         """
         facts_list: list[str] = []
-        triggered_rules = []
-        # confidence is calculated using the probability of the package being benign, so the negation of the confidence values
-        # in the problog model. Multiplying these probabilities together on several triggers will further decrease the probability
-        # of the package being benign. This is then negated after calculation to get the probability of the package being malicious.
-        # If no rules are triggered, this will simply result in 1.0 - 1.0 = 0.0.
-        # For example, if a LOW rule and MEDIUM rule are triggered, with confidences 0.4 and 0.7 respectively, this would result in
-        # the following calculation for confidence in package maliciousness:
-        # 1 - (1.0 * (1 - 0.4) * (1 - 0.7)) = 0.82
-        confidence: float = 1.0
+        triggered_rules: dict[str, JsonType] = {}
 
         for heuristic, result in heuristic_results.items():
             if result == HeuristicResult.PASS:
@@ -169,11 +161,11 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         problog_model = PrologString(problog_code)
         problog_results: dict[Term, float] = get_evaluatable().create_from(problog_model).evaluate()
 
-        for term, conf in problog_results.items():
-            if conf is not None and conf > 0:
-                confidence *= 1.0 - conf  # decrease the probability of the package being benign
-                triggered_rules.append(term.args[0])
-        confidence = round(1.0 - confidence, 2)  # 2 decimal places
+        confidence = problog_results.pop(Term(self.problog_result_access), 0.0)
+        if confidence > 0:  # a rule was triggered
+            for term, conf in problog_results.items():
+                if term.args:
+                    triggered_rules[str(term.args[0])] = conf
 
         return confidence, triggered_rules
 
@@ -336,11 +328,21 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         AnomalousVersionAnalyzer,
     ]
 
+    problog_result_access = "result"
+
     malware_rules_problog_model = f"""
     % ----- Wrappers ------
-    % These should be used to logically check for a pass or fail on a heuristic for the rest of the model. They exist since,
-    % when a heuristic is skipped, it is ommitted from being defined in the ProbLog model, and as such these try_call statements
-    % are needed to handle referencing an undefined fact.
+    % When a heuristic is skipped, it is ommitted from the problog model facts definition. This means that references in this
+    % static model must account for when they are not existent. These wrappers perform this function using the inbuilt try_call
+    % problog function. It will try to evaluate the provided logic, and return false if it encounters an error, such as the fact
+    % not being defined. For example, you are expecting A to pass, so we do:
+    %
+    % passed(A)
+    %
+    % If A was 'true', then this will return true, as A did pass. If A was 'false', then this will return false, as A did not pass.
+    % If A was not defined, then this will return false, as A did not pass.
+    % Please use these wrappers throughout the problog model for logic definitions.
+
     passed(H) :- try_call(H).
     failed(H) :- try_call(not H).
 
@@ -358,14 +360,14 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     % ----- Suspicious Combinations -----
 
     % Package released recently with little detail, forcing the setup.py to run.
-    {Confidence.HIGH.value}::result("malware_high_confidence_1") :-
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_1) :-
         quickUndetailed, forceSetup, failed({Heuristics.ONE_RELEASE.value}).
-    {Confidence.HIGH.value}::result("malware_high_confidence_2") :-
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_2) :-
         quickUndetailed, forceSetup, failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}).
 
     % Package released recently with little detail, with some more refined trust markers introduced: project links,
     % multiple different releases, but there is no source code repository matching it and the setup is suspicious.
-    {Confidence.HIGH.value}::result("malware_high_confidence_3") :-
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_3) :-
         failed({Heuristics.SOURCE_CODE_REPO.value}),
         failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
         passed({Heuristics.UNCHANGED_RELEASE.value}),
@@ -374,21 +376,31 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
     % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
     % the same code.
-    {Confidence.MEDIUM.value}::result("malware_medium_confidence_1") :-
+    {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_1) :-
         quickUndetailed,
         failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
         failed({Heuristics.UNCHANGED_RELEASE.value}),
         passed({Heuristics.SUSPICIOUS_SETUP.value}).
 
     % Package released recently with little detail and an anomalous version number for a single-release package.
-    {Confidence.MEDIUM.value}::result("malware_medium_confidence_2") :-
+    {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_2) :-
         quickUndetailed,
         failed({Heuristics.ONE_RELEASE.value}),
         passed({Heuristics.WHEEL_ABSENCE.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}).
 
     % ----- Evaluation -----
-    query(result(_)).
+
+    % Aggregate result
+    {problog_result_access} :- trigger(malware_high_confidence_1).
+    {problog_result_access} :- trigger(malware_high_confidence_2).
+    {problog_result_access} :- trigger(malware_high_confidence_3).
+    {problog_result_access} :- trigger(malware_medium_confidence_2).
+    {problog_result_access} :- trigger(malware_medium_confidence_1).
+    query({problog_result_access}).
+
+    % Explainability
+    query(trigger(_)).
     """
 
 
