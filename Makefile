@@ -156,9 +156,9 @@ souffle:
 	      sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.5/x86_64-fedora-41-souffle-2.5-Linux.rpm;; \
 	    "Ubuntu") \
 	      sudo apt update; \
-          sudo wget https://github.com/souffle-lang/souffle/releases/download/2.5/x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
-		  sudo apt install ./x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
-		  rm x86_64-ubuntu-2404-souffle-2.5-Linux.deb;; \
+	      sudo wget https://github.com/souffle-lang/souffle/releases/download/2.5/x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
+	      sudo apt install ./x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
+	      rm x86_64-ubuntu-2404-souffle-2.5-Linux.deb;; \
 	    "Darwin") \
 	      if command -v brew; then \
 	        brew install --HEAD souffle-lang/souffle/souffle; \
