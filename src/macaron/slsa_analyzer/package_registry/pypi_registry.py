@@ -716,6 +716,26 @@ class PyPIPackageJsonAsset:
 
                 yield filepath, contents
 
+    def get_sha256(self) -> str | None:
+        """Get the sha256 hash of the artifact from its payload.
+
+        Returns
+        -------
+        str | None
+            The sha256 hash of the artifact, or None if not found.
+        """
+        if not self.package_json and not self.download(""):
+            return None
+
+        if not self.component_version:
+            artifact_hash = json_extract(self.package_json, ["urls", 0, "digests", "sha256"], str)
+        else:
+            artifact_hash = json_extract(
+                self.package_json, ["releases", self.component_version, "digests", "sha256"], str
+            )
+        logger.debug("Found sha256 hash: %s", artifact_hash)
+        return artifact_hash
+
 
 def find_or_create_pypi_asset(
     asset_name: str, asset_version: str | None, pypi_registry_info: PackageRegistryInfo

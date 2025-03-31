@@ -1081,6 +1081,10 @@ class Analyzer:
             if not pypi_asset.download(""):
                 return None
 
+            artifact_hash = pypi_asset.get_sha256()
+            if artifact_hash:
+                return artifact_hash
+
             source_url = pypi_asset.get_sourcecode_url("bdist_wheel")
             if not source_url:
                 return None
