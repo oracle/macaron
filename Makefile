@@ -155,13 +155,10 @@ souffle:
 	    "Fedora Linux") \
 	      sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.5/x86_64-fedora-41-souffle-2.5-Linux.rpm;; \
 	    "Ubuntu") \
-	      sudo wget https://souffle-lang.github.io/ppa/souffle-key.public -O /usr/share/keyrings/souffle-archive-keyring.gpg; \
-	      echo "deb [signed-by=/usr/share/keyrings/souffle-archive-keyring.gpg] https://souffle-lang.github.io/ppa/ubuntu/ stable main" | sudo tee /etc/apt/sources.list.d/souffle.list; \
 	      sudo apt update; \
           sudo wget https://github.com/souffle-lang/souffle/releases/download/2.5/x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
 		  sudo apt install ./x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
-		  rm x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
-	      sudo apt install souffle;; \
+		  rm x86_64-ubuntu-2404-souffle-2.5-Linux.deb;; \
 	    "Darwin") \
 	      if command -v brew; then \
 	        brew install --HEAD souffle-lang/souffle/souffle; \
