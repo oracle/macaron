@@ -282,8 +282,15 @@ class MavenCentralRegistry(PackageRegistry):
         if not file_name:
             return None
 
+        # Maven supports but does not require a sha256 hash of uploaded artifacts. Check that first.
         artifact_url = self.registry_url + "/" + artifact_path + "/" + file_name
-        logger.debug("Search for artifact using URL: %s", artifact_url)
+        sha256_url = artifact_url + ".sha256"
+        logger.debug("Search for artifact hash using URL: %s", [sha256_url, artifact_url])
+
+        response = send_get_http_raw(sha256_url, {})
+        if response and response.text:
+            logger.debug("Found hash of artifact: %s", response.text)
+            return response.text
 
         try:
             response = requests.get(artifact_url, stream=True, timeout=40)
