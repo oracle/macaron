@@ -13,7 +13,7 @@ from typing import Any
 
 import sqlalchemy as sa
 import sqlalchemy.event
-from sqlalchemy import Connection
+from sqlalchemy import Connection, Dialect
 from sqlalchemy.ext import compiler
 from sqlalchemy.schema import BaseDDLElement, DDLElement, MetaData, SchemaItem, Table
 from sqlalchemy.sql import Select
@@ -46,10 +46,12 @@ def _drop_view(element, comp, **kw):  # type: ignore
 
 def view_exists(
     ddl: BaseDDLElement,
-    target: SchemaItem,
+    target: SchemaItem | str,
     bind: Connection | None,
     tables: list[Table] | None = None,
     state: Any | None = None,
+    *,
+    dialect: Dialect,
     **kw: Any,
 ) -> bool:
     """Check if a view exists in the database.
@@ -62,7 +64,7 @@ def view_exists(
     ----------
     ddl : BaseDDLElement
         The DDL element that represents the creation or dropping of a view.
-    target : SchemaItem
+    target : SchemaItem | str
         The target schema item (not directly used in this check).
     bind : Connection | None
         The database connection used to inspect the database for existing views.
@@ -70,8 +72,10 @@ def view_exists(
         A list of tables (not directly used in this check).
     state : Any | None, optional
         The state of the object (not directly used in this check).
+    dialect : Dialect
+        The database dialect to be used for generating SQL (not directly used in this check).
     kw : Any
-        Additional keyword arguments passed to the function (not directly used).
+        Additional keyword arguments passed to the function.
 
     Returns
     -------
@@ -86,10 +90,12 @@ def view_exists(
 
 def view_doesnt_exist(
     ddl: BaseDDLElement,
-    target: SchemaItem,
+    target: SchemaItem | str,
     bind: Connection | None,
     tables: list[Table] | None = None,
     state: Any | None = None,
+    *,
+    dialect: Dialect,
     **kw: Any,
 ) -> bool:
     """Check if a view does not exist in the database.
@@ -101,7 +107,7 @@ def view_doesnt_exist(
     ----------
     ddl : BaseDDLElement
         The DDL element that represents the creation or dropping of a view.
-    target : SchemaItem
+    target : SchemaItem | str
         The target schema item (not directly used in this check).
     bind : Connection | None
         The database connection used to inspect the database for existing views.
@@ -109,15 +115,17 @@ def view_doesnt_exist(
         A list of tables (not directly used in this check).
     state : Any | None, optional
         The state of the object (not directly used in this check).
+    dialect : Dialect
+        The database dialect to be used for generating SQL (not directly used in this check).
     kw : Any
-        Additional keyword arguments passed to the function (not directly used).
+        Additional keyword arguments passed to the function.
 
     Returns
     -------
     bool
         Returns `True` if the view does not exist in the database, `False` otherwise.
     """
-    return not view_exists(ddl, target, bind, **kw)
+    return not view_exists(ddl, target, bind, dialect=dialect, **kw)
 
 
 def create_view(name: str, metadata: MetaData, selectable: Select[Any]) -> None:
