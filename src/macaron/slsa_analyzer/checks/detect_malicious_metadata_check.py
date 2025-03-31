@@ -140,11 +140,18 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         Returns
         -------
-        tuple[float, JsonType]
+        tuple[float, list[str]]
             Returns the confidence associated with the detected malicious combination, and associated rule IDs detailing
             what rules were triggered.
         """
         facts_list: list[str] = []
+        triggered_rules = []
+        # confidence is calculated using the probability of the package being benign, so the negation of the confidence values
+        # in the problog model. Multiplying these probabilities together on several triggers will further decrease the probability
+        # of the package being benign. This is then negated after calculation to get the probability of the package being malicious.
+        # If no rules are triggered, this will simply result in 1.0 - 1.0 = 0.0.
+        confidence: float = 1.0
+
         for heuristic, result in heuristic_results.items():
             if result == HeuristicResult.PASS:
                 facts_list.append(f"{heuristic.value} :- true.")
@@ -159,10 +166,11 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         problog_model = PrologString(problog_code)
         problog_results: dict[Term, float] = get_evaluatable().create_from(problog_model).evaluate()
 
-        confidence = sum(conf for conf in problog_results.values() if conf is not None)
-        triggered_rules: JsonType = ["No malicious rules triggered"]
-        if confidence > 0:
-            triggered_rules = [term.args[0] for term in problog_results]
+        for term, conf in problog_results.items():
+            if conf is not None and conf > 0:
+                confidence *= 1.0 - conf  # decrease the probability of the package being benign
+                triggered_rules.append(term.args[0])
+        confidence = round(1.0 - confidence, 2)  # 2 decimal places
 
         return confidence, triggered_rules
 
