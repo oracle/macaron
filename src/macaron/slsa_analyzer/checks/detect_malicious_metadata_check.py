@@ -150,6 +150,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         # in the problog model. Multiplying these probabilities together on several triggers will further decrease the probability
         # of the package being benign. This is then negated after calculation to get the probability of the package being malicious.
         # If no rules are triggered, this will simply result in 1.0 - 1.0 = 0.0.
+        # For example, if a LOW rule and MEDIUM rule are triggered, with confidences 0.4 and 0.7 respectively, this would result in
+        # the following calculation for confidence in package maliciousness:
+        # 1 - (1.0 * (1 - 0.4) * (1 - 0.7)) = 0.82
         confidence: float = 1.0
 
         for heuristic, result in heuristic_results.items():
