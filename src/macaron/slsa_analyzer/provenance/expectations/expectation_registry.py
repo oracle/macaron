@@ -43,9 +43,11 @@ class ExpectationRegistry:
                         os.path.relpath(expectation_path, os.getcwd()),
                     )
                 else:
-                    logger.error("Unable to find target for expectation %s.", expectation_path)
+                    logger.error(
+                        "Unable to find target for expectation %s.", os.path.relpath(expectation_path, os.getcwd())
+                    )
             else:
-                logger.error("Unsupported expectation format: %s", expectation_path)
+                logger.error("Unsupported expectation format: %s", os.path.relpath(expectation_path, os.getcwd()))
 
     def get_expectation_for_target(self, repo_complete_name: str) -> Expectation | None:
         """

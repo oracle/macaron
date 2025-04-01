@@ -100,7 +100,7 @@ class GlobalConfig:
                     logger.info("Added provenance expectation file %s", os.path.relpath(policy_file_path, os.getcwd()))
         elif os.path.isfile(exp_path):
             exp_files.append(exp_path)
-            logger.info("Added provenance expectation file %s", exp_path)
+            logger.info("Added provenance expectation file %s", os.path.relpath(exp_path, os.getcwd()))
 
         self.expectation_paths = exp_files
 
@@ -114,7 +114,10 @@ class GlobalConfig:
             The path to the Python virtual environment of the target software component.
         """
         if os.path.isdir(venv_path):
-            logger.info("Found Python virtual environment for the analysis target at %s", venv_path)
+            logger.info(
+                "Found Python virtual environment for the analysis target at %s",
+                os.path.relpath(venv_path, os.getcwd()),
+            )
 
         self.python_venv_path = str(os.path.abspath(venv_path))
 

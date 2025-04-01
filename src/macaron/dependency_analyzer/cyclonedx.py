@@ -408,7 +408,7 @@ class DependencyAnalyzer(ABC):
                 "Running %s version %s dependency analyzer on %s",
                 dep_analyzer.tool_name,
                 dep_analyzer.tool_version,
-                main_ctx.component.repository.fs_path,
+                os.path.relpath(main_ctx.component.repository.fs_path, os.getcwd()),
             )
 
             log_path = os.path.join(
@@ -454,7 +454,11 @@ class DependencyAnalyzer(ABC):
                     recursive=recursive,
                 )
 
-            logger.info("Stored dependency resolver log for %s to %s.", dep_analyzer.tool_name, log_path)
+            logger.info(
+                "Stored dependency resolver log for %s to %s.",
+                dep_analyzer.tool_name,
+                os.path.relpath(log_path, os.getcwd()),
+            )
 
         # Use repo finder to find more repositories to analyze.
         if defaults.getboolean("repofinder", "find_repos"):

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseCIService class to be inherited by a CI service."""
@@ -147,7 +147,9 @@ class BaseCIService:
                                 line.strip(),
                             )
                             return keyword, config
-                logger.info("No build command found for %s in %s", build_tool_name, file_path)
+                logger.info(
+                    "No build command found for %s in %s", build_tool_name, os.path.relpath(file_path, os.getcwd())
+                )
                 return "", ""
             except FileNotFoundError as error:
                 logger.debug(error)
