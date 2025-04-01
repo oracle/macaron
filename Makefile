@@ -134,13 +134,14 @@ $(PACKAGE_PATH)/resources/schemastore/NOTICE:
 		&& wget https://raw.githubusercontent.com/SchemaStore/schemastore/a1689388470d1997f2e5ebd8b430e99587b8d354/NOTICE \
 		&& cd $(REPO_PATH)
 
-# Supports OL8+, Fedora 34+, Ubuntu 20.04+, and macOS.
+# Supports OL8+, Fedora 34+, Ubuntu 22.04+ and 24.04+, and macOS.
 OS := "$(shell uname)"
 ifeq ($(OS), "Darwin")
   OS_DISTRO := "Darwin"
 else
   ifeq ($(OS), "Linux")
     OS_DISTRO := "$(shell grep '^NAME=' /etc/os-release | sed 's/^NAME=//' | sed 's/"//g')"
+    OS_MAJOR_VERSION := "$(shell grep '^VERSION=' /etc/os-release | sed -r 's/^[^0-9]+([0-9]+)\..*/\1/')"
   endif
 endif
 # If Souffle cannot be installed, we advise the user to install it manually
@@ -156,9 +157,15 @@ souffle:
 	      sudo dnf -y install https://github.com/souffle-lang/souffle/releases/download/2.5/x86_64-fedora-41-souffle-2.5-Linux.rpm;; \
 	    "Ubuntu") \
 	      sudo apt update; \
-	      wget https://github.com/souffle-lang/souffle/releases/download/2.5/x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
-	      sudo apt install ./x86_64-ubuntu-2404-souffle-2.5-Linux.deb; \
-	      rm x86_64-ubuntu-2404-souffle-2.5-Linux.deb;; \
+	      if [ $(OS_MAJOR_VERSION) == "24" ]; then \
+	        wget https://github.com/souffle-lang/souffle/releases/download/2.5/x86_64-ubuntu-2404-souffle-2.5-Linux.deb -O ./souffle.deb; \
+	      elif [ $(OS_MAJOR_VERSION) == "22" ]; then \
+	        wget https://github.com/souffle-lang/souffle/releases/download/2.5/x86_64-ubuntu-2204-souffle-2.5-Linux.deb -O ./souffle.deb; \
+	      else \
+	        echo "Unsupported Ubuntu major version: $(OS_MAJOR_VERSION)"; exit 0; \
+	      fi; \
+	      sudo apt install ./souffle.deb; \
+	      rm ./souffle.deb;; \
 	    "Darwin") \
 	      if command -v brew; then \
 	        brew install --HEAD souffle-lang/souffle/souffle; \
