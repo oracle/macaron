@@ -19,4 +19,4 @@ Policy("test_policy", component_id, "") :-
     is_repo_url(component_id, "https://github.com/apache/logging-log4j2").
 
 apply_policy_to("test_policy", component_id) :-
-    is_component(component_id, "pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta2").
+    is_component(component_id, "pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta3").
