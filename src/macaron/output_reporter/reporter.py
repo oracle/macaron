@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains reporter classes for creating reports of Macaron analyzed results."""
@@ -60,11 +60,11 @@ class FileReporter(abc.ABC):
         """
         try:
             with open(file_path, mode=self.mode, encoding=self.encoding) as file:
-                logger.info("Writing to file %s", file_path)
+                logger.info("Writing to file %s", os.path.relpath(file_path, os.getcwd()))
                 file.write(data)
                 return True
         except OSError as error:
-            logger.error("Cannot write to %s. Error: %s", file_path, error)
+            logger.error("Cannot write to %s. Error: %s", os.path.relpath(file_path, os.getcwd()), error)
             return False
 
     @abc.abstractmethod

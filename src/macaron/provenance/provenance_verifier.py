@@ -327,7 +327,7 @@ def _verify_slsa(
         verified = "PASSED: SLSA verification passed" in output
         log_path = os.path.join(global_config.build_log_path, f"{os.path.basename(source_path)}.slsa_verifier.log")
         with open(log_path, mode="a", encoding="utf-8") as log_file:
-            logger.info("Storing SLSA verifier output for %s to %s", asset_name, log_path)
+            logger.info("Storing SLSA verifier output for %s to %s", asset_name, os.path.relpath(log_path, os.getcwd()))
             log_file.writelines(
                 [f"SLSA verifier output for cmd: {' '.join(cmd)}\n", output, "--------------------------------\n"]
             )
@@ -346,7 +346,9 @@ def _verify_slsa(
                 global_config.build_log_path, f"{os.path.basename(source_path)}.slsa_verifier.errors"
             )
             with open(error_log_path, mode="a", encoding="utf-8") as log_file:
-                logger.info("Storing SLSA verifier log for%s to %s", asset_name, error_log_path)
+                logger.info(
+                    "Storing SLSA verifier log for%s to %s", asset_name, os.path.relpath(error_log_path, os.getcwd())
+                )
                 log_file.write(f"SLSA verifier output for cmd: {' '.join(cmd)}\n")
                 log_file.writelines(errors)
                 log_file.write("--------------------------------\n")

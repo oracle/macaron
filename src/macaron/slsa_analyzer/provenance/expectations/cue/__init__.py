@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides CUE expectation implementations.
@@ -10,6 +10,7 @@ To know more about the CUE language, see https://cuelang.org/
 
 import hashlib
 import logging
+import os
 from typing import Self
 
 from sqlalchemy import ForeignKey
@@ -52,7 +53,7 @@ class CUEExpectation(Expectation):
         Self
             The instantiated expectation object.
         """
-        logger.info("Generating an expectation from file %s", expectation_path)
+        logger.info("Generating an expectation from file %s", os.path.relpath(expectation_path, os.getcwd()))
         expectation: CUEExpectation = CUEExpectation(
             description="CUE expectation",
             path=expectation_path,

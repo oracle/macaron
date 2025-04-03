@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The provenance expectation module manages expectations that will be provided to checks."""
@@ -37,11 +37,17 @@ class ExpectationRegistry:
                 expectation = CUEExpectation.make_expectation(expectation_path)
                 if expectation and expectation.target:
                     self.expectations[expectation.target] = expectation
-                    logger.info("Found target %s for expectation %s.", expectation.target, expectation_path)
+                    logger.info(
+                        "Found target %s for expectation %s.",
+                        expectation.target,
+                        os.path.relpath(expectation_path, os.getcwd()),
+                    )
                 else:
-                    logger.error("Unable to find target for expectation %s.", expectation_path)
+                    logger.error(
+                        "Unable to find target for expectation %s.", os.path.relpath(expectation_path, os.getcwd())
+                    )
             else:
-                logger.error("Unsupported expectation format: %s", expectation_path)
+                logger.error("Unsupported expectation format: %s", os.path.relpath(expectation_path, os.getcwd()))
 
     def get_expectation_for_target(self, repo_complete_name: str) -> Expectation | None:
         """
