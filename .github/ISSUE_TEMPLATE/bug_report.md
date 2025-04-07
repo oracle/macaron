@@ -24,7 +24,7 @@ What were you expecting to happen?
 What actually happened? Please include any error messages, logs, or unexpected behavior you observed.
 
 ### Debug Information
-Please run the command again with the `--verbose` option to provide debug information. This will help us diagnose the issue more effectively. You can add this option to the command like this:
+Please run the command again with the `--verbose` [option](https://oracle.github.io/macaron/pages/cli_usage/index.html#cmdoption-v) to provide debug information. This will help us diagnose the issue more effectively. You can add this option to the command like this:
 
 ```shell
 ./run_macaron.sh --verbose [other options]
@@ -37,11 +37,15 @@ To assist with troubleshooting, please provide the following information about y
 
 Operating System: (e.g., Ubuntu 20.04, macOS 11.2)
 
+CPU architecture information (e.g., x86-64 (AMD64))
+
 Bash Version: (Run bash --version to get the version)
 
 Docker or Podman Version: (Run docker --version to get the version)
 
-Macaron Version: (If available, please specify the Macaron version you're using)
+If you are using Macaron as a Python package, please indicate that in your environment details and specify the Python version you are using.
+
+Macaron version or commit hash where the issue occurs.
 
 Additional Information: (Any other relevant details, such as hardware or network environment, such as proxies)
 
