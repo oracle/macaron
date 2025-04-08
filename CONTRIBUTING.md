@@ -35,13 +35,13 @@ See our [Macaron Style Guide](./docs/source/pages/developers_guide/style_guide.r
 
 1. Ensure there is an issue created to track and discuss the fix or enhancement
    you intend to submit.
-2. Fork this repository including the `staging` branch. In Macaron, the `staging` branch is the active development branch and contains the most recent changes.
-3. Create a branch in your fork to implement the changes.  Make sure to create your branch from the `staging` branch and not `main`. We recommend using the issue number as part of your branch name, e.g. `1234-fixes`.
+2. Fork this repository.
+3. Create a branch in your fork to implement the changes. We recommend using the issue number as part of your branch name, e.g. `1234-fixes`.
 4. The title of the PR should follow the convention of [commit messages](#commit-messages).
 5. Ensure that any documentation is updated with the changes that are required by your change.
 6. Ensure that any samples are updated if the base image has been changed.
 7. Submit the pull request. *Do not leave the pull request blank*. Explain exactly what your changes are meant to do and provide simple steps on how to validate. your changes. Ensure that you reference the issue you created as well.
-8. Choose `staging` as the base branch for your PR.
+8. Choose `main` as the base branch for your PR.
 9. We will assign the pull request to 2-3 people for review before it is merged.
 
 ### Commit messages
@@ -74,7 +74,7 @@ a detailed commit message body is preferred. Make sure to keep the `Signed-off-b
 
 ## Branching model
 
-* The `main` branch is only used for releases and the `staging` branch is used for development. We only merge to `main` when we want to create a new release for Macaron.
+* The `main` branch should be used as the base branch for pull requests. The `release` branch is designated for releases and should only be merged into when creating a new release for Macaron.
 
 ## Setting up the development environment
 

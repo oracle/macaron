@@ -202,7 +202,7 @@ And the following relation is declared in this policy:
 * ``violating_dependencies(parent: number)``
 
 Feel free to browse through the available
-relations `here <https://github.com/oracle/macaron/blob/main/src/macaron/policy_engine/prelude/>`_
+relations `here <https://github.com/oracle/macaron/blob/release/src/macaron/policy_engine/prelude/>`_
 to see how they are constructed before moving on.
 
 .. code-block:: prolog

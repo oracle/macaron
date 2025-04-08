@@ -121,7 +121,7 @@ Here is a pretty-printed version of the policy as it appears in the VSA, along w
 
     * Applying the Policy (``apply_policy_to``): To apply the ``gcn_provenance_policy``, Macaron first determines if the ``component_id`` is a valid component and if its ``PURL`` conforms to the pattern defined in the ``match`` predicate. If both conditions are met, the policy is applied.
 
-    * The template Datalog policy file can be downloaded from `here <https://github.com/oracle/macaron/tree/main/src/macaron/resources/policies/gdk/policy.dl.template>`_
+    * The template Datalog policy file can be downloaded from `here <https://github.com/oracle/macaron/tree/release/src/macaron/resources/policies/gdk/policy.dl.template>`_
 
     Below you can find the template CUE file that has been used by the :ref:`mcn_provenance_expectation_1 <checks>` check at verification time to verify the provenance. It contains place holders for expected values that are populated by the GDK maintainers.
 
@@ -148,7 +148,7 @@ Here is a pretty-printed version of the policy as it appears in the VSA, along w
 
     * ``projecturl: "https://<REPO_URL>"``: This checks that the ``projecturl`` attribute exactly matches the expected Repository URL. ``<REPO_URL>`` is a placeholder for the actual repository URL, e.g., ``internal.repo.com/micronaut-projects/micronaut-core``.
 
-    * The template CUE expectation can be downloaded from `this location <https://github.com/oracle/macaron/tree/main/src/macaron/resources/policies/gdk/expectation.cue.template>`_.
+    * The template CUE expectation can be downloaded from `this location <https://github.com/oracle/macaron/tree/release/src/macaron/resources/policies/gdk/expectation.cue.template>`_.
 
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -175,7 +175,7 @@ Download the check_vsa.sh script
 
 .. code-block:: shell
 
-    curl -O https://raw.githubusercontent.com/oracle/macaron/main/scripts/release_scripts/check_vsa.sh
+    curl -O https://raw.githubusercontent.com/oracle/macaron/release/scripts/release_scripts/check_vsa.sh
 
 ++++++++++++++++++++++++++
 Make the script executable

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # We run checks on pushing to the specified branches.
@@ -9,7 +9,7 @@ on:
   push:
     branches:
     - main
-    - staging
+    - release
 permissions:
   contents: read
 env:
@@ -28,11 +28,11 @@ jobs:
       contents: read
       packages: read
 
-  # On pushes to the 'main' branch create a new release by bumping the version
+  # On pushes to the 'release' branch create a new release by bumping the version
   # and generating a change log. That's the new bump commit and associated tag.
   bump:
     needs: check
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/release'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -72,18 +72,18 @@ jobs:
         git push
         git push --tags
 
-  # After the bump commit was pushed to the main branch, rebase the staging branch
-  # (to_head argument) on top of the new main branch (from_base argument), to keep
+  # After the bump commit was pushed to the release branch, rebase the main branch
+  # (to_head argument) on top of the release branch (from_base argument), to keep
   # the histories of both branches in sync.
-  rebase_staging:
+  rebase_main:
     needs: [bump]
-    name: Rebase staging branch on main
+    name: Rebase main branch on release
     uses: ./.github/workflows/_generate-rebase.yaml
     permissions:
       contents: read
     with:
-      to_head: staging
-      from_base: origin/main
+      to_head: main
+      from_base: origin/release
       git_user_name: behnazh-w
       git_user_email: behnazh-w@users.noreply.github.com
     secrets:
@@ -91,7 +91,7 @@ jobs:
 
   # When triggered by the version bump commit, build the package and publish the release artifacts.
   build:
-    if: github.ref == 'refs/heads/main' && startsWith(github.event.commits[0].message, 'bump:')
+    if: github.ref == 'refs/heads/release' && startsWith(github.event.commits[0].message, 'bump:')
     uses: ./.github/workflows/_build.yaml
     permissions:
       contents: read

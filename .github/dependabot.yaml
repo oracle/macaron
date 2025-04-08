@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This configuration file enables Dependabot version updates.
@@ -16,7 +16,7 @@ updates:
     prefix-development: chore
     include: scope
   open-pull-requests-limit: 13
-  target-branch: staging
+  target-branch: main
   # Add additional reviewers for PRs opened by Dependabot. For more information, see:
   # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#reviewers
   # reviewers:
@@ -31,7 +31,7 @@ updates:
     prefix-development: chore
     include: scope
   open-pull-requests-limit: 13
-  target-branch: staging
+  target-branch: main
   # Add additional reviewers for PRs opened by Dependabot. For more information, see:
   # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#reviewers
   # reviewers:
@@ -46,7 +46,7 @@ updates:
     prefix-development: chore
     include: scope
   open-pull-requests-limit: 13
-  target-branch: staging
+  target-branch: main
   # Add additional reviewers for PRs opened by Dependabot. For more information, see:
   # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#reviewers
   # reviewers:
