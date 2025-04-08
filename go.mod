@@ -8,7 +8,7 @@ go 1.23.0
 toolchain go1.23.2
 
 require (
-	cuelang.org/go v0.12.0
+	cuelang.org/go v0.12.1
 	mvdan.cc/sh/v3 v3.11.0
 )
 
