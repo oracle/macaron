@@ -1,0 +1,11 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+blank_issues_enabled: false
+contact_links:
+- name: GitHub Discussions
+  url: https://github.com/oracle/macaron/discussions
+  about: Please ask and answer questions here.
+- name: Security Reports
+  url: https://github.com/oracle/macaron/blob/main/SECURITY.md
+  about: Please report security vulnerabilities following the instructions.
