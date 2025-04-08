@@ -29,12 +29,14 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import Whee
 from macaron.malware_analyzer.pypi_heuristics.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.build_tool.pip import Pip
-from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
-from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset, PyPIRegistry
+from macaron.slsa_analyzer.package_registry.pypi_registry import (
+    PyPIPackageJsonAsset,
+    PyPIRegistry,
+    find_or_create_pypi_asset,
+)
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 from macaron.util import send_post_http_raw
@@ -224,6 +226,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         # First check if this package is a known malware
         data = {"package": {"purl": ctx.component.purl}}
 
+        package_exists = False
         try:
             package_exists = bool(DepsDevService.get_package_info(ctx.component.purl))
         except APIAccessError as error:
@@ -260,14 +263,18 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             match package_registry_info_entry:
                 # Currently, only PyPI packages are supported.
                 case PackageRegistryInfo(
-                    build_tool=Pip() | Poetry(),
-                    package_registry=PyPIRegistry() as pypi_registry,
+                    build_tool_name="pip" | "poetry",
+                    build_tool_purl_type="pypi",
+                    package_registry=PyPIRegistry(),
                 ) as pypi_registry_info:
-
-                    # Create an AssetLocator object for the PyPI package JSON object.
-                    pypi_package_json = PyPIPackageJsonAsset(
-                        component=ctx.component, pypi_registry=pypi_registry, package_json={}
+                    # Retrieve the pre-existing asset, or create a new one.
+                    pypi_package_json = find_or_create_pypi_asset(
+                        ctx.component.name, ctx.component.version, pypi_registry_info
                     )
+                    if pypi_package_json is None:
+                        return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
+
+                    pypi_package_json.has_repository = ctx.component.repository is not None
 
                     pypi_registry_info.metadata.append(pypi_package_json)
 

@@ -4,11 +4,14 @@
 """This module handles the cloning and analyzing a Git repo."""
 
 import glob
+import hashlib
+import json
 import logging
 import os
 import re
 import sys
 import tempfile
+import urllib.parse
 from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,7 +23,10 @@ from pydriller.git import Git
 from sqlalchemy.orm import Session
 
 from macaron import __version__
-from macaron.artifact.local_artifact import get_local_artifact_dirs
+from macaron.artifact.local_artifact import (
+    get_local_artifact_dirs,
+    get_local_artifact_hash,
+)
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
@@ -41,6 +47,7 @@ from macaron.errors import (
     ProvenanceError,
     PURLNotFoundError,
 )
+from macaron.json_tools import json_extract
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.provenance import provenance_verifier
@@ -66,12 +73,15 @@ from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.database_store import store_analyze_context_to_db
-from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
+from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService, GitHub
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR
-from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
+from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, MavenCentralRegistry, PyPIRegistry
+from macaron.slsa_analyzer.package_registry.pypi_registry import find_or_create_pypi_asset
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payload
+from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError
+from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
@@ -353,6 +363,9 @@ class Analyzer:
                 status=SCMStatus.ANALYSIS_FAILED,
             )
 
+        # Pre-populate all package registries so assets can be stored for later.
+        all_package_registries = self._populate_package_registry_info()
+
         provenance_is_verified = False
         if not provenance_payload and parsed_purl:
             # Try to find the provenance file for the parsed PURL.
@@ -385,7 +398,12 @@ class Analyzer:
         available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
         try:
             analysis_target = Analyzer.to_analysis_target(
-                config, available_domains, parsed_purl, provenance_repo_url, provenance_commit_digest
+                config,
+                available_domains,
+                parsed_purl,
+                provenance_repo_url,
+                provenance_commit_digest,
+                all_package_registries,
             )
         except InvalidAnalysisTargetError as error:
             return Record(
@@ -394,6 +412,17 @@ class Analyzer:
                 pre_config=config,
                 status=SCMStatus.ANALYSIS_FAILED,
             )
+
+        local_artifact_dirs = None
+        if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
+            local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
+            try:
+                local_artifact_dirs = get_local_artifact_dirs(
+                    purl=parsed_purl,
+                    local_artifact_repo_path=local_artifact_repo_path,
+                )
+            except LocalArtifactFinderError as error:
+                logger.debug(error)
 
         # Prepare the repo.
         git_obj = None
@@ -464,7 +493,7 @@ class Analyzer:
         logger.info("With PURL: %s", component.purl)
         logger.info("=====================================")
 
-        analyze_ctx = self.get_analyze_ctx(component)
+        analyze_ctx = self.create_analyze_ctx(component)
         analyze_ctx.dynamic_data["expectation"] = self.expectations.get_expectation_for_target(
             analyze_ctx.component.purl.split("@")[0]
         )
@@ -472,9 +501,42 @@ class Analyzer:
         git_service = self._determine_git_service(analyze_ctx)
         self._determine_ci_services(analyze_ctx, git_service)
         self._determine_build_tools(analyze_ctx, git_service)
+
+        # Try to find an attestation from GitHub, if applicable.
+        if parsed_purl and not provenance_payload and analysis_target.repo_path and isinstance(git_service, GitHub):
+            # Try to discover GitHub attestation for the target software component.
+            url = None
+            try:
+                url = urllib.parse.urlparse(analysis_target.repo_path)
+            except TypeError as error:
+                logger.debug("Failed to parse repository path as URL: %s", error)
+            if url and url.hostname == "github.com":
+                artifact_hash = self.get_artifact_hash(
+                    parsed_purl, local_artifact_dirs, hashlib.sha256(), all_package_registries
+                )
+                if artifact_hash:
+                    git_attestation_dict = git_service.api_client.get_attestation(
+                        analyze_ctx.component.repository.full_name, artifact_hash
+                    )
+                    if git_attestation_dict:
+                        git_attestation_list = json_extract(git_attestation_dict, ["attestations"], list)
+                        if git_attestation_list:
+                            git_attestation = git_attestation_list[0]
+
+                            with tempfile.TemporaryDirectory() as temp_dir:
+                                attestation_file = os.path.join(temp_dir, "attestation")
+                                with open(attestation_file, "w", encoding="UTF-8") as file:
+                                    json.dump(git_attestation, file)
+
+                                try:
+                                    payload = load_provenance_payload(attestation_file)
+                                    provenance_payload = payload
+                                except LoadIntotoAttestationError as error:
+                                    logger.debug("Failed to load provenance payload: %s", error)
+
         if parsed_purl is not None:
             self._verify_repository_link(parsed_purl, analyze_ctx)
-        self._determine_package_registries(analyze_ctx)
+        self._determine_package_registries(analyze_ctx, all_package_registries)
 
         provenance_l3_verified = False
         if not provenance_payload:
@@ -533,16 +595,8 @@ class Analyzer:
 
         analyze_ctx.dynamic_data["validate_malware"] = validate_malware
 
-        if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
-            local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
-            try:
-                local_artifact_dirs = get_local_artifact_dirs(
-                    purl=parsed_purl,
-                    local_artifact_repo_path=local_artifact_repo_path,
-                )
-                analyze_ctx.dynamic_data["local_artifact_paths"].extend(local_artifact_dirs)
-            except LocalArtifactFinderError as error:
-                logger.debug(error)
+        if local_artifact_dirs:
+            analyze_ctx.dynamic_data["local_artifact_paths"].extend(local_artifact_dirs)
 
         analyze_ctx.check_results = registry.scan(analyze_ctx)
 
@@ -802,6 +856,7 @@ class Analyzer:
         parsed_purl: PackageURL | None,
         provenance_repo_url: str | None = None,
         provenance_commit_digest: str | None = None,
+        all_package_registries: list[PackageRegistryInfo] | None = None,
     ) -> AnalysisTarget:
         """Resolve the details of a software component from user input.
 
@@ -818,6 +873,8 @@ class Analyzer:
             The repository URL extracted from provenance, or None if not found or no provenance.
         provenance_commit_digest: str | None
             The commit extracted from provenance, or None if not found or no provenance.
+        all_package_registries: list[PackageRegistryInfo] | None
+            The list of all package registries.
 
         Returns
         -------
@@ -860,7 +917,9 @@ class Analyzer:
                     converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)
                     if converted_repo_path is None:
                         # Try to find repo from PURL
-                        repo, repo_finder_outcome = repo_finder.find_repo(parsed_purl)
+                        repo, repo_finder_outcome = repo_finder.find_repo(
+                            parsed_purl, all_package_registries=all_package_registries
+                        )
 
                 return Analyzer.AnalysisTarget(
                     parsed_purl=parsed_purl,
@@ -904,8 +963,8 @@ class Analyzer:
                     "Cannot determine the analysis target: PURL and repository path are missing."
                 )
 
-    def get_analyze_ctx(self, component: Component) -> AnalyzeContext:
-        """Return the analyze context for a target component.
+    def create_analyze_ctx(self, component: Component) -> AnalyzeContext:
+        """Create and return an analysis context for the passed component.
 
         Parameters
         ----------
@@ -925,6 +984,99 @@ class Analyzer:
         )
 
         return analyze_ctx
+
+    def get_artifact_hash(
+        self,
+        purl: PackageURL,
+        cached_artifacts: list[str] | None,
+        hash_algorithm: Any,
+        all_package_registries: list[PackageRegistryInfo],
+    ) -> str | None:
+        """Get the hash of the artifact found from the passed PURL using local or remote files.
+
+        Parameters
+        ----------
+        purl: PackageURL
+            The PURL of the artifact.
+        cached_artifacts: list[str] | None
+            The list of local files that match the PURL.
+        hash_algorithm: Any
+            The hash algorithm to use.
+        all_package_registries: list[PackageRegistryInfo]
+            The list of package registry information.
+
+        Returns
+        -------
+        str | None
+            The hash of the artifact, or None if not found.
+        """
+        if cached_artifacts:
+            # Try to get the hash from a local file.
+            artifact_hash = get_local_artifact_hash(purl, cached_artifacts, hash_algorithm.name)
+
+            if artifact_hash:
+                return artifact_hash
+
+        # Download the artifact.
+        if purl.type == "maven":
+            maven_registry = next(
+                (
+                    package_registry
+                    for package_registry in PACKAGE_REGISTRIES
+                    if isinstance(package_registry, MavenCentralRegistry)
+                ),
+                None,
+            )
+            if not maven_registry:
+                return None
+
+            return maven_registry.get_artifact_hash(purl, hash_algorithm)
+
+        if purl.type == "pypi":
+            pypi_registry = next(
+                (
+                    package_registry
+                    for package_registry in PACKAGE_REGISTRIES
+                    if isinstance(package_registry, PyPIRegistry)
+                ),
+                None,
+            )
+            if not pypi_registry:
+                logger.debug("Missing registry for PyPI")
+                return None
+
+            registry_info = next(
+                (
+                    info
+                    for info in all_package_registries
+                    if info.package_registry == pypi_registry and info.build_tool_name in {"pip", "poetry"}
+                ),
+                None,
+            )
+            if not registry_info:
+                logger.debug("Missing registry information for PyPI")
+                return None
+
+            pypi_asset = find_or_create_pypi_asset(purl.name, purl.version, registry_info)
+            if not pypi_asset:
+                return None
+
+            pypi_asset.has_repository = True
+            if not pypi_asset.download(""):
+                return None
+
+            artifact_hash = pypi_asset.get_sha256()
+            if artifact_hash:
+                return artifact_hash
+
+            source_url = pypi_asset.get_sourcecode_url("bdist_wheel")
+            if not source_url:
+                return None
+
+            return pypi_registry.get_artifact_hash(source_url, hash_algorithm)
+
+        logger.debug("Purl type '%s' not yet supported for GitHub attestation discovery.", purl.type)
+        return None
 
     def _determine_git_service(self, analyze_ctx: AnalyzeContext) -> BaseGitService:
         """Determine the Git service used by the software component."""
@@ -1011,20 +1163,39 @@ class Analyzer:
                     )
                 )
 
-    def _determine_package_registries(self, analyze_ctx: AnalyzeContext) -> None:
+    def _populate_package_registry_info(self) -> list[PackageRegistryInfo]:
+        """Add all possible package registries to the analysis context."""
+        package_registries = []
+        for package_registry in PACKAGE_REGISTRIES:
+            for build_tool in BUILD_TOOLS:
+                build_tool_name = build_tool.name
+                if build_tool_name not in package_registry.build_tool_names:
+                    continue
+                package_registries.append(
+                    PackageRegistryInfo(
+                        build_tool_name=build_tool_name,
+                        build_tool_purl_type=build_tool.purl_type,
+                        package_registry=package_registry,
+                    )
+                )
+        return package_registries
+
+    def _determine_package_registries(
+        self, analyze_ctx: AnalyzeContext, all_package_registries: list[PackageRegistryInfo]
+    ) -> None:
         """Determine the package registries used by the software component based on its build tools."""
         build_tools = (
             analyze_ctx.dynamic_data["build_spec"]["tools"] or analyze_ctx.dynamic_data["build_spec"]["purl_tools"]
         )
-        for package_registry in PACKAGE_REGISTRIES:
-            for build_tool in build_tools:
-                if package_registry.is_detected(build_tool):
-                    analyze_ctx.dynamic_data["package_registries"].append(
-                        PackageRegistryInfo(
-                            build_tool=build_tool,
-                            package_registry=package_registry,
-                        )
-                    )
+        build_tool_names = {build_tool.name for build_tool in build_tools}
+        relevant_package_registries = []
+        for package_registry in all_package_registries:
+            if package_registry.build_tool_name not in build_tool_names:
+                continue
+            relevant_package_registries.append(package_registry)
+
+        # Assign the updated list of registries.
+        analyze_ctx.dynamic_data["package_registries"] = relevant_package_registries
 
     def _verify_repository_link(self, parsed_purl: PackageURL, analyze_ctx: AnalyzeContext) -> None:
         """Verify whether the claimed repository links back to the artifact."""

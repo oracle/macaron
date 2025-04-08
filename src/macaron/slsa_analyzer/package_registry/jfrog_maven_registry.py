@@ -17,9 +17,6 @@ from macaron.artifact.maven import construct_maven_repository_path
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError
 from macaron.json_tools import JsonType
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
-from macaron.slsa_analyzer.build_tool.gradle import Gradle
-from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -126,7 +123,7 @@ class JFrogMavenRegistry(PackageRegistry):
         self.request_timeout = request_timeout or 10
         self.download_timeout = download_timeout or 120
         self.enabled = enabled or False
-        super().__init__("JFrog Maven Registry")
+        super().__init__("JFrog Maven Registry", {"maven", "gradle"})
 
     def load_defaults(self) -> None:
         """Load the .ini configuration for the current package registry.
@@ -172,31 +169,6 @@ class JFrogMavenRegistry(PackageRegistry):
             ) from error
 
         self.enabled = True
-
-    def is_detected(self, build_tool: BaseBuildTool) -> bool:
-        """Detect if artifacts of the repo under analysis can possibly be published to this package registry.
-
-        The detection here is based on the repo's detected build tool.
-        If the package registry is compatible with the given build tool, it can be a
-        possible place where the artifacts produced from the repo are published.
-
-        ``JFrogMavenRegistry`` is compatible with Maven and Gradle.
-
-        Parameters
-        ----------
-        build_tool : BaseBuildTool
-            A detected build tool of the repository under analysis.
-
-        Returns
-        -------
-        bool
-            ``True`` if the repo under analysis can be published to this package registry,
-            based on the given build tool.
-        """
-        if not self.enabled:
-            return False
-        compatible_build_tool_classes = [Maven, Gradle]
-        return any(isinstance(build_tool, build_tool_class) for build_tool_class in compatible_build_tool_classes)
 
     def fetch_artifact_ids(self, group_id: str) -> list[str]:
         """Get all artifact ids under a group id.

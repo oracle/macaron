@@ -1,0 +1,22 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Finding the source of a PyPI PURL that is not correctly found by deps.dev and must be sought on the package registry directly.
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Run macaron analyze
+  kind: find-source
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/torch@2.6.0
+- name: Validate the produced report
+  kind: validate_schema
+  options:
+    kind: json_schema
+    schema: find_source_json_report
+    result: output/reports/pypi/torch/torch.source.json
