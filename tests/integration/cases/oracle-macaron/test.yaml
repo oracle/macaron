@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Analyzing the staging branch of the Macaron repo to detect vulnerable GitHub Actions.
+  Analyzing the main branch of the Macaron repo to detect vulnerable GitHub Actions.
 
 tags:
 - macaron-python-package
@@ -15,7 +15,7 @@ steps:
     - -rp
     - https://github.com/oracle/macaron
     - -b
-    - staging
+    - main
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:
