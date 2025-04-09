@@ -386,7 +386,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_2) :-
         quickUndetailed,
         failed({Heuristics.ONE_RELEASE.value}),
-        passed({Heuristics.WHEEL_ABSENCE.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}).
 
     % ----- Evaluation -----
