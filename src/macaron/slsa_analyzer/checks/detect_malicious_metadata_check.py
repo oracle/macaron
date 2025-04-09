@@ -140,9 +140,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         Returns
         -------
-        tuple[float, list[str]]
+        tuple[float, JsonType]
             Returns the confidence associated with the detected malicious combination, and associated rule IDs detailing
-            what rules were triggered.
+            what rules were triggered and their confidence as a dict[str, float] type.
         """
         facts_list: list[str] = []
         triggered_rules: dict[str, JsonType] = {}
@@ -328,6 +328,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         AnomalousVersionAnalyzer,
     ]
 
+    # name used to query the result of all problog rules, so it can be accessed outside the model.
     problog_result_access = "result"
 
     malware_rules_problog_model = f"""
