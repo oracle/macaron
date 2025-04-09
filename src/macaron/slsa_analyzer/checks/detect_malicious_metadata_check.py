@@ -306,7 +306,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                             return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
                         confidence, triggered_rules = self.evaluate_heuristic_results(heuristic_results)
-                        detail_info["triggered_rules"] = triggered_rules
+                        heuristics_detail_info["triggered_rules"] = triggered_rules
                         result_type = CheckResultType.FAILED
                         if not confidence:
                             confidence = Confidence.HIGH
