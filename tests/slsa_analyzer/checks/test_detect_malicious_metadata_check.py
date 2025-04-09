@@ -126,6 +126,7 @@ def test_evaluations(combination: dict[Heuristics, HeuristicResult]) -> None:
     """Test heuristic combinations to ensure they evaluate as expected."""
     check = DetectMaliciousMetadataCheck()
 
-    confidence, _ = check.evaluate_heuristic_results(combination)
-
+    confidence, triggered_rules = check.evaluate_heuristic_results(combination)
     assert confidence == 0
+    # Expecting this to be a dictionary, so we can ignore the type problems
+    assert len(dict(triggered_rules)) == 0  # type: ignore[arg-type]
