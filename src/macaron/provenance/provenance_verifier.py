@@ -334,7 +334,10 @@ def _verify_slsa(
 
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
         logger.error(error)
-        errors.append(error.output.decode("utf-8"))
+        if error.output:
+            errors.append(error.output.decode("utf-8"))
+        else:
+            errors.append(f"Verification failed: {type(error)}")
     except OSError as error:
         logger.error(error)
         errors.append(str(error))
