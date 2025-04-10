@@ -23,3 +23,8 @@ Glossary
 
         * Witness is a tool that wraps a build command and records various types of information in a provenance document in the ``in-toto`` format as the build execution happens.
         * URL: https://github.com/in-toto/witness
+
+    PURL
+
+        * Package URL identifier
+        * URL: https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst
