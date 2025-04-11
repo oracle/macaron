@@ -353,6 +353,9 @@ class Analyzer:
                 status=SCMStatus.ANALYSIS_FAILED,
             )
 
+        # Pre-populate all package registries so assets can be stored for later.
+        package_registries_info = self._populate_package_registry_info()
+
         provenance_is_verified = False
         if not provenance_payload and parsed_purl:
             # Try to find the provenance file for the parsed PURL.
@@ -385,7 +388,12 @@ class Analyzer:
         available_domains = [git_service.hostname for git_service in GIT_SERVICES if git_service.hostname]
         try:
             analysis_target = Analyzer.to_analysis_target(
-                config, available_domains, parsed_purl, provenance_repo_url, provenance_commit_digest
+                config,
+                available_domains,
+                parsed_purl,
+                provenance_repo_url,
+                provenance_commit_digest,
+                package_registries_info,
             )
         except InvalidAnalysisTargetError as error:
             return Record(
@@ -464,7 +472,7 @@ class Analyzer:
         logger.info("With PURL: %s", component.purl)
         logger.info("=====================================")
 
-        analyze_ctx = self.get_analyze_ctx(component)
+        analyze_ctx = self.create_analyze_ctx(component)
         analyze_ctx.dynamic_data["expectation"] = self.expectations.get_expectation_for_target(
             analyze_ctx.component.purl.split("@")[0]
         )
@@ -474,7 +482,7 @@ class Analyzer:
         self._determine_build_tools(analyze_ctx, git_service)
         if parsed_purl is not None:
             self._verify_repository_link(parsed_purl, analyze_ctx)
-        self._determine_package_registries(analyze_ctx)
+        self._determine_package_registries(analyze_ctx, package_registries_info)
 
         provenance_l3_verified = False
         if not provenance_payload:
@@ -802,6 +810,7 @@ class Analyzer:
         parsed_purl: PackageURL | None,
         provenance_repo_url: str | None = None,
         provenance_commit_digest: str | None = None,
+        package_registries_info: list[PackageRegistryInfo] | None = None,
     ) -> AnalysisTarget:
         """Resolve the details of a software component from user input.
 
@@ -818,6 +827,9 @@ class Analyzer:
             The repository URL extracted from provenance, or None if not found or no provenance.
         provenance_commit_digest: str | None
             The commit extracted from provenance, or None if not found or no provenance.
+        package_registries_info: list[PackageRegistryInfo] | None
+            The list of package registry information if available.
+            If no package registries are loaded, this can be set to None.
 
         Returns
         -------
@@ -860,7 +872,9 @@ class Analyzer:
                     converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)
                     if converted_repo_path is None:
                         # Try to find repo from PURL
-                        repo, repo_finder_outcome = repo_finder.find_repo(parsed_purl)
+                        repo, repo_finder_outcome = repo_finder.find_repo(
+                            parsed_purl, package_registries_info=package_registries_info
+                        )
 
                 return Analyzer.AnalysisTarget(
                     parsed_purl=parsed_purl,
@@ -904,8 +918,8 @@ class Analyzer:
                     "Cannot determine the analysis target: PURL and repository path are missing."
                 )
 
-    def get_analyze_ctx(self, component: Component) -> AnalyzeContext:
-        """Return the analyze context for a target component.
+    def create_analyze_ctx(self, component: Component) -> AnalyzeContext:
+        """Create and return an analysis context for the passed component.
 
         Parameters
         ----------
@@ -1011,20 +1025,39 @@ class Analyzer:
                     )
                 )
 
-    def _determine_package_registries(self, analyze_ctx: AnalyzeContext) -> None:
+    def _populate_package_registry_info(self) -> list[PackageRegistryInfo]:
+        """Add all possible package registries to the analysis context."""
+        package_registries = []
+        for package_registry in PACKAGE_REGISTRIES:
+            for build_tool in BUILD_TOOLS:
+                build_tool_name = build_tool.name
+                if build_tool_name not in package_registry.build_tool_names:
+                    continue
+                package_registries.append(
+                    PackageRegistryInfo(
+                        build_tool_name=build_tool_name,
+                        build_tool_purl_type=build_tool.purl_type,
+                        package_registry=package_registry,
+                    )
+                )
+        return package_registries
+
+    def _determine_package_registries(
+        self, analyze_ctx: AnalyzeContext, package_registries_info: list[PackageRegistryInfo]
+    ) -> None:
         """Determine the package registries used by the software component based on its build tools."""
         build_tools = (
             analyze_ctx.dynamic_data["build_spec"]["tools"] or analyze_ctx.dynamic_data["build_spec"]["purl_tools"]
         )
-        for package_registry in PACKAGE_REGISTRIES:
-            for build_tool in build_tools:
-                if package_registry.is_detected(build_tool):
-                    analyze_ctx.dynamic_data["package_registries"].append(
-                        PackageRegistryInfo(
-                            build_tool=build_tool,
-                            package_registry=package_registry,
-                        )
-                    )
+        build_tool_names = {build_tool.name for build_tool in build_tools}
+        relevant_package_registries = []
+        for package_registry in package_registries_info:
+            if package_registry.build_tool_name not in build_tool_names:
+                continue
+            relevant_package_registries.append(package_registry)
+
+        # Assign the updated list of registries.
+        analyze_ctx.dynamic_data["package_registries"] = relevant_package_registries
 
     def _verify_repository_link(self, parsed_purl: PackageURL, analyze_ctx: AnalyzeContext) -> None:
         """Verify whether the claimed repository links back to the artifact."""

@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides utility functions for JSON data."""
@@ -53,5 +53,5 @@ def json_extract(entry: dict | list, keys: Sequence[str | int], type_: type[T]) 
     if isinstance(entry, type_):
         return entry
 
-    logger.debug("Found value of incorrect type: %s instead of %s.", type(entry), type(type_))
+    logger.debug("Found value of incorrect type: %s instead of %s.", type(entry), type_)
     return None

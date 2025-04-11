@@ -1,0 +1,8 @@
+{
+    "purl": "pkg:pypi/torch@2.6.0",
+    "commit": "1eba9b3aa3c43f86f4a2c807ac8e12c4a7767340",
+    "repo": "https://github.com/pytorch/pytorch",
+    "repo_validated": false,
+    "commit_validated": false,
+    "url": "https://github.com/pytorch/pytorch/commit/1eba9b3aa3c43f86f4a2c807ac8e12c4a7767340"
+}
