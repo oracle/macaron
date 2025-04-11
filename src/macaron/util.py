@@ -131,6 +131,7 @@ def send_get_http_raw(
     timeout: int | None = None,
     allow_redirects: bool = True,
     check_response_fails: bool = True,
+    stream: bool = False,
 ) -> Response | None:
     """Send the GET HTTP request with the given url and headers.
 
@@ -148,6 +149,8 @@ def send_get_http_raw(
         Whether to allow redirects. Default: True.
     check_response_fails: bool
         When True, check if the response fails. Otherwise, return the response.
+    stream: bool
+        Indicates whether the response should be immediately downloaded (False) or streamed (True). Default: False.
 
     Returns
     -------
@@ -164,10 +167,7 @@ def send_get_http_raw(
     retry_counter = error_retries
     try:
         response = requests.get(
-            url=url,
-            headers=headers,
-            timeout=timeout,
-            allow_redirects=allow_redirects,
+            url=url, headers=headers, timeout=timeout, allow_redirects=allow_redirects, stream=stream
         )
     except requests.exceptions.RequestException as error:
         logger.debug(error)
