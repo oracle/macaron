@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This workflow checks and tests the package code, builds all package
@@ -23,3 +23,47 @@ jobs:
     permissions:
       contents: read
       packages: read
+
+  verify_artifacts:
+    needs: [build]
+    name: Verify artifacts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+
+    # Download all uploaded artifacts in the build job into the 'downloads' directory.
+    # This includes built package distributions and SHA256 hash files from some matrix jobs.
+    # The `path` input ensures all artifacts are placed under the 'downloads/' folder while
+    # maintaining their respective artifact subdirectory structure.
+    - name: Download artifact
+      uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+      with:
+        path: downloads
+
+    # Verify hashes by first computing hashes for the artifacts and then comparing them
+    # against the hashes computed by the build job.
+    - name: Verify the artifact hash
+      run: |
+        set -euo pipefail
+        cd downloads
+        for ARCH in "ubuntu-x86-64" "ubuntu-arm64"; do
+          HASH_DIR="artifacts-sha256-file-${ARCH}"
+          ARTIFACT_DIR="artifacts-${ARCH}"
+          HASH_FILE="${HASH_DIR}/artifacts-sha256-file-${ARCH}"
+
+          echo "Verifying artifacts for ${ARCH}"
+          echo "Decoding expected SHA256 digest:"
+          DECODED_HASH=$(base64 --decode "${HASH_FILE}")
+          echo "$DECODED_HASH"
+
+          pushd "${ARTIFACT_DIR}"
+          echo "$DECODED_HASH" | sha256sum --strict --check --status || {
+            echo "Hash verification failed for ${ARCH}!"
+            exit 1
+          }
+          popd
+
+          echo "Hash verified successfully for ${ARCH}"
+        done
