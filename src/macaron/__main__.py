@@ -276,8 +276,6 @@ def perform_action(action_args: argparse.Namespace) -> None:
             try:
                 for git_service in GIT_SERVICES:
                     git_service.load_defaults()
-                for package_registry in PACKAGE_REGISTRIES:
-                    package_registry.load_defaults()
             except ConfigurationError as error:
                 logger.error(error)
                 sys.exit(os.EX_USAGE)
@@ -367,6 +365,13 @@ def main(argv: list[str] | None = None) -> None:
         help="The directory where Macaron looks for already cloned repositories.",
     )
 
+    main_parser.add_argument(
+        "-pp",
+        "--popular-packages-path",
+        required=False,
+        default="",
+        help= "The path to the popular packages file used for typosquatting detection. "
+    )
     # Add sub parsers for each action.
     sub_parser = main_parser.add_subparsers(dest="action", help="Run macaron <action> --help for help")
 
@@ -580,6 +585,7 @@ def main(argv: list[str] | None = None) -> None:
         debug_level=log_level,
         local_repos_path=args.local_repos_path,
         resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
+        popular_packages_path=args.popular_packages_path
     )
 
     # Load the default values from defaults.ini files.

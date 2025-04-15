@@ -24,11 +24,14 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
+from macaron.slsa_analyzer.build_tool.pip import Pip
+from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
@@ -228,7 +231,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         # First check if this package is a known malware
         data = {"package": {"purl": ctx.component.purl}}
 
-        package_exists = False
         try:
             package_exists = bool(DepsDevService.get_package_info(ctx.component.purl))
         except APIAccessError as error:
@@ -265,35 +267,19 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             match package_registry_info_entry:
                 # Currently, only PyPI packages are supported.
                 case PackageRegistryInfo(
-                    build_tool_name="pip" | "poetry",
-                    build_tool_purl_type="pypi",
+                    build_tool=Pip() | Poetry(),
                     package_registry=PyPIRegistry() as pypi_registry,
                 ) as pypi_registry_info:
-                    # Retrieve the pre-existing AssetLocator object for the PyPI package JSON object, if it exists.
-                    pypi_package_json = next(
-                        (
-                            asset
-                            for asset in pypi_registry_info.metadata
-                            if isinstance(asset, PyPIPackageJsonAsset)
-                            and asset.component_name == ctx.component.name
-                            and asset.component_version == ctx.component.version
-                        ),
-                        None,
+
+                    # Create an AssetLocator object for the PyPI package JSON object.
+                    pypi_package_json = PyPIPackageJsonAsset(
+                        component=ctx.component, pypi_registry=pypi_registry, package_json={}
                     )
-                    if not pypi_package_json:
-                        # Create an AssetLocator object for the PyPI package JSON object.
-                        pypi_package_json = PyPIPackageJsonAsset(
-                            component_name=ctx.component.name,
-                            component_version=ctx.component.version,
-                            has_repository=ctx.component.repository is not None,
-                            pypi_registry=pypi_registry,
-                            package_json={},
-                        )
 
                     pypi_registry_info.metadata.append(pypi_package_json)
 
                     # Download the PyPI package JSON, but no need to persist it to the filesystem.
-                    if pypi_package_json.package_json or pypi_package_json.download(dest=""):
+                    if pypi_package_json.download(dest=""):
                         try:
                             result, detail_info = self.run_heuristics(pypi_package_json)
                         except HeuristicAnalyzerValueError:
@@ -341,6 +327,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         SuspiciousSetupAnalyzer,
         WheelAbsenceAnalyzer,
         AnomalousVersionAnalyzer,
+        TyposquattingPresenceAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
@@ -397,6 +384,11 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
         failed({Heuristics.UNCHANGED_RELEASE.value}),
         passed({Heuristics.SUSPICIOUS_SETUP.value}).
+
+    % Package released recently with a name similar to a popular package.
+    {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_2) :-
+        quickUndetailed,
+        failed({Heuristics.TYPOSQUATTING_PRESENCE.value}),
 
     % Package released recently with little detail and an anomalous version number for a single-release package.
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_2) :-
