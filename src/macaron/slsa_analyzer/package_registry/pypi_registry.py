@@ -17,12 +17,9 @@ from bs4 import BeautifulSoup, Tag
 from requests import RequestException
 
 from macaron.config.defaults import defaults
-from macaron.database.table_definitions import Component
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
-from macaron.slsa_analyzer.build_tool import Pip, Poetry
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
 from macaron.util import send_get_http_raw
 
@@ -75,7 +72,7 @@ class PyPIRegistry(PackageRegistry):
         self.request_timeout = request_timeout or 10
         self.enabled = enabled
         self.registry_url = ""
-        super().__init__("PyPI Registry")
+        super().__init__("PyPI Registry", {"pip", "poetry"})
 
     def load_defaults(self) -> None:
         """Load the .ini configuration for the current package registry.
@@ -128,29 +125,6 @@ class PyPIRegistry(PackageRegistry):
                 f'The "request_timeout" value in section [{section_name}]'
                 f"of the .ini configuration file is invalid: {error}",
             ) from error
-
-    def is_detected(self, build_tool: BaseBuildTool) -> bool:
-        """Detect if artifacts of the repo under analysis can possibly be published to this package registry.
-
-        The detection here is based on the repo's detected build tools.
-        If the package registry is compatible with the given build tools, it can be a
-        possible place where the artifacts produced from the repo are published.
-
-        ``PyPIRegistry`` is compatible with Pip and Poetry.
-
-        Parameters
-        ----------
-        build_tool: BaseBuildTool
-            A detected build tool of the repository under analysis.
-
-        Returns
-        -------
-        bool
-            ``True`` if the repo under analysis can be published to this package registry,
-            based on the given build tool.
-        """
-        compatible_build_tool_classes = [Pip, Poetry]
-        return any(isinstance(build_tool, build_tool_class) for build_tool_class in compatible_build_tool_classes)
 
     def download_package_json(self, url: str) -> dict:
         """Download the package JSON metadata from pypi registry.
@@ -366,8 +340,14 @@ class PyPIRegistry(PackageRegistry):
 class PyPIPackageJsonAsset:
     """The package JSON hosted on the PyPI registry."""
 
-    #: The target pypi software component.
-    component: Component
+    #: The target pypi software component name.
+    component_name: str
+
+    #: The target pypi software component version.
+    component_version: str | None
+
+    #: Whether the component of this asset has a related repository.
+    has_repository: bool
 
     #: The pypi registry.
     pypi_registry: PyPIRegistry
@@ -397,7 +377,7 @@ class PyPIPackageJsonAsset:
         -------
         str
         """
-        json_endpoint = f"pypi/{self.component.name}/json"
+        json_endpoint = f"pypi/{self.component_name}/json"
         return urllib.parse.urljoin(self.pypi_registry.registry_url, json_endpoint)
 
     def download(self, dest: str) -> bool:  # pylint: disable=unused-argument
@@ -459,8 +439,8 @@ class PyPIPackageJsonAsset:
             The URL of the source distribution.
         """
         urls: list | None = None
-        if self.component.version:
-            urls = json_extract(self.package_json, ["releases", self.component.version], list)
+        if self.component_version:
+            urls = json_extract(self.package_json, ["releases", self.component_version], list)
         else:
             # Get the latest version.
             urls = json_extract(self.package_json, ["urls"], list)

@@ -12,9 +12,6 @@ import requests
 
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
-from macaron.slsa_analyzer.build_tool.npm import NPM
-from macaron.slsa_analyzer.build_tool.yarn import Yarn
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
 from macaron.util import send_get_http_raw
 
@@ -53,7 +50,7 @@ class NPMRegistry(PackageRegistry):
         self.attestation_endpoint = attestation_endpoint or ""
         self.request_timeout = request_timeout or 10
         self.enabled = enabled
-        super().__init__("npm Registry")
+        super().__init__("npm Registry", {"npm", "yarn"})
 
     def load_defaults(self) -> None:
         """Load the .ini configuration for the current package registry.
@@ -94,34 +91,6 @@ class NPMRegistry(PackageRegistry):
                 f'The "request_timeout" value in section [{section_name}]'
                 f"of the .ini configuration file is invalid: {error}",
             ) from error
-
-    def is_detected(self, build_tool: BaseBuildTool) -> bool:
-        """Detect if artifacts under analysis can be published to this package registry.
-
-        The detection here is based on the repo's detected build tools.
-        If the package registry is compatible with the given build tools, it can be a
-        possible place where the artifacts are published.
-
-        ``NPMRegistry`` is compatible with npm and Yarn build tools.
-
-        Note: if the npm registry is disabled through the ini configuration, this method returns False.
-
-        Parameters
-        ----------
-        build_tool : BaseBuildTool
-            A detected build tool of the repository under analysis.
-
-        Returns
-        -------
-        bool
-            ``True`` if the repo under analysis can be published to this package registry,
-            based on the given build tool.
-        """
-        if not self.enabled:
-            logger.debug("Support for the npm registry is disabled.")
-            return False
-        compatible_build_tool_classes = [NPM, Yarn]
-        return any(isinstance(build_tool, build_tool_class) for build_tool_class in compatible_build_tool_classes)
 
     def download_attestation_payload(self, url: str, download_path: str) -> bool:
         """Download the npm attestation from npm registry.

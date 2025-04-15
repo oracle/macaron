@@ -43,7 +43,7 @@ from pydriller import Git
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.errors import CloneError, RepoCheckOutError
-from macaron.repo_finder import to_domain_from_known_purl_types
+from macaron.repo_finder import repo_finder_pypi, to_domain_from_known_purl_types
 from macaron.repo_finder.commit_finder import find_commit, match_tags
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
@@ -66,11 +66,16 @@ from macaron.slsa_analyzer.git_url import (
     list_remote_references,
     resolve_local_path,
 )
+from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str, RepoFinderInfo]:
+def find_repo(
+    purl: PackageURL,
+    check_latest_version: bool = True,
+    package_registries_info: list[PackageRegistryInfo] | None = None,
+) -> tuple[str, RepoFinderInfo]:
     """Retrieve the repository URL that matches the given PURL.
 
     Parameters
@@ -79,6 +84,9 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
         The parsed PURL to convert to the repository path.
     check_latest_version: bool
         A flag that determines whether the latest version of the PURL is also checked.
+    package_registries_info: list[PackageRegistryInfo] | None
+        The list of package registry information if available.
+        If no package registries are loaded, this can be set to None.
 
     Returns
     -------
@@ -103,6 +111,9 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
     logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
     found_repo, outcome = repo_finder.find_repo(purl)
 
+    if not found_repo:
+        found_repo, outcome = find_repo_alternative(purl, outcome, package_registries_info)
+
     if check_latest_version and not defaults.getboolean("repofinder", "try_latest_purl", fallback=True):
         check_latest_version = False
 
@@ -117,9 +128,45 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
         return "", RepoFinderInfo.NO_NEWER_VERSION
 
     found_repo, outcome = DepsDevRepoFinder().find_repo(latest_version_purl)
+    if found_repo:
+        return found_repo, outcome
+
+    if not found_repo:
+        found_repo, outcome = find_repo_alternative(latest_version_purl, outcome, package_registries_info)
+
     if not found_repo:
         logger.debug("Could not find repo from latest version of PURL: %s", latest_version_purl)
         return "", RepoFinderInfo.LATEST_VERSION_INVALID
+
+    return found_repo, outcome
+
+
+def find_repo_alternative(
+    purl: PackageURL, outcome: RepoFinderInfo, package_registries_info: list[PackageRegistryInfo] | None = None
+) -> tuple[str, RepoFinderInfo]:
+    """Use PURL type specific methods to find the repository when the standard methods have failed.
+
+    Parameters
+    ----------
+    purl : PackageURL
+        The parsed PURL to convert to the repository path.
+    outcome: RepoFinderInfo
+        A previous outcome to report if this method does nothing.
+    package_registries_info: list[PackageRegistryInfo] | None
+        The list of package registry information if available.
+        If no package registries are loaded, this can be set to None.
+
+    Returns
+    -------
+    tuple[str, RepoFinderOutcome] :
+        The repository URL for the passed package, if found, and the outcome to report.
+    """
+    found_repo = ""
+    if purl.type == "pypi":
+        found_repo, outcome = repo_finder_pypi.find_repo(purl, package_registries_info)
+
+    if not found_repo:
+        logger.debug("Could not find repository using type specific (%s) methods for PURL: %s", purl.type, purl)
 
     return found_repo, outcome
 

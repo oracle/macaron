@@ -57,6 +57,18 @@ class RepoFinderInfo(Enum):
     #: Reported if deps.dev returns data that does not contain the desired SCM URL. E.g. The repository URL.
     DDEV_NO_URLS = "deps.dev no URLs"
 
+    #: Reported if there was an error with the request sent to the PyPI registry.
+    PYPI_HTTP_ERROR = "PyPI HTTP error"
+
+    #: Reported if there was an error parsing the JSON returned by the PyPI registry.
+    PYPI_JSON_ERROR = "PyPI JSON error"
+
+    #: Reported if there was no matching URLs in the JSON returned by the PyPI registry.
+    PYPI_NO_URLS = "PyPI no matching URLs"
+
+    #: Reported if the PyPI registry is disabled or not present in the list of package registries.
+    PYPI_NO_REGISTRY = "PyPI registry disabled or absent"
+
     #: Reported if the provided PURL did not produce a result, but a more recent version could not be found.
     NO_NEWER_VERSION = "No newer version than provided which failed"
 
@@ -70,7 +82,10 @@ class RepoFinderInfo(Enum):
     FOUND_FROM_PARENT = "Found from parent"
 
     #: Reported when a repository is found from a more recent version than was provided by the user.
-    FOUND_FROM_LATEST = "Found form latest"
+    FOUND_FROM_LATEST = "Found from latest"
+
+    #: Reported when a repository could only be found by checking the PyPI registry JSON.
+    FOUND_FROM_PYPI = "Found from PyPI"
 
     #: Default value. Reported if the Repo Finder was not called. E.g. Because the repository URL was already present.
     NOT_USED = "Not used"
