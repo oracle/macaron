@@ -297,8 +297,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                             has_repository=ctx.component.repository is not None,
                             pypi_registry=pypi_registry,
                             package_json={},
-                            package_sourcecode={},
-                            package_sourcecode_path=""
+                            package_sourcecode_path="",
                         )
 
                     pypi_registry_info.metadata.append(pypi_package_json)
