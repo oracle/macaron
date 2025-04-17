@@ -40,13 +40,15 @@ RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
         pytest.param("pkg:pypi/zlibxjson", CheckResultType.PASSED, True, id="test_experimental_malicious_pypi_package"),
     ],
 )
-def test_detect_malicious_metadata(mock_global_config: MagicMock,
-                                   httpserver: HTTPServer,
-                                   tmp_path: Path,
-                                   macaron_path: Path,
-                                   purl: str,
-                                   expected: str,
-                                   experimental: bool) -> None:
+def test_detect_malicious_metadata(
+    mock_global_config: MagicMock,
+    httpserver: HTTPServer,
+    tmp_path: Path,
+    macaron_path: Path,
+    purl: str,
+    expected: str,
+    experimental: bool,
+) -> None:
     """Test that the check handles repositories correctly."""
     check = DetectMaliciousMetadataCheck()
 
@@ -141,5 +143,5 @@ def test_evaluations(combination: dict[Heuristics, HeuristicResult]) -> None:
 
     confidence, triggered_rules = check.evaluate_heuristic_results(combination)
     assert confidence == 0
-    # Expecting this to be a dictionary, so we can ignore the type problems
+    # Expecting this to be a dictionary, so we can ignore the type problems.
     assert len(dict(triggered_rules)) == 0  # type: ignore[arg-type]
