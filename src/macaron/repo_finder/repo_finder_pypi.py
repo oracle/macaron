@@ -67,7 +67,7 @@ def find_repo(
                 break
 
     if not pypi_asset:
-        pypi_asset = PyPIPackageJsonAsset(purl.name, purl.version, False, pypi_registry, {})
+        pypi_asset = PyPIPackageJsonAsset(purl.name, purl.version, False, pypi_registry, {}, "")
 
     if not pypi_asset.package_json and not pypi_asset.download(dest=""):
         return "", RepoFinderInfo.PYPI_HTTP_ERROR
