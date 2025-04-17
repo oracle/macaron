@@ -20,12 +20,7 @@ from bs4 import BeautifulSoup, Tag
 from requests import RequestException
 
 from macaron.config.defaults import defaults
-<<<<<<< HEAD
-from macaron.errors import ConfigurationError, InvalidHTTPResponseError
-=======
-from macaron.database.table_definitions import Component
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceCodeError
->>>>>>> 0de258c9 (refactor: support for semgrep as the code analysis tool)
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
