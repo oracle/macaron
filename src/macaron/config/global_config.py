@@ -49,6 +49,9 @@ class GlobalConfig:
     #: The path to the local .m2 Maven repository. This attribute is None if there is no available .m2 directory.
     local_maven_repo: str | None = None
 
+    #: The path to the popular packages file.
+    popular_packages_path: str | None = None
+
     def load(
         self,
         macaron_path: str,
@@ -57,6 +60,7 @@ class GlobalConfig:
         debug_level: int,
         local_repos_path: str,
         resources_path: str,
+        popular_packages_path: str,
     ) -> None:
         """Initiate the GlobalConfig object.
 
@@ -81,6 +85,7 @@ class GlobalConfig:
         self.debug_level = debug_level
         self.local_repos_path = local_repos_path
         self.resources_path = resources_path
+        self.popular_packages_path = popular_packages_path
 
     def load_expectation_files(self, exp_path: str) -> None:
         """
