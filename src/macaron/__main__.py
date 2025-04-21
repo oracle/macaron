@@ -367,6 +367,16 @@ def main(argv: list[str] | None = None) -> None:
         help="The directory where Macaron looks for already cloned repositories.",
     )
 
+    main_parser.add_argument(
+        "-pp",
+        "--popular-packages-path",
+        required=False,
+        type=str,
+        default=None,
+        help="The path to the popular packages file used for typosquatting detection.",
+        dest="popular_packages_path",
+    )
+
     # Add sub parsers for each action.
     sub_parser = main_parser.add_subparsers(dest="action", help="Run macaron <action> --help for help")
 
@@ -579,6 +589,7 @@ def main(argv: list[str] | None = None) -> None:
         build_log_path=os.path.join(args.output_dir, "build_log"),
         debug_level=log_level,
         local_repos_path=args.local_repos_path,
+        popular_packages_path=args.popular_packages_path,
         resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
     )
 
