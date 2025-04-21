@@ -23,6 +23,7 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
@@ -332,6 +333,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         SuspiciousSetupAnalyzer,
         WheelAbsenceAnalyzer,
         AnomalousVersionAnalyzer,
+        TyposquattingPresenceAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
@@ -395,12 +397,18 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.ONE_RELEASE.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}).
 
+    % Package released with a name similar to a popular package.
+    {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_3) :-
+        quickUndetailed,
+        failed({Heuristics.TYPOSQUATTING_PRESENCE.value}).
+
     % ----- Evaluation -----
 
     % Aggregate result
     {problog_result_access} :- trigger(malware_high_confidence_1).
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
+    {problog_result_access} :- trigger(malware_medium_confidence_3).
     {problog_result_access} :- trigger(malware_medium_confidence_2).
     {problog_result_access} :- trigger(malware_medium_confidence_1).
     query({problog_result_access}).
