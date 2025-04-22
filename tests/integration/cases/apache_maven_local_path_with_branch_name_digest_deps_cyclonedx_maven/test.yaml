@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
@@ -15,6 +15,7 @@ steps:
 - name: Run macaron analyze
   kind: analyze
   options:
+    ini: config.ini
     main_args:
     - -lr
     - ./output/git_repos/local_repos
