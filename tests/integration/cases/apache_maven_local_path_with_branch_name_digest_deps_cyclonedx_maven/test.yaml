@@ -3,6 +3,8 @@
 
 description: |
   Analyzing local clone with the branch name, the commit digest and dependency resolution using cyclonedx maven plugin (default).
+  To keep the results from the main target's dependencies static, the Repo Finder's latest PURL finding feature is disabled for this test.
+  In particular, dependency commons-jxpath:commons-jxpath@1.3 has no readable SCM URL, while from versions 1.4 onwards, it does.
 
 tags:
 - macaron-python-package
