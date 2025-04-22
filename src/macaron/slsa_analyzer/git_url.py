@@ -909,7 +909,7 @@ def is_empty_repo(git_obj: Git) -> bool:
         return True
 
 
-def is_commit_hash(version_str: str) -> bool:
+def is_commit_hash(value: str) -> bool:
     """Check if a given string is a valid Git commit hash.
 
     A valid Git commit hash is a 40-character long hexadecimal string or
@@ -918,7 +918,8 @@ def is_commit_hash(version_str: str) -> bool:
 
     Parameters
     ----------
-    version_str (str): The string to be checked for validity as a commit hash.
+    value: str
+        The string value to be checked for validity as a commit hash.
 
     Returns
     -------
@@ -939,7 +940,7 @@ def is_commit_hash(version_str: str) -> bool:
     False
     """
     pattern = r"^[a-f0-9]{7,40}$"
-    return bool(re.match(pattern, version_str))
+    return bool(re.match(pattern, value))
 
 
 def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:

@@ -7,9 +7,9 @@
 How to detect vulnerable GitHub Actions
 =======================================
 
-This tutorial explains how to use a check in Macaron that detects vulnerable third-party GitHub Actions. This check is important for preventing security issues in your CI/CD pipeline, especially in light of recent incidents, such as vulnerabilities discovered in popular GitHub Actions like `tj-actions/changed-files <https://www.cve.org/CVERecord?id=CVE-2025-30066>`_, and `reviewdog/action-setup <https://www.cve.org/CVERecord?id=CVE-2025-30154>`_.
+This tutorial explains how to use a check in Macaron to detect vulnerable third-party GitHub Actions. This check is important for preventing security issues in your CI/CD pipeline, especially in light of recent incidents, such as vulnerabilities discovered in popular GitHub Actions like `tj-actions/changed-files <https://www.cve.org/CVERecord?id=CVE-2025-30066>`_, and `reviewdog/action-setup <https://www.cve.org/CVERecord?id=CVE-2025-30154>`_.
 
-We will guide you on how to enable and use this check to enhance the security of your development pipeline.
+We will demonstrate how to enable and use this check to enhance the security of your development pipeline.
 
 For more information on other features of Macaron, please refer to the :ref:`documentation here <index>`.
 

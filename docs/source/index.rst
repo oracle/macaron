@@ -46,7 +46,7 @@ Current checks in Macaron
 The table below shows the current set of actionable checks derived from
 the requirements that are currently supported by Macaron.
 
-.. list-table:: Macaron checks descriptions
+.. list-table:: Macaron check descriptions
    :widths: 20 40 40
    :header-rows: 1
 

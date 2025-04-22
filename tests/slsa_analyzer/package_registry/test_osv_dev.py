@@ -54,15 +54,19 @@ def test_load_defaults_query_api(tmp_path: Path, user_config_input: str) -> None
 
 def test_is_affected_version_invalid_commit() -> None:
     """Test if the function can handle invalid commits"""
-    with pytest.raises(APIAccessError):
+    with pytest.raises(APIAccessError, match="^Failed to find a tag for"):
         OSVDevService.is_version_affected(
-            vuln={}, pkg_name="pkg", pkg_version="invalid_commit", ecosystem="GitHub Actions"
+            vuln={},
+            pkg_name="pkg",
+            pkg_version="c253e1f19ebfb98fe02a8354082cbbd282d446a0",
+            ecosystem="GitHub Actions",
+            source_repo="mock_repo",
         )
 
 
 def test_is_affected_version_invalid_response() -> None:
     """Test if the function can handle empty OSV response."""
-    with pytest.raises(APIAccessError):
+    with pytest.raises(APIAccessError, match="^Received invalid response for"):
         OSVDevService.is_version_affected(
             vuln={"vulns": []}, pkg_name="repo/workflow", pkg_version="1.0.0", ecosystem="GitHub Actions"
         )

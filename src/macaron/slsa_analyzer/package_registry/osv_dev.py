@@ -118,6 +118,61 @@ class OSVDevService:
         return results
 
     @staticmethod
+    def get_osv_url(endpoint: str) -> str:
+        """Construct a full API URL for a given OSV endpoint using values from the .ini configuration.
+
+        The configuration is expected to be in a section named `[osv_dev]` within the defaults object,
+        and must include the following keys:
+
+        - `url_netloc`: The base domain of the API.
+        - `url_scheme` (optional): The scheme (e.g., "https"). Defaults to "https" if not provided.
+        - A key matching the provided `endpoint` argument (e.g., "query_endpoint"), which defines the URL path.
+
+        Parameters
+        ----------
+        endpoint: str
+            The key name of the endpoint in the `[osv_dev]` section to construct the URL path.
+
+        Returns
+        -------
+        str
+            The fully constructed API URL.
+
+        Raises
+        ------
+        APIAccessError
+            If required keys are missing from the configuration or if the URL cannot be constructed.
+        """
+        section_name = "osv_dev"
+        if not defaults.has_section(section_name):
+            raise APIAccessError(f"The section [{section_name}] is missing in the .ini configuration file.")
+        section = defaults[section_name]
+
+        url_netloc = section.get("url_netloc")
+        if not url_netloc:
+            raise APIAccessError(
+                f'The "url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
+            )
+        url_scheme = section.get("url_scheme", "https")
+        query_endpoint = section.get(endpoint)
+        if not query_endpoint:
+            raise APIAccessError(
+                f'The "query_endpoint" key is missing in section [{section_name}] of the .ini configuration file.'
+            )
+        try:
+            return urllib.parse.urlunsplit(
+                urllib.parse.SplitResult(
+                    scheme=url_scheme,
+                    netloc=url_netloc,
+                    path=query_endpoint,
+                    query="",
+                    fragment="",
+                )
+            )
+        except ValueError as error:
+            raise APIAccessError("Failed to construct the API URL.") from error
+
+    @staticmethod
     def call_osv_query_api(query_data: dict) -> list:
         """Query the OSV (Open Source Vulnerability) knowledge base API with the given data.
 
@@ -141,35 +196,10 @@ class OSVDevService:
         APIAccessError
             If there are issues with the API URL construction, missing configuration values, or invalid responses.
         """
-        section_name = "osv_dev"
-        if not defaults.has_section(section_name):
-            return []
-        section = defaults[section_name]
-
-        url_netloc = section.get("url_netloc")
-        if not url_netloc:
-            raise APIAccessError(
-                f'The "url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
-            )
-        url_scheme = section.get("url_scheme", "https")
-        query_endpoint = section.get("query_endpoint")
-        if not query_endpoint:
-            raise APIAccessError(
-                f'The "query_endpoint" key is missing in section [{section_name}] of the .ini configuration file.'
-            )
         try:
-            url = urllib.parse.urlunsplit(
-                urllib.parse.SplitResult(
-                    scheme=url_scheme,
-                    netloc=url_netloc,
-                    path=query_endpoint,
-                    query="",
-                    fragment="",
-                )
-            )
-        except ValueError as error:
-            raise APIAccessError("Failed to construct the API URL.") from error
-
+            url = OSVDevService.get_osv_url("query_endpoint")
+        except APIAccessError as error:
+            raise error
         response = send_post_http_raw(url, json_data=query_data, headers=None)
         res_obj = None
         if response:
@@ -209,8 +239,7 @@ class OSVDevService:
         -------
         list
             A list of results from the OSV API containing the vulnerability data that matches
-            the query parameters. If no valid response is received or the results are
-            improperly formatted, an empty list is returned.
+            the query parameters.
 
         Raises
         ------
@@ -219,34 +248,10 @@ class OSVDevService:
             fails, or if the response from the OSV API is invalid or the number of results
             does not match the expected size.
         """
-        section_name = "osv_dev"
-        if not defaults.has_section(section_name):
-            return []
-        section = defaults[section_name]
-
-        url_netloc = section.get("url_netloc")
-        if not url_netloc:
-            raise APIAccessError(
-                f'The "url_netloc" key is missing in section [{section_name}] of the .ini configuration file.'
-            )
-        url_scheme = section.get("url_scheme", "https")
-        query_endpoint = section.get("querybatch_endpoint")
-        if not query_endpoint:
-            raise APIAccessError(
-                f'The "query_endpoint" key is missing in section [{section_name}] of the .ini configuration file.'
-            )
         try:
-            url = urllib.parse.urlunsplit(
-                urllib.parse.SplitResult(
-                    scheme=url_scheme,
-                    netloc=url_netloc,
-                    path=query_endpoint,
-                    query="",
-                    fragment="",
-                )
-            )
-        except ValueError as error:
-            raise APIAccessError("Failed to construct the API URL.") from error
+            url = OSVDevService.get_osv_url("querybatch_endpoint")
+        except APIAccessError as error:
+            raise error
 
         response = send_post_http_raw(url, json_data=query_data, headers=None)
         res_obj = None
@@ -261,11 +266,13 @@ class OSVDevService:
         if isinstance(results, list):
             if expected_size:
                 if len(results) != expected_size:
-                    raise APIAccessError(f"Unable to get a valid result from {url}")
+                    raise APIAccessError(
+                        f"Failed to retrieve a valid result from {url}: result count does not match the expected count."
+                    )
 
             return results
 
-        return []
+        raise APIAccessError(f"The response from {url} does not contain a valid 'results' list.")
 
     @staticmethod
     def is_version_affected(
@@ -326,9 +333,13 @@ class OSVDevService:
                     pkg_version = tag
                     break
 
+            # If we were not able to find a tag for the commit hash, raise an exception.
+            if is_commit_hash(pkg_version):
+                raise APIAccessError(f"Failed to find a tag for {pkg_name}@{pkg_version}.")
+
         affected = json_extract(vuln, ["affected"], list)
         if not affected:
-            raise APIAccessError(f"Failed to extracted info for {pkg_name}@{pkg_version}.")
+            raise APIAccessError(f"Received invalid response for {pkg_name}@{pkg_version}.")
 
         affected_ranges: list | None = None
         for rec in affected:
@@ -342,12 +353,12 @@ class OSVDevService:
                 break
 
         if not affected_ranges:
-            raise APIAccessError(f"Failed to extracted affected versions for {pkg_name}@{pkg_version}.")
+            raise APIAccessError(f"Failed to extract affected versions for {pkg_name}@{pkg_version}.")
 
         for affected_range in affected_ranges:
             events = json_extract(affected_range, ["events"], list)
             if not events:
-                raise APIAccessError(f"Failed to extracted affected versions for {pkg_name}@{pkg_version}.")
+                raise APIAccessError(f"Failed to extract affected versions for {pkg_name}@{pkg_version}.")
 
             introduced = None
             fixed = None
