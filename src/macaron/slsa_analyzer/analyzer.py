@@ -265,7 +265,7 @@ class Analyzer:
                 self.generate_reports(report)
 
                 # Print the analysis result into the console output.
-                logger.info(str(report))
+                logger.debug(str(report))
 
                 db_session.add(analysis)
 
