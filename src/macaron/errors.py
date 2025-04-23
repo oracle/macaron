@@ -32,6 +32,10 @@ class CloneError(MacaronError):
     """Happens when cannot clone a git repository."""
 
 
+class GitTagError(MacaronError):
+    """Happens when there is a Git tag related error."""
+
+
 class RepoCheckOutError(MacaronError):
     """Happens when there is an error when checking out the correct revision of a git repository."""
 
