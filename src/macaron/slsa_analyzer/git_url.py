@@ -1012,6 +1012,9 @@ def find_highest_git_tag(tags: set[str]) -> str:
     >>> find_highest_git_tag({"v2.0.0"})
     'v2.0.0'
 
+    >>> find_highest_git_tag({"v4", "v4.2.1"})
+    'v4.2.1'
+
     >>> find_highest_git_tag({"1.2.3", "2.0.0", "1.10.1"})
     '2.0.0'
 
