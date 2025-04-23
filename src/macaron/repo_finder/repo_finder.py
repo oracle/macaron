@@ -61,9 +61,9 @@ from macaron.slsa_analyzer.git_url import (
     get_remote_origin_of_local_repo,
     get_remote_vcs_url,
     get_repo_dir_name,
+    get_tags_via_git_remote,
     is_empty_repo,
     is_remote_repo,
-    list_remote_references,
     resolve_local_path,
 )
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -382,49 +382,6 @@ def get_latest_repo_if_different(latest_version_purl: PackageURL, original_repo:
 
     logger.debug("Found new repository from latest PURL: %s", latest_repo)
     return latest_repo
-
-
-def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
-    """Retrieve all tags from a given repository using ls-remote.
-
-    Parameters
-    ----------
-    repo: str
-        The repository to perform the operation on.
-
-    Returns
-    -------
-    dict[str]
-        A dictionary of tags mapped to their commits, or None if the operation failed..
-    """
-    tag_data = list_remote_references(["--tags"], repo)
-    if not tag_data:
-        return None
-    tags = {}
-
-    for tag_line in tag_data.splitlines():
-        tag_line = tag_line.strip()
-        if not tag_line:
-            continue
-        split = tag_line.split("\t")
-        if len(split) != 2:
-            continue
-        possible_tag = split[1]
-        if possible_tag.endswith("^{}"):
-            possible_tag = possible_tag[:-3]
-        elif possible_tag in tags:
-            # If a tag already exists, it must be the annotated reference of an annotated tag.
-            # In that case we skip the tag as it does not point to the proper source commit.
-            # Note that this should only happen if the tags are received out of standard order.
-            continue
-        possible_tag = possible_tag.replace("refs/tags/", "")
-        if not possible_tag:
-            continue
-        tags[possible_tag] = split[0]
-
-    logger.debug("Found %s tags via ls-remote of %s", len(tags), repo)
-
-    return tags
 
 
 def prepare_repo(

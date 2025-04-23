@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides methods to perform generic actions on Git URLS."""
@@ -907,3 +907,80 @@ def is_empty_repo(git_obj: Git) -> bool:
         return False
     except GitCommandError:
         return True
+
+
+def is_commit_hash(value: str) -> bool:
+    """Check if a given string is a valid Git commit hash.
+
+    A valid Git commit hash is a 40-character long hexadecimal string or
+    a short version that is at least 7 characters long. The function uses
+    a regular expression to match these patterns.
+
+    Parameters
+    ----------
+    value: str
+        The string value to be checked for validity as a commit hash.
+
+    Returns
+    -------
+    bool: True if the string matches the format of a Git commit hash (7 to 40
+        characters long and only contains hexadecimal characters), False otherwise.
+
+    Example
+    -------
+    >>> is_commit_hash('e3a1b6c')
+    True
+    >>> is_commit_hash('e3a1b6c8d9b2ff0c9f5f8a0a5d8f4cf2e19b1db3')
+    True
+    >>> is_commit_hash('invalid_hash123')
+    False
+    >>> is_commit_hash('master')
+    False
+    >>> is_commit_hash('main')
+    False
+    """
+    pattern = r"^[a-f0-9]{7,40}$"
+    return bool(re.match(pattern, value))
+
+
+def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
+    """Retrieve all tags from a given repository using ls-remote.
+
+    Parameters
+    ----------
+    repo: str
+        The repository to perform the operation on.
+
+    Returns
+    -------
+    dict[str]
+        A dictionary of tags mapped to their commits, or None if the operation failed..
+    """
+    tag_data = list_remote_references(["--tags"], repo)
+    if not tag_data:
+        return None
+    tags = {}
+
+    for tag_line in tag_data.splitlines():
+        tag_line = tag_line.strip()
+        if not tag_line:
+            continue
+        split = tag_line.split("\t")
+        if len(split) != 2:
+            continue
+        possible_tag = split[1]
+        if possible_tag.endswith("^{}"):
+            possible_tag = possible_tag[:-3]
+        elif possible_tag in tags:
+            # If a tag already exists, it must be the annotated reference of an annotated tag.
+            # In that case we skip the tag as it does not point to the proper source commit.
+            # Note that this should only happen if the tags are received out of standard order.
+            continue
+        possible_tag = possible_tag.replace("refs/tags/", "")
+        if not possible_tag:
+            continue
+        tags[possible_tag] = split[0]
+
+    logger.debug("Found %s tags via ls-remote of %s", len(tags), repo)
+
+    return tags

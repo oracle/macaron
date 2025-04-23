@@ -46,12 +46,12 @@ Current checks in Macaron
 The table below shows the current set of actionable checks derived from
 the requirements that are currently supported by Macaron.
 
-.. list-table:: Mapping SLSA requirements to Macaron checks
+.. list-table:: Macaron check descriptions
    :widths: 20 40 40
    :header-rows: 1
 
    * - Check ID
-     - SLSA requirement
+     - Summary
      - Concrete check
    * - ``mcn_build_tool_1``
      - **Build tool exists** - The source code repository includes configurations for a supported build tool used to produce the software component.
@@ -95,19 +95,12 @@ the requirements that are currently supported by Macaron.
    * - ``mcn_scm_authenticity_check_1``
      - **Source repo authenticity** - Check whether the claims of a source code repository made by a package can be corroborated.
      - If the source code repository contains conflicting evidence regarding its claim of the source code repository, this check will fail. If no source code repository or corroborating evidence is found, or if the build system is unsupported, the check will return ``UNKNOWN`` as the result. This check currently supports only Maven artifacts.
-
-****************************************************************************************
-Macaron checks that report integrity issues but do not map to SLSA requirements directly
-****************************************************************************************
-
-.. list-table::
-   :widths: 20 40
-   :header-rows: 1
-
-   * - Check ID
-     - Description
    * - ``mcn_detect_malicious_metadata_1``
-     - This check performs analysis on PyPI package metadata to detect malicious behavior. It also reports known malware from other ecosystems, but the analysis is currently limited to PyPI packages.
+     - **Malicious code detection** - Check whether the source code or package metadata has indicators of compromise.
+     - This check performs analysis on PyPI package metadata to detect malicious behavior. It also reports known malware from other ecosystems.
+   * - ``mcn_githubactions_vulnerabilities_1``
+     - **Detect vulnerable GitHub Actions** - Check whether the GitHub Actions called from the corresponding repo have known vulnerabilities.
+     - This check identifies third-party GitHub Actions used in a repository and reports any known vulnerabilities associated with the used versions.
 
 ----------------------
 How does Macaron work?

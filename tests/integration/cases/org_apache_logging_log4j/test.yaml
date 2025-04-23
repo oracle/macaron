@@ -3,13 +3,14 @@
 
 description: |
   Analyzing with PURL and repository path without dependency resolution.
+  This test case is used in two tutorials: `detect-manual-upload-java-dep` and `detect-vuln-gh-actions`.
 
 tags:
 - macaron-python-package
 - tutorial
 
 steps:
-- name: Run macaron analyze
+- name: Run macaron analyze with PURL
   kind: analyze
   options:
     command_args:
@@ -18,4 +19,15 @@ steps:
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:
-    policy: policy.dl
+    policy: policy_purl.dl
+
+- name: Run macaron analyze with repo path
+  kind: analyze
+  options:
+    command_args:
+    - -rp
+    - https://github.com/apache/logging-log4j2
+- name: Run macaron verify-policy to verify passed/failed checks
+  kind: verify
+  options:
+    policy: policy_repo_url.dl

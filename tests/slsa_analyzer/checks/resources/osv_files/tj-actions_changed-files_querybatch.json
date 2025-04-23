@@ -1,0 +1,19 @@
+{
+  "results": [
+    {},
+    {},
+    {
+      "vulns": [
+        {
+          "id": "GHSA-mcph-m25j-8j63",
+          "modified": "2024-01-02T16:41:27Z"
+        },
+        {
+          "id": "GHSA-mrrh-fwg8-r2c3",
+          "modified": "2025-03-24T14:23:37Z"
+        }
+      ]
+    },
+    {}
+  ]
+}
