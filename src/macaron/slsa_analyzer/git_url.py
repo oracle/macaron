@@ -16,12 +16,13 @@ from pathlib import Path
 from git import GitCommandError
 from git.objects import Commit
 from git.repo import Repo
+from packaging import version
 from pydriller.git import Git
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.environment_variables import get_patched_env
-from macaron.errors import CloneError
+from macaron.errors import CloneError, GitTagError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -984,3 +985,73 @@ def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
     logger.debug("Found %s tags via ls-remote of %s", len(tags), repo)
 
     return tags
+
+
+def find_highest_git_tag(tags: set[str]) -> str:
+    """
+    Find and return the highest (most recent) semantic version tag from a set of Git tags.
+
+    Parameters
+    ----------
+    tags : set[str]
+        A set of version strings (e.g., {"v1.0.0", "v2.3.4", "v2.1.0"}). Tags must follow PEP 440 or
+        semver format, otherwise they will be skipped.
+
+    Returns
+    -------
+    str
+        The tag string corresponding to the highest version.
+
+    Raises
+    ------
+    GitTagError
+        If no valid tag is found or if a tag is not a valid version.
+
+    Example
+    -------
+    >>> find_highest_git_tag({"v2.0.0"})
+    'v2.0.0'
+
+    >>> find_highest_git_tag({"v4", "v4.2.1"})
+    'v4.2.1'
+
+    >>> find_highest_git_tag({"1.2.3", "2.0.0", "1.10.1"})
+    '2.0.0'
+
+    >>> find_highest_git_tag({"0.1", "0.1.1", "0.0.9"})
+    '0.1.1'
+
+    >>> find_highest_git_tag({"invalid", "1.0.0"})
+    '1.0.0'
+
+    >>> find_highest_git_tag(set())
+    Traceback (most recent call last):
+        ...
+    GitTagError: No tags provided.
+
+    >>> find_highest_git_tag({"invalid"})
+    Traceback (most recent call last):
+        ...
+    GitTagError: No valid version tag found.
+    """
+    if not tags:
+        raise GitTagError("No tags provided.")
+
+    highest_tag = None
+    highest_parsed_tag = version.Version("0")
+
+    for tag in tags:
+        try:
+            parsed_tag = version.Version(tag)
+        except version.InvalidVersion:
+            logger.debug("Invalid version tag encountered while finding the highest tag: %s", tag)
+            continue
+
+        if parsed_tag > highest_parsed_tag:
+            highest_parsed_tag = parsed_tag
+            highest_tag = tag
+
+    if highest_tag is None:
+        raise GitTagError("No valid version tag found.")
+
+    return highest_tag

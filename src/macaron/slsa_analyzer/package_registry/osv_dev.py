@@ -10,9 +10,9 @@ import requests
 from packaging import version
 
 from macaron.config.defaults import defaults
-from macaron.errors import APIAccessError
+from macaron.errors import APIAccessError, GitTagError
 from macaron.json_tools import json_extract
-from macaron.slsa_analyzer.git_url import get_tags_via_git_remote, is_commit_hash
+from macaron.slsa_analyzer.git_url import find_highest_git_tag, get_tags_via_git_remote, is_commit_hash
 from macaron.util import send_post_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -328,14 +328,21 @@ class OSVDevService:
         # and try to match the commit hash with the tag. If a match is found, update `pkg_version` to the tag.
         if source_repo and is_commit_hash(pkg_version):
             tags: dict = get_tags_via_git_remote(source_repo) or {}
+            # There might be tag aliases for a release, e.g., v4 and v4.2.1.
+            commit_tags = set()
             for tag, commit in tags.items():
                 if commit.startswith(pkg_version):
-                    pkg_version = tag
-                    break
+                    commit_tags.add(tag)
 
             # If we were not able to find a tag for the commit hash, raise an exception.
-            if is_commit_hash(pkg_version):
+            if not commit_tags:
                 raise APIAccessError(f"Failed to find a tag for {pkg_name}@{pkg_version}.")
+
+            # Pick the most recent (highest) tag if there are aliases.
+            try:
+                pkg_version = find_highest_git_tag(commit_tags)
+            except GitTagError as error:
+                raise APIAccessError from error
 
         affected = json_extract(vuln, ["affected"], list)
         if not affected:
