@@ -82,10 +82,12 @@ def verify_npm_provenance(purl: PackageURL, provenance: list[InTotoPayload]) -> 
 
     signed_subjects = provenance[1].statement.get("subject")
     if not signed_subjects:
+        logger.debug("Missing signed subjects.")
         return False
 
     unsigned_subjects = provenance[0].statement.get("subject")
     if not unsigned_subjects:
+        logger.debug("Missing unsigned subjects.")
         return False
 
     found_signed_subject = None
@@ -97,6 +99,7 @@ def verify_npm_provenance(purl: PackageURL, provenance: list[InTotoPayload]) -> 
         break
 
     if not found_signed_subject:
+        logger.debug("Missing signed subject.")
         return False
 
     found_unsigned_subject = None
@@ -108,15 +111,18 @@ def verify_npm_provenance(purl: PackageURL, provenance: list[InTotoPayload]) -> 
         break
 
     if not found_unsigned_subject:
+        logger.debug("Missing unsigned subject.")
         return False
 
     signed_digest = found_signed_subject.get("digest")
     unsigned_digest = found_unsigned_subject.get("digest")
     if not (signed_digest and unsigned_digest):
+        logger.debug("Missing %ssigned digest.", "un" if signed_digest else "")
         return False
 
     # For signed and unsigned to match, the digests must be identical.
     if signed_digest != unsigned_digest:
+        logger.debug("Signed and unsigned digests do not match.")
         return False
 
     key = list(signed_digest.keys())[0]

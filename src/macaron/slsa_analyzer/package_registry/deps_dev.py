@@ -8,6 +8,8 @@ import logging
 import urllib.parse
 from json.decoder import JSONDecodeError
 from typing import Any
+from urllib.parse import quote as encode
+from urllib.parse import unquote as decode
 
 from macaron.config.defaults import defaults
 from macaron.errors import APIAccessError
@@ -104,6 +106,10 @@ class DepsDevService:
             If the service is misconfigured, the API is invalid, a network error happens,
             or unexpected response is returned by the API.
         """
+        if "%" in purl:
+            purl = decode(purl)
+        purl = encode(purl, safe="")
+
         api_endpoint = DepsDevService.get_endpoint(path=purl)
         url = urllib.parse.urlunsplit(api_endpoint)
 
