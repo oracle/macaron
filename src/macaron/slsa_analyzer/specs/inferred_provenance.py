@@ -24,7 +24,7 @@ class InferredProvenance:
                 "builder": {"id": "<URI>"},
                 "buildType": "<URI>",
                 "invocation": {
-                    "configSource": {"uri": "<URI>", "digest": {"sha1": "<STING>"}, "entryPoint": "<STRING>"},
+                    "configSource": {"uri": "<URI>", "digest": {"sha1": "<STRING>"}, "entryPoint": "<STRING>"},
                     "parameters": {},
                     "environment": {},
                 },

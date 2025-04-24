@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the loaders for SLSA provenances."""
@@ -11,13 +11,25 @@ import logging
 import zlib
 from urllib.parse import urlparse
 
+from pypi_attestations import Attestation
+
 from macaron.config.defaults import defaults
-from macaron.json_tools import JsonType
+from macaron.json_tools import JsonType, json_extract
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
 from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError, ValidateInTotoPayloadError
+from macaron.slsa_analyzer.specs.pypi_certificate_predicate import PyPICertificatePredicate
 from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+# See: https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md
+_OID_NAMES = {
+    "source_repo": "1.3.6.1.4.1.57264.1.12",
+    "source_digest": "1.3.6.1.4.1.57264.1.13",
+    "workflow": "1.3.6.1.4.1.57264.1.18",
+    "invocation": "1.3.6.1.4.1.57264.1.21",
+}
 
 
 def _try_read_url_link_file(file_content: bytes) -> str | None:
@@ -66,9 +78,11 @@ def _load_provenance_file_content(
     try:
         try:
             decompressed_file_content = gzip.decompress(file_content)
-            provenance = json.loads(decompressed_file_content.decode())
+            decoded_file_content = decompressed_file_content.decode()
+            provenance = json.loads(decoded_file_content)
         except (gzip.BadGzipFile, EOFError, zlib.error):
-            provenance = json.loads(file_content.decode())
+            decoded_file_content = file_content.decode()
+            provenance = json.loads(decoded_file_content)
     except (json.JSONDecodeError, TypeError, UnicodeDecodeError) as error:
         raise LoadIntotoAttestationError(
             "Cannot deserialize the file content as JSON.",
@@ -83,6 +97,13 @@ def _load_provenance_file_content(
         # Some provenances, such as Witness may not include the DSSE envelope `dsseEnvelope`
         # property but contain its value directly.
         provenance_payload = provenance.get("payload", None)
+    if not provenance_payload:
+        # GitHub Attestation.
+        # TODO Check if old method (above) actually works.
+        provenance_payload = json_extract(provenance, ["bundle", "dsseEnvelope", "payload"], str)
+    if not provenance_payload:
+        # PyPI Attestation.
+        provenance_payload = json_extract(provenance, ["envelope", "statement"], str)
     if not provenance_payload:
         raise LoadIntotoAttestationError(
             'Cannot find the "payload" field in the decoded provenance.',
@@ -103,6 +124,26 @@ def _load_provenance_file_content(
     if not isinstance(json_payload, dict):
         raise LoadIntotoAttestationError("The provenance payload is not a JSON object.")
 
+    if json_payload["predicate"]:
+        return json_payload
+
+    # For provenance without a predicate (e.g. PyPI), try to use the provenance certificate instead.
+    attestation_model = Attestation.model_validate_json(decoded_file_content)
+    certificate_claims = attestation_model.certificate_claims
+    source_repo = certificate_claims[_OID_NAMES["source_repo"]]
+    workflow = certificate_claims[_OID_NAMES["workflow"]]
+    workflow = workflow.replace(source_repo + "/", "")
+    if "@" in workflow:
+        workflow = workflow[: workflow.index("@")]
+
+    invocation = certificate_claims[_OID_NAMES["invocation"]]
+    if "/attempts" in invocation:
+        invocation = invocation[: invocation.index("/attempts")]
+
+    pypi_predicate = PyPICertificatePredicate.build_predicate(
+        source_repo, certificate_claims[_OID_NAMES["source_digest"]], workflow, invocation
+    )
+    json_payload["predicate"] = pypi_predicate
     return json_payload
 
 

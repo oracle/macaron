@@ -45,17 +45,17 @@ class RepoFinderInfo(Enum):
     #: Reported for all other bad status codes that a host could return. E.g. 500, etc.
     HTTP_OTHER = "HTTP other"
 
-    #: Reported if deps.dev produces no response to the HTTP request.
-    DDEV_BAD_RESPONSE = "deps.dev bad response"
-
-    #: Reported if deps.dev returns JSON data that cannot be parsed.
-    DDEV_JSON_FETCH_ERROR = "deps.dev fetch error"
+    #: Reported if deps.dev produces an invalid response to an API request.
+    DDEV_API_ERROR = "deps.dev bad response"
 
     #: Reported if deps.dev returns JSON data that is missing expected fields.
     DDEV_JSON_INVALID = "deps.dev JSON invalid"
 
-    #: Reported if deps.dev returns data that does not contain the desired SCM URL. E.g. The repository URL.
-    DDEV_NO_URLS = "deps.dev no URLs"
+    #: Reported if deps.dev returns JSON data with no repository URLs.
+    DDEV_NO_URLS = "deps.dev no urls"
+
+    #: Reported if deps.dev returns JSON data with no valid repository URLs.
+    DDEV_NO_VALID_URLS = "deps.dev no valid URLs"
 
     #: Reported if there was an error with the request sent to the PyPI registry.
     PYPI_HTTP_ERROR = "PyPI HTTP error"
