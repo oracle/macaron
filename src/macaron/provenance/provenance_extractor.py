@@ -43,8 +43,11 @@ def extract_repo_and_commit_from_provenance(payload: InTotoPayload) -> tuple[str
         If the extraction process fails for any reason.
     """
     predicate_type = payload.statement.get("predicateType")
-    if isinstance(payload, InTotoV1Payload) and predicate_type == "https://slsa.dev/provenance/v1":
-        return _extract_from_slsa_v1(payload)
+    if isinstance(payload, InTotoV1Payload):
+        if predicate_type == "https://slsa.dev/provenance/v1":
+            return _extract_from_slsa_v1(payload)
+        if predicate_type == "https://docs.pypi.org/attestations/publish/v1":
+            return _extract_from_pypi_v1(payload)
 
     if isinstance(payload, InTotoV01Payload):
         if predicate_type == "https://slsa.dev/provenance/v0.2":
@@ -195,6 +198,29 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str | None, str | N
     return repo, commit or None
 
 
+def _extract_from_pypi_v1(payload: InTotoV1Payload) -> tuple[str | None, str | None]:
+    """Extract the repository and commit metadata from the pypi provenance file found at the passed path.
+
+    Parameters
+    ----------
+    payload: InTotoPayload
+        The payload to extract from.
+
+    Returns
+    -------
+    tuple[str, str]
+        The repository URL and commit hash if found, a pair of empty strings otherwise.
+    """
+    predicate: dict[str, JsonType] | None = payload.statement.get("predicate")
+    if not predicate:
+        logger.debug("No predicate in payload statement.")
+        return None, None
+
+    repo = json_extract(predicate, ["sourceUri"], str)
+    digest = json_extract(predicate, ["sourceDigest"], str)
+    return repo, digest
+
+
 def _extract_from_witness_provenance(payload: InTotoV01Payload) -> tuple[str | None, str | None]:
     """Extract the repository and commit metadata from the witness provenance file found at the passed path.
 
@@ -300,7 +326,7 @@ def check_if_input_purl_provenance_conflict(
     provenance_repo_url: str | None,
     purl: PackageURL,
 ) -> bool:
-    """Test if the input repository type PURL's repo and commit match the contents of the provenance.
+    """Test if the input repository type PURL's repo matches the contents of the provenance.
 
     Parameters
     ----------
@@ -620,6 +646,41 @@ class WitnessGitLabBuildDefinitionV01(ProvenanceBuildDefinition):
         return gl_workflow, gl_job_url
 
 
+class PyPICertificateDefinition(ProvenanceBuildDefinition):
+    """Class representing the derived PyPI certificate build definition.
+
+    This class implements the abstract methods from the `ProvenanceBuildDefinition`
+    to extract build invocation details specific to the GitHub Actions build type.
+    """
+
+    #: Determines the expected ``buildType`` field in the provenance predicate.
+    expected_build_type = "pypi_certificate"
+
+    def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
+        """Retrieve the build invocation information from the given statement.
+
+        Parameters
+        ----------
+        statement : InTotoV1Statement | InTotoV01Statement
+            The provenance statement from which to extract the build invocation
+            details. This statement contains the metadata about the build process
+            and its associated artifacts.
+
+        Returns
+        -------
+        tuple[str | None, str | None]
+            A tuple containing two elements:
+            - The first element is the build invocation entry point (e.g., workflow name), or None if not found.
+            - The second element is the invocation URL or identifier (e.g., job URL), or None if not found.
+        """
+        if statement["predicate"] is None:
+            return None, None
+
+        gha_workflow = json_extract(statement["predicate"], ["workflow"], str)
+        invocation_url = json_extract(statement["predicate"], ["invocationUrl"], str)
+        return gha_workflow, invocation_url
+
+
 class ProvenancePredicate:
     """Class providing utility methods for handling provenance predicates.
 
@@ -685,6 +746,7 @@ class ProvenancePredicate:
             SLSAGCBBuildDefinitionV1(),
             SLSAOCIBuildDefinitionV1(),
             WitnessGitLabBuildDefinitionV01(),
+            PyPICertificateDefinition(),
         ]
 
         for build_def in build_defs:

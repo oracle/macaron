@@ -4,18 +4,21 @@
 """This module contains the PythonRepoFinderDD class to be used for finding repositories using deps.dev."""
 import json
 import logging
+import urllib.parse
 from enum import StrEnum
 from typing import Any
 from urllib.parse import quote as encode
 
 from packageurl import PackageURL
 
+from macaron.errors import APIAccessError
 from macaron.json_tools import json_extract
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 from macaron.slsa_analyzer.git_url import clean_url
-from macaron.util import send_get_http_raw
+from macaron.slsa_analyzer.package_registry.deps_dev import DepsDevService
+from macaron.util import send_get_http, send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -37,9 +40,6 @@ class DepsDevType(StrEnum):
 class DepsDevRepoFinder(BaseRepoFinder):
     """This class is used to find repositories using Google's Open Source Insights A.K.A. deps.dev."""
 
-    # See https://docs.deps.dev/api/v3alpha/
-    BASE_URL = "https://api.deps.dev/v3alpha/purl/"
-
     def find_repo(self, purl: PackageURL) -> tuple[str, RepoFinderInfo]:
         """
         Attempt to retrieve a repository URL that matches the passed artifact.
@@ -54,17 +54,12 @@ class DepsDevRepoFinder(BaseRepoFinder):
         tuple[str, RepoFinderOutcome] :
             A tuple of the found URL (or an empty string), and the outcome of the Repo Finder.
         """
-        request_urls, outcome = self._create_urls(purl)
-        if not request_urls:
-            logger.debug("No urls found for: %s", purl)
-            return "", outcome
+        try:
+            json_data = DepsDevService.get_package_info(encode(str(purl), safe=""))
+        except APIAccessError:
+            return "", RepoFinderInfo.DDEV_API_ERROR
 
-        json_data = self._retrieve_json(request_urls[0])
-        if not json_data:
-            logger.debug("Failed to retrieve json data for: %s", purl)
-            return "", RepoFinderInfo.DDEV_JSON_FETCH_ERROR
-
-        urls, outcome = self._read_json(json_data)
+        urls, outcome = DepsDevRepoFinder.extract_links(json_data)
         if not urls:
             logger.debug("Failed to extract repository URLs from json data: %s", purl)
             return "", outcome
@@ -75,7 +70,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
             logger.debug("Found valid url: %s", url)
             return url, RepoFinderInfo.FOUND
 
-        return "", RepoFinderInfo.DDEV_NO_URLS
+        return "", RepoFinderInfo.DDEV_NO_VALID_URLS
 
     @staticmethod
     def get_project_info(project_url: str) -> dict[str, Any] | None:
@@ -98,7 +93,9 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         project_key = clean_repo_url.hostname + clean_repo_url.path
 
-        request_url = f"https://api.deps.dev/v3alpha/projects/{encode(project_key, safe='')}"
+        api_endpoint = DepsDevService.get_endpoint(purl=False, path=f"projects/{encode(project_key, safe='')}")
+        request_url = urllib.parse.urlunsplit(api_endpoint)
+
         response = send_get_http_raw(request_url)
         if not (response and response.text):
             logger.debug("Failed to retrieve additional repo info for: %s", project_url)
@@ -130,17 +127,10 @@ class DepsDevRepoFinder(BaseRepoFinder):
             namespace = purl.namespace + "/" if purl.namespace else ""
             purl = PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}")
 
-        url = f"{DepsDevRepoFinder.BASE_URL}{encode(str(purl), safe='')}"
-        response = send_get_http_raw(url)
-
-        if not response:
-            return None, RepoFinderInfo.DDEV_BAD_RESPONSE
-
         try:
-            metadata: dict = json.loads(response.text)
-        except ValueError as error:
-            logger.debug("Failed to parse response from deps.dev: %s", error)
-            return None, RepoFinderInfo.DDEV_JSON_FETCH_ERROR
+            metadata = DepsDevService.get_package_info(encode(str(purl), safe=""))
+        except APIAccessError:
+            return None, RepoFinderInfo.DDEV_API_ERROR
 
         versions_keys = ["package", "versions"] if "package" in metadata else ["version"]
         versions = json_extract(metadata, versions_keys, list)
@@ -149,6 +139,8 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         latest_version = None
         for version_result in reversed(versions):
+            if not isinstance(version_result, dict) or "isDefault" not in version_result:
+                continue
             if version_result["isDefault"]:
                 # Accept the version as the latest if it is marked with the "isDefault" property.
                 latest_version = json_extract(version_result, ["versionKey", "version"], str)
@@ -164,11 +156,9 @@ class DepsDevRepoFinder(BaseRepoFinder):
             RepoFinderInfo.FOUND_FROM_LATEST,
         )
 
-    def _create_urls(self, purl: PackageURL) -> tuple[list[str], RepoFinderInfo]:
-        """
-        Create the urls to search for the metadata relating to the passed artifact, and report on that process.
-
-        If a version is not specified, remote API calls will be used to try and find one.
+    @staticmethod
+    def get_attestation(purl: PackageURL) -> tuple[dict | None, bool]:
+        """Retrieve the attestation associated with the passed PURL.
 
         Parameters
         ----------
@@ -177,61 +167,80 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         Returns
         -------
-        tuple[list[str], RepoFinderInfo]
-            A tuple of: the list of created URLs, and the information on the Repo Finder outcome.
+        tuple[dict | None, bool]
+            The attestation, or None if not found, and a flag for whether it is verified.
         """
-        outcome = None
         if not purl.version:
-            latest_purl, outcome = DepsDevRepoFinder.get_latest_version(purl)
+            latest_purl, _ = DepsDevRepoFinder.get_latest_version(purl)
             if not latest_purl:
-                return [], outcome
+                return None, False
             purl = latest_purl
+            if not purl.version:
+                # Should be unreachable.
+                return None, False
 
-        return [f"{DepsDevRepoFinder.BASE_URL}{encode(str(purl), safe='')}"], outcome or RepoFinderInfo.FOUND
+        api_endpoint = DepsDevService.get_endpoint(
+            purl=False, path="/".join(["systems", purl.type, "packages", purl.name, "versions", purl.version])
+        )
+        target_url = urllib.parse.urlunsplit(api_endpoint)
 
-    def _retrieve_json(self, url: str) -> str:
+        result = send_get_http(target_url, headers={})
+        if not result:
+            return None, False
+
+        result_attestations = json_extract(result, ["attestations"], list)
+        if not result_attestations:
+            logger.debug("No attestations in result.")
+            return None, False
+        if len(result_attestations) > 1:
+            logger.debug("More than one attestation in result: %s", len(result_attestations))
+
+        attestation_url = json_extract(result_attestations, [0, "url"], str)
+        if not attestation_url:
+            logger.debug("No attestation reported for %s", purl)
+            return None, False
+
+        attestation_data = send_get_http(attestation_url, headers={})
+        if not attestation_data:
+            return None, False
+
+        bundle = json_extract(attestation_data, ["attestation_bundles"], list)
+        if not bundle:
+            logger.debug("No attestation bundle in response.")
+            return None, False
+        if len(bundle) > 1:
+            logger.debug("Bundle length greater than one: %s", len(bundle))
+
+        attestations = json_extract(bundle[0], ["attestations"], list)
+        if not attestations:
+            logger.debug("No attestations in response.")
+            return None, False
+        if len(attestations) > 1:
+            logger.debug("More than one attestation: %s", len(attestations))
+
+        if not isinstance(attestations[0], dict):
+            logger.debug("Attestation invalid.")
+            return None, False
+
+        return attestations[0], json_extract(result_attestations, [0, "verified"], bool) or False
+
+    @staticmethod
+    def extract_links(json_data: dict) -> tuple[list[str], RepoFinderInfo]:
         """
-        Attempt to retrieve the json file located at the passed URL.
+        Extract the repository links from  the deps.dev json data.
 
         Parameters
         ----------
-        url : str
-            The URL for the GET request.
-
-        Returns
-        -------
-        str :
-            The retrieved file data or an empty string.
-        """
-        response = send_get_http_raw(url, {})
-
-        if not response:
-            return ""
-
-        return response.text
-
-    def _read_json(self, json_data: str) -> tuple[list[str], RepoFinderInfo]:
-        """
-        Parse the deps.dev json file and extract the repository links.
-
-        Parameters
-        ----------
-        json_data : str
-            The json metadata as a string.
+        json_data : dict
+            The json metadata.
 
         Returns
         -------
         tuple[list[str], RepoFinderOutcome] :
             The extracted contents as a list, and the outcome to report.
         """
-        try:
-            parsed = json.loads(json_data)
-        except ValueError as error:
-            logger.debug("Failed to parse response from deps.dev: %s", error)
-            return [], RepoFinderInfo.DDEV_JSON_FETCH_ERROR
-
-        links_keys = ["version", "links"] if "version" in parsed else ["links"]
-        links = json_extract(parsed, links_keys, list)
+        links_keys = ["version", "links"] if "version" in json_data else ["links"]
+        links = json_extract(json_data, links_keys, list)
         if not links:
             logger.debug("Could not extract 'version' or 'links' from deps.dev response.")
             return [], RepoFinderInfo.DDEV_JSON_INVALID
@@ -241,5 +250,9 @@ class DepsDevRepoFinder(BaseRepoFinder):
             url = item.get("url")
             if url and isinstance(url, str):
                 result.append(url)
+
+        if not result:
+            logger.debug("No str entries in 'links' list.")
+            return [], RepoFinderInfo.DDEV_NO_URLS
 
         return result, RepoFinderInfo.FOUND
