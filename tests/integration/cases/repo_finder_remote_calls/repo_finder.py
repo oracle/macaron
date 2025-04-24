@@ -43,6 +43,13 @@ def test_repo_finder() -> int:
         defaults.add_section("git_service.gitlab")
     defaults.set("git_service.gitlab", "hostname", "gitlab.com")
 
+    if not defaults.has_section("deps_dev"):
+        defaults.add_section("deps_dev")
+    defaults.set("deps_dev", "url_netloc", "api.deps.dev")
+    defaults.set("deps_dev", "url_scheme", "https")
+    defaults.set("deps_dev", "api_endpoint", "v3alpha")
+    defaults.set("deps_dev", "purl_endpoint", "purl")
+
     # Test Java package with SCM metadata in artifact POM.
     match, outcome = find_repo(PackageURL.from_string("pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"))
     if not match or outcome != RepoFinderInfo.FOUND:
