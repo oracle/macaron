@@ -228,14 +228,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             analyzer: BaseHeuristicAnalyzer = _analyzer()
             logger.debug("Instantiating %s", _analyzer.__name__)
 
-            depends_on: list[tuple[Heuristics, HeuristicResult]] | None = analyzer.depends_on
-
-            if depends_on:
-                should_skip: bool = self._should_skip(results, depends_on)
-                if should_skip:
-                    results[analyzer.heuristic] = HeuristicResult.SKIP
-                    continue
-
             result, result_info = analyzer.analyze(pypi_package_json)
             if analyzer.heuristic:
                 results[analyzer.heuristic] = result
