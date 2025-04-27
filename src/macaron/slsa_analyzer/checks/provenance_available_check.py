@@ -74,18 +74,31 @@ class ProvenanceAvailableCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        available = (
-            ctx.dynamic_data["provenance_info"]
-            and ctx.dynamic_data["provenance_info"].provenance_payload
-            and not ctx.dynamic_data["is_inferred_prov"]
-        )
+        provenance_info = None
+        inferred = False
+        if ctx.dynamic_data["provenance_info"]:
+            provenance_info = ctx.dynamic_data["provenance_info"]
+            inferred = ctx.dynamic_data["is_inferred_prov"]
+
+        if not provenance_info or not provenance_info.provenance_payload or inferred:
+            return CheckResultData(
+                result_tables=[
+                    ProvenanceAvailableFacts(
+                        confidence=Confidence.HIGH,
+                    )
+                ],
+                result_type=CheckResultType.FAILED,
+            )
+
         return CheckResultData(
             result_tables=[
                 ProvenanceAvailableFacts(
                     confidence=Confidence.HIGH,
+                    asset_name=provenance_info.provenance_asset_name,
+                    asset_url=provenance_info.provenance_asset_url,
                 )
             ],
-            result_type=CheckResultType.PASSED if available else CheckResultType.FAILED,
+            result_type=CheckResultType.PASSED,
         )
 
 
