@@ -499,9 +499,6 @@ class Provenance(ORMBase):
     #: The release tag commit sha.
     release_commit_sha: Mapped[str] = mapped_column(String, nullable=True)
 
-    #: The release tag.
-    release_tag: Mapped[str] = mapped_column(String, nullable=True)
-
     #: The repository URL from the provenance.
     repository_url: Mapped[str] = mapped_column(String, nullable=True)
 

@@ -543,7 +543,7 @@ class Analyzer:
                 slsa_version=slsa_version,
                 provenance_asset_name=provenance_asset.name if provenance_asset else None,
                 provenance_asset_url=provenance_asset.url if provenance_asset else None,
-                # TODO Add release tag, release digest.
+                # TODO Add release digest.
             )
 
         analyze_ctx.dynamic_data["validate_malware"] = validate_malware
