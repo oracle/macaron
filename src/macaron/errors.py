@@ -109,3 +109,7 @@ class HeuristicAnalyzerValueError(MacaronError):
 
 class LocalArtifactFinderError(MacaronError):
     """Happens when there is an error looking for local artifacts."""
+
+
+class SourceCodeError(MacaronError):
+    """Error for operations on package source code."""
