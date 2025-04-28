@@ -282,15 +282,16 @@ class MavenCentralRegistry(PackageRegistry):
         if not file_name:
             return None
 
-        # Maven supports but does not require a sha256 hash of uploaded artifacts. Check that first.
+        # Maven supports but does not require a sha256 hash of uploaded artifacts.
         artifact_url = self.registry_url + "/" + artifact_path + "/" + file_name
         sha256_url = artifact_url + ".sha256"
         logger.debug("Search for artifact hash using URL: %s", [sha256_url, artifact_url])
 
         response = send_get_http_raw(sha256_url, {})
-        if response and response.text:
-            logger.debug("Found hash of artifact: %s", response.text)
-            return response.text
+        sha256_hash = None
+        if response and (sha256_hash := response.text):
+            # As Maven hashes are user provided and not verified they serve as a reference only.
+            logger.debug("Found hash of artifact: %s", sha256_hash)
 
         try:
             response = requests.get(artifact_url, stream=True, timeout=40)
@@ -313,5 +314,9 @@ class MavenCentralRegistry(PackageRegistry):
             return None
 
         artifact_hash: str = hash_algorithm.hexdigest()
+        if sha256_hash and artifact_hash != sha256_hash:
+            logger.debug("Artifact hash and discovered hash do not match: %s != %s", artifact_hash, sha256_hash)
+            return None
+
         logger.debug("Computed hash of artifact: %s", artifact_hash)
         return artifact_hash
