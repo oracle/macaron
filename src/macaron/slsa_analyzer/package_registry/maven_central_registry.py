@@ -274,15 +274,15 @@ class MavenCentralRegistry(PackageRegistry):
         str | None
             The hash of the artifact, or None if not found.
         """
-        if not (purl.namespace and purl.version):
+        if not purl.namespace:
             return None
 
-        artifact_path = construct_maven_repository_path(purl.namespace, purl.name, purl.version)
         file_name = MavenCentralRegistry.get_artifact_file_name(purl)
-        if not file_name:
+        if not (purl.version and file_name):
             return None
 
         # Maven supports but does not require a sha256 hash of uploaded artifacts.
+        artifact_path = construct_maven_repository_path(purl.namespace, purl.name, purl.version)
         artifact_url = self.registry_url + "/" + artifact_path + "/" + file_name
         sha256_url = artifact_url + ".sha256"
         logger.debug("Search for artifact hash using URL: %s", [sha256_url, artifact_url])
