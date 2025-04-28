@@ -33,7 +33,6 @@ from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
 from macaron.slsa_analyzer.package_registry.osv_dev import OSVDevService
-from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset, PyPIRegistry
 from macaron.slsa_analyzer.package_registry.pypi_registry import (
     PyPIPackageJsonAsset,
     PyPIRegistry,

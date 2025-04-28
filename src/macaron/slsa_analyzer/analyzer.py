@@ -523,7 +523,7 @@ class Analyzer:
                 logger.debug("Failed to parse repository path as URL: %s", error)
             if url and url.hostname == "github.com":
                 artifact_hash = self.get_artifact_hash(
-                    parsed_purl, local_artifact_dirs, hashlib.sha256(), all_package_registries
+                    parsed_purl, local_artifact_dirs, hashlib.sha256(), package_registries_info
                 )
                 if artifact_hash:
                     git_attestation_dict = git_service.api_client.get_attestation(
@@ -1006,7 +1006,7 @@ class Analyzer:
         purl: PackageURL,
         cached_artifacts: list[str] | None,
         hash_algorithm: Any,
-        all_package_registries: list[PackageRegistryInfo],
+        package_registries_info: list[PackageRegistryInfo],
     ) -> str | None:
         """Get the hash of the artifact found from the passed PURL using local or remote files.
 
@@ -1018,7 +1018,7 @@ class Analyzer:
             The list of local files that match the PURL.
         hash_algorithm: Any
             The hash algorithm to use.
-        all_package_registries: list[PackageRegistryInfo]
+        package_registries_info: list[PackageRegistryInfo]
             The list of package registry information.
 
         Returns
@@ -1064,7 +1064,7 @@ class Analyzer:
             registry_info = next(
                 (
                     info
-                    for info in all_package_registries
+                    for info in package_registries_info
                     if info.package_registry == pypi_registry and info.build_tool_name in {"pip", "poetry"}
                 ),
                 None,
