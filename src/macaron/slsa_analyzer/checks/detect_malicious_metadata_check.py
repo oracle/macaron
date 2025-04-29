@@ -398,9 +398,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.ANOMALOUS_VERSION.value}).
 
     % Package released with a name similar to a popular package.
-    {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_3) :-
-        quickUndetailed,
-        failed({Heuristics.TYPOSQUATTING_PRESENCE.value}).
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_4) :-
+        quickUndetailed, forceSetup, failed({Heuristics.TYPOSQUATTING_PRESENCE.value}).
 
     % ----- Evaluation -----
 
@@ -408,7 +407,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {problog_result_access} :- trigger(malware_high_confidence_1).
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
-    {problog_result_access} :- trigger(malware_medium_confidence_3).
+    {problog_result_access} :- trigger(malware_high_confidence_4).
     {problog_result_access} :- trigger(malware_medium_confidence_2).
     {problog_result_access} :- trigger(malware_medium_confidence_1).
     query({problog_result_access}).
