@@ -7,7 +7,6 @@ import json
 import logging
 import urllib.parse
 from json.decoder import JSONDecodeError
-from typing import Any
 from urllib.parse import quote as encode
 from urllib.parse import unquote as decode
 
@@ -22,7 +21,7 @@ class DepsDevService:
     """The deps.dev service class."""
 
     @staticmethod
-    def get_endpoint(purl: bool = True, path: str | None = None) -> Any:
+    def get_endpoint(purl: bool = True, path: str | None = None) -> urllib.parse.SplitResult:
         """Build the API endpoint for the deps.dev service and return it.
 
         Parameters
