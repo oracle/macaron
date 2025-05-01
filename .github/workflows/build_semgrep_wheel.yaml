@@ -1,0 +1,55 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+name: Build Semgrep Wheel Artifact
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  build-semgrep-wheel:
+    name: Build Semgrep wheel
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Install git   # for cloning Semgrep repository
+      run: |
+        sudo apt-get install git
+
+    - name: Clone Semgrep v1.113.0 repository
+      run: |
+        git init
+        git remote add origin https://github.com/semgrep/semgrep.git
+        git fetch --depth 1 origin 4729a05d24bf9cee8face447e8a6d418037d61d8
+        git checkout FETCH_HEAD
+        git submodule update --init --recursive --depth 1
+
+    - name: Build wheel through docker
+      run: |
+        docker build --target semgrep-wheel -t semgrep .
+        docker create --name temp semgrep
+        mkdir -p dist/
+        docker cp temp:/semgrep/cli/dist/ dist/
+        docker container rm temp
+
+    - name: Get wheel name
+      run: |
+        WHEELS=($(find ./dist -type f -name "*manylinux*.whl"))
+        if [ "${WHEELS[@]}" -ne 1]; then
+          echo "Expected a single wheel file built by semgrep dockerfile"
+          exit 1
+        fi
+        echo "WHEEL_PATH=${WHEELS[0]}" >> "$GITHUB_ENV"
+
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02    # v4.6.2
+      with:
+        name: semgrep_wheel_manylinux.whl
+        path: ${{ env.WHEEL_PATH }}
+        if-no-files-found: error
+        compression-level: 0   # don't compress the wheel file
+        retention-days: 90   # uploaded wheel valid for 90 days, before workflow must be run again
