@@ -11,7 +11,7 @@ import logging
 import zlib
 from urllib.parse import urlparse
 
-from pypi_attestations import Attestation
+from cryptography import x509
 
 from macaron.config.defaults import defaults
 from macaron.json_tools import JsonType, json_extract
@@ -29,6 +29,12 @@ _OID_NAMES = {
     "source_digest": "1.3.6.1.4.1.57264.1.13",
     "workflow": "1.3.6.1.4.1.57264.1.18",
     "invocation": "1.3.6.1.4.1.57264.1.21",
+}
+_OID_IDS = {
+    "1.3.6.1.4.1.57264.1.12": "source_repo",
+    "1.3.6.1.4.1.57264.1.13": "source_digest",
+    "1.3.6.1.4.1.57264.1.18": "workflow",
+    "1.3.6.1.4.1.57264.1.21": "invocation",
 }
 
 
@@ -128,23 +134,84 @@ def _load_provenance_file_content(
         return json_payload
 
     # For provenance without a predicate (e.g. PyPI), try to use the provenance certificate instead.
-    attestation_model = Attestation.model_validate_json(decoded_file_content)
-    certificate_claims = attestation_model.certificate_claims
-    source_repo = certificate_claims[_OID_NAMES["source_repo"]]
-    workflow = certificate_claims[_OID_NAMES["workflow"]]
-    workflow = workflow.replace(source_repo + "/", "")
-    if "@" in workflow:
-        workflow = workflow[: workflow.index("@")]
-
-    invocation = certificate_claims[_OID_NAMES["invocation"]]
-    if "/attempts" in invocation:
-        invocation = invocation[: invocation.index("/attempts")]
+    raw_certificate = json_extract(provenance, ["verification_material", "certificate"], str)
+    if not raw_certificate:
+        raise LoadIntotoAttestationError("Failed to extract certificate data.")
+    try:
+        decoded_certificate = base64.b64decode(raw_certificate)
+        certificate_claims = get_x509_certificate_values(decoded_certificate)
+    except UnicodeDecodeError as error:
+        raise LoadIntotoAttestationError("Cannot decode the payload.") from error
+    except ValueError as error:
+        logger.debug(error)
+        raise LoadIntotoAttestationError("Error parsing certificate.") from error
 
     pypi_predicate = PyPICertificatePredicate.build_predicate(
-        source_repo, certificate_claims[_OID_NAMES["source_digest"]], workflow, invocation
+        certificate_claims["source_repo"],
+        certificate_claims["source_digest"],
+        certificate_claims["workflow"],
+        certificate_claims["invocation"],
     )
     json_payload["predicate"] = pypi_predicate
     return json_payload
+
+
+def get_x509_certificate_values(decoded_certificate: bytes) -> dict:
+    """Retrieve the values of interest from an x509 certificate.
+
+    Parameters
+    ----------
+    decoded_certificate: bytes
+        The decoded certificate bytes.
+
+    Returns
+    -------
+    dict
+        A dictionary of the extracted values.
+
+    Raises
+    ------
+    ValueError
+        If the values could not be extracted.
+    """
+    certificate = x509.load_der_x509_certificate(decoded_certificate)
+    certificate_claims = {}
+    for extension in certificate.extensions:
+        if extension.oid.dotted_string not in _OID_IDS:
+            continue
+
+        claim_name = _OID_IDS[extension.oid.dotted_string]
+        certificate_claims[claim_name] = extension.value.value
+
+    for name in _OID_NAMES:
+        if name not in certificate_claims:
+            raise ValueError(f"Missing certificate value: {name}")
+
+        # Values are DER encoded UTF-8 strings. Removing the first two bytes seems to be sufficient.
+        value: str = certificate_claims[name][2:].decode("UTF-8")
+        if name == "source_digest" and len(value) != 40:
+            # Expect a 40 character hex value.
+            raise ValueError(f"Digest is not 40 characters long: {value}. Original: {certificate_claims[name]}")
+        if name != "source_digest" and not value.startswith("http"):
+            # Expect a URL with scheme.
+            raise ValueError(f"URL has invalid scheme: {value}. Original: {certificate_claims[name]}")
+
+        # Accept value.
+        certificate_claims[name] = value
+
+    # Apply final formatting.
+    workflow = certificate_claims["workflow"]
+    workflow = workflow.replace(certificate_claims["source_repo"] + "/", "")
+    if "@" in workflow:
+        workflow = workflow[: workflow.index("@")]
+    certificate_claims["workflow"] = workflow
+
+    if "/attempts" in certificate_claims["invocation"]:
+        certificate_claims["invocation"] = certificate_claims["invocation"][
+            : certificate_claims["invocation"].index("/attempts")
+        ]
+
+    return certificate_claims
 
 
 def load_provenance_file(filepath: str) -> dict[str, JsonType]:
