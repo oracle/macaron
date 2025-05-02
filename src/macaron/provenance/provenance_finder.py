@@ -293,11 +293,6 @@ def find_pypi_provenance(purl: PackageURL) -> list[InTotoPayload]:
     -------
     list[InTotoPayload] | None
         The provenance payload if found, or an empty list otherwise.
-
-    Raises
-    ------
-    ProvenanceAvailableException
-        If the discovered provenance file size exceeds the configured limit.
     """
     attestation, verified = DepsDevRepoFinder.get_attestation(purl)
     if not attestation:
