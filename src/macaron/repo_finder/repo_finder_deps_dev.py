@@ -17,6 +17,7 @@ from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 from macaron.slsa_analyzer.git_url import clean_url
+from macaron.slsa_analyzer.package_registry import PyPIRegistry
 from macaron.slsa_analyzer.package_registry.deps_dev import DepsDevService
 from macaron.util import send_get_http, send_get_http_raw
 
@@ -55,7 +56,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
             A tuple of the found URL (or an empty string), and the outcome of the Repo Finder.
         """
         try:
-            json_data = DepsDevService.get_package_info(encode(str(purl), safe=""))
+            json_data = DepsDevService.get_package_info(str(purl))
         except APIAccessError:
             return "", RepoFinderInfo.DDEV_API_ERROR
 
@@ -93,7 +94,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         project_key = clean_repo_url.hostname + clean_repo_url.path
 
-        api_endpoint = DepsDevService.get_endpoint(purl=False, path=f"projects/{encode(project_key, safe='')}")
+        api_endpoint = DepsDevService.get_endpoint(f"projects/{encode(project_key, safe='')}")
         request_url = urllib.parse.urlunsplit(api_endpoint)
 
         response = send_get_http_raw(request_url)
@@ -128,7 +129,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
             purl = PackageURL.from_string(f"pkg:{purl.type}/{namespace}{purl.name}")
 
         try:
-            metadata = DepsDevService.get_package_info(encode(str(purl), safe=""))
+            metadata = DepsDevService.get_package_info(purl)
         except APIAccessError:
             return None, RepoFinderInfo.DDEV_API_ERROR
 
@@ -170,19 +171,18 @@ class DepsDevRepoFinder(BaseRepoFinder):
         tuple[dict | None, bool]
             The attestation, or None if not found, and a flag for whether it is verified.
         """
+        if purl.type != "pypi":
+            logger.debug("PURL type (%s) attestation not yet supported via deps.dev.")
+            return None, False
+
         if not purl.version:
             latest_purl, _ = DepsDevRepoFinder.get_latest_version(purl)
             if not latest_purl:
                 return None, False
             purl = latest_purl
-            if not purl.version:
-                # Should be unreachable.
-                return None, False
 
-        api_endpoint = DepsDevService.get_endpoint(
-            purl=False, path="/".join(["systems", purl.type, "packages", purl.name, "versions", purl.version])
-        )
-        target_url = urllib.parse.urlunsplit(api_endpoint)
+        purl_endpoint = DepsDevService().get_purl_endpoint(purl)
+        target_url = urllib.parse.urlunsplit(purl_endpoint)
 
         result = send_get_http(target_url, headers={})
         if not result:
@@ -204,25 +204,10 @@ class DepsDevRepoFinder(BaseRepoFinder):
         if not attestation_data:
             return None, False
 
-        bundle = json_extract(attestation_data, ["attestation_bundles"], list)
-        if not bundle:
-            logger.debug("No attestation bundle in response.")
-            return None, False
-        if len(bundle) > 1:
-            logger.debug("Bundle length greater than one: %s", len(bundle))
-
-        attestations = json_extract(bundle[0], ["attestations"], list)
-        if not attestations:
-            logger.debug("No attestations in response.")
-            return None, False
-        if len(attestations) > 1:
-            logger.debug("More than one attestation: %s", len(attestations))
-
-        if not isinstance(attestations[0], dict):
-            logger.debug("Attestation invalid.")
-            return None, False
-
-        return attestations[0], json_extract(result_attestations, [0, "verified"], bool) or False
+        return (
+            PyPIRegistry().extract_attestation(attestation_data),
+            json_extract(result_attestations, [0, "verified"], bool) or False,
+        )
 
     @staticmethod
     def extract_links(json_data: dict) -> tuple[list[str], RepoFinderInfo]:

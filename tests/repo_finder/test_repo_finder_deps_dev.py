@@ -2,7 +2,6 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the deps.dev repo finder."""
-
 import pytest
 from packageurl import PackageURL
 from pytest_httpserver import HTTPServer
@@ -58,23 +57,23 @@ def test_find_repo_success(httpserver: HTTPServer, deps_dev_service_mock: dict) 
 
 
 @pytest.mark.parametrize(
-    ("repo_url", "server_url", "data"),
+    "repo_url",
     [
-        ("http::::://130/test", "", ""),
-        ("http://github.com/oracle/macaron", "", ""),
-        ("", "/oracle/macaron", "INVALID JSON"),
+        "http::::://130/test",
+        "http://github.com/oracle/macaron",
     ],
 )
-def test_get_project_info_failures(
-    httpserver: HTTPServer, deps_dev_service_mock: dict, repo_url: str, server_url: str, data: str
-) -> None:
-    """Test get project info failures."""
-    if not repo_url:
-        repo_url = f"{deps_dev_service_mock['base_scheme']}://{deps_dev_service_mock['base_netloc']}{server_url}"
+def test_get_project_info_invalid_url(repo_url: str) -> None:
+    """Test get project info invalid url."""
+    assert not DepsDevRepoFinder().get_project_info(repo_url)
 
-    if server_url:
-        target_url = f"/{deps_dev_service_mock['api']}/projects/{deps_dev_service_mock['base_hostname']}{server_url}"
-        httpserver.expect_request(target_url).respond_with_data(data)
+
+def test_get_project_info_invalid_json(httpserver: HTTPServer, deps_dev_service_mock: dict) -> None:
+    """Test get project info invalid json."""
+    server_url = "/oracle/macaron"
+    repo_url = f"{deps_dev_service_mock['base_scheme']}://{deps_dev_service_mock['base_netloc']}{server_url}"
+    target_url = f"/{deps_dev_service_mock['api']}/projects/{deps_dev_service_mock['base_hostname']}{server_url}"
+    httpserver.expect_request(target_url).respond_with_data("INVALID JSON")
 
     assert not DepsDevRepoFinder().get_project_info(repo_url)
 
@@ -155,10 +154,7 @@ def test_get_attestation_failures(
 
     if server_url:
         assert purl.version
-        target_url = (
-            f"/{deps_dev_service_mock['api']}/"
-            + f"{'/'.join(['systems', purl.type, 'packages', purl.name, 'versions', purl.version])}"
-        )
+        target_url = f"/{deps_dev_service_mock['api']}/{deps_dev_service_mock['purl']}/{purl}"
         if "*replace_url*" in data:
             attestation_url = (
                 f"{deps_dev_service_mock['base_scheme']}://{deps_dev_service_mock['base_netloc']}{target_url}"
@@ -174,15 +170,25 @@ def test_get_attestation_failures(
 def test_get_attestation_success(httpserver: HTTPServer, deps_dev_service_mock: dict) -> None:
     """Test get attestation success."""
     purl = PackageURL.from_string("pkg:pypi/test@3")
-    target_url = (
-        f"/{deps_dev_service_mock['api']}/"
-        + f"{'/'.join(['systems', purl.type, 'packages', purl.name, 'versions', purl.version or ''])}"
-    )
+    target_url = f"/{deps_dev_service_mock['api']}/{deps_dev_service_mock['purl']}/{purl}"
     attestation_url = f"{deps_dev_service_mock['base_scheme']}://{deps_dev_service_mock['base_netloc']}{target_url}"
     data = """
         {
-            "attestations": [{"url": "*replace_url*", "verified": true}],
-            "attestation_bundles": [{"attestations": [{"foo": "bar"}]}]
+            "attestations": [
+                {
+                    "url": "*replace_url*",
+                    "verified": true
+                }
+            ],
+            "attestation_bundles": [
+                {
+                    "attestations": [
+                        {
+                            "foo": "bar"
+                        }
+                    ]
+                }
+            ]
         }
     """
     data = data.replace("*replace_url*", attestation_url)
