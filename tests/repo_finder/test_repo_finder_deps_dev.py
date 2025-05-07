@@ -63,7 +63,9 @@ def test_find_repo_success(httpserver: HTTPServer, deps_dev_service_mock: dict) 
         "http://github.com/oracle/macaron",
     ],
 )
-def test_get_project_info_invalid_url(repo_url: str) -> None:
+def test_get_project_info_invalid_url(
+    deps_dev_service_mock: dict, repo_url: str  # pylint: disable=unused-argument
+) -> None:
     """Test get project info invalid url."""
     assert not DepsDevRepoFinder().get_project_info(repo_url)
 
