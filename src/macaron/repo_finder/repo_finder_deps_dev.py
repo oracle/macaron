@@ -188,7 +188,11 @@ class DepsDevRepoFinder(BaseRepoFinder):
         if not result:
             return None, False
 
-        result_attestations = json_extract(result, ["attestations"], list)
+        attestation_keys = ["attestations"]
+        if "version" in result:
+            attestation_keys.insert(0, "version")
+
+        result_attestations = json_extract(result, attestation_keys, list)
         if not result_attestations:
             logger.debug("No attestations in result.")
             return None, False
