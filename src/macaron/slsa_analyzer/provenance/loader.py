@@ -144,7 +144,7 @@ def _load_provenance_file_content(
         logger.debug(error)
         raise LoadIntotoAttestationError("Error parsing certificate.") from error
 
-    json_payload["predicate"] = certificate_predicate
+    json_payload["predicate"] = certificate_predicate.build_predicate()
     return json_payload
 
 
