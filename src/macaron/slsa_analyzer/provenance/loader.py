@@ -12,6 +12,7 @@ import zlib
 from urllib.parse import urlparse
 
 from cryptography import x509
+from cryptography.x509 import DuplicateExtension, UnsupportedGeneralNameType
 
 from macaron.config.defaults import defaults
 from macaron.json_tools import JsonType, json_extract
@@ -24,12 +25,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 # See: https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md
-_OID_NAMES = {
-    "source_repo": "1.3.6.1.4.1.57264.1.12",
-    "source_digest": "1.3.6.1.4.1.57264.1.13",
-    "workflow": "1.3.6.1.4.1.57264.1.18",
-    "invocation": "1.3.6.1.4.1.57264.1.21",
-}
 _OID_IDS = {
     "1.3.6.1.4.1.57264.1.12": "source_repo",
     "1.3.6.1.4.1.57264.1.13": "source_digest",
@@ -123,14 +118,17 @@ def _load_provenance_file_content(
     try:
         json_payload = json.loads(decoded_payload)
     except (json.JSONDecodeError, TypeError) as error:
-        raise LoadIntotoAttestationError(
-            "Cannot deserialize the provenance payload as JSON.",
-        ) from error
+        raise LoadIntotoAttestationError("Cannot deserialize the provenance payload as JSON.") from error
 
     if not isinstance(json_payload, dict):
         raise LoadIntotoAttestationError("The provenance payload is not a JSON object.")
 
     if json_payload["predicate"]:
+        predicate_type = json_extract(json_payload, ["predicateType"], str)
+        if not predicate_type:
+            raise LoadIntotoAttestationError("Missing predicateType in payload.")
+        if predicate_type == "https://docs.pypi.org/attestations/publish/v1":
+            raise LoadIntotoAttestationError("PyPI attestation should not have a predicate.")
         return json_payload
 
     # For provenance without a predicate (e.g. PyPI), try to use the provenance certificate instead.
@@ -139,65 +137,66 @@ def _load_provenance_file_content(
         raise LoadIntotoAttestationError("Failed to extract certificate data.")
     try:
         decoded_certificate = base64.b64decode(raw_certificate)
-        certificate_claims = get_x509_certificate_values(decoded_certificate)
+        certificate_predicate = get_x509_der_certificate_values(decoded_certificate)
     except UnicodeDecodeError as error:
         raise LoadIntotoAttestationError("Cannot decode the payload.") from error
     except ValueError as error:
         logger.debug(error)
         raise LoadIntotoAttestationError("Error parsing certificate.") from error
 
-    pypi_predicate = PyPICertificatePredicate.build_predicate(
-        certificate_claims["source_repo"],
-        certificate_claims["source_digest"],
-        certificate_claims["workflow"],
-        certificate_claims["invocation"],
-    )
-    json_payload["predicate"] = pypi_predicate
+    json_payload["predicate"] = certificate_predicate
     return json_payload
 
 
-def get_x509_certificate_values(decoded_certificate: bytes) -> dict:
-    """Retrieve the values of interest from an x509 certificate.
+def get_x509_der_certificate_values(x509_der_certificate: bytes) -> PyPICertificatePredicate:
+    """Retrieve the values of interest from an x509 certificate in the form of a predicate.
+
+    The passed certificate should be following the DER specification.
+    See https://peps.python.org/pep-0740/#provenance-objects.
+
 
     Parameters
     ----------
-    decoded_certificate: bytes
-        The decoded certificate bytes.
+    x509_der_certificate: bytes
+        The certificate bytes.
 
     Returns
     -------
-    dict
-        A dictionary of the extracted values.
+    PyPICertificatePredicate
+        A predicate created from the extracted values.
 
     Raises
     ------
     ValueError
         If the values could not be extracted.
+
     """
-    certificate = x509.load_der_x509_certificate(decoded_certificate)
+    certificate = x509.load_der_x509_certificate(x509_der_certificate)
     certificate_claims = {}
-    for extension in certificate.extensions:
+    try:
+        extensions = certificate.extensions
+    except (DuplicateExtension, UnsupportedGeneralNameType) as error:
+        raise ValueError("Certificate extension error:") from error
+
+    for extension in extensions:
         if extension.oid.dotted_string not in _OID_IDS:
             continue
 
+        # These extensions should be of the UnrecognizedExtension type.
+        # See: https://cryptography.io/en/latest/x509/reference/#cryptography.x509.UnrecognizedExtension
         claim_name = _OID_IDS[extension.oid.dotted_string]
-        certificate_claims[claim_name] = extension.value.value
-
-    for name in _OID_NAMES:
-        if name not in certificate_claims:
-            raise ValueError(f"Missing certificate value: {name}")
 
         # Values are DER encoded UTF-8 strings. Removing the first two bytes seems to be sufficient.
-        value: str = certificate_claims[name][2:].decode("UTF-8")
-        if name == "source_digest" and len(value) != 40:
+        value: str = extension.value.value[2:].decode("UTF-8")
+        if claim_name == "source_digest" and len(value) != 40:
             # Expect a 40 character hex value.
-            raise ValueError(f"Digest is not 40 characters long: {value}. Original: {certificate_claims[name]}")
-        if name != "source_digest" and not value.startswith("http"):
+            raise ValueError(f"Digest is not 40 characters long: {value}. Original: {extension.value.value}")
+        if claim_name != "source_digest" and not value.startswith("http"):
             # Expect a URL with scheme.
-            raise ValueError(f"URL has invalid scheme: {value}. Original: {certificate_claims[name]}")
+            raise ValueError(f"URL has invalid scheme: {value}. Original: {extension.value.value}")
 
         # Accept value.
-        certificate_claims[name] = value
+        certificate_claims[claim_name] = value
 
     # Apply final formatting.
     workflow = certificate_claims["workflow"]
@@ -211,7 +210,12 @@ def get_x509_certificate_values(decoded_certificate: bytes) -> dict:
             : certificate_claims["invocation"].index("/attempts")
         ]
 
-    return certificate_claims
+    return PyPICertificatePredicate(
+        certificate_claims["source_repo"],
+        certificate_claims["source_digest"],
+        certificate_claims["workflow"],
+        certificate_claims["invocation"],
+    )
 
 
 def load_provenance_file(filepath: str) -> dict[str, JsonType]:
