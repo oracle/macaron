@@ -181,6 +181,8 @@ class DepsDevRepoFinder(BaseRepoFinder):
                 return None, False
             purl = latest_purl
 
+        # Example of a PURL endpoint for deps.dev with '/' encoded as '%2F':
+        # https://api.deps.dev/v3alpha/purl/pkg:npm%2F@sigstore%2Fmock@0.7.5
         purl_endpoint = DepsDevService().get_purl_endpoint(purl)
         target_url = urllib.parse.urlunsplit(purl_endpoint)
 
