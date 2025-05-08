@@ -1,0 +1,13 @@
+/* Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("test_policy", component_id, "") :-
+    check_passed(component_id, "mcn_provenance_verified_1"),
+    check_passed(component_id, "mcn_provenance_available_1"),
+    check_passed(component_id, "mcn_provenance_derived_repo_1"),
+    check_passed(component_id, "mcn_provenance_derived_commit_1").
+
+apply_policy_to("test_policy", component_id) :-
+    is_component(component_id, "pkg:pypi/ultralytics@8.3.70").

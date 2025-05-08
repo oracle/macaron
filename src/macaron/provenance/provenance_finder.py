@@ -2,6 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains methods for finding provenance files."""
+import json
 import logging
 import os
 import tempfile
@@ -12,6 +13,7 @@ from pydriller import Git
 
 from macaron.config.defaults import defaults
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
+from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.provenance_available_check import ProvenanceAvailableException
 from macaron.slsa_analyzer.ci_service import GitHubActions
@@ -76,6 +78,10 @@ class ProvenanceFinder:
                 return []
 
             discovery_functions = [partial(find_gav_provenance, purl, self.jfrog_registry)]
+            return self._find_provenance(discovery_functions)
+
+        if purl.type == "pypi":
+            discovery_functions = [partial(find_pypi_provenance, purl)]
             return self._find_provenance(discovery_functions)
 
         # TODO add other possible discovery functions.
@@ -273,6 +279,37 @@ def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[
 
     # We assume that there is only one provenance per GAV.
     return provenances[:1]
+
+
+def find_pypi_provenance(purl: PackageURL) -> list[InTotoPayload]:
+    """Find and download the PyPI based provenance for the passed PURL.
+
+    Parameters
+    ----------
+    purl: PackageURL
+        The PURL of the analysis target.
+
+    Returns
+    -------
+    list[InTotoPayload] | None
+        The provenance payload if found, or an empty list otherwise.
+    """
+    attestation, verified = DepsDevRepoFinder.get_attestation(purl)
+    if not attestation:
+        return []
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        file_name = os.path.join(temp_dir, f"{purl.name}")
+        with open(file_name, "w", encoding="utf-8") as file:
+            json.dump(attestation, file)
+
+        try:
+            payload = load_provenance_payload(file_name)
+            payload.verified = verified
+            return [payload]
+        except LoadIntotoAttestationError as load_error:
+            logger.error("Error while loading provenance: %s", load_error)
+            return []
 
 
 def find_provenance_from_ci(

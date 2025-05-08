@@ -335,6 +335,40 @@ class PyPIRegistry(PackageRegistry):
 
         return res.replace(tzinfo=None) if res else None
 
+    @staticmethod
+    def extract_attestation(attestation_data: dict) -> dict | None:
+        """Extract the first attestation file from a PyPI attestation response.
+
+        Parameters
+        ----------
+        attestation_data: dict
+            The JSON data representing a bundle of attestations.
+
+        Returns
+        -------
+        dict | None
+            The first attestation, or None if not found.
+        """
+        bundle = json_extract(attestation_data, ["attestation_bundles"], list)
+        if not bundle:
+            logger.debug("No attestation bundle in response.")
+            return None
+        if len(bundle) > 1:
+            logger.debug("Bundle length greater than one: %s", len(bundle))
+
+        attestations = json_extract(bundle[0], ["attestations"], list)
+        if not attestations:
+            logger.debug("No attestations in response.")
+            return None
+        if len(attestations) > 1:
+            logger.debug("More than one attestation: %s", len(attestations))
+
+        if not isinstance(attestations[0], dict):
+            logger.debug("Attestation invalid.")
+            return None
+
+        return attestations[0]
+
 
 @dataclass
 class PyPIPackageJsonAsset:

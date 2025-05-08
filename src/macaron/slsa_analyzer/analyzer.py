@@ -363,7 +363,9 @@ class Analyzer:
             provenances = provenance_finder.find_provenance(parsed_purl)
             if provenances:
                 provenance_payload = provenances[0]
-                if verify_provenance:
+                if provenance_payload.verified:
+                    provenance_is_verified = True
+                elif verify_provenance:
                     provenance_is_verified = provenance_verifier.verify_provenance(parsed_purl, provenances)
 
         # Try to extract the repository URL and commit digest from the Provenance, if it exists.
@@ -425,7 +427,7 @@ class Analyzer:
             found_commit=final_digest,
         )
 
-        # Check if only one of the repo or digest came from direct input.
+        # Check if repo came from direct input.
         if parsed_purl:
             if check_if_input_purl_provenance_conflict(
                 bool(repo_path_input),

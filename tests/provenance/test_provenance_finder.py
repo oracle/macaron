@@ -14,7 +14,11 @@ from packageurl import PackageURL
 from pydriller import Git
 
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.provenance.provenance_finder import find_gav_provenance, find_npm_provenance, find_provenance_from_ci
+from macaron.provenance.provenance_finder import (
+    find_gav_provenance,
+    find_npm_provenance,
+    find_provenance_from_ci,
+)
 from macaron.slsa_analyzer.ci_service import BaseCIService, CircleCI, GitHubActions, GitLabCI, Jenkins, Travis
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
 from macaron.slsa_analyzer.package_registry import JFrogMavenRegistry, NPMRegistry
@@ -206,9 +210,7 @@ def test_provenance_on_supported_ci(macaron_path: Path, test_dir: Path) -> None:
         assert provenance is None
 
 
-def test_provenance_available_on_npm_registry(
-    test_dir: Path,
-) -> None:
+def test_provenance_available_on_npm_registry(test_dir: Path) -> None:
     """Test provenance published on npm registry."""
     purl = PackageURL.from_string("pkg:npm/@sigstore/mock@0.1.0")
     npm_registry = MockNPMRegistry()
@@ -220,11 +222,9 @@ def test_provenance_available_on_npm_registry(
     assert provenance
 
 
-def test_provenance_available_on_jfrog_registry(
-    test_dir: Path,
-) -> None:
+def test_provenance_available_on_jfrog_registry(test_dir: Path) -> None:
     """Test provenance published on jfrog registry."""
-    purl = PackageURL.from_string("pkg:/maven/io.micronaut/micronaut-core@4.2.3")
+    purl = PackageURL.from_string("pkg:maven/io.micronaut/micronaut-core@4.2.3")
     jfrog_registry = MockJFrogRegistry(str(test_dir))
     provenance = find_gav_provenance(purl, jfrog_registry)
 
