@@ -123,13 +123,17 @@ def _load_provenance_file_content(
     if not isinstance(json_payload, dict):
         raise LoadIntotoAttestationError("The provenance payload is not a JSON object.")
 
-    if json_payload["predicate"]:
-        predicate_type = json_extract(json_payload, ["predicateType"], str)
-        if not predicate_type:
-            raise LoadIntotoAttestationError("Missing predicateType in payload.")
+    predicate_type = json_extract(json_payload, ["predicateType"], str)
+    if not predicate_type:
+        raise LoadIntotoAttestationError("The payload is missing a predicate type.")
+
+    if "predicate" in json_payload:
         if predicate_type == "https://docs.pypi.org/attestations/publish/v1":
             raise LoadIntotoAttestationError("PyPI attestation should not have a predicate.")
         return json_payload
+
+    if predicate_type != "https://docs.pypi.org/attestations/publish/v1":
+        raise LoadIntotoAttestationError(f"The payload predicate type '{predicate_type}' requires a predicate.")
 
     # For provenance without a predicate (e.g. PyPI), try to use the provenance certificate instead.
     raw_certificate = json_extract(provenance, ["verification_material", "certificate"], str)
@@ -197,6 +201,10 @@ def get_x509_der_certificate_values(x509_der_certificate: bytes) -> PyPICertific
 
         # Accept value.
         certificate_claims[claim_name] = value
+
+    # Expect all values to have been found.
+    if len(certificate_claims) != len(_OID_IDS):
+        raise ValueError(f"Missing certificate claim(s). Found {len(certificate_claims)} of {len(_OID_IDS)}")
 
     # Apply final formatting.
     workflow = certificate_claims["workflow"]
