@@ -127,7 +127,8 @@ def _load_provenance_file_content(
     if not predicate_type:
         raise LoadIntotoAttestationError("The payload is missing a predicate type.")
 
-    if "predicate" in json_payload:
+    predicate = json_extract(json_payload, ["predicate"], dict)
+    if predicate:
         if predicate_type == "https://docs.pypi.org/attestations/publish/v1":
             raise LoadIntotoAttestationError("PyPI attestation should not have a predicate.")
         return json_payload
