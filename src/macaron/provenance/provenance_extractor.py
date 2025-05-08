@@ -201,6 +201,9 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str | None, str | N
 def _extract_from_pypi_v1(payload: InTotoV1Payload) -> tuple[str | None, str | None]:
     """Extract the repository and commit metadata from the pypi provenance file found at the passed path.
 
+    This payload represents a custom predicate created from the certificate of a PyPI v1 attestation file.
+    By design, these attestations come without a predicate.
+
     Parameters
     ----------
     payload: InTotoPayload
