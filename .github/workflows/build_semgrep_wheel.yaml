@@ -3,7 +3,7 @@
 
 name: Build Semgrep Wheel Artifact
 
-on: [push, workflow_dispatch]
+on: workflow_dispatch
 
 permissions:
   contents: read
