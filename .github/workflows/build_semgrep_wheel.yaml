@@ -20,8 +20,8 @@ jobs:
 
     steps:
     # To update the semgrep version, please apply the following changes:
-    #   - change the version tag in the 'name' description
-    #   - change the 'ref' field to use the commit hash of that tag
+    #   change the version tag in the 'name' description
+    #   change the 'ref' field to use the commit hash of that tag
     - name: Check out Semgrep v1.113.0 repository
       uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
       with:
@@ -39,8 +39,8 @@ jobs:
         docker cp temp:/semgrep/cli/dist/. wheels/
         docker container rm temp
 
-    # - name: Log in to GitHub Container Registry
-    #   run: docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+    - name: Log in to GitHub Container Registry
+      run: docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
 
     # The manylinux image will be a static binary built using musl, suitable for Oracle linux
     - name: Build and push semgrep wheel image
@@ -50,6 +50,4 @@ jobs:
         echo "FROM scratch
         COPY ${WHEEL} /semgrep_wheel.whl" >> Dockerfile.semgrep
         docker build -t ghcr.io/macaron/macaron-deps:latest -f Dockerfile.semgrep .
-
-
-    # docker push ghcr.io/macaron/macaron-deps:latest
+        docker push ghcr.io/macaron/macaron-deps:latest
