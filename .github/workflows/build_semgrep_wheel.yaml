@@ -1,0 +1,53 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+name: Build Semgrep Wheel Artifact
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  build-semgrep-wheel:
+    name: Build Semgrep wheel
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write # to push the docker image
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # To update the semgrep version, please apply the following changes:
+    #   change the version tag in the 'name' description
+    #   change the 'ref' field to use the commit hash of that tag
+    - name: Check out Semgrep v1.113.0 repository
+      uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      with:
+        repository: semgrep/semgrep.git
+        ref: 4729a05d24bf9cee8face447e8a6d418037d61d8 # v1.113.0
+        fetch-depth: 1 # only need most recent commits to this tag
+        submodules: recursive # semgrep uses many of their own ocaml submodules, which are required to build
+
+    - name: Build wheel through docker
+      # we build to the 'semgrep-wheel' target as we don't need the performance testing, and want to extract the wheel
+      run: |
+        docker build --target semgrep-wheel -t semgrep .
+        docker create --name temp semgrep
+        mkdir -p wheels/
+        docker cp temp:/semgrep/cli/dist/. wheels/
+        docker container rm temp
+
+    - name: Log in to GitHub Container Registry
+      run: docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+
+    # The manylinux image will be a static binary built using musl, suitable for Oracle linux
+    - name: Build and push semgrep wheel image
+      run: |
+        cd wheels
+        WHEEL=$(find . -type f -name 'semgrep-*manylinux*.whl')
+        echo "FROM scratch
+        COPY ${WHEEL} /semgrep_wheel.whl" >> Dockerfile.semgrep
+        docker build -t ghcr.io/macaron/macaron-deps:latest -f Dockerfile.semgrep .
+        docker push ghcr.io/macaron/macaron-deps:latest
