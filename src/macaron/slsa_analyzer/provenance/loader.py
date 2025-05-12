@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the loaders for SLSA provenances."""
@@ -12,7 +12,7 @@ import zlib
 from urllib.parse import urlparse
 
 from macaron.config.defaults import defaults
-from macaron.json_tools import JsonType
+from macaron.json_tools import JsonType, json_extract
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
 from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError, ValidateInTotoPayloadError
 from macaron.util import send_get_http_raw
@@ -83,6 +83,10 @@ def _load_provenance_file_content(
         # Some provenances, such as Witness may not include the DSSE envelope `dsseEnvelope`
         # property but contain its value directly.
         provenance_payload = provenance.get("payload", None)
+    if not provenance_payload:
+        # GitHub Attestation.
+        # TODO Check if old method (above) actually works.
+        provenance_payload = json_extract(provenance, ["bundle", "dsseEnvelope", "payload"], str)
     if not provenance_payload:
         raise LoadIntotoAttestationError(
             'Cannot find the "payload" field in the decoded provenance.',
