@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """In-toto provenance schemas and validation."""
@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import NamedTuple, Protocol, TypeVar
+from dataclasses import dataclass
+from typing import Protocol, TypeVar
 
 from packageurl import PackageURL
 
@@ -21,7 +22,8 @@ from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1ResourceDescripto
 StatementT = TypeVar("StatementT", bound=Mapping)
 
 
-class InTotoV01Payload(NamedTuple):
+@dataclass
+class InTotoV01Payload:
     """The provenance payload following in-toto v0.1 schema.
 
     The payload is a field within a DSSE envelope, having the type "Statement".
@@ -36,9 +38,11 @@ class InTotoV01Payload(NamedTuple):
     """
 
     statement: v01.InTotoV01Statement
+    verified: bool = False
 
 
-class InTotoV1Payload(NamedTuple):
+@dataclass
+class InTotoV1Payload:
     """The provenance payload following in-toto v1 schema.
 
     The payload is a field within a DSSE envelope, having the type "Statement".
@@ -53,6 +57,7 @@ class InTotoV1Payload(NamedTuple):
     """
 
     statement: v1.InTotoV1Statement
+    verified: bool = False
 
 
 # The payload is a field within a DSSE envelope, having the type "Statement".

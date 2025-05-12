@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the loaders for SLSA provenances."""
@@ -11,13 +11,26 @@ import logging
 import zlib
 from urllib.parse import urlparse
 
+from cryptography import x509
+from cryptography.x509 import DuplicateExtension, UnsupportedGeneralNameType
+
 from macaron.config.defaults import defaults
-from macaron.json_tools import JsonType
+from macaron.json_tools import JsonType, json_extract
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
 from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError, ValidateInTotoPayloadError
+from macaron.slsa_analyzer.specs.pypi_certificate_predicate import PyPICertificatePredicate
 from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+# See: https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md
+_OID_IDS = {
+    "1.3.6.1.4.1.57264.1.12": "source_repo",
+    "1.3.6.1.4.1.57264.1.13": "source_digest",
+    "1.3.6.1.4.1.57264.1.18": "workflow",
+    "1.3.6.1.4.1.57264.1.21": "invocation",
+}
 
 
 def _try_read_url_link_file(file_content: bytes) -> str | None:
@@ -66,9 +79,11 @@ def _load_provenance_file_content(
     try:
         try:
             decompressed_file_content = gzip.decompress(file_content)
-            provenance = json.loads(decompressed_file_content.decode())
+            decoded_file_content = decompressed_file_content.decode()
+            provenance = json.loads(decoded_file_content)
         except (gzip.BadGzipFile, EOFError, zlib.error):
-            provenance = json.loads(file_content.decode())
+            decoded_file_content = file_content.decode()
+            provenance = json.loads(decoded_file_content)
     except (json.JSONDecodeError, TypeError, UnicodeDecodeError) as error:
         raise LoadIntotoAttestationError(
             "Cannot deserialize the file content as JSON.",
@@ -84,6 +99,9 @@ def _load_provenance_file_content(
         # property but contain its value directly.
         provenance_payload = provenance.get("payload", None)
     if not provenance_payload:
+        # PyPI Attestation.
+        provenance_payload = json_extract(provenance, ["envelope", "statement"], str)
+    if not provenance_payload:
         raise LoadIntotoAttestationError(
             'Cannot find the "payload" field in the decoded provenance.',
         )
@@ -96,14 +114,113 @@ def _load_provenance_file_content(
     try:
         json_payload = json.loads(decoded_payload)
     except (json.JSONDecodeError, TypeError) as error:
-        raise LoadIntotoAttestationError(
-            "Cannot deserialize the provenance payload as JSON.",
-        ) from error
+        raise LoadIntotoAttestationError("Cannot deserialize the provenance payload as JSON.") from error
 
     if not isinstance(json_payload, dict):
         raise LoadIntotoAttestationError("The provenance payload is not a JSON object.")
 
+    predicate_type = json_extract(json_payload, ["predicateType"], str)
+    if not predicate_type:
+        raise LoadIntotoAttestationError("The payload is missing a predicate type.")
+
+    predicate = json_extract(json_payload, ["predicate"], dict)
+    if predicate:
+        if predicate_type == "https://docs.pypi.org/attestations/publish/v1":
+            raise LoadIntotoAttestationError("PyPI attestation should not have a predicate.")
+        return json_payload
+
+    if predicate_type != "https://docs.pypi.org/attestations/publish/v1":
+        raise LoadIntotoAttestationError(f"The payload predicate type '{predicate_type}' requires a predicate.")
+
+    # For provenance without a predicate (e.g. PyPI), try to use the provenance certificate instead.
+    raw_certificate = json_extract(provenance, ["verification_material", "certificate"], str)
+    if not raw_certificate:
+        raise LoadIntotoAttestationError("Failed to extract certificate data.")
+    try:
+        decoded_certificate = base64.b64decode(raw_certificate)
+        certificate_predicate = get_x509_der_certificate_values(decoded_certificate)
+    except UnicodeDecodeError as error:
+        raise LoadIntotoAttestationError("Cannot decode the payload.") from error
+    except ValueError as error:
+        logger.debug(error)
+        raise LoadIntotoAttestationError("Error parsing certificate.") from error
+
+    json_payload["predicate"] = certificate_predicate.build_predicate()
     return json_payload
+
+
+def get_x509_der_certificate_values(x509_der_certificate: bytes) -> PyPICertificatePredicate:
+    """Retrieve the values of interest from an x509 certificate in the form of a predicate.
+
+    The passed certificate should be following the DER specification.
+    See https://peps.python.org/pep-0740/#provenance-objects.
+
+
+    Parameters
+    ----------
+    x509_der_certificate: bytes
+        The certificate bytes.
+
+    Returns
+    -------
+    PyPICertificatePredicate
+        A predicate created from the extracted values.
+
+    Raises
+    ------
+    ValueError
+        If the values could not be extracted.
+
+    """
+    certificate = x509.load_der_x509_certificate(x509_der_certificate)
+    certificate_claims = {}
+    try:
+        extensions = certificate.extensions
+    except (DuplicateExtension, UnsupportedGeneralNameType) as error:
+        raise ValueError("Certificate extension error:") from error
+
+    for extension in extensions:
+        if extension.oid.dotted_string not in _OID_IDS:
+            continue
+
+        # These extensions should be of the UnrecognizedExtension type.
+        # See: https://cryptography.io/en/latest/x509/reference/#cryptography.x509.UnrecognizedExtension
+        claim_name = _OID_IDS[extension.oid.dotted_string]
+
+        # Values are DER encoded UTF-8 strings. Removing the first two bytes seems to be sufficient.
+        value: str = extension.value.value[2:].decode("UTF-8")
+        if claim_name == "source_digest" and len(value) != 40:
+            # Expect a 40 character hex value.
+            raise ValueError(f"Digest is not 40 characters long: {value}. Original: {extension.value.value}")
+        if claim_name != "source_digest" and not value.startswith("http"):
+            # Expect a URL with scheme.
+            raise ValueError(f"URL has invalid scheme: {value}. Original: {extension.value.value}")
+
+        # Accept value.
+        certificate_claims[claim_name] = value
+
+    # Expect all values to have been found.
+    if len(certificate_claims) != len(_OID_IDS):
+        raise ValueError(f"Missing certificate claim(s). Found {len(certificate_claims)} of {len(_OID_IDS)}")
+
+    # Apply final formatting.
+    workflow = certificate_claims["workflow"]
+    workflow = workflow.replace(certificate_claims["source_repo"] + "/", "")
+    if "@" in workflow:
+        workflow = workflow[: workflow.index("@")]
+    certificate_claims["workflow"] = workflow
+
+    if "/attempts" in certificate_claims["invocation"]:
+        certificate_claims["invocation"] = certificate_claims["invocation"][
+            : certificate_claims["invocation"].index("/attempts")
+        ]
+
+    return PyPICertificatePredicate(
+        certificate_claims["source_repo"],
+        certificate_claims["source_digest"],
+        certificate_claims["workflow"],
+        certificate_claims["invocation"],
+    )
 
 
 def load_provenance_file(filepath: str) -> dict[str, JsonType]:

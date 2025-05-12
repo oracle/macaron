@@ -1,11 +1,14 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Fixtures for tests."""
+import os
+import urllib.parse
 from pathlib import Path
 from typing import Any, NoReturn
 
 import pytest
+from pytest_httpserver import HTTPServer
 
 import macaron
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
@@ -459,3 +462,32 @@ def build_github_actions_call_graph_for_commands(commands: list[str]) -> CallGra
     )
 
     return gh_cg
+
+
+@pytest.fixture(name="deps_dev_service_mock")
+def deps_dev_service_mock_(httpserver: HTTPServer, tmp_path: Path) -> dict:
+    """Create the mocked deps.dev service."""
+    api_endpoint = "v999"
+    purl_endpoint = "purl"
+    base_url_parsed = urllib.parse.urlparse(httpserver.url_for(""))
+    config = f"""
+    [deps_dev]
+    url_netloc = {base_url_parsed.netloc}
+    url_scheme = {base_url_parsed.scheme}
+    api_endpoint = {api_endpoint}
+    purl_endpoint = {purl_endpoint}
+    """
+    user_config_path = os.path.join(tmp_path, "config.ini")
+    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
+        user_config_file.write(config)
+    # We don't have to worry about modifying the ``defaults`` object causing test
+    # pollution here, since we reload the ``defaults`` object before every test with the
+    # ``setup_test`` fixture.
+    load_defaults(user_config_path)
+    return {
+        "api": api_endpoint,
+        "purl": purl_endpoint,
+        "base_hostname": base_url_parsed.hostname,
+        "base_scheme": base_url_parsed.scheme,
+        "base_netloc": base_url_parsed.netloc,
+    }
