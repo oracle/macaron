@@ -99,10 +99,6 @@ def _load_provenance_file_content(
         # property but contain its value directly.
         provenance_payload = provenance.get("payload", None)
     if not provenance_payload:
-        # GitHub Attestation.
-        # TODO Check if old method (above) actually works.
-        provenance_payload = json_extract(provenance, ["bundle", "dsseEnvelope", "payload"], str)
-    if not provenance_payload:
         # PyPI Attestation.
         provenance_payload = json_extract(provenance, ["envelope", "statement"], str)
     if not provenance_payload:
