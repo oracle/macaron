@@ -408,6 +408,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
     {problog_result_access} :- trigger(malware_high_confidence_4).
+    {problog_result_access} :- trigger(malware_high_confidence_5).
     {problog_result_access} :- trigger(malware_medium_confidence_2).
     {problog_result_access} :- trigger(malware_medium_confidence_1).
     query({problog_result_access}).
