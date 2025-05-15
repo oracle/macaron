@@ -30,6 +30,7 @@ repos:
   - id: isort
     name: Sort import statements
     args: [--settings-path, pyproject.toml]
+    exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
 
 # Add Black code formatters.
 - repo: https://github.com/ambv/black
@@ -38,6 +39,7 @@ repos:
   - id: black
     name: Format code
     args: [--config, pyproject.toml]
+    exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
 - repo: https://github.com/asottile/blacken-docs
   rev: 1.19.1
   hooks:
@@ -65,6 +67,7 @@ repos:
     files: ^src/macaron/|^tests/
     types: [text, python]
     additional_dependencies: [flake8-bugbear==22.10.27, flake8-builtins==2.0.1, flake8-comprehensions==3.10.1, flake8-docstrings==1.6.0, flake8-mutable==1.2.0, flake8-noqa==1.4.0, flake8-pytest-style==1.6.0, flake8-rst-docstrings==0.3.0, pep8-naming==0.13.2]
+    exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
     args: [--config, .flake8]
 
 # Check GitHub Actions workflow files.
@@ -82,6 +85,7 @@ repos:
     entry: pylint
     language: python
     files: ^src/macaron/|^tests/
+    exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
     types: [text, python]
     args: [--rcfile, pyproject.toml]
 
@@ -94,6 +98,7 @@ repos:
     language: python
     files: ^src/macaron/|^tests/
     types: [text, python]
+    exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
     args: [--show-traceback, --config-file, pyproject.toml]
 
 # Check for potential security issues.
@@ -106,6 +111,7 @@ repos:
     files: ^src/macaron/|^tests/
     types: [text, python]
     additional_dependencies: ['bandit[toml]']
+    exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
 
 # Enable a whole bunch of useful helper hooks, too.
 # See https://pre-commit.com/hooks.html for more hooks.
@@ -196,6 +202,18 @@ repos:
     language: system
     always_run: true
     pass_filenames: false
+
+# Checks that tests/malware_analyzer/pypi/resources/sourcecode_samples files do not have executable permissions
+# This is another measure to make sure the files can't be accidentally executed
+- repo: local
+  hooks:
+  - id: sourcecode-sample-permissions
+    name: Sourcecode sample executable permissions checker
+    entry: scripts/dev_scripts/samples_permissions_checker.sh
+    language: system
+    always_run: true
+    pass_filenames: false
+
 
 # A linter for Golang
 - repo: https://github.com/golangci/golangci-lint
