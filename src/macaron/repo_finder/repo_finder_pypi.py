@@ -61,7 +61,7 @@ def find_repo(
             if not isinstance(existing_asset, PyPIPackageJsonAsset):
                 continue
 
-            if existing_asset.component_name == purl.name and existing_asset.component_version == purl.version:
+            if existing_asset.component_name == purl.name:
                 pypi_asset = existing_asset
                 from_metadata = True
                 break
