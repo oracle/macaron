@@ -55,6 +55,12 @@ class DepsDevRepoFinder(BaseRepoFinder):
         tuple[str, RepoFinderOutcome] :
             A tuple of the found URL (or an empty string), and the outcome of the Repo Finder.
         """
+        if not purl.version:
+            latest_purl, outcome = self.get_latest_version(purl)
+            if not latest_purl:
+                return "", outcome
+            purl = latest_purl
+
         try:
             json_data = DepsDevService.get_package_info(str(purl))
         except APIAccessError:
