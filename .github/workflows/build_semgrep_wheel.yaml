@@ -48,6 +48,6 @@ jobs:
         cd wheels
         WHEEL=$(find . -type f -name 'semgrep-*manylinux*.whl')
         echo "FROM scratch
-        COPY ${WHEEL} /semgrep_wheel.whl" >> Dockerfile.semgrep
+        COPY ${WHEEL} /" >> Dockerfile.semgrep
         docker build -t ghcr.io/oracle/macaron-deps:latest -f Dockerfile.semgrep .
         docker push ghcr.io/oracle/macaron-deps:latest
