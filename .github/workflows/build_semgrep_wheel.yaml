@@ -1,6 +1,9 @@
 # Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
+# This is a manually-triggered workflow to build the minimal macaron dependencies image that stores the built-from-source
+# Semgrep wheel file. Note that this workflow DOES push the built image.
+
 name: Build Semgrep Wheel Artifact
 
 on: workflow_dispatch
@@ -48,6 +51,6 @@ jobs:
         cd wheels
         WHEEL=$(find . -type f -name 'semgrep-*manylinux*.whl')
         echo "FROM scratch
-        COPY ${WHEEL} /semgrep_wheel.whl" >> Dockerfile.semgrep
+        COPY ${WHEEL} /" >> Dockerfile.semgrep
         docker build -t ghcr.io/oracle/macaron-deps:latest -f Dockerfile.semgrep .
         docker push ghcr.io/oracle/macaron-deps:latest

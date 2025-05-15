@@ -1,14 +1,17 @@
 # Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-# This Dockerfile is for building the final production image. It's based on ghcr.io/oracle/macaron-base.
-# For the build, two files will be copied into the image:
+# This Dockerfile is for building the final production image. It's based on ghcr.io/oracle/macaron-base and ghcr.io/oracle/maracon-deps.
+# For the build, three files will be copied into the image:
 #   - Macaron wheel file (its path must be provided to the build argument WHEEL_PATH)
+#   - Macaron dependency files, copied from the macaron-deps image.
 #   - user.sh for the entrypoint of the final image.
 # For example, using Docker, we could build the image using:
 #   docker build --build-arg WHEEL_PATH=<path_to_wheel> -t ghcr.io/oracle/macaron -f docker/Dockerfile.final ./
 # Note that the local machine must login to ghcr.io so that Docker could pull the ghcr.io/oracle/macaron-base
 # image for this build.
+
+FROM ghcr.io/oracle/macaron-deps:latest@sha256:99526baf6596c4c3f24e4caa2b59afaf7f7c26d633ad3113ca24ba43dfad3f0f as deps_stage
 
 FROM ghcr.io/oracle/macaron-base:latest@sha256:79b3b8b03cb9b6a124c6450f4baa58f96f83ee9e37f572c88a97597b35c7bc51
 
@@ -34,11 +37,17 @@ ARG WHEEL_PATH
 # the warning of not having correct ownership of /home/macaron is not raised.
 USER macaron:macaron
 COPY --chown=macaron:macaron $WHEEL_PATH $HOME/dist/
+# Currently, the only dependency stored in the minimal image is the wheel for Semgrep, which we copy here. Since the
+# Macaron project dependencies lists Semgrep as a python dependency, we uninstall it first before using our wheel here
+# to install a trusted built-from-source version.
+COPY --chown=macaron:macaron --from=deps_stage /semgrep-*manylinux*.whl $HOME/dist/
 RUN : \
     && python3 -m venv $HOME/.venv \
     && . .venv/bin/activate \
     && pip install --no-compile --no-cache-dir --upgrade pip setuptools \
     && find $HOME/dist -depth \( -type f \( -name "macaron-*.whl" \) \) -exec pip install --no-compile --no-cache-dir '{}' \; \
+    && pip uninstall semgrep \
+    && find $HOME/dist -depth \( -type f \( -name "semgrep-*.whl" \) \) -exec pip install --no-compile --no-cache-dir '{}' \; \
     && rm -rf $HOME/dist \
     && deactivate
 
