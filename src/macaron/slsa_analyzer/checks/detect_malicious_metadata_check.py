@@ -20,13 +20,17 @@ from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult,
 from macaron.malware_analyzer.pypi_heuristics.metadata.anomalous_version import AnomalousVersionAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.fake_email import FakeEmailAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.similar_projects import SimilarProjectAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.sourcecode.white_spaces import WhiteSpacesAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
@@ -332,6 +336,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         SuspiciousSetupAnalyzer,
         WheelAbsenceAnalyzer,
         AnomalousVersionAnalyzer,
+        TyposquattingPresenceAnalyzer,
+        FakeEmailAnalyzer,
+        WhiteSpacesAnalyzer,
+        SimilarProjectAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
@@ -381,6 +389,17 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.CLOSER_RELEASE_JOIN_DATE.value}),
         forceSetup.
 
+    % Package released with a name similar to a popular package.
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_4) :-
+        quickUndetailed, forceSetup, failed({Heuristics.TYPOSQUATTING_PRESENCE.value}).
+
+    % Package released with a lot of white spaces in one line, having similar folder structure with
+    % other packages from the same maintainer.
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_5) :-
+        failed({Heuristics.SIMILAR_PROJECTS.value}),
+        failed({Heuristics.WHITE_SPACES.value}),
+        forceSetup.
+
     % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
     % the same code.
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_1) :-
@@ -395,12 +414,19 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.ONE_RELEASE.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}).
 
+    % Package released with one or more suspicious email addresses from the maintainers .
+    {Confidence.HIGH.value}::trigger(malware_medium_confidence_3) :-
+        quickUndetailed, forceSetup, failed({Heuristics.FAKE_EMAIL.value}).
+
     % ----- Evaluation -----
 
     % Aggregate result
     {problog_result_access} :- trigger(malware_high_confidence_1).
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
+    {problog_result_access} :- trigger(malware_high_confidence_4).
+    {problog_result_access} :- trigger(malware_high_confidence_5).
+    {problog_result_access} :- trigger(malware_medium_confidence_3).
     {problog_result_access} :- trigger(malware_medium_confidence_2).
     {problog_result_access} :- trigger(malware_medium_confidence_1).
     query({problog_result_access}).
