@@ -101,7 +101,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         return False
 
     def analyze_source(
-        self, pypi_package_json: PyPIPackageJsonAsset, results: dict[Heuristics, HeuristicResult]
+        self, pypi_package_json: PyPIPackageJsonAsset, results: dict[Heuristics, HeuristicResult], force: bool = False
     ) -> tuple[HeuristicResult, dict[str, JsonType]]:
         """Analyze the source code of the package with a textual scan, looking for malicious code patterns.
 
@@ -112,6 +112,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         results: dict[Heuristics, HeuristicResult]
             Containing all heuristics' results (excluding this one), where the key is the heuristic and the value is the result
             associated with that heuristic.
+        force: bool
+            Forces sourcecode analysis to run regardless of heuristic results. Defaults to False.
 
         Returns
         -------
@@ -128,7 +130,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         logger.debug("Instantiating %s", PyPISourcecodeAnalyzer.__name__)
         analyzer = PyPISourcecodeAnalyzer()
 
-        if analyzer.depends_on and self._should_skip(results, analyzer.depends_on):
+        if not force and analyzer.depends_on and self._should_skip(results, analyzer.depends_on):
             return HeuristicResult.SKIP, {}
 
         try:
@@ -320,7 +322,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                         if ctx.dynamic_data["analyze_source"]:
                             try:
                                 sourcecode_result, sourcecode_detail_info = self.analyze_source(
-                                    pypi_package_json, heuristic_results
+                                    pypi_package_json, heuristic_results, force=ctx.dynamic_data["force_analyze_source"]
                                 )
                             except (HeuristicAnalyzerValueError, ConfigurationError):
                                 return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)

@@ -138,6 +138,7 @@ class Analyzer:
         provenance_payload: InTotoPayload | None = None,
         verify_provenance: bool = False,
         analyze_source: bool = False,
+        force_analyze_source: bool = False,
     ) -> int:
         """Run the analysis and write results to the output path.
 
@@ -158,6 +159,8 @@ class Analyzer:
             Enable provenance verification if True.
         analyze_source : bool
             When true, triggers source code analysis for PyPI packages. Defaults to False.
+        force_analyze_source : bool
+            When true, enforces running source code analysis regardless of other heuristic results. Defaults to False.
 
         Returns
         -------
@@ -192,6 +195,7 @@ class Analyzer:
                     provenance_payload=provenance_payload,
                     verify_provenance=verify_provenance,
                     analyze_source=analyze_source,
+                    force_analyze_source=force_analyze_source,
                 )
 
                 if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
@@ -311,6 +315,7 @@ class Analyzer:
         provenance_payload: InTotoPayload | None = None,
         verify_provenance: bool = False,
         analyze_source: bool = False,
+        force_analyze_source: bool = False,
     ) -> Record:
         """Run the checks for a single repository target.
 
@@ -331,6 +336,8 @@ class Analyzer:
             Enable provenance verification if True.
         analyze_source : bool
             When true, triggers source code analysis for PyPI packages. Defaults to False.
+        force_analyze_source : bool
+            When true, enforces running source code analysis regardless of other heuristic results. Defaults to False.
 
         Returns
         -------
@@ -542,6 +549,7 @@ class Analyzer:
             )
 
         analyze_ctx.dynamic_data["analyze_source"] = analyze_source
+        analyze_ctx.dynamic_data["force_analyze_source"] = force_analyze_source
 
         if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
             local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
