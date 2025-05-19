@@ -481,7 +481,7 @@ def main(argv: list[str] | None = None) -> None:
         required=False,
         action="store_true",
         help=(
-            "EXPERIMENTAL. For improved malware detection, analyze the source code of the"
+            "For improved malware detection, analyze the source code of the"
             + " (PyPI) package using a textual scan and dataflow analysis."
         ),
     )

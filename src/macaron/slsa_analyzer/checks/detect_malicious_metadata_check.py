@@ -316,7 +316,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                             confidence = Confidence.HIGH
                             result_type = CheckResultType.PASSED
 
-                        # experimental sourcecode analysis feature
+                        # optional sourcecode analysis feature
                         if ctx.dynamic_data["analyze_source"]:
                             try:
                                 sourcecode_result, sourcecode_detail_info = self.analyze_source(
