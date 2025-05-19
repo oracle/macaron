@@ -731,7 +731,7 @@ class PyPIPackageJsonAsset:
             artifact_hash = json_extract(self.package_json, ["urls", 0, "digests", "sha256"], str)
         else:
             artifact_hash = json_extract(
-                self.package_json, ["releases", self.component_version, "digests", "sha256"], str
+                self.package_json, ["releases", self.component_version, 0, "digests", "sha256"], str
             )
         logger.debug("Found sha256 hash: %s", artifact_hash)
         return artifact_hash
