@@ -383,6 +383,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.CLOSER_RELEASE_JOIN_DATE.value}),
         forceSetup.
 
+    % Package released with a name similar to a popular package.
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_4) :-
+        quickUndetailed, forceSetup, failed({Heuristics.TYPOSQUATTING_PRESENCE.value}).
+
     % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
     % the same code.
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_1) :-
@@ -397,10 +401,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.ONE_RELEASE.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}).
 
-    % Package released with a name similar to a popular package.
-    {Confidence.HIGH.value}::trigger(malware_high_confidence_4) :-
-        quickUndetailed, forceSetup, failed({Heuristics.TYPOSQUATTING_PRESENCE.value}).
-
     % ----- Evaluation -----
 
     % Aggregate result
@@ -408,7 +408,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
     {problog_result_access} :- trigger(malware_high_confidence_4).
-    {problog_result_access} :- trigger(malware_high_confidence_5).
     {problog_result_access} :- trigger(malware_medium_confidence_2).
     {problog_result_access} :- trigger(malware_medium_confidence_1).
     query({problog_result_access}).
