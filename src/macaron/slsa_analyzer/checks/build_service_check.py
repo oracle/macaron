@@ -75,14 +75,14 @@ class BuildServiceCheck(BaseCheck):
         """Initiate the BuildServiceCheck instance."""
         check_id = "mcn_build_service_1"
         description = "Check if the target repo has a valid build service."
-        depends_on: list[tuple[str, CheckResultType]] = [("mcn_build_as_code_1", CheckResultType.FAILED)]
+        depends_on: list[tuple[str, CheckResultType]] = [("mcn_version_control_system_1", CheckResultType.PASSED)]
         eval_reqs = [ReqName.BUILD_SERVICE]
         super().__init__(
             check_id=check_id,
             description=description,
             depends_on=depends_on,
             eval_reqs=eval_reqs,
-            result_on_skip=CheckResultType.PASSED,
+            result_on_skip=CheckResultType.FAILED,
         )
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
