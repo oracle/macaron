@@ -55,6 +55,12 @@ class DepsDevRepoFinder(BaseRepoFinder):
         tuple[str, RepoFinderOutcome] :
             A tuple of the found URL (or an empty string), and the outcome of the Repo Finder.
         """
+        if not purl.version:
+            latest_purl, outcome = self.get_latest_version(purl)
+            if not latest_purl:
+                return "", outcome
+            purl = latest_purl
+
         try:
             json_data = DepsDevService.get_package_info(str(purl))
         except APIAccessError:
@@ -183,7 +189,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         # Example of a PURL endpoint for deps.dev with '/' encoded as '%2F':
         # https://api.deps.dev/v3alpha/purl/pkg:npm%2F@sigstore%2Fmock@0.7.5
-        purl_endpoint = DepsDevService().get_purl_endpoint(purl)
+        purl_endpoint = DepsDevService.get_purl_endpoint(purl)
         target_url = urllib.parse.urlunsplit(purl_endpoint)
 
         result = send_get_http(target_url, headers={})
