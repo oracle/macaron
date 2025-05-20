@@ -29,7 +29,7 @@ RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
         # heuristic, a false negative has been introduced. Note that if the unit test were allowed to access the OSV
         # knowledge base, it would report the package as malware. However, we intentionally block unit tests
         # from reaching the network.
-        ("pkg:pypi/zlibxjson", CheckResultType.PASSED),
+        ("pkg:pypi/zlibxjson", CheckResultType.UNKNOWN),
         ("pkg:pypi/test", CheckResultType.UNKNOWN),
         ("pkg:maven:test/test", CheckResultType.UNKNOWN),
     ],
