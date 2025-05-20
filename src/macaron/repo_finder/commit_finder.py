@@ -469,6 +469,20 @@ def determine_optional_suffix_index(version: str, parts: list[str]) -> int | Non
     - 3.1.test.2.M5 -> 'M5' becomes optional.
     Parts that come after a change in seperator are also flagged as optional.
     - 2.2-3 -> '3' becomes optional.
+
+    Parameters
+    ----------
+    version: str
+        The version string of the software component.
+    parts: list[str]
+        The non-separator parts of the version produced by a prior split operation.
+
+    Returns
+    -------
+    int | None
+        The index of the first optional part, or None if not found. This is a zero-based index to match the parts
+        parameter, with the caveat that a value of zero cannot be returned due to the behaviour of the algorithm.
+        In other words, there must always be at least one non-optional part.
     """
     optional_start_index = None
     separators = _split_separators(version)
