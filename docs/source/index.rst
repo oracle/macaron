@@ -11,15 +11,11 @@
 Macaron documentation
 =====================
 
-Software supply-chain attacks are becoming more prevalent as the systems get more complex, particularly with respect to the use of open-source
-third-party code. Attacks include stealing credentials, tampering with the
-code, tampering with the code repository, and tampering with the build system.
-It is crucial to have guarantees that the third-party code we rely on is the
-code we expect.
+Macaron is an open-source software supply chain security tool from Oracle Labs to detect and prevent supply chain attacks across ecosystems like Python and Java. It automatically analyzes software packages (e.g., from PyPI or Maven Central) to detect malicious behavior and insecure DevOps practices. Macaron has reported over **225 malicious PyPI packages**, all confirmed and removed by the PyPI security team.
 
-To tackle these problems, `Supply-chain Levels for Software Artifacts (SLSA or "salsa") <https://slsa.dev>`_ is created to improve the integrity and
-protection of the software supply-chain. Macaron can analyze a software
-repository to determine its SLSA level and provide supply-chain transparency of the build process.
+Macaron follows the recommendations of the `SLSA (Supply chain Levels for Software Artifacts) <https://slsa.dev>`_ framework. It features a **flexible and extensible policy engine** that allows users to define and compose custom rules tailored to their CI/CD environments and security goals.
+
+It also supports **attestation verification**, **reproducible builds**, and **malicious artifact detection**, making it a valuable tool for securing the modern software supply chain.
 
 --------
 Overview

@@ -4,17 +4,42 @@
 
 ![Macaron](./docs/source/assets/macaron.svg)
 
-Macaron is a supply chain security analysis tool from [Oracle Labs](https://labs.oracle.com/pls/apex/r/labs/labs/intro), which focuses on the build integrity of an artifact and the artifact dependencies. It is based on the [Supply chain Levels for Software Artifacts (SLSA)](https://slsa.dev/) specification, which aims at preventing some of the software supply chain attacks as the systems get more complex, especially with respect to the use of open-source third-party code in applications. Attacks include stealing credentials, injecting malicious code etc., and it is critical to have security assurance on the third-party code to guarantee that the integrity of the code has not been compromised.
+[Full Documentation](https://oracle.github.io/macaron/index.html) | [Tutorials](https://oracle.github.io/macaron/pages/tutorials/index.html) | [Videos](https://www.youtube.com/watch?v=ebo0kGKP6bw) | [Papers](#publications) | [Presentations](#presentations)
 
-Macaron uses [SLSA requirements specifications](https://slsa.dev/spec/v1.0/levels) to define concrete rules for protecting software integrity that can be checked for compliance requirements automatically. Macaron provides a customizable checker platform that makes it easy to define checks that depend on each other. This is particularly useful for implementing checks for SLSA levels. In addition, Macaron also checks a user-specified policy for a software component to detect unexpected behavior in the build process. We currently support the following build tools:
 
-* Maven and Gradle Java build systems
-* Pip or Poetry package managers for Python
-* npm and Yarn for JavaScript
-* Go
-* Docker
+**Macaron** is a software supply chain security analysis tool from Oracle Labs focused on verifying the **build integrity** of artifacts and their dependencies. It helps developers, security teams, and researchers ensure that packages are built as expected and have not been tampered with.
 
-For the full list of supported technologies, such as CI services, registries, and provenance types see [this page](https://oracle.github.io/macaron/pages/supported_technologies/index.html). Macaron is a work-in-progress project. We plan to support more build systems and technologies in the future.
+## Key Capabilities
+
+Macaron supports:
+- **Attestation verification** for third-party and internal artifacts across major ecosystems like PyPI, npm, and Go, enabling automated provenance validation ([tutorial](https://oracle.github.io/macaron/pages/tutorials/npm_provenance.html)).
+- **Detection of malicious or suspicious packages** in popular ecosystems using customizable heuristics ([tutorial](https://oracle.github.io/macaron/pages/tutorials/detect_malicious_package.html), [blog post](https://blogs.oracle.com/developers/post/detecting-malicious-behavior-in-software-supply-chain-part-1)).
+- **Detection of vulnerable GitHub Actions**, which is increasingly important due to recent real-world incidents like [tj-actions/changed-files](https://www.cve.org/CVERecord?id=CVE-2025-30066) ([tutorial](https://oracle.github.io/macaron/pages/tutorials/detect_vulnerable_github_actions.html)).
+- **Reproducible build** through static analysis of build scripts. Macaron enables **rebuilding packages from source** and **comparing to released artifacts** to detect discrepancies, and therefore compromised workflows or artifacts ([paper](https://arxiv.org/pdf/2410.08427)).
+- **Accurate repository and commit detection** for released artifacts, improving traceability and trust ([tutorial](https://oracle.github.io/macaron/pages/tutorials/source_finder.html)).
+
+## Based on SLSA
+
+Macaron follows the recommendations of the [SLSA (Supply chain Levels for Software Artifacts)](https://slsa.dev) framework. It offers a flexible, extensible policy engine for checking compliance with SLSA levels. Users can define and compose custom rules tailored to their CI/CD practices and security needs.
+
+## Supported Build Tools
+
+Macaron currently supports the following build tools:
+- **Java**: Maven, Gradle  
+- **Python**: pip, Poetry  
+- **JavaScript**: npm, Yarn  
+- **Go**
+- **Docker**
+
+## Adoption
+
+Macaron is integrated into the [Graal Development Kit (GDK)](https://graal.cloud/gdk/), where it is used to generate **Verification Summary Attestations** for each artifact. This helps GDK users validate and trust the integrity of their dependencies ([tutorial](https://oracle.github.io/macaron/pages/tutorials/use_verification_summary_attestation.html), [blog post](https://blogs.oracle.com/java/post/announcing-graal-development-kit-for-micronaut-460)).
+
+## Learn More
+
+For a complete list of supported technologies, CI providers, and provenance formats, see the [documentation](https://oracle.github.io/macaron/pages/supported_technologies/index.html).
+
+Macaron is actively evolving, with ongoing work to support more ecosystems and enhance supply chain security capabilities.
 
 ## Table of Contents
 
@@ -41,28 +66,24 @@ After cloning a repository, Macaron parses the CI configuration files and bash s
 
 To learn how to define your own checks, see the steps in the [checks documentation](/src/macaron/slsa_analyzer/checks/README.md).
 
+## Presentations
+
+* [Securing the Software Supply Chain with Macaron: A Comprehensive Tool for Analysis and Protection](https://labs.oracle.com/pls/apex/f?p=94065:10:15059068980668:11351), Supply Chain Security Summit 2025.
+
+* [Towards safeguarding software components from supply chain attacks](https://labs.oracle.com/pls/apex/f?p=94065:10:117744701900:10830), Chalmers Security & Privacy Lab Seminars 2024.
+
 ## Publications
 
-* Behnaz Hassanshahi, Trong Nhan Mai, Alistair Michael, Benjamin Selwyn-Smith, Sophie Bates, and Padmanabhan Krishnan: [Macaron: A Logic-based Framework for Software Supply Chain Security Assurance](https://dl.acm.org/doi/abs/10.1145/3605770.3625213). SCORED 2023. Best paper award :trophy:
-  ```tex
-  @inproceedings{10.1145/3605770.3625213,
-    author = {Hassanshahi, Behnaz and Mai, Trong Nhan and Michael, Alistair and Selwyn-Smith, Benjamin and Bates, Sophie and Krishnan, Padmanabhan},
-    title = {Macaron: A Logic-Based Framework for Software Supply Chain Security Assurance},
-    year = {2023},
-    isbn = {9798400702631},
-    publisher = {Association for Computing Machinery},
-    url = {https://doi.org/10.1145/3605770.3625213},
-    doi = {10.1145/3605770.3625213},
-    booktitle = {Proceedings of the 2023 Workshop on Software Supply Chain Offensive Research and Ecosystem Defenses},
-    pages = {29–37},
-    series = {SCORED'23}
-  }
-  ```
+* Behnaz Hassanshahi, Trong Nhan Mai, Alistair Michael, Benjamin Selwyn-Smith, Sophie Bates, and Padmanabhan Krishnan: [Macaron: A Logic-based Framework for Software Supply Chain Security Assurance](https://dl.acm.org/doi/abs/10.1145/3605770.3625213), SCORED 2023. Best paper award :trophy:
 
+* Ridwan Shariffdeen, Behnaz Hassanshahi, Martin Mirchev, Ali El Husseini, Abhik Roychoudhury [Detecting Python Malware in the Software Supply Chain with Program Analysis](https://labs.oracle.com/pls/apex/f?p=94065:10:11591088449483:11569), ICSE-SEIP 2025.
 
-## Generating SLSA provenances for Macaron itself
+* Jens Dietrich, Tim White, Behnaz Hassanshahi, Paddy Krishnan [Levels of Binary Equivalence for the Comparison of Binaries
+from Alternative Builds](https://arxiv.org/pdf/2410.08427), pre-print on arXiv.
 
-We have integrated [SLSA provenance generation](https://github.com/slsa-framework/slsa-github-generator) for our Docker image and release artifacts. However, due to a strict policy regarding the use of third-party GitHub Actions, we cannot generate the provenances in this repository yet until [this issue](https://github.com/slsa-framework/slsa-github-generator/issues/2204) is resolved.
+* Jens Dietrich, Tim White, Valerio Terragni, Behnaz Hassanshahi [Towards Cross-Build Differential Testing](https://labs.oracle.com/pls/apex/f?p=94065:10:11591088449483:11549), ICST 2025.
+
+* Jens Dietrich, Tim White, Mohammad Mahdi Abdollahpour, Elliott Wen, Behnaz Hassanshahi [BinEq-A Benchmark of Compiled Java Programs to Assess Alternative Builds](https://dl.acm.org/doi/10.1145/3689944.3696162), SCORED 2024.
 
 ## Security
 
