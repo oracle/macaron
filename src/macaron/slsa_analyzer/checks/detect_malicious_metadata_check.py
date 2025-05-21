@@ -27,6 +27,7 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import 
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.sourcecode.white_spaces import WhiteSpacesAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
@@ -332,6 +333,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         SuspiciousSetupAnalyzer,
         WheelAbsenceAnalyzer,
         AnomalousVersionAnalyzer,
+        WhiteSpacesAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
@@ -381,6 +383,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.CLOSER_RELEASE_JOIN_DATE.value}),
         forceSetup.
 
+    % Package released with excessive whitespace in the code .
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_4) :-
+        quickUndetailed, forceSetup, failed({Heuristics.WHITE_SPACES.value}).
+
     % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
     % the same code.
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_1) :-
@@ -401,6 +407,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {problog_result_access} :- trigger(malware_high_confidence_1).
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
+    {problog_result_access} :- trigger(malware_high_confidence_4).
     {problog_result_access} :- trigger(malware_medium_confidence_2).
     {problog_result_access} :- trigger(malware_medium_confidence_1).
     query({problog_result_access}).
