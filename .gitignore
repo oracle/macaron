@@ -181,3 +181,4 @@ docs/_build
 bin/
 requirements.txt
 .macaron_env_file
+.DS_Store
