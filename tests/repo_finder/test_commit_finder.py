@@ -16,7 +16,7 @@ from packageurl import PackageURL
 from pydriller.git import Git
 
 from macaron.repo_finder import commit_finder
-from macaron.repo_finder.commit_finder import AbstractPurlType
+from macaron.repo_finder.commit_finder import AbstractPurlType, determine_optional_suffix_index
 from macaron.repo_finder.repo_finder_enums import CommitFinderInfo
 from tests.slsa_analyzer.mock_git_utils import commit_files, initiate_repo
 
@@ -244,6 +244,20 @@ def test_commit_finder_tag_no_commit(mocked_repo: Git) -> None:
     match, outcome = commit_finder.find_commit(mocked_repo, PackageURL.from_string("pkg:maven/apache/maven@TEST"))
     assert not match
     assert outcome == CommitFinderInfo.NO_TAGS_WITH_COMMITS
+
+
+@pytest.mark.parametrize(
+    ("version", "parts", "expected"),
+    [
+        ("1.2.RELEASE", ["1", "2", "RELEASE"], 2),
+        ("3.1.test.2.M5", ["3", "1", "test", "2", "M5"], 4),
+        ("2.2-3", ["2", "2", "3"], 2),
+        ("5.4.3_test.2.1", ["5", "4", "3", "test", "2", "1"], 3),
+    ],
+)
+def test_commit_finder_optional_suffixes(version: str, parts: list, expected: int) -> None:
+    """Test the optional suffix function."""
+    assert determine_optional_suffix_index(version, parts) == expected
 
 
 @given(text())
