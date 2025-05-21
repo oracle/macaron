@@ -164,7 +164,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
         )
 
     @staticmethod
-    def get_attestation(purl: PackageURL) -> tuple[dict | None, bool]:
+    def get_attestation(purl: PackageURL) -> tuple[dict | None, str | None, bool]:
         """Retrieve the attestation associated with the passed PURL.
 
         Parameters
@@ -174,17 +174,18 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         Returns
         -------
-        tuple[dict | None, bool]
-            The attestation, or None if not found, and a flag for whether it is verified.
+        tuple[dict | None, str | None, bool]
+            The attestation, or None if not found, the url of the attestation asset,
+            and a flag for whether the attestation is verified.
         """
         if purl.type != "pypi":
             logger.debug("PURL type (%s) attestation not yet supported via deps.dev.")
-            return None, False
+            return None, None, False
 
         if not purl.version:
             latest_purl, _ = DepsDevRepoFinder.get_latest_version(purl)
             if not latest_purl:
-                return None, False
+                return None, None, False
             purl = latest_purl
 
         # Example of a PURL endpoint for deps.dev with '/' encoded as '%2F':
@@ -194,7 +195,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
 
         result = send_get_http(target_url, headers={})
         if not result:
-            return None, False
+            return None, None, False
 
         attestation_keys = ["attestations"]
         if "version" in result:
@@ -203,21 +204,22 @@ class DepsDevRepoFinder(BaseRepoFinder):
         result_attestations = json_extract(result, attestation_keys, list)
         if not result_attestations:
             logger.debug("No attestations in result.")
-            return None, False
+            return None, None, False
         if len(result_attestations) > 1:
             logger.debug("More than one attestation in result: %s", len(result_attestations))
 
         attestation_url = json_extract(result_attestations, [0, "url"], str)
         if not attestation_url:
             logger.debug("No attestation reported for %s", purl)
-            return None, False
+            return None, None, False
 
         attestation_data = send_get_http(attestation_url, headers={})
         if not attestation_data:
-            return None, False
+            return None, None, False
 
         return (
             PyPIRegistry().extract_attestation(attestation_data),
+            attestation_url,
             json_extract(result_attestations, [0, "verified"], bool) or False,
         )
 

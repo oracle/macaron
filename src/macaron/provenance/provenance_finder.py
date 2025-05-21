@@ -294,7 +294,7 @@ def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[
     return provenances[:1]
 
 
-def find_pypi_provenance(purl: PackageURL) -> list[InTotoPayload]:
+def find_pypi_provenance(purl: PackageURL) -> list[ProvenanceAsset]:
     """Find and download the PyPI based provenance for the passed PURL.
 
     Parameters
@@ -304,11 +304,11 @@ def find_pypi_provenance(purl: PackageURL) -> list[InTotoPayload]:
 
     Returns
     -------
-    list[InTotoPayload] | None
-        The provenance payload if found, or an empty list otherwise.
+    list[ProvenanceAsset]
+        The provenance assets found, or an empty list otherwise.
     """
-    attestation, verified = DepsDevRepoFinder.get_attestation(purl)
-    if not attestation:
+    attestation, url, verified = DepsDevRepoFinder.get_attestation(purl)
+    if not (attestation and url):
         return []
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -319,7 +319,7 @@ def find_pypi_provenance(purl: PackageURL) -> list[InTotoPayload]:
         try:
             payload = load_provenance_payload(file_name)
             payload.verified = verified
-            return [payload]
+            return [ProvenanceAsset(payload, purl.name, url)]
         except LoadIntotoAttestationError as load_error:
             logger.error("Error while loading provenance: %s", load_error)
             return []
