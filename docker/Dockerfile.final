@@ -46,7 +46,7 @@ RUN : \
     && . .venv/bin/activate \
     && pip install --no-compile --no-cache-dir --upgrade pip setuptools \
     && find $HOME/dist -depth \( -type f \( -name "macaron-*.whl" \) \) -exec pip install --no-compile --no-cache-dir '{}' \; \
-    && pip uninstall semgrep \
+    && pip uninstall semgrep -y \
     && find $HOME/dist -depth \( -type f \( -name "semgrep-*.whl" \) \) -exec pip install --no-compile --no-cache-dir '{}' \; \
     && rm -rf $HOME/dist \
     && deactivate
