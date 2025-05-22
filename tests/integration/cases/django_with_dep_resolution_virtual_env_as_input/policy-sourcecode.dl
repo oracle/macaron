@@ -1,0 +1,10 @@
+/* Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("check_sourcecode_malware_analysis", component_id, "Checks malware analysis with sourcecode analysis.") :-
+    check_passed(component_id, "mcn_detect_malicious_metadata_1").
+
+apply_policy_to("check_sourcecode_malware_analysis", component_id) :-
+    is_component(component_id, "pkg:pypi/django@5.0.6").
