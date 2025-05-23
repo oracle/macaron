@@ -82,11 +82,7 @@ class ProvenanceAvailableCheck(BaseCheck):
 
         if not provenance_info or not provenance_info.provenance_payload or inferred:
             return CheckResultData(
-                result_tables=[
-                    ProvenanceAvailableFacts(
-                        confidence=Confidence.HIGH,
-                    )
-                ],
+                result_tables=[],
                 result_type=CheckResultType.FAILED,
             )
 
