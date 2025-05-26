@@ -19,8 +19,6 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-# TODO replace this check with the provenance verification check.
-
 
 class ProvenanceAvailableException(MacaronError):
     """When there is an error while checking if a provenance is available."""
