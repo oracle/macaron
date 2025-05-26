@@ -8,5 +8,7 @@ result=$(sqlite3 --json output/macaron.db "SELECT detect_malicious_metadata_chec
 	AND component.name = 'django' AND component.version = '5.0.6';" | jq -r ".[0].result | fromjson | .suspicious_patterns")
 
 if [ "$result" != "PASS" ]; then
-	echo "$result is not PASS" >&2
+	echo "ERROR: suspicious_patterns heuristic result $result is not PASS" >&2
+	exit 1
 fi
+exit 0

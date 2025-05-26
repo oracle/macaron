@@ -67,6 +67,10 @@ steps:
   options:
     policy: policy-all-pypi.dl
 # optional Semgrep sourcecode analysis
+- name: Clean up the database.
+  kind: shell
+  options:
+    cmd: rm -f output/macaron.db
 - name: Run macaron analyze with forced sourcecode analysis
   kind: analyze
   options:
