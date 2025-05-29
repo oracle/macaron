@@ -499,9 +499,6 @@ class Provenance(ORMBase):
     #: The release tag commit sha.
     release_commit_sha: Mapped[str] = mapped_column(String, nullable=True)
 
-    #: The release tag.
-    release_tag: Mapped[str] = mapped_column(String, nullable=True)
-
     #: The repository URL from the provenance.
     repository_url: Mapped[str] = mapped_column(String, nullable=True)
 
@@ -510,6 +507,12 @@ class Provenance(ORMBase):
 
     #: The provenance payload.
     provenance_payload: Mapped[InTotoPayload] = mapped_column(ProvenancePayload, nullable=False)
+
+    #: The name of the provenance asset.
+    provenance_asset_name: Mapped[str] = mapped_column(String, nullable=True)
+
+    #: The URL of the provenance asset.
+    provenance_asset_url: Mapped[str] = mapped_column(String, nullable=True)
 
     #: The verified status of the provenance.
     verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

@@ -165,7 +165,7 @@ def test_get_attestation_failures(
 
         httpserver.expect_request(target_url).respond_with_data(data)
 
-    result, _ = DepsDevRepoFinder().get_attestation(purl)
+    result, _, _ = DepsDevRepoFinder().get_attestation(purl)
     assert not result
 
 
@@ -195,6 +195,7 @@ def test_get_attestation_success(httpserver: HTTPServer, deps_dev_service_mock: 
     """
     data = data.replace("*replace_url*", attestation_url)
     httpserver.expect_request(target_url).respond_with_data(data)
-    result, verified = DepsDevRepoFinder().get_attestation(purl)
+    result, url, verified = DepsDevRepoFinder().get_attestation(purl)
     assert result
+    assert url == attestation_url
     assert verified

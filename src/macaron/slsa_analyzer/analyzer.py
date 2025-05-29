@@ -357,15 +357,17 @@ class Analyzer:
         package_registries_info = self._populate_package_registry_info()
 
         provenance_is_verified = False
+        provenance_asset = None
         if not provenance_payload and parsed_purl:
             # Try to find the provenance file for the parsed PURL.
             provenance_finder = ProvenanceFinder()
             provenances = provenance_finder.find_provenance(parsed_purl)
             if provenances:
-                provenance_payload = provenances[0]
+                provenance_asset = provenances[0]
+                provenance_payload = provenance_asset.payload
                 if provenance_payload.verified:
                     provenance_is_verified = True
-                elif verify_provenance:
+                if verify_provenance:
                     provenance_is_verified = provenance_verifier.verify_provenance(parsed_purl, provenances)
 
         # Try to extract the repository URL and commit digest from the Provenance, if it exists.
@@ -490,10 +492,11 @@ class Analyzer:
         if not provenance_payload:
             # Look for provenance using the CI.
             with tempfile.TemporaryDirectory() as temp_dir:
-                provenance_payload = find_provenance_from_ci(analyze_ctx, git_obj, temp_dir)
+                provenance_asset = find_provenance_from_ci(analyze_ctx, git_obj, temp_dir)
                 # If found, validate analysis target against new provenance.
-                if provenance_payload:
+                if provenance_asset:
                     # If repository URL was not provided as input, check the one found during analysis.
+                    provenance_payload = provenance_asset.payload
                     if not repo_path_input and component.repository:
                         repo_path_input = component.repository.remote_path
                     provenance_repo_url = provenance_commit_digest = None
@@ -538,7 +541,9 @@ class Analyzer:
                 provenance_payload=provenance_payload,
                 slsa_level=slsa_level,
                 slsa_version=slsa_version,
-                # TODO Add release tag, release digest.
+                provenance_asset_name=provenance_asset.name if provenance_asset else None,
+                provenance_asset_url=provenance_asset.url if provenance_asset else None,
+                # TODO Add release digest.
             )
 
         analyze_ctx.dynamic_data["validate_malware"] = validate_malware
