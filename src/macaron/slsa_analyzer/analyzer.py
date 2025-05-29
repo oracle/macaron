@@ -136,8 +136,9 @@ class Analyzer:
         sbom_path: str = "",
         deps_depth: int = 0,
         provenance_payload: InTotoPayload | None = None,
-        validate_malware: bool = False,
         verify_provenance: bool = False,
+        analyze_source: bool = False,
+        force_analyze_source: bool = False,
     ) -> int:
         """Run the analysis and write results to the output path.
 
@@ -154,10 +155,12 @@ class Analyzer:
             The depth of dependency resolution. Default: 0.
         provenance_payload : InToToPayload | None
             The provenance intoto payload for the main software component.
-        validate_malware: bool
-            Enable malware validation if True.
         verify_provenance: bool
             Enable provenance verification if True.
+        analyze_source : bool
+            When true, triggers source code analysis for PyPI packages. Defaults to False.
+        force_analyze_source : bool
+            When true, enforces running source code analysis regardless of other heuristic results. Defaults to False.
 
         Returns
         -------
@@ -190,8 +193,9 @@ class Analyzer:
                     main_config,
                     analysis,
                     provenance_payload=provenance_payload,
-                    validate_malware=validate_malware,
                     verify_provenance=verify_provenance,
+                    analyze_source=analyze_source,
+                    force_analyze_source=force_analyze_source,
                 )
 
                 if main_record.status != SCMStatus.AVAILABLE or not main_record.context:
@@ -309,8 +313,9 @@ class Analyzer:
         analysis: Analysis,
         existing_records: dict[str, Record] | None = None,
         provenance_payload: InTotoPayload | None = None,
-        validate_malware: bool = False,
         verify_provenance: bool = False,
+        analyze_source: bool = False,
+        force_analyze_source: bool = False,
     ) -> Record:
         """Run the checks for a single repository target.
 
@@ -327,10 +332,12 @@ class Analyzer:
             The mapping of existing records that the analysis has run successfully.
         provenance_payload : InToToPayload | None
             The provenance intoto payload for the analyzed software component.
-        validate_malware: bool
-            Enable malware validation if True.
         verify_provenance: bool
             Enable provenance verification if True.
+        analyze_source : bool
+            When true, triggers source code analysis for PyPI packages. Defaults to False.
+        force_analyze_source : bool
+            When true, enforces running source code analysis regardless of other heuristic results. Defaults to False.
 
         Returns
         -------
@@ -546,7 +553,8 @@ class Analyzer:
                 # TODO Add release digest.
             )
 
-        analyze_ctx.dynamic_data["validate_malware"] = validate_malware
+        analyze_ctx.dynamic_data["analyze_source"] = analyze_source
+        analyze_ctx.dynamic_data["force_analyze_source"] = force_analyze_source
 
         if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
             local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]

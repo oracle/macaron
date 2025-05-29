@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
@@ -66,6 +66,29 @@ steps:
   kind: verify
   options:
     policy: policy-all-pypi.dl
+# optional Semgrep sourcecode analysis
+- name: Clean up the database.
+  kind: shell
+  options:
+    cmd: rm -f output/macaron.db
+- name: Run macaron analyze with forced sourcecode analysis
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/django@5.0.6
+    - --python-venv
+    - ./django_venv
+    - --analyze-source
+    - --force-analyze-source
+- name: Run macaron verify-policy to check the package was not marked as malicious.
+  kind: verify
+  options:
+    policy: policy-sourcecode.dl
+- name: Query the output database to verify the suspicious_patterns rull passed.
+  kind: shell
+  options:
+    cmd: ./check_sourcecode_patterns.sh
 - name: Clean up the virtual environment.
   kind: shell
   options:
