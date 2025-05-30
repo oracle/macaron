@@ -4,14 +4,12 @@
 """This module handles the cloning and analyzing a Git repo."""
 
 import glob
-import hashlib
 import json
 import logging
 import os
 import re
 import sys
 import tempfile
-import urllib.parse
 from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
@@ -516,34 +514,26 @@ class Analyzer:
         # Try to find an attestation from GitHub, if applicable.
         if parsed_purl and not provenance_payload and analysis_target.repo_path and isinstance(git_service, GitHub):
             # Try to discover GitHub attestation for the target software component.
-            url = None
-            try:
-                url = urllib.parse.urlparse(analysis_target.repo_path)
-            except TypeError as error:
-                logger.debug("Failed to parse repository path as URL: %s", error)
-            if url and url.hostname == "github.com":
-                artifact_hash = self.get_artifact_hash(
-                    parsed_purl, local_artifact_dirs, hashlib.sha256(), package_registries_info
+            artifact_hash = self.get_artifact_hash(parsed_purl, local_artifact_dirs, package_registries_info)
+            if artifact_hash:
+                git_attestation_dict = git_service.api_client.get_attestation(
+                    analyze_ctx.component.repository.full_name, artifact_hash
                 )
-                if artifact_hash:
-                    git_attestation_dict = git_service.api_client.get_attestation(
-                        analyze_ctx.component.repository.full_name, artifact_hash
-                    )
-                    if git_attestation_dict:
-                        git_attestation_list = json_extract(git_attestation_dict, ["attestations"], list)
-                        if git_attestation_list:
-                            git_attestation = git_attestation_list[0]
+                if git_attestation_dict:
+                    git_attestation_list = json_extract(git_attestation_dict, ["attestations"], list)
+                    if git_attestation_list:
+                        git_attestation = git_attestation_list[0]
 
-                            with tempfile.TemporaryDirectory() as temp_dir:
-                                attestation_file = os.path.join(temp_dir, "attestation")
-                                with open(attestation_file, "w", encoding="UTF-8") as file:
-                                    json.dump(git_attestation, file)
+                        with tempfile.TemporaryDirectory() as temp_dir:
+                            attestation_file = os.path.join(temp_dir, "attestation")
+                            with open(attestation_file, "w", encoding="UTF-8") as file:
+                                json.dump(git_attestation, file)
 
-                                try:
-                                    payload = load_provenance_payload(attestation_file)
-                                    provenance_payload = payload
-                                except LoadIntotoAttestationError as error:
-                                    logger.debug("Failed to load provenance payload: %s", error)
+                            try:
+                                payload = load_provenance_payload(attestation_file)
+                                provenance_payload = payload
+                            except LoadIntotoAttestationError as error:
+                                logger.debug("Failed to load provenance payload: %s", error)
 
         if parsed_purl is not None:
             self._verify_repository_link(parsed_purl, analyze_ctx)
@@ -1005,10 +995,13 @@ class Analyzer:
         self,
         purl: PackageURL,
         cached_artifacts: list[str] | None,
-        hash_algorithm: Any,
         package_registries_info: list[PackageRegistryInfo],
     ) -> str | None:
         """Get the hash of the artifact found from the passed PURL using local or remote files.
+
+        Provided local caches will be searched first. Artifacts will be downloaded if nothing is found within local
+        caches, or if no appropriate cache is provided for the target language.
+        Downloaded artifacts will be added to the passed package registry to prevent downloading them again.
 
         Parameters
         ----------
@@ -1016,19 +1009,17 @@ class Analyzer:
             The PURL of the artifact.
         cached_artifacts: list[str] | None
             The list of local files that match the PURL.
-        hash_algorithm: Any
-            The hash algorithm to use.
         package_registries_info: list[PackageRegistryInfo]
             The list of package registry information.
 
         Returns
         -------
         str | None
-            The hash of the artifact, or None if not found.
+            The hash of the artifact, or None if no artifact can be found locally or remotely.
         """
         if cached_artifacts:
             # Try to get the hash from a local file.
-            artifact_hash = get_local_artifact_hash(purl, cached_artifacts, hash_algorithm.name)
+            artifact_hash = get_local_artifact_hash(purl, cached_artifacts)
 
             if artifact_hash:
                 return artifact_hash
@@ -1046,7 +1037,7 @@ class Analyzer:
             if not maven_registry:
                 return None
 
-            return maven_registry.get_artifact_hash(purl, hash_algorithm)
+            return maven_registry.get_artifact_hash(purl)
 
         if purl.type == "pypi":
             pypi_registry = next(
@@ -1073,6 +1064,9 @@ class Analyzer:
                 logger.debug("Missing registry information for PyPI")
                 return None
 
+            if not purl.version:
+                return None
+
             pypi_asset = find_or_create_pypi_asset(purl.name, purl.version, registry_info)
             if not pypi_asset:
                 return None
@@ -1089,7 +1083,7 @@ class Analyzer:
             if not source_url:
                 return None
 
-            return pypi_registry.get_artifact_hash(source_url, hash_algorithm)
+            return pypi_registry.get_artifact_hash(source_url)
 
         logger.debug("Purl type '%s' not yet supported for GitHub attestation discovery.", purl.type)
         return None

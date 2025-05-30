@@ -14,7 +14,7 @@ import pytest
 from packageurl import PackageURL
 from pytest_httpserver import HTTPServer
 
-from macaron.artifact.maven import construct_maven_repository_path
+from macaron.artifact.maven import construct_maven_repository_path, construct_primary_jar_file_name
 from macaron.config.defaults import load_defaults
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.slsa_analyzer.package_registry.maven_central_registry import MavenCentralRegistry
@@ -239,16 +239,6 @@ def test_find_publish_timestamp_errors(
         maven_central.find_publish_timestamp(purl=purl)
 
 
-def test_get_artifact_file_name() -> None:
-    """Test the artifact file name function."""
-    assert not MavenCentralRegistry().get_artifact_file_name(PackageURL.from_string("pkg:maven/test/example"))
-
-    assert (
-        MavenCentralRegistry().get_artifact_file_name(PackageURL.from_string("pkg:maven/text/example@1"))
-        == "example-1.jar"
-    )
-
-
 @pytest.mark.parametrize("purl_string", ["pkg:maven/example", "pkg:maven/example/test", "pkg:maven/example/test@1"])
 def test_get_artifact_hash_failures(
     httpserver: HTTPServer, maven_service: dict, purl_string: str  # pylint: disable=unused-argument
@@ -259,12 +249,7 @@ def test_get_artifact_hash_failures(
     maven_registry = MavenCentralRegistry()
     maven_registry.load_defaults()
 
-    if (
-        purl.namespace
-        and purl.version
-        and (file_name := MavenCentralRegistry().get_artifact_file_name(purl))
-        and file_name
-    ):
+    if purl.namespace and purl.version and (file_name := construct_primary_jar_file_name(purl)) and file_name:
         artifact_path = "/" + construct_maven_repository_path(purl.namespace, purl.name, purl.version) + "/" + file_name
         hash_algorithm = sha256()
         hash_algorithm.update(b"example_data")
@@ -272,7 +257,7 @@ def test_get_artifact_hash_failures(
         httpserver.expect_request(artifact_path + ".sha256").respond_with_data(expected_hash)
         httpserver.expect_request(artifact_path).respond_with_data(b"example_data_2")
 
-    result = maven_registry.get_artifact_hash(purl, sha256())
+    result = maven_registry.get_artifact_hash(purl)
 
     assert not result
 
@@ -288,7 +273,7 @@ def test_get_artifact_hash_success(
     maven_registry = MavenCentralRegistry()
     maven_registry.load_defaults()
 
-    file_name = MavenCentralRegistry().get_artifact_file_name(purl)
+    file_name = construct_primary_jar_file_name(purl)
     assert file_name
 
     artifact_path = "/" + construct_maven_repository_path(purl.namespace, purl.name, purl.version) + "/" + file_name
@@ -298,6 +283,6 @@ def test_get_artifact_hash_success(
     httpserver.expect_request(artifact_path + ".sha256").respond_with_data(expected_hash)
     httpserver.expect_request(artifact_path).respond_with_data(b"example_data")
 
-    result = maven_registry.get_artifact_hash(purl, sha256())
+    result = maven_registry.get_artifact_hash(purl)
 
     assert result

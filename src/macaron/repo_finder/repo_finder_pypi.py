@@ -8,8 +8,8 @@ from packageurl import PackageURL
 
 from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
 from macaron.repo_finder.repo_validator import find_valid_repository_url
-from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, PyPIRegistry
-from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset
+from macaron.slsa_analyzer.package_registry import PyPIRegistry
+from macaron.slsa_analyzer.package_registry.pypi_registry import find_or_create_pypi_asset
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -45,36 +45,20 @@ def find_repo(
             None,
         )
 
-    if not pypi_info or not isinstance(pypi_info.package_registry, PyPIRegistry):
-        pypi_registry = next((registry for registry in PACKAGE_REGISTRIES if isinstance(registry, PyPIRegistry)), None)
-    else:
-        pypi_registry = pypi_info.package_registry
-
-    if not pypi_registry:
-        logger.debug("PyPI package registry not available.")
+    if not pypi_info:
         return "", RepoFinderInfo.PYPI_NO_REGISTRY
 
-    pypi_asset = None
-    from_metadata = False
-    if pypi_info:
-        for existing_asset in pypi_info.metadata:
-            if not isinstance(existing_asset, PyPIPackageJsonAsset):
-                continue
+    if not purl.version:
+        return "", RepoFinderInfo.NO_VERSION_PROVIDED
 
-            if existing_asset.component_name == purl.name:
-                pypi_asset = existing_asset
-                from_metadata = True
-                break
+    pypi_asset = find_or_create_pypi_asset(purl.name, purl.version, pypi_info)
 
     if not pypi_asset:
-        pypi_asset = PyPIPackageJsonAsset(purl.name, purl.version, False, pypi_registry, {}, "")
+        # This should be unreachable, as the pypi_registry has already been confirmed to be of type PyPIRegistry.
+        return "", RepoFinderInfo.PYPI_NO_REGISTRY
 
     if not pypi_asset.package_json and not pypi_asset.download(dest=""):
         return "", RepoFinderInfo.PYPI_HTTP_ERROR
-
-    if not from_metadata and pypi_info:
-        # Save the asset for later use.
-        pypi_info.metadata.append(pypi_asset)
 
     url_dict = pypi_asset.get_project_links()
     if not url_dict:

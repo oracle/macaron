@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides abstractions for the pypi package registry."""
-
+import hashlib
 import logging
 import os
 import re
@@ -14,7 +14,6 @@ from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
 
 import requests
 from bs4 import BeautifulSoup, Tag
@@ -265,15 +264,13 @@ class PyPIRegistry(PackageRegistry):
         logger.debug("Temporary download and unzip of %s stored in %s", file_name, temp_dir)
         return temp_dir
 
-    def get_artifact_hash(self, artifact_url: str, hash_algorithm: Any) -> str | None:
+    def get_artifact_hash(self, artifact_url: str) -> str | None:
         """Return the hash of the artifact found at the passed URL.
 
         Parameters
         ----------
         artifact_url
             The URL of the artifact.
-        hash_algorithm: Any
-            The hash algorithm to use.
 
         Returns
         -------
@@ -284,13 +281,14 @@ class PyPIRegistry(PackageRegistry):
             response = requests.get(artifact_url, stream=True, timeout=40)
             response.raise_for_status()
         except requests.exceptions.HTTPError as http_err:
-            logger.debug("HTTP error occurred: %s", http_err)
+            logger.debug("HTTP error occurred when trying to download artifact: %s", http_err)
             return None
 
         if response.status_code != 200:
             logger.debug("Invalid response: %s", response.status_code)
             return None
 
+        hash_algorithm = hashlib.sha256()
         try:
             for chunk in response.iter_content():
                 hash_algorithm.update(chunk)
@@ -738,15 +736,15 @@ class PyPIPackageJsonAsset:
 
 
 def find_or_create_pypi_asset(
-    asset_name: str, asset_version: str | None, pypi_registry_info: PackageRegistryInfo
+    asset_name: str, asset_version: str, pypi_registry_info: PackageRegistryInfo
 ) -> PyPIPackageJsonAsset | None:
-    """Find the asset in the provided package registry information, or create it.
+    """Find the matching asset in the provided package registry information, or if not found, create and add it.
 
     Parameters
     ----------
     asset_name: str
         The name of the asset.
-    asset_version: str | None
+    asset_version: str
         The version of the asset.
     pypi_registry_info:
         The package registry information.
@@ -756,12 +754,17 @@ def find_or_create_pypi_asset(
     PyPIPackageJsonAsset | None
         The asset, or None if not found.
     """
-    pypi_package_json = next(
-        (asset for asset in pypi_registry_info.metadata if isinstance(asset, PyPIPackageJsonAsset)),
+    asset = next(
+        (
+            asset
+            for asset in pypi_registry_info.metadata
+            if isinstance(asset, PyPIPackageJsonAsset) and asset.component_name == asset_name
+        ),
         None,
     )
-    if pypi_package_json:
-        return pypi_package_json
+
+    if asset:
+        return asset
 
     package_registry = pypi_registry_info.package_registry
     if not isinstance(package_registry, PyPIRegistry):

@@ -11,9 +11,8 @@ import os
 
 from packageurl import PackageURL
 
-from macaron.artifact.maven import construct_maven_repository_path
+from macaron.artifact.maven import construct_maven_repository_path, construct_primary_jar_file_name
 from macaron.errors import LocalArtifactFinderError
-from macaron.slsa_analyzer.package_registry import MavenCentralRegistry
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -254,7 +253,7 @@ def get_local_artifact_dirs(
     raise LocalArtifactFinderError(f"Unsupported PURL type {purl_type}")
 
 
-def get_local_artifact_hash(purl: PackageURL, artifact_dirs: list[str], hash_algorithm_name: str) -> str | None:
+def get_local_artifact_hash(purl: PackageURL, artifact_dirs: list[str]) -> str | None:
     """Compute the hash of the local artifact.
 
     Parameters
@@ -262,9 +261,7 @@ def get_local_artifact_hash(purl: PackageURL, artifact_dirs: list[str], hash_alg
     purl: PackageURL
         The PURL of the artifact being sought.
     artifact_dirs: list[str]
-        The possible locations of the artifact.
-    hash_algorithm_name: str
-        The hash algorithm to use.
+        The list of directories that may contain the artifact file.
 
     Returns
     -------
@@ -281,7 +278,9 @@ def get_local_artifact_hash(purl: PackageURL, artifact_dirs: list[str], hash_alg
 
     artifact_target = None
     if purl.type == "maven":
-        artifact_target = MavenCentralRegistry.get_artifact_file_name(purl)
+        artifact_target = construct_primary_jar_file_name(purl)
+
+    # TODO add support for other PURL types here.
 
     if not artifact_target:
         logger.debug("PURL type not supported: %s", purl.type)
@@ -294,7 +293,7 @@ def get_local_artifact_hash(purl: PackageURL, artifact_dirs: list[str], hash_alg
 
         with open(full_path, "rb") as file:
             try:
-                hash_result = hashlib.file_digest(file, hash_algorithm_name)
+                hash_result = hashlib.file_digest(file, "sha256")
             except ValueError as error:
                 logger.debug("Error while hashing file: %s", error)
                 continue
