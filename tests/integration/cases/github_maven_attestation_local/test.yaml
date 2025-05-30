@@ -2,10 +2,12 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Discovering GitHub attestation of a local Maven artifact but failing because the artifact is wrong
+  Discovering GitHub attestation of a local Maven artifact but failing because the artifact is wrong. In this case
+  we download the artifact's POM file and save it as a JAR file.
 
 tags:
 - macaron-python-package
+- macaron-docker-image
 
 steps:
 - name: Download artifact POM instead of the JAR

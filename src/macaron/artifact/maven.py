@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module declares types and utilities for Maven artifacts."""
@@ -196,3 +196,22 @@ def construct_maven_repository_path(
     if asset_name:
         path = "/".join([path, asset_name])
     return path
+
+
+def construct_primary_jar_file_name(purl: PackageURL) -> str | None:
+    """Return the name of the primary JAR for the passed PURL based on the Maven registry standard.
+
+    Parameters
+    ----------
+    purl: PackageURL
+        The PURL of the artifact.
+
+    Returns
+    -------
+    str | None
+        The artifact file name, or None if invalid.
+    """
+    if not purl.version:
+        return None
+
+    return purl.name + "-" + purl.version + ".jar"

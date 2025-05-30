@@ -13,7 +13,7 @@ steps:
   options:
     command_args:
     - -purl
-    - pkg:pypi/toga@0.5.0
+    - pkg:pypi/toga@0.4.8
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:

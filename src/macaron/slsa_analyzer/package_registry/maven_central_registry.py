@@ -2,17 +2,16 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides abstractions for the Maven Central package registry."""
-
+import hashlib
 import logging
 import urllib.parse
 from datetime import datetime, timezone
-from typing import Any
 
 import requests
 from packageurl import PackageURL
 from requests import RequestException
 
-from macaron.artifact.maven import construct_maven_repository_path
+from macaron.artifact.maven import construct_maven_repository_path, construct_primary_jar_file_name
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
@@ -240,34 +239,27 @@ class MavenCentralRegistry(PackageRegistry):
 
         raise InvalidHTTPResponseError(f"Invalid response from Maven central for {url}.")
 
-    @staticmethod
-    def get_artifact_file_name(purl: PackageURL) -> str | None:
-        """Return the artifact file name of the passed PURL based on the Maven registry standard.
-
-        Parameters
-        ----------
-        purl: PackageURL
-            The PURL of the artifact.
-
-        Returns
-        -------
-        str | None
-            The artifact file name, or None if invalid.
-        """
-        if not purl.version:
-            return None
-
-        return purl.name + "-" + purl.version + ".jar"
-
-    def get_artifact_hash(self, purl: PackageURL, hash_algorithm: Any) -> str | None:
+    def get_artifact_hash(self, purl: PackageURL) -> str | None:
         """Return the hash of the artifact found by the passed purl relevant to the registry's URL.
+
+        An artifact's URL will be as follows:
+        {registry_url}/{artifact_path}/{file_name}
+        Where:
+        - {registry_url} is determined by the setup/config of the registry.
+        - {artifact_path} is determined by the Maven repository layout.
+        (See: https://maven.apache.org/repository/layout.html and
+        https://maven.apache.org/guides/mini/guide-naming-conventions.html)
+        - {file_name} is {purl.name}-{purl.version}.jar (For a JAR artefact)
+
+        Example
+        -------
+        PURL: pkg:maven/com.experlog/xapool@1.5.0
+         URL: https://repo1.maven.org/maven2/com/experlog/xapool/1.5.0/xapool-1.5.0.jar
 
         Parameters
         ----------
         purl: PackageURL
             The purl of the artifact.
-        hash_algorithm: Any
-            The hash algorithm to use.
 
         Returns
         -------
@@ -277,33 +269,34 @@ class MavenCentralRegistry(PackageRegistry):
         if not purl.namespace:
             return None
 
-        file_name = MavenCentralRegistry.get_artifact_file_name(purl)
+        file_name = construct_primary_jar_file_name(purl)
         if not (purl.version and file_name):
             return None
 
         # Maven supports but does not require a sha256 hash of uploaded artifacts.
         artifact_path = construct_maven_repository_path(purl.namespace, purl.name, purl.version)
         artifact_url = self.registry_url + "/" + artifact_path + "/" + file_name
-        sha256_url = artifact_url + ".sha256"
-        logger.debug("Search for artifact hash using URL: %s", [sha256_url, artifact_url])
+        artifact_sha256_url = artifact_url + ".sha256"
+        logger.debug("Search for artifact hash using URL: %s", [artifact_sha256_url, artifact_url])
 
-        response = send_get_http_raw(sha256_url, {})
-        sha256_hash = None
-        if response and (sha256_hash := response.text):
+        response = send_get_http_raw(artifact_sha256_url, {})
+        retrieved_artifact_hash = None
+        if response and (retrieved_artifact_hash := response.text):
             # As Maven hashes are user provided and not verified they serve as a reference only.
-            logger.debug("Found hash of artifact: %s", sha256_hash)
+            logger.debug("Found hash of artifact: %s", retrieved_artifact_hash)
 
         try:
             response = requests.get(artifact_url, stream=True, timeout=40)
             response.raise_for_status()
         except requests.exceptions.HTTPError as http_err:
-            logger.debug("HTTP error occurred: %s", http_err)
+            logger.debug("HTTP error occurred when trying to download artifact: %s", http_err)
             return None
 
         if response.status_code != 200:
             return None
 
         # Download file and compute hash as chunks are received.
+        hash_algorithm = hashlib.sha256()
         try:
             for chunk in response.iter_content():
                 hash_algorithm.update(chunk)
@@ -313,10 +306,14 @@ class MavenCentralRegistry(PackageRegistry):
             response.close()
             return None
 
-        artifact_hash: str = hash_algorithm.hexdigest()
-        if sha256_hash and artifact_hash != sha256_hash:
-            logger.debug("Artifact hash and discovered hash do not match: %s != %s", artifact_hash, sha256_hash)
+        computed_artifact_hash: str = hash_algorithm.hexdigest()
+        if retrieved_artifact_hash and computed_artifact_hash != retrieved_artifact_hash:
+            logger.debug(
+                "Artifact hash and discovered hash do not match: %s != %s",
+                computed_artifact_hash,
+                retrieved_artifact_hash,
+            )
             return None
 
-        logger.debug("Computed hash of artifact: %s", artifact_hash)
-        return artifact_hash
+        logger.debug("Computed hash of artifact: %s", computed_artifact_hash)
+        return computed_artifact_hash
