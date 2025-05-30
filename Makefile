@@ -93,7 +93,6 @@ setup: force-upgrade setup-go setup-binaries setup-schemastore
 	go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.3.0
 setup-go:
 	go build -o $(PACKAGE_PATH)/bin/ $(REPO_PATH)/golang/cmd/...
-	go build -o $(PACKAGE_PATH)/bin/cuevalidate.so -buildmode=c-shared $(REPO_PATH)/golang/internal/cue_validator/cue_validator.go
 setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier $(PACKAGE_PATH)/resources/mvnw $(PACKAGE_PATH)/resources/gradlew souffle gnu-sed
 $(PACKAGE_PATH)/bin/slsa-verifier:
 	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.6.0

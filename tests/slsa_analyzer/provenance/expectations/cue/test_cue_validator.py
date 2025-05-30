@@ -1,14 +1,14 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the CUE expectation validator."""
 
-import json
 import os
 from pathlib import Path
 
 import pytest
 
+from macaron.errors import CUERuntimeError
 from macaron.slsa_analyzer.provenance.expectations.cue import CUEExpectation
 from macaron.slsa_analyzer.provenance.expectations.cue.cue_validator import get_target, validate_expectation
 
@@ -37,16 +37,23 @@ def test_make_expectation(expectation_path: str) -> None:
     ("expectation_path", "expected"),
     [
         (os.path.join(EXPECT_RESOURCE_PATH, "valid_expectations", "urllib3_PASS.cue"), PACKAGE_URLLIB3),
-        (os.path.join(EXPECT_RESOURCE_PATH, "valid_expectations", "urllib3_FAIL.cue"), ""),
     ],
 )
 def test_get_target(expectation_path: str, expected: str) -> None:
     """Test getting target from valid CUE expectations."""
-    expectation = CUEExpectation.make_expectation(expectation_path=expectation_path)
-    if expectation:
-        assert get_target(expectation.text) == expected
-    else:
-        raise ValueError("Expected a valid expectation.")
+    assert get_target(expectation_path) == expected
+
+
+@pytest.mark.parametrize(
+    "expectation_path",
+    [
+        os.path.join(EXPECT_RESOURCE_PATH, "valid_expectations", "urllib3_FAIL.cue"),
+    ],
+)
+def test_no_target(expectation_path: str) -> None:
+    """Test getting target from valid CUE expectations that misses a target."""
+    with pytest.raises(CUERuntimeError):
+        get_target(expectation_path)
 
 
 @pytest.mark.parametrize(
@@ -76,10 +83,4 @@ def test_get_target(expectation_path: str, expected: str) -> None:
 )
 def test_validate_expectation(expectation_path: str, prov_path: str, expected: bool) -> None:
     """Test validating CUE expectations against provenances."""
-    expectation = CUEExpectation.make_expectation(expectation_path=expectation_path)
-    if expectation:
-        with open(prov_path, encoding="utf-8") as prov_file:
-            provenance = json.load(prov_file)
-        assert validate_expectation(expectation.text, provenance) == expected
-    else:
-        raise ValueError("Expected a valid expectation.")
+    assert validate_expectation(expectation_path, prov_path) == expected

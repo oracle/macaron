@@ -94,12 +94,12 @@ class GlobalConfig:
         exp_files = []
         if os.path.isdir(exp_path):
             for policy_path in os.listdir(exp_path):
-                policy_file_path = os.path.join(exp_path, policy_path)
+                policy_file_path = os.path.abspath(os.path.join(exp_path, policy_path))
                 if os.path.isfile(policy_file_path):
                     exp_files.append(policy_file_path)
                     logger.info("Added provenance expectation file %s", os.path.relpath(policy_file_path, os.getcwd()))
         elif os.path.isfile(exp_path):
-            exp_files.append(exp_path)
+            exp_files.append(os.path.abspath(exp_path))
             logger.info("Added provenance expectation file %s", os.path.relpath(exp_path, os.getcwd()))
 
         self.expectation_paths = exp_files
