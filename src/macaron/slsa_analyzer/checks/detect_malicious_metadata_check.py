@@ -22,6 +22,7 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date 
 from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.similar_projects import SimilarProjectAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
@@ -332,6 +333,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         SuspiciousSetupAnalyzer,
         WheelAbsenceAnalyzer,
         AnomalousVersionAnalyzer,
+        SimilarProjectAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
@@ -381,6 +383,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.CLOSER_RELEASE_JOIN_DATE.value}),
         forceSetup.
 
+    % Package released that is similar to other packages maintained by the same maintainer.
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_4) :-
+        quickUndetailed, forceSetup, failed({Heuristics.SIMILAR_PROJECTS.value}).
+
     % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
     % the same code.
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_1) :-
@@ -401,6 +407,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {problog_result_access} :- trigger(malware_high_confidence_1).
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
+    {problog_result_access} :- trigger(malware_high_confidence_4).
     {problog_result_access} :- trigger(malware_medium_confidence_2).
     {problog_result_access} :- trigger(malware_medium_confidence_1).
     query({problog_result_access}).
