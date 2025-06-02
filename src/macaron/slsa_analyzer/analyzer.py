@@ -4,7 +4,6 @@
 """This module handles the cloning and analyzing a Git repo."""
 
 import glob
-import json
 import logging
 import os
 import re
@@ -78,7 +77,6 @@ from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, MavenCent
 from macaron.slsa_analyzer.package_registry.pypi_registry import find_or_create_pypi_asset
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payload
-from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError
 from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.registry import registry
@@ -516,24 +514,7 @@ class Analyzer:
             # Try to discover GitHub attestation for the target software component.
             artifact_hash = self.get_artifact_hash(parsed_purl, local_artifact_dirs, package_registries_info)
             if artifact_hash:
-                git_attestation_dict = git_service.api_client.get_attestation(
-                    analyze_ctx.component.repository.full_name, artifact_hash
-                )
-                if git_attestation_dict:
-                    git_attestation_list = json_extract(git_attestation_dict, ["attestations"], list)
-                    if git_attestation_list:
-                        git_attestation = git_attestation_list[0]
-
-                        with tempfile.TemporaryDirectory() as temp_dir:
-                            attestation_file = os.path.join(temp_dir, "attestation")
-                            with open(attestation_file, "w", encoding="UTF-8") as file:
-                                json.dump(git_attestation, file)
-
-                            try:
-                                payload = load_provenance_payload(attestation_file)
-                                provenance_payload = payload
-                            except LoadIntotoAttestationError as error:
-                                logger.debug("Failed to load provenance payload: %s", error)
+                provenance_payload = self.get_github_attestation_payload(analyze_ctx, git_service, artifact_hash)
 
         if parsed_purl is not None:
             self._verify_repository_link(parsed_purl, analyze_ctx)
@@ -994,7 +975,7 @@ class Analyzer:
     def get_artifact_hash(
         self,
         purl: PackageURL,
-        cached_artifacts: list[str] | None,
+        local_artifact_dirs: list[str] | None,
         package_registries_info: list[PackageRegistryInfo],
     ) -> str | None:
         """Get the hash of the artifact found from the passed PURL using local or remote files.
@@ -1007,8 +988,8 @@ class Analyzer:
         ----------
         purl: PackageURL
             The PURL of the artifact.
-        cached_artifacts: list[str] | None
-            The list of local files that match the PURL.
+        local_artifact_dirs: list[str] | None
+            The list of directories that may contain the artifact file.
         package_registries_info: list[PackageRegistryInfo]
             The list of package registry information.
 
@@ -1017,9 +998,9 @@ class Analyzer:
         str | None
             The hash of the artifact, or None if no artifact can be found locally or remotely.
         """
-        if cached_artifacts:
+        if local_artifact_dirs:
             # Try to get the hash from a local file.
-            artifact_hash = get_local_artifact_hash(purl, cached_artifacts)
+            artifact_hash = get_local_artifact_hash(purl, local_artifact_dirs)
 
             if artifact_hash:
                 return artifact_hash
@@ -1087,6 +1068,43 @@ class Analyzer:
 
         logger.debug("Purl type '%s' not yet supported for GitHub attestation discovery.", purl.type)
         return None
+
+    def get_github_attestation_payload(
+        self, analyze_ctx: AnalyzeContext, git_service: GitHub, artifact_hash: str
+    ) -> InTotoPayload | None:
+        """Get the GitHub attestation associated with the given PURL, or None if it cannot be found.
+
+        The schema of GitHub attestation can be found on the API page:
+        https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-attestations
+
+        Parameters
+        ----------
+        analyze_ctx: AnalyzeContext
+            The analysis context.
+        git_service: GitHub
+            The Git service to retrieve the attestation from.
+        artifact_hash: str
+            The hash of the related artifact.
+
+        Returns
+        -------
+        InTotoPayload | None
+            The attestation payload, if found.
+        """
+        git_attestation_dict = git_service.api_client.get_attestation(
+            analyze_ctx.component.repository.full_name, artifact_hash
+        )
+
+        if not git_attestation_dict:
+            return None
+
+        git_attestation_list = json_extract(git_attestation_dict, ["attestations"], list)
+        if not git_attestation_list:
+            return None
+
+        git_attestation: str = git_attestation_list[0]
+
+        return load_provenance_payload(git_attestation)
 
     def _determine_git_service(self, analyze_ctx: AnalyzeContext) -> BaseGitService:
         """Determine the Git service used by the software component."""

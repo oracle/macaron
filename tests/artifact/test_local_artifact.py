@@ -15,7 +15,9 @@ from macaron.artifact.local_artifact import (
     construct_local_artifact_dirs_glob_pattern_pypi_purl,
     find_artifact_dirs_from_python_venv,
     get_local_artifact_dirs,
+    get_local_artifact_hash,
 )
+from macaron.artifact.maven import construct_primary_jar_file_name
 from macaron.errors import LocalArtifactFinderError
 
 
@@ -249,3 +251,21 @@ def test_get_local_artifact_paths_succeeded_pypi(tmp_path: Path) -> None:
     )
 
     assert sorted(result) == sorted(pypi_artifact_paths)
+
+
+def test_get_local_artifact_hash() -> None:
+    """Test the get local artifact hash function."""
+    artifact_purl = PackageURL.from_string("pkg:maven/test/test@1")
+    artifact_jar_name = construct_primary_jar_file_name(artifact_purl)
+
+    assert artifact_jar_name
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        artifact_path = os.path.join(temp_dir, artifact_jar_name)
+        with open(artifact_path, "w", encoding="utf8") as file:
+            file.write("1")
+
+        # A file containing: "1".
+        target_hash = "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
+
+        assert target_hash == get_local_artifact_hash(artifact_purl, [temp_dir])
