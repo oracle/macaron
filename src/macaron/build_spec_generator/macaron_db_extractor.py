@@ -39,16 +39,6 @@ def compile_sqlite_select_statement(select_statment: Select) -> str:
     return str(sqlite_str)
 
 
-# SELECT
-#     analysis.analysis_time, analysis.id, component.id
-# FROM
-#     component
-# INNER JOIN
-#     analysis
-# ON
-#     analysis.id = component.analysis_id
-# WHERE
-#     component.purl = ?
 def get_sql_stmt_latest_component_for_purl(purl_string: str) -> Select[tuple[Component]]:
     """Return an SQLAlchemy SELECT statement to query the latest Component.
 
@@ -59,7 +49,7 @@ def get_sql_stmt_latest_component_for_purl(purl_string: str) -> Select[tuple[Com
 
     Returns
     -------
-    Select[tuple[Component, Analysis]]
+    Select[tuple[Component]]
         The SQLAlchemy SELECT statement to query the latest analyzed Component instance
         corresponding to the PackageURL.
     """
@@ -81,7 +71,20 @@ def get_sql_stmt_latest_component_for_purl(purl_string: str) -> Select[tuple[Com
 
 
 def lookup_latest_component_id(purl_string: str, session: Session) -> int | None:
-    """Return None if the value is not available in the database."""
+    """Return the component id of the latest analysis that matches a given PackageURL string.
+
+    Parameters
+    ----------
+    purl_string : str
+        The PackageURL string to look for the latest component id.
+    session : Session
+        The SQLAlcemy Session that connects to the Macaron database.
+
+    Returns
+    -------
+    int | None
+        The latest component id or None if there isn't one available in the database.
+    """
     latest_component_id_stmt = get_sql_stmt_latest_component_for_purl(purl_string)
     logger.debug("Latest Analysis and Component query \n %s", compile_sqlite_select_statement(latest_component_id_stmt))
 
@@ -93,35 +96,25 @@ def lookup_latest_component_id(purl_string: str, session: Session) -> int | None
     return component.id
 
 
-# SELECT
-#     build_tool_check.build_tool_name,
-#     build_tool_check.language
-# FROM
-#     component
-# INNER JOIN
-#     check_result
-# ON
-#     component.id = check_result.component_id
-# INNER JOIN
-#     check_facts
-# ON
-#     check_result.id = check_facts.check_result_id
-# INNER JOIN
-#     build_tool_check
-# ON
-#     check_facts.id = build_tool_check.id
-# WHERE
-#     component.id = ?
-# ORDER BY
-#     check_facts.confidence DESC, build_tool_check.id ASC
 def get_sql_stmt_build_tools(component_id: int) -> Select[tuple[BuildToolFacts]]:
-    """WIP."""
-    # https://docs.sqlalchemy.org/en/20/errors.html#an-alias-is-being-generated-automatically-due-to-overlapping-tables
-    # TODO: explain why we need this.
+    """Return an SQLAlchemy SELECT statement to query the BuildToolFacts for a given PackageURL.
+
+    Parameters
+    ----------
+    purl_string : str
+        The PackageURL string to find the BuildToolFacts.
+
+    Returns
+    -------
+    Select[tuple[BuildAsCodeFacts]]
+        The SQLAlchemy SELECT statement.
+    """
+    # Because BuildToolFacts inherit from CheckFacts, SQLAlchemy had to perform implicit alias
+    # when performing a join between them. This pattern is not recommended, hence a warning is raised
+    # https://docs.sqlalchemy.org/en/20/errors.html#an-alias-is-being-generated-automatically-due-to-overlapping-tables.
+    # To resolve this, we need to create an SQLAlchemy alias and use it in the SELECT statement.
     build_tool_facts_alias = aliased(BuildToolFacts, flat=True)
 
-    # There are 2 ways we can perform the join, on the table or on a relationship
-    # I decide to join on the table, with explicit ON clause.
     return (
         select(build_tool_facts_alias)
         .select_from(Component)
@@ -146,7 +139,20 @@ def get_sql_stmt_build_tools(component_id: int) -> Select[tuple[BuildToolFacts]]
 
 
 def lookup_build_tools_check(component_id: int, session: Session) -> Sequence[BuildToolFacts] | None:
-    """WIP."""
+    """Return the sequence of BuildToolFacts instances for given PackageURL string.
+
+    Parameters
+    ----------
+    purl_string : str
+        The PackageURL string to look for the BuildToolFacts.
+    session : Session
+        The SQLAlcemy Session that connects to the Macaron database.
+
+    Returns
+    -------
+    Sequence[BuildToolFacts]
+        The sequence of BuildToolFacts instances obtained from querying the database.
+    """
     build_tools_statement = get_sql_stmt_build_tools(component_id)
     logger.debug(
         "Build Tools Check Facts for component %d \n %s",
@@ -159,32 +165,23 @@ def lookup_build_tools_check(component_id: int, session: Session) -> Sequence[Bu
     return sql_results or None
 
 
-# SELECT
-#     build_as_code_check.deploy_command,
-#     build_as_code_check.build_tool_name,
-#     build_as_code_check.language,
-#     build_as_code_check.language_distributions,
-#     build_as_code_check.language_versions
-# FROM
-#     component
-# INNER JOIN
-#     check_result
-# ON
-#     component.id = check_result.component_id
-# INNER JOIN
-#     check_facts
-# ON
-#     check_result.id = check_facts.check_result_id
-# INNER JOIN
-#     build_as_code_check
-# ON
-#     check_facts.id = build_as_code_check.id
-# WHERE
-#     component.id = ? AND build_as_code_check.deploy_command IS NOT NULL
-# ORDER BY
-#     check_facts.confidence DESC, build_as_code_check.id ASC
 def get_sql_stmt_build_as_code_check(component_id: int) -> Select[tuple[BuildAsCodeFacts]]:
-    """WIP."""
+    """Return an SQLAlchemy SELECT statement to query the BuildAsCodeFacts for a given PackageURL.
+
+    Parameters
+    ----------
+    purl_string : str
+        The PackageURL string to find the BuildToolFacts.
+
+    Returns
+    -------
+    Select[tuple[BuildAsCodeFacts]]
+        The SQLAlchemy SELECT statement.
+    """
+    # Because BuildAsCodeFacts inherit from CheckFacts, SQLAlchemy had to perform implicit alias
+    # when performing a join between them. This pattern is not recommended, hence a warning is raised
+    # https://docs.sqlalchemy.org/en/20/errors.html#an-alias-is-being-generated-automatically-due-to-overlapping-tables.
+    # To resolve this, we need to create an SQLAlchemy alias and use it in the SELECT statement.
     build_as_code_facts_alias = aliased(BuildAsCodeFacts, flat=True)
 
     return (
@@ -216,7 +213,20 @@ def get_sql_stmt_build_as_code_check(component_id: int) -> Select[tuple[BuildAsC
 
 
 def lookup_build_as_code_check(component_id: int, session: Session) -> Sequence[BuildAsCodeFacts] | None:
-    """WIP."""
+    """Return the sequence of BuildAsCodeFacts instances for given PackageURL string.
+
+    Parameters
+    ----------
+    purl_string : str
+        The PackageURL string to look for the BuildAsCodeFacts.
+    session : Session
+        The SQLAlcemy Session that connects to the Macaron database.
+
+    Returns
+    -------
+    Sequence[BuildAsCodeFacts]
+        The sequence of BuildAsCodeFacts instances obtained from querying the database.
+    """
     build_as_code_statement = get_sql_stmt_build_as_code_check(component_id)
     logger.debug(
         "Build As Code Check Fact for component %d \n %s",
@@ -229,32 +239,23 @@ def lookup_build_as_code_check(component_id: int, session: Session) -> Sequence[
     return sql_results or None
 
 
-# SELECT
-#     build_service_check.build_command,
-#     build_service_check.build_tool_name,
-#     build_service_check.language,
-#     build_service_check.language_distributions,
-#     build_service_check.language_versions
-# FROM
-#     component
-# INNER JOIN
-#     check_result
-# ON
-#     component.id = check_result.component_id
-# INNER JOIN
-#     check_facts
-# ON
-#     check_result.id = check_facts.check_result_id
-# INNER JOIN
-#     build_service_check
-# ON
-#     check_facts.id = build_service_check.id
-# WHERE
-#     component.id = ? AND build_service_check.build_command IS NOT NULL
-# ORDER BY
-#     check_facts.confidence DESC, build_service_check.id ASC
 def get_sql_stmt_build_service_check(component_id: int) -> Select[tuple[BuildServiceFacts]]:
-    """WIP."""
+    """Return an SQLAlchemy SELECT statement to query the BuildServiceFacts for a given PackageURL.
+
+    Parameters
+    ----------
+    purl_string : str
+        The PackageURL string to find the BuildServiceFacts.
+
+    Returns
+    -------
+    Select[tuple[BuildServiceFacts]]
+        The SQLAlchemy SELECT statement.
+    """
+    # Because BuildServiceFacts inherit from CheckFacts, SQLAlchemy had to perform implicit alias
+    # when performing a join between them. This pattern is not recommended, hence a warning is raised
+    # https://docs.sqlalchemy.org/en/20/errors.html#an-alias-is-being-generated-automatically-due-to-overlapping-tables.
+    # To resolve this, we need to create an SQLAlchemy alias and use it in the SELECT statement.
     build_service_facts_alias = aliased(BuildServiceFacts, flat=True)
 
     return (
@@ -286,7 +287,20 @@ def get_sql_stmt_build_service_check(component_id: int) -> Select[tuple[BuildSer
 
 
 def lookup_build_service_check(component_id: int, session: Session) -> Sequence[BuildServiceFacts] | None:
-    """WIP."""
+    """Return the sequence of BuildServiceFacts instances for given PackageURL string.
+
+    Parameters
+    ----------
+    purl_string : str
+        The PackageURL string to look for the BuildServiceFacts.
+    session : Session
+        The SQLAlcemy Session that connects to the Macaron database.
+
+    Returns
+    -------
+    Sequence[BuildServiceFacts]
+        The sequence of BuildServiceFacts instances obtained from querying the database.
+    """
     build_service_statement = get_sql_stmt_build_service_check(component_id)
     logger.debug(
         "Build Service Check Fact for component %d \n %s",
@@ -299,32 +313,23 @@ def lookup_build_service_check(component_id: int, session: Session) -> Sequence[
     return sql_results or None
 
 
-# SELECT
-#     build_script_check.build_tool_command,
-#     build_script_check.build_tool_name,
-#     build_script_check.language,
-#     build_script_check.language_distributions,
-#     build_script_check.language_versions
-# FROM
-#     component
-# INNER JOIN
-#     check_result
-# ON
-#     component.id = check_result.component_id
-# INNER JOIN
-#     check_facts
-# ON
-#     check_result.id = check_facts.check_result_id
-# INNER JOIN
-#     build_script_check
-# ON
-#     check_facts.id = build_script_check.id
-# WHERE
-#     component.id = ? AND build_script_check.build_tool_command IS NOT NULL
-# ORDER BY
-#     check_facts.confidence DESC, build_script_check.id ASC
 def get_sql_stmt_build_script_check(component_id: int) -> Select[tuple[BuildScriptFacts]]:
-    """WIP."""
+    """Return an SQLAlchemy SELECT statement to query the BuildScriptFacts for a given PackageURL.
+
+    Parameters
+    ----------
+    purl_string : str
+        The PackageURL string to find the BuildScriptFacts.
+
+    Returns
+    -------
+    Select[tuple[BuildScriptFacts]]
+        The SQLAlchemy SELECT statement.
+    """
+    # Because BuildScriptFacts inherit from CheckFacts, SQLAlchemy had to perform implicit alias
+    # when performing a join between them. This pattern is not recommended, hence a warning is raised
+    # https://docs.sqlalchemy.org/en/20/errors.html#an-alias-is-being-generated-automatically-due-to-overlapping-tables.
+    # To resolve this, we need to create an SQLAlchemy alias and use it in the SELECT statement.
     build_script_facts_alias = aliased(BuildScriptFacts, flat=True)
 
     return (
@@ -356,7 +361,20 @@ def get_sql_stmt_build_script_check(component_id: int) -> Select[tuple[BuildScri
 
 
 def lookup_build_script_check(component_id: int, session: Session) -> Sequence[BuildScriptFacts] | None:
-    """WIP."""
+    """Return the sequence of BuildScriptFacts instances for given PackageURL string.
+
+    Parameters
+    ----------
+    purl_string : str
+        The PackageURL string to look for the BuildScriptFacts.
+    session : Session
+        The SQLAlcemy Session that connects to the Macaron database.
+
+    Returns
+    -------
+    Sequence[BuildScriptFacts]
+        The sequence of BuildScriptFacts instances obtained from querying the database.
+    """
     build_script_statement = get_sql_stmt_build_script_check(component_id)
     logger.debug(
         "Build Script Check Fact for component %d \n %s",
@@ -385,7 +403,18 @@ def lookup_any_build_command(component_id: int, session: Session) -> Sequence[Ch
 
 
 def get_sql_stmt_repository(component_id: int) -> Select[tuple[Repository]]:
-    """WIP."""
+    """Return an SQLAlchemy SELECT statement to query the Repository for a given PackageURL.
+
+    Parameters
+    ----------
+    purl_string : str
+        The PackageURL string to find the Repository.
+
+    Returns
+    -------
+    Select[tuple[Repository]]
+        The SQLAlchemy SELECT statement.
+    """
     return (
         select(Repository)
         .select_from(Component)
@@ -398,7 +427,20 @@ def get_sql_stmt_repository(component_id: int) -> Select[tuple[Repository]]:
 
 
 def lookup_repository(component_id: int, session: Session) -> Repository | None:
-    """WIP."""
+    """Return the Repository instance for given PackageURL string.
+
+    Parameters
+    ----------
+    purl_string : str
+        The PackageURL string to look for the Repository.
+    session : Session
+        The SQLAlcemy Session that connects to the Macaron database.
+
+    Returns
+    -------
+    Repository
+        The Repository instances obtained from querying the database.
+    """
     repository_statement = get_sql_stmt_repository(component_id)
     logger.debug(
         "Repository for component %d \n %s.", component_id, compile_sqlite_select_statement(repository_statement)
