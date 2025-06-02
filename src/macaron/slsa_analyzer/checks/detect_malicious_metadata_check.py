@@ -13,7 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.db_custom_types import DBJsonDict
 from macaron.database.table_definitions import CheckFacts
-from macaron.errors import HeuristicAnalyzerValueError
+from macaron.errors import ConfigurationError, HeuristicAnalyzerValueError, SourceCodeError
 from macaron.json_tools import JsonType, json_extract
 from macaron.malware_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult, Heuristics
@@ -26,7 +26,7 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import S
 from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
-from macaron.malware_analyzer.pypi_heuristics.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.sourcecode.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
@@ -101,26 +101,46 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 return True
         return False
 
-    def validate_malware(self, pypi_package_json: PyPIPackageJsonAsset) -> tuple[bool, dict[str, JsonType] | None]:
-        """Validate the package is malicious.
+    def analyze_source(
+        self, pypi_package_json: PyPIPackageJsonAsset, results: dict[Heuristics, HeuristicResult], force: bool = False
+    ) -> tuple[HeuristicResult, dict[str, JsonType]]:
+        """Analyze the source code of the package with a textual scan, looking for malicious code patterns.
 
         Parameters
         ----------
         pypi_package_json: PyPIPackageJsonAsset
+            The PyPI package JSON asset object.
+        results: dict[Heuristics, HeuristicResult]
+            Containing all heuristics' results (excluding this one), where the key is the heuristic and the value is the result
+            associated with that heuristic.
+        force: bool
+            Forces sourcecode analysis to run regardless of heuristic results. Defaults to False.
 
         Returns
         -------
-        tuple[bool, dict[str, JsonType] | None]
-            Returns True if the source code includes suspicious pattern.
-            Returns the result of the validation including the line number
-            and the suspicious arguments.
-            e.g. requests.get("http://malicious.com")
-            return the "http://malicious.com"
+        tuple[HeuristicResult, dict[str, JsonType]]
+            Containing the analysis results and relevant patterns identified.
+
+        Raises
+        ------
+        HeuristicAnalyzerValueError
+            If the analyzer fails due to malformed package information.
+        ConfigurationError
+            If the configuration of the analyzer encountered a problem.
         """
-        # TODO: This redundant function might be removed
-        sourcecode_analyzer = PyPISourcecodeAnalyzer(pypi_package_json)
-        is_malware, detail_info = sourcecode_analyzer.analyze()
-        return is_malware, detail_info
+        logger.debug("Instantiating %s", PyPISourcecodeAnalyzer.__name__)
+        analyzer = PyPISourcecodeAnalyzer()
+
+        if not force and analyzer.depends_on and self._should_skip(results, analyzer.depends_on):
+            return HeuristicResult.SKIP, {}
+
+        try:
+            with pypi_package_json.sourcecode():
+                return analyzer.analyze(pypi_package_json)
+        except SourceCodeError as error:
+            error_msg = f"Unable to perform analysis, source code not available: {error}"
+            logger.debug(error_msg)
+            raise HeuristicAnalyzerValueError(error_msg) from error
 
     def evaluate_heuristic_results(
         self, heuristic_results: dict[Heuristics, HeuristicResult]
@@ -280,6 +300,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                             has_repository=ctx.component.repository is not None,
                             pypi_registry=pypi_registry,
                             package_json={},
+                            package_sourcecode_path="",
                         )
 
                     pypi_registry_info.metadata.append(pypi_package_json)
@@ -287,28 +308,39 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                     # Download the PyPI package JSON, but no need to persist it to the filesystem.
                     if pypi_package_json.package_json or pypi_package_json.download(dest=""):
                         try:
-                            result, detail_info = self.run_heuristics(pypi_package_json)
+                            heuristic_results, heuristics_detail_info = self.run_heuristics(pypi_package_json)
                         except HeuristicAnalyzerValueError:
                             return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-                        confidence, triggered_rules = self.evaluate_heuristic_results(result)
-                        detail_info["triggered_rules"] = triggered_rules
+                        confidence, triggered_rules = self.evaluate_heuristic_results(heuristic_results)
+                        heuristics_detail_info["triggered_rules"] = triggered_rules
                         result_type = CheckResultType.FAILED
                         if not confidence:
                             confidence = Confidence.HIGH
                             result_type = CheckResultType.PASSED
-                        elif ctx.dynamic_data["validate_malware"]:
-                            is_malware, validation_result = self.validate_malware(pypi_package_json)
-                            if is_malware:  # Find source code block matched the malicious pattern
-                                confidence = Confidence.HIGH
-                            elif validation_result:  # Find suspicious source code, but cannot be confirmed
-                                confidence = Confidence.MEDIUM
-                            logger.debug(validation_result)
+
+                        # optional sourcecode analysis feature
+                        if ctx.dynamic_data["analyze_source"]:
+                            try:
+                                sourcecode_result, sourcecode_detail_info = self.analyze_source(
+                                    pypi_package_json, heuristic_results, force=ctx.dynamic_data["force_analyze_source"]
+                                )
+                            except (HeuristicAnalyzerValueError, ConfigurationError):
+                                return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
+
+                            heuristic_results[Heuristics.SUSPICIOUS_PATTERNS] = sourcecode_result
+                            heuristics_detail_info.update(sourcecode_detail_info)
+
+                            if sourcecode_result == HeuristicResult.FAIL:
+                                if result_type == CheckResultType.PASSED:
+                                    # heuristics determined it benign, so lower the confidence
+                                    confidence = Confidence.LOW
+                                result_type = CheckResultType.FAILED
 
                         result_tables.append(
                             MaliciousMetadataFacts(
-                                result=result,
-                                detail_information=detail_info,
+                                result=heuristic_results,
+                                detail_information=heuristics_detail_info,
                                 confidence=confidence,
                             )
                         )

@@ -72,6 +72,10 @@ See below for instructions to set up the development environment.
 - PRs should be merged using the `Squash and merge` strategy. In most cases a single commit with
 a detailed commit message body is preferred. Make sure to keep the `Signed-off-by` line in the body.
 
+### PyPI Malware Detection Contribution
+
+Please see the [README for the malware analyzer](./src/macaron/malware_analyzer/README.md) for information on contributing Heuristics and code patterns.
+
 ## Branching model
 
 * The `main` branch should be used as the base branch for pull requests. The `release` branch is designated for releases and should only be merged into when creating a new release for Macaron.

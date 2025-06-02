@@ -37,6 +37,7 @@ dependencies = [
     "beautifulsoup4 >= 4.12.0,<5.0.0",
     "problog >= 2.2.6,<3.0.0",
     "cryptography >=44.0.0,<45.0.0",
+    "semgrep == 1.113.0",
 ]
 keywords = []
 # https://pypi.org/classifiers/
@@ -119,12 +120,14 @@ Issues = "https://github.com/oracle/macaron/issues"
 [tool.bandit]
 tests = []
 skips = ["B101"]
-
+exclude_dirs = ['tests/malware_analyzer/pypi/resources/sourcecode_samples']
 
 # https://github.com/psf/black#configuration
 [tool.black]
 line-length = 120
-
+force-exclude = '''
+tests/malware_analyzer/pypi/resources/sourcecode_samples/
+'''
 
 # https://github.com/commitizen-tools/commitizen
 # https://commitizen-tools.github.io/commitizen/bump/
@@ -170,7 +173,6 @@ exclude = [
     "SECURITY.md",
 ]
 
-
 # https://pycqa.github.io/isort/
 [tool.isort]
 profile = "black"
@@ -181,7 +183,6 @@ skip_gitignore = true
 
 # https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml
 [tool.mypy]
-# exclude=
 show_error_codes = true
 show_column_numbers = true
 check_untyped_defs = true
@@ -208,7 +209,6 @@ module = [
     "problog.*",
 ]
 ignore_missing_imports = true
-
 
 # https://pylint.pycqa.org/en/latest/user_guide/configuration/index.html
 [tool.pylint.MASTER]
@@ -261,6 +261,7 @@ addopts = """-vv -ra --tb native \
     --doctest-modules --doctest-continue-on-failure --doctest-glob '*.rst' \
     --cov macaron \
     --ignore tests/integration \
+    --ignore tests/malware_analyzer/pypi/resources/sourcecode_samples \
 """  # Consider adding --pdb
 # https://docs.python.org/3/library/doctest.html#option-flags
 doctest_optionflags = "IGNORE_EXCEPTION_DETAIL"
