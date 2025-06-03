@@ -22,6 +22,10 @@ class ProvenanceDerivedRepoFacts(CheckFacts):
 
     __tablename__ = "_provenance_derived_repo_check"
 
+    # This check is disabled here due to a bug in pylint. The Mapped class triggers a false positive.
+    # It may arbitrarily become true that this is no longer needed in this check, or will be needed in another check.
+    # pylint: disable=unsubscriptable-object
+
     #: The primary key.
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 

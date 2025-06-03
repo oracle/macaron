@@ -2,6 +2,8 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides abstractions for the pypi package registry."""
+from __future__ import annotations
+
 import hashlib
 import logging
 import os
@@ -14,6 +16,7 @@ from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import requests
 from bs4 import BeautifulSoup, Tag
@@ -24,8 +27,10 @@ from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceC
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
-from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 from macaron.util import send_get_http_raw
+
+if TYPE_CHECKING:
+    from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
