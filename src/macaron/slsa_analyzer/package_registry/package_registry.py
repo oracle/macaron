@@ -7,9 +7,9 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-from macaron.errors import InvalidHTTPResponseError
+from macaron.errors import APIAccessError, InvalidHTTPResponseError
 from macaron.json_tools import json_extract
-from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
+from macaron.slsa_analyzer.package_registry.deps_dev import DepsDevService
 
 logger: logging.Logger = logging.getLogger(__name__)
 
