@@ -286,12 +286,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                     package_registry=PyPIRegistry(),
                 ) as pypi_registry_info:
                     # Retrieve the pre-existing asset, or create a new one.
-                    pypi_package_json = None
-                    if ctx.component.version:
-                        pypi_package_json = find_or_create_pypi_asset(
-                            ctx.component.name, ctx.component.version, pypi_registry_info
-                        )
-                    if pypi_package_json is None:
+                    pypi_package_json = find_or_create_pypi_asset(
+                        ctx.component.name, ctx.component.version, pypi_registry_info
+                    )
+                    if not pypi_package_json:
                         return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
                     pypi_package_json.has_repository = ctx.component.repository is not None

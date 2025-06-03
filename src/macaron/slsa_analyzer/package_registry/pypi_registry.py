@@ -736,7 +736,7 @@ class PyPIPackageJsonAsset:
 
 
 def find_or_create_pypi_asset(
-    asset_name: str, asset_version: str, pypi_registry_info: PackageRegistryInfo
+    asset_name: str, asset_version: str | None, pypi_registry_info: PackageRegistryInfo
 ) -> PyPIPackageJsonAsset | None:
     """Find the matching asset in the provided package registry information, or if not found, create and add it.
 
@@ -744,7 +744,7 @@ def find_or_create_pypi_asset(
     ----------
     asset_name: str
         The name of the asset.
-    asset_version: str
+    asset_version: str | None
         The version of the asset.
     pypi_registry_info:
         The package registry information.
