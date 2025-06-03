@@ -747,7 +747,7 @@ def find_or_create_pypi_asset(
     asset_version: str | None
         The version of the asset.
     pypi_registry_info:
-        The package registry information.
+        The package registry information. If a new asset is created, it will be added to the metadata of this registry.
 
     Returns
     -------
