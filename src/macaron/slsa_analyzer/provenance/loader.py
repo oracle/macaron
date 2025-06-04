@@ -80,15 +80,33 @@ def _load_provenance_file_content(
         try:
             decompressed_file_content = gzip.decompress(file_content)
             decoded_file_content = decompressed_file_content.decode()
-            provenance = json.loads(decoded_file_content)
+            return decode_provenance(json.loads(decoded_file_content))
         except (gzip.BadGzipFile, EOFError, zlib.error):
             decoded_file_content = file_content.decode()
-            provenance = json.loads(decoded_file_content)
+            return decode_provenance(json.loads(decoded_file_content))
     except (json.JSONDecodeError, TypeError, UnicodeDecodeError) as error:
         raise LoadIntotoAttestationError(
             "Cannot deserialize the file content as JSON.",
         ) from error
 
+
+def decode_provenance(provenance: dict) -> dict[str, JsonType]:
+    """Find and decode the provenance payload.
+
+    Parameters
+    ----------
+    provenance: dict
+        The contents of the provenance from which the payload will be decoded.
+
+    Returns
+    -------
+    The decoded payload.
+
+    Raises
+    ------
+    LoadIntotoAttestationError
+        If the payload could not be decoded.
+    """
     # The GitHub Attestation stores the DSSE envelope in `dsseEnvelope` property.
     dsse_envelope = provenance.get("dsseEnvelope", None)
     if dsse_envelope:
@@ -101,6 +119,10 @@ def _load_provenance_file_content(
     if not provenance_payload:
         # PyPI Attestation.
         provenance_payload = json_extract(provenance, ["envelope", "statement"], str)
+    if not provenance_payload:
+        # GitHub Attestation.
+        # TODO Check if old method (above) actually works.
+        provenance_payload = json_extract(provenance, ["bundle", "dsseEnvelope", "payload"], str)
     if not provenance_payload:
         raise LoadIntotoAttestationError(
             'Cannot find the "payload" field in the decoded provenance.',

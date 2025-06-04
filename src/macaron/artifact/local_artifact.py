@@ -1,16 +1,20 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module declares types and utilities for handling local artifacts."""
 
 import fnmatch
 import glob
+import hashlib
+import logging
 import os
 
 from packageurl import PackageURL
 
-from macaron.artifact.maven import construct_maven_repository_path
+from macaron.artifact.maven import construct_maven_repository_path, construct_primary_jar_file_name
 from macaron.errors import LocalArtifactFinderError
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def construct_local_artifact_dirs_glob_pattern_maven_purl(maven_purl: PackageURL) -> list[str] | None:
@@ -247,3 +251,55 @@ def get_local_artifact_dirs(
         )
 
     raise LocalArtifactFinderError(f"Unsupported PURL type {purl_type}")
+
+
+def get_local_artifact_hash(purl: PackageURL, artifact_dirs: list[str]) -> str | None:
+    """Compute the hash of the local artifact.
+
+    Parameters
+    ----------
+    purl: PackageURL
+        The PURL of the artifact being sought.
+    artifact_dirs: list[str]
+        The list of directories that may contain the artifact file.
+
+    Returns
+    -------
+    str | None
+        The hash, or None if not found.
+    """
+    if not artifact_dirs:
+        logger.debug("No artifact directories provided.")
+        return None
+
+    if not purl.version:
+        logger.debug("PURL is missing version.")
+        return None
+
+    artifact_target = None
+    if purl.type == "maven":
+        artifact_target = construct_primary_jar_file_name(purl)
+
+    # TODO add support for other PURL types here.
+    # Other purl types can be easily supported if user provided artifacts are accepted from the command line.
+    # See https://github.com/oracle/macaron/issues/498.
+
+    if not artifact_target:
+        logger.debug("PURL type not supported: %s", purl.type)
+        return None
+
+    for artifact_dir in artifact_dirs:
+        full_path = os.path.join(artifact_dir, artifact_target)
+        if not os.path.exists(full_path):
+            continue
+
+        with open(full_path, "rb") as file:
+            try:
+                hash_result = hashlib.file_digest(file, "sha256")
+            except ValueError as error:
+                logger.debug("Error while hashing file: %s", error)
+                continue
+
+            return hash_result.hexdigest()
+
+    return None

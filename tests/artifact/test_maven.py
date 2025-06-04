@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for types and utilities for Maven artifacts."""
@@ -6,7 +6,11 @@
 import pytest
 from packageurl import PackageURL
 
-from macaron.artifact.maven import MavenSubjectPURLMatcher, construct_maven_repository_path
+from macaron.artifact.maven import (
+    MavenSubjectPURLMatcher,
+    construct_maven_repository_path,
+    construct_primary_jar_file_name,
+)
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
 
 
@@ -161,3 +165,10 @@ def test_to_group_folder_path(
 ) -> None:
     """Test the ``to_gorup_folder_path`` method."""
     assert construct_maven_repository_path(group_id) == expected_group_path
+
+
+def test_construct_primary_jar_file_name() -> None:
+    """Test the artifact file name function."""
+    assert not construct_primary_jar_file_name(PackageURL.from_string("pkg:maven/test/example"))
+
+    assert construct_primary_jar_file_name(PackageURL.from_string("pkg:maven/text/example@1")) == "example-1.jar"

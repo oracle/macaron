@@ -166,7 +166,12 @@ def find_repo_alternative(
         found_repo, outcome = repo_finder_pypi.find_repo(purl, package_registries_info)
 
     if not found_repo:
-        logger.debug("Could not find repository using type specific (%s) methods for PURL: %s", purl.type, purl)
+        logger.debug(
+            "Could not find repository using type specific (%s) methods for PURL %s. Outcome: %s",
+            purl.type,
+            purl,
+            outcome,
+        )
 
     return found_repo, outcome
 

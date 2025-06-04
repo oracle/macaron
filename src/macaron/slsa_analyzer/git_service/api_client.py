@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides API clients for VCS services, such as GitHub."""
@@ -658,6 +658,25 @@ class GhAPIClient(BaseAPIClient):
             return False
 
         return True
+
+    def get_attestation(self, full_name: str, artifact_hash: str) -> dict:
+        """Download and return the attestation associated with the passed artifact hash, if any.
+
+        Parameters
+        ----------
+        full_name : str
+            The full name of the repo.
+        artifact_hash: str
+            The SHA256 hash of an artifact.
+
+        Returns
+        -------
+        dict
+            The attestation data, or an empty dict if not found.
+        """
+        url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/attestations/sha256:{artifact_hash}"
+        response_data = send_get_http(url, self.headers)
+        return response_data or {}
 
 
 def get_default_gh_client(access_token: str) -> GhAPIClient:
