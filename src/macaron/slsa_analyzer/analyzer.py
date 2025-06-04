@@ -76,8 +76,13 @@ from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, MavenCentralRegistry, PyPIRegistry
 from macaron.slsa_analyzer.package_registry.pypi_registry import find_or_create_pypi_asset
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
-from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payload
-from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
+from macaron.slsa_analyzer.provenance.intoto import (
+    InTotoPayload,
+    InTotoV01Payload,
+    ValidateInTotoPayloadError,
+    validate_intoto_payload,
+)
+from macaron.slsa_analyzer.provenance.loader import decode_provenance
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
@@ -1102,9 +1107,13 @@ class Analyzer:
         if not git_attestation_list:
             return None
 
-        git_attestation: str = git_attestation_list[0]
+        payload = decode_provenance(git_attestation_list[0])
 
-        return load_provenance_payload(git_attestation)
+        try:
+            return validate_intoto_payload(payload)
+        except ValidateInTotoPayloadError as error:
+            logger.debug("Invalid attestation payload: %s", error)
+            return None
 
     def _determine_git_service(self, analyze_ctx: AnalyzeContext) -> BaseGitService:
         """Determine the Git service used by the software component."""

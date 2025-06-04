@@ -7,4 +7,4 @@ Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_provenance_available_1").
 
 apply_policy_to("test_policy", component_id) :-
-    is_component(component_id, "pkg:pypi/toga@0.5.0").
+    is_component(component_id, "pkg:pypi/toga@0.4.8").
