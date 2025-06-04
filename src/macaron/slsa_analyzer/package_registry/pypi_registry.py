@@ -5,10 +5,13 @@
 
 import logging
 import os
+import re
+import shutil
 import tarfile
 import tempfile
 import urllib.parse
-import zipfile
+from collections.abc import Callable, Generator, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -17,13 +20,17 @@ from bs4 import BeautifulSoup, Tag
 from requests import RequestException
 
 from macaron.config.defaults import defaults
-from macaron.errors import ConfigurationError, InvalidHTTPResponseError
+from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceCodeError
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
 from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+def _handle_temp_dir_clean(function: Callable, path: str, onerror: tuple) -> None:
+    raise SourceCodeError(f"Error removing with shutil. function={function}, " f"path={path}, excinfo={onerror}")
 
 
 class PyPIRegistry(PackageRegistry):
@@ -159,77 +166,102 @@ class PyPIRegistry(PackageRegistry):
 
         return res_obj
 
-    def fetch_sourcecode(self, src_url: str) -> dict[str, str] | None:
-        """Get the source code of the package.
+    def download_package_sourcecode(self, url: str) -> str:
+        """Download the package source code from pypi registry.
+
+        Parameters
+        ----------
+        url: str
+            The package source code url.
 
         Returns
         -------
-        str | None
-            The source code.
+        str
+            The temp directory with the source code.
+
+        Raises
+        ------
+        InvalidHTTPResponseError
+            If the HTTP request to the registry fails or an unexpected response is returned.
         """
         # Get name of file.
-        _, _, file_name = src_url.rpartition("/")
+        _, _, file_name = url.rpartition("/")
+        package_name = re.sub(r"\.tar\.gz$", "", file_name)
 
-        # Create a temporary directory to store the downloaded source.
-        with tempfile.TemporaryDirectory() as temp_dir:
+        # temporary directory to unzip and read all source files
+        temp_dir = tempfile.mkdtemp(prefix=f"{package_name}_")
+        response = send_get_http_raw(url, stream=True)
+        if response is None:
+            error_msg = f"Unable to find package source code using URL: {url}"
+            logger.debug(error_msg)
             try:
-                response = requests.get(src_url, stream=True, timeout=40)
-                response.raise_for_status()
-            except requests.exceptions.HTTPError as http_err:
-                logger.debug("HTTP error occurred: %s", http_err)
-                return None
+                shutil.rmtree(temp_dir, onerror=_handle_temp_dir_clean)
+            except SourceCodeError as tempdir_exception:
+                tempdir_exception_msg = (
+                    f"Unable to cleanup temporary directory {temp_dir} for source code: {tempdir_exception}"
+                )
+                logger.debug(tempdir_exception_msg)
+                raise InvalidHTTPResponseError(error_msg) from tempdir_exception
 
-            if response.status_code != 200:
-                return None
+            raise InvalidHTTPResponseError(error_msg)
 
-            source_file = os.path.join(temp_dir, file_name)
-            with open(source_file, "wb") as file:
+        with tempfile.NamedTemporaryFile("+wb", delete=True) as source_file:
+            try:
+                for chunk in response.iter_content():
+                    source_file.write(chunk)
+                    source_file.flush()
+            except RequestException as stream_error:
+                error_msg = f"Error while streaming source file: {stream_error}"
+                logger.debug(error_msg)
                 try:
-                    for chunk in response.iter_content():
-                        file.write(chunk)
-                except RequestException as error:
-                    # Something went wrong with the request, abort.
-                    logger.debug("Error while streaming source file: %s", error)
-                    response.close()
-                    return None
-            logger.debug("Begin fetching the source code from PyPI")
-            py_files_content: dict[str, str] = {}
-            if tarfile.is_tarfile(source_file):
+                    shutil.rmtree(temp_dir, onerror=_handle_temp_dir_clean)
+                except SourceCodeError as tempdir_exception:
+                    tempdir_exception_msg = (
+                        f"Unable to cleanup temporary directory {temp_dir} for source code: {tempdir_exception}"
+                    )
+                    logger.debug(tempdir_exception_msg)
+
+                raise InvalidHTTPResponseError(error_msg) from RequestException
+
+            if tarfile.is_tarfile(source_file.name):
                 try:
-                    with tarfile.open(source_file, "r:gz") as tar:
-                        for member in tar.getmembers():
-                            if member.isfile() and member.name.endswith(".py") and member.size > 0:
-                                file_obj = tar.extractfile(member)
-                                if file_obj:
-                                    content = file_obj.read().decode("utf-8")
-                                    py_files_content[member.name] = content
-                except tarfile.ReadError as exception:
-                    logger.debug("Error reading tar file: %s", exception)
-                    return None
-            elif zipfile.is_zipfile(source_file):
-                try:
-                    with zipfile.ZipFile(source_file, "r") as zip_ref:
-                        for info in zip_ref.infolist():
-                            if info.filename.endswith(".py") and not info.is_dir() and info.file_size > 0:
-                                with zip_ref.open(info) as file_obj:
-                                    content = file_obj.read().decode("utf-8")
-                                    py_files_content[info.filename] = content
-                except zipfile.BadZipFile as bad_zip_exception:
-                    logger.debug("Error reading zip file: %s", bad_zip_exception)
-                    return None
-                except zipfile.LargeZipFile as large_zip_exception:
-                    logger.debug("Zip file too large to read: %s", large_zip_exception)
-                    return None
-                # except KeyError as zip_key_exception:
-                #     logger.debug(
-                #         "Error finding target '%s' in zip file '%s': %s", archive_target, source_file, zip_key_exception
-                #     )
-                #     return None
+                    with tarfile.open(source_file.name, "r:gz") as sourcecode_tar:
+                        sourcecode_tar.extractall(temp_dir, filter="data")
+
+                except tarfile.ReadError as read_error:
+                    error_msg = f"Error reading source code tar file: {read_error}"
+                    logger.debug(error_msg)
+                    try:
+                        shutil.rmtree(temp_dir, onerror=_handle_temp_dir_clean)
+                    except SourceCodeError as tempdir_exception:
+                        tempdir_exception_msg = (
+                            f"Unable to cleanup temporary directory {temp_dir} for source code: {tempdir_exception}"
+                        )
+                        logger.debug(tempdir_exception_msg)
+
+                    raise InvalidHTTPResponseError(error_msg) from read_error
+
+                extracted_dir = os.listdir(temp_dir)
+                if len(extracted_dir) == 1 and package_name == extracted_dir[0]:
+                    # structure used package name and version as top-level directory
+                    temp_dir = os.path.join(temp_dir, extracted_dir[0])
+
             else:
-                logger.debug("Unable to extract file: %s", file_name)
+                error_msg = f"Unable to extract source code from file {file_name}"
+                logger.debug(error_msg)
+                try:
+                    shutil.rmtree(temp_dir, onerror=_handle_temp_dir_clean)
+                except SourceCodeError as tempdir_exception:
+                    tempdir_exception_msg = (
+                        f"Unable to cleanup temporary directory {temp_dir} for source code: {tempdir_exception}"
+                    )
+                    logger.debug(tempdir_exception_msg)
+                    raise InvalidHTTPResponseError(error_msg) from tempdir_exception
 
-            logger.debug("Successfully fetch the source code from PyPI")
-            return py_files_content
+                raise InvalidHTTPResponseError(error_msg)
+
+        logger.debug("Temporary download and unzip of %s stored in %s", file_name, temp_dir)
+        return temp_dir
 
     def get_package_page(self, package_name: str) -> str | None:
         """Implement custom API to get package main page.
@@ -389,6 +421,9 @@ class PyPIPackageJsonAsset:
     #: The asset content.
     package_json: dict
 
+    #: the source code temporary location name
+    package_sourcecode_path: str
+
     #: The size of the asset (in bytes). This attribute is added to match the AssetLocator
     #: protocol and is not used because pypi API registry does not provide it.
     @property
@@ -518,16 +553,120 @@ class PyPIPackageJsonAsset:
             return upload_time
         return None
 
-    def get_sourcecode(self) -> dict[str, str] | None:
-        """Get source code of the package.
+    @contextmanager
+    def sourcecode(self) -> Generator[None]:
+        """Download and cleanup source code of the package with a context manager."""
+        if not self.download_sourcecode():
+            raise SourceCodeError("Unable to download package source code.")
+        yield
+        self.cleanup_sourcecode()
+
+    def download_sourcecode(self) -> bool:
+        """Get the source code of the package and store it in a temporary directory.
 
         Returns
         -------
-        dict[str, str] | None
-            The source code of each script in the package
+        bool
+            ``True`` if the source code is downloaded successfully; ``False`` if not.
         """
-        url: str | None = self.get_sourcecode_url()
+        url = self.get_sourcecode_url()
         if url:
-            source_code: dict[str, str] | None = self.pypi_registry.fetch_sourcecode(url)
-            return source_code
-        return None
+            try:
+                self.package_sourcecode_path = self.pypi_registry.download_package_sourcecode(url)
+                return True
+            except InvalidHTTPResponseError as error:
+                logger.debug(error)
+        return False
+
+    def cleanup_sourcecode(self) -> None:
+        """
+        Delete the temporary directory created when downloading the source code.
+
+        The package source code is no longer accessible after this, and the package_sourcecode_path
+        attribute is set to an empty string.
+        """
+        if self.package_sourcecode_path:
+            try:
+                shutil.rmtree(self.package_sourcecode_path, onerror=_handle_temp_dir_clean)
+                self.package_sourcecode_path = ""
+            except SourceCodeError as tempdir_exception:
+                tempdir_exception_msg = (
+                    f"Unable to cleanup temporary directory {self.package_sourcecode_path}"
+                    f" for source code: {tempdir_exception}"
+                )
+                logger.debug(tempdir_exception_msg)
+                raise tempdir_exception
+
+    def get_sourcecode_file_contents(self, path: str) -> bytes:
+        """
+        Get the contents of a single source code file specified by the path.
+
+        The path can be relative to the package_sourcecode_path attribute, or an absolute path.
+
+        Parameters
+        ----------
+        path: str
+            The absolute or relative to package_sourcecode_path file path to open.
+
+        Returns
+        -------
+        bytes
+            The raw contents of the source code file.
+
+        Raises
+        ------
+        SourceCodeError
+            if the source code has not been downloaded, or there is an error accessing the file.
+        """
+        if not self.package_sourcecode_path:
+            error_msg = "No source code files have been downloaded"
+            logger.debug(error_msg)
+            raise SourceCodeError(error_msg)
+
+        if not os.path.isabs(path):
+            path = os.path.join(self.package_sourcecode_path, path)
+
+        if not os.path.exists(path):
+            error_msg = f"Unable to locate file {path}"
+            logger.debug(error_msg)
+            raise SourceCodeError(error_msg)
+
+        try:
+            with open(path, "rb") as file:
+                return file.read()
+        except OSError as read_error:
+            error_msg = f"Unable to read file {path}: {read_error}"
+            logger.debug(error_msg)
+            raise SourceCodeError(error_msg) from read_error
+
+    def iter_sourcecode(self) -> Iterator[tuple[str, bytes]]:
+        """
+        Iterate through all source code files.
+
+        Returns
+        -------
+        tuple[str, bytes]
+            The source code file path, and the the raw contents of the source code file.
+
+        Raises
+        ------
+        SourceCodeError
+            if the source code has not been downloaded.
+        """
+        if not self.package_sourcecode_path:
+            error_msg = "No source code files have been downloaded"
+            logger.debug(error_msg)
+            raise SourceCodeError(error_msg)
+
+        for root, _directories, files in os.walk(self.package_sourcecode_path):
+            for file in files:
+                if root == ".":
+                    root_path = os.getcwd() + os.linesep
+                else:
+                    root_path = root
+                filepath = os.path.join(root_path, file)
+
+                with open(filepath, "rb") as handle:
+                    contents = handle.read()
+
+                yield filepath, contents

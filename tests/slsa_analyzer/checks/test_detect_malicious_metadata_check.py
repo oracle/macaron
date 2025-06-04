@@ -7,10 +7,12 @@ import json
 import os
 import urllib.parse
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest_httpserver import HTTPServer
 
+from macaron import MACARON_PATH
 from macaron.config.defaults import load_defaults
 from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult, Heuristics
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
@@ -22,20 +24,32 @@ from tests.conftest import MockAnalyzeContext
 RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
 
 
+@patch("macaron.malware_analyzer.pypi_heuristics.sourcecode.pypi_sourcecode_analyzer.global_config")
 @pytest.mark.parametrize(
-    ("purl", "expected"),
+    ("purl", "expected", "sourcecode_analysis"),
     [
         # TODO: This check is expected to FAIL for pkg:pypi/zlibxjson. However, after introducing the wheel presence
         # heuristic, a false negative has been introduced. Note that if the unit test were allowed to access the OSV
         # knowledge base, it would report the package as malware. However, we intentionally block unit tests
         # from reaching the network.
-        ("pkg:pypi/zlibxjson", CheckResultType.PASSED),
-        ("pkg:pypi/test", CheckResultType.UNKNOWN),
-        ("pkg:maven:test/test", CheckResultType.UNKNOWN),
+        pytest.param("pkg:pypi/zlibxjson", CheckResultType.PASSED, False, id="test_malicious_pypi_package"),
+        pytest.param("pkg:pypi/test", CheckResultType.UNKNOWN, False, id="test_unknown_pypi_package"),
+        pytest.param("pkg:maven:test/test", CheckResultType.UNKNOWN, False, id="test_non_pypi_package"),
+        # TODO: including source code analysis that detects flow from a remote point to a file write may assist in resolving
+        # the issue of this false negative.
+        pytest.param(
+            "pkg:pypi/zlibxjson", CheckResultType.PASSED, True, id="test_sourcecode_analysis_malicious_pypi_package"
+        ),
     ],
 )
 def test_detect_malicious_metadata(
-    httpserver: HTTPServer, tmp_path: Path, macaron_path: Path, purl: str, expected: str
+    mock_global_config: MagicMock,
+    httpserver: HTTPServer,
+    tmp_path: Path,
+    macaron_path: Path,
+    purl: str,
+    expected: str,
+    sourcecode_analysis: bool,
 ) -> None:
     """Test that the check handles repositories correctly."""
     check = DetectMaliciousMetadataCheck()
@@ -44,6 +58,10 @@ def test_detect_malicious_metadata(
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl=purl)
     pypi_registry = PyPIRegistry()
     ctx.dynamic_data["package_registries"] = [PackageRegistryInfo("pip", "pypi", pypi_registry)]
+    if sourcecode_analysis:
+        ctx.dynamic_data["analyze_source"] = True
+
+    mock_global_config.resources_path = os.path.join(MACARON_PATH, "resources")
 
     # Set up responses of PyPI endpoints using the httpserver plugin.
     with open(os.path.join(RESOURCE_PATH, "pypi_files", "zlibxjson.html"), encoding="utf8") as page:
@@ -129,5 +147,5 @@ def test_evaluations(combination: dict[Heuristics, HeuristicResult]) -> None:
 
     confidence, triggered_rules = check.evaluate_heuristic_results(combination)
     assert confidence == 0
-    # Expecting this to be a dictionary, so we can ignore the type problems
+    # Expecting this to be a dictionary, so we can ignore the type problems.
     assert len(dict(triggered_rules)) == 0  # type: ignore[arg-type]
