@@ -111,8 +111,6 @@ def find_repo(
     logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
     found_repo, outcome = repo_finder.find_repo(purl)
 
-    print(package_registries_info)
-
     if not found_repo:
         found_repo, outcome = find_repo_alternative(purl, outcome, package_registries_info)
 

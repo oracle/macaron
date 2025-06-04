@@ -281,6 +281,8 @@ def get_local_artifact_hash(purl: PackageURL, artifact_dirs: list[str]) -> str |
         artifact_target = construct_primary_jar_file_name(purl)
 
     # TODO add support for other PURL types here.
+    # Other purl types can be easily supported if user provided artifacts are accepted from the command line.
+    # See https://github.com/oracle/macaron/issues/498.
 
     if not artifact_target:
         logger.debug("PURL type not supported: %s", purl.type)
