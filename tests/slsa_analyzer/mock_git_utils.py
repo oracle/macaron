@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -44,7 +44,7 @@ def initiate_repo(repo_path: str | os.PathLike, git_init_options: dict | None = 
         git_wrapper = Git(repo_path)
         return git_wrapper
     except GitError:
-        # No git repo at repo_path
+        # No git repo at repo_path.
         git.Repo.init(repo_path, **git_init_options)
         return Git(repo_path)
 
@@ -65,7 +65,7 @@ def commit_files(git_wrapper: Git, file_names: list) -> bool:
         True if succeed else False.
     """
     try:
-        # Store the index object as recommended by the documentation
+        # Store the index object as recommended by the documentation.
         current_index = git_wrapper.repo.index
         current_index.add(file_names)
         current_index.commit(f"Add files: {str(file_names)}")

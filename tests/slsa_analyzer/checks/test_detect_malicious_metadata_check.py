@@ -127,7 +127,7 @@ def test_detect_malicious_metadata(
     [
         pytest.param(
             {
-                # similar to rule ID malware_high_confidence_1, but SUSPICIOUS_SETUP is skipped since the file does not
+                # Similar to rule ID malware_high_confidence_1, but SUSPICIOUS_SETUP is skipped since the file does not
                 # exist, so the rule should not trigger.
                 Heuristics.EMPTY_PROJECT_LINK: HeuristicResult.FAIL,
                 Heuristics.SOURCE_CODE_REPO: HeuristicResult.SKIP,
