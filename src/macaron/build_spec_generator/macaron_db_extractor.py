@@ -6,8 +6,10 @@
 import logging
 from collections.abc import Sequence
 
+from packageurl import PackageURL
 from sqlalchemy import Select, and_, select
 from sqlalchemy.dialects import sqlite
+from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.orm import Session, aliased
 
 from macaron.database.table_definitions import Analysis, CheckFacts, Component, MappedCheckResult, Repository
@@ -17,6 +19,10 @@ from macaron.slsa_analyzer.checks.build_service_check import BuildServiceFacts
 from macaron.slsa_analyzer.checks.build_tool_check import BuildToolFacts
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+class QueryMacaronDatabaseError(Exception):
+    """Happens when there is an unexpected error while querying the database using SQLAlchemy."""
 
 
 def compile_sqlite_select_statement(select_statment: Select) -> str:
@@ -39,13 +45,13 @@ def compile_sqlite_select_statement(select_statment: Select) -> str:
     return str(sqlite_str)
 
 
-def get_sql_stmt_latest_component_for_purl(purl_string: str) -> Select[tuple[Component]]:
+def get_sql_stmt_latest_component_for_purl(purl: PackageURL) -> Select[tuple[Component]]:
     """Return an SQLAlchemy SELECT statement to query the latest Component.
 
     Parameters
     ----------
-    purl_string : str
-        The PackageURL string to find the Component instance.
+    purl : PackageURL
+        The PackageURL object to find the Component instance.
 
     Returns
     -------
@@ -62,7 +68,7 @@ def get_sql_stmt_latest_component_for_purl(purl_string: str) -> Select[tuple[Com
             Analysis,
             onclause=Component.id == Analysis.id,
         )
-        .where(Component.purl == purl_string)
+        .where(Component.purl == purl.to_string())
         .order_by(
             Analysis.analysis_time.desc(),
             Analysis.id.desc(),
@@ -70,13 +76,13 @@ def get_sql_stmt_latest_component_for_purl(purl_string: str) -> Select[tuple[Com
     )
 
 
-def lookup_latest_component_id(purl_string: str, session: Session) -> int | None:
+def lookup_latest_component_id(purl: PackageURL, session: Session) -> int | None:
     """Return the component id of the latest analysis that matches a given PackageURL string.
 
     Parameters
     ----------
-    purl_string : str
-        The PackageURL string to look for the latest component id.
+    purl : PackageURL
+        The PackageURL object to look for the latest component id.
     session : Session
         The SQLAlcemy Session that connects to the Macaron database.
 
@@ -85,7 +91,7 @@ def lookup_latest_component_id(purl_string: str, session: Session) -> int | None
     int | None
         The latest component id or None if there isn't one available in the database.
     """
-    latest_component_id_stmt = get_sql_stmt_latest_component_for_purl(purl_string)
+    latest_component_id_stmt = get_sql_stmt_latest_component_for_purl(purl)
     logger.debug("Latest Analysis and Component query \n %s", compile_sqlite_select_statement(latest_component_id_stmt))
 
     component = session.execute(latest_component_id_stmt).scalars().first()
@@ -420,7 +426,7 @@ def get_sql_stmt_repository(component_id: int) -> Select[tuple[Repository]]:
         .select_from(Component)
         .join(
             Repository,
-            onclause=Component.id == Repository.id,
+            onclause=Component.id == Repository.component_id,
         )
         .where(Component.id == component_id)
     )
@@ -431,8 +437,8 @@ def lookup_repository(component_id: int, session: Session) -> Repository | None:
 
     Parameters
     ----------
-    purl_string : str
-        The PackageURL string to look for the Repository.
+    component_id : int
+        The component id to look for the Repository.
     session : Session
         The SQLAlcemy Session that connects to the Macaron database.
 
@@ -440,16 +446,25 @@ def lookup_repository(component_id: int, session: Session) -> Repository | None:
     -------
     Repository
         The Repository instances obtained from querying the database.
+
+    Raises
+    ------
+    QueryMacaronDatabaseError
+        If the query result from the database contains more than one Repository instance.
     """
     repository_statement = get_sql_stmt_repository(component_id)
     logger.debug(
         "Repository for component %d \n %s.", component_id, compile_sqlite_select_statement(repository_statement)
     )
 
-    sql_results = session.execute(repository_statement).scalars().all()
+    try:
+        repository = session.execute(repository_statement).scalars().one_or_none()
+    except MultipleResultsFound as error:
+        raise QueryMacaronDatabaseError(
+            f"Expect at most one repository, found multiple repositories data for component id {component_id}"
+        ) from error
 
-    assert len(sql_results) == 1 or len(sql_results) == 0
-    return sql_results[0] or None
+    return repository
 
 
 # TODO: can we refactor the obtaining the sql statement and execute it

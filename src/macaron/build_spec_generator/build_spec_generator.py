@@ -7,10 +7,11 @@ import logging
 from enum import Enum
 
 from packageurl import PackageURL
-from sqlalchemy.engine import create_engine
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from macaron.build_spec_generator.macaron_db_extractor import (
+    QueryMacaronDatabaseError,
     lookup_any_build_command,
     lookup_build_tools_check,
     lookup_latest_component_id,
@@ -59,7 +60,14 @@ def gen_build_spec_from_database(
     db_engine = create_engine(f"sqlite+pysqlite:///{database_path}", echo=False)
 
     with Session(db_engine) as session, session.begin():
-        latest_component_id = lookup_latest_component_id(purl_string, session)
+        # I think we can move this parsing / validation to the logc specific for each format.
+        try:
+            rc_purl = parse_rc_purl(purl_string)
+        except InvalidPURLError as error:
+            raise BuildSpecGenerationError(
+                f"The purl string {purl_string} is not sufficient for Reproducible-Central build spec generation"
+            ) from error
+        latest_component_id = lookup_latest_component_id(rc_purl, session)
         if not latest_component_id:
             raise BuildSpecGenerationError(f"Cannot find an analysis result for PackageURL {purl_string}.")
         logger.debug("Latest component ID: %d", latest_component_id)
@@ -89,7 +97,13 @@ def gen_build_spec_from_database(
             )
             # lookup_build_facts = ...
 
-        lookup_component_repository = lookup_repository(latest_component_id, session)
+        try:
+            lookup_component_repository = lookup_repository(latest_component_id, session)
+        except QueryMacaronDatabaseError as error:
+            raise BuildSpecGenerationError(
+                f"Critical: Unexpected result from querying repository information for {purl_string} in {database_path}."
+            ) from error
+
         if not lookup_component_repository:
             raise BuildSpecGenerationError(f"The PackageURL {purl_string} doesn't have any repository information.")
 
