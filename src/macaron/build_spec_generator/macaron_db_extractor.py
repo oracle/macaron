@@ -45,7 +45,26 @@ def lookup_multiple(
     select_statement: Select[tuple[T]],
     session: Session,
 ) -> Sequence[T]:
-    """WIP."""
+    """Perform an SELECT statement and return all scalar results.
+
+    Parameters
+    ----------
+    select_statement : Select[tuple[T]]
+        The SQLAlchemy SELECT statement to execute.
+    session : Session
+        The SQLAlchemy session to the database we are querying from.
+
+    Returns
+    -------
+    Sequence[T]
+        The result of executing the SELECT statement as scalar values.
+
+    Raises
+    ------
+    QueryMacaronDatabaseError
+        If the SELECT statement isn't executed successfully.
+        For example, if the schema of the target database doesn't match the statement.
+    """
     try:
         sql_results = session.execute(select_statement)
     except SQLAlchemyError as generic_exec_error:
@@ -60,7 +79,28 @@ def lookup_one_or_none(
     select_statement: Select[tuple[T]],
     session: Session,
 ) -> T | None:
-    """WIP."""
+    """Perform an SELECT statement and return at most one scalar result.
+
+    Parameters
+    ----------
+    select_statement : Select[tuple[T]]
+        The SQLAlchemy SELECT statement to execute
+    session : Session
+        The SQLAlchemy session to the database we are querying from.
+
+    Returns
+    -------
+    T | None
+        The result of executing the SELECT statement as one scalar value or None
+        if there isn't any available.
+
+    Raises
+    ------
+    QueryMacaronDatabaseError
+        If the SELECT statement isn't executed successfully.
+        For example, if the schema of the target database doesn't match the statement.
+        Of if there are more than one result obtained from the SELECT statement.
+    """
     compiled_select_statement = compile_sqlite_select_statement(select_statement)
     try:
         query_scalar_results = session.execute(select_statement).scalars()
@@ -80,7 +120,7 @@ def lookup_one_or_none(
 
 
 def compile_sqlite_select_statement(select_statment: Select) -> str:
-    """Return the SQLite SELECT statement from an SQLAlchemy Select statement.
+    """Return the equivalent SQLite SELECT statement from an SQLAlchemy SELECT statement.
 
     Parameters
     ----------
@@ -90,7 +130,7 @@ def compile_sqlite_select_statement(select_statment: Select) -> str:
     Returns
     -------
     str
-        The equivalent SQLite statement as a string.
+        The equivalent SQLite SELECT statement as a string.
     """
     sqlite_str = select_statment.compile(
         dialect=sqlite.dialect(),  # type: ignore
@@ -517,11 +557,30 @@ def lookup_build_script_check(component_id: int, session: Session) -> Sequence[B
 def extract_generic_build_command_info(
     check_facts: Sequence[BuildAsCodeFacts] | Sequence[BuildServiceFacts] | Sequence[BuildScriptFacts],
 ) -> list[GenericBuildCommandInfo]:
-    """WIP."""
+    """Return the list of GenericBuildCommandInfo instances from a list of Build related Check Facts.
+
+    The following information are captured for each Check Facts
+    - `command`: the build command, but this information is located in different attribute depending on the
+    type of Build Check Fact (e.g. in `BuildAsCodeFacts` it is stored in `deploy_command`). It's stored
+    in the database as a serialized JSON object so we need to use json.loads to turn it into a list of strings.
+    - `language` and `build_tool_name` are attributes of all Build Check Fact instances
+    - `language_versions` is an attribute of all Build Check Fact instances. It's stored
+    in the database as a serialized JSON object so we need to use json.loads to turn it into a list of strings.
+
+    Parameters
+    ----------
+    check_facts : Sequence[BuildAsCodeFacts] | Sequence[BuildServiceFacts] | Sequence[BuildScriptFacts]
+        The sequence of check facts obtained from the database.
+
+    Returns
+    -------
+    list[GenericBuildCommandInfo]
+        The list of GenericBuildCommandInfo instances that store build command information
+        representing by the Build Check Facts.
+    """
     result = []
     for fact in check_facts:
         match fact:
-            # TODO: create an issue about the confusing the type of Build related Check Facts
             case BuildAsCodeFacts():
                 result.append(
                     GenericBuildCommandInfo(
