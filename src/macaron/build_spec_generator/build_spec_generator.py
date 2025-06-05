@@ -84,21 +84,14 @@ def gen_build_spec_from_database(
         default_build_tool_name = None
         for fact in build_tool_facts:
             if fact.build_tool_name in {"gradle", "maven"} and fact.language in {"java"}:
+                # TODO: think about what to do if many build tools are discovered for a single project.!!!
                 default_build_tool_name = fact.build_tool_name
+                break
         if not default_build_tool_name:
             raise BuildSpecGenerationError(f"The PackageURL {purl_string} doesn't have any build tool that we support.")
 
-        # Right now we assume that
-        # BuildAsCodeFacts, BuildScriptFacts and BuildServiceFacts all contain the following
-        # attribute
         lookup_build_facts = lookup_any_build_command(latest_component_id, session)
-        if not lookup_build_facts:
-            logger.info(
-                "Cannot find any build facts for component %d. " + "Use the default build command for %s.",
-                latest_component_id,
-                default_build_tool_name,
-            )
-            # lookup_build_facts = ...
+        print(lookup_build_facts)
 
         try:
             lookup_component_repository = lookup_repository(latest_component_id, session)
@@ -106,7 +99,6 @@ def gen_build_spec_from_database(
             raise BuildSpecGenerationError(
                 f"Critical: Unexpected result from querying repository information for {purl_string} in {database_path}."
             ) from error
-
         if not lookup_component_repository:
             raise BuildSpecGenerationError(f"The PackageURL {purl_string} doesn't have any repository information.")
 
