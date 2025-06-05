@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from packageurl import PackageURL
 from sqlalchemy import Select, and_, select
 from sqlalchemy.dialects import sqlite
-from sqlalchemy.exc import MultipleResultsFound
+from sqlalchemy.exc import MultipleResultsFound, SQLAlchemyError
 from sqlalchemy.orm import Session, aliased
 
 from macaron.database.table_definitions import Analysis, CheckFacts, Component, MappedCheckResult, Repository
@@ -90,16 +90,27 @@ def lookup_latest_component_id(purl: PackageURL, session: Session) -> int | None
     -------
     int | None
         The latest component id or None if there isn't one available in the database.
+
+    Raises
+    ------
+    QueryMacaronDatabaseError
+        If there is an unexpected error when executing the SQLAlchemy query.
     """
     latest_component_id_stmt = get_sql_stmt_latest_component_for_purl(purl)
     logger.debug("Latest Analysis and Component query \n %s", compile_sqlite_select_statement(latest_component_id_stmt))
 
-    component = session.execute(latest_component_id_stmt).scalars().first()
+    try:
+        component_results = session.execute(latest_component_id_stmt)
+    except SQLAlchemyError as generic_exec_error:
+        raise QueryMacaronDatabaseError(
+            f"Critical: unexpected error when execute query {compile_sqlite_select_statement(latest_component_id_stmt)}."
+        ) from generic_exec_error
 
-    if not component:
+    latest_component = component_results.scalars().first()
+    if not latest_component:
         return None
 
-    return component.id
+    return latest_component.id
 
 
 def get_sql_stmt_build_tools(component_id: int) -> Select[tuple[BuildToolFacts]]:
@@ -144,7 +155,7 @@ def get_sql_stmt_build_tools(component_id: int) -> Select[tuple[BuildToolFacts]]
     )
 
 
-def lookup_build_tools_check(component_id: int, session: Session) -> Sequence[BuildToolFacts] | None:
+def lookup_build_tools_check(component_id: int, session: Session) -> Sequence[BuildToolFacts]:
     """Return the sequence of BuildToolFacts instances for given PackageURL string.
 
     Parameters
@@ -158,6 +169,11 @@ def lookup_build_tools_check(component_id: int, session: Session) -> Sequence[Bu
     -------
     Sequence[BuildToolFacts]
         The sequence of BuildToolFacts instances obtained from querying the database.
+
+    Raises
+    ------
+    QueryMacaronDatabaseError
+        If there is an unexpected error when executing the SQLAlchemy query.
     """
     build_tools_statement = get_sql_stmt_build_tools(component_id)
     logger.debug(
@@ -166,9 +182,14 @@ def lookup_build_tools_check(component_id: int, session: Session) -> Sequence[Bu
         compile_sqlite_select_statement(build_tools_statement),
     )
 
-    sql_results = session.execute(build_tools_statement).scalars().all()
+    try:
+        sql_results = session.execute(build_tools_statement)
+    except SQLAlchemyError as generic_exec_error:
+        raise QueryMacaronDatabaseError(
+            f"Critical: unexpected error when execute query {compile_sqlite_select_statement(build_tools_statement)}."
+        ) from generic_exec_error
 
-    return sql_results or None
+    return sql_results.scalars().all()
 
 
 def get_sql_stmt_build_as_code_check(component_id: int) -> Select[tuple[BuildAsCodeFacts]]:
@@ -218,7 +239,7 @@ def get_sql_stmt_build_as_code_check(component_id: int) -> Select[tuple[BuildAsC
     )
 
 
-def lookup_build_as_code_check(component_id: int, session: Session) -> Sequence[BuildAsCodeFacts] | None:
+def lookup_build_as_code_check(component_id: int, session: Session) -> Sequence[BuildAsCodeFacts]:
     """Return the sequence of BuildAsCodeFacts instances for given PackageURL string.
 
     Parameters
@@ -232,6 +253,11 @@ def lookup_build_as_code_check(component_id: int, session: Session) -> Sequence[
     -------
     Sequence[BuildAsCodeFacts]
         The sequence of BuildAsCodeFacts instances obtained from querying the database.
+
+    Raises
+    ------
+    QueryMacaronDatabaseError
+        If there is an unexpected error when executing the SQLAlchemy query.
     """
     build_as_code_statement = get_sql_stmt_build_as_code_check(component_id)
     logger.debug(
@@ -240,9 +266,14 @@ def lookup_build_as_code_check(component_id: int, session: Session) -> Sequence[
         compile_sqlite_select_statement(build_as_code_statement),
     )
 
-    sql_results = session.execute(build_as_code_statement).scalars().all()
+    try:
+        sql_results = session.execute(build_as_code_statement)
+    except SQLAlchemyError as generic_exec_error:
+        raise QueryMacaronDatabaseError(
+            f"Critical: unexpected error when execute query {compile_sqlite_select_statement(build_as_code_statement)}."
+        ) from generic_exec_error
 
-    return sql_results or None
+    return sql_results.scalars().all()
 
 
 def get_sql_stmt_build_service_check(component_id: int) -> Select[tuple[BuildServiceFacts]]:
@@ -292,7 +323,7 @@ def get_sql_stmt_build_service_check(component_id: int) -> Select[tuple[BuildSer
     )
 
 
-def lookup_build_service_check(component_id: int, session: Session) -> Sequence[BuildServiceFacts] | None:
+def lookup_build_service_check(component_id: int, session: Session) -> Sequence[BuildServiceFacts]:
     """Return the sequence of BuildServiceFacts instances for given PackageURL string.
 
     Parameters
@@ -306,6 +337,11 @@ def lookup_build_service_check(component_id: int, session: Session) -> Sequence[
     -------
     Sequence[BuildServiceFacts]
         The sequence of BuildServiceFacts instances obtained from querying the database.
+
+    Raises
+    ------
+    QueryMacaronDatabaseError
+        If there is an unexpected error when executing the SQLAlchemy query.
     """
     build_service_statement = get_sql_stmt_build_service_check(component_id)
     logger.debug(
@@ -314,9 +350,14 @@ def lookup_build_service_check(component_id: int, session: Session) -> Sequence[
         compile_sqlite_select_statement(build_service_statement),
     )
 
-    sql_results = session.execute(build_service_statement).scalars().all()
+    try:
+        sql_results = session.execute(build_service_statement)
+    except SQLAlchemyError as generic_exec_error:
+        raise QueryMacaronDatabaseError(
+            f"Critical: unexpected error when execute query {compile_sqlite_select_statement(build_service_statement)}."
+        ) from generic_exec_error
 
-    return sql_results or None
+    return sql_results.scalars().all()
 
 
 def get_sql_stmt_build_script_check(component_id: int) -> Select[tuple[BuildScriptFacts]]:
@@ -366,7 +407,7 @@ def get_sql_stmt_build_script_check(component_id: int) -> Select[tuple[BuildScri
     )
 
 
-def lookup_build_script_check(component_id: int, session: Session) -> Sequence[BuildScriptFacts] | None:
+def lookup_build_script_check(component_id: int, session: Session) -> Sequence[BuildScriptFacts]:
     """Return the sequence of BuildScriptFacts instances for given PackageURL string.
 
     Parameters
@@ -380,6 +421,11 @@ def lookup_build_script_check(component_id: int, session: Session) -> Sequence[B
     -------
     Sequence[BuildScriptFacts]
         The sequence of BuildScriptFacts instances obtained from querying the database.
+
+    Raises
+    ------
+    QueryMacaronDatabaseError
+        If there is an unexpected error when executing the SQLAlchemy query.
     """
     build_script_statement = get_sql_stmt_build_script_check(component_id)
     logger.debug(
@@ -388,14 +434,19 @@ def lookup_build_script_check(component_id: int, session: Session) -> Sequence[B
         compile_sqlite_select_statement(build_script_statement),
     )
 
-    sql_results = session.execute(build_script_statement).scalars().all()
+    try:
+        sql_results = session.execute(build_script_statement)
+    except SQLAlchemyError as generic_exec_error:
+        raise QueryMacaronDatabaseError(
+            f"Critical: unexpected error when execute query {compile_sqlite_select_statement(build_script_statement)}."
+        ) from generic_exec_error
 
-    return sql_results or None
+    return sql_results.scalars().all()
 
 
 # TODO: think more about the return type of this function, should we proceed the CheckFacts instances
 # or leave it to later.
-def lookup_any_build_command(component_id: int, session: Session) -> Sequence[CheckFacts] | None:
+def lookup_any_build_command(component_id: int, session: Session) -> Sequence[CheckFacts]:
     """WIP."""
     build_as_code_check_facts = lookup_build_as_code_check(component_id, session)
     if build_as_code_check_facts:
@@ -450,7 +501,8 @@ def lookup_repository(component_id: int, session: Session) -> Repository | None:
     Raises
     ------
     QueryMacaronDatabaseError
-        If the query result from the database contains more than one Repository instance.
+        If the query result from the database contains more than one Repository instance,
+        or there is an unexpected error when executing the SQLAlchemy query.
     """
     repository_statement = get_sql_stmt_repository(component_id)
     logger.debug(
@@ -463,6 +515,10 @@ def lookup_repository(component_id: int, session: Session) -> Repository | None:
         raise QueryMacaronDatabaseError(
             f"Expect at most one repository, found multiple repositories data for component id {component_id}"
         ) from error
+    except SQLAlchemyError as generic_exec_error:
+        raise QueryMacaronDatabaseError(
+            f"Critical: unexpected error when execute query {compile_sqlite_select_statement(repository_statement)}."
+        ) from generic_exec_error
 
     return repository
 

@@ -88,6 +88,9 @@ def gen_build_spec_from_database(
         if not default_build_tool_name:
             raise BuildSpecGenerationError(f"The PackageURL {purl_string} doesn't have any build tool that we support.")
 
+        # Right now we assume that
+        # BuildAsCodeFacts, BuildScriptFacts and BuildServiceFacts all contain the following
+        # attribute
         lookup_build_facts = lookup_any_build_command(latest_component_id, session)
         if not lookup_build_facts:
             logger.info(
