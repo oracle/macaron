@@ -1,10 +1,10 @@
 # Go module documentation
 ## Quick start
 Prerequisites
-- Go (tested on `go1.17.8 linux/amd64`). Installation instructions [here](https://go.dev/doc/install).
+- Go (tested on `go 1.23.0 linux/amd64`). Installation instructions [here](https://go.dev/doc/install).
 
 - Prepare the required libraries by running this command from the root dir of this repository:
-```
+```bash
 go mod download
 ```
 This command will download all packages as defined in [go.mod](../../../go.mod) and [go.sum](../../../go.sum).
@@ -12,17 +12,17 @@ This command will download all packages as defined in [go.mod](../../../go.mod) 
 ### Project layout
 This go module follows the Golang project layout as specified in [golang-standards/project-layout](https://github.com/golang-standards/project-layout).
 
-```
+```bash
 macaron
 ├── golang
-│   ├── cmd
-│   │   └── bashparser
-│   ├── internal
-│   │   ├── bashparser
-│   │   ├── cue_validator
-│   │   └── filewriter
-│   ├── pkg
-│   └── README.md
+│   ├── cmd
+│   │   ├── bashparser
+│   │   └── cuevalidator
+│   ├── internal
+│   │   ├── bashparser
+│   │   ├── cuevalidator
+│   │   └── filewriter
+│   └── README.md
 ├── go.mod
 ├── go.sum
 └── <other files in the root repository ...>
@@ -36,32 +36,39 @@ macaron
 
 ### Run the application code directly using Go
 To run an application (in the `cmd` dir), from the root dir of this repository:
-```
+```bash
 go run ./golang/cmd/<app_name>/<app_name>.go [ARGS]
 ```
 
-For example, to run the [actionparser](./cmd/actionparser/README.md) application:
-```
-go run ./golang/cmd/actionparser/actionparser.go -file ./golang/internal/actionparser/resources/valid.yaml
-```
 ### Run the Go tests
 
 To run all the tests, from the root dir of this repository:
+```bash
+make test
 ```
+
+To just run the Go tests:
+```bash
 go test ./golang/...
 ```
 
 To run the tests and record the code coverage, from the root dir of this repository:
-```
+```bash
 go test -cover ./golang/...
 ```
 
 ### Build the executable
 To build an executable of an application in this module:
+
+```bash
+make setup-go
 ```
+
+Alternatively you can run:
+```bash
 go build ./golang/cmd/<app_name>/<app_name>.go
 ```
 This will generate an executable `app_name` in the current directory. We can also change the path of the output executable by using:
-```
+```bash
 go build -o <output_path> ./golang/cmd/<app_name>/<app_name>.go
 ```

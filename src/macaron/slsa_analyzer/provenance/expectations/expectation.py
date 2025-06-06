@@ -1,8 +1,10 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides a base class for provenance expectation verifiers."""
 
+import json
+import tempfile
 from abc import abstractmethod
 from collections.abc import Callable
 from typing import Any, Self
@@ -89,6 +91,12 @@ class Expectation(CheckFacts):
             If there are errors happened during the validation process.
         """
         if not self._validator:
-            raise ExpectationRuntimeError(f"Cannot find the validator for expectation {self.path}")
+            raise ExpectationRuntimeError(f"Unable to find the validator for expectation {self.path}")
 
-        return self._validator(prov.statement)  # pylint: disable=not-callable
+        with tempfile.NamedTemporaryFile(suffix=".json", mode="w+", delete=True) as prov_stmt_file:
+            prov_stmt_file.write(json.dumps(prov.statement))
+            # Rewind the file pointer before reading..
+            prov_stmt_file.seek(0)
+            return self._validator(prov_stmt_file.name)  # pylint: disable=not-callable
+
+        raise ExpectationRuntimeError("Unable to validate the expectation.")

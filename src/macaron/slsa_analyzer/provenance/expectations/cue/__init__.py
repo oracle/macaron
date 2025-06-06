@@ -66,9 +66,9 @@ class CUEExpectation(Expectation):
             with open(expectation_path, encoding="utf-8") as expectation_file:
                 expectation.text = expectation_file.read()
                 expectation.sha = str(hashlib.sha256(expectation.text.encode("utf-8")).hexdigest())
-                expectation.target = cue_validator.get_target(expectation.text)
+                expectation.target = cue_validator.get_target(expectation_path)
                 expectation._validator = (  # pylint: disable=protected-access
-                    lambda provenance: cue_validator.validate_expectation(expectation.text, provenance)
+                    lambda provenance_path: cue_validator.validate_expectation(expectation_path, provenance_path)
                 )
         except (OSError, CUERuntimeError, CUEExpectationError) as error:
             logger.error("CUE expectation error: %s", error)
