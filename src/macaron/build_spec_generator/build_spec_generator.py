@@ -23,89 +23,10 @@ from macaron.slsa_analyzer.checks.build_tool_check import BuildToolFacts
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class BuildSpecGenerationError(Exception):
-    """Happens when there is unexpected error during the build spec generation."""
-
-
 class BuildSpecFormat(str, Enum):
     """The build spec format that we supports."""
 
     REPRODUCIBLE_CENTRAL = "rc-buildspec"
-
-
-def gen_build_spec_from_database(
-    purl_string: str,
-    database_path: str,
-    build_spec_format: str,
-) -> str:
-    """Generate a build spec for a given PURL string from the database.
-
-    Parameters
-    ----------
-    purl_string : str
-        The PackageURL as string to generate the build spec for.
-    database_path: str
-        The path to the Macaron database where we extract the information.
-    build_spec_format : str
-        The format of the output build spec file.
-
-    Returns
-    -------
-    str
-        The build spec file content as a string.
-    """
-    if build_spec_format not in [ele.value for ele in BuildSpecFormat]:
-        raise BuildSpecGenerationError(f"The output format {build_spec_format} is not supported")
-
-    db_engine = create_engine(f"sqlite+pysqlite:///{database_path}", echo=False)
-
-    with Session(db_engine) as session, session.begin():
-        # I think we can move this parsing / validation to the logc specific for each format.
-        try:
-            rc_purl = parse_rc_purl(purl_string)
-        except InvalidPURLError as error:
-            raise BuildSpecGenerationError(
-                f"The purl string {purl_string} is not sufficient for Reproducible-Central build spec generation"
-            ) from error
-        latest_component_id = lookup_latest_component_id(rc_purl, session)
-        if not latest_component_id:
-            raise BuildSpecGenerationError(f"Cannot find an analysis result for PackageURL {purl_string}.")
-        logger.debug("Latest component ID: %d", latest_component_id)
-
-        build_tool_facts = lookup_build_tools_check(latest_component_id, session)
-        if not build_tool_facts:
-            raise BuildSpecGenerationError(
-                f"Cannot find any build tool in the {BuildToolFacts.__tablename__} table for PackageURL {purl_string}."
-            )
-        logger.debug("Build tools discovered from the %s table: %s", BuildToolFacts.__tablename__, build_tool_facts)
-
-        # The build tool from the build tool check table is found by checking the build configs.
-        # We use this as the default build tool if we cannot find any build commands from the build-related checks.
-        default_build_tool_name = None
-        for fact in build_tool_facts:
-            if fact.build_tool_name in {"gradle", "maven"} and fact.language in {"java"}:
-                # TODO: think about what to do if many build tools are discovered for a single project.!!!
-                default_build_tool_name = fact.build_tool_name
-                break
-        if not default_build_tool_name:
-            raise BuildSpecGenerationError(f"The PackageURL {purl_string} doesn't have any build tool that we support.")
-
-        lookup_build_facts = lookup_any_build_command(latest_component_id, session)
-        print(lookup_build_facts)
-
-        try:
-            lookup_component_repository = lookup_repository(latest_component_id, session)
-        except QueryMacaronDatabaseError as error:
-            raise BuildSpecGenerationError(
-                f"Critical: Unexpected result from querying repository information for {purl_string} in {database_path}."
-            ) from error
-        if not lookup_component_repository:
-            raise BuildSpecGenerationError(f"The PackageURL {purl_string} doesn't have any repository information.")
-
-        print(lookup_component_repository.remote_path)
-        print(lookup_component_repository.commit_sha)
-
-    return ""
 
 
 # Possible refactor: move all of our purl parsing validation
@@ -139,19 +60,122 @@ def parse_rc_purl(purl_string: str) -> PackageURL:
     return maven_purl
 
 
-# def gen_build_spec_rc(
-#     purl_string: str,
-#     session: Session,
-# ) -> str:
-#     """Generate the build spec in Reproducible Central format.
+def gen_rc_build_spec_from_database(
+    purl_string: str,
+    database_path: str,
+) -> str | None:
+    """Generate a Reproducible Central build spec for a given PURL string from the database.
 
-#     WIP.
-#     """
-#     try:
-#         rc_purl = parse_rc_purl(purl_string)
-#     except InvalidPURLError as error:
-#         raise BuildSpecGenerationError(
-#             f"The purl string {purl_string} is not sufficient for Reproducible-Central build spec generation"
-#         ) from error
+    Parameters
+    ----------
+    purl_string : str
+        The PackageURL as string to generate the build spec for.
+    database_path: str
+        The path to the Macaron database where we extract the information.
 
-#     return ""
+    Returns
+    -------
+    str | None
+        The RC build spec content or None if there exists an error.
+    """
+    db_engine = create_engine(f"sqlite+pysqlite:///{database_path}", echo=False)
+
+    with Session(db_engine) as session, session.begin():
+        try:
+            rc_purl = parse_rc_purl(purl_string)
+        except InvalidPURLError as error:
+            logger.error(
+                "The purl string %s is not sufficient for Reproducible-Central build spec generation. Error: %s",
+                purl_string,
+                error,
+            )
+            return None
+
+        try:
+            latest_component_id = lookup_latest_component_id(
+                purl=rc_purl,
+                session=session,
+            )
+        except QueryMacaronDatabaseError as lookup_component_error:
+            logger.error(
+                "Unexpected result from querying latest component id for %s. Error: %s",
+                purl_string,
+                lookup_component_error,
+            )
+            return None
+        if not latest_component_id:
+            logger.error(
+                "Cannot find an analysis result for PackageURL %s in the database. "
+                + "Please check if an analysis for it exists in the database.",
+                purl_string,
+            )
+            return None
+        logger.debug("Latest component ID: %d", latest_component_id)
+
+        try:
+            build_tool_facts = lookup_build_tools_check(
+                component_id=latest_component_id,
+                session=session,
+            )
+        except QueryMacaronDatabaseError as lookup_build_tools_error:
+            logger.error(
+                "Unexpected result from querying build tools for %s. Error: %s",
+                purl_string,
+                lookup_build_tools_error,
+            )
+            return None
+        if not build_tool_facts:
+            logger.error(
+                "Cannot find any build tool for PackageURL %s in the database.",
+                purl_string,
+            )
+            return None
+        logger.debug("Build tools discovered from the %s table: %s", BuildToolFacts.__tablename__, build_tool_facts)
+
+        # The build tool from the build tool check table is found by checking the build configs.
+        # We use this as the default build tool if we cannot find any build commands from the build-related checks.
+        default_build_tool_name = None
+        for fact in build_tool_facts:
+            if fact.build_tool_name in {"gradle", "maven"} and fact.language in {"java"}:
+                # TODO: think about what to do if many build tools are discovered for a single project.!!!
+                default_build_tool_name = fact.build_tool_name
+                break
+        if not default_build_tool_name:
+            logger.error(
+                "The PackageURL %s doesn't have any build tool that we support. It has %s.",
+                purl_string,
+                [(fact.build_tool_name, fact.language) for fact in build_tool_facts],
+            )
+            return None
+
+        try:
+            lookup_component_repository = lookup_repository(latest_component_id, session)
+        except QueryMacaronDatabaseError as lookup_repository_error:
+            logger.error(
+                "Unexpected result from querying repository information for %s. Error: %s",
+                purl_string,
+                lookup_repository_error,
+            )
+            return None
+        if not lookup_component_repository:
+            logger.error(
+                "Cannot find any repository information for %s in the database.",
+                purl_string,
+            )
+            return None
+
+        print(lookup_component_repository.remote_path)
+        print(lookup_component_repository.commit_sha)
+
+        try:
+            lookup_build_facts = lookup_any_build_command(latest_component_id, session)
+        except QueryMacaronDatabaseError as lookup_build_command_error:
+            logger.error(
+                "Unexpected result from querying all build command information for %s. Error: %s",
+                purl_string,
+                lookup_build_command_error,
+            )
+            return None
+        print(lookup_build_facts)
+
+        return ""

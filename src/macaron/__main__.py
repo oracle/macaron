@@ -14,7 +14,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from packageurl import PackageURL
 
 import macaron
-from macaron.build_spec_generator.build_spec_generator import gen_build_spec_from_database
+from macaron.build_spec_generator.build_spec_generator import BuildSpecFormat, gen_rc_build_spec_from_database
 from macaron.config.defaults import create_defaults, load_defaults
 from macaron.config.global_config import global_config
 from macaron.errors import ConfigurationError
@@ -253,13 +253,24 @@ def gen_build_spec(gen_build_spec_args: argparse.Namespace) -> int:
         print("Printing out SLQ queries without actually performing it.")
         # WIP
 
-    gen_build_spec_from_database(
-        purl_string=gen_build_spec_args.package_url,
-        database_path=gen_build_spec_args.database,
-        build_spec_format=gen_build_spec_args.output_format,
-    )
+    output_format = gen_build_spec_args.output_format
+    match output_format:
+        case BuildSpecFormat.REPRODUCIBLE_CENTRAL:
+            build_spec_content = gen_rc_build_spec_from_database(
+                purl_string=gen_build_spec_args.package_url,
+                database_path=gen_build_spec_args.database,
+            )
 
-    return os.EX_OK
+            if not build_spec_content:
+                return os.EX_DATAERR
+
+            # Writing to output file here.
+            # Remember to print the path to that file as log message, similar to VSA generation.
+
+            return os.EX_OK
+        case _:
+            logger.error("The output format %s is not supported", output_format)
+            return os.EX_USAGE
 
 
 def find_source(find_args: argparse.Namespace) -> int:
@@ -581,7 +592,7 @@ def main(argv: list[str] | None = None) -> None:
     gen_build_spec_parser.add_argument(
         "--output-format",
         type=str,
-        help=('The output format. Can be rc-build-spec (Reproducible-central build spec) (default "rc-buildspec")'),
+        help=('The output format. Can be rc-buildspec (Reproducible-central build spec) (default "rc-buildspec")'),
         default="rc-buildspec",
     )
 
