@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Script to compare a generated VSA with an expected payload."""
@@ -139,7 +139,7 @@ def compare_list(
     if len(result) != len(expected):
         log_err(f"Expected field '{name}' of length {len(result)} in result to have length {len(expected)}")
         log_diff(name, result, expected)
-        # Nothing else to compare
+        # Nothing else to compare.
         return False
 
     equal = True

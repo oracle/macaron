@@ -25,7 +25,7 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
     https://docs.sqlalchemy.org/en/20/dialects/sqlite.html#sqlalchemy.dialects.sqlite.DATETIME
     """
 
-    # It is stored in the database as a string
+    # It is stored in the database as a string.
     impl = String
 
     # To prevent Sphinx from rendering the docstrings for `cache_ok`, make this docstring private.

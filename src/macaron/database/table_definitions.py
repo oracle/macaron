@@ -42,7 +42,7 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-# TODO: Use UUIDs as primary keys rather than incremental
+# TODO: Use UUIDs as primary keys rather than incremental.
 
 ################################################################################
 # Analysis

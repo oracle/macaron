@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Go build functions."""
@@ -24,7 +24,7 @@ from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 def test_get_build_dirs(snapshot: list, tmp_path: Path, go_tool: Go, folder: str, file: str) -> None:
     """Test discovering build directories."""
     # Since there's issues having 2 go.mod files in the same project, we make
-    # it on the fly for this test
+    # it on the fly for this test.
     proj_dir = tmp_path.joinpath(folder)
     proj_dir.mkdir(parents=True)
 
