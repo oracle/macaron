@@ -320,11 +320,10 @@ class PyPIRegistry(PackageRegistry):
         str | None
             The package main page.
         """
-        url = os.path.join(self.registry_url, "project", package_name)
+        url = f"https://pypi.org/project/{package_name}/"
         response = send_get_http_raw(url)
         if response:
-            html_snippets = response.content.decode("utf-8")
-            return html_snippets
+            return response.text
         return None
 
     def get_maintainers_of_package(self, package_name: str) -> list | None:
