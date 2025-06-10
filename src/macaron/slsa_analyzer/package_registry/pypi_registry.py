@@ -320,10 +320,12 @@ class PyPIRegistry(PackageRegistry):
         str | None
             The package main page.
         """
-        url = f"https://pypi.org/project/{package_name}/"
+        # Important: trailing '/' avoids JS-based redirect; ensures Macaron can access the page directly
+        url = urllib.parse.urljoin(self.registry_url, f"project/{package_name}/")
         response = send_get_http_raw(url)
         if response:
-            return response.text
+            html_snippets = response.content.decode("utf-8")
+            return html_snippets
         return None
 
     def get_maintainers_of_package(self, package_name: str) -> list | None:
@@ -359,7 +361,8 @@ class PyPIRegistry(PackageRegistry):
         str | None
             The profile page.
         """
-        url = os.path.join(self.registry_url, "user", username)
+        # Important: trailing '/' avoids JS-based redirect; ensures Macaron can access the page directly
+        url = urllib.parse.urljoin(self.registry_url, f"user/{username}/")
         response = send_get_http_raw(url, headers=None)
         if response:
             html_snippets = response.content.decode("utf-8")
