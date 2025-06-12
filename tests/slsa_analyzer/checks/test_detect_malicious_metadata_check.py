@@ -59,7 +59,7 @@ def test_detect_malicious_metadata(
     pypi_registry = PyPIRegistry()
     ctx.dynamic_data["package_registries"] = [PackageRegistryInfo("pip", "pypi", pypi_registry)]
     if sourcecode_analysis:
-        ctx.dynamic_data["analyze_source"] = True
+        ctx.dynamic_data["force_analyze_source"] = True
 
     mock_global_config.resources_path = os.path.join(MACARON_PATH, "resources")
 

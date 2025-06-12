@@ -107,7 +107,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
     def analyze_source(
         self, pypi_package_json: PyPIPackageJsonAsset, results: dict[Heuristics, HeuristicResult], force: bool = False
-    ) -> tuple[HeuristicResult, dict[str, JsonType]]:
+    ) -> tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]:
         """Analyze the source code of the package with a textual scan, looking for malicious code patterns.
 
         Parameters
@@ -122,7 +122,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         Returns
         -------
-        tuple[HeuristicResult, dict[str, JsonType]]
+        tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]
             Containing the analysis results and relevant patterns identified.
 
         Raises
@@ -136,11 +136,13 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         analyzer = PyPISourcecodeAnalyzer()
 
         if not force and analyzer.depends_on and self._should_skip(results, analyzer.depends_on):
-            return HeuristicResult.SKIP, {}
+            return {analyzer.heuristic: HeuristicResult.SKIP}, {}
 
         try:
             with pypi_package_json.sourcecode():
-                return analyzer.analyze(pypi_package_json)
+                result, detail_info = analyzer.analyze(pypi_package_json)
+                return {analyzer.heuristic: result}, detail_info
+
         except SourceCodeError as error:
             error_msg = f"Unable to perform analysis, source code not available: {error}"
             logger.debug(error_msg)
@@ -310,23 +312,22 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                             confidence = Confidence.HIGH
                             result_type = CheckResultType.PASSED
 
-                        # optional sourcecode analysis feature
-                        if ctx.dynamic_data["analyze_source"]:
-                            try:
-                                sourcecode_result, sourcecode_detail_info = self.analyze_source(
-                                    pypi_package_json, heuristic_results, force=ctx.dynamic_data["force_analyze_source"]
-                                )
-                            except (HeuristicAnalyzerValueError, ConfigurationError):
-                                return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
+                        # Source code analysis
+                        try:
+                            sourcecode_result, sourcecode_detail_info = self.analyze_source(
+                                pypi_package_json, heuristic_results, force=ctx.dynamic_data["force_analyze_source"]
+                            )
+                        except (HeuristicAnalyzerValueError, ConfigurationError):
+                            return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-                            heuristic_results[Heuristics.SUSPICIOUS_PATTERNS] = sourcecode_result
-                            heuristics_detail_info.update(sourcecode_detail_info)
+                        heuristic_results.update(sourcecode_result)
+                        heuristics_detail_info.update(sourcecode_detail_info)
 
-                            if sourcecode_result == HeuristicResult.FAIL:
-                                if result_type == CheckResultType.PASSED:
-                                    # heuristics determined it benign, so lower the confidence
-                                    confidence = Confidence.LOW
-                                result_type = CheckResultType.FAILED
+                        if sourcecode_result[Heuristics.SUSPICIOUS_PATTERNS] == HeuristicResult.FAIL:
+                            if result_type == CheckResultType.PASSED:
+                                # heuristics determined it benign, so lower the confidence
+                                confidence = Confidence.LOW
+                            result_type = CheckResultType.FAILED
 
                         result_tables.append(
                             MaliciousMetadataFacts(

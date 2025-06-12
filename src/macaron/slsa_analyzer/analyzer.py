@@ -148,7 +148,6 @@ class Analyzer:
         deps_depth: int = 0,
         provenance_payload: InTotoPayload | None = None,
         verify_provenance: bool = False,
-        analyze_source: bool = False,
         force_analyze_source: bool = False,
     ) -> int:
         """Run the analysis and write results to the output path.
@@ -168,8 +167,6 @@ class Analyzer:
             The provenance intoto payload for the main software component.
         verify_provenance: bool
             Enable provenance verification if True.
-        analyze_source : bool
-            When true, triggers source code analysis for PyPI packages. Defaults to False.
         force_analyze_source : bool
             When true, enforces running source code analysis regardless of other heuristic results. Defaults to False.
 
@@ -205,7 +202,6 @@ class Analyzer:
                     analysis,
                     provenance_payload=provenance_payload,
                     verify_provenance=verify_provenance,
-                    analyze_source=analyze_source,
                     force_analyze_source=force_analyze_source,
                 )
 
@@ -325,7 +321,6 @@ class Analyzer:
         existing_records: dict[str, Record] | None = None,
         provenance_payload: InTotoPayload | None = None,
         verify_provenance: bool = False,
-        analyze_source: bool = False,
         force_analyze_source: bool = False,
     ) -> Record:
         """Run the checks for a single repository target.
@@ -345,8 +340,6 @@ class Analyzer:
             The provenance intoto payload for the analyzed software component.
         verify_provenance: bool
             Enable provenance verification if True.
-        analyze_source : bool
-            When true, triggers source code analysis for PyPI packages. Defaults to False.
         force_analyze_source : bool
             When true, enforces running source code analysis regardless of other heuristic results. Defaults to False.
 
@@ -583,7 +576,6 @@ class Analyzer:
                 # TODO Add release digest.
             )
 
-        analyze_ctx.dynamic_data["analyze_source"] = analyze_source
         analyze_ctx.dynamic_data["force_analyze_source"] = force_analyze_source
 
         if local_artifact_dirs:
