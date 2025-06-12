@@ -122,6 +122,22 @@ Note that the ``match`` constraint applies a regex pattern and can be expanded t
       is_component(component_id, purl),
       match("pkg:pypi.*", purl).
 
+''''''''''''''''''''
+Source Code Analysis
+''''''''''''''''''''
+
+.. note:: This is a new feature recently added to Macaron.
+
+Macaron supports static code analysis as a malware analysis heuristic. This can be enabled by supplying the command line argument ``--analyze-source``. Macaron uses the open-source static code analysis tool Semgrep to analyse the source code of a python package, looking for malicious code patterns defined in Macaron's own Semgrep rules. Example detection patterns include identifying attempts to obfuscate source code and detecting code that exfiltrates sensitive data to remote connections.
+
+By default, the source code analyzer is run in conjunction with the other metadata heuristics. The source code heuristic is optimised such that it is not always required to be run to ensure a package is benign, so it will not always be run as part of the heuristic analysis, even when enabled. To force it to run regardless of the result of other heuristics, the command line argument ``--force-analyze-source`` must be supplied. To analyze ``django@5.0.6`` with source code analysis enabled and enforced, the following command may be run:
+
+.. code-block:: shell
+
+  ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 --python-venv "/tmp/.django_venv" --analyze-source --force-analyze-source
+
+If any suspicious patterns are triggered, this will be identified in the ``mcn_detect_malicious_metadata_1`` result for the heuristic named ``suspicious_patterns``. The output database ``output/macaron.db`` can be used to get the specific results of the analysis by querying the :class:`detect_malicious_metadata_check.result field <macaron.database>`. This will provide detailed JSON information about all data collected by the ``mcn_detect_malicious_metadata_1`` check, including, for source code analysis, any malicious code patterns detected, what Semgrep rule detected it, the file in which it was detected, and the line number for the detection.
+
 +++++++++++++++++++++++++++++++++++++++
 Verification Summary Attestation report
 +++++++++++++++++++++++++++++++++++++++

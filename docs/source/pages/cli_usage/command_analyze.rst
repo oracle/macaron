@@ -84,6 +84,13 @@ Options
 
     Allow the analysis to attempt to verify provenance files as part of its normal operations.
 
+.. option:: --force-analyze-source
+
+    Forces PyPI sourcecode analysis to run regardless of other heuristic results. Requires '--analyze-source'.
+
+.. option:: --analyze-source
+
+    For improved malware detection, analyze the source code of the (PyPI) package using a textual scan and dataflow analysis.
 
 -----------
 Environment
