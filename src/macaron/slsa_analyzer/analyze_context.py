@@ -51,8 +51,6 @@ class ChecksOutputs(TypedDict):
     """The provenance and related information."""
     local_artifact_paths: list[str]
     """The local artifact absolute paths."""
-    analyze_source: bool
-    """True when PyPI source code analysis has been enabled."""
     force_analyze_source: bool
     """When True, enforces running source code analysis, regardless of other heuristic results."""
 
@@ -108,7 +106,6 @@ class AnalyzeContext:
             expectation=None,
             provenance_info=None,
             local_artifact_paths=[],
-            analyze_source=False,
             force_analyze_source=False,
         )
 
