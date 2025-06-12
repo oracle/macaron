@@ -126,7 +126,7 @@ Note that the ``match`` constraint applies a regex pattern and can be expanded t
 Source Code Analysis
 ''''''''''''''''''''
 
-.. note:: This is a new feature recently added to Macaron in 2025.
+.. note:: This is a new feature recently added to Macaron.
 
 Macaron supports static code analysis as a malware analysis heuristic. This can be enabled by supplying the command line argument ``--analyze-source``. Macaron uses the open-source static code analysis tool Semgrep to analyse the source code of a python package, looking for malicious code patterns defined in Macaron's own Semgrep rules. Example detection patterns include identifying attempts to obfuscate source code and detecting code that exfiltrates sensitive data to remote connections.
 
