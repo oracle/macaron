@@ -84,6 +84,9 @@ Options
 
     Allow the analysis to attempt to verify provenance files as part of its normal operations.
 
+.. option:: --force-analyze-source
+
+    Forces PyPI sourcecode analysis to run regardless of other heuristic results.
 
 -----------
 Environment
