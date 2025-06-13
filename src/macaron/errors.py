@@ -113,3 +113,11 @@ class LocalArtifactFinderError(MacaronError):
 
 class SourceCodeError(MacaronError):
     """Error for operations on package source code."""
+
+
+class MavenCLICommandParseError(Exception):
+    """Raised if an error is encountered while parsing a Maven CLI Command."""
+
+
+class PatchBuildCommandError(Exception):
+    """Raised if an error is encountered while patching a Maven CLI Command."""

@@ -14,6 +14,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from packageurl import PackageURL
 
 import macaron
+from macaron.build_spec_generator.build_spec_generator import BuildSpecFormat, gen_rc_build_spec_from_database
 from macaron.config.defaults import create_defaults, load_defaults
 from macaron.config.global_config import global_config
 from macaron.errors import ConfigurationError
@@ -241,6 +242,42 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
     return os.EX_USAGE
 
 
+def gen_build_spec(gen_build_spec_args: argparse.Namespace) -> int:
+    """Generate a build spec containing the build information discovered by Macaron.
+
+    Returns
+    -------
+    int
+        Returns os.EX_OK if successful or the corresponding error code on failure.
+    """
+    if not os.path.isfile(gen_build_spec_args.database):
+        logger.critical("The database file does not exist.")
+        return os.EX_OSFILE
+
+    if gen_build_spec_args.dry:
+        print("Printing out SLQ queries without actually performing it.")
+        # WIP
+
+    output_format = gen_build_spec_args.output_format
+    match output_format:
+        case BuildSpecFormat.REPRODUCIBLE_CENTRAL:
+            build_spec_content = gen_rc_build_spec_from_database(
+                purl_string=gen_build_spec_args.package_url,
+                database_path=gen_build_spec_args.database,
+            )
+
+            if not build_spec_content:
+                return os.EX_DATAERR
+
+            # Writing to output file here.
+            # Remember to print the path to that file as log message, similar to VSA generation.
+
+            return os.EX_OK
+        case _:
+            logger.error("The output format %s is not supported", output_format)
+            return os.EX_USAGE
+
+
 def find_source(find_args: argparse.Namespace) -> int:
     """Perform repo and commit finding for a passed PURL, or commit finding for a passed PURL and repo."""
     if repo_finder.find_source(find_args.package_url, find_args.repo_path or None):
@@ -288,6 +325,9 @@ def perform_action(action_args: argparse.Namespace) -> None:
                 sys.exit(os.EX_USAGE)
 
             find_source(action_args)
+
+        case "gen-build-spec":
+            sys.exit(gen_build_spec(action_args))
 
         case _:
             logger.error("Macaron does not support command option %s.", action_args.action)
@@ -538,6 +578,39 @@ def main(argv: list[str] | None = None) -> None:
             "The path to a repository that matches the provided PURL, can be local or remote. "
             "This argument is only required in cases where the repository cannot be discovered automatically."
         ),
+    )
+
+    # Generate a build spec containing rebuild information for a software component.
+    gen_build_spec_parser = sub_parser.add_parser(name="gen-build-spec")
+
+    gen_build_spec_parser.add_argument(
+        "-purl",
+        "--package-url",
+        required=True,
+        type=str,
+        help=("The PURL string of the software component to generate build spec for."),
+    )
+
+    gen_build_spec_parser.add_argument(
+        "--database",
+        help="Path to the database.",
+        required=True,
+    )
+
+    gen_build_spec_parser.add_argument(
+        "--dry",
+        action="store_true",
+        help=(
+            "Run the gen-build-spec command in dry mode, which only shows the SQL queries that we "
+            "are going to use, one by one."
+        ),
+    )
+
+    gen_build_spec_parser.add_argument(
+        "--output-format",
+        type=str,
+        help=('The output format. Can be rc-buildspec (Reproducible-central build spec) (default "rc-buildspec")'),
+        default="rc-buildspec",
     )
 
     args = main_parser.parse_args(argv)
