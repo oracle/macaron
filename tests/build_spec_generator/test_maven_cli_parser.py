@@ -10,28 +10,29 @@ import pytest
 
 from macaron.build_spec_generator.maven_cli_parser import (
     MavenCLICommandParseError,
-    MvnCLICommand,
-    MvnCLIOptions,
+    MvnCLICommandParser,
+    is_dict_of_str_to_str,
+    is_list_of_strs,
     patch_mapping,
 )
 
 
 @pytest.mark.parametrize(
-    ("options", "expected"),
+    ("command", "expected"),
     [
         pytest.param(
-            "clean package",
+            "mvn clean package",
             {"goals": ["clean", "package"]},
             id="No option, just goals",
         ),
         # https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html#Build_Lifecycle_Basics
         pytest.param(
-            "clean dependency:copy-dependencies package",
+            "mvn clean dependency:copy-dependencies package",
             {"goals": ["clean", "dependency:copy-dependencies", "package"]},
             id="A mixture of goals and phases",
         ),
         pytest.param(
-            "clean package -P profile1,profile2 -T 2C -ntp -Dmaven.skip.test=true -Dboo=foo",
+            "mvn clean package -P profile1,profile2 -T 2C -ntp -Dmaven.skip.test=true -Dboo=foo",
             {
                 "goals": ["clean", "package"],
                 # "-P"
@@ -47,7 +48,7 @@ from macaron.build_spec_generator.maven_cli_parser import (
             "system property definition (define) and comma-delimited list of string (activate_profiles).",
         ),
         pytest.param(
-            "clean package -Dmaven.skip.test=true -Dmaven.skip.test=false",
+            "mvn clean package -Dmaven.skip.test=true -Dmaven.skip.test=false",
             {
                 "goals": ["clean", "package"],
                 "define": {"maven.skip.test": "false"},
@@ -57,7 +58,7 @@ from macaron.build_spec_generator.maven_cli_parser import (
         # A modified version of
         # https://github.com/apache/syncope/blob/9437c6c978ca8c03b5e5cccc40a5a352be1ecc52/.github/workflows/crosschecks.yml#L70
         pytest.param(
-            "-f fit/core-reference/pom.xml verify -Dit.test=RESTITCase -Dinvoker.streamLogs=true "
+            "mvn -f fit/core-reference/pom.xml verify -Dit.test=RESTITCase -Dinvoker.streamLogs=true "
             "-Dmodernizer.skip=true -Drat.skip=true -Dcheckstyle.skip=true -Djacoco.skip=true",
             {
                 "file": "fit/core-reference/pom.xml",
@@ -75,7 +76,7 @@ from macaron.build_spec_generator.maven_cli_parser import (
         ),
         # https://github.com/apache/activemq-artemis/blob/2.27.1/.github/workflows/build.yml
         pytest.param(
-            "-s ../.github/maven-settings.xml install -Pexamples,noRun",
+            "mvn -s ../.github/maven-settings.xml install -Pexamples,noRun",
             {
                 "settings": "../.github/maven-settings.xml",
                 "goals": ["install"],
@@ -85,59 +86,49 @@ from macaron.build_spec_generator.maven_cli_parser import (
         ),
     ],
 )
-def test_mvn_cli_option_parser_valid_input(
-    options: str,
+def test_mvn_cli_command_parser_valid_input(
+    mvn_cli_parser: MvnCLICommandParser,
+    command: str,
     expected: dict[str, str | None | bool | list[str]],
 ) -> None:
-    """Test the maven cli option parser on valid input."""
-    mvn_cli_options = MvnCLIOptions.from_list_of_string(
-        options.split(),
-    )
+    """Test the maven cli parser on valid input."""
+    parsed_res = mvn_cli_parser.parse(command.split())
 
     for key, val in expected.items():
-        assert getattr(mvn_cli_options, key) == val
+        assert getattr(parsed_res.options, key) == val
 
 
 @pytest.mark.parametrize(
-    ("build_command", "accept_exes", "expected"),
+    ("build_command", "expected"),
     [
         pytest.param(
             "mvn clean package -X -ntp",
-            ["mvn", "mvnw"],
             "mvn",
         ),
         pytest.param(
             "mvnw clean package -X -ntp",
-            ["mvn", "mvnw"],
             "mvnw",
         ),
         pytest.param(
             "./boo/mvnw clean package -X -ntp",
-            ["mvn", "mvnw"],
             "./boo/mvnw",
         ),
     ],
 )
 def test_mvn_cli_command_parser_executable(
+    mvn_cli_parser: MvnCLICommandParser,
     build_command: str,
-    accept_exes: list[str],
     expected: str,
 ) -> None:
     """Test the Maven CLI command correctly persisting the executable string."""
-    parse_res = MvnCLICommand.from_list_of_string(
-        build_command.split(),
-        accepted_mvn_executable=accept_exes,
-    )
+    parse_res = mvn_cli_parser.parse(build_command.split())
     assert parse_res.executable == expected
 
 
-def test_mvn_cli_command_parser_default_value() -> None:
-    """Test the Maven CLI command parser initialized any attribute as None if it doesn't exist in the input build command."""
+def test_mvn_cli_command_parser_default_value(mvn_cli_parser: MvnCLICommandParser) -> None:
+    """Test the Maven CLI command parser initialized any option as None if it doesn't exist in the input build command."""
     build_command = "mvn clean package"
-    parse_res = MvnCLICommand.from_list_of_string(
-        build_command.split(),
-        accepted_mvn_executable=["mvn", "mvnw"],
-    )
+    parse_res = mvn_cli_parser.parse(build_command.split())
 
     attr_map = vars(parse_res.options)
     for name, value in attr_map.items():
@@ -167,14 +158,12 @@ def test_mvn_cli_command_parser_default_value() -> None:
     ],
 )
 def test_mvn_cli_command_parser_invalid_input(
+    mvn_cli_parser: MvnCLICommandParser,
     build_command: str,
 ) -> None:
     """Test the Maven CLI command parser on invalid input."""
     with pytest.raises(MavenCLICommandParseError):
-        MvnCLICommand.from_list_of_string(
-            build_command.split(),
-            accepted_mvn_executable=["mvn", "mvnw"],
-        )
+        mvn_cli_parser.parse(build_command.split())
 
 
 @pytest.mark.parametrize(
@@ -244,6 +233,79 @@ def test_patch_mapping(
         ),
     ],
 )
-def test_is_system_prop_dict(value: Any, expected: bool) -> None:
-    """Test the is_system_prop_dict type guard."""
-    assert MvnCLIOptions.is_system_prop_dict(value) == expected
+def test_is_dict_of_str_to_str(value: Any, expected: bool) -> None:
+    """Test the is_dict_of_str_to_str type guard."""
+    assert is_dict_of_str_to_str(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(
+            ["str1", "str2"],
+            True,
+        ),
+        pytest.param(
+            [],
+            True,
+        ),
+        pytest.param(
+            {"A": "B"},
+            False,
+        ),
+        pytest.param(
+            "str",
+            False,
+        ),
+        pytest.param(
+            True,
+            False,
+        ),
+    ],
+)
+def test_is_list_of_strs(value: Any, expected: bool) -> None:
+    """Test the is_list_of_strs function."""
+    assert is_list_of_strs(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("command"),
+    [
+        "mvn clean package",
+        "mvn clean package -P profile1,profile2 -T 2C -ntp -Dmaven.skip.test=true -Dboo=foo",
+        "mvn -f fit/core-reference/pom.xml verify -Dit.test=RESTITCase -Dinvoker.streamLogs=true"
+        + " -Dmodernizer.skip=true -Drat.skip=true -Dcheckstyle.skip=true -Djacoco.skip=true",
+        "mvn -s ../.github/maven-settings.xml install -Pexamples,noRun",
+    ],
+)
+def test_to_cmd_goals(mvn_cli_parser: MvnCLICommandParser, command: str) -> None:
+    """Test the to_cmd_goals method."""
+    mvn_cli_command = mvn_cli_parser.parse(command.split())
+
+    print_command_with_goals = [mvn_cli_command.executable]
+    print_command_with_goals.extend(mvn_cli_command.options.to_cmd_goals())
+
+    mvn_cli_command_second = mvn_cli_parser.parse(print_command_with_goals)
+    assert mvn_cli_command == mvn_cli_command_second
+
+
+@pytest.mark.parametrize(
+    ("this", "that"),
+    [
+        ("mvn clean package", "mvn install"),
+        ("mvn clean package", "mvn clean package -X"),
+        ("mvn clean package", "mvn clean package -P project1,project2"),
+        ("mvn clean package", "mvn clean package -Dmaven.skip.test=true"),
+        ("mvn clean package", "mvn clean package --settings ./pom.xml"),
+        ("mvn clean package", "mvn package clean"),
+    ],
+)
+def test_comparing_mvn_cli_options_unequal(
+    mvn_cli_parser: MvnCLICommandParser,
+    this: str,
+    that: str,
+) -> None:
+    """Test comparing two unequal MvnCLIOption objects."""
+    this_options = mvn_cli_parser.parse(this.split()).options
+    that_options = mvn_cli_parser.parse(that.split()).options
+    assert not this_options == that_options
