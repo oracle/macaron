@@ -5,106 +5,148 @@
 
 import pytest
 
-from macaron.build_spec_generator.build_command_patcher import patch_maven_cli_command
-from macaron.build_spec_generator.maven_cli_parser import MvnCLICommand, MvnOptionPatchValueType
+from macaron.build_spec_generator.build_command_patcher import _patch_mvn_cli_command
+from macaron.build_spec_generator.maven_cli_parser import MvnCLICommandParser, MvnOptionPatchValueType
 
 
 @pytest.mark.parametrize(
-    ("original", "force_goals_phases", "patch_options", "expected"),
+    ("original", "patch_options", "expected"),
     [
         pytest.param(
             "mvn install -X",
-            [],
             {},
             "mvn install -X",
-            id="No force goal/phase is provided, should use the original",
+            id="no_patch_value",
         ),
         pytest.param(
             "mvn install -X",
-            ["clean", "package"],
-            {},
+            {"goals": ["clean", "package"]},
             "mvn clean package -X",
-            id="The force goals/phases you persist their order in the force_goals_phases input list",
+            id="patch_goals_should_persist_order",
         ),
         pytest.param(
             "mvn install",
-            ["clean", "package"],
             {
-                "no_transfer_progress": True,
+                "--no-transfer-progress": True,
             },
-            "mvn clean package -ntp",
-            id="Enabling a flag by setting it to True in the patch",
+            "mvn install -ntp",
+            id="patching_an_optional_flag",
         ),
         pytest.param(
             "mvn install",
-            ["clean", "package"],
             {
-                "threads": "2C",
-                "activate_profiles": "profile1,profile2",
+                "--threads": "2C",
             },
-            "mvn clean package -T 2C -P profile1,profile2",
-            id="Setting a value option flag by setting its value as string in the patch",
+            "mvn install -T 2C",
+            id="patching_single_value_option",
         ),
         pytest.param(
             "mvn install",
-            ["clean", "package"],
             {
-                "define": {
+                "--activate-profiles": ["profile1", "profile2"],
+            },
+            "mvn install -P profile1,profile2",
+            id="patching_comma_delimt_list_value_option",
+        ),
+        pytest.param(
+            "mvn install",
+            {
+                "--define": {
                     "maven.skip.test": "true",
                     "rat.skip": "true",
                 },
             },
-            "mvn clean package -Dmaven.skip.test=true -Drat.skip=true",
-            id="Defining system properties using a dictionary",
+            "mvn install -Dmaven.skip.test=true -Drat.skip=true",
+            id="patching_system_properties",
         ),
+        # The patch for -D/--define merge with the original the system properties. The patch will always takes precedence.
         pytest.param(
             "mvn install -Dmaven.skip.test=false -Dboo=foo",
-            ["clean", "package"],
             {
-                "define": {
+                "goals": ["clean", "package"],
+                "--define": {
                     "maven.skip.test": "true",
                     "rat.skip": "true",
                 },
             },
-            "mvn clean package -Dmaven.skip.test=false -Drat.skip=true -Dboo=foo",
-            id="The patch for -D/--define can merge the system properties, with the patch takes precedence.",
+            "mvn clean package -Dmaven.skip.test=true -Drat.skip=true -Dboo=foo",
+            id="patching_system_properties_merging",
         ),
         pytest.param(
             "mvn install -T 2C -ntp -Dmaven.skip.test=true",
-            ["clean", "package"],
             {
-                "threads": None,
-                "no_transfer_progress": None,
-                "define": None,
+                "--threads": None,
+                "--no-transfer-progress": None,
+                "--define": None,
             },
-            "mvn clean package",
-            id="Remove any type of option by setting its value to None in the patch",
+            "mvn install",
+            id="removing_any_option_using_None",
         ),
     ],
 )
-def test_patch_maven_cli_command(
+def test_patch_mvn_cli_command(
+    mvn_cli_parser: MvnCLICommandParser,
     original: str,
-    force_goals_phases: list[str],
     patch_options: dict[str, MvnOptionPatchValueType],
     expected: str,
 ) -> None:
     """Test the patch maven cli command on valid input."""
-    patch_cmds = patch_maven_cli_command(
+    patch_cmds = _patch_mvn_cli_command(
         cmd_list=original.split(),
-        force_goals_phases=force_goals_phases,
         patch_options=patch_options,
+        mvn_cli_parser=mvn_cli_parser,
     )
     assert patch_cmds
-    accept_exes = ["mvn", "mvnw"]
 
-    patch_command = MvnCLICommand.from_list_of_string(
-        cmd_as_list=patch_cmds,
-        accepted_mvn_executable=accept_exes,
+    patch_mvn_cli_command = mvn_cli_parser.parse(patch_cmds)
+
+    expected_mvn_cli_command = mvn_cli_parser.parse(expected.split())
+
+    assert patch_mvn_cli_command == expected_mvn_cli_command
+
+
+@pytest.mark.parametrize(
+    ("invalid_patch"),
+    [
+        pytest.param(
+            {
+                "--this-option-should-never-exist": True,
+            },
+            id="Patching an unrecognised mvn option name.",
+        ),
+        pytest.param(
+            {
+                "--define": True,
+            },
+            id="The patching value is not the exected type. --define expects patch None | dict[str, str]",
+        ),
+        pytest.param(
+            {
+                "--debug": "some_value",
+            },
+            id="The patching value is not the exected type. --debug expects patch None | bool",
+        ),
+        pytest.param(
+            {
+                "--settings": False,
+            },
+            id="The patching value is not the exected type. --settings expects patch None | str",
+        ),
+        pytest.param(
+            {
+                "--activate-profiles": False,
+            },
+            id="The patching value is not the exected type. --activate-profiles expects patch None | list[str]",
+        ),
+    ],
+)
+def test_patch_mvn_cli_command_error(
+    mvn_cli_parser: MvnCLICommandParser,
+    invalid_patch: dict[str, MvnOptionPatchValueType],
+) -> None:
+    """Test patch mvn cli command patching with invalid patch."""
+    assert not _patch_mvn_cli_command(
+        cmd_list="mvn -s ../.github/maven-settings.xml install -Pexamples,noRun".split(),
+        patch_options=invalid_patch,
+        mvn_cli_parser=mvn_cli_parser,
     )
-
-    expected_command = MvnCLICommand.from_list_of_string(
-        cmd_as_list=expected.split(),
-        accepted_mvn_executable=accept_exes,
-    )
-
-    assert patch_command == expected_command

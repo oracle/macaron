@@ -4,195 +4,326 @@
 """This module contains the Maven CLI Command parser."""
 
 import argparse
+import logging
 import os
 from collections.abc import Mapping
+from copy import deepcopy
+from dataclasses import dataclass
 from typing import Any, TypeGuard
 
+from macaron.build_spec_generator.base_cli_option import Option
 from macaron.errors import MavenCLICommandParseError, PatchBuildCommandError
+
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 MvnOptionPatchValueType = str | list[str] | bool | dict[str, str] | None
 
 
-def get_mvn_argument_parser() -> argparse.ArgumentParser:
-    """Return the argparse.ArgumentParser instances used to parse Maven CLI command.
+def is_list_of_strs(value: Any) -> TypeGuard[list[str]]:
+    """Type guard for a list of strings."""
+    return isinstance(value, list) and all(isinstance(ele, str) for ele in value)
 
-    Returns
-    -------
-    argparse.ArgumentParser
-        The argparse.ArgumentParser instance with all argument initialized.
+
+def is_dict_of_str_to_str(value: Any) -> TypeGuard[list[str]]:
+    """Type guard for a dictionary with keys are string and values are strings."""
+    return isinstance(value, dict) and all(isinstance(key, str) and isinstance(val, str) for key, val in value.items())
+
+
+@dataclass
+class MvnOptionalFlag(Option[bool]):
+    """This option represents an optional flag in Maven CLI command.
+
+    For example: --debug/-X
+
+    A short form for the option is rquired.
     """
-    arg_parser = argparse.ArgumentParser(
-        description="Parse Maven CLI command",
-        prog="mvn",
-        add_help=False,
-        # https://docs.python.org/3/library/argparse.html#exit-on-error
-        # Best effort of parsing the build command. Therefore, we don't want to exit on error.
-        exit_on_error=False,
-    )
-    arg_parser.add_argument(
-        *("-am", "--also-make"),
-        action="store_true",
-    )
 
-    arg_parser.add_argument(
-        *("-amd", "--also-make-dependents"),
-        action="store_true",
-    )
+    short_name: str
 
-    arg_parser.add_argument(
-        *("-B", "--batch-mode"),
-        action="store_true",
-    )
+    def is_valid_patch_option(self, patch: Any) -> TypeGuard[bool]:
+        """Return True if the provide patch value is compatible with the internal type of this option."""
+        if patch is None or isinstance(patch, bool):
+            return True
 
-    arg_parser.add_argument(
-        *("-b", "--builder"),
-    )
+        return False
 
-    arg_parser.add_argument(
-        *("-C", "--strict-checksums"),
-        action="store_true",
-    )
+    def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
+        """Add a new argument to argparser.ArgumentParser representing this option."""
+        arg_parse.add_argument(
+            *(self.short_name, self.long_name),
+            action="store_true",
+        )
 
-    arg_parser.add_argument(
-        *("-c", "--lax-checksums"),
-        action="store_true",
-    )
+    def get_patch_type_str(self) -> str:
+        """Return the expected type for the patch value as string."""
+        return "bool"
 
-    arg_parser.add_argument(
-        *("-D", "--define"),
-        action="append",
-    )
 
-    arg_parser.add_argument(
-        *("-e", "--errors"),
-        action="store_true",
-    )
+@dataclass
+class MvnSingleValue(Option[str]):
+    """This option represents an option that takes a value in Maven CLI command.
 
-    arg_parser.add_argument(
-        *("-emp", "--encrypt-master-password"),
-    )
+    For example: "--settings ./path/to/pom.xml"
 
-    arg_parser.add_argument(
-        *("-ep", "--encrypt-password"),
-    )
+    A short form for the option is required.
+    """
 
-    arg_parser.add_argument(
-        *("-f", "--file"),
-    )
+    short_name: str
 
-    arg_parser.add_argument(
-        *("-fae", "--fail-at-end"),
-        action="store_true",
-    )
+    def is_valid_patch_option(self, patch: Any) -> TypeGuard[str]:
+        """Return True if the provide patch value is compatible with the internal type of this option."""
+        if patch is None or isinstance(patch, str):
+            return True
 
-    arg_parser.add_argument(
-        *("-ff", "--fail-fast"),
-        action="store_true",
-    )
+        return False
 
-    arg_parser.add_argument(
-        *("-fn", "--fail-never"),
-        action="store_true",
-    )
+    def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
+        """Add a new argument to argparser.ArgumentParser representing this option."""
+        arg_parse.add_argument(
+            *(self.short_name, self.long_name),
+        )
 
-    arg_parser.add_argument(
-        *("-gs", "--global-settings"),
-    )
+    def get_patch_type_str(self) -> str:
+        """Return the expected type for the patch value as string."""
+        return "str"
 
-    arg_parser.add_argument(
-        *("-gt", "--global-toolchains"),
-    )
 
-    arg_parser.add_argument(
-        *("-h", "--help"),
-        action="store_true",
-    )
+@dataclass
+class MvnCommaDelimList(Option[list[str]]):
+    """This option represents an option that takes a comma delimited value in Maven CLI command.
 
-    arg_parser.add_argument(
-        *("-l", "--log-file"),
-    )
+    This option can be defined one time only and the value is stored as a string in argparse.
+    However, it's stored internally as list of strings obtained by spliting its original value in argparse
+    using comma as the delimiter.
 
-    arg_parser.add_argument(
-        *("-N", "--non-recursive"),
-        action="store_true",
-    )
+    For example: "-P profile1,profile2,profile3"
+    will be store as ["profile1", "profile2", "profile3"]
 
-    arg_parser.add_argument(
-        *("-nsu", "--no-snapshot-updates"),
-        action="store_true",
-    )
+    A short form for the option is required.
+    """
 
-    arg_parser.add_argument(
-        *("-ntp", "--no-transfer-progress"),
-        action="store_true",
-    )
+    short_name: str
 
-    arg_parser.add_argument(
-        *("-o", "--offline"),
-        action="store_true",
-    )
+    def is_valid_patch_option(self, patch: Any) -> TypeGuard[list[str]]:
+        """Return True if the provide patch value is compatible with the internal type of this option."""
+        if patch is None or is_list_of_strs(patch):
+            return True
 
-    arg_parser.add_argument(
-        *("-P", "--activate-profiles"),
-    )
+        return False
 
-    arg_parser.add_argument(
-        *("-pl", "--projects"),
-    )
+    def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
+        """Add a new argument to argparser.ArgumentParser representing this option."""
+        arg_parse.add_argument(
+            *(self.short_name, self.long_name),
+        )
 
-    arg_parser.add_argument(
-        *("-q", "--quiet"),
-        action="store_true",
-    )
+    def get_patch_type_str(self) -> str:
+        """Return the expected type for the patch value as string."""
+        return "list[str]"
 
-    arg_parser.add_argument(
-        *("-rf", "--resume-from"),
-    )
 
-    arg_parser.add_argument(
-        *("-s", "--settings"),
-    )
+@dataclass
+class MvnSystemPropeties(Option[dict[str, str]]):
+    """This option represents the -D/--define option of a Maven CLI command.
 
-    arg_parser.add_argument(
-        *("-t", "--toolchains"),
-    )
+    This option can be defined multiple times and the values are appended into a list of string in argparse.
+    However, it's stored internally as a dictionary mapping between the system property name to its value.
 
-    arg_parser.add_argument(
-        *("-T", "--threads"),
-    )
+    For example: ``-Dmaven.skip.test=true -Drat.skip=true``
+    will be stored as ``{"maven.skip.test": "true", "rat.skip": "true"}``
 
-    arg_parser.add_argument(
-        *("-U", "--update-snapshots"),
-        action="store_true",
-    )
+    A short form for the option is required.
+    """
 
-    arg_parser.add_argument(
-        *("-v", "--version"),
-        action="store_true",
-    )
+    short_name: str
 
-    arg_parser.add_argument(
-        *("-V", "--show-version"),
-        action="store_true",
-    )
+    def is_valid_patch_option(self, patch: Any) -> TypeGuard[dict[str, str]]:
+        """Return True if the provide patch value is compatible with the internal type of this option."""
+        if patch is None or is_dict_of_str_to_str(patch):
+            return True
 
-    arg_parser.add_argument(
-        *("-X", "--debug"),
-        action="store_true",
-    )
+        return False
 
-    arg_parser.add_argument(
-        "goals",
-        nargs="+",
-    )
+    def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
+        """Add a new argument to argparser.ArgumentParser representing this option."""
+        arg_parse.add_argument(
+            *(self.short_name, self.long_name),
+            action="append",
+        )
 
-    return arg_parser
+    def get_patch_type_str(self) -> str:
+        """Return the expected type for the patch value as string."""
+        return "dict[str, str]"
+
+
+@dataclass
+class MvnGoalPhase(Option[list[str]]):
+    """This option represents the positional goal/plugin-phase option in Maven CLI command.
+
+    argparse.Namespace stores this as a list of string. This is stored internally as a list of string.
+    """
+
+    def is_valid_patch_option(self, patch: Any) -> TypeGuard[list[str]]:
+        """Return True if the provide patch value is compatible with the internal type of this option."""
+        if patch is None or is_list_of_strs(patch):
+            return True
+
+        return False
+
+    def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
+        """Add a new argument to argparser.ArgumentParser representing this option."""
+        arg_parse.add_argument(
+            self.long_name,
+            nargs="+",
+        )
+
+    def get_patch_type_str(self) -> str:
+        """Return the expected type for the patch value as string."""
+        return "list[str]"
+
+
+MVN_OPTION_DEF: list[Option] = [
+    MvnOptionalFlag(
+        short_name="-am",
+        long_name="--also-make",
+    ),
+    MvnOptionalFlag(
+        short_name="-amd",
+        long_name="--also-make-dependents",
+    ),
+    MvnOptionalFlag(
+        short_name="-B",
+        long_name="--batch-mode",
+    ),
+    MvnSingleValue(
+        short_name="-b",
+        long_name="--builder",
+    ),
+    MvnOptionalFlag(
+        short_name="-C",
+        long_name="--strict-checksums",
+    ),
+    MvnOptionalFlag(
+        short_name="-c",
+        long_name="--lax-checksums",
+    ),
+    MvnSystemPropeties(
+        short_name="-D",
+        long_name="--define",
+    ),
+    MvnOptionalFlag(
+        short_name="-e",
+        long_name="--errors",
+    ),
+    MvnSingleValue(
+        short_name="-emp",
+        long_name="--encrypt-master-password",
+    ),
+    MvnSingleValue(
+        short_name="-ep",
+        long_name="--encrypt-password",
+    ),
+    MvnSingleValue(
+        short_name="-f",
+        long_name="--file",
+    ),
+    MvnOptionalFlag(
+        short_name="-fae",
+        long_name="--fail-at-end",
+    ),
+    MvnOptionalFlag(
+        short_name="-ff",
+        long_name="--fail-fast",
+    ),
+    MvnOptionalFlag(
+        short_name="-fn",
+        long_name="--fail-never",
+    ),
+    MvnSingleValue(
+        short_name="-gs",
+        long_name="--global-settings",
+    ),
+    MvnSingleValue(
+        short_name="-gt",
+        long_name="--global-toolchains",
+    ),
+    MvnOptionalFlag(
+        short_name="-h",
+        long_name="--help",
+    ),
+    MvnSingleValue(
+        short_name="-l",
+        long_name="--log-file",
+    ),
+    MvnOptionalFlag(
+        short_name="-N",
+        long_name="--non-recursive",
+    ),
+    MvnOptionalFlag(
+        short_name="-nsu",
+        long_name="--no-snapshot-updates",
+    ),
+    MvnOptionalFlag(
+        short_name="-ntp",
+        long_name="--no-transfer-progress",
+    ),
+    MvnOptionalFlag(
+        short_name="-o",
+        long_name="--offline",
+    ),
+    MvnCommaDelimList(
+        short_name="-P",
+        long_name="--activate-profiles",
+    ),
+    MvnCommaDelimList(
+        short_name="-pl",
+        long_name="--projects",
+    ),
+    MvnOptionalFlag(
+        short_name="-q",
+        long_name="--quiet",
+    ),
+    MvnSingleValue(
+        short_name="-rf",
+        long_name="--resume-from",
+    ),
+    MvnSingleValue(
+        short_name="-s",
+        long_name="--settings",
+    ),
+    MvnSingleValue(
+        short_name="-t",
+        long_name="--toolchains",
+    ),
+    MvnSingleValue(
+        short_name="-T",
+        long_name="--threads",
+    ),
+    MvnOptionalFlag(
+        short_name="-U",
+        long_name="--update-snapshots",
+    ),
+    MvnOptionalFlag(
+        short_name="-v",
+        long_name="--version",
+    ),
+    MvnOptionalFlag(
+        short_name="-V",
+        long_name="--show-version",
+    ),
+    MvnOptionalFlag(
+        short_name="-X",
+        long_name="--debug",
+    ),
+    MvnGoalPhase(
+        long_name="goals",
+    ),
+]
 
 
 class MvnCLIOptions:
     """The class that stores the values of options parsed from a Maven CLI Command."""
-
-    mvn_arg_parser = get_mvn_argument_parser()
 
     def __init__(
         self,
@@ -223,7 +354,7 @@ class MvnCLIOptions:
         self.fail_never: bool | None = parsed_arg.fail_never
         self.global_settings: str | None = parsed_arg.global_settings
         self.global_toolchains: str | None = parsed_arg.global_toolchains
-        self.help_: bool | None = parsed_arg.help
+        self.help: bool | None = parsed_arg.help
         self.log_file: str | None = parsed_arg.log_file
         self.non_recursive: bool | None = parsed_arg.non_recursive
         self.no_snapshot_updates: bool | None = parsed_arg.no_snapshot_updates
@@ -250,7 +381,7 @@ class MvnCLIOptions:
         if not isinstance(value, MvnCLIOptions):
             return False
 
-        return sorted(vars(self)) == sorted(vars(value))
+        return vars(self) == vars(value)
 
     @staticmethod
     def parse_system_properties(props: list[str]) -> dict[str, str]:
@@ -344,7 +475,7 @@ class MvnCLIOptions:
             result.append("-B")
 
         if self.builder:
-            result.append(f"-b {self.builder}")
+            result.extend(f"-b {self.builder}".split())
 
         if self.strict_checksums:
             result.append("-C")
@@ -360,13 +491,13 @@ class MvnCLIOptions:
             result.append("-e")
 
         if self.encrypt_master_password:
-            result.append(f"-emp {self.encrypt_master_password}")
+            result.extend(f"-emp {self.encrypt_master_password}".split())
 
         if self.encrypt_password:
-            result.append(f"-ep {self.encrypt_password}")
+            result.extend(f"-ep {self.encrypt_password}".split())
 
         if self.file:
-            result.append(f"-f {self.file}")
+            result.extend(f"-f {self.file}".split())
 
         if self.fail_at_end:
             result.append("-fae")
@@ -378,16 +509,16 @@ class MvnCLIOptions:
             result.append("-fn")
 
         if self.global_settings:
-            result.append(f"-gs {self.global_settings}")
+            result.extend(f"-gs {self.global_settings}".split())
 
         if self.global_toolchains:
-            result.append(f"-gt {self.global_toolchains}")
+            result.extend(f"-gt {self.global_toolchains}".split())
 
-        if self.help_:
+        if self.help:
             result.append("-h")
 
         if self.log_file:
-            result.append(f"-l {self.log_file}")
+            result.extend(f"-l {self.log_file}".split())
 
         if self.non_recursive:
             result.append("-N")
@@ -402,25 +533,25 @@ class MvnCLIOptions:
             result.append("-o")
 
         if self.activate_profiles:
-            result.append(f"-P {','.join(self.activate_profiles)}")
+            result.extend(f"-P {','.join(self.activate_profiles)}".split())
 
         if self.projects:
-            result.append(f"-pl {','.join(self.projects)}")
+            result.extend(f"-pl {','.join(self.projects)}".split())
 
         if self.quiet:
             result.append("-q")
 
         if self.resume_from:
-            result.append(f"-rf {self.resume_from}")
+            result.extend(f"-rf {self.resume_from}".split())
 
         if self.settings:
-            result.append(f"-s {self.settings}")
+            result.extend(f"-s {self.settings}".split())
 
         if self.toolchains:
-            result.append(f"-t {self.toolchains}")
+            result.extend(f"-t {self.toolchains}".split())
 
         if self.threads:
-            result.append(f"-T {self.threads}")
+            result.extend(f"-T {self.threads}".split())
 
         if self.update_snapshots:
             result.append("-U")
@@ -435,91 +566,6 @@ class MvnCLIOptions:
             result.append("-X")
 
         return result
-
-    @staticmethod
-    def is_system_prop_dict(values: Any) -> TypeGuard[dict[str, str]]:
-        """Type guard for system property dictionary."""
-        if not isinstance(values, dict):
-            return False
-
-        for key, value in values.items():
-            if not isinstance(key, str):
-                return False
-            if not isinstance(value, str):
-                return False
-
-        return True
-
-    @staticmethod
-    def from_list_of_string(option_strs: list[str]) -> "MvnCLIOptions":
-        """Parse the options part of the Maven CLI command.
-
-        Parameters
-        ----------
-        list[str]
-            The options to parse
-
-        Returns
-        -------
-        MvnCLIOptions
-            The MvnCLIOptions that capture the informatino of the provided options.
-
-        Raises
-        ------
-        MavenCLICommandParseError
-            If an error happens during parsing.
-        """
-        try:
-            parsed_args = MvnCLIOptions.mvn_arg_parser.parse_args(option_strs)
-        except argparse.ArgumentError as error:
-            raise MavenCLICommandParseError(
-                f"Failed to parse the Maven CLI Options {' '.join(option_strs)}."
-            ) from error
-        # Even though we have set `exit_on_error`, argparse still exists unexpectedly in some
-        # cases. This has been confirmed to be a bug in argparse implementation.
-        # https://github.com/python/cpython/issues/121018.
-        # This is fixed in Python3.12, but not Python3.11
-        except SystemExit as sys_exit_err:
-            raise MavenCLICommandParseError(
-                f"Failed to parse the Maven CLI Options {' '.join(option_strs)}."
-            ) from sys_exit_err
-
-        return MvnCLIOptions(parsed_args)
-
-    def apply_patch(
-        self,
-        patch: Mapping[str, MvnOptionPatchValueType],
-    ) -> None:
-        """Apply a patch to the option values contained in an MvnCLIOptions instance.
-
-        This function will mutate the attributes of the MvnCLIOptions instance.
-
-        Parameters
-        ----------
-        patch: Mapping[str, PatchOptionType]
-            A mapping between the name of the attribute in MvnCLIOptions and its patch value
-        """
-        for attr_name, attr_value in patch.items():
-            # Ensure that setting any option to None in the patch
-            # will remove it from the build command.
-            if attr_value is None:
-                setattr(self, attr_name, attr_value)
-                continue
-
-            if attr_name == "define":
-                if not MvnCLIOptions.is_system_prop_dict(attr_value):
-                    raise PatchBuildCommandError(
-                        f"The patch value for --define flag {attr_value} is not of type dict[str, str]"
-                    )
-
-                self.define = patch_mapping(
-                    original=self.define or {},
-                    patch=attr_value,
-                )
-
-                continue
-
-            setattr(self, attr_name, attr_value)
 
 
 def patch_mapping(
@@ -580,43 +626,153 @@ class MvnCLICommand:
 
         return self.executable == value.executable and self.options == value.options
 
-    @staticmethod
-    def from_list_of_string(
-        cmd_as_list: list[str],
-        accepted_mvn_executable: list[str],
-    ) -> "MvnCLICommand":
-        """Parse a Maven CLI command.
+
+class MvnCLICommandParser:
+    """A Maven CLI Command Parser."""
+
+    ACCEPTABLE_EXECUTABLE = ["mvn", "mvnw"]
+
+    def __init__(self) -> None:
+        """Initialize the instance."""
+        self.arg_parser = argparse.ArgumentParser(
+            description="Parse Maven CLI command",
+            prog="mvn",
+            add_help=False,
+            # https://docs.python.org/3/library/argparse.html#exit-on-error
+            # Best effort of parsing the build command. Therefore, we don't want to exit on error.
+            exit_on_error=False,
+        )
+
+        # A mapping between the long name to its option definition.
+        self.option_defs: dict[str, Option] = {}
+
+        for opt_def in MVN_OPTION_DEF:
+            opt_def.add_itself_to_arg_parser(self.arg_parser)
+
+            self.option_defs[opt_def.long_name] = opt_def
+
+    def validate_patch(self, patch: Mapping[str, MvnOptionPatchValueType]) -> bool:
+        """Return True if the patch conforms to the expected format."""
+        for patch_name, patch_value in patch.items():
+            opt_def = self.option_defs.get(patch_name)
+            if not opt_def:
+                logger.error("Cannot find any option that matches %s", patch_name)
+                return False
+
+            if not opt_def.is_valid_patch_option(patch_value):
+                logger.error(
+                    "The patch value %s of %s is not in the correct type. Expect %s.",
+                    patch_value,
+                    patch_name,
+                    opt_def.get_patch_type_str(),
+                )
+                return False
+
+        return True
+
+    def parse(self, cmd_list: list[str]) -> "MvnCLICommand":
+        """Parse the Maven CLI Command.
 
         Parameters
         ----------
-        list[str]
-            The Maven CLI command, as list of strings.
+        cmd_list: list[str]
+            The Maven CLI Command as list of strings.
 
         Returns
         -------
         MvnCLICommand
-            The MvnCLICommand that capture the information of the provided Maven CLI command.
+            The MvnCLICommand instance.
 
         Raises
         ------
         MavenCLICommandParseError
-            If an error happens during parsing.
+            If an error happens when parsing the Maven CLI Command.
         """
-        if not cmd_as_list:
+        if not cmd_list:
             raise MavenCLICommandParseError("The provided cmd list is empty.")
 
-        exe_path = cmd_as_list[0]
-        options = cmd_as_list[1:]
+        exe_path = cmd_list[0]
+        options = cmd_list[1:]
 
-        if os.path.basename(exe_path) not in accepted_mvn_executable:
+        if os.path.basename(exe_path) not in MvnCLICommandParser.ACCEPTABLE_EXECUTABLE:
             raise MavenCLICommandParseError(f"{exe_path} is not an acceptable mvn executable path.")
 
         try:
-            mvn_cli_options = MvnCLIOptions.from_list_of_string(options)
-        except MavenCLICommandParseError as error:
-            raise MavenCLICommandParseError(f"Failed to parse options of {' '.join(cmd_as_list)}.") from error
+            parsed_opts = self.arg_parser.parse_args(options)
+        except argparse.ArgumentError as error:
+            raise MavenCLICommandParseError(f"Failed to parse the Maven CLI Options {' '.join(options)}.") from error
+        # Even though we have set `exit_on_error`, argparse still exists unexpectedly in some
+        # cases. This has been confirmed to be a bug in the argparse library implementation.
+        # https://github.com/python/cpython/issues/121018.
+        # This is fixed in Python3.12, but not Python3.11
+        except SystemExit as sys_exit_err:
+            raise MavenCLICommandParseError(
+                f"Failed to parse the Maven CLI Options {' '.join(options)}."
+            ) from sys_exit_err
+
+        mvn_cli_options = MvnCLIOptions(parsed_opts)
 
         return MvnCLICommand(
             executable=exe_path,
             options=mvn_cli_options,
         )
+
+    def apply_option_patch(
+        self,
+        mvn_cli_options: MvnCLIOptions,
+        patch: Mapping[str, MvnOptionPatchValueType],
+    ) -> MvnCLIOptions:
+        """Patch the Maven CLI Options and return a new copy.
+
+        Parameters
+        ----------
+        mvn_cli_options: MvnCLIOptions
+            The Maven CLI Options to patch.
+        patch: Mapping[str, PatchOptionType]
+            A mapping between the name of the attribute in MvnCLIOptions and its patch value
+
+        Returns
+        -------
+        MvnCLIOptions
+            The new patched maven cli options.
+
+        Raises
+        ------
+        PatchBuildCommandError
+            If an error happens during the patching process.
+        """
+        if not self.validate_patch(patch):
+            raise PatchBuildCommandError("The patch is invalid.")
+
+        # Copy the Maven CLI Options for patching
+        new_mvn_cli_options = deepcopy(mvn_cli_options)
+
+        for option_long_name, patch_value in patch.items():
+            # Get the attribute name of MvnCLIOption object.
+            # They all follow the same rule of removing the prefix --
+            # from option long name and replace all "-" with "_"
+            attr_name = option_long_name.removeprefix("--").replace("-", "_")
+
+            # Ensure that setting any option to None in the patch
+            # will remove it from the build command.
+            if patch_value is None:
+                setattr(new_mvn_cli_options, attr_name, patch_value)
+                continue
+
+            # Only for "-D/--define" we patch it differently than other options.
+            if option_long_name == "--define":
+                define_opt_def = self.option_defs.get(option_long_name)
+                if not define_opt_def or not define_opt_def.is_valid_patch_option(patch_value):
+                    # Shouldn't happen
+                    raise PatchBuildCommandError(
+                        f"Critical, incorrect runtime type for patch --define, value: {patch_value}."
+                    )
+                new_mvn_cli_options.define = patch_mapping(
+                    original=new_mvn_cli_options.define or {},
+                    patch=patch_value,
+                )
+                continue
+
+            setattr(new_mvn_cli_options, attr_name, patch_value)
+
+        return new_mvn_cli_options

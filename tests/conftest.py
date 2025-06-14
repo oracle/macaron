@@ -11,6 +11,7 @@ import pytest
 from pytest_httpserver import HTTPServer
 
 import macaron
+from macaron.build_spec_generator.maven_cli_parser import MvnCLICommandParser
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.database.table_definitions import Analysis, Component, RepoFinderMetadata, Repository
@@ -491,3 +492,9 @@ def deps_dev_service_mock_(httpserver: HTTPServer, tmp_path: Path) -> dict:
         "base_scheme": base_url_parsed.scheme,
         "base_netloc": base_url_parsed.netloc,
     }
+
+
+@pytest.fixture(scope="module")
+def mvn_cli_parser() -> MvnCLICommandParser:
+    """Return a MvnCLICommandParser instance with a module scope."""
+    return MvnCLICommandParser()
