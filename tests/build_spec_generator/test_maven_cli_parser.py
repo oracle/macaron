@@ -84,6 +84,32 @@ from macaron.build_spec_generator.maven_cli_parser import (
             },
             id="pkg:maven/org.apache.activemq/artemis-log-annotation-processor@2.27.1",
         ),
+        pytest.param(
+            "mvn --help",
+            {
+                "goals": [],
+                "help": True,
+            },
+            id="allow_no_goal_for_help",
+        ),
+        pytest.param(
+            "mvn --version",
+            {
+                "goals": [],
+                "help": False,
+                "version": True,
+            },
+            id="allow_no_goal_for_version",
+        ),
+        pytest.param(
+            "mvn --help --version",
+            {
+                "goals": [],
+                "help": True,
+                "version": True,
+            },
+            id="allow_no_goal_for_version_and_help",
+        ),
     ],
 )
 def test_maven_cli_command_parser_valid_input(
@@ -145,15 +171,19 @@ def test_maven_cli_command_parser_default_value(maven_cli_parser: MavenCLIComman
         pytest.param("mvn", id="No goal or phase"),
         pytest.param(
             "mvn --this-argument-should-never-exist-in-mvn",
-            id="Unrecognized optional arguments",
+            id="unrecognized_optional_argument",
         ),
         pytest.param(
             "mvn --this-argument-should-never-exist-in-mvn some-value",
-            id="Unrecognized value option",
+            id="unrecognized_value_option",
         ),
         pytest.param(
             "mmmvvvnnn clean package",
-            id="The executable is unacceptable",
+            id="unrecognized_executable_path",
+        ),
+        pytest.param(
+            "mvn --show-version",
+            id="show_version_with_no_goal",
         ),
     ],
 )
