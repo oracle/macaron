@@ -10,7 +10,7 @@ import pytest
 
 from macaron.build_spec_generator.maven_cli_parser import (
     MavenCLICommandParseError,
-    MvnCLICommandParser,
+    MavenCLICommandParser,
     is_dict_of_str_to_str,
     is_list_of_strs,
     patch_mapping,
@@ -86,13 +86,13 @@ from macaron.build_spec_generator.maven_cli_parser import (
         ),
     ],
 )
-def test_mvn_cli_command_parser_valid_input(
-    mvn_cli_parser: MvnCLICommandParser,
+def test_maven_cli_command_parser_valid_input(
+    maven_cli_parser: MavenCLICommandParser,
     command: str,
     expected: dict[str, str | None | bool | list[str]],
 ) -> None:
     """Test the maven cli parser on valid input."""
-    parsed_res = mvn_cli_parser.parse(command.split())
+    parsed_res = maven_cli_parser.parse(command.split())
 
     for key, val in expected.items():
         assert getattr(parsed_res.options, key) == val
@@ -115,20 +115,20 @@ def test_mvn_cli_command_parser_valid_input(
         ),
     ],
 )
-def test_mvn_cli_command_parser_executable(
-    mvn_cli_parser: MvnCLICommandParser,
+def test_maven_cli_command_parser_executable(
+    maven_cli_parser: MavenCLICommandParser,
     build_command: str,
     expected: str,
 ) -> None:
     """Test the Maven CLI command correctly persisting the executable string."""
-    parse_res = mvn_cli_parser.parse(build_command.split())
+    parse_res = maven_cli_parser.parse(build_command.split())
     assert parse_res.executable == expected
 
 
-def test_mvn_cli_command_parser_default_value(mvn_cli_parser: MvnCLICommandParser) -> None:
+def test_maven_cli_command_parser_default_value(maven_cli_parser: MavenCLICommandParser) -> None:
     """Test the Maven CLI command parser initialized any option as None if it doesn't exist in the input build command."""
     build_command = "mvn clean package"
-    parse_res = mvn_cli_parser.parse(build_command.split())
+    parse_res = maven_cli_parser.parse(build_command.split())
 
     attr_map = vars(parse_res.options)
     for name, value in attr_map.items():
@@ -157,13 +157,13 @@ def test_mvn_cli_command_parser_default_value(mvn_cli_parser: MvnCLICommandParse
         ),
     ],
 )
-def test_mvn_cli_command_parser_invalid_input(
-    mvn_cli_parser: MvnCLICommandParser,
+def test_maven_cli_command_parser_invalid_input(
+    maven_cli_parser: MavenCLICommandParser,
     build_command: str,
 ) -> None:
     """Test the Maven CLI command parser on invalid input."""
     with pytest.raises(MavenCLICommandParseError):
-        mvn_cli_parser.parse(build_command.split())
+        maven_cli_parser.parse(build_command.split())
 
 
 @pytest.mark.parametrize(
@@ -278,15 +278,15 @@ def test_is_list_of_strs(value: Any, expected: bool) -> None:
         "mvn -s ../.github/maven-settings.xml install -Pexamples,noRun",
     ],
 )
-def test_to_cmd_goals(mvn_cli_parser: MvnCLICommandParser, command: str) -> None:
+def test_to_cmd_goals(maven_cli_parser: MavenCLICommandParser, command: str) -> None:
     """Test the to_cmd_goals method."""
-    mvn_cli_command = mvn_cli_parser.parse(command.split())
+    maven_cli_command = maven_cli_parser.parse(command.split())
 
-    print_command_with_goals = [mvn_cli_command.executable]
-    print_command_with_goals.extend(mvn_cli_command.options.to_cmd_goals())
+    print_command_with_goals = [maven_cli_command.executable]
+    print_command_with_goals.extend(maven_cli_command.options.to_cmd_goals())
 
-    mvn_cli_command_second = mvn_cli_parser.parse(print_command_with_goals)
-    assert mvn_cli_command == mvn_cli_command_second
+    maven_cli_command_second = maven_cli_parser.parse(print_command_with_goals)
+    assert maven_cli_command == maven_cli_command_second
 
 
 @pytest.mark.parametrize(
@@ -300,12 +300,12 @@ def test_to_cmd_goals(mvn_cli_parser: MvnCLICommandParser, command: str) -> None
         ("mvn clean package", "mvn package clean"),
     ],
 )
-def test_comparing_mvn_cli_options_unequal(
-    mvn_cli_parser: MvnCLICommandParser,
+def test_comparing_maven_cli_options_unequal(
+    maven_cli_parser: MavenCLICommandParser,
     this: str,
     that: str,
 ) -> None:
-    """Test comparing two unequal MvnCLIOption objects."""
-    this_options = mvn_cli_parser.parse(this.split()).options
-    that_options = mvn_cli_parser.parse(that.split()).options
+    """Test comparing two unequal MavenCLIOption objects."""
+    this_options = maven_cli_parser.parse(this.split()).options
+    that_options = maven_cli_parser.parse(that.split()).options
     assert not this_options == that_options
