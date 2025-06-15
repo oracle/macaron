@@ -205,9 +205,10 @@ class MavenGoalPhase(Option[list[str]]):
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
+        # Doesn't require to allow cases like "mvn --help".
         arg_parse.add_argument(
             self.long_name,
-            nargs="+",
+            nargs="*",
         )
 
     def get_patch_type_str(self) -> str:
@@ -456,6 +457,16 @@ class MavenCLICommandParser:
             raise MavenCLICommandParseError(
                 f"Failed to parse the Maven CLI Options {' '.join(options)}."
             ) from sys_exit_err
+
+        # Handle cases where goal or plugin phase is not provided.
+        if not parsed_opts.goals:
+            # Allow cases such as:
+            #   mvn --help
+            #   mvn --version
+            # Note that we don't allow mvn -V or mvn --show-version as this command will
+            #   failed for mvn
+            if not parsed_opts.help and not parsed_opts.version:
+                raise MavenCLICommandParseError(f"No goal detected for {' '.join(options)}.")
 
         maven_cli_options = MavenCLIOptions(parsed_opts)
 
