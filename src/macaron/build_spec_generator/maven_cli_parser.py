@@ -240,6 +240,10 @@ MAVEN_OPTION_DEF: list[Option] = [
         short_name="-c",
         long_name="--lax-checksums",
     ),
+    MavenOptionalFlag(
+        short_name="-cpu",
+        long_name="--check-plugin-updates",
+    ),
     MavenSystemPropeties(
         short_name="-D",
         long_name="--define",
@@ -289,6 +293,10 @@ MAVEN_OPTION_DEF: list[Option] = [
         long_name="--log-file",
     ),
     MavenOptionalFlag(
+        short_name="-llr",
+        long_name="--legacy-local-repository",
+    ),
+    MavenOptionalFlag(
         short_name="-N",
         long_name="--non-recursive",
     ),
@@ -299,6 +307,14 @@ MAVEN_OPTION_DEF: list[Option] = [
     MavenOptionalFlag(
         short_name="-ntp",
         long_name="--no-transfer-progress",
+    ),
+    MavenOptionalFlag(
+        short_name="-npu",
+        long_name="--no-plugin-updates",
+    ),
+    MavenOptionalFlag(
+        short_name="-npr",
+        long_name="--no-plugin-registry",
     ),
     MavenOptionalFlag(
         short_name="-o",
@@ -335,6 +351,10 @@ MAVEN_OPTION_DEF: list[Option] = [
     MavenOptionalFlag(
         short_name="-U",
         long_name="--update-snapshots",
+    ),
+    MavenOptionalFlag(
+        short_name="-up",
+        long_name="--update-plugins",
     ),
     MavenOptionalFlag(
         short_name="-v",
