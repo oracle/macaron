@@ -24,6 +24,13 @@ from macaron.build_spec_generator.maven_cli_parser import MavenCLICommandParser
             "mvn clean package -X -P project1,project2",
             id="test_different_order_of_options",
         ),
+        # This case is unequal because we store the value for `-Dmaven.skip.test=true` as "true"
+        # and `-Dmaven.skip.test` as an empty string
+        pytest.param(
+            "mvn clean package -Dmaven.skip.test=true",
+            "mvn clean package -Dmaven.skip.test",
+            id="test_default_value_for_system_property",
+        ),
     ],
 )
 def test_comparing_maven_cli_command_equal(
@@ -47,9 +54,6 @@ def test_comparing_maven_cli_command_equal(
         ("mvn clean package", "mvn clean package --settings ./pom.xml"),
         ("mvn clean package", "mvn package clean"),
         ("mvn clean package", "mvnw clean package"),
-        # This case is unequal because we store the value for `-Dmaven.skip.test=true` as "true"
-        # and `-Dmaven.skip.test` as an empty string
-        ("mvn clean package -Dmaven.skip.test=true", "mvn clean package -Dmaven.skip.test"),
     ],
 )
 def test_comparing_maven_cli_command_unequal(
@@ -125,8 +129,8 @@ def test_to_cmd_goals(maven_cli_parser: MavenCLICommandParser, command: str) -> 
         pytest.param(
             # For example one can specify mvn clean package -Dmaven.skip.true=true -Dboo
             ["maven.skip.true=true", "boo"],
-            {"maven.skip.true": "true", "boo": ""},
-            id="test_system_property_without_value",
+            {"maven.skip.true": "true", "boo": "true"},
+            id="test_system_property_default_value",
         ),
     ],
 )

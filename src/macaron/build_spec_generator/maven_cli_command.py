@@ -98,18 +98,19 @@ class MavenCLIOptions:
             #   mvn help:evaluate -Da=foo -Da=bar -Dexpression=a -q -DforceStdout
             # => result for `a` is bar
             # If ele doesn't have "=", for example `-Dmaven.skip.test`, we store
-            # the value as an empty string and don't try to evaluate it.
+            # the value using the value "true" string.
             #
             # For example:
             #   Maven evaluates the system property maven.skip.test to be "true" in these two commands
             #       mvn clean package -Dmaven.skip.test=true
             #       mvn clean package -Dmaven.skip.test
-            #   However, we store -Dmaven.skip.test=true as {"maven.skip.test": "true"}
-            #   and -Dmaven.skip.test as {"maven.skip.test": ""}
             #   To check how Maven evaluate the expression, run these commands on any project that uses maven.
             #       mvn help:evaluate -Dmaven.skip.test -Dexpression=maven.skip.test -q -DforceStdout
             #       mvn help:evaluate -Dmaven.skip.test=true -Dexpression=maven.skip.test -q -DforceStdout
-            system_props[prop_name] = prop_val
+            if not prop_val:
+                system_props[prop_name] = "true"
+            else:
+                system_props[prop_name] = prop_val
 
         return system_props
 
