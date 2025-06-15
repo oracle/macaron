@@ -17,7 +17,7 @@ from macaron.errors import MavenCLICommandParseError, PatchBuildCommandError
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-MvnOptionPatchValueType = str | list[str] | bool | dict[str, str] | None
+MavenOptionPatchValueType = str | list[str] | bool | dict[str, str] | None
 
 
 def is_list_of_strs(value: Any) -> TypeGuard[list[str]]:
@@ -31,7 +31,7 @@ def is_dict_of_str_to_str(value: Any) -> TypeGuard[list[str]]:
 
 
 @dataclass
-class MvnOptionalFlag(Option[bool]):
+class MavenOptionalFlag(Option[bool]):
     """This option represents an optional flag in Maven CLI command.
 
     For example: --debug/-X
@@ -61,7 +61,7 @@ class MvnOptionalFlag(Option[bool]):
 
 
 @dataclass
-class MvnSingleValue(Option[str]):
+class MavenSingleValue(Option[str]):
     """This option represents an option that takes a value in Maven CLI command.
 
     For example: "--settings ./path/to/pom.xml"
@@ -90,7 +90,7 @@ class MvnSingleValue(Option[str]):
 
 
 @dataclass
-class MvnCommaDelimList(Option[list[str]]):
+class MavenCommaDelimList(Option[list[str]]):
     """This option represents an option that takes a comma delimited value in Maven CLI command.
 
     This option can be defined one time only and the value is stored as a string in argparse.
@@ -124,7 +124,7 @@ class MvnCommaDelimList(Option[list[str]]):
 
 
 @dataclass
-class MvnSystemPropeties(Option[dict[str, str]]):
+class MavenSystemPropeties(Option[dict[str, str]]):
     """This option represents the -D/--define option of a Maven CLI command.
 
     This option can be defined multiple times and the values are appended into a list of string in argparse.
@@ -158,7 +158,7 @@ class MvnSystemPropeties(Option[dict[str, str]]):
 
 
 @dataclass
-class MvnGoalPhase(Option[list[str]]):
+class MavenGoalPhase(Option[list[str]]):
     """This option represents the positional goal/plugin-phase option in Maven CLI command.
 
     argparse.Namespace stores this as a list of string. This is stored internally as a list of string.
@@ -183,146 +183,146 @@ class MvnGoalPhase(Option[list[str]]):
         return "list[str]"
 
 
-MVN_OPTION_DEF: list[Option] = [
-    MvnOptionalFlag(
+MAVEN_OPTION_DEF: list[Option] = [
+    MavenOptionalFlag(
         short_name="-am",
         long_name="--also-make",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-amd",
         long_name="--also-make-dependents",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-B",
         long_name="--batch-mode",
     ),
-    MvnSingleValue(
+    MavenSingleValue(
         short_name="-b",
         long_name="--builder",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-C",
         long_name="--strict-checksums",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-c",
         long_name="--lax-checksums",
     ),
-    MvnSystemPropeties(
+    MavenSystemPropeties(
         short_name="-D",
         long_name="--define",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-e",
         long_name="--errors",
     ),
-    MvnSingleValue(
+    MavenSingleValue(
         short_name="-emp",
         long_name="--encrypt-master-password",
     ),
-    MvnSingleValue(
+    MavenSingleValue(
         short_name="-ep",
         long_name="--encrypt-password",
     ),
-    MvnSingleValue(
+    MavenSingleValue(
         short_name="-f",
         long_name="--file",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-fae",
         long_name="--fail-at-end",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-ff",
         long_name="--fail-fast",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-fn",
         long_name="--fail-never",
     ),
-    MvnSingleValue(
+    MavenSingleValue(
         short_name="-gs",
         long_name="--global-settings",
     ),
-    MvnSingleValue(
+    MavenSingleValue(
         short_name="-gt",
         long_name="--global-toolchains",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-h",
         long_name="--help",
     ),
-    MvnSingleValue(
+    MavenSingleValue(
         short_name="-l",
         long_name="--log-file",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-N",
         long_name="--non-recursive",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-nsu",
         long_name="--no-snapshot-updates",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-ntp",
         long_name="--no-transfer-progress",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-o",
         long_name="--offline",
     ),
-    MvnCommaDelimList(
+    MavenCommaDelimList(
         short_name="-P",
         long_name="--activate-profiles",
     ),
-    MvnCommaDelimList(
+    MavenCommaDelimList(
         short_name="-pl",
         long_name="--projects",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-q",
         long_name="--quiet",
     ),
-    MvnSingleValue(
+    MavenSingleValue(
         short_name="-rf",
         long_name="--resume-from",
     ),
-    MvnSingleValue(
+    MavenSingleValue(
         short_name="-s",
         long_name="--settings",
     ),
-    MvnSingleValue(
+    MavenSingleValue(
         short_name="-t",
         long_name="--toolchains",
     ),
-    MvnSingleValue(
+    MavenSingleValue(
         short_name="-T",
         long_name="--threads",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-U",
         long_name="--update-snapshots",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-v",
         long_name="--version",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-V",
         long_name="--show-version",
     ),
-    MvnOptionalFlag(
+    MavenOptionalFlag(
         short_name="-X",
         long_name="--debug",
     ),
-    MvnGoalPhase(
+    MavenGoalPhase(
         long_name="goals",
     ),
 ]
 
 
-class MvnCLIOptions:
+class MavenCLIOptions:
     """The class that stores the values of options parsed from a Maven CLI Command."""
 
     def __init__(
@@ -343,7 +343,7 @@ class MvnCLIOptions:
         self.strict_checksums: bool | None = parsed_arg.strict_checksums
         self.lax_checksums: bool | None = parsed_arg.lax_checksums
         self.define: dict[str, str] | None = (
-            MvnCLIOptions.parse_system_properties(parsed_arg.define) if parsed_arg.define else None
+            MavenCLIOptions.parse_system_properties(parsed_arg.define) if parsed_arg.define else None
         )
         self.errors: bool | None = parsed_arg.errors
         self.encrypt_master_password: str | None = parsed_arg.encrypt_master_password
@@ -361,10 +361,10 @@ class MvnCLIOptions:
         self.no_transfer_progress: bool | None = parsed_arg.no_transfer_progress
         self.offline: bool | None = parsed_arg.offline
         self.activate_profiles: list[str] | None = (
-            MvnCLIOptions.parse_comma_sep_list(parsed_arg.activate_profiles) if parsed_arg.activate_profiles else None
+            MavenCLIOptions.parse_comma_sep_list(parsed_arg.activate_profiles) if parsed_arg.activate_profiles else None
         )
         self.projects: list[str] | None = (
-            MvnCLIOptions.parse_comma_sep_list(parsed_arg.projects) if parsed_arg.projects else None
+            MavenCLIOptions.parse_comma_sep_list(parsed_arg.projects) if parsed_arg.projects else None
         )
         self.quiet: bool | None = parsed_arg.quiet
         self.resume_from: str | None = parsed_arg.resume_from
@@ -378,7 +378,7 @@ class MvnCLIOptions:
         self.goals: list[str] = parsed_arg.goals
 
     def __eq__(self, value: Any) -> bool:
-        if not isinstance(value, MvnCLIOptions):
+        if not isinstance(value, MavenCLIOptions):
             return False
 
         return vars(self) == vars(value)
@@ -401,7 +401,7 @@ class MvnCLIOptions:
 
         Examples
         --------
-        >>> MvnCLIOptions.parse_system_properties(["boo=true", "foo=1"])
+        >>> MavenCLIOptions.parse_system_properties(["boo=true", "foo=1"])
         {'boo': 'true', 'foo': '1'}
         """
         system_props = {}
@@ -432,7 +432,7 @@ class MvnCLIOptions:
 
         Examples
         --------
-        >>> MvnCLIOptions.parse_comma_sep_list("examples,release")
+        >>> MavenCLIOptions.parse_comma_sep_list("examples,release")
         ['examples', 'release']
         """
         return input_val.split(",")
@@ -599,13 +599,13 @@ def patch_mapping(
     return patch_result
 
 
-class MvnCLICommand:
+class MavenCLICommand:
     """The class that stores the values of a Maven CLI Command."""
 
     def __init__(
         self,
         executable: str,
-        options: MvnCLIOptions,
+        options: MavenCLIOptions,
     ) -> None:
         """Initialize the instance.
 
@@ -614,20 +614,20 @@ class MvnCLICommand:
         executeable : str
             The executable part of the build command (e.g. mvnw, mvn or ./path/to/mvnw).
 
-        options: MvnCLIOptions
-            The MvnCLIOptions object created from parsing the options part of the build command.
+        options: MavenCLIOptions
+            The MavenCLIOptions object created from parsing the options part of the build command.
         """
         self.executable = executable
         self.options = options
 
     def __eq__(self, value: Any) -> bool:
-        if not isinstance(value, MvnCLICommand):
+        if not isinstance(value, MavenCLICommand):
             return False
 
         return self.executable == value.executable and self.options == value.options
 
 
-class MvnCLICommandParser:
+class MavenCLICommandParser:
     """A Maven CLI Command Parser."""
 
     ACCEPTABLE_EXECUTABLE = ["mvn", "mvnw"]
@@ -646,12 +646,12 @@ class MvnCLICommandParser:
         # A mapping between the long name to its option definition.
         self.option_defs: dict[str, Option] = {}
 
-        for opt_def in MVN_OPTION_DEF:
+        for opt_def in MAVEN_OPTION_DEF:
             opt_def.add_itself_to_arg_parser(self.arg_parser)
 
             self.option_defs[opt_def.long_name] = opt_def
 
-    def validate_patch(self, patch: Mapping[str, MvnOptionPatchValueType]) -> bool:
+    def validate_patch(self, patch: Mapping[str, MavenOptionPatchValueType]) -> bool:
         """Return True if the patch conforms to the expected format."""
         for patch_name, patch_value in patch.items():
             opt_def = self.option_defs.get(patch_name)
@@ -670,7 +670,7 @@ class MvnCLICommandParser:
 
         return True
 
-    def parse(self, cmd_list: list[str]) -> "MvnCLICommand":
+    def parse(self, cmd_list: list[str]) -> "MavenCLICommand":
         """Parse the Maven CLI Command.
 
         Parameters
@@ -680,8 +680,8 @@ class MvnCLICommandParser:
 
         Returns
         -------
-        MvnCLICommand
-            The MvnCLICommand instance.
+        MavenCLICommand
+            The MavenCLICommand instance.
 
         Raises
         ------
@@ -694,7 +694,7 @@ class MvnCLICommandParser:
         exe_path = cmd_list[0]
         options = cmd_list[1:]
 
-        if os.path.basename(exe_path) not in MvnCLICommandParser.ACCEPTABLE_EXECUTABLE:
+        if os.path.basename(exe_path) not in MavenCLICommandParser.ACCEPTABLE_EXECUTABLE:
             raise MavenCLICommandParseError(f"{exe_path} is not an acceptable mvn executable path.")
 
         try:
@@ -710,30 +710,30 @@ class MvnCLICommandParser:
                 f"Failed to parse the Maven CLI Options {' '.join(options)}."
             ) from sys_exit_err
 
-        mvn_cli_options = MvnCLIOptions(parsed_opts)
+        maven_cli_options = MavenCLIOptions(parsed_opts)
 
-        return MvnCLICommand(
+        return MavenCLICommand(
             executable=exe_path,
-            options=mvn_cli_options,
+            options=maven_cli_options,
         )
 
     def apply_option_patch(
         self,
-        mvn_cli_options: MvnCLIOptions,
-        patch: Mapping[str, MvnOptionPatchValueType],
-    ) -> MvnCLIOptions:
+        maven_cli_options: MavenCLIOptions,
+        patch: Mapping[str, MavenOptionPatchValueType],
+    ) -> MavenCLIOptions:
         """Patch the Maven CLI Options and return a new copy.
 
         Parameters
         ----------
-        mvn_cli_options: MvnCLIOptions
+        maven_cli_options: MavenCLIOptions
             The Maven CLI Options to patch.
         patch: Mapping[str, PatchOptionType]
-            A mapping between the name of the attribute in MvnCLIOptions and its patch value
+            A mapping between the name of the attribute in MavenCLIOptions and its patch value
 
         Returns
         -------
-        MvnCLIOptions
+        MavenCLIOptions
             The new patched maven cli options.
 
         Raises
@@ -745,10 +745,10 @@ class MvnCLICommandParser:
             raise PatchBuildCommandError("The patch is invalid.")
 
         # Copy the Maven CLI Options for patching
-        new_mvn_cli_options = deepcopy(mvn_cli_options)
+        new_maven_cli_options = deepcopy(maven_cli_options)
 
         for option_long_name, patch_value in patch.items():
-            # Get the attribute name of MvnCLIOption object.
+            # Get the attribute name of MavenCLIOption object.
             # They all follow the same rule of removing the prefix --
             # from option long name and replace all "-" with "_"
             attr_name = option_long_name.removeprefix("--").replace("-", "_")
@@ -756,7 +756,7 @@ class MvnCLICommandParser:
             # Ensure that setting any option to None in the patch
             # will remove it from the build command.
             if patch_value is None:
-                setattr(new_mvn_cli_options, attr_name, patch_value)
+                setattr(new_maven_cli_options, attr_name, patch_value)
                 continue
 
             # Only for "-D/--define" we patch it differently than other options.
@@ -767,12 +767,12 @@ class MvnCLICommandParser:
                     raise PatchBuildCommandError(
                         f"Critical, incorrect runtime type for patch --define, value: {patch_value}."
                     )
-                new_mvn_cli_options.define = patch_mapping(
-                    original=new_mvn_cli_options.define or {},
+                new_maven_cli_options.define = patch_mapping(
+                    original=new_maven_cli_options.define or {},
                     patch=patch_value,
                 )
                 continue
 
-            setattr(new_mvn_cli_options, attr_name, patch_value)
+            setattr(new_maven_cli_options, attr_name, patch_value)
 
-        return new_mvn_cli_options
+        return new_maven_cli_options

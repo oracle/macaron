@@ -6,7 +6,7 @@
 import pytest
 
 from macaron.build_spec_generator.build_command_patcher import _patch_mvn_cli_command
-from macaron.build_spec_generator.maven_cli_parser import MvnCLICommandParser, MvnOptionPatchValueType
+from macaron.build_spec_generator.maven_cli_parser import MavenCLICommandParser, MavenOptionPatchValueType
 
 
 @pytest.mark.parametrize(
@@ -85,22 +85,22 @@ from macaron.build_spec_generator.maven_cli_parser import MvnCLICommandParser, M
     ],
 )
 def test_patch_mvn_cli_command(
-    mvn_cli_parser: MvnCLICommandParser,
+    maven_cli_parser: MavenCLICommandParser,
     original: str,
-    patch_options: dict[str, MvnOptionPatchValueType],
+    patch_options: dict[str, MavenOptionPatchValueType],
     expected: str,
 ) -> None:
     """Test the patch maven cli command on valid input."""
     patch_cmds = _patch_mvn_cli_command(
         cmd_list=original.split(),
         patch_options=patch_options,
-        mvn_cli_parser=mvn_cli_parser,
+        mvn_cli_parser=maven_cli_parser,
     )
     assert patch_cmds
 
-    patch_mvn_cli_command = mvn_cli_parser.parse(patch_cmds)
+    patch_mvn_cli_command = maven_cli_parser.parse(patch_cmds)
 
-    expected_mvn_cli_command = mvn_cli_parser.parse(expected.split())
+    expected_mvn_cli_command = maven_cli_parser.parse(expected.split())
 
     assert patch_mvn_cli_command == expected_mvn_cli_command
 
@@ -141,12 +141,12 @@ def test_patch_mvn_cli_command(
     ],
 )
 def test_patch_mvn_cli_command_error(
-    mvn_cli_parser: MvnCLICommandParser,
-    invalid_patch: dict[str, MvnOptionPatchValueType],
+    maven_cli_parser: MavenCLICommandParser,
+    invalid_patch: dict[str, MavenOptionPatchValueType],
 ) -> None:
     """Test patch mvn cli command patching with invalid patch."""
     assert not _patch_mvn_cli_command(
         cmd_list="mvn -s ../.github/maven-settings.xml install -Pexamples,noRun".split(),
         patch_options=invalid_patch,
-        mvn_cli_parser=mvn_cli_parser,
+        mvn_cli_parser=maven_cli_parser,
     )

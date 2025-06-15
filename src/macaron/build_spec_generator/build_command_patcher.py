@@ -8,19 +8,19 @@ from collections.abc import Mapping
 
 from macaron.build_spec_generator.maven_cli_parser import (
     MavenCLICommandParseError,
-    MvnCLICommandParser,
-    MvnOptionPatchValueType,
+    MavenCLICommandParser,
+    MavenOptionPatchValueType,
     PatchBuildCommandError,
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-MVN_CLI_PARSER = MvnCLICommandParser()
+MVN_CLI_PARSER = MavenCLICommandParser()
 
 
 def patch_mvn_cli_command(
     cmd_list: list[str],
-    patch_options: Mapping[str, MvnOptionPatchValueType],
+    patch_options: Mapping[str, MavenOptionPatchValueType],
 ) -> list[str] | None:
     """Patch a Maven CLI command.
 
@@ -58,8 +58,8 @@ def patch_mvn_cli_command(
 
 def _patch_mvn_cli_command(
     cmd_list: list[str],
-    patch_options: Mapping[str, MvnOptionPatchValueType],
-    mvn_cli_parser: MvnCLICommandParser,
+    patch_options: Mapping[str, MavenOptionPatchValueType],
+    mvn_cli_parser: MavenCLICommandParser,
 ) -> list[str] | None:
     """Patch a Maven CLI command by enforcing goals/phases and modifying options.
 
