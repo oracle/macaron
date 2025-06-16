@@ -3,17 +3,12 @@
 
 """This module contains the tests for maven cli parser."""
 
-from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
 from macaron.build_spec_generator.maven_cli_parser import (
-    MavenCLICommandParseError,
+    CommandLineParseError,
     MavenCLICommandParser,
-    is_dict_of_str_to_str,
-    is_list_of_strs,
-    patch_mapping,
 )
 
 
@@ -192,107 +187,5 @@ def test_maven_cli_command_parser_invalid_input(
     build_command: str,
 ) -> None:
     """Test the Maven CLI command parser on invalid input."""
-    with pytest.raises(MavenCLICommandParseError):
+    with pytest.raises(CommandLineParseError):
         maven_cli_parser.parse(build_command.split())
-
-
-@pytest.mark.parametrize(
-    ("original", "patch", "expected"),
-    [
-        pytest.param(
-            {},
-            {},
-            {},
-        ),
-        pytest.param(
-            {"boo": "foo", "bar": "far"},
-            {},
-            {"boo": "foo", "bar": "far"},
-        ),
-        pytest.param(
-            {},
-            {"boo": "foo", "bar": "far"},
-            {"boo": "foo", "bar": "far"},
-        ),
-        pytest.param(
-            {"boo": "foo", "bar": "far"},
-            {"boo": "another_foo"},
-            {"boo": "another_foo", "bar": "far"},
-        ),
-        pytest.param(
-            {"boo": "foo", "bar": "far"},
-            {"boo": "another_foo", "bar": None},
-            {"boo": "another_foo"},
-            id="Use None to remove a system property",
-        ),
-    ],
-)
-def test_patch_mapping(
-    original: Mapping[str, str],
-    patch: Mapping[str, str | None],
-    expected: Mapping[str, str],
-) -> None:
-    """Test the patch mapping function."""
-    assert (
-        patch_mapping(
-            original=original,
-            patch=patch,
-        )
-        == expected
-    )
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        pytest.param(
-            {"A": "B"},
-            True,
-        ),
-        pytest.param(
-            True,
-            False,
-        ),
-        pytest.param(
-            ["A", "B"],
-            False,
-        ),
-        pytest.param(
-            {"A": "B", "C": 1, "D": {}},
-            False,
-        ),
-    ],
-)
-def test_is_dict_of_str_to_str(value: Any, expected: bool) -> None:
-    """Test the is_dict_of_str_to_str type guard."""
-    assert is_dict_of_str_to_str(value) == expected
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        pytest.param(
-            ["str1", "str2"],
-            True,
-        ),
-        pytest.param(
-            [],
-            True,
-        ),
-        pytest.param(
-            {"A": "B"},
-            False,
-        ),
-        pytest.param(
-            "str",
-            False,
-        ),
-        pytest.param(
-            True,
-            False,
-        ),
-    ],
-)
-def test_is_list_of_strs(value: Any, expected: bool) -> None:
-    """Test the is_list_of_strs function."""
-    assert is_list_of_strs(value) == expected

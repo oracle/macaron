@@ -5,10 +5,52 @@
 
 import argparse
 from abc import abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Generic, TypeGuard, TypeVar
 
 T = TypeVar("T")
+
+
+def is_list_of_strs(value: Any) -> TypeGuard[list[str]]:
+    """Type guard for a list of strings."""
+    return isinstance(value, list) and all(isinstance(ele, str) for ele in value)
+
+
+def is_dict_of_str_to_str(value: Any) -> TypeGuard[list[str]]:
+    """Type guard for a dictionary with keys are string and values are strings."""
+    return isinstance(value, dict) and all(isinstance(key, str) and isinstance(val, str) for key, val in value.items())
+
+
+def patch_mapping(
+    original: Mapping[str, str],
+    patch: Mapping[str, str | None],
+) -> dict[str, str]:
+    """Patch a mapping.
+
+    A key with value in patch set to None will be removed from the original.
+
+    Parameters
+    ----------
+    original: Mapping[str, str]
+        The original mapping.
+    patch: Mapping[str, str | None]
+        The patch.
+
+    Returns
+    -------
+    dict[str, str]:
+        The new dictionary after applying the patch.
+    """
+    patch_result = dict(original)
+
+    for name, value in patch.items():
+        if value is None:
+            patch_result.pop(name, None)
+        else:
+            patch_result[name] = value
+
+    return patch_result
 
 
 @dataclass

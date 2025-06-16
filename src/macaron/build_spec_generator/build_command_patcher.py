@@ -7,7 +7,7 @@ import logging
 from collections.abc import Mapping
 
 from macaron.build_spec_generator.maven_cli_parser import (
-    MavenCLICommandParseError,
+    CommandLineParseError,
     MavenCLICommandParser,
     MavenOptionPatchValueType,
     PatchBuildCommandError,
@@ -68,7 +68,7 @@ def _patch_mvn_cli_command(
     """
     try:
         mvn_cli_command = mvn_cli_parser.parse(cmd_list)
-    except MavenCLICommandParseError as error:
+    except CommandLineParseError as error:
         logger.error(
             "Failed to parse the mvn command %s. Error %s.",
             " ".join(cmd_list),

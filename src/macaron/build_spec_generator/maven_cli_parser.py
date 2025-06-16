@@ -11,55 +11,14 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, TypeGuard
 
-from macaron.build_spec_generator.base_cli_option import Option
+from macaron.build_spec_generator.base_cli_option import Option, is_dict_of_str_to_str, is_list_of_strs, patch_mapping
 from macaron.build_spec_generator.maven_cli_command import MavenCLICommand, MavenCLIOptions
-from macaron.errors import MavenCLICommandParseError, PatchBuildCommandError
+from macaron.errors import CommandLineParseError, PatchBuildCommandError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
 MavenOptionPatchValueType = str | list[str] | bool | dict[str, str] | None
-
-
-def is_list_of_strs(value: Any) -> TypeGuard[list[str]]:
-    """Type guard for a list of strings."""
-    return isinstance(value, list) and all(isinstance(ele, str) for ele in value)
-
-
-def is_dict_of_str_to_str(value: Any) -> TypeGuard[list[str]]:
-    """Type guard for a dictionary with keys are string and values are strings."""
-    return isinstance(value, dict) and all(isinstance(key, str) and isinstance(val, str) for key, val in value.items())
-
-
-def patch_mapping(
-    original: Mapping[str, str],
-    patch: Mapping[str, str | None],
-) -> dict[str, str]:
-    """Patch a mapping.
-
-    A key with value in patch set to None will be removed from the original.
-
-    Parameters
-    ----------
-    original: Mapping[str, str]
-        The original mapping.
-    patch: Mapping[str, str | None]
-        The patch.
-
-    Returns
-    -------
-    dict[str, str]:
-        The new dictionary after applying the patch.
-    """
-    patch_result = dict(original)
-
-    for name, value in patch.items():
-        if value is None:
-            patch_result.pop(name, None)
-        else:
-            patch_result[name] = value
-
-    return patch_result
 
 
 @dataclass
@@ -89,7 +48,7 @@ class MavenOptionalFlag(Option[bool]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "bool"
+        return "bool | None"
 
 
 @dataclass
@@ -118,7 +77,7 @@ class MavenSingleValue(Option[str]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "str"
+        return "str | None"
 
 
 @dataclass
@@ -152,7 +111,7 @@ class MavenCommaDelimList(Option[list[str]]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "list[str]"
+        return "list[str] | None"
 
 
 @dataclass
@@ -186,7 +145,7 @@ class MavenSystemPropeties(Option[dict[str, str]]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "dict[str, str]"
+        return "dict[str, str] | None"
 
 
 @dataclass
@@ -213,16 +172,10 @@ class MavenGoalPhase(Option[list[str]]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "list[str]"
+        return "list[str] | None"
 
 
-# TODO: we need to confirm whether one can provide
-# -P or -pl multiple times and the values will be aggregate into a list of string
-# The current implementation only consider one instance of -P or -pl.
-# Where to begin:
-# - https://github.com/apache/maven/blob/maven-3.9.x/maven-embedder/src/main/java/org/apache/maven/cli/CLIManager.java
-# - https://github.com/apache/commons-cli/blob/master/src/main/java/org/apache/commons/cli/Parser.java
-# We intend to support Maven after version 3.6.3
+# We intend to support Maven version 3.6.3 - 3.9
 MAVEN_OPTION_DEF: list[Option] = [
     MavenOptionalFlag(
         short_name="-am",
@@ -236,10 +189,6 @@ MAVEN_OPTION_DEF: list[Option] = [
         short_name="-B",
         long_name="--batch-mode",
     ),
-    MavenSingleValue(
-        short_name="-b",
-        long_name="--builder",
-    ),
     MavenOptionalFlag(
         short_name="-C",
         long_name="--strict-checksums",
@@ -252,25 +201,9 @@ MAVEN_OPTION_DEF: list[Option] = [
         short_name="-cpu",
         long_name="--check-plugin-updates",
     ),
-    MavenSystemPropeties(
-        short_name="-D",
-        long_name="--define",
-    ),
     MavenOptionalFlag(
         short_name="-e",
         long_name="--errors",
-    ),
-    MavenSingleValue(
-        short_name="-emp",
-        long_name="--encrypt-master-password",
-    ),
-    MavenSingleValue(
-        short_name="-ep",
-        long_name="--encrypt-password",
-    ),
-    MavenSingleValue(
-        short_name="-f",
-        long_name="--file",
     ),
     MavenOptionalFlag(
         short_name="-fae",
@@ -284,21 +217,9 @@ MAVEN_OPTION_DEF: list[Option] = [
         short_name="-fn",
         long_name="--fail-never",
     ),
-    MavenSingleValue(
-        short_name="-gs",
-        long_name="--global-settings",
-    ),
-    MavenSingleValue(
-        short_name="-gt",
-        long_name="--global-toolchains",
-    ),
     MavenOptionalFlag(
         short_name="-h",
         long_name="--help",
-    ),
-    MavenSingleValue(
-        short_name="-l",
-        long_name="--log-file",
     ),
     MavenOptionalFlag(
         short_name="-llr",
@@ -328,33 +249,9 @@ MAVEN_OPTION_DEF: list[Option] = [
         short_name="-o",
         long_name="--offline",
     ),
-    MavenCommaDelimList(
-        short_name="-P",
-        long_name="--activate-profiles",
-    ),
-    MavenCommaDelimList(
-        short_name="-pl",
-        long_name="--projects",
-    ),
     MavenOptionalFlag(
         short_name="-q",
         long_name="--quiet",
-    ),
-    MavenSingleValue(
-        short_name="-rf",
-        long_name="--resume-from",
-    ),
-    MavenSingleValue(
-        short_name="-s",
-        long_name="--settings",
-    ),
-    MavenSingleValue(
-        short_name="-t",
-        long_name="--toolchains",
-    ),
-    MavenSingleValue(
-        short_name="-T",
-        long_name="--threads",
     ),
     MavenOptionalFlag(
         short_name="-U",
@@ -378,6 +275,68 @@ MAVEN_OPTION_DEF: list[Option] = [
     ),
     MavenGoalPhase(
         long_name="goals",
+    ),
+    # TODO: we need to confirm whether one can provide
+    # -P or -pl multiple times and the values will be aggregate into a list of string
+    # The current implementation only consider one instance of -P or -pl.
+    # Where to begin:
+    # https://github.com/apache/maven/blob/maven-3.9.x/maven-embedder/src/main/java/org/apache/maven/cli/CLIManager.java
+    # https://github.com/apache/commons-cli/blob/master/src/main/java/org/apache/commons/cli/Parser.java
+    MavenSingleValue(
+        short_name="-b",
+        long_name="--builder",
+    ),
+    MavenSystemPropeties(
+        short_name="-D",
+        long_name="--define",
+    ),
+    MavenSingleValue(
+        short_name="-emp",
+        long_name="--encrypt-master-password",
+    ),
+    MavenSingleValue(
+        short_name="-ep",
+        long_name="--encrypt-password",
+    ),
+    MavenSingleValue(
+        short_name="-f",
+        long_name="--file",
+    ),
+    MavenSingleValue(
+        short_name="-gs",
+        long_name="--global-settings",
+    ),
+    MavenSingleValue(
+        short_name="-gt",
+        long_name="--global-toolchains",
+    ),
+    MavenSingleValue(
+        short_name="-l",
+        long_name="--log-file",
+    ),
+    MavenCommaDelimList(
+        short_name="-P",
+        long_name="--activate-profiles",
+    ),
+    MavenCommaDelimList(
+        short_name="-pl",
+        long_name="--projects",
+    ),
+    MavenSingleValue(
+        short_name="-rf",
+        long_name="--resume-from",
+    ),
+    MavenSingleValue(
+        short_name="-s",
+        long_name="--settings",
+    ),
+    MavenSingleValue(
+        short_name="-t",
+        long_name="--toolchains",
+    ),
+    MavenSingleValue(
+        short_name="-T",
+        long_name="--threads",
     ),
 ]
 
@@ -444,28 +403,26 @@ class MavenCLICommandParser:
             If an error happens when parsing the Maven CLI Command.
         """
         if not cmd_list:
-            raise MavenCLICommandParseError("The provided cmd list is empty.")
+            raise CommandLineParseError("The provided cmd list is empty.")
 
         exe_path = cmd_list[0]
         options = cmd_list[1:]
 
         if os.path.basename(exe_path) not in MavenCLICommandParser.ACCEPTABLE_EXECUTABLE:
-            raise MavenCLICommandParseError(f"{exe_path} is not an acceptable mvn executable path.")
+            raise CommandLineParseError(f"{exe_path} is not an acceptable mvn executable path.")
 
         # TODO: because our parser is not completed for all cases, should we be more relaxed and use
         # parse_unknown_options?
         try:
             parsed_opts = self.arg_parser.parse_args(options)
         except argparse.ArgumentError as error:
-            raise MavenCLICommandParseError(f"Critical: Unexpected {' '.join(options)}.") from error
+            raise CommandLineParseError(f"Failed to parse command {' '.join(options)}.") from error
         # Even though we have set `exit_on_error`, argparse still exists unexpectedly in some
         # cases. This has been confirmed to be a bug in the argparse library implementation.
         # https://github.com/python/cpython/issues/121018.
         # This is fixed in Python3.12, but not Python3.11
         except SystemExit as sys_exit_err:
-            raise MavenCLICommandParseError(
-                f"Failed to parse the Maven CLI Options {' '.join(options)}."
-            ) from sys_exit_err
+            raise CommandLineParseError(f"Failed to parse the Maven CLI Options {' '.join(options)}.") from sys_exit_err
 
         # Handle cases where goal or plugin phase is not provided.
         if not parsed_opts.goals:
@@ -475,7 +432,7 @@ class MavenCLICommandParser:
             # Note that we don't allow mvn -V or mvn --show-version as this command will
             #   failed for mvn
             if not parsed_opts.help and not parsed_opts.version:
-                raise MavenCLICommandParseError(f"No goal detected for {' '.join(options)}.")
+                raise CommandLineParseError(f"No goal detected for {' '.join(options)}.")
 
         maven_cli_options = MavenCLIOptions(parsed_opts)
 

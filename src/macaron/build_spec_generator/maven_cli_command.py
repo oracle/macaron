@@ -60,7 +60,7 @@ class MavenCLIOptions:
         self.version: bool | None = parsed_arg.version
         self.show_version: bool | None = parsed_arg.show_version
         self.debug: bool | None = parsed_arg.debug
-        self.goals: list[str] = parsed_arg.goals
+        self.goals: list[str] | None = parsed_arg.goals
 
     def __eq__(self, value: Any) -> bool:
         if not isinstance(value, MavenCLIOptions):
@@ -146,8 +146,9 @@ class MavenCLIOptions:
             The goals/phases and options.
         """
         result = self.to_cmd_no_goals()
-        for goal in self.goals:
-            result.append(goal)
+        if self.goals:
+            for goal in self.goals:
+                result.append(goal)
 
         return result
 

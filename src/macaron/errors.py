@@ -115,8 +115,8 @@ class SourceCodeError(MacaronError):
     """Error for operations on package source code."""
 
 
-class MavenCLICommandParseError(Exception):
-    """Raised if an error is encountered while parsing a Maven CLI Command."""
+class CommandLineParseError(Exception):
+    """Raised if an error is encountered while parsing a CLI Command."""
 
 
 class PatchBuildCommandError(Exception):
