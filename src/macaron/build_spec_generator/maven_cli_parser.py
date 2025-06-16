@@ -216,6 +216,13 @@ class MavenGoalPhase(Option[list[str]]):
         return "list[str]"
 
 
+# TODO: we need to confirm whether one can provide
+# -P or -pl multiple times and the values will be aggregate into a list of string
+# The current implementation only consider one instance of -P or -pl.
+# Where to begin:
+# - https://github.com/apache/maven/blob/maven-3.9.x/maven-embedder/src/main/java/org/apache/maven/cli/CLIManager.java
+# - https://github.com/apache/commons-cli/blob/master/src/main/java/org/apache/commons/cli/Parser.java
+# We intend to support Maven after version 3.6.3
 MAVEN_OPTION_DEF: list[Option] = [
     MavenOptionalFlag(
         short_name="-am",
@@ -445,10 +452,12 @@ class MavenCLICommandParser:
         if os.path.basename(exe_path) not in MavenCLICommandParser.ACCEPTABLE_EXECUTABLE:
             raise MavenCLICommandParseError(f"{exe_path} is not an acceptable mvn executable path.")
 
+        # TODO: because our parser is not completed for all cases, should we be more relaxed and use
+        # parse_unknown_options?
         try:
             parsed_opts = self.arg_parser.parse_args(options)
         except argparse.ArgumentError as error:
-            raise MavenCLICommandParseError(f"Failed to parse the Maven CLI Options {' '.join(options)}.") from error
+            raise MavenCLICommandParseError(f"Critical: Unexpected {' '.join(options)}.") from error
         # Even though we have set `exit_on_error`, argparse still exists unexpectedly in some
         # cases. This has been confirmed to be a bug in the argparse library implementation.
         # https://github.com/python/cpython/issues/121018.
