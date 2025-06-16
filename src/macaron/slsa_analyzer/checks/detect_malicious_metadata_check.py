@@ -20,6 +20,7 @@ from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult,
 from macaron.malware_analyzer.pypi_heuristics.metadata.anomalous_version import AnomalousVersionAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.fake_email import FakeEmailAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
@@ -358,6 +359,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         WheelAbsenceAnalyzer,
         AnomalousVersionAnalyzer,
         TyposquattingPresenceAnalyzer,
+        FakeEmailAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
@@ -425,6 +427,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.ONE_RELEASE.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}).
 
+    % Package released recently with the a maintainer email address that is not valid.
+    {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_3) :-
+        quickUndetailed,
+        failed({Heuristics.FAKE_EMAIL.value}).
     % ----- Evaluation -----
 
     % Aggregate result
@@ -432,6 +438,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
     {problog_result_access} :- trigger(malware_high_confidence_4).
+    {problog_result_access} :- trigger(malware_medium_confidence_3).
     {problog_result_access} :- trigger(malware_medium_confidence_2).
     {problog_result_access} :- trigger(malware_medium_confidence_1).
     query({problog_result_access}).
