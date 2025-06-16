@@ -38,6 +38,7 @@ dependencies = [
     "problog >= 2.2.6,<3.0.0",
     "cryptography >=44.0.0,<45.0.0",
     "semgrep == 1.113.0",
+    "dnspython >=2.7.0,<3.0.0",
 ]
 keywords = []
 # https://pypi.org/classifiers/
