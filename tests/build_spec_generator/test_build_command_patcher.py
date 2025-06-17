@@ -73,6 +73,18 @@ from macaron.build_spec_generator.maven_cli_parser import MavenCLICommandParser,
             id="patching_system_properties_merging",
         ),
         pytest.param(
+            "mvn install -Dmaven.skip.test=false -Dboo=foo",
+            {
+                "goals": ["clean", "package"],
+                "--define": {
+                    "maven.skip.test": None,
+                    "rat.skip": "true",
+                },
+            },
+            "mvn clean package -Drat.skip=true -Dboo=foo",
+            id="patching_system_properties_disable",
+        ),
+        pytest.param(
             "mvn install -T 2C -ntp -Dmaven.skip.test=true",
             {
                 "--threads": None,
