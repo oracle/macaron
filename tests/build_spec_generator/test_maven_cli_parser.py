@@ -115,8 +115,15 @@ def test_maven_cli_command_parser_valid_input(
     """Test the maven cli parser on valid input."""
     parsed_res = maven_cli_parser.parse(command.split())
 
-    for key, val in expected.items():
-        assert getattr(parsed_res.options, key) == val
+    all_attrs = vars(parsed_res.options).keys()
+
+    for attribute in all_attrs:
+        if attribute in expected:
+            assert getattr(parsed_res.options, attribute) == expected[attribute]
+        else:
+            # Making sure that we are not enabling flags that are not part of the
+            # build command.
+            assert not getattr(parsed_res.options, attribute)
 
 
 @pytest.mark.parametrize(
@@ -146,23 +153,10 @@ def test_maven_cli_command_parser_executable(
     assert parse_res.executable == expected
 
 
-def test_maven_cli_command_parser_default_value(maven_cli_parser: MavenCLICommandParser) -> None:
-    """Test the Maven CLI command parser initialized any option as None if it doesn't exist in the input build command."""
-    build_command = "mvn clean package"
-    parse_res = maven_cli_parser.parse(build_command.split())
-
-    attr_map = vars(parse_res.options)
-    for name, value in attr_map.items():
-        if name == "goals":
-            assert value == ["clean", "package"]
-        else:
-            assert not value
-
-
 @pytest.mark.parametrize(
     ("build_command"),
     [
-        pytest.param("", id="An empty build command"),
+        pytest.param("", id="An empty command"),
         pytest.param("mvn", id="No goal or phase"),
         pytest.param(
             "mvn --this-argument-should-never-exist-in-mvn",

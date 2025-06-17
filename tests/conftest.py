@@ -11,6 +11,7 @@ import pytest
 from pytest_httpserver import HTTPServer
 
 import macaron
+from macaron.build_spec_generator.gradle_cli_parser import GradleCLICommandParser
 from macaron.build_spec_generator.maven_cli_parser import MavenCLICommandParser
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.config.defaults import create_defaults, defaults, load_defaults
@@ -498,3 +499,9 @@ def deps_dev_service_mock_(httpserver: HTTPServer, tmp_path: Path) -> dict:
 def maven_cli_parser() -> MavenCLICommandParser:
     """Return a MvnCLICommandParser instance with a module scope."""
     return MavenCLICommandParser()
+
+
+@pytest.fixture(scope="module")
+def gradle_cli_parser() -> GradleCLICommandParser:
+    """Return a GradleCLICommandParser instance with a module scope."""
+    return GradleCLICommandParser()

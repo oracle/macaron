@@ -91,18 +91,16 @@ class GradleOptionalNegateableFlag(Option[bool]):
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
-        group = arg_parse.add_mutually_exclusive_group()
+        # We allow providing both the normal and negated form.
         negated_long_name = self.get_negated_long_name(self.long_name)
-
         dest = self.long_name.removeprefix("--").replace("-", "_")
-
-        group.add_argument(
+        arg_parse.add_argument(
             self.long_name,
             action="store_true",
             dest=dest,
         )
 
-        group.add_argument(
+        arg_parse.add_argument(
             negated_long_name,
             action="store_false",
             dest=dest,
@@ -202,6 +200,38 @@ class GradleTask(Option[list[str]]):
         return "list[str] | None"
 
 
+@dataclass
+class GradleAppendedList(Option[list[str]]):
+    """This option represents an option that can be specify multiple times and they all appended to a list.
+
+    For example, one can exclude multiple tasks with
+        gradle <task_to_run> --exclude-task taskA --exclude-task taskB
+    """
+
+    short_name: str
+
+    def is_valid_patch_option(self, patch: Any) -> TypeGuard[list[str]]:
+        """Return True if the provide patch value is compatible with the internal type of this option."""
+        if patch is None or is_list_of_strs(patch):
+            return True
+
+        return False
+
+    def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
+        """Add a new argument to argparser.ArgumentParser representing this option."""
+        arg_parse.add_argument(
+            *(self.short_name, self.long_name),
+            action="append",
+        )
+
+    def get_patch_type_str(self) -> str:
+        """Return the expected type for the patch value as string."""
+        return "list[str] | None"
+
+
+# TODO: some value option only allows you to provide certain values
+# For example: --console allows "plain", "auto", "rich" or "verbose".
+# They are right now not enforced. We need to think whether we want to enforce them.
 GRADLE_OPTION_DEF: list[Option] = [
     GradleOptionalFlag(
         short_names=["-?", "-h"],
@@ -309,6 +339,40 @@ GRADLE_OPTION_DEF: list[Option] = [
     GradleOptionalNegateableFlag(
         long_name="--watch-fs",
     ),
+    # This has been validated by setting up a minimal gradle project. Gradle version 8.14.2
+    #     gradle init --type java-library
+    # And use default values for any prompted configuration.
+    # Then append this block of code into src/build.gradle
+    #
+    # task boo {
+    #     doLast {
+    #         println "Running task: boo"
+    #     }
+    # }
+    # task foo {
+    #     doLast {
+    #         println "Running task: foo"
+    #     }
+    # }
+    # task bar {
+    #     doLast {
+    #         println "Running task: bar"
+    #     }
+    # }
+    # task everything(dependsOn: ['boo', 'foo']) {
+    #     doLast {
+    #         println "Running task: everything"
+    #     }
+    # }
+    # And then run ./gradlew everything -x boo -x foo
+    #   > Task :lib:bar
+    #   Running task: gamma
+    #   > Task :lib:everything
+    #   Running task: everything
+    GradleAppendedList(
+        short_name="-x",
+        long_name="--exclude-task",
+    ),
     # TODO: determine which of these options can be provided multiple times
     GradleSingleValue(
         short_name="-b",
@@ -369,10 +433,6 @@ GRADLE_OPTION_DEF: list[Option] = [
     GradleSingleValue(
         short_name=None,
         long_name="--warning-mode",
-    ),
-    GradleSingleValue(
-        short_name="-x",
-        long_name="--exclude-task",
     ),
     GradlePropeties(
         short_name="-D",

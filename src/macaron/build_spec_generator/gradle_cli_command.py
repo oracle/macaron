@@ -44,7 +44,7 @@ class GradleCLIOptions:
         self.write_locks: bool | None = parsed_arg.write_locks
         self.build_cache: bool | None = parsed_arg.build_cache
         self.configuration_cache: bool | None = parsed_arg.configuration_cache
-        self.configuration_on_demand: bool | None = parsed_arg.configuration_on_demand
+        self.configure_on_demand: bool | None = parsed_arg.configure_on_demand
         self.daemon: bool | None = parsed_arg.daemon
         self.parallel: bool | None = parsed_arg.parallel
         self.scan: bool | None = parsed_arg.scan
@@ -62,18 +62,23 @@ class GradleCLIOptions:
         self.project_cache_dir: str | None = parsed_arg.project_cache_dir
         self.update_locks: str | None = parsed_arg.update_locks
         self.warning_mode: str | None = parsed_arg.warning_mode
+        self.exclude_task: list[str] | None = parsed_arg.exclude_task
         self.system_prop: dict[str, str] | None = (
-            GradleCLIOptions.parse_system_properties(parsed_arg.system_prop) if parsed_arg.system_prop else None
+            GradleCLIOptions.parse_properties(parsed_arg.system_prop) if parsed_arg.system_prop else None
         )
         self.project_prop: dict[str, str] | None = (
-            GradleCLIOptions.parse_system_properties(parsed_arg.project_prop) if parsed_arg.project_prop else None
+            GradleCLIOptions.parse_properties(parsed_arg.project_prop) if parsed_arg.project_prop else None
         )
         self.tasks: list[str] | None = parsed_arg.tasks
 
-    # TODO: refactor this to share between Maven CLI Options an this one.
     @staticmethod
-    def parse_system_properties(props: list[str]) -> dict[str, str]:
+    def parse_properties(props: list[str]) -> dict[str, str]:
         """Return a dictionary that maps between a property and its value.
+
+        Each property definition value in `props` can have either of these format:
+        - `property=value`: this will be parsed into a dictionary mapping of `property: value`. Both the key and value
+        of this mapping is of type string.
+        - `property`: this will be parsed into a dictionary mapping of `property: empty_string`.
 
         Parameters
         ----------
@@ -83,14 +88,14 @@ class GradleCLIOptions:
         Returns
         -------
         dict[str, str]:
-            The system properties dictionary.
+            The properties dictionary.
         """
         system_props = {}
         for ele in props:
             prop_name, _, prop_val = ele.partition("=")
 
             if not prop_val:
-                system_props[prop_name] = "true"
+                system_props[prop_name] = ""
             else:
                 system_props[prop_name] = prop_val
 
@@ -206,8 +211,8 @@ class GradleCLIOptions:
             else:
                 result.append("--no-configuration-cache")
 
-        if self.configuration_on_demand is not None:
-            if self.configuration_on_demand is True:
+        if self.configure_on_demand is not None:
+            if self.configure_on_demand is True:
                 result.append("--configure-on-demand")
             else:
                 result.append("--no-configure-on-demand")
@@ -288,13 +293,24 @@ class GradleCLIOptions:
             result.append("--warning-mode")
             result.append(self.warning_mode)
 
+        if self.exclude_task:
+            for task in self.exclude_task:
+                result.append("-x")
+                result.append(task)
+
         if self.system_prop:
             for key, value in self.system_prop.items():
-                result.append(f"-D{key}={value}")
+                if value:
+                    result.append(f"-D{key}={value}")
+                else:
+                    result.append(f"-D{key}")
 
         if self.project_prop:
             for key, value in self.project_prop.items():
-                result.append(f"-P{key}={value}")
+                if value:
+                    result.append(f"-P{key}={value}")
+                else:
+                    result.append(f"-D{key}")
 
         if self.tasks:
             result.extend(self.tasks)
