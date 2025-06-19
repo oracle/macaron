@@ -79,7 +79,6 @@ steps:
     - pkg:pypi/django@5.0.6
     - --python-venv
     - ./django_venv
-    - --analyze-source
     - --force-analyze-source
 - name: Run macaron verify-policy to check the package was not marked as malicious.
   kind: verify

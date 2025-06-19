@@ -3,8 +3,8 @@ macaron.slsa\_analyzer.provenance.intoto package
 
 .. automodule:: macaron.slsa_analyzer.provenance.intoto
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------
@@ -23,5 +23,5 @@ macaron.slsa\_analyzer.provenance.intoto.errors module
 
 .. automodule:: macaron.slsa_analyzer.provenance.intoto.errors
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

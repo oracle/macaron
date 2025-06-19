@@ -3,8 +3,8 @@ macaron.vsa package
 
 .. automodule:: macaron.vsa
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------
@@ -14,5 +14,5 @@ macaron.vsa.vsa module
 
 .. automodule:: macaron.vsa.vsa
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
