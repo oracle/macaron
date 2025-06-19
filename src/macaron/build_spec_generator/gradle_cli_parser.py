@@ -96,15 +96,20 @@ class GradleOptionalNegateableFlag(Option[bool]):
         # We allow providing both the normal and negated form.
         negated_long_name = self.get_negated_long_name(self.long_name)
         dest = self.long_name.removeprefix("--").replace("-", "_")
+
+        # We set the default to None so that we don't print out these options
+        # if they are not provided in the original build command in to_cmd_tasks().
         arg_parse.add_argument(
             self.long_name,
             action="store_true",
+            default=None,
             dest=dest,
         )
 
         arg_parse.add_argument(
             negated_long_name,
             action="store_false",
+            default=None,
             dest=dest,
         )
 

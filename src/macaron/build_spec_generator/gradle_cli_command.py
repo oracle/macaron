@@ -320,9 +320,6 @@ class GradleCLIOptions:
                 else:
                     result.append(f"-D{key}")
 
-        if self.tasks:
-            result.extend(self.tasks)
-
         return result
 
 

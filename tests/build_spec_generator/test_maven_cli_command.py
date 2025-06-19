@@ -24,8 +24,6 @@ from macaron.build_spec_generator.maven_cli_parser import MavenCLICommandParser
             "mvn clean package -X -P project1,project2",
             id="test_different_order_of_options",
         ),
-        # This case is unequal because we store the value for `-Dmaven.skip.test=true` as "true"
-        # and `-Dmaven.skip.test` as an empty string
         pytest.param(
             "mvn clean package -Dmaven.skip.test=true",
             "mvn clean package -Dmaven.skip.test",
@@ -85,7 +83,9 @@ def test_comparing_maven_cli_command_unequal(
     ],
 )
 def test_comparing_maven_cli_command_unequal_types(
-    maven_cli_parser: MavenCLICommandParser, command: str, that: Any
+    maven_cli_parser: MavenCLICommandParser,
+    command: str,
+    that: Any,
 ) -> None:
     """Test comparing MavenCLICommand with another incompatible type oject."""
     this_command = maven_cli_parser.parse(command.split())
