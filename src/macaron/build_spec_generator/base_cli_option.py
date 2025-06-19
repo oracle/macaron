@@ -17,9 +17,19 @@ def is_list_of_strs(value: Any) -> TypeGuard[list[str]]:
     return isinstance(value, list) and all(isinstance(ele, str) for ele in value)
 
 
-def is_dict_of_str_to_str(value: Any) -> TypeGuard[list[str]]:
-    """Type guard for a dictionary with keys are string and values are strings."""
-    return isinstance(value, dict) and all(isinstance(key, str) and isinstance(val, str) for key, val in value.items())
+def is_dict_of_str_to_str_or_none(value: Any) -> TypeGuard[dict[str, str | None]]:
+    """Type guard for a dictionary with keys are string and values are strings or None."""
+    if not isinstance(value, dict):
+        return False
+
+    for key, val in value.items():
+        if not isinstance(key, str):
+            return False
+
+        if not (val is None or isinstance(val, str)):
+            return False
+
+    return True
 
 
 def patch_mapping(
@@ -57,7 +67,7 @@ def patch_mapping(
 class Option(Generic[T]):
     """This class represent a type of option for the CLI command.
 
-    The generic type T is how we store the value parsed for this option internally.
+    The generic type T is the patch expected type (if it's not None).
     """
 
     # e.g. `--long-option-name`

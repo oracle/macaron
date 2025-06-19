@@ -18,13 +18,13 @@ from macaron.build_spec_generator.maven_cli_parser import (
         pytest.param(
             "mvn clean package",
             {"goals": ["clean", "package"]},
-            id="No option, just goals",
+            id="goal_only_no_option",
         ),
         # https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html#Build_Lifecycle_Basics
         pytest.param(
             "mvn clean dependency:copy-dependencies package",
             {"goals": ["clean", "dependency:copy-dependencies", "package"]},
-            id="A mixture of goals and phases",
+            id="goal_and_phase_mix",
         ),
         pytest.param(
             "mvn clean package -P profile1,profile2 -T 2C -ntp -Dmaven.skip.test=true -Dboo=foo",
@@ -39,8 +39,7 @@ from macaron.build_spec_generator.maven_cli_parser import (
                 # "-D<name>=<val>"
                 "define": {"maven.skip.test": "true", "boo": "foo"},
             },
-            id="Combination of goals, value option (threads), optional flag (no_transfer_progress), "
-            "system property definition (define) and comma-delimited list of string (activate_profiles).",
+            id="test_combination_options",
         ),
         pytest.param(
             "mvn clean package -Dmaven.skip.test=true -Dmaven.skip.test=false",
@@ -48,7 +47,15 @@ from macaron.build_spec_generator.maven_cli_parser import (
                 "goals": ["clean", "package"],
                 "define": {"maven.skip.test": "false"},
             },
-            id="Allow overriding a system property by defining it multiple times.",
+            id="multiple_definition_of_the_same_property_override_each_other",
+        ),
+        pytest.param(
+            "mvn clean package -Dmaven.skip.test",
+            {
+                "goals": ["clean", "package"],
+                "define": {"maven.skip.test": "true"},
+            },
+            id="test_default_value_if_no_value_is_provided_for_a_property",
         ),
         # A modified version of
         # https://github.com/apache/syncope/blob/9437c6c978ca8c03b5e5cccc40a5a352be1ecc52/.github/workflows/crosschecks.yml#L70

@@ -76,19 +76,27 @@ class GradleCLIOptions:
         """Return a dictionary that maps between a property and its value.
 
         Each property definition value in `props` can have either of these format:
-        - `property=value`: this will be parsed into a dictionary mapping of `property: value`. Both the key and value
-        of this mapping is of type string.
-        - `property`: this will be parsed into a dictionary mapping of `property: empty_string`.
+        - `property=value` (e.g. `property=value` from `-Dproperty=value`): this will
+        be parsed into a dictionary mapping of `"property": "value"`.
+        Both the key and value of this mapping is of type string.
+        - `property` (e.g. `property` from `-Dproperty`): this will be parsed into a
+        dictionary mapping of `"property": <empty_string>`.
 
         Parameters
         ----------
         props: list[str]
-            The list of values provided to -D/--define in the cli command.
+            The list of properties definition provided in the cli command.
+            This is the list parsed by argparse.
 
         Returns
         -------
         dict[str, str]:
             The properties dictionary.
+
+        Examples
+        --------
+        >>> GradleCLIOptions.parse_properties(["boo=true", "foo=1", "bar"])
+        {'boo': 'true', 'foo': '1', 'bar': ''}
         """
         system_props = {}
         for ele in props:
