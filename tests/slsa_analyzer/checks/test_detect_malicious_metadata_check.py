@@ -26,7 +26,7 @@ RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
 
 @patch("macaron.malware_analyzer.pypi_heuristics.sourcecode.pypi_sourcecode_analyzer.global_config")
 @pytest.mark.parametrize(
-    ("purl", "expected", "sourcecode_analysis"),
+    ("purl", "expected", "force_analyze_source"),
     [
         # TODO: This check is expected to FAIL for pkg:pypi/zlibxjson. However, after introducing the wheel presence
         # heuristic, a false negative has been introduced. Note that if the unit test were allowed to access the OSV
@@ -38,7 +38,10 @@ RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
         # TODO: including source code analysis that detects flow from a remote point to a file write may assist in resolving
         # the issue of this false negative.
         pytest.param(
-            "pkg:pypi/zlibxjson", CheckResultType.PASSED, True, id="test_sourcecode_analysis_malicious_pypi_package"
+            "pkg:pypi/zlibxjson",
+            CheckResultType.PASSED,
+            True,
+            id="test_force_sourcecode_analysis_malicious_pypi_package",
         ),
     ],
 )
@@ -49,7 +52,7 @@ def test_detect_malicious_metadata(
     macaron_path: Path,
     purl: str,
     expected: str,
-    sourcecode_analysis: bool,
+    force_analyze_source: bool,
 ) -> None:
     """Test that the check handles repositories correctly."""
     check = DetectMaliciousMetadataCheck()
@@ -58,8 +61,7 @@ def test_detect_malicious_metadata(
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl=purl)
     pypi_registry = PyPIRegistry()
     ctx.dynamic_data["package_registries"] = [PackageRegistryInfo("pip", "pypi", pypi_registry)]
-    if sourcecode_analysis:
-        ctx.dynamic_data["force_analyze_source"] = True
+    ctx.dynamic_data["force_analyze_source"] = force_analyze_source
 
     mock_global_config.resources_path = os.path.join(MACARON_PATH, "resources")
 
