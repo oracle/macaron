@@ -72,12 +72,17 @@ class MavenCLIOptions:
     def parse_system_properties(props: list[str]) -> dict[str, str]:
         """Return a dictionary that maps between a system propertie and its value.
 
+        Each property definition value in `props` can have either of these format:
+        - `property=value` (e.g. `-Dproperty=value`): this will be parsed into a
+        dictionary mapping of `"property": "value"`. Both the key and value
+        of this mapping is of type string.
+        - `property` (e.g. `-Dproperty`): this will be parsed into a dictionary mapping of `"property": "true"`.
+
         Parameters
         ----------
         props: list[str]
             The list of values provided to -D/--define in the cli command.
-            For example: if the command is `mvn -Dboo=foo -Dbar=far clean install`
-            then props will be ["boo=foo", "bar=far"]
+            This is the list parsed by argparse.
 
         Returns
         -------
@@ -86,8 +91,8 @@ class MavenCLIOptions:
 
         Examples
         --------
-        >>> MavenCLIOptions.parse_system_properties(["boo=true", "foo=1"])
-        {'boo': 'true', 'foo': '1'}
+        >>> MavenCLIOptions.parse_system_properties(["boo=true", "foo=1", "bar"])
+        {'boo': 'true', 'foo': '1', 'bar': 'true'}
         """
         system_props = {}
         for ele in props:

@@ -11,14 +11,19 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any, TypeGuard
 
-from macaron.build_spec_generator.base_cli_option import Option, is_dict_of_str_to_str, is_list_of_strs, patch_mapping
+from macaron.build_spec_generator.base_cli_option import (
+    Option,
+    is_dict_of_str_to_str_or_none,
+    is_list_of_strs,
+    patch_mapping,
+)
 from macaron.build_spec_generator.gradle_cli_command import GradleCLICommand, GradleCLIOptions
 from macaron.errors import CommandLineParseError, PatchBuildCommandError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-GradleOptionPatchValueType = str | list[str] | bool | dict[str, str] | None
+GradleOptionPatchValueType = str | list[str] | bool | dict[str, str]
 
 
 @dataclass
@@ -79,10 +84,7 @@ class GradleOptionalNegateableFlag(Option[bool]):
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[bool]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
-        if patch is None or isinstance(patch, bool):
-            return True
-
-        return False
+        return isinstance(patch, bool)
 
     @staticmethod
     def get_negated_long_name(long_name: str) -> str:
@@ -108,7 +110,7 @@ class GradleOptionalNegateableFlag(Option[bool]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "bool | None"
+        return "bool"
 
 
 @dataclass
@@ -119,10 +121,7 @@ class GradleSingleValue(Option[str]):
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[str]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
-        if patch is None or isinstance(patch, str):
-            return True
-
-        return False
+        return isinstance(patch, str)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
@@ -137,11 +136,11 @@ class GradleSingleValue(Option[str]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "str | None"
+        return "str"
 
 
 @dataclass
-class GradlePropeties(Option[dict[str, str]]):
+class GradlePropeties(Option[dict[str, str | None]]):
     """This option represents an option used to define properties values of a Gradle CLI command.
 
     This option can be defined multiple times and the values are appended into a list of string in argparse.
@@ -154,12 +153,9 @@ class GradlePropeties(Option[dict[str, str]]):
 
     short_name: str
 
-    def is_valid_patch_option(self, patch: Any) -> TypeGuard[dict[str, str]]:
+    def is_valid_patch_option(self, patch: Any) -> TypeGuard[dict[str, str | None]]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
-        if patch is None or is_dict_of_str_to_str(patch):
-            return True
-
-        return False
+        return is_dict_of_str_to_str_or_none(patch)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
@@ -170,7 +166,7 @@ class GradlePropeties(Option[dict[str, str]]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "dict[str, str] | None"
+        return "dict[str, str | None]"
 
 
 @dataclass
@@ -182,10 +178,7 @@ class GradleTask(Option[list[str]]):
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[list[str]]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
-        if patch is None or is_list_of_strs(patch):
-            return True
-
-        return False
+        return is_list_of_strs(patch)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
@@ -197,7 +190,7 @@ class GradleTask(Option[list[str]]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "list[str] | None"
+        return "list[str]"
 
 
 @dataclass
@@ -212,10 +205,7 @@ class GradleAppendedList(Option[list[str]]):
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[list[str]]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
-        if patch is None or is_list_of_strs(patch):
-            return True
-
-        return False
+        return is_list_of_strs(patch)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
@@ -226,7 +216,7 @@ class GradleAppendedList(Option[list[str]]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "list[str] | None"
+        return "list[str]"
 
 
 # TODO: some value option only allows you to provide certain values
@@ -472,7 +462,7 @@ class GradleCLICommandParser:
 
             self.option_defs[opt_def.long_name] = opt_def
 
-    def validate_patch(self, patch: Mapping[str, GradleOptionPatchValueType]) -> bool:
+    def validate_patch(self, patch: Mapping[str, GradleOptionPatchValueType | None]) -> bool:
         """Return True if the patch conforms to the expected format."""
         for patch_name, patch_value in patch.items():
             opt_def = self.option_defs.get(patch_name)
@@ -542,10 +532,10 @@ class GradleCLICommandParser:
 
     def _patch_properties_mapping(
         self,
-        gradle_cli_options: GradleCLIOptions,
+        original_props: dict[str, str],
         option_long_name: str,
         patch_value: GradleOptionPatchValueType,
-    ) -> None:
+    ) -> dict[str, str]:
         prop_opt_def = self.option_defs.get(option_long_name)
         if not prop_opt_def or not isinstance(prop_opt_def, GradlePropeties):
             raise PatchBuildCommandError(f"{option_long_name} from the patch is not a property type option.")
@@ -555,22 +545,15 @@ class GradleCLICommandParser:
                 f"Incorrect runtime type for patch option {option_long_name}, value: {patch_value}."
             )
 
-        if option_long_name == "--system-prop":
-            gradle_cli_options.project_prop = patch_mapping(
-                original=gradle_cli_options.project_prop or {},
-                patch=patch_value,
-            )
-
-        if option_long_name == "--system-prop":
-            gradle_cli_options.system_prop = patch_mapping(
-                original=gradle_cli_options.system_prop or {},
-                patch=patch_value,
-            )
+        return patch_mapping(
+            original=original_props,
+            patch=patch_value,
+        )
 
     def apply_option_patch(
         self,
         gradle_cli_options: GradleCLIOptions,
-        patch: Mapping[str, GradleOptionPatchValueType],
+        patch: Mapping[str, GradleOptionPatchValueType | None],
     ) -> GradleCLIOptions:
         """Patch the Gradle CLI Options and return a new copy.
 
@@ -578,7 +561,7 @@ class GradleCLICommandParser:
         ----------
         gradle_cli_options: GradleCLIOptions
             The Gradle CLI Options to patch.
-        patch: Mapping[str, GradleOptionPatchValueType]
+        patch: Mapping[str, GradleOptionPatchValueType | None]
             A mapping between the name of the attribute in GradleCLIOptions and its patch value
 
         Returns
@@ -612,10 +595,17 @@ class GradleCLICommandParser:
                 setattr(new_gradle_cli_options, attr_name, patch_value)
                 continue
 
-            # The values are patched differently for these 2 options.
-            if option_long_name in {"--project-prop", "--system-prop"}:
-                self._patch_properties_mapping(
-                    gradle_cli_options=new_gradle_cli_options,
+            if option_long_name == "--project-prop":
+                new_gradle_cli_options.project_prop = self._patch_properties_mapping(
+                    original_props=new_gradle_cli_options.project_prop or {},
+                    option_long_name=option_long_name,
+                    patch_value=patch_value,
+                )
+                continue
+
+            if option_long_name == "--system-prop":
+                new_gradle_cli_options.system_prop = self._patch_properties_mapping(
+                    original_props=new_gradle_cli_options.system_prop or {},
                     option_long_name=option_long_name,
                     patch_value=patch_value,
                 )

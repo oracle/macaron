@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from macaron.build_spec_generator.base_cli_option import is_dict_of_str_to_str, is_list_of_strs, patch_mapping
+from macaron.build_spec_generator.base_cli_option import is_dict_of_str_to_str_or_none, is_list_of_strs, patch_mapping
 
 
 @pytest.mark.parametrize(
@@ -16,6 +16,14 @@ from macaron.build_spec_generator.base_cli_option import is_dict_of_str_to_str, 
     [
         pytest.param(
             {"A": "B"},
+            True,
+        ),
+        pytest.param(
+            {"A": None, "B": "C"},
+            True,
+        ),
+        pytest.param(
+            {"A": "B", "C": "D"},
             True,
         ),
         pytest.param(
@@ -30,11 +38,15 @@ from macaron.build_spec_generator.base_cli_option import is_dict_of_str_to_str, 
             {"A": "B", "C": 1, "D": {}},
             False,
         ),
+        pytest.param(
+            {1: "B"},
+            False,
+        ),
     ],
 )
-def test_is_dict_of_str_to_str(value: Any, expected: bool) -> None:
-    """Test the is_dict_of_str_to_str type guard."""
-    assert is_dict_of_str_to_str(value) == expected
+def test_is_dict_of_str_to_str_or_none(value: Any, expected: bool) -> None:
+    """Test the is_dict_of_str_to_str_or_none type guard."""
+    assert is_dict_of_str_to_str_or_none(value) == expected
 
 
 @pytest.mark.parametrize(

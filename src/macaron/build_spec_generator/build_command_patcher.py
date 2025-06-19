@@ -20,7 +20,7 @@ MVN_CLI_PARSER = MavenCLICommandParser()
 
 def patch_mvn_cli_command(
     cmd_list: list[str],
-    patch_options: Mapping[str, MavenOptionPatchValueType],
+    patch_options: Mapping[str, MavenOptionPatchValueType | None],
 ) -> list[str] | None:
     """Patch a Maven CLI command.
 
@@ -58,7 +58,7 @@ def patch_mvn_cli_command(
 
 def _patch_mvn_cli_command(
     cmd_list: list[str],
-    patch_options: Mapping[str, MavenOptionPatchValueType],
+    patch_options: Mapping[str, MavenOptionPatchValueType | None],
     mvn_cli_parser: MavenCLICommandParser,
 ) -> list[str] | None:
     """Patch a Maven CLI command by enforcing goals/phases and modifying options.

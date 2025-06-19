@@ -11,14 +11,19 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, TypeGuard
 
-from macaron.build_spec_generator.base_cli_option import Option, is_dict_of_str_to_str, is_list_of_strs, patch_mapping
+from macaron.build_spec_generator.base_cli_option import (
+    Option,
+    is_dict_of_str_to_str_or_none,
+    is_list_of_strs,
+    patch_mapping,
+)
 from macaron.build_spec_generator.maven_cli_command import MavenCLICommand, MavenCLIOptions
 from macaron.errors import CommandLineParseError, PatchBuildCommandError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-MavenOptionPatchValueType = str | list[str] | bool | dict[str, str] | None
+MavenOptionPatchValueType = str | list[str] | bool | dict[str, str | None]
 
 
 @dataclass
@@ -34,10 +39,7 @@ class MavenOptionalFlag(Option[bool]):
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[bool]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
-        if patch is None or isinstance(patch, bool):
-            return True
-
-        return False
+        return isinstance(patch, bool)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
@@ -48,7 +50,7 @@ class MavenOptionalFlag(Option[bool]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "bool | None"
+        return "bool"
 
 
 @dataclass
@@ -64,10 +66,7 @@ class MavenSingleValue(Option[str]):
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[str]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
-        if patch is None or isinstance(patch, str):
-            return True
-
-        return False
+        return isinstance(patch, str)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
@@ -77,7 +76,7 @@ class MavenSingleValue(Option[str]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "str | None"
+        return "str"
 
 
 @dataclass
@@ -98,10 +97,7 @@ class MavenCommaDelimList(Option[list[str]]):
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[list[str]]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
-        if patch is None or is_list_of_strs(patch):
-            return True
-
-        return False
+        return is_list_of_strs(patch)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
@@ -111,11 +107,11 @@ class MavenCommaDelimList(Option[list[str]]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "list[str] | None"
+        return "list"
 
 
 @dataclass
-class MavenSystemPropeties(Option[dict[str, str]]):
+class MavenSystemPropeties(Option[dict[str, str | None]]):
     """This option represents the -D/--define option of a Maven CLI command.
 
     This option can be defined multiple times and the values are appended into a list of string in argparse.
@@ -129,12 +125,9 @@ class MavenSystemPropeties(Option[dict[str, str]]):
 
     short_name: str
 
-    def is_valid_patch_option(self, patch: Any) -> TypeGuard[dict[str, str]]:
+    def is_valid_patch_option(self, patch: Any) -> TypeGuard[dict[str, str | None]]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
-        if patch is None or is_dict_of_str_to_str(patch):
-            return True
-
-        return False
+        return is_dict_of_str_to_str_or_none(patch)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
@@ -145,7 +138,7 @@ class MavenSystemPropeties(Option[dict[str, str]]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "dict[str, str] | None"
+        return "dict[str, str | None]"
 
 
 @dataclass
@@ -157,10 +150,7 @@ class MavenGoalPhase(Option[list[str]]):
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[list[str]]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
-        if patch is None or is_list_of_strs(patch):
-            return True
-
-        return False
+        return is_list_of_strs(patch)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
@@ -172,7 +162,7 @@ class MavenGoalPhase(Option[list[str]]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "list[str] | None"
+        return "list[str]"
 
 
 # We intend to support Maven version 3.6.3 - 3.9
@@ -365,13 +355,16 @@ class MavenCLICommandParser:
 
             self.option_defs[opt_def.long_name] = opt_def
 
-    def validate_patch(self, patch: Mapping[str, MavenOptionPatchValueType]) -> bool:
+    def validate_patch(self, patch: Mapping[str, MavenOptionPatchValueType | None]) -> bool:
         """Return True if the patch conforms to the expected format."""
         for patch_name, patch_value in patch.items():
             opt_def = self.option_defs.get(patch_name)
             if not opt_def:
                 logger.error("Cannot find any option that matches %s", patch_name)
                 return False
+
+            if patch_value is None:
+                continue
 
             if not opt_def.is_valid_patch_option(patch_value):
                 logger.error(
@@ -441,10 +434,28 @@ class MavenCLICommandParser:
             options=maven_cli_options,
         )
 
+    def _patch_properties_mapping(
+        self,
+        original_props: dict[str, str],
+        option_long_name: str,
+        patch_value: MavenOptionPatchValueType,
+    ) -> dict[str, str]:
+        define_opt_def = self.option_defs.get(option_long_name)
+        if not define_opt_def or not isinstance(define_opt_def, MavenSystemPropeties):
+            raise PatchBuildCommandError(f"{option_long_name} from the patch is not a --define option.")
+
+        if not define_opt_def.is_valid_patch_option(patch_value):
+            raise PatchBuildCommandError(f"Critical, incorrect runtime type for patch --define, value: {patch_value}.")
+
+        return patch_mapping(
+            original=original_props,
+            patch=patch_value,
+        )
+
     def apply_option_patch(
         self,
         maven_cli_options: MavenCLIOptions,
-        patch: Mapping[str, MavenOptionPatchValueType],
+        patch: Mapping[str, MavenOptionPatchValueType | None],
     ) -> MavenCLIOptions:
         """Patch the Maven CLI Options and return a new copy.
 
@@ -452,8 +463,9 @@ class MavenCLICommandParser:
         ----------
         maven_cli_options: MavenCLIOptions
             The Maven CLI Options to patch.
-        patch: Mapping[str, PatchOptionType]
-            A mapping between the name of the attribute in MavenCLIOptions and its patch value
+        patch: Mapping[str, MavenOptionPatchValueType | None]
+            A mapping between the name of the attribute in MavenCLIOptions and its patch value.
+            The value can be None to disable an option.
 
         Returns
         -------
@@ -485,15 +497,10 @@ class MavenCLICommandParser:
 
             # Only for "-D/--define" we patch it differently than other options.
             if option_long_name == "--define":
-                define_opt_def = self.option_defs.get(option_long_name)
-                if not define_opt_def or not define_opt_def.is_valid_patch_option(patch_value):
-                    # Shouldn't happen
-                    raise PatchBuildCommandError(
-                        f"Critical, incorrect runtime type for patch --define, value: {patch_value}."
-                    )
-                new_maven_cli_options.define = patch_mapping(
-                    original=new_maven_cli_options.define or {},
-                    patch=patch_value,
+                new_maven_cli_options.define = self._patch_properties_mapping(
+                    original_props=new_maven_cli_options.define or {},
+                    option_long_name=option_long_name,
+                    patch_value=patch_value,
                 )
                 continue
 
