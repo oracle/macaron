@@ -11,9 +11,12 @@ from dataclasses import dataclass
 class GradleCLIOptions:
     """The class that stores the values of options parsed from a Gradle CLI Command."""
 
-    help_: bool | None
-    no_rebuild: bool | None
+    # Optional flags with a different attribute name.
     continue_: bool | None
+    help_: bool | None
+
+    # Optional flags.
+    no_rebuild: bool | None
     debug: bool | None
     export_keys: bool | None
     foreground: bool | None
@@ -40,6 +43,7 @@ class GradleCLIOptions:
     scan: bool | None
     watch_fs: bool | None
 
+    # Single value options.
     build_file: str | None
     settings_file: str | None
     configuration_cache_problems: str | None
@@ -54,9 +58,14 @@ class GradleCLIOptions:
     update_locks: str | None
     warning_mode: str | None
 
+    # Appended list option.
     exclude_task: list[str] | None
+
+    # Property definition options.
     system_prop: dict[str, str] | None
     project_prop: dict[str, str] | None
+
+    # Gradle tasks.
     tasks: list[str] | None
 
     @classmethod
