@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module test the yaml loader functions."""
@@ -39,7 +39,7 @@ class TestYamlLoader(TestCase):
     def test_validate_yaml_data(self) -> None:
         """Test the validate yaml data method."""
         # We are not testing the behavior of yamale methods
-        # so the schema and data can be empty
+        # so the schema and data can be empty.
         mock_schema = Schema({})
         mock_data: list = []
 

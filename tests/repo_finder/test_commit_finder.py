@@ -294,7 +294,7 @@ def test_version_to_tag_matching(_data: DataObject) -> None:  # noqa: PT019
     This test verifies that a similar version and tag can be matched by the commit finder.
     """
     # pylint: disable=protected-access
-    # Generate the version
+    # Generate the version.
     version = _data.draw(hypothesis.strategies.from_regex(input_pattern, fullmatch=True))
     if not version:
         return

@@ -5,7 +5,7 @@
 import logging
 import re
 import urllib.parse
-from xml.etree.ElementTree import Element  # nosec
+from xml.etree.ElementTree import Element  # nosec B405
 
 from packageurl import PackageURL
 
