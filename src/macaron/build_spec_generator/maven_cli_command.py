@@ -11,39 +11,48 @@ from dataclasses import dataclass
 class MavenCLIOptions:
     """The class that stores the values of options parsed from a Maven CLI Command."""
 
+    # Optional flag.
     also_make: bool | None
     also_make_dependents: bool | None
     batch_mode: bool | None
-    builder: str | None
     strict_checksums: bool | None
     lax_checksums: bool | None
-    define: dict[str, str] | None
     errors: bool | None
-    encrypt_master_password: str | None
-    encrypt_password: str | None
-    file: str | None
     fail_at_end: bool | None
     fail_fast: bool | None
     fail_never: bool | None
-    global_settings: str | None
-    global_toolchains: str | None
     help_: bool | None
-    log_file: str | None
     non_recursive: bool | None
     no_snapshot_updates: bool | None
     no_transfer_progress: bool | None
-    offline: bool | None
-    activate_profiles: list[str] | None
-    projects: list[str] | None
     quiet: bool | None
+    version: bool | None
+    show_version: bool | None
+    debug: bool | None
+    offline: bool | None
+    update_snapshots: bool | None
+
+    # Single Value Option.
+    builder: str | None
+    encrypt_master_password: str | None
+    encrypt_password: str | None
+    file: str | None
+    global_settings: str | None
+    global_toolchains: str | None
+    log_file: str | None
     resume_from: str | None
     settings: str | None
     toolchains: str | None
     threads: str | None
-    update_snapshots: bool | None
-    version: bool | None
-    show_version: bool | None
-    debug: bool | None
+
+    # Comma-delim list option.
+    activate_profiles: list[str] | None
+    projects: list[str] | None
+
+    # System properties definition.
+    define: dict[str, str] | None
+
+    # Maven goals and plugin phases.
     goals: list[str] | None
 
     @classmethod
