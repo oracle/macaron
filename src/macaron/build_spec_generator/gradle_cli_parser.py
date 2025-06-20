@@ -475,6 +475,9 @@ class GradleCLICommandParser:
                 logger.error("Cannot find any option that matches %s", patch_name)
                 return False
 
+            if patch_value is None:
+                continue
+
             if not opt_def.is_valid_patch_option(patch_value):
                 logger.error(
                     "The patch value %s of %s is not in the correct type. Expect %s.",
