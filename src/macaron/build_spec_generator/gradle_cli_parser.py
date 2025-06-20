@@ -40,8 +40,9 @@ class GradleOptionalFlag(Option[bool]):
 
     short_names: list[str] | None
 
-    # Right now this is ONLY used for --continue where the default attribute name for it
-    # in the returned argparse.Namespace is "continue" which conflicts with a Python keyword.
+    # Right now this is used for --continue and --help where the default attribute name for it
+    # in the returned argparse.Namespace is "continue" which conflicts with a Python keyword and
+    # "help" which conflicts with the built-in function help().
     dest: str | None = field(default=None)
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[bool]:
@@ -231,6 +232,7 @@ GRADLE_OPTION_DEF: list[Option] = [
     GradleOptionalFlag(
         short_names=["-?", "-h"],
         long_name="--help",
+        dest="help_",
     ),
     GradleOptionalFlag(
         short_names=["-a"],
@@ -239,7 +241,7 @@ GRADLE_OPTION_DEF: list[Option] = [
     GradleOptionalFlag(
         short_names=None,
         long_name="--continue",
-        dest="_continue",
+        dest="continue_",
     ),
     GradleOptionalFlag(
         short_names=["-d"],
@@ -531,7 +533,7 @@ class GradleCLICommandParser:
                 f"Failed to parse the Gradle CLI Options {' '.join(options)}."
             ) from sys_exit_err
 
-        gradle_cli_options = GradleCLIOptions(parsed_opts)
+        gradle_cli_options = GradleCLIOptions.from_parsed_arg(parsed_opts)
 
         return GradleCLICommand(
             executable=exe_path,
@@ -589,8 +591,10 @@ class GradleCLICommandParser:
         new_gradle_cli_options = deepcopy(gradle_cli_options)
 
         for option_long_name, patch_value in patch.items():
-            if option_long_name == "--continue":
-                attr_name = "_continue"
+            if option_long_name == "--help":
+                attr_name = "help_"
+            elif option_long_name == "--continue":
+                attr_name = "continue_"
             else:
                 # Get the attribute name of GradleCLIOption object.
                 # They all follow the same rule of removing the prefix --

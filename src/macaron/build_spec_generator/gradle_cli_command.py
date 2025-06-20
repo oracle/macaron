@@ -4,72 +4,127 @@
 """This module contains the classes that represent components of a Gradle CLI Command."""
 
 import argparse
-from typing import Any
+from dataclasses import dataclass
 
 
+@dataclass
 class GradleCLIOptions:
     """The class that stores the values of options parsed from a Gradle CLI Command."""
 
-    def __init__(
-        self,
+    help_: bool | None
+    no_rebuild: bool | None
+    continue_: bool | None
+    debug: bool | None
+    export_keys: bool | None
+    foreground: bool | None
+    info: bool | None
+    offline: bool | None
+    profile: bool | None
+    quiet: bool | None
+    refresh_dependencies: bool | None
+    refresh_keys: bool | None
+    rerun_tasks: bool | None
+    full_stacktrace: bool | None
+    stacktrace: bool | None
+    status: bool | None
+    stop: bool | None
+    continuous: bool | None
+    version: bool | None
+    warn: bool | None
+    write_locks: bool | None
+    build_cache: bool | None
+    configuration_cache: bool | None
+    configure_on_demand: bool | None
+    daemon: bool | None
+    parallel: bool | None
+    scan: bool | None
+    watch_fs: bool | None
+
+    build_file: str | None
+    settings_file: str | None
+    configuration_cache_problems: str | None
+    gradle_user_home: str | None
+    init_script: str | None
+    include_build: str | None
+    write_verification_metadata: str | None
+    max_workers: str | None
+    project_dir: str | None
+    priority: str | None
+    project_cache_dir: str | None
+    update_locks: str | None
+    warning_mode: str | None
+
+    exclude_task: list[str] | None
+    system_prop: dict[str, str] | None
+    project_prop: dict[str, str] | None
+    tasks: list[str] | None
+
+    @classmethod
+    def from_parsed_arg(
+        cls,
         parsed_arg: argparse.Namespace,
-    ):
-        """Initialize the instance.
+    ) -> "GradleCLIOptions":
+        """Initialize the instance from an argparse.Namespace object.
 
         Parameters
         ----------
         parsed_arg : argparse.Namespace
             The argparse.Namespace object obtained from parsing the CLI Command.
+
+        Returns
+        -------
+        GradleCLIOptions
+            The intialized GradleCLIOptions object instance.
         """
-        self.help: bool | None = parsed_arg.help
-        self.no_rebuild: bool | None = parsed_arg.no_rebuild
-        self._continue: bool | None = parsed_arg._continue
-        self.debug: bool | None = parsed_arg.debug
-        self.export_keys: bool | None = parsed_arg.export_keys
-        self.foreground: bool | None = parsed_arg.foreground
-        self.info: bool | None = parsed_arg.info
-        self.offline: bool | None = parsed_arg.offline
-        self.profile: bool | None = parsed_arg.profile
-        self.quiet: bool | None = parsed_arg.quiet
-        self.refresh_dependencies: bool | None = parsed_arg.refresh_dependencies
-        self.refresh_keys: bool | None = parsed_arg.refresh_keys
-        self.rerun_tasks: bool | None = parsed_arg.rerun_tasks
-        self.full_stacktrace: bool | None = parsed_arg.full_stacktrace
-        self.stacktrace: bool | None = parsed_arg.stacktrace
-        self.status: bool | None = parsed_arg.status
-        self.stop: bool | None = parsed_arg.stop
-        self.continuous: bool | None = parsed_arg.continuous
-        self.version: bool | None = parsed_arg.version
-        self.warn: bool | None = parsed_arg.warn
-        self.write_locks: bool | None = parsed_arg.write_locks
-        self.build_cache: bool | None = parsed_arg.build_cache
-        self.configuration_cache: bool | None = parsed_arg.configuration_cache
-        self.configure_on_demand: bool | None = parsed_arg.configure_on_demand
-        self.daemon: bool | None = parsed_arg.daemon
-        self.parallel: bool | None = parsed_arg.parallel
-        self.scan: bool | None = parsed_arg.scan
-        self.watch_fs: bool | None = parsed_arg.watch_fs
-        self.build_file: str | None = parsed_arg.build_file
-        self.settings_file: str | None = parsed_arg.settings_file
-        self.configuration_cache_problems: str | None = parsed_arg.configuration_cache_problems
-        self.gradle_user_home: str | None = parsed_arg.gradle_user_home
-        self.init_script: str | None = parsed_arg.init_script
-        self.include_build: str | None = parsed_arg.include_build
-        self.write_verification_metadata: str | None = parsed_arg.write_verification_metadata
-        self.max_workers: str | None = parsed_arg.max_workers
-        self.project_dir: str | None = parsed_arg.project_dir
-        self.priority: str | None = parsed_arg.priority
-        self.project_cache_dir: str | None = parsed_arg.project_cache_dir
-        self.update_locks: str | None = parsed_arg.update_locks
-        self.warning_mode: str | None = parsed_arg.warning_mode
-        self.exclude_task: list[str] | None = parsed_arg.exclude_task
-        self.system_prop: dict[str, str] | None = (
-            GradleCLIOptions.parse_properties(parsed_arg.system_prop) if parsed_arg.system_prop else None
+        return cls(
+            help_=parsed_arg.help_,
+            no_rebuild=parsed_arg.no_rebuild,
+            continue_=parsed_arg.continue_,
+            debug=parsed_arg.debug,
+            export_keys=parsed_arg.export_keys,
+            foreground=parsed_arg.foreground,
+            info=parsed_arg.info,
+            offline=parsed_arg.offline,
+            profile=parsed_arg.profile,
+            quiet=parsed_arg.quiet,
+            refresh_dependencies=parsed_arg.refresh_dependencies,
+            refresh_keys=parsed_arg.refresh_keys,
+            rerun_tasks=parsed_arg.rerun_tasks,
+            full_stacktrace=parsed_arg.full_stacktrace,
+            stacktrace=parsed_arg.stacktrace,
+            status=parsed_arg.status,
+            stop=parsed_arg.stop,
+            continuous=parsed_arg.continuous,
+            version=parsed_arg.version,
+            warn=parsed_arg.warn,
+            write_locks=parsed_arg.write_locks,
+            build_cache=parsed_arg.build_cache,
+            configuration_cache=parsed_arg.configuration_cache,
+            configure_on_demand=parsed_arg.configure_on_demand,
+            daemon=parsed_arg.daemon,
+            parallel=parsed_arg.parallel,
+            scan=parsed_arg.scan,
+            watch_fs=parsed_arg.watch_fs,
+            build_file=parsed_arg.build_file,
+            settings_file=parsed_arg.settings_file,
+            configuration_cache_problems=parsed_arg.configuration_cache_problems,
+            gradle_user_home=parsed_arg.gradle_user_home,
+            init_script=parsed_arg.init_script,
+            include_build=parsed_arg.include_build,
+            write_verification_metadata=parsed_arg.write_verification_metadata,
+            max_workers=parsed_arg.max_workers,
+            project_dir=parsed_arg.project_dir,
+            priority=parsed_arg.priority,
+            project_cache_dir=parsed_arg.project_cache_dir,
+            update_locks=parsed_arg.update_locks,
+            warning_mode=parsed_arg.warning_mode,
+            exclude_task=parsed_arg.exclude_task,
+            system_prop=GradleCLIOptions.parse_properties(parsed_arg.system_prop) if parsed_arg.system_prop else None,
+            project_prop=(
+                GradleCLIOptions.parse_properties(parsed_arg.project_prop) if parsed_arg.project_prop else None
+            ),
+            tasks=parsed_arg.tasks,
         )
-        self.project_prop: dict[str, str] | None = (
-            GradleCLIOptions.parse_properties(parsed_arg.project_prop) if parsed_arg.project_prop else None
-        )
-        self.tasks: list[str] | None = parsed_arg.tasks
 
     @staticmethod
     def parse_properties(props: list[str]) -> dict[str, str]:
@@ -109,12 +164,6 @@ class GradleCLIOptions:
 
         return system_props
 
-    def __eq__(self, value: Any) -> bool:
-        if not isinstance(value, GradleCLIOptions):
-            return False
-
-        return vars(self) == vars(value)
-
     def to_cmd_tasks(self) -> list[str]:
         """Return the tasks and options as a list of string.
 
@@ -144,13 +193,13 @@ class GradleCLIOptions:
         """
         result = []
 
-        if self.help:
+        if self.help_:
             result.append("-h")
 
         if self.no_rebuild:
             result.append("-a")
 
-        if self._continue:
+        if self.continue_:
             result.append("--continue")
 
         if self.debug:
@@ -323,29 +372,9 @@ class GradleCLIOptions:
         return result
 
 
+@dataclass
 class GradleCLICommand:
     """The class that stores the values of a Gradle CLI Command."""
 
-    def __init__(
-        self,
-        executable: str,
-        options: GradleCLIOptions,
-    ) -> None:
-        """Initialize the instance.
-
-        Parameters
-        ----------
-        executeable : str
-            The executable part of the build command (e.g. mvnw, mvn or ./path/to/mvnw).
-
-        options: GradleCLIOptions
-            The GradleCLIOptions object created from parsing the options part of the build command.
-        """
-        self.executable = executable
-        self.options = options
-
-    def __eq__(self, value: Any) -> bool:
-        if not isinstance(value, GradleCLICommand):
-            return False
-
-        return self.executable == value.executable and self.options == value.options
+    executable: str
+    options: GradleCLIOptions

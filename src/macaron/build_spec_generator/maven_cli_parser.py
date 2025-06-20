@@ -8,7 +8,7 @@ import logging
 import os
 from collections.abc import Mapping
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, TypeGuard
 
 from macaron.build_spec_generator.base_cli_option import (
@@ -37,16 +37,27 @@ class MavenOptionalFlag(Option[bool]):
 
     short_name: str
 
+    # Right now this is used for --help where the default attribute name for it
+    # in the returned argparse.Namespace is "--help" which conflicts with the built-in function help().
+    dest: str | None = field(default=None)
+
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[bool]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
         return isinstance(patch, bool)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
-        arg_parse.add_argument(
-            *(self.short_name, self.long_name),
-            action="store_true",
-        )
+        if self.dest:
+            arg_parse.add_argument(
+                *(self.short_name, self.long_name),
+                action="store_true",
+                dest=self.dest,
+            )
+        else:
+            arg_parse.add_argument(
+                *(self.short_name, self.long_name),
+                action="store_true",
+            )
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
@@ -210,6 +221,7 @@ MAVEN_OPTION_DEF: list[Option] = [
     MavenOptionalFlag(
         short_name="-h",
         long_name="--help",
+        dest="help_",
     ),
     MavenOptionalFlag(
         short_name="-llr",
@@ -424,10 +436,10 @@ class MavenCLICommandParser:
             #   mvn --version
             # Note that we don't allow mvn -V or mvn --show-version as this command will
             #   failed for mvn
-            if not parsed_opts.help and not parsed_opts.version:
+            if not parsed_opts.help_ and not parsed_opts.version:
                 raise CommandLineParseError(f"No goal detected for {' '.join(options)}.")
 
-        maven_cli_options = MavenCLIOptions(parsed_opts)
+        maven_cli_options = MavenCLIOptions.from_parsed_arg(parsed_opts)
 
         return MavenCLICommand(
             executable=exe_path,
@@ -484,10 +496,13 @@ class MavenCLICommandParser:
         new_maven_cli_options = deepcopy(maven_cli_options)
 
         for option_long_name, patch_value in patch.items():
-            # Get the attribute name of MavenCLIOption object.
-            # They all follow the same rule of removing the prefix --
-            # from option long name and replace all "-" with "_"
-            attr_name = option_long_name.removeprefix("--").replace("-", "_")
+            if option_long_name == "--help":
+                attr_name = "_help"
+            else:
+                # Get the attribute name of MavenCLIOption object.
+                # They all follow the same rule of removing the prefix --
+                # from option long name and replace all "-" with "_"
+                attr_name = option_long_name.removeprefix("--").replace("-", "_")
 
             # Ensure that setting any option to None in the patch
             # will remove it from the build command.

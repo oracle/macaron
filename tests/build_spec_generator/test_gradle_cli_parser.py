@@ -22,17 +22,17 @@ from macaron.errors import CommandLineParseError
         ),
         pytest.param(
             "gradle -?",
-            {"tasks": [], "help": True},
+            {"tasks": [], "help_": True},
             id="gradle_print_help_-?",
         ),
         pytest.param(
             "gradle --help",
-            {"tasks": [], "help": True},
+            {"tasks": [], "help_": True},
             id="gradle_print_help_--help",
         ),
         pytest.param(
             "gradle -h",
-            {"tasks": [], "help": True},
+            {"tasks": [], "help_": True},
             id="gradle_print_help_-h",
         ),
         pytest.param(
@@ -57,7 +57,7 @@ from macaron.errors import CommandLineParseError
         ),
         pytest.param(
             "gradle clean build --continue",
-            {"tasks": ["clean", "build"], "_continue": True},
+            {"tasks": ["clean", "build"], "continue_": True},
             id="test_continue_flag_with_exception_in_attribute_name",
         ),
         # TODO: validate if the order of the options decide the final value of
@@ -79,7 +79,7 @@ from macaron.errors import CommandLineParseError
             "gradle clean build --continue --debug --rerun-tasks -s --console plain --build-cache",
             {
                 "tasks": ["clean", "build"],
-                "_continue": True,
+                "continue_": True,
                 "debug": True,
                 "rerun_tasks": True,
                 "stacktrace": True,
@@ -106,6 +106,8 @@ def test_gradle_cli_command_parser_valid_input(
         else:
             # Making sure that we are not enabling flags that are not part of the
             # build command.
+            # We don't compare it to None because some options if not set, argparse
+            # will assign a different Falsy value depending on the option type.
             assert not getattr(parsed_res.options, attribute)
 
 

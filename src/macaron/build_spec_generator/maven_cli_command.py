@@ -4,69 +4,105 @@
 """This module contains the classes that represent components of a Maven CLI Command."""
 
 import argparse
-from typing import Any
+from dataclasses import dataclass
 
 
+@dataclass
 class MavenCLIOptions:
     """The class that stores the values of options parsed from a Maven CLI Command."""
 
-    def __init__(
-        self,
+    also_make: bool | None
+    also_make_dependents: bool | None
+    batch_mode: bool | None
+    builder: str | None
+    strict_checksums: bool | None
+    lax_checksums: bool | None
+    define: dict[str, str] | None
+    errors: bool | None
+    encrypt_master_password: str | None
+    encrypt_password: str | None
+    file: str | None
+    fail_at_end: bool | None
+    fail_fast: bool | None
+    fail_never: bool | None
+    global_settings: str | None
+    global_toolchains: str | None
+    help_: bool | None
+    log_file: str | None
+    non_recursive: bool | None
+    no_snapshot_updates: bool | None
+    no_transfer_progress: bool | None
+    offline: bool | None
+    activate_profiles: list[str] | None
+    projects: list[str] | None
+    quiet: bool | None
+    resume_from: str | None
+    settings: str | None
+    toolchains: str | None
+    threads: str | None
+    update_snapshots: bool | None
+    version: bool | None
+    show_version: bool | None
+    debug: bool | None
+    goals: list[str] | None
+
+    @classmethod
+    def from_parsed_arg(
+        cls,
         parsed_arg: argparse.Namespace,
-    ) -> None:
-        """Initialize the instance.
+    ) -> "MavenCLIOptions":
+        """Initialize the instance from the the argparse.Namespace object.
 
         Parameters
         ----------
         parsed_arg : argparse.Namespace
             The argparse.Namespace object obtained from parsing the CLI Command.
+
+        Returns
+        -------
+        MavenCLIOptions
+            The MavenCLIOptions object.
         """
-        self.also_make: bool | None = parsed_arg.also_make
-        self.also_make_dependents: bool | None = parsed_arg.also_make_dependents
-        self.batch_mode: bool | None = parsed_arg.batch_mode
-        self.builder: str | None = parsed_arg.builder
-        self.strict_checksums: bool | None = parsed_arg.strict_checksums
-        self.lax_checksums: bool | None = parsed_arg.lax_checksums
-        self.define: dict[str, str] | None = (
-            MavenCLIOptions.parse_system_properties(parsed_arg.define) if parsed_arg.define else None
+        return cls(
+            also_make=parsed_arg.also_make,
+            also_make_dependents=parsed_arg.also_make_dependents,
+            batch_mode=parsed_arg.batch_mode,
+            builder=parsed_arg.builder,
+            strict_checksums=parsed_arg.strict_checksums,
+            lax_checksums=parsed_arg.lax_checksums,
+            define=MavenCLIOptions.parse_system_properties(parsed_arg.define) if parsed_arg.define else None,
+            errors=parsed_arg.errors,
+            encrypt_master_password=parsed_arg.encrypt_master_password,
+            encrypt_password=parsed_arg.encrypt_password,
+            file=parsed_arg.file,
+            fail_at_end=parsed_arg.fail_at_end,
+            fail_fast=parsed_arg.fail_fast,
+            fail_never=parsed_arg.fail_never,
+            global_settings=parsed_arg.global_settings,
+            global_toolchains=parsed_arg.global_toolchains,
+            help_=parsed_arg.help_,
+            log_file=parsed_arg.log_file,
+            non_recursive=parsed_arg.non_recursive,
+            no_snapshot_updates=parsed_arg.no_snapshot_updates,
+            no_transfer_progress=parsed_arg.no_transfer_progress,
+            offline=parsed_arg.offline,
+            activate_profiles=(
+                MavenCLIOptions.parse_comma_sep_list(parsed_arg.activate_profiles)
+                if parsed_arg.activate_profiles
+                else None
+            ),
+            projects=MavenCLIOptions.parse_comma_sep_list(parsed_arg.projects) if parsed_arg.projects else None,
+            quiet=parsed_arg.quiet,
+            resume_from=parsed_arg.resume_from,
+            settings=parsed_arg.settings,
+            toolchains=parsed_arg.toolchains,
+            threads=parsed_arg.threads,
+            update_snapshots=parsed_arg.update_snapshots,
+            version=parsed_arg.version,
+            show_version=parsed_arg.show_version,
+            debug=parsed_arg.debug,
+            goals=parsed_arg.goals,
         )
-        self.errors: bool | None = parsed_arg.errors
-        self.encrypt_master_password: str | None = parsed_arg.encrypt_master_password
-        self.encrypt_password: str | None = parsed_arg.encrypt_password
-        self.file: str | None = parsed_arg.file
-        self.fail_at_end: bool | None = parsed_arg.fail_at_end
-        self.fail_fast: bool | None = parsed_arg.fail_fast
-        self.fail_never: bool | None = parsed_arg.fail_never
-        self.global_settings: str | None = parsed_arg.global_settings
-        self.global_toolchains: str | None = parsed_arg.global_toolchains
-        self.help: bool | None = parsed_arg.help
-        self.log_file: str | None = parsed_arg.log_file
-        self.non_recursive: bool | None = parsed_arg.non_recursive
-        self.no_snapshot_updates: bool | None = parsed_arg.no_snapshot_updates
-        self.no_transfer_progress: bool | None = parsed_arg.no_transfer_progress
-        self.offline: bool | None = parsed_arg.offline
-        self.activate_profiles: list[str] | None = (
-            MavenCLIOptions.parse_comma_sep_list(parsed_arg.activate_profiles) if parsed_arg.activate_profiles else None
-        )
-        self.projects: list[str] | None = (
-            MavenCLIOptions.parse_comma_sep_list(parsed_arg.projects) if parsed_arg.projects else None
-        )
-        self.quiet: bool | None = parsed_arg.quiet
-        self.resume_from: str | None = parsed_arg.resume_from
-        self.settings: str | None = parsed_arg.settings
-        self.toolchains: str | None = parsed_arg.toolchains
-        self.threads: str | None = parsed_arg.threads
-        self.update_snapshots: bool | None = parsed_arg.update_snapshots
-        self.version: bool | None = parsed_arg.version
-        self.show_version: bool | None = parsed_arg.show_version
-        self.debug: bool | None = parsed_arg.debug
-        self.goals: list[str] | None = parsed_arg.goals
-
-    def __eq__(self, value: Any) -> bool:
-        if not isinstance(value, MavenCLIOptions):
-            return False
-
-        return vars(self) == vars(value)
 
     @staticmethod
     def parse_system_properties(props: list[str]) -> dict[str, str]:
@@ -218,7 +254,7 @@ class MavenCLIOptions:
         if self.global_toolchains:
             result.extend(f"-gt {self.global_toolchains}".split())
 
-        if self.help:
+        if self.help_:
             result.append("-h")
 
         if self.log_file:
@@ -272,29 +308,9 @@ class MavenCLIOptions:
         return result
 
 
+@dataclass
 class MavenCLICommand:
     """The class that stores the values of a Maven CLI Command."""
 
-    def __init__(
-        self,
-        executable: str,
-        options: MavenCLIOptions,
-    ) -> None:
-        """Initialize the instance.
-
-        Parameters
-        ----------
-        executeable : str
-            The executable part of the build command (e.g. mvnw, mvn or ./path/to/mvnw).
-
-        options: MavenCLIOptions
-            The MavenCLIOptions object created from parsing the options part of the build command.
-        """
-        self.executable = executable
-        self.options = options
-
-    def __eq__(self, value: Any) -> bool:
-        if not isinstance(value, MavenCLICommand):
-            return False
-
-        return self.executable == value.executable and self.options == value.options
+    executable: str
+    options: MavenCLIOptions
