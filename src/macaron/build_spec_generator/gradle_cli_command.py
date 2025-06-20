@@ -318,7 +318,7 @@ class GradleCLIOptions:
                 if value:
                     result.append(f"-P{key}={value}")
                 else:
-                    result.append(f"-D{key}")
+                    result.append(f"-P{key}")
 
         return result
 
