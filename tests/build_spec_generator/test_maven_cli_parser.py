@@ -90,7 +90,7 @@ from macaron.build_spec_generator.maven_cli_parser import (
             "mvn --help",
             {
                 "goals": [],
-                "help": True,
+                "help_": True,
             },
             id="allow_no_goal_for_help",
         ),
@@ -98,7 +98,7 @@ from macaron.build_spec_generator.maven_cli_parser import (
             "mvn --version",
             {
                 "goals": [],
-                "help": False,
+                "help_": False,
                 "version": True,
             },
             id="allow_no_goal_for_version",
@@ -107,7 +107,7 @@ from macaron.build_spec_generator.maven_cli_parser import (
             "mvn --help --version",
             {
                 "goals": [],
-                "help": True,
+                "help_": True,
                 "version": True,
             },
             id="allow_no_goal_for_version_and_help",
@@ -130,6 +130,11 @@ def test_maven_cli_command_parser_valid_input(
         else:
             # Making sure that we are not enabling flags that are not part of the
             # build command.
+            # We don't compare it to None because some options if not set, argparse
+            # will assign a different Falsy value depending on the option type.
+            # For example
+            #   - If `--help` is not provide, its value will be False
+            #   - If `--settings` is not provided, its value will be None.
             assert not getattr(parsed_res.options, attribute)
 
 
