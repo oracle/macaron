@@ -367,7 +367,7 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
 
     Returns
     -------
-    tuple[Pattern | None, list[str]]
+    tuple[Pattern | None, list[str], CommitFinderInfo]
         The tuple of the regex pattern that will match the version, the list of version parts that were extracted, and
         the outcome to report. If an exception occurs from any regex operation, the pattern will be returned as None.
 
@@ -384,43 +384,19 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
         logger.debug("Version contained no valid parts: %s", version)
         return None, [], CommitFinderInfo.INVALID_VERSION
 
-    logger.debug("Final version parts: %s", parts)
+    logger.debug("Version parts: %s", parts)
 
-    this_version_pattern = ""
+    # Determine optional suffixes.
+    optional_start_index = determine_optional_suffix_index(version, parts)
+
     # Detect versions that end with a zero number (0, 00, 000, etc.), so that part can be made optional.
     has_trailing_zero = len(parts) > 2 and multiple_zero_pattern.match(parts[-1])
 
-    # Version parts that are alphanumeric, and do not come before parts that are purely numeric, can be treated
-    # as optional suffixes.
-    # E.g.
-    # - 1.2.RELEASE -> 'RELEASE' becomes optional.
-    # - 3.1.test.2.M5 -> 'M5' becomes optional.
-    # Parts that come after a change in seperator are also flagged as optional.
-    # - 2.2-3 -> '3' becomes optional.
-    optional_start_index = None
-    separators = _split_separators(version)
-    last_separator = separators[0] if separators else None
-    for index in range(1, len(parts)):
-        # Check if current part should be optional, or reset the index if not.
-        optional_start_index = None if numeric_only_pattern.match(parts[index]) else index
-
-        if not last_separator:
-            continue
-
-        if index >= len(separators):
-            continue
-
-        # Check if parts should be made optional based on a difference in separators.
-        new_separator = separators[index]
-        if new_separator != last_separator:
-            optional_start_index = index + 1
-            break
-        last_separator = new_separator
-
     # Create the pattern.
+    this_version_pattern = ""
     for count, part in enumerate(parts):
-        # This part will be made optional in the regex if within the optional suffix range, or the final part and it
-        # is a trailing zero.
+        # This part will be made optional in the regex if it is within the optional suffix range, or is the final part
+        # and is a trailing zero.
         optional = (optional_start_index and count >= optional_start_index) or (
             count == len(parts) - 1 and has_trailing_zero
         )
@@ -483,6 +459,54 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
         return None, [], CommitFinderInfo.REGEX_COMPILE_FAILURE
 
 
+def determine_optional_suffix_index(version: str, parts: list[str]) -> int | None:
+    """Determine optional suffix index of a given version string.
+
+    Version parts that are alphanumeric, and do not come before parts that are purely numeric, can be treated
+    as optional suffixes.
+    E.g.
+    - 1.2.RELEASE -> 'RELEASE' becomes optional.
+    - 3.1.test.2.M5 -> 'M5' becomes optional.
+    Parts that come after a change in seperator are also flagged as optional.
+    - 2.2-3 -> '3' becomes optional.
+
+    Parameters
+    ----------
+    version: str
+        The version string of the software component.
+    parts: list[str]
+        The non-separator parts of the version produced by a prior split operation.
+
+    Returns
+    -------
+    int | None
+        The index of the first optional part, or None if not found. This is a zero-based index to match the parts
+        parameter, with the caveat that a value of zero cannot be returned due to the behaviour of the algorithm.
+        In other words, there must always be at least one non-optional part.
+    """
+    optional_start_index = None
+    separators = _split_separators(version)
+    last_separator = separators[0] if separators else None
+    for index in range(1, len(parts)):
+        # Check if current part should be optional, or reset the index if not.
+        optional_start_index = None if numeric_only_pattern.match(parts[index]) else index
+
+        if not last_separator:
+            continue
+
+        if index >= len(separators):
+            continue
+
+        # Check if parts should be made optional based on a difference in separators.
+        new_separator = separators[index]
+        if new_separator != last_separator:
+            optional_start_index = index + 1
+            break
+        last_separator = new_separator
+
+    return optional_start_index
+
+
 def match_tags(tag_list: list[str], name: str, version: str) -> tuple[list[str], CommitFinderInfo]:
     """Return items of the passed tag list that match the passed artifact name and version.
 
@@ -507,9 +531,8 @@ def match_tags(tag_list: list[str], name: str, version: str) -> tuple[list[str],
     # Generally version identifiers do not contain the `v` prefix, while tags often do. If a version does contain such
     # a prefix, it is expected to be in the tag also. If not, the `v` prefix is left as optional.
     v_prefix = "(?:v)?" if not version.lower().startswith("v") else ""
-    escaped_version = re.escape(version)
     almost_exact_pattern = re.compile(
-        f"^(?:[^/]+/)?(?P<prefix>{re.escape(name)}-)?{v_prefix}{escaped_version}$", re.IGNORECASE
+        f"^(?:[^/]+/)?(?P<prefix>{re.escape(name)}-)?{v_prefix}{re.escape(version)}$", re.IGNORECASE
     )
 
     # Compare tags to the almost exact pattern. Prefer tags that matched the name prefix as well.

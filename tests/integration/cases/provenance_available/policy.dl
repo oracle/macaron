@@ -1,0 +1,17 @@
+/* Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("test_policy", component_id, "") :-
+    check_passed(component_id, "mcn_provenance_available_1"),
+    provenance_available_check(_, asset_name, asset_url),
+    asset_name = "toga",
+    asset_url = "https://pypi.org/integrity/toga/0.5.1/toga-0.5.1-py3-none-any.whl/provenance",
+    provenance(_, component_id, _, slsa_level, _, repo_url, commit_sha, _, asset_name, asset_url, _),
+    slsa_level = 2,
+    repo_url = "https://github.com/beeware/toga",
+    commit_sha = "ef1912b0a1b5c07793f9aa372409f5b9d36f2604".
+
+apply_policy_to("test_policy", component_id) :-
+    is_component(component_id, "pkg:pypi/toga@0.5.1").

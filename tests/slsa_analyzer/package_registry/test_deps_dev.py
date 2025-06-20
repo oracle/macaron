@@ -3,66 +3,37 @@
 
 """Tests for the deps.dev service."""
 
-import os
-import urllib
-from pathlib import Path
-
 import pytest
+from packageurl import PackageURL
 from pytest_httpserver import HTTPServer
-from werkzeug import Response
 
-from macaron.config.defaults import load_defaults
 from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
 
 
-@pytest.mark.parametrize(
-    ("purl", "data", "expected"),
-    [
-        ("pkg%3Apypi%2Fultralytics%408.3.46", "", None),
-        ("pkg%3Apypi%2Fultralytics", '{"foo": "bar"}', {"foo": "bar"}),
-    ],
-)
-def test_get_package_info(httpserver: HTTPServer, tmp_path: Path, purl: str, data: str, expected: dict | None) -> None:
+def test_get_package_info(httpserver: HTTPServer, deps_dev_service_mock: dict) -> None:
     """Test getting package info."""
-    base_url_parsed = urllib.parse.urlparse(httpserver.url_for(""))
-    user_config_input = f"""
-    [deps_dev]
-    url_netloc = {base_url_parsed.netloc}
-    url_scheme = {base_url_parsed.scheme}
-    """
+    purl = "pkg:npm/@test/%:_@\"'$£!^&*()-test-example@v3.5.0-jar"
+    httpserver.expect_request(
+        f"/{deps_dev_service_mock['api']}/{deps_dev_service_mock['purl']}/{purl}"
+    ).respond_with_data('{"foo": "bar"}')
 
-    user_config_path = os.path.join(tmp_path, "config.ini")
-    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
-        user_config_file.write(user_config_input)
-    # We don't have to worry about modifying the ``defaults`` object causing test
-    # pollution here, since we reload the ``defaults`` object before every test with the
-    # ``setup_test`` fixture.
-    load_defaults(user_config_path)
-
-    httpserver.expect_request(f"/v3alpha/purl/{purl}").respond_with_response(Response(data))
-
+    expected = {"foo": "bar"}
     assert DepsDevService.get_package_info(purl) == expected
+    assert DepsDevService.get_package_info(PackageURL.from_string(purl)) == expected
 
 
-def test_get_package_info_exception(httpserver: HTTPServer, tmp_path: Path) -> None:
+def test_get_package_info_exception(httpserver: HTTPServer, deps_dev_service_mock: dict) -> None:
     """Test if the function correctly returns an exception."""
-    base_url_parsed = urllib.parse.urlparse(httpserver.url_for(""))
-    user_config_input = f"""
-    [deps_dev]
-    url_netloc = {base_url_parsed.netloc}
-    url_scheme = {base_url_parsed.scheme}
-    """
+    purl = "pkg:pypi/example"
 
-    user_config_path = os.path.join(tmp_path, "config.ini")
-    with open(user_config_path, "w", encoding="utf-8") as user_config_file:
-        user_config_file.write(user_config_input)
-    # We don't have to worry about modifying the ``defaults`` object causing test
-    # pollution here, since we reload the ``defaults`` object before every test with the
-    # ``setup_test`` fixture.
-    load_defaults(user_config_path)
+    # Return bad JSON data.
+    httpserver.expect_request(
+        f"/{deps_dev_service_mock['api']}/{deps_dev_service_mock['purl']}/{purl}"
+    ).respond_with_data("Not Valid")
 
-    purl = "pkg%3Apypi%2Fexample"
-    httpserver.expect_request(f"/v3alpha/purl/{purl}").respond_with_data("Not Valid")
-
-    with pytest.raises(APIAccessError):
+    with pytest.raises(APIAccessError, match="^Failed to process"):
         DepsDevService.get_package_info(purl)
+
+    # Request an invalid resource.
+    with pytest.raises(APIAccessError, match="^No valid response"):
+        DepsDevService.get_package_info("pkg:pypi/test")

@@ -3,8 +3,8 @@ macaron.parsers package
 
 .. automodule:: macaron.parsers
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------
@@ -22,29 +22,29 @@ macaron.parsers.actionparser module
 
 .. automodule:: macaron.parsers.actionparser
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 macaron.parsers.bashparser module
 ---------------------------------
 
 .. automodule:: macaron.parsers.bashparser
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 macaron.parsers.github\_workflow\_model module
 ----------------------------------------------
 
 .. automodule:: macaron.parsers.github_workflow_model
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 macaron.parsers.pomparser module
 --------------------------------
 
 .. automodule:: macaron.parsers.pomparser
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

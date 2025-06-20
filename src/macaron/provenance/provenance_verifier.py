@@ -17,6 +17,7 @@ from packageurl import PackageURL
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.provenance.provenance_extractor import ProvenancePredicate, SLSAGithubGenericBuildDefinitionV01
+from macaron.provenance.provenance_finder import ProvenanceAsset
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import AssetLocator
@@ -28,15 +29,15 @@ from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def verify_provenance(purl: PackageURL, provenance: list[InTotoPayload]) -> bool:
+def verify_provenance(purl: PackageURL, provenance_assets: list[ProvenanceAsset]) -> bool:
     """Verify the passed provenance.
 
     Parameters
     ----------
     purl: PackageURL
         The PURL of the analysis target.
-    provenance: list[InTotoPayload]
-        The list of provenance.
+    provenance_assets: list[ProvenanceAsset]
+        The list of provenance assets.
 
     Returns
     -------
@@ -50,7 +51,7 @@ def verify_provenance(purl: PackageURL, provenance: list[InTotoPayload]) -> bool
     verification_function = None
 
     if purl.type == "npm":
-        verification_function = partial(verify_npm_provenance, purl, provenance)
+        verification_function = partial(verify_npm_provenance, purl, provenance_assets)
 
     # TODO other verification functions go here.
 
@@ -61,31 +62,36 @@ def verify_provenance(purl: PackageURL, provenance: list[InTotoPayload]) -> bool
     return False
 
 
-def verify_npm_provenance(purl: PackageURL, provenance: list[InTotoPayload]) -> bool:
+def verify_npm_provenance(purl: PackageURL, provenance_assets: list[ProvenanceAsset]) -> bool:
     """Compare the unsigned payload subject digest with the signed payload digest, if available.
 
     Parameters
     ----------
     purl: PackageURL
         The PURL of the analysis target.
-    provenance: list[InTotoPayload]
-        The provenances to verify.
+    provenance_assets: list[ProvenanceAsset]
+        The provenance assets to verify.
 
     Returns
     -------
     bool
         True if the provenance was verified, or False otherwise.
     """
-    if len(provenance) != 2:
-        logger.debug("Expected unsigned and signed provenance.")
+    if len(provenance_assets) != 2:
+        logger.debug("Expected unsigned and signed provenance assets.")
         return False
 
-    signed_subjects = provenance[1].statement.get("subject")
+    signed_provenance = provenance_assets[1].payload
+    unsigned_provenance = provenance_assets[0].payload
+
+    signed_subjects = signed_provenance.statement.get("subject")
     if not signed_subjects:
+        logger.debug("Missing signed subjects.")
         return False
 
-    unsigned_subjects = provenance[0].statement.get("subject")
+    unsigned_subjects = unsigned_provenance.statement.get("subject")
     if not unsigned_subjects:
+        logger.debug("Missing unsigned subjects.")
         return False
 
     found_signed_subject = None
@@ -97,6 +103,7 @@ def verify_npm_provenance(purl: PackageURL, provenance: list[InTotoPayload]) -> 
         break
 
     if not found_signed_subject:
+        logger.debug("Missing signed subject.")
         return False
 
     found_unsigned_subject = None
@@ -108,15 +115,18 @@ def verify_npm_provenance(purl: PackageURL, provenance: list[InTotoPayload]) -> 
         break
 
     if not found_unsigned_subject:
+        logger.debug("Missing unsigned subject.")
         return False
 
     signed_digest = found_signed_subject.get("digest")
     unsigned_digest = found_unsigned_subject.get("digest")
     if not (signed_digest and unsigned_digest):
+        logger.debug("Missing %ssigned digest.", "un" if signed_digest else "")
         return False
 
     # For signed and unsigned to match, the digests must be identical.
     if signed_digest != unsigned_digest:
+        logger.debug("Signed and unsigned digests do not match.")
         return False
 
     key = list(signed_digest.keys())[0]
@@ -334,7 +344,10 @@ def _verify_slsa(
 
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
         logger.error(error)
-        errors.append(error.output.decode("utf-8"))
+        if error.output:
+            errors.append(error.output.decode("utf-8"))
+        else:
+            errors.append(f"Verification failed: {type(error)}")
     except OSError as error:
         logger.error(error)
         errors.append(str(error))

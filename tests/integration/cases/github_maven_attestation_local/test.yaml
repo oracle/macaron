@@ -1,0 +1,30 @@
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Discovering GitHub attestation of a local Maven artifact but failing because the artifact is wrong. In this case
+  we download the artifact's POM file and save it as a JAR file.
+
+tags:
+- macaron-python-package
+- macaron-docker-image
+
+steps:
+- name: Download artifact POM instead of the JAR
+  kind: shell
+  options:
+    cmd: curl --create-dirs -o ./output/.m2/repository/io/liftwizard/liftwizard-checkstyle/2.1.22/liftwizard-checkstyle-2.1.22.jar https://repo1.maven.org/maven2/io/liftwizard/liftwizard-checkstyle/2.1.22/liftwizard-checkstyle-2.1.22.pom
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.liftwizard/liftwizard-checkstyle@2.1.22
+    - -rp
+    - https://github.com/liftwizard/liftwizard
+    - --local-maven-repo
+    - ./output/.m2
+- name: Run macaron verify-policy to verify no provenance was found
+  kind: verify
+  options:
+    policy: policy.dl

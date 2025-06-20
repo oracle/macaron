@@ -3,8 +3,8 @@ macaron.slsa\_analyzer.provenance.expectations package
 
 .. automodule:: macaron.slsa_analyzer.provenance.expectations
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------
@@ -22,13 +22,13 @@ macaron.slsa\_analyzer.provenance.expectations.expectation module
 
 .. automodule:: macaron.slsa_analyzer.provenance.expectations.expectation
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 macaron.slsa\_analyzer.provenance.expectations.expectation\_registry module
 ---------------------------------------------------------------------------
 
 .. automodule:: macaron.slsa_analyzer.provenance.expectations.expectation_registry
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This is a reuseable workflow to build and test the Docker image. Note that this workflow does not
@@ -52,6 +52,10 @@ jobs:
         set -euo pipefail
         echo "Hash of package should be $ARTIFACT_HASH."
         echo "$ARTIFACT_HASH" | base64 --decode | sha256sum --strict --check --status || exit 1
+
+    # Login so the docker build has access to the internal dependencies image
+    - name: Log in to GitHub Container Registry
+      run: docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
 
     # Build the Docker image without pushing it.
     - name: Build the Docker image

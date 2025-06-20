@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Integration test utility."""
@@ -79,6 +79,7 @@ COMPARE_SCRIPTS: dict[str, Sequence[str]] = {
     "policy_report": ["tests", "policy_engine", "compare_policy_reports.py"],
     "deps_report": ["tests", "dependency_analyzer", "compare_dependencies.py"],
     "vsa": ["tests", "vsa", "compare_vsa.py"],
+    "find_source": ["tests", "find_source", "compare_source_reports.py"],
 }
 
 VALIDATE_SCHEMA_SCRIPTS: dict[str, Sequence[str]] = {

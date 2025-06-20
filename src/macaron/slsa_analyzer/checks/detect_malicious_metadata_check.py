@@ -5,7 +5,6 @@
 
 import logging
 
-import requests
 from problog import get_evaluatable
 from problog.logic import Term
 from problog.program import PrologString
@@ -14,7 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.db_custom_types import DBJsonDict
 from macaron.database.table_definitions import CheckFacts
-from macaron.errors import HeuristicAnalyzerValueError
+from macaron.errors import ConfigurationError, HeuristicAnalyzerValueError, SourceCodeError
 from macaron.json_tools import JsonType, json_extract
 from macaron.malware_analyzer.pypi_heuristics.base_analyzer import BaseHeuristicAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult, Heuristics
@@ -24,26 +23,29 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
-from macaron.malware_analyzer.pypi_heuristics.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.sourcecode.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.build_tool.pip import Pip
-from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.package_registry.deps_dev import APIAccessError, DepsDevService
-from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset, PyPIRegistry
+from macaron.slsa_analyzer.package_registry.osv_dev import OSVDevService
+from macaron.slsa_analyzer.package_registry.pypi_registry import (
+    PyPIPackageJsonAsset,
+    PyPIRegistry,
+    find_or_create_pypi_asset,
+)
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
-from macaron.util import send_post_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
 class MaliciousMetadataFacts(CheckFacts):
-    """The ORM mapping for justifications in pypi heuristic check."""
+    """The ORM mapping for justifications in malicious metadata check."""
 
     __tablename__ = "_detect_malicious_metadata_check"
 
@@ -71,14 +73,10 @@ class MaliciousMetadataFacts(CheckFacts):
 class DetectMaliciousMetadataCheck(BaseCheck):
     """This check analyzes the metadata of a package for malicious behavior."""
 
-    # The OSV knowledge base query database.
-    osv_query_url = "https://api.osv.dev/v1/query"
-
     def __init__(self) -> None:
         """Initialize a check instance."""
         check_id = "mcn_detect_malicious_metadata_1"
         description = """This check analyzes the metadata of a package based on reports malicious behavior.
-        Supported ecosystem for unknown malware: PyPI.
         """
         super().__init__(check_id=check_id, description=description, eval_reqs=[])
 
@@ -107,28 +105,52 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 return True
         return False
 
-    def validate_malware(self, pypi_package_json: PyPIPackageJsonAsset) -> tuple[bool, dict[str, JsonType] | None]:
-        """Validate the package is malicious.
+    def analyze_source(
+        self, pypi_package_json: PyPIPackageJsonAsset, results: dict[Heuristics, HeuristicResult], force: bool = False
+    ) -> tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]:
+        """Analyze the source code of the package with a textual scan, looking for malicious code patterns.
 
         Parameters
         ----------
         pypi_package_json: PyPIPackageJsonAsset
+            The PyPI package JSON asset object.
+        results: dict[Heuristics, HeuristicResult]
+            Containing all heuristics' results (excluding this one), where the key is the heuristic and the value is the result
+            associated with that heuristic.
+        force: bool
+            Forces sourcecode analysis to run regardless of heuristic results. Defaults to False.
 
         Returns
         -------
-        tuple[bool, dict[str, JsonType] | None]
-            Returns True if the source code includes suspicious pattern.
-            Returns the result of the validation including the line number
-            and the suspicious arguments.
-            e.g. requests.get("http://malicious.com")
-            return the "http://malicious.com"
-        """
-        # TODO: This redundant function might be removed
-        sourcecode_analyzer = PyPISourcecodeAnalyzer(pypi_package_json)
-        is_malware, detail_info = sourcecode_analyzer.analyze()
-        return is_malware, detail_info
+        tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]
+            Containing the analysis results and relevant patterns identified.
 
-    def evaluate_heuristic_results(self, heuristic_results: dict[Heuristics, HeuristicResult]) -> float | None:
+        Raises
+        ------
+        HeuristicAnalyzerValueError
+            If the analyzer fails due to malformed package information.
+        ConfigurationError
+            If the configuration of the analyzer encountered a problem.
+        """
+        logger.debug("Instantiating %s", PyPISourcecodeAnalyzer.__name__)
+        analyzer = PyPISourcecodeAnalyzer()
+
+        if not force and analyzer.depends_on and self._should_skip(results, analyzer.depends_on):
+            return {analyzer.heuristic: HeuristicResult.SKIP}, {}
+
+        try:
+            with pypi_package_json.sourcecode():
+                result, detail_info = analyzer.analyze(pypi_package_json)
+                return {analyzer.heuristic: result}, detail_info
+
+        except SourceCodeError as error:
+            error_msg = f"Unable to perform analysis, source code not available: {error}"
+            logger.debug(error_msg)
+            raise HeuristicAnalyzerValueError(error_msg) from error
+
+    def evaluate_heuristic_results(
+        self, heuristic_results: dict[Heuristics, HeuristicResult]
+    ) -> tuple[float, JsonType]:
         """Analyse the heuristic results to determine the maliciousness of the package.
 
         Parameters
@@ -138,18 +160,19 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         Returns
         -------
-        float | None
-            Returns the confidence associated with the detected malicious combination, otherwise None if no associated
-            malicious combination was triggered.
+        tuple[float, JsonType]
+            Returns the confidence associated with the detected malicious combination, and associated rule IDs detailing
+            what rules were triggered and their confidence as a dict[str, float] type.
         """
         facts_list: list[str] = []
+        triggered_rules: dict[str, JsonType] = {}
+
         for heuristic, result in heuristic_results.items():
-            if result == HeuristicResult.SKIP:
-                facts_list.append(f"0.0::{heuristic.value}.")
-            elif result == HeuristicResult.PASS:
+            if result == HeuristicResult.PASS:
                 facts_list.append(f"{heuristic.value} :- true.")
-            else:  # HeuristicResult.FAIL
+            elif result == HeuristicResult.FAIL:
                 facts_list.append(f"{heuristic.value} :- false.")
+            # Do not define for HeuristicResult.SKIP
 
         facts = "\n".join(facts_list)
         problog_code = f"{facts}\n\n{self.malware_rules_problog_model}"
@@ -158,10 +181,13 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         problog_model = PrologString(problog_code)
         problog_results: dict[Term, float] = get_evaluatable().create_from(problog_model).evaluate()
 
-        confidence: float | None = problog_results.get(Term(self.problog_result_access))
-        if confidence == 0.0:
-            return None  # no rules were triggered
-        return confidence
+        confidence = problog_results.pop(Term(self.problog_result_access), 0.0)
+        if confidence > 0:  # a rule was triggered
+            for term, conf in problog_results.items():
+                if term.args:
+                    triggered_rules[str(term.args[0])] = conf
+
+        return confidence, triggered_rules
 
     def run_heuristics(
         self, pypi_package_json: PyPIPackageJsonAsset
@@ -222,8 +248,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         package_registry_info_entries = ctx.dynamic_data["package_registries"]
 
         # First check if this package is a known malware
-        data = {"package": {"purl": ctx.component.purl}}
-
+        package_exists = False
         try:
             package_exists = bool(DepsDevService.get_package_info(ctx.component.purl))
         except APIAccessError as error:
@@ -231,70 +256,83 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         # Known malicious packages must have been removed.
         if not package_exists:
-            response = send_post_http_raw(self.osv_query_url, json_data=data, headers=None)
-            res_obj = None
-            if response:
-                try:
-                    res_obj = response.json()
-                except requests.exceptions.JSONDecodeError as error:
-                    logger.debug("Unable to get a valid response from %s: %s", self.osv_query_url, error)
-            if res_obj:
-                for vuln in res_obj.get("vulns", {}):
-                    if v_id := json_extract(vuln, ["id"], str):
-                        result_tables.append(
-                            MaliciousMetadataFacts(
-                                known_malware=f"https://osv.dev/vulnerability/{v_id}",
-                                result={},
-                                detail_information=vuln,
-                                confidence=Confidence.HIGH,
-                            )
+            vulns: list = []
+            try:
+                vulns = OSVDevService.get_vulnerabilities_purl(ctx.component.purl)
+            except APIAccessError as error:
+                logger.debug(error)
+
+            for vuln in vulns:
+                if v_id := json_extract(vuln, ["id"], str):
+                    result_tables.append(
+                        MaliciousMetadataFacts(
+                            known_malware=f"https://osv.dev/vulnerability/{v_id}",
+                            result={},
+                            detail_information=vuln,
+                            confidence=Confidence.HIGH,
                         )
-                if result_tables:
-                    return CheckResultData(
-                        result_tables=result_tables,
-                        result_type=CheckResultType.FAILED,
                     )
+            if result_tables:
+                return CheckResultData(
+                    result_tables=result_tables,
+                    result_type=CheckResultType.FAILED,
+                )
 
         # If the package is not a known malware, run malware analysis heuristics.
         for package_registry_info_entry in package_registry_info_entries:
             match package_registry_info_entry:
                 # Currently, only PyPI packages are supported.
                 case PackageRegistryInfo(
-                    build_tool=Pip() | Poetry(),
-                    package_registry=PyPIRegistry() as pypi_registry,
+                    build_tool_name="pip" | "poetry",
+                    build_tool_purl_type="pypi",
+                    package_registry=PyPIRegistry(),
                 ) as pypi_registry_info:
-
-                    # Create an AssetLocator object for the PyPI package JSON object.
-                    pypi_package_json = PyPIPackageJsonAsset(
-                        component=ctx.component, pypi_registry=pypi_registry, package_json={}
+                    # Retrieve the pre-existing asset, or create a new one.
+                    pypi_package_json = find_or_create_pypi_asset(
+                        ctx.component.name, ctx.component.version, pypi_registry_info
                     )
+                    if not pypi_package_json:
+                        return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
+
+                    pypi_package_json.has_repository = ctx.component.repository is not None
 
                     pypi_registry_info.metadata.append(pypi_package_json)
 
                     # Download the PyPI package JSON, but no need to persist it to the filesystem.
-                    if pypi_package_json.download(dest=""):
+                    if pypi_package_json.package_json or pypi_package_json.download(dest=""):
                         try:
-                            result, detail_info = self.run_heuristics(pypi_package_json)
+                            heuristic_results, heuristics_detail_info = self.run_heuristics(pypi_package_json)
                         except HeuristicAnalyzerValueError:
                             return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-                        confidence = self.evaluate_heuristic_results(result)
+                        confidence, triggered_rules = self.evaluate_heuristic_results(heuristic_results)
+                        heuristics_detail_info["triggered_rules"] = triggered_rules
                         result_type = CheckResultType.FAILED
-                        if confidence is None:
+                        if not confidence:
                             confidence = Confidence.HIGH
                             result_type = CheckResultType.PASSED
-                        elif ctx.dynamic_data["validate_malware"]:
-                            is_malware, validation_result = self.validate_malware(pypi_package_json)
-                            if is_malware:  # Find source code block matched the malicious pattern
-                                confidence = Confidence.HIGH
-                            elif validation_result:  # Find suspicious source code, but cannot be confirmed
-                                confidence = Confidence.MEDIUM
-                            logger.debug(validation_result)
+
+                        # Source code analysis
+                        try:
+                            sourcecode_result, sourcecode_detail_info = self.analyze_source(
+                                pypi_package_json, heuristic_results, force=ctx.dynamic_data["force_analyze_source"]
+                            )
+                        except (HeuristicAnalyzerValueError, ConfigurationError):
+                            return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
+
+                        heuristic_results.update(sourcecode_result)
+                        heuristics_detail_info.update(sourcecode_detail_info)
+
+                        if sourcecode_result[Heuristics.SUSPICIOUS_PATTERNS] == HeuristicResult.FAIL:
+                            if result_type == CheckResultType.PASSED:
+                                # heuristics determined it benign, so lower the confidence
+                                confidence = Confidence.LOW
+                            result_type = CheckResultType.FAILED
 
                         result_tables.append(
                             MaliciousMetadataFacts(
-                                result=result,
-                                detail_information=detail_info,
+                                result=heuristic_results,
+                                detail_information=heuristics_detail_info,
                                 confidence=confidence,
                             )
                         )
@@ -319,53 +357,87 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         SuspiciousSetupAnalyzer,
         WheelAbsenceAnalyzer,
         AnomalousVersionAnalyzer,
+        TyposquattingPresenceAnalyzer,
     ]
 
+    # name used to query the result of all problog rules, so it can be accessed outside the model.
     problog_result_access = "result"
 
     malware_rules_problog_model = f"""
-    % Heuristic groupings
+    % ----- Wrappers ------
+    % When a heuristic is skipped, it is ommitted from the problog model facts definition. This means that references in this
+    % static model must account for when they are not existent. These wrappers perform this function using the inbuilt try_call
+    % problog function. It will try to evaluate the provided logic, and return false if it encounters an error, such as the fact
+    % not being defined. For example, you are expecting A to pass, so we do:
+    %
+    % passed(A)
+    %
+    % If A was 'true', then this will return true, as A did pass. If A was 'false', then this will return false, as A did not pass.
+    % If A was not defined, then this will return false, as A did not pass.
+    % Please use these wrappers throughout the problog model for logic definitions.
+
+    passed(H) :- try_call(H).
+    failed(H) :- try_call(not H).
+
+    % ----- Heuristic groupings -----
     % These are common combinations of heuristics that are used in many of the rules, thus themselves representing
     % certain behaviors. When changing or adding rules here, if there are frequent combinations of particular
     % heuristics, group them together here.
 
     % Maintainer has recently joined, publishing an undetailed page with no links.
-    quickUndetailed :- not {Heuristics.EMPTY_PROJECT_LINK.value}, not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value}.
+    quickUndetailed :- failed({Heuristics.EMPTY_PROJECT_LINK.value}), failed({Heuristics.CLOSER_RELEASE_JOIN_DATE.value}).
 
     % Maintainer releases a suspicious setup.py and forces it to run by omitting a .whl file.
-    forceSetup :- not {Heuristics.SUSPICIOUS_SETUP.value}, not {Heuristics.WHEEL_ABSENCE.value}.
+    forceSetup :- failed({Heuristics.SUSPICIOUS_SETUP.value}), failed({Heuristics.WHEEL_ABSENCE.value}).
 
-    % Suspicious Combinations
+    % ----- Suspicious Combinations -----
 
     % Package released recently with little detail, forcing the setup.py to run.
-    {Confidence.HIGH.value}::high :- quickUndetailed, forceSetup, not {Heuristics.ONE_RELEASE.value}.
-    {Confidence.HIGH.value}::high :- quickUndetailed, forceSetup, not {Heuristics.HIGH_RELEASE_FREQUENCY.value}.
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_1) :-
+        quickUndetailed, forceSetup, failed({Heuristics.ONE_RELEASE.value}).
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_2) :-
+        quickUndetailed, forceSetup, failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}).
 
     % Package released recently with little detail, with some more refined trust markers introduced: project links,
     % multiple different releases, but there is no source code repository matching it and the setup is suspicious.
-    {Confidence.HIGH.value}::high :- not {Heuristics.SOURCE_CODE_REPO.value},
-        not {Heuristics.HIGH_RELEASE_FREQUENCY.value},
-        not {Heuristics.CLOSER_RELEASE_JOIN_DATE.value},
-        {Heuristics.UNCHANGED_RELEASE.value},
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_3) :-
+        failed({Heuristics.SOURCE_CODE_REPO.value}),
+        failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
+        passed({Heuristics.UNCHANGED_RELEASE.value}),
+        failed({Heuristics.CLOSER_RELEASE_JOIN_DATE.value}),
         forceSetup.
+
+    % Package released with a name similar to a popular package.
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_4) :-
+        quickUndetailed, forceSetup, failed({Heuristics.TYPOSQUATTING_PRESENCE.value}).
 
     % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
     % the same code.
-    {Confidence.MEDIUM.value}::medium :- quickUndetailed,
-        not {Heuristics.HIGH_RELEASE_FREQUENCY.value},
-        not {Heuristics.UNCHANGED_RELEASE.value},
-        {Heuristics.SUSPICIOUS_SETUP.value}.
+    {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_1) :-
+        quickUndetailed,
+        failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
+        failed({Heuristics.UNCHANGED_RELEASE.value}),
+        passed({Heuristics.SUSPICIOUS_SETUP.value}).
 
     % Package released recently with little detail and an anomalous version number for a single-release package.
-    {Confidence.MEDIUM.value}::medium :- quickUndetailed,
-        not {Heuristics.ONE_RELEASE.value},
-        {Heuristics.WHEEL_ABSENCE.value},
-        not {Heuristics.ANOMALOUS_VERSION.value}.
+    {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_2) :-
+        quickUndetailed,
+        failed({Heuristics.ONE_RELEASE.value}),
+        failed({Heuristics.ANOMALOUS_VERSION.value}).
 
-    {problog_result_access} :- high.
-    {problog_result_access} :- medium.
+    % ----- Evaluation -----
 
+    % Aggregate result
+    {problog_result_access} :- trigger(malware_high_confidence_1).
+    {problog_result_access} :- trigger(malware_high_confidence_2).
+    {problog_result_access} :- trigger(malware_high_confidence_3).
+    {problog_result_access} :- trigger(malware_high_confidence_4).
+    {problog_result_access} :- trigger(malware_medium_confidence_2).
+    {problog_result_access} :- trigger(malware_medium_confidence_1).
     query({problog_result_access}).
+
+    % Explainability
+    query(trigger(_)).
     """
 
 

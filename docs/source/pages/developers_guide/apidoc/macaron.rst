@@ -3,8 +3,8 @@ macaron package
 
 .. automodule:: macaron
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------
@@ -34,29 +34,29 @@ macaron.environment\_variables module
 
 .. automodule:: macaron.environment_variables
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 macaron.errors module
 ---------------------
 
 .. automodule:: macaron.errors
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 macaron.json\_tools module
 --------------------------
 
 .. automodule:: macaron.json_tools
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 macaron.util module
 -------------------
 
 .. automodule:: macaron.util
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

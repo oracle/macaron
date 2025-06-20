@@ -1,28 +1,23 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The cue module invokes the CUE schema validator."""
 
-import ctypes
-import json
 import os
-from collections.abc import Callable
+import subprocess  # nosec B404
 
 from macaron import MACARON_PATH
+from macaron.config.defaults import defaults
 from macaron.errors import CUEExpectationError, CUERuntimeError
-from macaron.json_tools import JsonType
-
-# Load the CUE shared library.
-cue = ctypes.CDLL(os.path.join(MACARON_PATH, "bin", "cuevalidate.so"))
 
 
-def get_target(expectation: str | None) -> str:
+def get_target(expectation_path: str | None) -> str:
     """Get the analysis target of the expectation.
 
     Parameters
     ----------
-    expectation: str | None
-        The cue expectation content.
+    expectation_path: str | None
+        The cue expectation path.
 
     Returns
     -------
@@ -34,42 +29,45 @@ def get_target(expectation: str | None) -> str:
     CUERuntimeError, CUEExpectationError
         If expectation is invalid or unable to get the target by invoking the shared library.
     """
-    if not expectation:
-        raise CUEExpectationError("CUE expectation is empty.")
+    if not expectation_path:
+        raise CUEExpectationError("CUE expectation path is not provided.")
 
-    cue.target.restype = ctypes.c_void_p
+    cmd = [
+        os.path.join(MACARON_PATH, "bin", "cuevalidator"),
+        "-target-policy",
+        expectation_path,
+    ]
 
-    def _errcheck(
-        result: ctypes.c_void_p, func: Callable, args: tuple  # pylint: disable=unused-argument
-    ) -> ctypes.c_void_p:
-        if not result:
-            raise CUERuntimeError("Unable to find target field in CUE expectation.")
-        return result
+    try:
+        result = subprocess.run(  # nosec B603
+            cmd,
+            capture_output=True,
+            check=True,
+            cwd=MACARON_PATH,
+            timeout=defaults.getint("cue_validator", "timeout", fallback=30),
+        )
+    except (
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        FileNotFoundError,
+    ) as error:
+        raise CUERuntimeError("Unable to process CUE expectation.") from error
 
-    cue.target.errcheck = _errcheck  # type: ignore
-    expectation_buffer = ctypes.create_string_buffer(bytes(expectation, encoding="utf-8"))
-    target_ptr = cue.target(expectation_buffer)
-    res_bytes = ctypes.string_at(target_ptr)
+    if result.returncode == 0:
+        return result.stdout.decode("utf-8")
 
-    # Even though Python & Go have a garbage collector that will free up unused memory,
-    # the documentation says it is the caller's responsibility to free up the C string
-    # allocated memory. See https://pkg.go.dev/cmd/cgo
-    free = cue.free
-    free.argtypes = [ctypes.c_void_p]
-    free(target_ptr)
-
-    return res_bytes.decode("utf-8")
+    raise CUEExpectationError("Unable to find target field in CUE expectation.")
 
 
-def validate_expectation(expectation: str | None, prov: JsonType) -> bool:
+def validate_expectation(expectation_path: str, prov_stmt_path: str) -> bool:
     """Validate a json document against a cue expectation.
 
     Parameters
     ----------
-    expectation: str | None
-        The cue expectation content.
-    prov: JsonType
-        The provenance payload.
+    expectation_path: str
+        The cue expectation path.
+    prov_stmt_path: str
+        The provenance statement path.
 
     Returns
     -------
@@ -78,20 +76,36 @@ def validate_expectation(expectation: str | None, prov: JsonType) -> bool:
 
     Raises
     ------
-    CUERuntimeError, CUEExpectationError
+    CUERuntimeError
         If expectation is invalid or unable to validate the expectation by invoking the shared library.
     """
-    if not expectation:
-        raise CUEExpectationError("CUE policies is empty.")
+    cmd = [
+        os.path.join(MACARON_PATH, "bin", "cuevalidator"),
+        "-validate-policy",
+        expectation_path,
+        "-validate-provenance",
+        prov_stmt_path,
+    ]
 
-    expectation_buffer = ctypes.create_string_buffer(bytes(expectation, encoding="utf-8"))
-    prov_buffer = ctypes.create_string_buffer(bytes(json.dumps(prov), encoding="utf-8"))
+    try:
+        result = subprocess.run(  # nosec B603
+            cmd,
+            capture_output=True,
+            check=True,
+            cwd=MACARON_PATH,
+            timeout=defaults.getint("cue_validator", "timeout", fallback=30),
+        )
+    except (
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        FileNotFoundError,
+    ) as error:
+        raise CUERuntimeError("Unable to process CUE expectation or provenance.") from error
 
-    def _errcheck(result: int, func: Callable, args: tuple) -> int:  # pylint: disable=unused-argument
-        if result == -1:
-            raise CUERuntimeError("Unable to validate the CUE expectation")
-        return result
+    if result.returncode == 0:
+        if result.stdout.decode("utf-8") == "True":
+            return True
+        if result.stdout.decode("utf-8") == "False":
+            return False
 
-    cue.target.errcheck = _errcheck  # type: ignore
-    result = bool(cue.validate(expectation_buffer, prov_buffer))
-    return result
+    raise CUERuntimeError("Something unexpected happened while validating the provenance against CUE expectation.")

@@ -1,12 +1,34 @@
-/* Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
-package main
+package cuevalidator
 
 import (
+	"os"
+	"path"
+	"runtime"
 	"testing"
 )
 
+// Get the path to the resources directory.
+func GetResourcesPath(t *testing.T) string {
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		t.Errorf("Unable to locate resources.")
+	}
+	return path.Join(path.Dir(filename), "resources")
+}
+
+func LoadResource(t *testing.T, name string) string {
+	path := path.Join(GetResourcesPath(t), name)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("Failed to read file: %s", err)
+	}
+	return string(data)
+}
+
+// Test_Target tests the Target function for extracting the target from a CUE policy.
 func Test_Target(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -16,7 +38,7 @@ func Test_Target(t *testing.T) {
 		{
 			name:     "get target from invalid policy",
 			path:     "invalid_policy.cue",
-			expected: GetGoString(nil),
+			expected: "",
 		},
 		{
 			name:     "get target from valid policy",
@@ -28,16 +50,17 @@ func Test_Target(t *testing.T) {
 		test := test // Re-initialize the test.
 		t.Run(test.name, func(t *testing.T) {
 			policy := LoadResource(t, test.path)
-			value := target(policy)
+			value := Target(policy)
 
 			// GoLang doesn’t provide any built-in support for assert.
-			if GetGoString(value) != test.expected {
-				t.Errorf("Expected %s but got %s.", test.expected, GetGoString(value))
+			if value != test.expected {
+				t.Errorf("Expected %s but got %s.", test.expected, value)
 			}
 		})
 	}
 }
 
+// Test_ValidatePolicy tests the Validate function for validating the provenance against a CUE policy.
 func Test_ValidatePolicy(t *testing.T) {
 	tests := []struct {
 		name            string
@@ -82,7 +105,7 @@ func Test_ValidatePolicy(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			policy := LoadResource(t, test.policy_path)
 			provenance := LoadResource(t, test.provenance_path)
-			result := validate(policy, provenance)
+			result := Validate(policy, provenance)
 			if result != test.expected {
 				t.Errorf("Expected %d but got %d.", test.expected, result)
 			}

@@ -1,3 +1,22 @@
+## v0.16.0 (2025-04-24)
+
+### Feat
+
+- detect vulnerable GitHub Actions (#1021)
+- check PyPI registry when deps.dev fails to find a source repository (#982)
+- add callgraph and build cmd detection for Jenkins (#977)
+
+### Fix
+
+- fix incorrect skip result evaluation causing false positives in PyPI malware reporting (#1031)
+- use 'isDefault' version from deps dev api (#1019)
+
+### Refactor
+
+- log the SLSA summary in verbose mode only (#1063)
+- log relative paths for file (#1032)
+- use problog for suspicious combinations (#997)
+
 ## v0.15.0 (2025-03-10)
 
 ### Feat

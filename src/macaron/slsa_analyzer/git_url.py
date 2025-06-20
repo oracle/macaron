@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides methods to perform generic actions on Git URLS."""
@@ -16,12 +16,13 @@ from pathlib import Path
 from git import GitCommandError
 from git.objects import Commit
 from git.repo import Repo
+from packaging import version
 from pydriller.git import Git
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.environment_variables import get_patched_env
-from macaron.errors import CloneError
+from macaron.errors import CloneError, GitTagError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -907,3 +908,150 @@ def is_empty_repo(git_obj: Git) -> bool:
         return False
     except GitCommandError:
         return True
+
+
+def is_commit_hash(value: str) -> bool:
+    """Check if a given string is a valid Git commit hash.
+
+    A valid Git commit hash is a 40-character long hexadecimal string or
+    a short version that is at least 7 characters long. The function uses
+    a regular expression to match these patterns.
+
+    Parameters
+    ----------
+    value: str
+        The string value to be checked for validity as a commit hash.
+
+    Returns
+    -------
+    bool: True if the string matches the format of a Git commit hash (7 to 40
+        characters long and only contains hexadecimal characters), False otherwise.
+
+    Example
+    -------
+    >>> is_commit_hash('e3a1b6c')
+    True
+    >>> is_commit_hash('e3a1b6c8d9b2ff0c9f5f8a0a5d8f4cf2e19b1db3')
+    True
+    >>> is_commit_hash('invalid_hash123')
+    False
+    >>> is_commit_hash('master')
+    False
+    >>> is_commit_hash('main')
+    False
+    """
+    pattern = r"^[a-f0-9]{7,40}$"
+    return bool(re.match(pattern, value))
+
+
+def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
+    """Retrieve all tags from a given repository using ls-remote.
+
+    Parameters
+    ----------
+    repo: str
+        The repository to perform the operation on.
+
+    Returns
+    -------
+    dict[str]
+        A dictionary of tags mapped to their commits, or None if the operation failed..
+    """
+    tag_data = list_remote_references(["--tags"], repo)
+    if not tag_data:
+        return None
+    tags = {}
+
+    for tag_line in tag_data.splitlines():
+        tag_line = tag_line.strip()
+        if not tag_line:
+            continue
+        split = tag_line.split("\t")
+        if len(split) != 2:
+            continue
+        possible_tag = split[1]
+        if possible_tag.endswith("^{}"):
+            possible_tag = possible_tag[:-3]
+        elif possible_tag in tags:
+            # If a tag already exists, it must be the annotated reference of an annotated tag.
+            # In that case we skip the tag as it does not point to the proper source commit.
+            # Note that this should only happen if the tags are received out of standard order.
+            continue
+        possible_tag = possible_tag.replace("refs/tags/", "")
+        if not possible_tag:
+            continue
+        tags[possible_tag] = split[0]
+
+    logger.debug("Found %s tags via ls-remote of %s", len(tags), repo)
+
+    return tags
+
+
+def find_highest_git_tag(tags: set[str]) -> str:
+    """
+    Find and return the highest (most recent) semantic version tag from a set of Git tags.
+
+    Parameters
+    ----------
+    tags : set[str]
+        A set of version strings (e.g., {"v1.0.0", "v2.3.4", "v2.1.0"}). Tags must follow PEP 440 or
+        semver format, otherwise they will be skipped.
+
+    Returns
+    -------
+    str
+        The tag string corresponding to the highest version.
+
+    Raises
+    ------
+    GitTagError
+        If no valid tag is found or if a tag is not a valid version.
+
+    Example
+    -------
+    >>> find_highest_git_tag({"v2.0.0"})
+    'v2.0.0'
+
+    >>> find_highest_git_tag({"v4", "v4.2.1"})
+    'v4.2.1'
+
+    >>> find_highest_git_tag({"1.2.3", "2.0.0", "1.10.1"})
+    '2.0.0'
+
+    >>> find_highest_git_tag({"0.1", "0.1.1", "0.0.9"})
+    '0.1.1'
+
+    >>> find_highest_git_tag({"invalid", "1.0.0"})
+    '1.0.0'
+
+    >>> find_highest_git_tag(set())
+    Traceback (most recent call last):
+        ...
+    GitTagError: No tags provided.
+
+    >>> find_highest_git_tag({"invalid"})
+    Traceback (most recent call last):
+        ...
+    GitTagError: No valid version tag found.
+    """
+    if not tags:
+        raise GitTagError("No tags provided.")
+
+    highest_tag = None
+    highest_parsed_tag = version.Version("0")
+
+    for tag in tags:
+        try:
+            parsed_tag = version.Version(tag)
+        except version.InvalidVersion:
+            logger.debug("Invalid version tag encountered while finding the highest tag: %s", tag)
+            continue
+
+        if parsed_tag > highest_parsed_tag:
+            highest_parsed_tag = parsed_tag
+            highest_tag = tag
+
+    if highest_tag is None:
+        raise GitTagError("No valid version tag found.")
+
+    return highest_tag

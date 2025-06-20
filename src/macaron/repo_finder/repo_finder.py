@@ -43,7 +43,7 @@ from pydriller import Git
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.errors import CloneError, RepoCheckOutError
-from macaron.repo_finder import to_domain_from_known_purl_types
+from macaron.repo_finder import repo_finder_pypi, to_domain_from_known_purl_types
 from macaron.repo_finder.commit_finder import find_commit, match_tags
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
@@ -61,16 +61,21 @@ from macaron.slsa_analyzer.git_url import (
     get_remote_origin_of_local_repo,
     get_remote_vcs_url,
     get_repo_dir_name,
+    get_tags_via_git_remote,
     is_empty_repo,
     is_remote_repo,
-    list_remote_references,
     resolve_local_path,
 )
+from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str, RepoFinderInfo]:
+def find_repo(
+    purl: PackageURL,
+    check_latest_version: bool = True,
+    package_registries_info: list[PackageRegistryInfo] | None = None,
+) -> tuple[str, RepoFinderInfo]:
     """Retrieve the repository URL that matches the given PURL.
 
     Parameters
@@ -79,6 +84,9 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
         The parsed PURL to convert to the repository path.
     check_latest_version: bool
         A flag that determines whether the latest version of the PURL is also checked.
+    package_registries_info: list[PackageRegistryInfo] | None
+        The list of package registry information if available.
+        If no package registries are loaded, this can be set to None.
 
     Returns
     -------
@@ -103,6 +111,9 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
     logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
     found_repo, outcome = repo_finder.find_repo(purl)
 
+    if not found_repo:
+        found_repo, outcome = find_repo_alternative(purl, outcome, package_registries_info)
+
     if check_latest_version and not defaults.getboolean("repofinder", "try_latest_purl", fallback=True):
         check_latest_version = False
 
@@ -117,9 +128,50 @@ def find_repo(purl: PackageURL, check_latest_version: bool = True) -> tuple[str,
         return "", RepoFinderInfo.NO_NEWER_VERSION
 
     found_repo, outcome = DepsDevRepoFinder().find_repo(latest_version_purl)
+    if found_repo:
+        return found_repo, outcome
+
+    if not found_repo:
+        found_repo, outcome = find_repo_alternative(latest_version_purl, outcome, package_registries_info)
+
     if not found_repo:
         logger.debug("Could not find repo from latest version of PURL: %s", latest_version_purl)
         return "", RepoFinderInfo.LATEST_VERSION_INVALID
+
+    return found_repo, outcome
+
+
+def find_repo_alternative(
+    purl: PackageURL, outcome: RepoFinderInfo, package_registries_info: list[PackageRegistryInfo] | None = None
+) -> tuple[str, RepoFinderInfo]:
+    """Use PURL type specific methods to find the repository when the standard methods have failed.
+
+    Parameters
+    ----------
+    purl : PackageURL
+        The parsed PURL to convert to the repository path.
+    outcome: RepoFinderInfo
+        A previous outcome to report if this method does nothing.
+    package_registries_info: list[PackageRegistryInfo] | None
+        The list of package registry information if available.
+        If no package registries are loaded, this can be set to None.
+
+    Returns
+    -------
+    tuple[str, RepoFinderOutcome] :
+        The repository URL for the passed package, if found, and the outcome to report.
+    """
+    found_repo = ""
+    if purl.type == "pypi":
+        found_repo, outcome = repo_finder_pypi.find_repo(purl, package_registries_info)
+
+    if not found_repo:
+        logger.debug(
+            "Could not find repository using type specific (%s) methods for PURL %s. Outcome: %s",
+            purl.type,
+            purl,
+            outcome,
+        )
 
     return found_repo, outcome
 
@@ -335,49 +387,6 @@ def get_latest_repo_if_different(latest_version_purl: PackageURL, original_repo:
 
     logger.debug("Found new repository from latest PURL: %s", latest_repo)
     return latest_repo
-
-
-def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
-    """Retrieve all tags from a given repository using ls-remote.
-
-    Parameters
-    ----------
-    repo: str
-        The repository to perform the operation on.
-
-    Returns
-    -------
-    dict[str]
-        A dictionary of tags mapped to their commits, or None if the operation failed..
-    """
-    tag_data = list_remote_references(["--tags"], repo)
-    if not tag_data:
-        return None
-    tags = {}
-
-    for tag_line in tag_data.splitlines():
-        tag_line = tag_line.strip()
-        if not tag_line:
-            continue
-        split = tag_line.split("\t")
-        if len(split) != 2:
-            continue
-        possible_tag = split[1]
-        if possible_tag.endswith("^{}"):
-            possible_tag = possible_tag[:-3]
-        elif possible_tag in tags:
-            # If a tag already exists, it must be the annotated reference of an annotated tag.
-            # In that case we skip the tag as it does not point to the proper source commit.
-            # Note that this should only happen if the tags are received out of standard order.
-            continue
-        possible_tag = possible_tag.replace("refs/tags/", "")
-        if not possible_tag:
-            continue
-        tags[possible_tag] = split[0]
-
-    logger.debug("Found %s tags via ls-remote of %s", len(tags), repo)
-
-    return tags
 
 
 def prepare_repo(

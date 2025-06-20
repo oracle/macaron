@@ -32,6 +32,10 @@ class CloneError(MacaronError):
     """Happens when cannot clone a git repository."""
 
 
+class GitTagError(MacaronError):
+    """Happens when there is a Git tag related error."""
+
+
 class RepoCheckOutError(MacaronError):
     """Happens when there is an error when checking out the correct revision of a git repository."""
 
@@ -105,3 +109,7 @@ class HeuristicAnalyzerValueError(MacaronError):
 
 class LocalArtifactFinderError(MacaronError):
     """Happens when there is an error looking for local artifacts."""
+
+
+class SourceCodeError(MacaronError):
+    """Error for operations on package source code."""

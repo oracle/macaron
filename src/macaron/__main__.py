@@ -172,8 +172,8 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         analyzer_single_args.sbom_path,
         deps_depth,
         provenance_payload=prov_payload,
-        validate_malware=analyzer_single_args.validate_malware,
         verify_provenance=analyzer_single_args.verify_provenance,
+        force_analyze_source=analyzer_single_args.force_analyze_source,
     )
     sys.exit(status_code)
 
@@ -276,6 +276,8 @@ def perform_action(action_args: argparse.Namespace) -> None:
             try:
                 for git_service in GIT_SERVICES:
                     git_service.load_defaults()
+                for package_registry in PACKAGE_REGISTRIES:
+                    package_registry.load_defaults()
             except ConfigurationError as error:
                 logger.error(error)
                 sys.exit(os.EX_USAGE)
@@ -475,10 +477,10 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     single_analyze_parser.add_argument(
-        "--validate-malware",
+        "--force-analyze-source",
         required=False,
         action="store_true",
-        help=("Enable malware validation."),
+        help=("Forces PyPI sourcecode analysis to run regardless of other heuristic results."),
     )
 
     single_analyze_parser.add_argument(

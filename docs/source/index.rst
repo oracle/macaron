@@ -11,15 +11,11 @@
 Macaron documentation
 =====================
 
-Software supply-chain attacks are becoming more prevalent as the systems get more complex, particularly with respect to the use of open-source
-third-party code. Attacks include stealing credentials, tampering with the
-code, tampering with the code repository, and tampering with the build system.
-It is crucial to have guarantees that the third-party code we rely on is the
-code we expect.
+Macaron is an open-source software supply chain security tool from Oracle Labs to detect and prevent supply chain attacks across ecosystems like Python and Java. It automatically analyzes software packages (e.g., from PyPI or Maven Central) to detect malicious behavior and insecure DevOps practices. Macaron has reported over **225 malicious PyPI packages**, all confirmed and removed by the PyPI security team.
 
-To tackle these problems, `Supply-chain Levels for Software Artifacts (SLSA or "salsa") <https://slsa.dev>`_ is created to improve the integrity and
-protection of the software supply-chain. Macaron can analyze a software
-repository to determine its SLSA level and provide supply-chain transparency of the build process.
+Macaron follows the recommendations of the `SLSA (Supply chain Levels for Software Artifacts) <https://slsa.dev>`_ framework. It features a **flexible and extensible policy engine** that allows users to define and compose custom rules tailored to their CI/CD environments and security goals.
+
+It also supports **attestation verification**, **reproducible builds**, and **malicious artifact detection**, making it a valuable tool for securing the modern software supply chain.
 
 --------
 Overview
@@ -46,12 +42,12 @@ Current checks in Macaron
 The table below shows the current set of actionable checks derived from
 the requirements that are currently supported by Macaron.
 
-.. list-table:: Mapping SLSA requirements to Macaron checks
+.. list-table:: Macaron check descriptions
    :widths: 20 40 40
    :header-rows: 1
 
    * - Check ID
-     - SLSA requirement
+     - Summary
      - Concrete check
    * - ``mcn_build_tool_1``
      - **Build tool exists** - The source code repository includes configurations for a supported build tool used to produce the software component.
@@ -95,19 +91,12 @@ the requirements that are currently supported by Macaron.
    * - ``mcn_scm_authenticity_check_1``
      - **Source repo authenticity** - Check whether the claims of a source code repository made by a package can be corroborated.
      - If the source code repository contains conflicting evidence regarding its claim of the source code repository, this check will fail. If no source code repository or corroborating evidence is found, or if the build system is unsupported, the check will return ``UNKNOWN`` as the result. This check currently supports only Maven artifacts.
-
-****************************************************************************************
-Macaron checks that report integrity issues but do not map to SLSA requirements directly
-****************************************************************************************
-
-.. list-table::
-   :widths: 20 40
-   :header-rows: 1
-
-   * - Check ID
-     - Description
    * - ``mcn_detect_malicious_metadata_1``
-     - This check performs analysis on PyPI package metadata to detect malicious behavior. It also reports known malware from other ecosystems, but the analysis is currently limited to PyPI packages.
+     - **Malicious code detection** - Check whether the source code or package metadata has indicators of compromise.
+     - This check performs analysis on PyPI package metadata to detect malicious behavior. It also reports known malware from other ecosystems.
+   * - ``mcn_githubactions_vulnerabilities_1``
+     - **Detect vulnerable GitHub Actions** - Check whether the GitHub Actions called from the corresponding repo have known vulnerabilities.
+     - This check identifies third-party GitHub Actions used in a repository and reports any known vulnerabilities associated with the used versions.
 
 ----------------------
 How does Macaron work?
