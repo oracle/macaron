@@ -513,6 +513,13 @@ class Analyzer:
             artifact_hash = self.get_artifact_hash(parsed_purl, local_artifact_dirs, package_registries_info)
             if artifact_hash:
                 provenance_payload = self.get_github_attestation_payload(analyze_ctx, git_service, artifact_hash)
+                if provenance_payload:
+                    try:
+                        provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
+                            provenance_payload
+                        )
+                    except ProvenanceError as error:
+                        logger.debug("Failed to extract from provenance: %s", error)
 
         self._determine_package_registries(analyze_ctx, package_registries_info)
 
