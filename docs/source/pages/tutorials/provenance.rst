@@ -9,6 +9,8 @@ This tutorial demonstrates how Macaron can automatically retrieve provenance for
 
 Currently, Macaron supports discovery of attestation for: npm artifacts using features provided by `npm <https://npmjs.com/>`_; PyPI artifacts using features provided by `Open Source Insights <https://deps.dev/>`_; and artifacts that have been published attestations to `GitHub <https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-attestations>`_. This tutorial uses two example packages to demonstrate these three discovery methods: The `semver <https://www.npmjs.com/package/semver>`_ npm package, and the `toga <https://pypi.org/pypi/toga>`_ PyPI package.
 
+.. contents:: :local:
+
 ******************************
 Installation and Prerequisites
 ******************************
