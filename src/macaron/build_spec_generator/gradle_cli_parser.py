@@ -47,10 +47,7 @@ class GradleOptionalFlag(Option[bool]):
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[bool]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
-        if patch is None or isinstance(patch, bool):
-            return True
-
-        return False
+        return isinstance(patch, bool)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
@@ -73,7 +70,7 @@ class GradleOptionalFlag(Option[bool]):
 
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
-        return "bool | None"
+        return "bool"
 
 
 @dataclass
