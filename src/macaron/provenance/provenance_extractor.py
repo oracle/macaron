@@ -159,7 +159,7 @@ def _extract_from_slsa_v1(payload: InTotoV1Payload) -> tuple[str | None, str | N
         repo = json_extract(predicate, ["buildDefinition", "externalParameters", "sourceToBuild", "repository"], str)
         if not repo:
             repo = json_extract(predicate, ["buildDefinition", "externalParameters", "configSource", "repository"], str)
-    elif isinstance(build_def, SLSAGithubActionsBuildDefinitionV1):
+    elif isinstance(build_def, (SLSAGithubActionsBuildDefinitionV1, GitHubActionsBuildDefinition)):
         repo = json_extract(predicate, ["buildDefinition", "externalParameters", "workflow", "repository"], str)
     elif isinstance(build_def, SLSAOCIBuildDefinitionV1):
         repo = json_extract(predicate, ["buildDefinition", "externalParameters", "source"], str)
@@ -684,6 +684,43 @@ class PyPICertificateDefinition(ProvenanceBuildDefinition):
         return gha_workflow, invocation_url
 
 
+class GitHubActionsBuildDefinition(ProvenanceBuildDefinition):
+    """Class representing the GitHub Actions Build Definition (v1).
+
+    This class implements the abstract methods defined in `ProvenanceBuildDefinition`
+    to extract build invocation details specific to the GitHub actions attestation build type.
+    """
+
+    #: Determines the expected ``buildType`` field in the provenance predicate.
+    expected_build_type = "https://actions.github.io/buildtypes/workflow/v1"
+
+    def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
+        """Retrieve the build invocation information from the given statement.
+
+        Parameters
+        ----------
+        statement : InTotoV1Statement | InTotoV01Statement
+            The provenance statement from which to extract the build invocation
+            details. This statement contains the metadata about the build process
+            and its associated artifacts.
+
+        Returns
+        -------
+        tuple[str | None, str | None]
+            A tuple containing two elements:
+            - The first element is the build invocation entry point (e.g., workflow name), or None if not found.
+            - The second element is the invocation URL or identifier (e.g., job URL), or None if not found.
+        """
+        if statement["predicate"] is None:
+            return None, None
+
+        gha_workflow = json_extract(
+            statement["predicate"], ["buildDefinition", "externalParameters", "workflow", "path"], str
+        )
+        invocation_url = json_extract(statement["predicate"], ["runDetails", "metadata", "invocationId"], str)
+        return gha_workflow, invocation_url
+
+
 class ProvenancePredicate:
     """Class providing utility methods for handling provenance predicates.
 
@@ -750,6 +787,7 @@ class ProvenancePredicate:
             SLSAOCIBuildDefinitionV1(),
             WitnessGitLabBuildDefinitionV01(),
             PyPICertificateDefinition(),
+            GitHubActionsBuildDefinition(),
         ]
 
         for build_def in build_defs:
