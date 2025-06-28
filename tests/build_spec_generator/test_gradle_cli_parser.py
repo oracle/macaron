@@ -5,7 +5,7 @@
 
 import pytest
 
-from macaron.build_spec_generator.gradle_cli_parser import GradleCLICommandParser
+from macaron.build_spec_generator.cli_command_parser.gradle_cli_parser import GradleCLICommandParser
 from macaron.errors import CommandLineParseError
 
 

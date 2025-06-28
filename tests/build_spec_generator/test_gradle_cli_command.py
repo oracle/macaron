@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 
-from macaron.build_spec_generator.gradle_cli_command import GradleCLIOptions
-from macaron.build_spec_generator.gradle_cli_parser import GradleCLICommandParser
+from macaron.build_spec_generator.cli_command_parser.gradle_cli_command import GradleCLIOptions
+from macaron.build_spec_generator.cli_command_parser.gradle_cli_parser import GradleCLICommandParser
 
 
 @pytest.mark.parametrize(
@@ -123,7 +123,7 @@ def test_to_cmd_goals(gradle_cli_parser: GradleCLICommandParser, command: str) -
     gradle_cli_command = gradle_cli_parser.parse(command.split())
 
     print_command_with_tasks = [gradle_cli_command.executable]
-    print_command_with_tasks.extend(gradle_cli_command.options.to_cmd_tasks())
+    print_command_with_tasks.extend(gradle_cli_command.options.to_option_cmds())
 
     gradle_cli_command_second = gradle_cli_parser.parse(print_command_with_tasks)
     assert gradle_cli_command == gradle_cli_command_second

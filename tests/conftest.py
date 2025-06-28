@@ -11,8 +11,8 @@ import pytest
 from pytest_httpserver import HTTPServer
 
 import macaron
-from macaron.build_spec_generator.gradle_cli_parser import GradleCLICommandParser
-from macaron.build_spec_generator.maven_cli_parser import MavenCLICommandParser
+from macaron.build_spec_generator.cli_command_parser.gradle_cli_parser import GradleCLICommandParser
+from macaron.build_spec_generator.cli_command_parser.maven_cli_parser import MavenCLICommandParser
 from macaron.code_analyzer.call_graph import BaseNode, CallGraph
 from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.database.table_definitions import Analysis, Component, RepoFinderMetadata, Repository

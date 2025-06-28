@@ -185,16 +185,8 @@ class MavenCLIOptions:
         """
         return input_val.split(",")
 
-    def to_cmd_goals(self) -> list[str]:
-        """Return the goals/phases and options as a list of string.
-
-        Only enabled options are returned.
-
-        Returns
-        -------
-        list[str]
-            The goals/phases and options.
-        """
+    def to_option_cmds(self) -> list[str]:
+        """Return the options as a list of strings."""
         result = self.to_cmd_no_goals()
         if self.goals:
             for goal in self.goals:
@@ -323,3 +315,10 @@ class MavenCLICommand:
 
     executable: str
     options: MavenCLIOptions
+
+    def to_cmds(self) -> list[str]:
+        """Return the CLI Command as a list of strings."""
+        result = []
+        result.append(self.executable)
+        result.extend(self.options.to_option_cmds())
+        return result

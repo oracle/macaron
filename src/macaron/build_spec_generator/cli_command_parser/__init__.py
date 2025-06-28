@@ -1,15 +1,14 @@
 # Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module contain the base class for all cli options."""
+"""This module contain the base classes cli command parsers related."""
 
 import argparse
 from abc import abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Generic, TypeGuard, TypeVar
-
-T = TypeVar("T")
+from enum import Enum
+from typing import Any, Generic, Protocol, TypeGuard, TypeVar
 
 
 def is_list_of_strs(value: Any) -> TypeGuard[list[str]]:
@@ -63,10 +62,14 @@ def patch_mapping(
     return patch_result
 
 
-@dataclass
-class Option(Generic[T]):
-    """This class represent a type of option for the CLI command.
+P = TypeVar("P")
 
+
+@dataclass
+class OptionDef(Generic[P]):
+    """This class represent a definition of a CLI option for argparse.ArgumentParser.
+
+    This class also contains the information for validating a patch value.
     The generic type T is the patch expected type (if it's not None).
     """
 
@@ -75,7 +78,7 @@ class Option(Generic[T]):
     long_name: str
 
     @abstractmethod
-    def is_valid_patch_option(self, patch: Any) -> TypeGuard[T]:
+    def is_valid_patch_option(self, patch: Any) -> TypeGuard[P]:
         """Return True if the provide patch value is compatible with the internal type of this option."""
         raise NotImplementedError()
 
@@ -88,3 +91,75 @@ class Option(Generic[T]):
     def get_patch_type_str(self) -> str:
         """Return the expected type for the patch value as string."""
         raise NotImplementedError()
+
+
+class PatchCommandBuildTool(str, Enum):
+    """Build tool supported for CLICommand patching."""
+
+    MAVEN = "maven"
+    GRADLE = "gradle"
+
+
+class CLIOptions(Protocol):
+    """Interface of the options part of a CLICommand."""
+
+    def to_option_cmds(self) -> list[str]:
+        """Return the options as a list of strings."""
+
+
+class CLICommand(Protocol):
+    """Interface of a CLI Command."""
+
+    def to_cmds(self) -> list[str]:
+        """Return the CLI Command as a list of strings."""
+
+
+T = TypeVar("T", bound="CLICommand")
+Y_contra = TypeVar("Y_contra", contravariant=True)
+
+
+class CLICommandParser(Protocol[T, Y_contra]):
+    """Interface of a CLI Command Parser."""
+
+    @property
+    def build_tool(self) -> PatchCommandBuildTool:
+        """Return the ``BuildTool`` enum corresponding to this CLICommand."""
+
+    def parse(self, cmd_list: list[str]) -> CLICommand:
+        """Parse the CLI Command.
+
+        Parameters
+        ----------
+        cmd_list: list[str]
+            The CLI Command as list of strings.
+
+        Returns
+        -------
+        CLICommand
+            The CLICommand instance.
+
+        Raises
+        ------
+        CommandLineParseError
+            If an error happens when parsing the CLI Command.
+        """
+
+    def is_build_tool(self, executable_path: str) -> bool:
+        """Return True if ``executable_path`` ends the accepted executable for this build tool.
+
+        Parameters
+        ----------
+        executable_path: str
+            The executable component of a CLI command.
+
+        Returns
+        -------
+        bool
+        """
+
+    def apply_patch(
+        self,
+        cli_command: T,
+        options_patch: Mapping[str, Y_contra | None],
+    ) -> T:
+        """Return the a new CLICommand object with its option patched, while persisting the executable path."""

@@ -11,13 +11,14 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any, TypeGuard
 
-from macaron.build_spec_generator.base_cli_option import (
-    Option,
+from macaron.build_spec_generator.cli_command_parser import (
+    OptionDef,
+    PatchCommandBuildTool,
     is_dict_of_str_to_str_or_none,
     is_list_of_strs,
     patch_mapping,
 )
-from macaron.build_spec_generator.maven_cli_command import MavenCLICommand, MavenCLIOptions
+from macaron.build_spec_generator.cli_command_parser.maven_cli_command import MavenCLICommand, MavenCLIOptions
 from macaron.errors import CommandLineParseError, PatchBuildCommandError
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ MavenOptionPatchValueType = str | list[str] | bool | dict[str, str | None]
 
 
 @dataclass
-class MavenOptionalFlag(Option[bool]):
+class MavenOptionalFlag(OptionDef[bool]):
     """This option represents an optional flag in Maven CLI command.
 
     For example: --debug/-X
@@ -65,7 +66,7 @@ class MavenOptionalFlag(Option[bool]):
 
 
 @dataclass
-class MavenSingleValue(Option[str]):
+class MavenSingleValue(OptionDef[str]):
     """This option represents an option that takes a value in Maven CLI command.
 
     For example: "--settings ./path/to/pom.xml"
@@ -91,7 +92,7 @@ class MavenSingleValue(Option[str]):
 
 
 @dataclass
-class MavenCommaDelimList(Option[list[str]]):
+class MavenCommaDelimList(OptionDef[list[str]]):
     """This option represents an option that takes a comma delimited value in Maven CLI command.
 
     This option can be defined one time only and the value is stored as a string in argparse.
@@ -122,7 +123,7 @@ class MavenCommaDelimList(Option[list[str]]):
 
 
 @dataclass
-class MavenSystemPropeties(Option[dict[str, str | None]]):
+class MavenSystemPropeties(OptionDef[dict[str, str | None]]):
     """This option represents the -D/--define option of a Maven CLI command.
 
     This option can be defined multiple times and the values are appended into a list of string in argparse.
@@ -153,7 +154,7 @@ class MavenSystemPropeties(Option[dict[str, str | None]]):
 
 
 @dataclass
-class MavenGoalPhase(Option[list[str]]):
+class MavenGoalPhase(OptionDef[list[str]]):
     """This option represents the positional goal/plugin-phase option in Maven CLI command.
 
     argparse.Namespace stores this as a list of string. This is stored internally as a list of string.
@@ -177,7 +178,7 @@ class MavenGoalPhase(Option[list[str]]):
 
 
 # We intend to support Maven version 3.6.3 - 3.9
-MAVEN_OPTION_DEF: list[Option] = [
+MAVEN_OPTION_DEF: list[OptionDef] = [
     MavenOptionalFlag(
         short_name="-am",
         long_name="--also-make",
@@ -360,12 +361,28 @@ class MavenCLICommandParser:
         )
 
         # A mapping between the long name to its option definition.
-        self.option_defs: dict[str, Option] = {}
+        self.option_defs: dict[str, OptionDef] = {}
 
         for opt_def in MAVEN_OPTION_DEF:
             opt_def.add_itself_to_arg_parser(self.arg_parser)
 
             self.option_defs[opt_def.long_name] = opt_def
+
+        self.build_tool = PatchCommandBuildTool.MAVEN
+
+    def is_build_tool(self, executable_path: str) -> bool:
+        """Return True if ``executable_path`` ends the accepted executable for this build tool.
+
+        Parameters
+        ----------
+        executable_path: str
+            The executable component of a CLI command.
+
+        Returns
+        -------
+        bool
+        """
+        return os.path.basename(executable_path) in MavenCLICommandParser.ACCEPTABLE_EXECUTABLE
 
     def validate_patch(self, patch: Mapping[str, MavenOptionPatchValueType | None]) -> bool:
         """Return True if the patch conforms to the expected format."""
@@ -464,6 +481,59 @@ class MavenCLICommandParser:
             patch=patch_value,
         )
 
+    def apply_patch(
+        self,
+        cli_command: MavenCLICommand,
+        options_patch: Mapping[str, MavenOptionPatchValueType | None],
+    ) -> MavenCLICommand:
+        """Patch the options of a Gradle CLI command, while persisting the executable path.
+
+        `options_patch` is a mapping with:
+
+        - **Key**: the long name of a Maven CLI option as a string. For example: ``--define``, ``--settings``.
+          For patching goals or plugin phases, use the key `goals` with value being a list of string.
+
+        - **Value**: The value to patch. The type of this value depends on the type of option you want to
+          patch.
+
+        The types of patch values:
+
+        - For optional flag (e.g ``-X/--debug``) it is boolean. True to set it and False to unset it.
+
+        - For ``-D/--define`` ONLY, it will be a mapping between the system property name and its value.
+
+        - For options that expects a comma delimited list of string (e.g. ``-P/--activate-profiles``
+          and ``-pl/--projects``), a list of string is expected.
+
+        - For other value option (e.g ``-s/--settings``), a string is expected.
+
+        None can be provided to any type of option to remove it from the original build command.
+
+        Parameters
+        ----------
+        cli_command : MavenCLICommand
+            The original Maven command, as a ``MavenCLICommand`` object from ``MavenCLICommand.parse(...)``
+        patch_options : Mapping[str, MavenOptionPatchValueType | None]
+            The patch values.
+
+        Returns
+        -------
+        MavenCLICommand
+            The patched command as a new ``MavenCLICommand`` object.
+
+        Raises
+        ------
+        PatchBuildCommandError
+            If an error happens during the patching process.
+        """
+        return MavenCLICommand(
+            executable=cli_command.executable,
+            options=self.apply_option_patch(
+                cli_command.options,
+                patch=options_patch,
+            ),
+        )
+
     def apply_option_patch(
         self,
         maven_cli_options: MavenCLIOptions,
@@ -475,7 +545,7 @@ class MavenCLICommandParser:
         ----------
         maven_cli_options: MavenCLIOptions
             The Maven CLI Options to patch.
-        patch: Mapping[str, MavenOptionPatchValueType | None]
+        patch: Mapping[str, PatchValueType | None]
             A mapping between the name of the attribute in MavenCLIOptions and its patch value.
             The value can be None to disable an option.
 

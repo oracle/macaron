@@ -7,8 +7,8 @@ from typing import Any
 
 import pytest
 
-from macaron.build_spec_generator.maven_cli_command import MavenCLIOptions
-from macaron.build_spec_generator.maven_cli_parser import MavenCLICommandParser
+from macaron.build_spec_generator.cli_command_parser.maven_cli_command import MavenCLIOptions
+from macaron.build_spec_generator.cli_command_parser.maven_cli_parser import MavenCLICommandParser
 
 
 @pytest.mark.parametrize(
@@ -108,7 +108,7 @@ def test_to_cmd_goals(maven_cli_parser: MavenCLICommandParser, command: str) -> 
     maven_cli_command = maven_cli_parser.parse(command.split())
 
     print_command_with_goals = [maven_cli_command.executable]
-    print_command_with_goals.extend(maven_cli_command.options.to_cmd_goals())
+    print_command_with_goals.extend(maven_cli_command.options.to_option_cmds())
 
     maven_cli_command_second = maven_cli_parser.parse(print_command_with_goals)
     assert maven_cli_command == maven_cli_command_second

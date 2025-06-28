@@ -8,7 +8,11 @@ from typing import Any
 
 import pytest
 
-from macaron.build_spec_generator.base_cli_option import is_dict_of_str_to_str_or_none, is_list_of_strs, patch_mapping
+from macaron.build_spec_generator.cli_command_parser import (
+    is_dict_of_str_to_str_or_none,
+    is_list_of_strs,
+    patch_mapping,
+)
 
 
 @pytest.mark.parametrize(

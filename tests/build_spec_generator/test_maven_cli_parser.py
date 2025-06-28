@@ -6,7 +6,7 @@
 
 import pytest
 
-from macaron.build_spec_generator.maven_cli_parser import (
+from macaron.build_spec_generator.cli_command_parser.maven_cli_parser import (
     CommandLineParseError,
     MavenCLICommandParser,
 )

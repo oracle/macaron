@@ -11,13 +11,14 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any, TypeGuard
 
-from macaron.build_spec_generator.base_cli_option import (
-    Option,
+from macaron.build_spec_generator.cli_command_parser import (
+    OptionDef,
+    PatchCommandBuildTool,
     is_dict_of_str_to_str_or_none,
     is_list_of_strs,
     patch_mapping,
 )
-from macaron.build_spec_generator.gradle_cli_command import GradleCLICommand, GradleCLIOptions
+from macaron.build_spec_generator.cli_command_parser.gradle_cli_command import GradleCLICommand, GradleCLIOptions
 from macaron.errors import CommandLineParseError, PatchBuildCommandError
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ GradleOptionPatchValueType = str | list[str] | bool | dict[str, str]
 
 
 @dataclass
-class GradleOptionalFlag(Option[bool]):
+class GradleOptionalFlag(OptionDef[bool]):
     """This option represents an optional flag in Gradle CLI command.
 
     For example:
@@ -74,7 +75,7 @@ class GradleOptionalFlag(Option[bool]):
 
 
 @dataclass
-class GradleOptionalNegateableFlag(Option[bool]):
+class GradleOptionalNegateableFlag(OptionDef[bool]):
     """This option represents an optional negateable flag in Gradle CLI command.
 
     For example: --build-cache/--no-build-cache
@@ -117,7 +118,7 @@ class GradleOptionalNegateableFlag(Option[bool]):
 
 
 @dataclass
-class GradleSingleValue(Option[str]):
+class GradleSingleValue(OptionDef[str]):
     """This option represents an option that takes a value in Grale CLI command."""
 
     short_name: str | None
@@ -143,7 +144,7 @@ class GradleSingleValue(Option[str]):
 
 
 @dataclass
-class GradlePropeties(Option[dict[str, str | None]]):
+class GradlePropeties(OptionDef[dict[str, str | None]]):
     """This option represents an option used to define properties values of a Gradle CLI command.
 
     This option can be defined multiple times and the values are appended into a list of string in argparse.
@@ -173,7 +174,7 @@ class GradlePropeties(Option[dict[str, str | None]]):
 
 
 @dataclass
-class GradleTask(Option[list[str]]):
+class GradleTask(OptionDef[list[str]]):
     """This option represents the positional task option in Maven CLI command.
 
     argparse.Namespace stores this as a list of string. This is stored internally as a list of string.
@@ -197,7 +198,7 @@ class GradleTask(Option[list[str]]):
 
 
 @dataclass
-class GradleAppendedList(Option[list[str]]):
+class GradleAppendedList(OptionDef[list[str]]):
     """This option represents an option that can be specify multiple times and they all appended to a list.
 
     For example, one can exclude multiple tasks with
@@ -225,7 +226,7 @@ class GradleAppendedList(Option[list[str]]):
 # TODO: some value option only allows you to provide certain values
 # For example: --console allows "plain", "auto", "rich" or "verbose".
 # They are right now not enforced. We need to think whether we want to enforce them.
-GRADLE_OPTION_DEF: list[Option] = [
+GRADLE_OPTION_DEF: list[OptionDef] = [
     GradleOptionalFlag(
         short_names=["-?", "-h"],
         long_name="--help",
@@ -459,12 +460,28 @@ class GradleCLICommandParser:
         )
 
         # A mapping between the long name to its option definition.
-        self.option_defs: dict[str, Option] = {}
+        self.option_defs: dict[str, OptionDef] = {}
 
         for opt_def in GRADLE_OPTION_DEF:
             opt_def.add_itself_to_arg_parser(self.arg_parser)
 
             self.option_defs[opt_def.long_name] = opt_def
+
+        self.build_tool = PatchCommandBuildTool.GRADLE
+
+    def is_build_tool(self, executable_path: str) -> bool:
+        """Return True if ``executable_path`` ends the accepted executable for this build tool.
+
+        Parameters
+        ----------
+        executable_path: str
+            The executable component of a CLI command.
+
+        Returns
+        -------
+        bool
+        """
+        return os.path.basename(executable_path) in GradleCLICommandParser.ACCEPTABLE_EXECUTABLE
 
     def validate_patch(self, patch: Mapping[str, GradleOptionPatchValueType | None]) -> bool:
         """Return True if the patch conforms to the expected format."""
@@ -488,7 +505,7 @@ class GradleCLICommandParser:
 
         return True
 
-    def parse(self, cmd_list: list[str]) -> "GradleCLICommand":
+    def parse(self, cmd_list: list[str]) -> GradleCLICommand:
         """Parse the Gradle CLI Command.
 
         Parameters
@@ -555,6 +572,65 @@ class GradleCLICommandParser:
         return patch_mapping(
             original=original_props,
             patch=patch_value,
+        )
+
+    def apply_patch(
+        self,
+        cli_command: GradleCLICommand,
+        options_patch: Mapping[str, GradleOptionPatchValueType | None],
+    ) -> GradleCLICommand:
+        """Patch the options of a Gradle CLI command, while persisting the executable path.
+
+        `options_patch` is a mapping with:
+
+        - **Key**: the long name of an Gradle CLI option as string. For example: ``--continue``, ``--build-cache``.
+          For patching tasks, use the key ``tasks``.
+
+        - **Value**: The value to patch for an option referred to by the key. The type of this value
+          depends on the type of option you want to patch. Please see the details below.
+
+        The types of patch values:
+
+        - For optional flag (e.g ``-d/--debug``) that doesn't take in a value, it is boolean. True if you want to
+          set it, and False if you want to unset it.
+
+        - For ``-D/--system-prop`` and ``-P/--project-prop`` ONLY, it is a a mapping between the property name
+          and its value. A value of type None can be provided to "unset" the property.
+
+        - For ``-x/--exclude-task`` option, a list of string is required.
+
+        - For options that have a negated form (e.g. ``--build-cache/--no-build-cache``), the key must be the normal
+          long name (``--build-cache``) and the value is of type boolean. True if you want to set ``--build-cache``
+          and False if you want to set ``--no-build-cache``.
+
+        - For other option that expects a value (e.g `-c/--setting-file <path/to/settings/file>``), a string is
+          expected.
+
+        None can be provided to ANY type of option to forcefully remove it from the original build command.
+
+        Parameters
+        ----------
+        cli_command : GradleCLICommand
+            The original Gradle command, as a ``GradleCLICommand`` object from ``GradleCLICommandParser.parse(...)``
+        patch_options : Mapping[str, GradleOptionPatchValueType | None]
+            The patch values.
+
+        Returns
+        -------
+        GradleCLICommand
+            The patched command as a new ``GradleCLICommand`` object.
+
+        Raises
+        ------
+        PatchBuildCommandError
+            If an error happens during the patching process.
+        """
+        return GradleCLICommand(
+            executable=cli_command.executable,
+            options=self.apply_option_patch(
+                cli_command.options,
+                patch=options_patch,
+            ),
         )
 
     def apply_option_patch(

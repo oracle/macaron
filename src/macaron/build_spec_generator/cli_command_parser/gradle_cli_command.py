@@ -173,16 +173,8 @@ class GradleCLIOptions:
 
         return system_props
 
-    def to_cmd_tasks(self) -> list[str]:
-        """Return the tasks and options as a list of string.
-
-        Only enabled options are returned.
-
-        Returns
-        -------
-        list[str]
-            The tasks and options.
-        """
+    def to_option_cmds(self) -> list[str]:
+        """Return the options as a list of strings."""
         result = self.to_cmd_no_tasks()
         if self.tasks:
             for task in self.tasks:
@@ -387,3 +379,10 @@ class GradleCLICommand:
 
     executable: str
     options: GradleCLIOptions
+
+    def to_cmds(self) -> list[str]:
+        """Return the CLI Command as a list of strings."""
+        result = []
+        result.append(self.executable)
+        result.extend(self.options.to_option_cmds())
+        return result
