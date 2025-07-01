@@ -16,6 +16,7 @@ from sqlalchemy.exc import MultipleResultsFound, SQLAlchemyError
 from sqlalchemy.orm import Session, aliased
 
 from macaron.database.table_definitions import Analysis, CheckFacts, Component, MappedCheckResult, Repository
+from macaron.errors import QueryMacaronDatabaseError
 from macaron.slsa_analyzer.checks.build_as_code_check import BuildAsCodeFacts
 from macaron.slsa_analyzer.checks.build_script_check import BuildScriptFacts
 from macaron.slsa_analyzer.checks.build_service_check import BuildServiceFacts
@@ -26,16 +27,12 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 @dataclass
 class GenericBuildCommandInfo:
-    """Contains the build commandi information extracted from build related check facts."""
+    """Contains the build command information extracted from build related check facts."""
 
     command: list[str]
     language: str
     language_versions: list[str]
     build_tool_name: str
-
-
-class QueryMacaronDatabaseError(Exception):
-    """Happens when there is an unexpected error while querying the database using SQLAlchemy."""
 
 
 T = TypeVar("T")
@@ -560,12 +557,15 @@ def extract_generic_build_command_info(
     """Return the list of GenericBuildCommandInfo instances from a list of Build related Check Facts.
 
     The following information are captured for each Check Facts
-    - `command`: the build command, but this information is located in different attribute depending on the
-    type of Build Check Fact (e.g. in `BuildAsCodeFacts` it is stored in `deploy_command`). It's stored
-    in the database as a serialized JSON object so we need to use json.loads to turn it into a list of strings.
-    - `language` and `build_tool_name` are attributes of all Build Check Fact instances
-    - `language_versions` is an attribute of all Build Check Fact instances. It's stored
-    in the database as a serialized JSON object so we need to use json.loads to turn it into a list of strings.
+
+    - ``command``: the build command, but this information is located in different attribute depending on the
+      type of Build Check Fact (e.g. in `BuildAsCodeFacts` it is stored in `deploy_command`). It's stored
+      in the database as a serialized JSON object so we need to use json.loads to turn it into a list of strings.
+
+    - ``language`` and ``build_tool_name`` are attributes of all Build Check Fact instances
+
+    - ``language_versions`` is an attribute of all Build Check Fact instances. It's stored
+      in the database as a serialized JSON object so we need to use json.loads to turn it into a list of strings.
 
     Parameters
     ----------

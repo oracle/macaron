@@ -121,3 +121,10 @@ class CommandLineParseError(Exception):
 
 class PatchBuildCommandError(Exception):
     """Raised if an error is encountered while patching a Maven CLI Command."""
+
+
+class QueryMacaronDatabaseError(Exception):
+    """Happens when there is an unexpected error while querying the database using SQLAlchemy."""
+
+class GenerateBuildSpecError(Exception):
+    """Happens when there is an unexpected error while generate the build spec file."""

@@ -278,6 +278,8 @@ def find_jdk_version_from_central_maven_repo(
 
     The artifacts will be downloaded from https://repo1.maven.org/maven2/ for JDK version extraction.
 
+    We now only support JAR files.
+
     Parameters
     ----------
     group_id: str

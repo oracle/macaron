@@ -14,7 +14,10 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from packageurl import PackageURL
 
 import macaron
-from macaron.build_spec_generator.build_spec_generator import BuildSpecFormat, gen_rc_build_spec_from_database
+from macaron.build_spec_generator.build_spec_generator import (
+    BuildSpecFormat,
+    gen_build_spec_str,
+)
 from macaron.config.defaults import create_defaults, load_defaults
 from macaron.config.global_config import global_config
 from macaron.errors import ConfigurationError
@@ -249,28 +252,49 @@ def gen_build_spec(gen_build_spec_args: argparse.Namespace) -> int:
         logger.critical("The database file does not exist.")
         return os.EX_OSFILE
 
-    if gen_build_spec_args.dry:
-        print("Printing out SLQ queries without actually performing it.")
-        # WIP
-
     output_format = gen_build_spec_args.output_format
-    match output_format:
-        case BuildSpecFormat.REPRODUCIBLE_CENTRAL:
-            build_spec_content = gen_rc_build_spec_from_database(
-                purl_string=gen_build_spec_args.package_url,
-                database_path=gen_build_spec_args.database,
+
+    try:
+        build_spec_format = BuildSpecFormat(output_format)
+    except ValueError:
+        logger.error("The output format %s is not supported.", output_format)
+        return os.EX_USAGE
+
+    try:
+        purl = PackageURL.from_string(gen_build_spec_args.package_url)
+    except ValueError as error:
+        logger.error("Cannot parse purl %s. Error %s.", gen_build_spec_args.package_url, error)
+        return os.EX_USAGE
+
+    build_spec_content = gen_build_spec_str(
+        purl=purl,
+        database_path=gen_build_spec_args.database,
+        build_spec_format=build_spec_format,
+    )
+
+    if not build_spec_content:
+        logger.error("Error while generate reproducible central build spec.")
+        return os.EX_DATAERR
+
+    logger.debug(build_spec_content)
+    build_spec_filepath = os.path.join(global_config.output_path, "macaron.buildspec")
+    try:
+        with open(build_spec_filepath, mode="w", encoding="utf-8") as file:
+            logger.info(
+                "Generating the %s format build spec to %s.",
+                build_spec_format.value,
+                os.path.relpath(build_spec_filepath, os.getcwd()),
             )
+            file.write(build_spec_content)
+    except OSError as error:
+        logger.error(
+            "Could not generate the Buildspec to %s. Error: %s",
+            os.path.relpath(build_spec_filepath, os.getcwd()),
+            error,
+        )
+        return os.EX_DATAERR
 
-            if not build_spec_content:
-                return os.EX_DATAERR
-
-            # Writing to output file here.
-            # Remember to print the path to that file as log message, similar to VSA generation.
-
-            return os.EX_OK
-        case _:
-            logger.error("The output format %s is not supported", output_format)
-            return os.EX_USAGE
+    return os.EX_OK
 
 
 def find_source(find_args: argparse.Namespace) -> int:
@@ -578,15 +602,6 @@ def main(argv: list[str] | None = None) -> None:
         "--database",
         help="Path to the database.",
         required=True,
-    )
-
-    gen_build_spec_parser.add_argument(
-        "--dry",
-        action="store_true",
-        help=(
-            "Run the gen-build-spec command in dry mode, which only shows the SQL queries that we "
-            "are going to use, one by one."
-        ),
     )
 
     gen_build_spec_parser.add_argument(
