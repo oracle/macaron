@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module analyzes GitHub Actions CI."""
@@ -18,6 +18,7 @@ from macaron.parsers.bashparser import BashNode, BashScriptType
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
+    DockerNode,
     GitHubJobNode,
     GitHubWorkflowNode,
     GitHubWorkflowType,
@@ -706,3 +707,50 @@ class GitHubActions(BaseCIService):
             The list of third-party CI configuration files
         """
         return self.third_party_configurations
+
+    def get_docker_build_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
+        """Traverse the callgraph and find all Docker RUN commands that use build tools.
+
+        Parameters
+        ----------
+        callgraph: CallGraph
+            The callgraph reachable from the CI workflows.
+        build_tool: BaseBuildTool
+            The corresponding build tool for which shell commands need to be detected.
+
+        Yields
+        ------
+        BuildToolCommand
+            The object that contains the build command from Dockerfile RUN instructions.
+        """
+        for node in callgraph.bfs():
+            # Look for DockerNode instances
+            if isinstance(node, DockerNode) and hasattr(node, "dockerfile_path"):
+                dockerfile_path = node.dockerfile_path
+
+                # Find the parent workflow for context
+                workflow_node = None
+                parent = node.caller
+                while parent:
+                    if isinstance(parent, GitHubWorkflowNode):
+                        workflow_node = parent
+                        break
+                    parent = parent.caller if hasattr(parent, "caller") else None
+
+                # Check all BashNode children of this DockerNode
+                for child in node.callee:
+                    if isinstance(child, BashNode):
+                        # Check each command in the bash node
+                        for cmd in child.parsed_bash_obj.get("commands", []):
+                            if build_tool.is_build_command(cmd):
+                                yield BuildToolCommand(
+                                    ci_path=dockerfile_path,
+                                    command=cmd,
+                                    step_node=child,
+                                    language=build_tool.language,
+                                    language_versions=None,
+                                    language_distributions=None,
+                                    language_url=None,
+                                    reachable_secrets=[],
+                                    events=get_ci_events(workflow_node) if workflow_node else [],
+                                )

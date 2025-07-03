@@ -280,6 +280,24 @@ class BaseCIService:
         """
         return []
 
+    def get_docker_build_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
+        """
+        Traverse the callgraph and find all the reachable Docker build commands.
+
+        Parameters
+        ----------
+        callgraph: CallGraph
+            The callgraph reachable from the CI workflows.
+
+        Yields
+        ------
+        BuildToolCommand
+            The object that contains the Docker build command as well useful contextual information.
+        """
+        # By default we assume that there is no Docker build command available for a CI service.
+        # Each CI service should override this method if a Docker build command is generated for it.
+        raise CallGraphError("There is no Docker build command for this CI service.")
+
 
 class NoneCIService(BaseCIService):
     """This class can be used to initialize an empty CI service."""
