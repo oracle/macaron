@@ -32,6 +32,46 @@ class BuildSpecFormat(str, Enum):
     REPRODUCIBLE_CENTRAL = "rc-buildspec"
 
 
+CLI_COMMAND_PATCHES: dict[
+    PatchCommandBuildTool,
+    Mapping[str, PatchValueType | None],
+] = {
+    PatchCommandBuildTool.MAVEN: {
+        "goals": ["clean", "package"],
+        "--batch-mode": False,
+        "--quiet": False,
+        "--no-transfer-progress": False,
+        # Example pkg:maven/io.liftwizard/liftwizard-servlet-logging-mdc@1.0.1
+        # https://github.com/liftwizard/liftwizard/blob/
+        # 4ea841ffc9335b22a28a7a19f9156e8ba5820027/.github/workflows/build-and-test.yml#L23
+        "--threads": None,
+        # For cases such as
+        # pkg:maven/org.apache.isis.valuetypes/isis-valuetypes-prism-resources@2.0.0-M7
+        "--version": False,
+        "--define": {
+            # pkg:maven/org.owasp/dependency-check-utils@7.3.2
+            # To remove "-Dgpg.passphrase=$MACARON_UNKNOWN"
+            "gpg.passphrase": None,
+            "skipTests": "true",
+            "maven.test.skip": "true",
+            "maven.site.skip": "true",
+            "rat.skip": "true",
+            "maven.javadoc.skip": "true",
+        },
+    },
+    PatchCommandBuildTool.GRADLE: {
+        "tasks": ["clean", "assemble"],
+        "--console": "plain",
+        "--exclude-task": ["test"],
+        "--project-prop": {
+            "skip.signing": "",
+            "skipSigning": "",
+            "gnupg.skip": "",
+        },
+    },
+}
+
+
 def gen_build_spec_str(
     purl: PackageURL,
     database_path: str,
@@ -69,18 +109,12 @@ def gen_build_spec_str(
             )
             return None
 
-        # TODO: update this later.
-        patches: Mapping[
-            PatchCommandBuildTool,
-            Mapping[str, PatchValueType | None],
-        ] = {}
-
         match build_spec_format:
             case BuildSpecFormat.REPRODUCIBLE_CENTRAL:
                 build_spec_content = gen_reproducible_central_build_spec(
                     build_info=internal_build_info,
                     # TODO: update this later
-                    patches=patches,
+                    patches=CLI_COMMAND_PATCHES,
                 )
 
                 return build_spec_content

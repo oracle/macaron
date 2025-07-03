@@ -24,7 +24,7 @@ from macaron.errors import CommandLineParseError, PatchBuildCommandError
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-GradleOptionPatchValueType = str | list[str] | bool | dict[str, str]
+GradleOptionPatchValueType = str | list[str] | bool | dict[str, str | None]
 
 
 @dataclass
