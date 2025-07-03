@@ -518,6 +518,8 @@ class Analyzer:
                         provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
                             provenance_payload
                         )
+                        # Attestations found from GitHub are signed and verified.
+                        provenance_is_verified = True
                     except ProvenanceError as error:
                         logger.debug("Failed to extract from provenance: %s", error)
 

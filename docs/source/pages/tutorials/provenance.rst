@@ -7,7 +7,14 @@ Provenance discovery, extraction, and verification
 
 This tutorial demonstrates how Macaron can automatically retrieve provenance for artifacts, validate the contents, and verify the authenticity. Any artifact that can be analyzed and checked for these properties can then be trusted to a greater degree than would be otherwise possible, as provenance files provide verifiable information, such as the commit and build service pipeline that has triggered the release.
 
-Currently, Macaron supports discovery of attestation for: npm artifacts using features provided by `npm <https://npmjs.com/>`_; PyPI artifacts using features provided by `Open Source Insights <https://deps.dev/>`_; and artifacts that have been published attestations to `GitHub <https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-attestations>`_. This tutorial uses two example packages to demonstrate these three discovery methods: The `semver <https://www.npmjs.com/package/semver>`_ npm package, and the `toga <https://pypi.org/pypi/toga>`_ PyPI package.
+Currently, Macaron supports discovery of attestation for:
+
+    * npm artifacts using features provided by `npm <https://npmjs.com/>`_
+    * PyPI artifacts using features provided by `Open Source Insights <https://deps.dev/>`_
+    * Artifacts that have published attestations to, or released as assets to `GitHub <https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-attestations>`_
+    * Attestation provided by the user to Macaron via the CLI
+
+This tutorial uses example packages to demonstrate these discovery methods: The `semver <https://www.npmjs.com/package/semver>`_ npm package, the `toga <https://pypi.org/pypi/toga>`_ PyPI package, and the `urllib3 <https://pypi.org/project/urllib3>`_ PyPI package.
 
 .. contents:: :local:
 
@@ -120,7 +127,7 @@ During this analysis, Macaron will attempt to discover a GitHub attestation by c
 
 In this particular case, the SHA256 hash of the toga 0.4.8 artifact is 0814a72abb0a9a5f22c32cc9479c55041ec30cdf4b12d73a0017aee58f9a1f00. A GitHub attestation can be found for this artifact `here <https://api.github.com/repos/beeware/toga/attestations/sha256:0814a72abb0a9a5f22c32cc9479c55041ec30cdf4b12d73a0017aee58f9a1f00>`_.
 
-Attestation discovered through GitHub cannot be ascertained as verified at this time. However, we can still be sure that the repository URL and commit digest associated with the user provided PURL match what is found within the attestation. This is reported by Macaron in two checks: ``mcn_provenance_derived_repo_1`` and ``mcn_provenance_derived_commit_1``.
+Attestation discovered through GitHub is signed with verified signatures. As long as the repository URL and commit digest associated with the user provided PURL match what is found within the attestation, Macaron can report it as verified. Therefore, we can examine the results of three checks: ``mcn_provenance_derived_repo_1``, ``mcn_provenance_derived_commit_1``, and ``mcn_provenance_verified_1``.
 
 .. _fig_toga_github_checks:
 
@@ -134,11 +141,101 @@ This image shows that both checks have passed, confirming that the repository UR
 
   open output/reports/pypi/toga/toga.html
 
+
+******************************************
+Attestation discovery for urllib3 (GitHub)
+******************************************
+
+To demonstrate GitHub attestation being found from released assets on the platform, we use the urllib3 library.
+
+.. code-block:: shell
+
+    ./run_macaron.sh analyze -purl pkg:pypi/urllib3@2.0.0a1 --verify-provenance
+
+As part of this analysis, Macaron ends up downloading three different asset files: The `attestation asset <https://api.github.com/repos/urllib3/urllib3/releases/assets/84708804>`_, the artifact's Python wheel file, and the artifact's compressed archive. By examining the attestation, Macaron can verify the two other files. This analysis can then report that provenance exists, and is verified.
+
+If we look at the results of three of Macaron's checks we can validate this result: ``mcn_provenance_derived_repo_1``, ``mcn_provenance_derived_commit_1``, and ``mcn_provenance_verified_1``.
+
+.. _fig_urllib3_github_checks:
+
+.. figure:: ../../_static/images/tutorial_urllib3_github.png
+   :alt: HTML report for ``urllib3 2.0.0a1``, summary
+   :align: center
+
+This image shows that all three checks have passed, confirming that the repository URL and commit digest from the provenance match those associated with the user provided PURL, and that the provenance is verified. To access the full report use the following:
+
+.. code-block:: shell
+
+  open output/reports/pypi/urllib3/urllib3.html
+
+**********************************
+Local attestation discovery (toga)
+**********************************
+
+If an attestation file already exists in a local directory, it makes more sense to use it than download it again. For this example case we rely on the attestation URL found for ``toga@0.4.8`` earlier in the tutorial. To download this file in the current directory, use the following command:
+
+.. code-block:: shell
+
+    curl https://api.github.com/repos/beeware/toga/attestations/sha256:0814a72abb0a9a5f22c32cc9479c55041ec30cdf4b12d73a0017aee58f9a1f00 -o toga_0.4.8_attestation.json
+
+
+With the attestation downloaded, we can run the analysis and pass it in as an argument. Like so:
+
+.. code-block:: shell
+
+    ./run_macaron.sh analyze -purl pkg:pypi/toga@0.4.8 -pf toga_0.4.8_attestation.json
+
+To then determine that the provenance was accepted and matched the analysis target, we can examine the results of Macaron's checks: ``mcn_provenance_derived_repo_1``, ``mcn_provenance_derived_commit_1``, and ``mcn_provenance_verified_1``.
+
+.. note:: Because the provenance file was provided by the user, we expect the provenance verification check to fail.
+
+.. _fig_toga_local_checks:
+
+.. figure:: ../../_static/images/tutorial_toga_local.png
+   :alt: HTML report for ``toga 0.4.8`` local, summary
+   :align: center
+
+This image shows that the repository and commit validation checks have passed, confirming that the provenance matches the analysis target. The verification check fails as expected. To view the report directly, use this command:
+
+.. code-block:: shell
+
+  open output/reports/pypi/toga/toga.html
+
+***************************
+Supported Attestation Types
+***************************
+
+When attestation is provided to Macaron as input, it must be of one of the support types in order to be accepted. Support is defined by the ``predicateType`` and ``buildType`` properties within an attestation.
+
+Predicate Types
+~~~~~~~~~~~~~~~
+
+    * SLSA v0.1
+    * SLSA v0.2
+    * SLSA v1.0
+    * Witness v0.1
+
+
+Build Types
+~~~~~~~~~~~
+
+.. csv-table::
+    :header: "Name", "Build Type"
+
+    "SLSA GitHub Generic              v0.1", "https://github.com/slsa-framework/slsa-github-generator/generic@v1"
+    "SLSA GitHub Actions              v1.0", "https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1"
+    "SLSA npm CLI                     v2.0", "https://github.com/npm/cli/gha/v2"
+    "SLSA Google Cloud Build          v1.0", "https://slsa-framework.github.io/gcb-buildtypes/triggered-build/v1"
+    "SLSA Oracle Cloud Infrastructure v1.0", "https://github.com/oracle/macaron/tree/main/src/macaron/resources/provenance-buildtypes/oci/v1"
+    "Witness GitLab                   v0.1", "https://witness.testifysec.com/attestation-collection/v0.1"
+
+
+
 **************************************
 Run ``verify-policy`` command (semver)
 **************************************
 
-Another feature of Macaron is policy verification. This allows Macaron to report on whether an artifact meets the security requirements specified by the user. Policies are written using `Soufflé Datalog <https://souffle-lang.github.io/index.html>`_ , a language similar to SQL. Results collected by the ``analyze`` command can be checked via declarative queries in the created policy, which Macaron can then automatically check.
+Another feature of Macaron is policy verification, which allows it to assess whether an artifact meets user-defined security requirements. This feature can also be integrated into CI/CD pipelines to automatically check policy compliance by returning appropriate error codes based on pass or fail status. Policies are written using `Soufflé Datalog <https://souffle-lang.github.io/index.html>`_ , a language similar to SQL. Results collected by the ``analyze`` command can be checked via declarative queries in the created policy, which Macaron can then automatically check.
 
 For this tutorial, we can create a policy that checks whether the three checks relating to the semver npm example above have passed. E.g. ``mcn_provenance_derived_repo_1``, ``mcn_provenance_derived_commit_1``, and ``mcn_provenance_verified_1``. In this way we can be sure that the requirement is satisfied without having to dive into the reports directly.
 

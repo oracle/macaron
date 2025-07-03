@@ -504,7 +504,7 @@ class SLSAGithubActionsBuildDefinitionV1(ProvenanceBuildDefinition):
 
 
 class SLSANPMCLIBuildDefinitionV2(ProvenanceBuildDefinition):
-    """Class representing the SLSA NPM CLI Build Definition (v12).
+    """Class representing the SLSA NPM CLI Build Definition (v2).
 
     This class implements the abstract methods from the `ProvenanceBuildDefinition`
     to extract build invocation details specific to the GitHub Actions build type.

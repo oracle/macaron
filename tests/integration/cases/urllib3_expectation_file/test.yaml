@@ -8,6 +8,7 @@ description: |
 tags:
 - macaron-python-package
 - macaron-docker-image
+- tutorial
 
 steps:
 - name: Run macaron analyze with expectation file
