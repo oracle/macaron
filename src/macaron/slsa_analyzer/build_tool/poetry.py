@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Poetry class which inherits BaseBuildTool.
@@ -126,7 +126,7 @@ class Poetry(BaseBuildTool):
         tool_name = "cyclonedx_py"
         if not DependencyAnalyzer.tool_valid(f"{tool_name}:{cyclonedx_version}"):
             raise DependencyAnalyzerError(
-                f"Dependency analyzer {defaults.get('dependency.resolver','dep_tool_gradle')} is not valid.",
+                f"Dependency analyzer {defaults.get('dependency.resolver', 'dep_tool_gradle')} is not valid.",
             )
         return CycloneDxPython(
             resources_path=global_config.resources_path,
