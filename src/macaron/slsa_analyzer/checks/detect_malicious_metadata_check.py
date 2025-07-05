@@ -21,10 +21,13 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.anomalous_version import 
 from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.minimal_content import MinimalContentAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.unknown_organization import UnknownOrganizationAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.unsecure_description import UnsecureDescriptionAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
@@ -358,6 +361,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         WheelAbsenceAnalyzer,
         AnomalousVersionAnalyzer,
         TyposquattingPresenceAnalyzer,
+        UnknownOrganizationAnalyzer,
+        UnsecureDescriptionAnalyzer,
+        MinimalContentAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
@@ -423,7 +429,16 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_2) :-
         quickUndetailed,
         failed({Heuristics.ONE_RELEASE.value}),
-        failed({Heuristics.ANOMALOUS_VERSION.value}).
+        failed({Heuristics.ANOMALOUS_VERSION.value}),
+        failed({Heuristics.UNKNOWN_ORGANIZATION.value}),
+        failed({Heuristics.UNSECURE_DESCRIPTION.value}).
+
+    % Package released with dependency confusion .
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_5) :-
+        passed({Heuristics.MINIMAL_CONTENT.value}),
+        failed({Heuristics.ANOMALOUS_VERSION.value}),
+        failed({Heuristics.UNKNOWN_ORGANIZATION.value}),
+        failed({Heuristics.UNSECURE_DESCRIPTION.value}).
 
     % ----- Evaluation -----
 
@@ -432,6 +447,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
     {problog_result_access} :- trigger(malware_high_confidence_4).
+    {problog_result_access} :- trigger(malware_high_confidence_5).
     {problog_result_access} :- trigger(malware_medium_confidence_2).
     {problog_result_access} :- trigger(malware_medium_confidence_1).
     query({problog_result_access}).

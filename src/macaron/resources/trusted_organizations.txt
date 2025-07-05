@@ -1,0 +1,119 @@
+Oracle
+jetbrains
+Rami Sayar
+AWS SDK Common Runtime Team
+Rafi Kurnia Putra
+Frank Seide
+Conchylicultor
+Pete Bryan
+John Evans
+Daniel van Flymen
+James Saryerwinnie
+PyTorch Team
+torchort contributors
+Ravindra Marella
+Lars van Gemerden
+Mark Saniscalchi
+Azure Red Team
+Google Cloud Datastore Team
+Mario Vilas
+Google AI Princeton
+CRE Avengers
+Microsoft Research - Causica
+Hunter Fernandes
+Deep Procedural Intelligence
+Paul O. Hayne
+Gregory Kwok
+Microsoft
+TBD
+Microsoft Corp.
+Luke Harries, Sebastian Lee, Jaroslaw Rzepecki, Katya Hofmann, Sam Devlin
+Bing Ads SDK Team
+John Schroeder
+Recommenders contributors
+Florian Berger
+pymox maintainers
+Sandeep Kumar
+Goffi (Jérôme Poisson)
+Yuxuan Dong
+Marc-Alexandre Côté
+pltrdy
+Gregory P. Smith
+piePaul
+Natalia Maximo
+Jon Wayne Parrott
+The Brotli Authors
+Microsoft Corporation License-Expression: Apache-2.0
+Mike Bayer
+David Herberth
+Google Inc.
+Darcy Mason and contributors
+Rüdiger Voigt
+Forensic artifacts
+Charles Marsh
+rego-cpp Team
+Lukas Schwab
+Google Quantum AI open-source maintainers
+Bling
+Stepan Perlov
+Eric Bridgeford
+The gRPC Authors
+hm-distro
+Capirca Team
+Microsoft Research AI Compilers Team
+PyWhy contributors
+Andy Casey
+The qsim/qsimh Developers
+Samuel Stauffer
+Tomi Pajunen
+Google
+OpenCensus Authors
+Charles Reese
+Jarek Potiuk, Szymon Przedwojski, Kamil Breguła, Feng Lu, Cameron Moberg
+Amazon Web Service
+Radovan Bast
+Mitch Garnaat
+Brian Quinlan
+The OpenFermion FQE Developers
+Project AIM
+Benjamin S. Meyers
+Kivanc Yuksel
+Patrick Costello
+PiCloud, Inc.
+Joseph DiLallo
+David Berthelot
+Holger Krekel, Bruno Oliveira, Ronny Pfannschmidt, Floris Bruynooghe, Brianna Laugher, Florian Bruhin, Others (See AUTHORS)
+Jonghak Choi
+Ludovico Magnocavallo
+Google LLC
+Dale Myers
+Tink Developers
+Amazon Web Services
+The Kubeflow Authors
+Xuan Ma
+Tim Swast, Google Inc.
+Prem Nair
+Wijnand Modderman-Lenstra
+The PyBigQuery Authors
+王振华(Zhenhua WANG)
+PyCQA
+Pedro Rodriguez
+Elizabeth Golden
+Stefan-Code
+Idin
+Michael Foord
+Matteo Cypriani
+suryapoojarypy
+Ian Hellen
+Microsoft Corporation
+MIT Lincoln Laboratory
+Dax Pryce
+Eider Moore
+James Gardner
+Jose Roberts
+JAX team
+Thea Flowers
+ScenePic Team
+Rodrigo Moraes
+The OpenFermion Developers
+Google, Inc.
