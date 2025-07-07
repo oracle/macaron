@@ -9,7 +9,7 @@ toolchain go1.23.2
 
 require (
 	cuelang.org/go v0.12.0
-	mvdan.cc/sh/v3 v3.11.0
+	mvdan.cc/sh/v3 v3.12.0
 )
 
 require (
