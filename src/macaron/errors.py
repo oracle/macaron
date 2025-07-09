@@ -113,3 +113,19 @@ class LocalArtifactFinderError(MacaronError):
 
 class SourceCodeError(MacaronError):
     """Error for operations on package source code."""
+
+
+class CommandLineParseError(Exception):
+    """Raised if an error is encountered while parsing a CLI Command."""
+
+
+class PatchBuildCommandError(Exception):
+    """Raised if an error is encountered while patching a Maven CLI Command."""
+
+
+class QueryMacaronDatabaseError(Exception):
+    """Happens when there is an unexpected error while querying the database using SQLAlchemy."""
+
+
+class GenerateBuildSpecError(Exception):
+    """Happens when there is an unexpected error while generate the build spec file."""
