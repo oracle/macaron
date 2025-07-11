@@ -28,6 +28,7 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import S
 from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.sourcecode.matching_docstrings import MatchingDocstringsAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -366,6 +367,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         TyposquattingPresenceAnalyzer,
         FakeEmailAnalyzer,
         SimilarProjectAnalyzer,
+        MatchingDocstringsAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
@@ -445,6 +447,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.SIMILAR_PROJECTS.value}),
         failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
         failed({Heuristics.FAKE_EMAIL.value}).
+    % Package released with a name similar to a popular package.
+    {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_3) :-
+        quickUndetailed, forceSetup, failed({Heuristics.MATCHING_DOCSTRINGS.value}).
+
     % ----- Evaluation -----
 
     % Aggregate result
@@ -452,10 +458,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
     {problog_result_access} :- trigger(malware_high_confidence_4).
-    {problog_result_access} :- trigger(malware_medium_confidence_1).
-    {problog_result_access} :- trigger(malware_medium_confidence_2).
-    {problog_result_access} :- trigger(malware_medium_confidence_3).
     {problog_result_access} :- trigger(malware_medium_confidence_4).
+    {problog_result_access} :- trigger(malware_medium_confidence_3).
+    {problog_result_access} :- trigger(malware_medium_confidence_2).
+    {problog_result_access} :- trigger(malware_medium_confidence_1).
     query({problog_result_access}).
 
     % Explainability
