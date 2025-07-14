@@ -26,7 +26,6 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneRel
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
-from macaron.malware_analyzer.pypi_heuristics.metadata.unknown_organization import UnknownOrganizationAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unsecure_description import UnsecureDescriptionAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
@@ -361,7 +360,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         WheelAbsenceAnalyzer,
         AnomalousVersionAnalyzer,
         TyposquattingPresenceAnalyzer,
-        UnknownOrganizationAnalyzer,
         UnsecureDescriptionAnalyzer,
         MinimalContentAnalyzer,
     ]
@@ -417,6 +415,13 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {Confidence.HIGH.value}::trigger(malware_high_confidence_4) :-
         quickUndetailed, forceSetup, failed({Heuristics.TYPOSQUATTING_PRESENCE.value}).
 
+    % Package released with dependency confusion .
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_5) :-
+        forceSetup,
+        passed({Heuristics.MINIMAL_CONTENT.value}),
+        failed({Heuristics.ANOMALOUS_VERSION.value}),
+        failed({Heuristics.UNSECURE_DESCRIPTION.value}).
+
     % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
     % the same code.
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_1) :-
@@ -430,14 +435,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         quickUndetailed,
         failed({Heuristics.ONE_RELEASE.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}),
-        failed({Heuristics.UNKNOWN_ORGANIZATION.value}),
-        failed({Heuristics.UNSECURE_DESCRIPTION.value}).
-
-    % Package released with dependency confusion .
-    {Confidence.HIGH.value}::trigger(malware_high_confidence_5) :-
-        passed({Heuristics.MINIMAL_CONTENT.value}),
-        failed({Heuristics.ANOMALOUS_VERSION.value}),
-        failed({Heuristics.UNKNOWN_ORGANIZATION.value}),
         failed({Heuristics.UNSECURE_DESCRIPTION.value}).
 
     % ----- Evaluation -----
