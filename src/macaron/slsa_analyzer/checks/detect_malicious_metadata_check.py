@@ -28,7 +28,6 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.similar_projects import S
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
-from macaron.malware_analyzer.pypi_heuristics.metadata.unknown_organization import UnknownOrganizationAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unsecure_description import UnsecureDescriptionAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
@@ -369,7 +368,6 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         TyposquattingPresenceAnalyzer,
         FakeEmailAnalyzer,
         SimilarProjectAnalyzer,
-        UnknownOrganizationAnalyzer,
         UnsecureDescriptionAnalyzer,
         MinimalContentAnalyzer,
     ]
@@ -427,9 +425,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
     % Package released with dependency confusion .
     {Confidence.HIGH.value}::trigger(malware_high_confidence_5) :-
+        forceSetup,
         passed({Heuristics.MINIMAL_CONTENT.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}),
-        failed({Heuristics.UNKNOWN_ORGANIZATION.value}),
         failed({Heuristics.UNSECURE_DESCRIPTION.value}).
 
     % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
@@ -444,7 +442,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_2) :-
         quickUndetailed,
         failed({Heuristics.ONE_RELEASE.value}),
-        failed({Heuristics.ANOMALOUS_VERSION.value}).
+        failed({Heuristics.ANOMALOUS_VERSION.value}),
+        failed({Heuristics.UNSECURE_DESCRIPTION.value}).
 
     % Package has no links, one release or multiple quick releases, and a suspicious maintainer who recently
     % joined, has a fake email address, and other similarly-structured projects.
@@ -458,6 +457,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.SIMILAR_PROJECTS.value}),
         failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
         failed({Heuristics.FAKE_EMAIL.value}).
+
     % ----- Evaluation -----
 
     % Aggregate result
