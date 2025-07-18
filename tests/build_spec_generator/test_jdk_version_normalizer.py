@@ -46,6 +46,12 @@ from macaron.build_spec_generator.jdk_version_normalizer import normalize_jdk_ve
             "19",
             id="major_follows_with_text",
         ),
+        # https://github.com/jboss-logging/jboss-logging/blob/25ad85c9cecf5a2f79db9a4d077221ed087e4ef5/.github/workflows/ci.yml#L46
+        pytest.param(
+            "22-ea",
+            "22",
+            id="pkg_maven_org.jboss.logging_jboss-logging_3.6.1.Final",
+        ),
     ],
 )
 def test_jdk_version_normalizer(version_string: str, expected: str) -> None:
