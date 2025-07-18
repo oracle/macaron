@@ -265,6 +265,13 @@ def gen_build_spec(gen_build_spec_args: argparse.Namespace) -> int:
         logger.error("Cannot parse purl %s. Error %s", gen_build_spec_args.package_url, error)
         return os.EX_USAGE
 
+    logger.info(
+        "Generating %s buildspec for PURL %s from %s.",
+        output_format,
+        purl,
+        gen_build_spec_args.database,
+    )
+
     build_spec_content = gen_build_spec_str(
         purl=purl,
         database_path=gen_build_spec_args.database,
