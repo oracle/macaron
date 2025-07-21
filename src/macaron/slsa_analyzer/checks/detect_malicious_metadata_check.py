@@ -172,7 +172,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 facts_list.append(f"{heuristic.value} :- true.")
             elif result == HeuristicResult.FAIL:
                 facts_list.append(f"{heuristic.value} :- false.")
-            # Do not define for HeuristicResult.SKIP
+            # Do not define for HeuristicResult.SKIP.
 
         facts = "\n".join(facts_list)
         problog_code = f"{facts}\n\n{self.malware_rules_problog_model}"
@@ -182,7 +182,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         problog_results: dict[Term, float] = get_evaluatable().create_from(problog_model).evaluate()
 
         confidence = problog_results.pop(Term(self.problog_result_access), 0.0)
-        if confidence > 0:  # a rule was triggered
+        if confidence > 0:  # A rule was triggered.
             for term, conf in problog_results.items():
                 if term.args:
                     triggered_rules[str(term.args[0])] = conf
@@ -247,7 +247,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         result_tables: list[CheckFacts] = []
         package_registry_info_entries = ctx.dynamic_data["package_registries"]
 
-        # First check if this package is a known malware
+        # First check if this package is a known malware.
         package_exists = False
         try:
             package_exists = bool(DepsDevService.get_package_info(ctx.component.purl))
@@ -312,7 +312,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                             confidence = Confidence.HIGH
                             result_type = CheckResultType.PASSED
 
-                        # Source code analysis
+                        # Source code analysis.
                         try:
                             sourcecode_result, sourcecode_detail_info = self.analyze_source(
                                 pypi_package_json, heuristic_results, force=ctx.dynamic_data["force_analyze_source"]
@@ -325,7 +325,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
                         if sourcecode_result[Heuristics.SUSPICIOUS_PATTERNS] == HeuristicResult.FAIL:
                             if result_type == CheckResultType.PASSED:
-                                # heuristics determined it benign, so lower the confidence
+                                # Heuristics determined it benign, so lower the confidence.
                                 confidence = Confidence.LOW
                             result_type = CheckResultType.FAILED
 
@@ -345,8 +345,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         # Return UNKNOWN result for unsupported ecosystems.
         return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-    # This list contains the heuristic analyzer classes
-    # When implementing new analyzer, appending the classes to this list
+    # This list contains the heuristic analyzer classes.
+    # When implementing new analyzer, appending the classes to this list.
     analyzers: list = [
         EmptyProjectLinkAnalyzer,
         SourceCodeRepoAnalyzer,
@@ -360,7 +360,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         TyposquattingPresenceAnalyzer,
     ]
 
-    # name used to query the result of all problog rules, so it can be accessed outside the model.
+    # Name used to query the result of all problog rules, so it can be accessed outside the model.
     problog_result_access = "result"
 
     malware_rules_problog_model = f"""

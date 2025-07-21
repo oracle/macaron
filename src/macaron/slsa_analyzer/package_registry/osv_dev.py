@@ -375,7 +375,7 @@ class OSVDevService:
                 if "fixed" in e:
                     fixed = e["fixed"]
 
-            # TODO: convert commit to tag & version
+            # TODO: convert commit to tag & version.
             parsed_introduced = version.Version("0")
             if introduced:
                 try:

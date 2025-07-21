@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Generate souffle datalog for policy prelude."""
@@ -244,20 +244,20 @@ def project_join_table_souffle_relation(
         }
     )
 
-    # Construct rule to create relations based on table
+    # Construct rule to create relations based on table.
     for value_column in right_table.columns:
-        # Loop over each column that gets treated as a value
+        # Loop over each column that gets treated as a value.
         if value_column.name in right_ignore_fields:
             continue
         if value_column.name in right_common_fields:
             continue
 
-        # Construct the relation statement containing all common_fields and the cid bound to value
+        # Construct the relation statement containing all common_fields and the cid bound to value.
         right_pattern = []
         left_pattern = []
         value_statement = ""
 
-        # Construct the relation statement containing all common_fields and the cid bound to value
+        # Construct the relation statement containing all common_fields and the cid bound to value.
         for column in left_table.columns:
             if column.name in left_common_fields:
                 left_pattern.append(left_common_fields[column.name])
@@ -328,7 +328,7 @@ def get_table_rules_per_column(
         Program to declare and construct the rules
             common_fields PRODUCT (table.columns - common_fields - ignore_columns)
     """
-    # Construct declaration statement
+    # Construct declaration statement.
     result = SouffleProgram(
         declarations={
             f".decl {rule_name} ("
@@ -342,15 +342,15 @@ def get_table_rules_per_column(
         }
     )
 
-    # Construct rule to create relations based on table
+    # Construct rule to create relations based on table.
     for value_column in table.columns:
-        # Loop over each column that gets treated as a value
+        # Loop over each column that gets treated as a value.
         if value_column.name in ignore_columns:
             continue
         if value_column.name in common_fields:
             continue
 
-        # Construct the relation statement containing all common_fields and the cid bound to value
+        # Construct the relation statement containing all common_fields and the cid bound to value.
         pattern = []
         value_statement = ""
         for column in table.columns:

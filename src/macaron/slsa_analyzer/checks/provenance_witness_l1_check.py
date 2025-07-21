@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This check examines a witness provenance (https://github.com/testifysec/witness)."""
@@ -79,7 +79,7 @@ def verify_artifact_assets(
     """
     # A look-up table to verify:
     # 1. if the name of the artifact appears in any subject of the witness provenance, then
-    # 2. if the digest of the artifact could be found
+    # 2. if the digest of the artifact could be found.
     look_up: dict[str, dict[str, InTotoV01Subject]] = {}
 
     for subject in subjects:

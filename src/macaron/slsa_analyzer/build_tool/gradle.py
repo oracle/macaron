@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Gradle class which inherits BaseBuildTool.
@@ -92,7 +92,7 @@ class Gradle(BaseBuildTool):
         bool
             True if succeed else False.
         """
-        # The path of the needed wrapper files
+        # The path of the needed wrapper files.
         wrapper_files = self.wrapper_files
 
         if copy_file_bulk(wrapper_files, wrapper_path, build_dir):
