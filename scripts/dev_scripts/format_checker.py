@@ -30,6 +30,8 @@ def main(source_locations: list[str] = None) -> int:
     source_files = []
     for source_location in source_locations:
         if os.path.isfile(source_location):
+            if not os.path.basename(source_location).lower().endswith(".py"):
+                continue
             source_files.append(source_location)
         elif os.path.isdir(source_location):
             source_directories.append(source_location)
