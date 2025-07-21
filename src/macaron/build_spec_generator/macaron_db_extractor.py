@@ -240,7 +240,7 @@ def get_sql_stmt_build_as_code_check(component_id: int) -> Select[tuple[BuildAsC
         )
         .join(
             CheckFacts,
-            onclause=MappedCheckResult.id == CheckFacts.id,
+            onclause=MappedCheckResult.id == CheckFacts.check_result_id,
         )
         .join(
             build_as_code_facts_alias,
@@ -287,7 +287,7 @@ def get_sql_stmt_build_service_check(component_id: int) -> Select[tuple[BuildSer
         )
         .join(
             CheckFacts,
-            onclause=MappedCheckResult.id == CheckFacts.id,
+            onclause=MappedCheckResult.id == CheckFacts.check_result_id,
         )
         .join(
             build_service_facts_alias,
@@ -330,11 +330,11 @@ def get_sql_stmt_build_script_check(component_id: int) -> Select[tuple[BuildScri
         .select_from(Component)
         .join(
             MappedCheckResult,
-            onclause=Component.id == MappedCheckResult.component_id,
+            onclause=MappedCheckResult.component_id == Component.id,
         )
         .join(
             CheckFacts,
-            onclause=MappedCheckResult.id == CheckFacts.id,
+            onclause=MappedCheckResult.id == CheckFacts.check_result_id,
         )
         .join(
             build_script_facts_alias,
