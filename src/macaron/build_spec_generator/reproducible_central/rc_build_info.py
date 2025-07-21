@@ -4,6 +4,7 @@
 """This module contains the representation of information needed for Reproducible Central Buildspec generation."""
 
 import logging
+import pprint
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -36,6 +37,12 @@ class RcInternalBuildInfo:
     generic_build_command_facts: Sequence[GenericBuildCommandInfo] | None
     latest_component_id: int
     build_tool_facts: Sequence[BuildToolFacts]
+
+
+def format_build_command_infos(build_command_infos: list[GenericBuildCommandInfo]) -> str:
+    """Return the prettified str format for a list of `GenericBuildCommandInfo` instances."""
+    pretty_formatted_ouput = [pprint.pformat(build_command_info) for build_command_info in build_command_infos]
+    return "\n".join(pretty_formatted_ouput)
 
 
 def get_rc_internal_build_info(
@@ -78,6 +85,28 @@ def get_rc_internal_build_info(
     logger.debug("Latest component ID: %d", latest_component_id)
 
     try:
+        lookup_component_repository = lookup_repository(latest_component_id, session)
+    except QueryMacaronDatabaseError as lookup_repository_error:
+        logger.error(
+            "Unexpected result from querying repository information for %s. Error: %s",
+            purl.to_string(),
+            lookup_repository_error,
+        )
+        return None
+    if not lookup_component_repository:
+        logger.error(
+            "Cannot find any repository information for %s in the database.",
+            purl.to_string(),
+        )
+        return None
+    logger.info(
+        "Repository information for purl %s: url %s, commit %s",
+        purl,
+        lookup_component_repository.remote_path,
+        lookup_component_repository.commit_sha,
+    )
+
+    try:
         build_tool_facts = lookup_build_tools_check(
             component_id=latest_component_id,
             session=session,
@@ -95,26 +124,14 @@ def get_rc_internal_build_info(
             purl.to_string(),
         )
         return None
-    logger.debug("Build tools discovered from the %s table: %s", BuildToolFacts.__tablename__, build_tool_facts)
+    logger.info(
+        "Build tools discovered from the %s table: %s",
+        BuildToolFacts.__tablename__,
+        [fact.build_tool_name for fact in build_tool_facts],
+    )
 
     try:
-        lookup_component_repository = lookup_repository(latest_component_id, session)
-    except QueryMacaronDatabaseError as lookup_repository_error:
-        logger.error(
-            "Unexpected result from querying repository information for %s. Error: %s",
-            purl.to_string(),
-            lookup_repository_error,
-        )
-        return None
-    if not lookup_component_repository:
-        logger.error(
-            "Cannot find any repository information for %s in the database.",
-            purl.to_string(),
-        )
-        return None
-
-    try:
-        lookup_build_facts = lookup_any_build_command(latest_component_id, session)
+        lookup_build_command_infos = lookup_any_build_command(latest_component_id, session)
     except QueryMacaronDatabaseError as lookup_build_command_error:
         logger.error(
             "Unexpected result from querying all build command information for %s. Error: %s",
@@ -122,11 +139,15 @@ def get_rc_internal_build_info(
             lookup_build_command_error,
         )
         return None
+    logger.debug(
+        "Build command information discovered\n%s",
+        format_build_command_infos(lookup_build_command_infos),
+    )
 
     return RcInternalBuildInfo(
         purl=purl,
         repository=lookup_component_repository,
         latest_component_id=latest_component_id,
         build_tool_facts=build_tool_facts,
-        generic_build_command_facts=lookup_build_facts,
+        generic_build_command_facts=lookup_build_command_infos,
     )
