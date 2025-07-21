@@ -12,8 +12,8 @@ class RepoFinderInfo(Enum):
     #: E.g. Maven central.
     NO_MAVEN_HOST_PROVIDED = "No maven host provided"
 
-    #: Reported if the list of period separated tags that point to the SCM within the POM is not provided by the user in
-    #: Macaron's config. E.g. scm.url, scm.connection
+    #: Reported if the list of period separated tags that point to the SCM within the POM is not provided by the user
+    #: in Macaron's config. E.g. scm.url, scm.connection.
     NO_POM_TAGS_PROVIDED = "No POM tags provided"
 
     #: Reported if the user does not provide a version for the Repo Finder via the command line, and does not allow the
@@ -87,7 +87,7 @@ class RepoFinderInfo(Enum):
     #: Reported when a repository could only be found by checking the PyPI registry JSON.
     FOUND_FROM_PYPI = "Found from PyPI"
 
-    #: Default value. Reported if the Repo Finder was not called. E.g. Because the repository URL was already present.
+    #: Default value. Reported if the Repo Finder was not called. E.g. because the repository URL was already present.
     NOT_USED = "Not used"
 
 
@@ -112,7 +112,7 @@ class CommitFinderInfo(Enum):
     NO_TAGS_WITH_COMMITS = "No Git tags with commits"
 
     #: Reported if the tag selected from the repository fails to resolve to a commit despite having one associated with
-    # it.
+    #: it.
     NO_TAG_COMMIT = "No valid commit found for Git tag"
 
     #: Reported if the version part of the user provided PURL is invalid.
@@ -127,5 +127,5 @@ class CommitFinderInfo(Enum):
     #: Reported if a match was found.
     MATCHED = "Matched"
 
-    #: Default state. Reported if the commit finder was not called. E.g. Because the Repo Finder failed.
+    #: Default state. Reported if the commit finder was not called. E.g. because the Repo Finder failed.
     NOT_USED = "Not used"
