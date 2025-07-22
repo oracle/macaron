@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """A check to determine whether the source repository of a package can be independently verified."""
@@ -64,7 +64,7 @@ class ScmAuthenticityCheck(BaseCheck):
             "Check whether the claims of a source repository provenance"
             " made by a package can be corroborated."
             " At this moment, this check only supports Maven packages"
-            " and returns UNKNOWN for others."
+            ", or packages with a from-provenance repository, and returns UNKNOWN for others."
         )
 
         super().__init__(
@@ -85,16 +85,26 @@ class ScmAuthenticityCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        # Only support Maven at the moment.
-        # TODO: Add support for other systems.
-        if ctx.component.type != "maven":
+        provenance_repo_link = None
+        if provenance_info := ctx.dynamic_data["provenance_info"]:
+            provenance_repo_link = provenance_info.repository_url
+        print(f"SCM: {ctx.component.purl} -- {provenance_repo_link}")
+
+        # This check supports all Maven PURLs, and other PURLs only if they have a from-provenance repository URL.
+        # TODO: Add full support for other systems.
+        if ctx.component.type != "maven" and not provenance_repo_link:
             return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
         stars_count: int | None = None
         fork_count: int | None = None
         deps_dev_repo_info: dict | None = None
 
-        repo_link = ctx.component.repository.remote_path if ctx.component.repository else None
+        repo_link: str | None = None
+        if provenance_repo_link:
+            repo_link = str(provenance_repo_link)
+        elif ctx.component.repository:
+            repo_link = ctx.component.repository.remote_path
+
         if repo_link:
             deps_dev_repo_info = DepsDevRepoFinder.get_project_info(repo_link)
 
@@ -104,24 +114,42 @@ class ScmAuthenticityCheck(BaseCheck):
 
         result_type = CheckResultType.UNKNOWN
         result_tables: list[CheckFacts] = []
-        for verification_result in ctx.dynamic_data.get("repo_verification", []):
+        if not provenance_repo_link:
+            for verification_result in ctx.dynamic_data.get("repo_verification", []):
+                result_tables.append(
+                    ScmAuthenticityFacts(
+                        repo_link=repo_link,
+                        reason=verification_result.reason,
+                        status=verification_result.status.value,
+                        build_tool=verification_result.build_tool.name,
+                        confidence=Confidence.MEDIUM,
+                        stars_count=stars_count,
+                        fork_count=fork_count,
+                    )
+                )
+
+                match (result_type, verification_result.status):
+                    case (_, RepositoryVerificationStatus.PASSED):
+                        result_type = CheckResultType.PASSED
+                    case (CheckResultType.UNKNOWN, RepositoryVerificationStatus.FAILED):
+                        result_type = CheckResultType.FAILED
+        else:
+            build_spec = ctx.dynamic_data["build_spec"]
+            build_tool = build_spec["tools"][0].name if build_spec["tools"] else "UNKNOWN"
+
             result_tables.append(
                 ScmAuthenticityFacts(
                     repo_link=repo_link,
-                    reason=verification_result.reason,
-                    status=verification_result.status.value,
-                    build_tool=verification_result.build_tool.name,
+                    reason="From provenance",
+                    status=RepositoryVerificationStatus.PASSED,
+                    build_tool=build_tool,
                     confidence=Confidence.MEDIUM,
                     stars_count=stars_count,
                     fork_count=fork_count,
                 )
             )
 
-            match (result_type, verification_result.status):
-                case (_, RepositoryVerificationStatus.PASSED):
-                    result_type = CheckResultType.PASSED
-                case (CheckResultType.UNKNOWN, RepositoryVerificationStatus.FAILED):
-                    result_type = CheckResultType.FAILED
+            result_type = CheckResultType.PASSED
 
         return CheckResultData(result_tables=result_tables, result_type=result_type)
 
