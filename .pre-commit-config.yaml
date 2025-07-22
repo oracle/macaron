@@ -76,6 +76,13 @@ repos:
   hooks:
   - id: actionlint
 
+# Check shell scripts with shellcheck.
+- repo: https://github.com/shellcheck-py/shellcheck-py
+  rev: v0.10.0.1
+  hooks:
+  - id: shellcheck
+    exclude: ^tests/
+
 # Run Pylint from the local repo to make sure venv packages
 # specified in pyproject.toml are available.
 - repo: local
