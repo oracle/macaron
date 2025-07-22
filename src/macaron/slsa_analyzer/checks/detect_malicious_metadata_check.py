@@ -144,7 +144,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         logger.debug("Instantiating %s", PyPISourcecodeAnalyzer.__name__)
         analyzer = PyPISourcecodeAnalyzer()
 
-        if not force and analyzer.depends_on and self._should_skip(results, analyzer.depends_on):
+        # If SOURCE_CODE_REPO failed, there is no source code repository available for this package. This is when we would want
+        # to run source code analysis.
+        if not force and results[Heuristics.SOURCE_CODE_REPO] == HeuristicResult.PASS:
             return {analyzer.heuristic: HeuristicResult.SKIP}, {}
 
         if not pypi_package_json.can_download_sourcecode():

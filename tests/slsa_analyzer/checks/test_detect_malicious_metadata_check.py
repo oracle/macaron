@@ -110,8 +110,8 @@ def test_detect_malicious_metadata(
     load_defaults(user_config_path)
     pypi_registry.load_defaults()
 
-    httpserver.expect_request("/project/zlibxjson").respond_with_data(p_page_content)
-    httpserver.expect_request("/user/tser111111").respond_with_data(u_page_content)
+    httpserver.expect_request("/project/zlibxjson/").respond_with_data(p_page_content)
+    httpserver.expect_request("/user/tser111111/").respond_with_data(u_page_content)
     httpserver.expect_request("/pypi/zlibxjson/json").respond_with_json(package_json)
     httpserver.expect_request(
         "/packages/3e/1e/b1ecb05e7ca1eb74ca6257a7f43d052b90d2ac01feb28eb28ce677a871ab/zlibxjson-8.2.tar.gz"
