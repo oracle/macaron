@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This script runs the Macaron Docker image.
@@ -231,6 +231,10 @@ function mount_dir_rw_allow_create() {
 #   $1: The macaron argument from which the directory is passed into this script.
 #   $2: The path to the directory on the host.
 #   $3: The path to the directory inside the container.
+#
+# Note: This function is currently unused but retained to avoid using `_mount_dir`
+# if not necessary, which may have unintended side effects.
+# shellcheck disable=SC2317
 function mount_dir_rw_forbid_create() {
     arg_name=$1
     dir_on_host=$2
