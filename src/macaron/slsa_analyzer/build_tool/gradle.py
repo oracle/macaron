@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Gradle class which inherits BaseBuildTool.
@@ -122,7 +122,7 @@ class Gradle(BaseBuildTool):
             raise DependencyAnalyzerError("No default dependency analyzer is found.")
         if not DependencyAnalyzer.tool_valid(defaults.get("dependency.resolver", "dep_tool_gradle")):
             raise DependencyAnalyzerError(
-                f"Dependency analyzer {defaults.get('dependency.resolver','dep_tool_gradle')} is not valid.",
+                f"Dependency analyzer {defaults.get('dependency.resolver', 'dep_tool_gradle')} is not valid.",
             )
 
         tool_name, tool_version = tuple(
