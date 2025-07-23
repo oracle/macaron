@@ -107,7 +107,7 @@ def find_repo(
         logger.debug("No Repo Finder found for package type: %s of %s", purl.type, purl)
         return "", RepoFinderInfo.UNSUPPORTED_PACKAGE_TYPE
 
-    # Call Repo Finder and return first valid URL
+    # Call Repo Finder and return first valid URL.
     logger.debug("Analyzing %s with Repo Finder: %s", purl, type(repo_finder))
     found_repo, outcome = repo_finder.find_repo(purl)
 

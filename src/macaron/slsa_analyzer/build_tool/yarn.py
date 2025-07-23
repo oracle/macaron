@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Yarn class which inherits BaseBuildTool.
@@ -36,7 +36,7 @@ class Yarn(BaseBuildTool):
         # if "builder.yarn.ci.deploy" in defaults:
         #     for item in defaults["builder.yarn.ci.deploy"]:
         #         if item in self.ci_deploy_kws:
-        #             self.ci_deploy_kws[item] = defaults.get_list("builder.yarn.ci.deploy", item)
+        #             self.ci_deploy_kws[item] = defaults.get_list("builder.yarn.ci.deploy", item).
 
     def is_detected(self, repo_path: str) -> bool:
         """Return True if this build tool is used in the target repo.
@@ -53,7 +53,7 @@ class Yarn(BaseBuildTool):
         """
         # TODO: When more complex build detection is being implemented, consider
         #       cases like .yarnrc existing but not package-lock.json and whether
-        #       they would still count as "detected"
+        #       they would still count as "detected".
         yarn_config_files = self.build_configs + self.package_lock + self.entry_conf
         return any(file_exists(repo_path, file) for file in yarn_config_files)
 

@@ -76,3 +76,21 @@ For variables of a class: we do not use the ``Attribute`` section as per the `nu
         x: float
         #: The y coordinate of the point.
         y: float
+
+
+--------
+Comments
+--------
+
+Comments should use typical grammar where appropriate. Ideally, they should be comprised of sentences that start with capital letters, and end with punctuation.
+We use a pre-commit hook script to help enforce this.
+The script is a lightweight implementation that can make mistakes in some cases.
+Python script files that have been changed in the commit will be passed to the checker, if they reside in either the ``src/macaron`` or ``tests`` directories.
+
+''''''''''''''''''''''''
+Working with the script:
+''''''''''''''''''''''''
+
+- Try to avoid having Proper nouns in the middle of sentences spill over to a new line, as this will be considered as the start of a sentence instead.
+- To prevent the script from changing a particular file, add the following comment after the copyright information: "# grammar: off"
+- To disable the script for a particular comment, use a double pound sign, e.g. "## <The comment to ignore>"

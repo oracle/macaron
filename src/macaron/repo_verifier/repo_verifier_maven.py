@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains code to verify whether a reported repository with Maven build system can be linked back to the artifact."""
@@ -117,9 +117,9 @@ class RepoVerifierMaven(RepoVerifierBase):
             # but it doesn't match gitlab.com/foo or gitlab.com/bar.
             if (
                 group_parts[0].lower() in {"io", "com"}
-                and group_parts[1].lower() == platform.lower()  # e.g., github
-                and group_parts[1].lower() == reported_hostname.lower()  # e.g., github
-                and group_parts[2].lower() == reported_account.lower()  # e.g., foo in github.com/foo
+                and group_parts[1].lower() == platform.lower()  # E.g., github.
+                and group_parts[1].lower() == reported_hostname.lower()  # E.g., github.
+                and group_parts[2].lower() == reported_account.lower()  # E.g., foo in github.com/foo.
             ):
                 return RepositoryVerificationResult(
                     status=RepositoryVerificationStatus.PASSED, reason="git_ns_match", build_tool=self.build_tool

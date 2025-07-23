@@ -95,7 +95,7 @@ def prepare_repo_for_testing(
     """
     git_repo = initiate_repo(repo_path)
 
-    # Commit untracked files
+    # Commit untracked files.
     if git_repo.repo.untracked_files:
         commit_files(git_repo, git_repo.repo.untracked_files)
 

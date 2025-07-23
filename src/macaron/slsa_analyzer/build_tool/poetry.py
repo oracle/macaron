@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Poetry class which inherits BaseBuildTool.
@@ -78,7 +78,7 @@ class Poetry(BaseBuildTool):
                 # Take the highest level file, if there are two at the same level, take the first in the list.
                 file_path = min(files_detected, key=lambda x: len(Path(x).parts))
                 try:
-                    # Parse the .toml file
+                    # Parse the .toml file.
                     with open(file_path, "rb") as toml_file:
                         try:
                             data = tomllib.load(toml_file)

@@ -303,7 +303,7 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
         If the repository has not been cloned and the clone attempt fails.
     """
     # Handle the case where the repository already exists in `<output_dir>/git_repos`.
-    # This could happen when multiple runs of Macaron use the same `<output_dir>`, leading to
+    # This could happen when multiple runs of Macaron use the same `<output_dir>`, leading to.
     # Macaron attempting to clone a repository multiple times.
     # In these cases, we should not error since it may interrupt the analysis.
     if os.path.isdir(clone_dir):
@@ -498,7 +498,7 @@ def get_repo_full_name_from_url(url: str) -> str:
 
     full_name = parsed_url.path.split(".git")[0]
 
-    # The full name must be in org/repo format
+    # The full name must be in org/repo format.
     if len(full_name.split("/")) != 2:
         logger.error("Fullname %s extract from %s is not valid.", full_name, url)
         return ""
@@ -713,7 +713,7 @@ def parse_remote_url(
     res_path = ""
     res_netloc = ""
 
-    # e.g., https://github.com/owner/project.git
+    # E.g., https://github.com/owner/project.git
     if parsed_url.scheme in {"http", "https", "ftp", "ftps", "git+https"}:
         if parsed_url.netloc not in allowed_git_service_hostnames:
             return None
@@ -727,7 +727,7 @@ def parse_remote_url(
 
     # e.g.:
     #   ssh://git@hostname:port/owner/project.git
-    #   ssh://git@hostname:owner/project.git
+    #   ssh://git@hostname:owner/project.git.
     elif parsed_url.scheme in {"ssh", "git+ssh"}:
         user_host, _, port = parsed_url.netloc.partition(":")
         user, _, host = user_host.rpartition("@")
@@ -754,7 +754,7 @@ def parse_remote_url(
         res_scheme = "https"
         res_netloc = host
 
-    # e.g., git@github.com:owner/project.git
+    # E.g., git@github.com:owner/project.git
     elif parsed_url.scheme == "":
         user_host, _, port_path = parsed_url.path.partition(":")
         if not user_host or not port_path:

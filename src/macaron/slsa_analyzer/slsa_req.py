@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the base classes for defining SLSA requirements."""
@@ -14,13 +14,13 @@ logger: logging.Logger = logging.getLogger(__name__)
 class ReqName(Enum):
     """Store the name of each requirement."""
 
-    # Source requirements
+    # Source requirements.
     VCS = "Version controlled"
     VERIFIED_HISTORY = "Verified history"
     RETAINED_INDEFINITELY = "Retained indefinitely"
     TWO_PERSON_REVIEWED = "Two-person reviewed"
 
-    # Build requirements
+    # Build requirements.
     SCRIPTED_BUILD = "Scripted Build"
     BUILD_SERVICE = "Build service"
     BUILD_AS_CODE = "Build as code"
@@ -30,14 +30,14 @@ class ReqName(Enum):
     HERMETIC = "Hermetic"
     REPRODUCIBLE = "Reproducible"
 
-    # Provenance requirements
+    # Provenance requirements.
     PROV_AVAILABLE = "Provenance - Available"
     PROV_AUTH = "Provenance - Authenticated"
     PROV_SERVICE_GEN = "Provenance - Service generated"
     PROV_NON_FALSIFIABLE = "Provenance - Non falsifiable"
     PROV_DEPENDENCIES_COMPLETE = "Provenance - Dependencies complete"
 
-    # Provenance content requirements
+    # Provenance content requirements.
     PROV_CONT_ARTI = "Provenance content - Identifies artifacts"
     PROV_CONT_BUILDER = "Provenance content - Identifies builder"
     PROV_CONT_BUILD_INS = "Provenance content - Identifies build instructions"
@@ -48,7 +48,7 @@ class ReqName(Enum):
     PROV_CONT_REPRODUCIBLE_INFO = "Provenance content - Includes reproducible info"
     PROV_CONT_META_DATA = "Provenance content - Includes metadata"
 
-    # Common requirements
+    # Common requirements.
     SECURITY = "Security"
     ACCESS = "Access"
     SUPERUSERS = "Superusers"
