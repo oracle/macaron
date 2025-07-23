@@ -91,7 +91,7 @@ def _response_generator(target_value: int) -> Callable[[Request], Response]:
 
     def generator(request: Request) -> Response:  # pylint: disable=unused-argument
         """Add the next value as a header and adjust the status code based on the value."""
-        nonlocal value, target_value
+        nonlocal value
         value += 1
         response = Response()
         response.status_code = 403 if value <= (target_value + 1) else 200
