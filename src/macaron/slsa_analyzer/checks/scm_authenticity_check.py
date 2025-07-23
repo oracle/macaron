@@ -88,7 +88,6 @@ class ScmAuthenticityCheck(BaseCheck):
         provenance_repo_link = None
         if provenance_info := ctx.dynamic_data["provenance_info"]:
             provenance_repo_link = provenance_info.repository_url
-        print(f"SCM: {ctx.component.purl} -- {provenance_repo_link}")
 
         # This check supports all Maven PURLs, and other PURLs only if they have a from-provenance repository URL.
         # TODO: Add full support for other systems.
@@ -143,7 +142,7 @@ class ScmAuthenticityCheck(BaseCheck):
                     reason="From provenance",
                     status=RepositoryVerificationStatus.PASSED,
                     build_tool=build_tool,
-                    confidence=Confidence.MEDIUM,
+                    confidence=Confidence.HIGH,
                     stars_count=stars_count,
                     fork_count=fork_count,
                 )
