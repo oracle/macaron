@@ -38,6 +38,8 @@ dependencies = [
     "problog >= 2.2.6,<3.0.0",
     "cryptography >=44.0.0,<45.0.0",
     "semgrep == 1.113.0",
+    "pydantic >= 2.11.5,<2.12.0",
+    "gradio_client == 1.4.3",
 ]
 keywords = []
 # https://pypi.org/classifiers/
