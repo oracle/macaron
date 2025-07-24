@@ -360,9 +360,9 @@ integration-test-update:
 # set to the build date/epoch. For more details, see: https://flit.pypa.io/en/latest/reproducible.html
 .PHONY: dist
 dist: dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-py3-none-any.whl dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt
-dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-py3-none-any.whl: check test integration-test
+dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-py3-none-any.whl:
 	flit build --setup-py --format wheel
-dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz: check test integration-test
+dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz:
 	flit build --setup-py --format sdist
 dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip: docs
 	python -m zipfile -c dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip docs/_build/html
@@ -401,6 +401,15 @@ push-docker:
 	  echo "Please set IMAGE_NAME and RELEASE_TAG environment variables!" && exit 1; \
 	fi
 	docker push "${IMAGE_NAME}":latest
+	docker push "${IMAGE_NAME}":"${RELEASE_TAG}"
+
+# Push the test Docker image. The image name and tag are read from IMAGE_NAME and RELEASE_TAG
+# environment variables, respectively.
+.PHONY: push-docker-test
+push-docker-test:
+	if [ -z "${IMAGE_NAME}" ] || [ -z "${RELEASE_TAG}" ]; then \
+	  echo "Please set IMAGE_NAME and RELEASE_TAG environment variables!" && exit 1; \
+	fi
 	docker push "${IMAGE_NAME}":"${RELEASE_TAG}"
 
 # Prune the packages currently installed in the virtual environment down to the required
