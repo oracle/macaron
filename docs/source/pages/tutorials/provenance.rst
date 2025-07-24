@@ -51,7 +51,7 @@ The analyses in this tutorial involve downloading the contents of a target repos
 Attestation Discovery for semver (npm)
 **************************************
 
-To perform an analysis on the latest version of semver (when this tutorial was written), Macaron can be run with the following command:
+To analyze a specific version of the semver package, Macaron can be run with the following command:
 
 .. code-block:: shell
 
@@ -81,7 +81,7 @@ The check results of this example (and others) can be automatically verified. A 
 Attestation Discovery for toga (PyPI)
 *************************************
 
-To perform an analysis on the latest version of toga (when this tutorial was written), Macaron can be run with the following command:
+To analyze a specific version of the toga package, Macaron can be run with the following command:
 
 .. code-block:: shell
 
