@@ -10,7 +10,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.table_definitions import CheckFacts
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
-from macaron.repo_verifier.repo_verifier_base import RepositoryVerificationStatus
+from macaron.repo_verifier.repo_verifier_base import (
+    RepositoryVerificationStatus,
+    RepoVerifierFromProvenance,
+)
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
@@ -85,27 +88,11 @@ class ScmAuthenticityCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        provenance_repo_link = None
-        if provenance_info := ctx.dynamic_data["provenance_info"]:
-            provenance_repo_link = provenance_info.repository_url
-
-        # This check supports all Maven PURLs, and other PURLs only if they have a from-provenance repository URL.
-        # TODO: Add full support for other systems.
-        if ctx.component.type != "maven" and not provenance_repo_link:
-            return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
-
         stars_count: int | None = None
         fork_count: int | None = None
-        deps_dev_repo_info: dict | None = None
 
-        repo_link: str | None = None
-        if provenance_repo_link:
-            repo_link = str(provenance_repo_link)
-        elif ctx.component.repository:
-            repo_link = ctx.component.repository.remote_path
-
-        if repo_link:
-            deps_dev_repo_info = DepsDevRepoFinder.get_project_info(repo_link)
+        repo_link = ctx.component.repository.remote_path
+        deps_dev_repo_info = DepsDevRepoFinder.get_project_info(repo_link)
 
         if deps_dev_repo_info:
             stars_count = deps_dev_repo_info.get("starsCount")
@@ -113,42 +100,27 @@ class ScmAuthenticityCheck(BaseCheck):
 
         result_type = CheckResultType.UNKNOWN
         result_tables: list[CheckFacts] = []
-        if not provenance_repo_link:
-            for verification_result in ctx.dynamic_data.get("repo_verification", []):
-                result_tables.append(
-                    ScmAuthenticityFacts(
-                        repo_link=repo_link,
-                        reason=verification_result.reason,
-                        status=verification_result.status.value,
-                        build_tool=verification_result.build_tool.name,
-                        confidence=Confidence.MEDIUM,
-                        stars_count=stars_count,
-                        fork_count=fork_count,
-                    )
-                )
-
-                match (result_type, verification_result.status):
-                    case (_, RepositoryVerificationStatus.PASSED):
-                        result_type = CheckResultType.PASSED
-                    case (CheckResultType.UNKNOWN, RepositoryVerificationStatus.FAILED):
-                        result_type = CheckResultType.FAILED
-        else:
-            build_spec = ctx.dynamic_data["build_spec"]
-            build_tool = build_spec["tools"][0].name if build_spec["tools"] else "UNKNOWN"
-
+        for verification_result in ctx.dynamic_data.get("repo_verification", []):
+            reason = verification_result.reason
             result_tables.append(
                 ScmAuthenticityFacts(
                     repo_link=repo_link,
-                    reason="From provenance",
-                    status=RepositoryVerificationStatus.PASSED,
-                    build_tool=build_tool,
-                    confidence=Confidence.HIGH,
+                    reason=reason,
+                    status=verification_result.status.value,
+                    build_tool=verification_result.build_tool.name,
+                    confidence=(
+                        Confidence.HIGH if reason == RepoVerifierFromProvenance.DEFAULT_REASON else Confidence.MEDIUM
+                    ),
                     stars_count=stars_count,
                     fork_count=fork_count,
                 )
             )
 
-            result_type = CheckResultType.PASSED
+            match (result_type, verification_result.status):
+                case (_, RepositoryVerificationStatus.PASSED):
+                    result_type = CheckResultType.PASSED
+                case (CheckResultType.UNKNOWN, RepositoryVerificationStatus.FAILED):
+                    result_type = CheckResultType.FAILED
 
         return CheckResultData(result_tables=result_tables, result_type=result_type)
 
