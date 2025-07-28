@@ -90,9 +90,11 @@ class ScmAuthenticityCheck(BaseCheck):
         """
         stars_count: int | None = None
         fork_count: int | None = None
+        deps_dev_repo_info: dict | None = None
 
-        repo_link = ctx.component.repository.remote_path
-        deps_dev_repo_info = DepsDevRepoFinder.get_project_info(repo_link)
+        repo_link = ctx.component.repository.remote_path if ctx.component.repository else None
+        if repo_link:
+            deps_dev_repo_info = DepsDevRepoFinder.get_project_info(repo_link)
 
         if deps_dev_repo_info:
             stars_count = deps_dev_repo_info.get("starsCount")
