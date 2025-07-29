@@ -360,8 +360,9 @@ def stream_file_with_size_limit(
         if data_processed >= size_limit > 0:
             response.close()
             logger.warning(
-                "The download of file '%s' has been unsuccessful due to the configured size limit."
-                "To be able to download this file, increase the size limit and try again."
+                "The download of file '%s' has been unsuccessful due to the configured size limit. "
+                "To be able to download this file, increase the size limit and try again.",
+                url,
             )
             return False
 
