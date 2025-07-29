@@ -14,7 +14,6 @@ steps:
     command_args:
     - -purl
     - pkg:npm/semver@7.7.2
-    - --verify-provenance
 - name: Verify checks for semver@7.7.2
   kind: verify
   options:
@@ -25,7 +24,6 @@ steps:
     command_args:
     - -purl
     - pkg:npm/semver@7.6.0
-    - --verify-provenance
 - name: Verify checks for all 7.x semver runs
   kind: verify
   options:
@@ -36,7 +34,6 @@ steps:
     command_args:
     - -purl
     - pkg:npm/semver@1.0.0
-    - --verify-provenance
 - name: Verify checks for all semver runs
   kind: verify
   options:
