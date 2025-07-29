@@ -249,7 +249,7 @@ def _find_subject_asset(
     for item in all_assets:
         item_path = os.path.join(download_path, item["name"])
         # Make sure to download an archive just once.
-        if not Path(item_path).is_file():
+        if not Path(item_path).exists():
             # TODO: check that it's not too large.
             if not ci_service.api_client.download_asset(item["url"], item_path):
                 logger.info("Could not download artifact %s. Skip verifying...", os.path.basename(item_path))

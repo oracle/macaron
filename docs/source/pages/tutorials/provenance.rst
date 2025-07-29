@@ -16,6 +16,8 @@ Currently, Macaron supports discovery of attestation for:
 
 This tutorial uses example packages to demonstrate these discovery methods: The `semver <https://www.npmjs.com/package/semver>`_ npm package, the `toga <https://pypi.org/pypi/toga>`_ PyPI package, and the `urllib3 <https://pypi.org/project/urllib3>`_ PyPI package.
 
+.. note:: Macaron has a size limit imposed for downloads. For more information on this see Section :ref:`Download Limit`.
+
 .. contents:: :local:
 
 ******************************
@@ -55,13 +57,13 @@ To analyze a specific version of the semver package, Macaron can be run with the
 
 .. code-block:: shell
 
-    ./run_macaron.sh analyze -purl pkg:npm/semver@7.7.2 --verify-provenance
+    ./run_macaron.sh analyze -purl pkg:npm/semver@7.7.2
 
 During this analysis, Macaron will retrieve two provenance files from the npm registry. One is a :term:`SLSA` v1.0 provenance, while the other is a npm specific publication provenance. The SLSA provenance provides details of the artifact it relates to, the repository it was built from, and the build action used to build it. The npm specific publication provenance exists if the SLSA provenance has been verified before publication.
 
 .. note:: Most of the details from the two provenance files can be found through the links provided on the artifacts page on the npm website. In particular: `Sigstore Rekor <https://search.sigstore.dev/?logIndex=211457167>`_. The provenance file itself can be found at: `npm registry <https://registry.npmjs.org/-/npm/v1/attestations/semver@7.7.2>`_.
 
-Of course to reliably say the above does what is claimed here, proof is needed. For this we can rely on the check results produced from the analysis run. In particular, we want to know the results of three checks: ``mcn_provenance_derived_repo_1``, ``mcn_provenance_derived_commit_1``, and ``mcn_provenance_verified_1``. The first two to ensure that the commit and the repository being analyzed match those found in the provenance file, and the last check to ensure that the provenance file has been verified. For the third check to succeed, you need to enable provenance verification in Macaron by using the ``--verify-provenance`` command-line argument, as demonstrated above. This verification is disabled by default because it can be slow in some cases due to I/O-bound operations.
+Of course to reliably say the above does what is claimed here, proof is needed. For this we can rely on the check results produced from the analysis run. In particular, we want to know the results of three checks: ``mcn_provenance_derived_repo_1``, ``mcn_provenance_derived_commit_1``, and ``mcn_provenance_verified_1``. The first two to ensure that the commit and the repository being analyzed match those found in the provenance file, and the last check to ensure that the provenance file has been verified.
 
 .. _fig_semver_7.7.2_report:
 
@@ -150,7 +152,7 @@ To demonstrate GitHub attestation being found from released assets on the platfo
 
 .. code-block:: shell
 
-    ./run_macaron.sh analyze -purl pkg:pypi/urllib3@2.0.0a1 --verify-provenance
+    ./run_macaron.sh analyze -purl pkg:pypi/urllib3@2.0.0a1
 
 As part of this analysis, Macaron ends up downloading three different asset files: The `attestation asset <https://api.github.com/repos/urllib3/urllib3/releases/assets/84708804>`_, the artifact's Python wheel file, and the artifact's compressed archive. By examining the attestation, Macaron can verify the two other files. This analysis can then report that provenance exists, and is verified.
 
@@ -215,7 +217,6 @@ Predicate Types
     * SLSA v1.0
     * Witness v0.1
 
-
 Build Types
 ~~~~~~~~~~~
 
@@ -229,7 +230,13 @@ Build Types
     "SLSA Oracle Cloud Infrastructure v1.0", "https://github.com/oracle/macaron/tree/main/src/macaron/resources/provenance-buildtypes/oci/v1"
     "Witness GitLab                   v0.1", "https://witness.testifysec.com/attestation-collection/v0.1"
 
+.. _Download Limit:
 
+*******************
+File Download Limit
+*******************
+
+To prevent analyses from taking too long, Macaron imposes a configurable size limit for downloads. This includes files being downloaded for provenance verification. In cases where the limit is being reached and you wish to continue analysis regardless, you can specify a new download size in the default configuration file. This value can be found under the ``slsa.verifier`` section, listed as ``max_download_size`` with a default limit of 10 megabytes. See :ref:`How to change the default configuration <change-config>` for more details on configuring values like these.
 
 **************************************
 Run ``verify-policy`` command (semver)
