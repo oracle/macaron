@@ -514,8 +514,6 @@ class Analyzer:
             if artifact_hash:
                 provenance_payload = self.get_github_attestation_payload(analyze_ctx, git_service, artifact_hash)
 
-        if parsed_purl is not None:
-            self._verify_repository_link(parsed_purl, analyze_ctx)
         self._determine_package_registries(analyze_ctx, package_registries_info)
 
         provenance_l3_verified = False
@@ -575,6 +573,9 @@ class Analyzer:
                 provenance_asset_url=provenance_asset.url if provenance_asset else None,
                 # TODO Add release digest.
             )
+
+        if parsed_purl is not None:
+            self._verify_repository_link(parsed_purl, analyze_ctx)
 
         analyze_ctx.dynamic_data["force_analyze_source"] = force_analyze_source
 
@@ -1232,7 +1233,7 @@ class Analyzer:
             logger.debug("The repository is not available. Skipping the repository verification.")
             return
 
-        if parsed_purl.namespace is None or parsed_purl.version is None:
+        if parsed_purl.version is None:
             logger.debug("The PURL is not complete. Skipping the repository verification.")
             return
 
@@ -1242,6 +1243,10 @@ class Analyzer:
 
         analyze_ctx.dynamic_data["repo_verification"] = []
 
+        provenance_repo_url = None
+        if provenance_info := analyze_ctx.dynamic_data["provenance_info"]:
+            provenance_repo_url = provenance_info.repository_url
+
         for build_tool in build_tools:
             verification_result = verify_repo(
                 namespace=parsed_purl.namespace,
@@ -1249,6 +1254,7 @@ class Analyzer:
                 version=parsed_purl.version,
                 reported_repo_url=analyze_ctx.component.repository.remote_path,
                 reported_repo_fs=analyze_ctx.component.repository.fs_path,
+                provenance_repo_url=provenance_repo_url,
                 build_tool=build_tool,
             )
             analyze_ctx.dynamic_data["repo_verification"].append(verification_result)
