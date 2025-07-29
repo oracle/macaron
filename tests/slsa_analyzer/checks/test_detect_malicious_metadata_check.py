@@ -96,6 +96,10 @@ def test_detect_malicious_metadata(
     [osv_dev]
     url_netloc = {base_url_parsed.netloc}
     url_scheme = {base_url_parsed.scheme}
+
+    [heuristic.pypi]
+    check_deliverability = False
+
     """
     user_config_path = os.path.join(tmp_path, "config.ini")
     with open(user_config_path, "w", encoding="utf-8") as user_config_file:
