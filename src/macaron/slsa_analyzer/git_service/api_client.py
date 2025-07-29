@@ -644,7 +644,7 @@ class GhAPIClient(BaseAPIClient):
 
         timeout = defaults.getint("downloads", "timeout", fallback=120)
         size_limit = defaults.getint("slsa.verifier", "max_download_size", fallback=10000000)
-        headers = {"Authorization": self.headers["Authorization"]}
+        headers = {"Accept": "application/octet-stream", "Authorization": self.headers["Authorization"]}
 
         return download_file_with_size_limit(url, headers, download_path, timeout, size_limit)
 
