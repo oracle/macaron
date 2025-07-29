@@ -17,7 +17,7 @@ repos:
 
 # Commitizen enforces semantic and conventional commit messages.
 - repo: https://github.com/commitizen-tools/commitizen
-  rev: v4.4.1
+  rev: v4.8.3
   hooks:
   - id: commitizen
     name: Check conventional commit message
@@ -50,7 +50,7 @@ repos:
 
 # Upgrade and rewrite Python idioms.
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.19.1
+  rev: v3.20.0
   hooks:
   - id: pyupgrade
     name: Upgrade code idioms
@@ -60,13 +60,13 @@ repos:
 # Similar to pylint, with a few more/different checks. For more available
 # extensions: https://github.com/DmytroLitvinov/awesome-flake8-extensions
 - repo: https://github.com/pycqa/flake8
-  rev: 7.1.2
+  rev: 7.3.0
   hooks:
   - id: flake8
     name: Check flake8 issues
     files: ^src/macaron/|^tests/
     types: [text, python]
-    additional_dependencies: [flake8-bugbear==22.10.27, flake8-builtins==2.0.1, flake8-comprehensions==3.10.1, flake8-docstrings==1.6.0, flake8-mutable==1.2.0, flake8-noqa==1.4.0, flake8-pytest-style==1.6.0, flake8-rst-docstrings==0.3.0, pep8-naming==0.13.2]
+    additional_dependencies: [flake8-bugbear==22.10.27, flake8-builtins==2.0.1, flake8-comprehensions==3.10.1, flake8-docstrings==1.6.0, flake8-mutable==1.2.0, flake8-noqa==1.4.0, flake8-pytest-style==1.6.0, flake8-rst-docstrings==0.3.0, flake8-print==5.0.0, pep8-naming==0.13.2]
     exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
     args: [--config, .flake8]
 
@@ -75,6 +75,13 @@ repos:
   rev: v1.7.7.23
   hooks:
   - id: actionlint
+
+# Check shell scripts with shellcheck.
+- repo: https://github.com/shellcheck-py/shellcheck-py
+  rev: v0.10.0.1
+  hooks:
+  - id: shellcheck
+    exclude: ^tests/
 
 # Run Pylint from the local repo to make sure venv packages
 # specified in pyproject.toml are available.
@@ -103,7 +110,7 @@ repos:
 
 # Check for potential security issues.
 - repo: https://github.com/PyCQA/bandit
-  rev: 1.8.3
+  rev: 1.8.6
   hooks:
   - id: bandit
     name: Check for security issues
@@ -157,7 +164,7 @@ repos:
 
 # Check and prettify the configuration files.
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.14.0
+  rev: v2.15.0
   hooks:
   - id: pretty-format-ini
     args: [--autofix]
@@ -217,7 +224,7 @@ repos:
 
 # A linter for Golang
 - repo: https://github.com/golangci/golangci-lint
-  rev: v1.64.6
+  rev: v2.3.0
   hooks:
   - id: golangci-lint
 

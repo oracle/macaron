@@ -90,7 +90,7 @@ the requirements that are currently supported by Macaron.
      - If there is no commit, this check will fail.
    * - ``mcn_scm_authenticity_check_1``
      - **Source repo authenticity** - Check whether the claims of a source code repository made by a package can be corroborated.
-     - If the source code repository contains conflicting evidence regarding its claim of the source code repository, this check will fail. If no source code repository or corroborating evidence is found, or if the build system is unsupported, the check will return ``UNKNOWN`` as the result. This check currently supports only Maven artifacts.
+     - If the source code repository contains conflicting evidence regarding its claim of the source code repository, this check will fail. If no source code repository or corroborating evidence is found, or if the build system is unsupported, the check will return ``UNKNOWN`` as the result. This check supports Maven artifacts, and other artifacts that have a repository that is confirmed to be from a provenance file.
    * - ``mcn_detect_malicious_metadata_1``
      - **Malicious code detection** - Check whether the source code or package metadata has indicators of compromise.
      - This check performs analysis on PyPI package metadata to detect malicious behavior. It also reports known malware from other ecosystems.

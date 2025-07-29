@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the base class and core data models for repository verification."""
@@ -94,10 +94,21 @@ class RepositoryVerificationResult:
 class RepoVerifierBase(abc.ABC):
     """The base class to verify whether a reported repository links back to the artifact."""
 
-    @property
     @abc.abstractmethod
-    def build_tool(self) -> BaseBuildTool:
-        """Define the build tool used to build the package."""
+    def verify_repo(self) -> RepositoryVerificationResult:
+        """Verify whether the repository links back to the artifact.
+
+        Returns
+        -------
+        RepositoryVerificationResult
+            The result of the repository verification
+        """
+
+
+class RepoVerifierFromProvenance(RepoVerifierBase):
+    """An implementation of the base verifier that verifies a repository if the URL comes from provenance."""
+
+    DEFAULT_REASON = "from_provenance"
 
     def __init__(
         self,
@@ -106,6 +117,8 @@ class RepoVerifierBase(abc.ABC):
         version: str,
         reported_repo_url: str,
         reported_repo_fs: str,
+        provenance_repo_url: str | None,
+        build_tool: BaseBuildTool,
     ):
         """Instantiate the class.
 
@@ -121,19 +134,82 @@ class RepoVerifierBase(abc.ABC):
             The URL of the repository reported by the publisher.
         reported_repo_fs : str
             The file system path of the reported repository.
+        provenance_repo_url : str | None
+            The URL of the repository from a provenance file, or None if it, or the provenance, is not present.
+        build_tool : BaseBuildTool
+            The build tool used to build the package.
         """
         self.namespace = namespace
         self.name = name
         self.version = version
         self.reported_repo_url = reported_repo_url
         self.reported_repo_fs = reported_repo_fs
+        self.provenance_repo_url = provenance_repo_url
+        self.build_tool = build_tool
+
+    def verify_repo(self) -> RepositoryVerificationResult:
+        """Verify whether the repository links back to the artifact from the provenance URL."""
+        if self.provenance_repo_url:
+            return RepositoryVerificationResult(
+                status=RepositoryVerificationStatus.PASSED,
+                reason=RepoVerifierFromProvenance.DEFAULT_REASON,
+                build_tool=self.build_tool,
+            )
+
+        return RepositoryVerificationResult(
+            status=RepositoryVerificationStatus.UNKNOWN, reason="unsupported_type", build_tool=self.build_tool
+        )
+
+
+class RepoVerifierToolSpecific(RepoVerifierFromProvenance, abc.ABC):
+    """An abstract subclass of the repo verifier that provides and calls a per-tool verification function.
+
+    From-provenance verification is inherited from the parent class.
+    """
+
+    @property
+    @abc.abstractmethod
+    def specific_tool(self) -> BaseBuildTool:
+        """Define the build tool used to build the package."""
+
+    def __init__(
+        self,
+        namespace: str | None,
+        name: str,
+        version: str,
+        reported_repo_url: str,
+        reported_repo_fs: str,
+        provenance_repo_url: str | None,
+    ):
+        """Instantiate the class.
+
+        Parameters
+        ----------
+        namespace : str
+            The namespace of the artifact.
+        name : str
+            The name of the artifact.
+        version : str
+            The version of the artifact.
+        reported_repo_url : str
+            The URL of the repository reported by the publisher.
+        reported_repo_fs : str
+            The file system path of the reported repository.
+        provenance_repo_url : str | None
+            The URL of the repository from a provenance file, or None if it, or the provenance, is not present.
+        """
+        super().__init__(
+            namespace, name, version, reported_repo_url, reported_repo_fs, provenance_repo_url, self.specific_tool
+        )
+
+    def verify_repo(self) -> RepositoryVerificationResult:
+        """Verify the repository as per the base class method."""
+        result = super().verify_repo()
+        if result.status == RepositoryVerificationStatus.PASSED:
+            return result
+
+        return self.verify_by_tool()
 
     @abc.abstractmethod
-    def verify_repo(self) -> RepositoryVerificationResult:
-        """Verify whether the repository links back to the artifact.
-
-        Returns
-        -------
-        RepositoryVerificationResult
-            The result of the repository verification
-        """
+    def verify_by_tool(self) -> RepositoryVerificationResult:
+        """Verify the repository using build tool specific methods."""
