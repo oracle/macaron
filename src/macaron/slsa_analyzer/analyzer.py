@@ -147,7 +147,6 @@ class Analyzer:
         sbom_path: str = "",
         deps_depth: int = 0,
         provenance_payload: InTotoPayload | None = None,
-        verify_provenance: bool = False,
         force_analyze_source: bool = False,
     ) -> int:
         """Run the analysis and write results to the output path.
@@ -165,8 +164,6 @@ class Analyzer:
             The depth of dependency resolution. Default: 0.
         provenance_payload : InToToPayload | None
             The provenance intoto payload for the main software component.
-        verify_provenance: bool
-            Enable provenance verification if True.
         force_analyze_source : bool
             When true, enforces running source code analysis regardless of other heuristic results. Defaults to False.
 
@@ -201,7 +198,6 @@ class Analyzer:
                     main_config,
                     analysis,
                     provenance_payload=provenance_payload,
-                    verify_provenance=verify_provenance,
                     force_analyze_source=force_analyze_source,
                 )
 
@@ -320,7 +316,6 @@ class Analyzer:
         analysis: Analysis,
         existing_records: dict[str, Record] | None = None,
         provenance_payload: InTotoPayload | None = None,
-        verify_provenance: bool = False,
         force_analyze_source: bool = False,
     ) -> Record:
         """Run the checks for a single repository target.
@@ -338,8 +333,6 @@ class Analyzer:
             The mapping of existing records that the analysis has run successfully.
         provenance_payload : InToToPayload | None
             The provenance intoto payload for the analyzed software component.
-        verify_provenance: bool
-            Enable provenance verification if True.
         force_analyze_source : bool
             When true, enforces running source code analysis regardless of other heuristic results. Defaults to False.
 
@@ -378,7 +371,7 @@ class Analyzer:
                 provenance_payload = provenance_asset.payload
                 if provenance_payload.verified:
                     provenance_is_verified = True
-                if verify_provenance:
+                else:
                     provenance_is_verified = provenance_verifier.verify_provenance(parsed_purl, provenances)
 
         # Try to extract the repository URL and commit digest from the Provenance, if it exists.
@@ -513,6 +506,15 @@ class Analyzer:
             artifact_hash = self.get_artifact_hash(parsed_purl, local_artifact_dirs, package_registries_info)
             if artifact_hash:
                 provenance_payload = self.get_github_attestation_payload(analyze_ctx, git_service, artifact_hash)
+                if provenance_payload:
+                    try:
+                        provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
+                            provenance_payload
+                        )
+                        # Attestations found from GitHub are signed and verified.
+                        provenance_is_verified = True
+                    except ProvenanceError as error:
+                        logger.debug("Failed to extract from provenance: %s", error)
 
         self._determine_package_registries(analyze_ctx, package_registries_info)
 
@@ -544,14 +546,13 @@ class Analyzer:
                         )
 
                     # Also try to verify CI provenance contents.
-                    if verify_provenance:
-                        verified = []
-                        for ci_info in analyze_ctx.dynamic_data["ci_services"]:
-                            verified.append(verify_ci_provenance(analyze_ctx, ci_info, temp_dir))
-                            if not verified:
-                                break
-                        if verified and all(verified):
-                            provenance_l3_verified = True
+                    verified = []
+                    for ci_info in analyze_ctx.dynamic_data["ci_services"]:
+                        verified.append(verify_ci_provenance(analyze_ctx, ci_info, temp_dir))
+                        if not verified:
+                            break
+                    if verified and all(verified):
+                        provenance_l3_verified = True
 
         if provenance_payload:
             analyze_ctx.dynamic_data["is_inferred_prov"] = False
