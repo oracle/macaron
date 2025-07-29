@@ -12,7 +12,12 @@ from typing import NamedTuple
 
 from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.asset import AssetLocator
-from macaron.util import construct_query, download_github_build_log, send_get_http, send_get_http_raw
+from macaron.util import (
+    construct_query,
+    download_file_with_size_limit,
+    download_github_build_log,
+    send_get_http,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -637,27 +642,11 @@ class GhAPIClient(BaseAPIClient):
         """
         logger.debug("Download assets from %s at %s.", url, download_path)
 
-        # Allow downloading binaries.
-        response = send_get_http_raw(
-            url,
-            {
-                "Accept": "application/octet-stream",
-                "Authorization": self.headers["Authorization"],
-            },
-            timeout=defaults.getint("downloads", "timeout", fallback=120),
-        )
-        if not response:
-            logger.error("Could not download the asset.")
-            return False
+        timeout = defaults.getint("downloads", "timeout", fallback=120)
+        size_limit = defaults.getint("slsa.verifier", "max_download_size", fallback=10000000)
+        headers = {"Authorization": self.headers["Authorization"]}
 
-        try:
-            with open(download_path, "wb") as asset_file:
-                asset_file.write(response.content)
-        except OSError as error:
-            logger.error(error)
-            return False
-
-        return True
+        return download_file_with_size_limit(url, headers, download_path, timeout, size_limit)
 
     def get_attestation(self, full_name: str, artifact_hash: str) -> dict:
         """Download and return the attestation associated with the passed artifact hash, if any.
