@@ -107,12 +107,15 @@ class BuildScriptCheck(BaseCheck):
         #       we parse bash scripts that are reachable through CI only.
         result_tables: list[CheckFacts] = []
         ci_services = ctx.dynamic_data["ci_services"]
+
         for tool in build_tools:
             for ci_info in ci_services:
                 ci_service: BaseCIService = ci_info["service"]
                 # Checking if a CI service is discovered for this repo.
                 if isinstance(ci_service, NoneCIService):
                     continue
+
+                # Process regular workflow build commands
                 try:
                     for build_command in ci_service.get_build_tool_commands(
                         callgraph=ci_info["callgraph"], build_tool=tool
@@ -147,6 +150,38 @@ class BuildScriptCheck(BaseCheck):
                         )
                 except CallGraphError as error:
                     logger.debug(error)
+
+                # Process Docker build commands if the CI service has the method
+                if hasattr(ci_service, "get_docker_build_commands"):
+                    try:
+                        for build_command in ci_service.get_docker_build_commands(
+                            callgraph=ci_info["callgraph"], build_tool=tool
+                        ):
+                            logger.debug("Processing Docker build command %s", build_command)
+                            # For Dockerfile, link to the Dockerfile itself
+                            relative_path = os.path.relpath(build_command["ci_path"], ctx.component.repository.fs_path)
+                            trigger_link = ci_service.api_client.get_file_link(
+                                ctx.component.repository.full_name,
+                                ctx.component.repository.commit_sha,
+                                relative_path,
+                            )
+                            logger.debug("Trigger link for Docker build command: %s", trigger_link)
+
+                            result_tables.append(
+                                BuildScriptFacts(
+                                    build_tool_name=tool.name,
+                                    ci_service_name=ci_service.name,
+                                    build_trigger=trigger_link,
+                                    language=build_command["language"],
+                                    language_distributions=None,
+                                    language_versions=None,
+                                    language_url=None,
+                                    build_tool_command=tool.serialize_to_json(build_command["command"]),
+                                    confidence=Confidence.HIGH,
+                                )
+                            )
+                    except CallGraphError as error:
+                        logger.debug(error)
 
         return CheckResultData(result_tables=result_tables, result_type=CheckResultType.PASSED)
 
