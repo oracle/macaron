@@ -248,7 +248,7 @@ class DependencyAnalyzer(ABC):
             latest_deps[key] = item
         else:
             try:
-                # These are stored as variables so mypy does not complain about None values (union-attr)
+                # These are stored as variables so mypy does not complain about None values (union-attr).
                 latest_value_purl = latest_value.get("purl")
                 item_purl = item.get("purl")
                 if (
@@ -476,7 +476,7 @@ class DependencyAnalyzer(ABC):
             if outcome not in {RepoFinderInfo.FOUND, RepoFinderInfo.FOUND_FROM_PARENT}:
                 logger.debug("Failed to find url for purl: %s", item["purl"])
             else:
-                # TODO decide how to handle possible duplicates here
+                # TODO decide how to handle possible duplicates here.
                 item["url"] = url
                 item["available"] = SCMStatus.AVAILABLE
                 item["note"] = ""
@@ -692,7 +692,7 @@ class DependencyAnalyzer(ABC):
                 # submodules that produce development artifacts in the same repo.
                 if (
                     "snapshot" in (purl.version or "").lower()
-                    # or "" is not necessary but mypy produces a FP otherwise.
+                    # Or "" is not necessary but mypy produces a FP otherwise.
                     and root_component
                     and purl.namespace == root_component.group
                 ):

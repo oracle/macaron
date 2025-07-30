@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for BaseCheck."""
@@ -12,7 +12,7 @@ from macaron.slsa_analyzer.checks.base_check import BaseCheck
 class TestConfiguration(TestCase):
     """This class contains the tests for BaseCheck."""
 
-    # Disable flake8's D202 check: "No blank lines allowed after function docstring"
+    # Disable flake8's D202 check: "No blank lines allowed after function docstring".
     def test_raise_implementation_error(self) -> None:
         """Test raising errors if child class does not override abstract method(s)."""  # noqa: D202
 

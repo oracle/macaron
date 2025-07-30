@@ -82,16 +82,16 @@ class AnalyzeContext:
 
         self.slsa_level = SLSALevels.LEVEL0
         # Indicate whether this repo fully reach a level or
-        # it's just compliant for a SLSA level
+        # it's just compliant for a SLSA level.
         self.is_full_reach = False
 
         # The Macaron root path where the wrapper files exist.
         self.macaron_path = macaron_path
 
-        # The output dir to store all files
+        # The output dir to store all files.
         self.output_dir = output_dir
 
-        # The check results from the analysis
+        # The check results from the analysis.
         self.check_results: dict[str, CheckResult] = {}
 
         # Add the data computed at runtime to the dynamic_data attribute.
@@ -169,7 +169,7 @@ class AnalyzeContext:
         except KeyError:
             return {}
 
-    # TODO: refactor as this information is related to the reporter not analyze context
+    # TODO: refactor as this information is related to the reporter not analyze context.
     @property
     def is_inferred_provenance(self) -> bool:
         """Return True if the provenance for this repo is an inferred one.
@@ -234,7 +234,7 @@ class AnalyzeContext:
         # Remove result_tables since we don't have a good json representation for them.
         sorted_on_id = []
         for res in _sorted_on_id:
-            # res is CheckResult
+            # Res is CheckResult.
             res_dict: dict = dict(res.get_summary())
             res_dict.pop("result_tables")
             sorted_on_id.append(res_dict)

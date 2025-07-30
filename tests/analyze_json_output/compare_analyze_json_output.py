@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module checks the result JSON files against the expected outputs."""
@@ -17,7 +17,7 @@ def compare_check_results(result: dict, expected: dict) -> int:
     """Compare the content of the target.checks section."""
     fail_count = 0
 
-    # Compare summary
+    # Compare summary.
     for key, exp_val in expected["summary"].items():
         if exp_val != result["summary"].get(key):
             logger.error(
@@ -28,7 +28,7 @@ def compare_check_results(result: dict, expected: dict) -> int:
             )
             fail_count += 1
 
-    # Compare check results
+    # Compare check results.
     res_sorted_reqs = sorted(result["results"], key=lambda item: str(item["check_id"]))
     exp_sorted_reqs = sorted(expected["results"], key=lambda item: str(item["check_id"]))
 
@@ -84,13 +84,13 @@ def compare_check_results(result: dict, expected: dict) -> int:
 
 def compare_target_info(result: dict, expected: dict) -> int:
     """Compare the content of the target.info section"""
-    # Remove nondeterministic fields
+    # Remove nondeterministic fields.
     result["local_cloned_path"] = expected["local_cloned_path"] = ""
     result["commit_date"] = expected["commit_date"] = ""
 
     fail_count = 0
 
-    # Iterate through elements in the JSON dictionary
+    # Iterate through elements in the JSON dictionary.
     for key, exp_item in expected.items():
         result_item = result.get(key)
 

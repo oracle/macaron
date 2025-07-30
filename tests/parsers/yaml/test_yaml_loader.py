@@ -24,15 +24,15 @@ class TestYamlLoader(TestCase):
 
     def test_load_yaml_content(self) -> None:
         """Test the load yaml content method."""
-        # Valid content
+        # Valid content.
         with patch("yamale.make_data", return_value=[({"yaml": None}, None)]):
             assert YamlLoader._load_yaml_content("sample_file_path") == [({"yaml": None}, None)]
 
-        # Failed while loading the yaml file
+        # Failed while loading the yaml file.
         with patch("yamale.make_data", side_effect=YAMLError):
             assert not YamlLoader._load_yaml_content("sample_file_path")
 
-        # File not found
+        # File not found.
         with patch("yamale.make_data", side_effect=FileNotFoundError):
             assert not YamlLoader._load_yaml_content("sample_file_path")
 
@@ -43,11 +43,11 @@ class TestYamlLoader(TestCase):
         mock_schema = Schema({})
         mock_data: list = []
 
-        # No errors
+        # No errors.
         with patch("yamale.validate", return_value=[]):
             assert YamlLoader.validate_yaml_data(mock_schema, mock_data)
 
-        # Errors exist
+        # Errors exist.
         with patch("yamale.validate", side_effect=YamaleError(results=[])):
             assert not YamlLoader.validate_yaml_data(mock_schema, mock_data)
 

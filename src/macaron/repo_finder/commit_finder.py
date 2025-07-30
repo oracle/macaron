@@ -34,12 +34,12 @@ logger: logging.Logger = logging.getLogger(__name__)
 # This part of the pattern terminates with an OR character to allow for it to be combined with the name of the target
 # artifact as another possible prefix match.
 # E.g.
-# PREFIX_START + <artifact_name> + PREFIX_END
+# PREFIX_START + <artifact_name> + PREFIX_END.
 PREFIX_START = "(?P<prefix_0>(?:(?:.*(?:[a-z0-9][a-z][0-9]+|[0-9][a-z]|[a-z]{2}|[0-9]{1,2}))|[a-z]{2})|"
 PREFIX_END = ")?"
 
 # An alternative prefix pattern that is intended for a single use case: A prefix that contains a part that is
-# difficult to distinguish from part of a version, i.e. java-v1-1.1.0 (prefix: java-v1, version: 1.1.0)
+# difficult to distinguish from part of a version, i.e. java-v1-1.1.0 (prefix: java-v1, version: 1.1.0).
 PREFIX_WITH_SEPARATOR = "(?P<prefix_1>(?:[a-z].*(?P<prefix_sep_1>[^a-z0-9])[a-z][0-9]+))(?:(?P=prefix_sep_1))"
 
 # Another alternative prefix pattern that accepts a string of any number of alphabetic characters and no separator.
@@ -96,7 +96,7 @@ SUFFIX = "(?P<suffix>[a-z0-9].*)?"
 # If a version string has less parts than this number it will be padded with additional zeros to provide better matching
 # opportunities.
 # For this to be applied, the version string must not have any non-numeric parts.
-# E.g 1.2 (2) -> 1.2.0.0 (4), 1.2.RELEASE (3) -> 1.2.RELEASE (3), 1.DEV-5 (3) -> 1.DEV-5 (3)
+# E.g 1.2 (2) -> 1.2.0.0 (4), 1.2.RELEASE (3) -> 1.2.RELEASE (3), 1.DEV-5 (3) -> 1.DEV-5 (3).
 MAX_ZERO_DIGIT_EXTENSION = 4
 
 split_pattern = re.compile("[^0-9a-z]", flags=re.IGNORECASE)  # Used to split version strings.
@@ -105,8 +105,8 @@ validation_pattern = re.compile("^[0-9a-z]+$", flags=re.IGNORECASE)  # Used to v
 alphabetic_only_pattern = re.compile("^[a-z]+$", flags=re.IGNORECASE)
 hex_only_pattern = re.compile("^[0-9a-f]+$", flags=re.IGNORECASE)
 numeric_only_pattern = re.compile("^[0-9]+$")
-special_suffix_pattern = re.compile("^([0-9]+)([a-z]+[0-9]+)$", flags=re.IGNORECASE)  # E.g. 1.10rc1
-versioned_string = re.compile("^([a-z]*)(0*)([1-9]+[0-9]*)?$", flags=re.IGNORECASE)  # e.g. RC1, 15, 0010, M, etc.
+special_suffix_pattern = re.compile("^([0-9]+)([a-z]+[0-9]+)$", flags=re.IGNORECASE)  # E.g. 1.10rc1.
+versioned_string = re.compile("^([a-z]*)(0*)([1-9]+[0-9]*)?$", flags=re.IGNORECASE)  # E.g. RC1, 15, 0010, M, etc.
 multiple_zero_pattern = re.compile("^0+$")
 name_version_pattern = re.compile("([0-9]+(?:[.][0-9]+)*)")  # Identifies version-like parts within prefixes.
 
@@ -323,7 +323,7 @@ def _split_name(name: str) -> list[str]:
 def _split_version(version: str) -> tuple[list[str], bool, set[int]]:
     """Split a version into its constituent parts, and flag if the version contained more than one kind of seperator."""
     # The version is split on non-alphanumeric characters to separate the version parts from the non-version parts.
-    # e.g. 1.2.3-DEV -> [1, 2, 3, DEV]
+    # E.g. 1.2.3-DEV -> [1, 2, 3, DEV].
     split = split_pattern.split(version)
     version_separators = _split_separators(version)
     multi_sep = False
@@ -592,7 +592,7 @@ def match_tags(tag_list: list[str], name: str, version: str) -> tuple[list[str],
         if not prefix:
             continue
         if "/" in prefix:
-            # Exclude prefix parts that exists before a forward slash, e.g. rel/
+            # Exclude prefix parts that exists before a forward slash, e.g. rel/.
             _, _, prefix = prefix.rpartition("/")
         if (
             prefix.lower() == name.lower()
@@ -654,7 +654,7 @@ def _fix_misaligned_tag_matches(matched_tags: list[dict[str, str]], version: str
         # Try to move any version-like strings from the end of the prefix to the version.
         # E.g. An optional 'v', 'r', or 'c', followed by one or more numbers.
         # TODO consider cases where multiple version-like parts exist in the prefix.
-        #  E.g. Prefix: 'prefix-1.2' Version: '3.4' from Artifact Version 'prefix-1.2.3.4'
+        #  E.g. Prefix: 'prefix-1.2' Version: '3.4' from Artifact Version 'prefix-1.2.3.4'.
         if re.match("^([vrc])?[0-9]+$", prefixes[-1], re.IGNORECASE):
             if version_sep and version_sep == prefix_sep:
                 # Ensure there is a version separator and a prefix separator, and they match.
@@ -762,7 +762,7 @@ def _compute_tag_version_similarity(
     # Try to reduce the score further based on the tag suffix.
     if tag_suffix:
         last_part = version_parts[-1].lower()
-        # The tag suffix might consist of multiple version parts, e.g. RC1.RELEASE
+        # The tag suffix might consist of multiple version parts, e.g. RC1.RELEASE.
         suffix_split, _, _ = _split_version(tag_suffix)
         # Try to match suffix parts to version.
         versioned_string_match = False

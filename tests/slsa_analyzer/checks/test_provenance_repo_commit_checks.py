@@ -53,7 +53,7 @@ def test_provenance_repo_commit_checks_pass(
     context = _prepare_context(macaron_path, repository)
     context.dynamic_data["provenance_info"] = Provenance(repository_url=repo_url, commit_sha=commit_digest)
 
-    # Check Repo
+    # Check Repo.
     repo_result = _perform_check_assert_result_return_result(
         ProvenanceDerivedRepoCheck(), context, CheckResultType.PASSED
     )
@@ -61,7 +61,7 @@ def test_provenance_repo_commit_checks_pass(
     assert repo_fact
     assert repo_fact.repository_info == "The repository URL was found from provenance."
 
-    # Check Commit
+    # Check Commit.
     commit_result = _perform_check_assert_result_return_result(
         ProvenanceDerivedCommitCheck(), context, CheckResultType.PASSED
     )
@@ -77,10 +77,10 @@ def test_provenance_repo_commit_checks_fail(
     """Test combinations of Repository objects and provenance strings against check."""
     context = _prepare_context(macaron_path, repository)
 
-    # Check Repo
+    # Check Repo.
     _perform_check_assert_result_return_result(ProvenanceDerivedRepoCheck(), context, CheckResultType.FAILED)
 
-    # Check Commit
+    # Check Commit.
     _perform_check_assert_result_return_result(ProvenanceDerivedCommitCheck(), context, CheckResultType.FAILED)
 
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for the Registry class."""
@@ -36,7 +36,7 @@ def check_registry_fixture() -> Registry:
     Registry
         The sample registry instance.
     """
-    # Refresh Registry static variables before each test case
+    # Refresh Registry static variables before each test case.
     Registry._all_checks_mapping = {}
     Registry._check_relationships_mapping = {}
 
@@ -60,7 +60,7 @@ class TestRegistry(TestCase):
     REGISTRY = Registry()
 
     def setUp(self) -> None:
-        # Refresh Registry static variables before each test case
+        # Refresh Registry static variables before each test case.
         Registry._all_checks_mapping = {}
         Registry._check_relationships_mapping = {}
 
@@ -103,7 +103,7 @@ class TestRegistry(TestCase):
 
     def test_add_relationship_entry(self) -> None:
         """Test adding a check relationship entry."""
-        # Adding successfully
+        # Adding successfully.
         self.REGISTRY.register(MockCheck("mcn_a_1", "Parent", []))
         self.REGISTRY.register(MockCheck("mcn_b_1", "Child1", [("mcn_a_1", CheckResultType.PASSED)]))
         self.REGISTRY.register(
@@ -126,11 +126,11 @@ class TestRegistry(TestCase):
             "mcn_d_1": {},
         }
 
-        # Cannot add a check that depends on itself
+        # Cannot add a check that depends on itself.
         with self.assertRaises(SystemExit):
             self.REGISTRY.register(MockCheck("mcn_e_1", "Self-dependent-check", [("mcn_e_1", CheckResultType.PASSED)]))
 
-        # Add a check with duplicated relationships
+        # Add a check with duplicated relationships.
         with self.assertRaises(SystemExit):
             self.REGISTRY.register(
                 MockCheck(
@@ -146,7 +146,7 @@ class TestRegistry(TestCase):
     @given(
         lists(
             one_of(none(), text(), integers(), tuples(), binary(), booleans()),
-            min_size=1,  # To ensure at least one invalid req is validated
+            min_size=1,  # To ensure at least one invalid req is validated.
         )
     )
     def test_exit_on_invalid_eval_reqs(self, eval_reqs: SearchStrategy) -> None:

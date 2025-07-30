@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -22,7 +22,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 class SouffleError(Exception):
     """Occurs when the souffle program contains errors, or there is an error invoking souffle."""
 
-    # TODO: Use generic Macaron error class
+    # TODO: Use generic Macaron error class.
 
     def __init__(
         self, command: list[str] | str | None = None, message: str = "An error occurred with calling Souffle."
