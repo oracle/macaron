@@ -16,7 +16,7 @@ RESOURCES_DIR = Path(__file__).parent.joinpath("resources")
 
 
 def test_pomparser_parse() -> None:
-    """Test parsing GH Actions workflows."""
+    """Test parsing a valid XML file."""
     with open(os.path.join(RESOURCES_DIR, "valid.xml"), encoding="utf8") as file:
         assert parse(file.read())
 
@@ -29,6 +29,6 @@ def test_pomparser_parse() -> None:
     ],
 )
 def test_pomparser_parse_invalid(file_name: str) -> None:
-    """Test parsing GH Actions workflows."""
+    """Test parsing invalid XML files."""
     with open(os.path.join(RESOURCES_DIR, file_name), encoding="utf8") as file:
         assert not parse(file.read())
