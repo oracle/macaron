@@ -6,6 +6,7 @@ import logging
 from xml.etree.ElementTree import Element  # nosec B405
 
 import defusedxml.ElementTree
+from defusedxml import DefusedXmlException
 from defusedxml.ElementTree import fromstring
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -29,6 +30,6 @@ def parse_pom_string(pom_string: str) -> Element | None:
         # Stored here first to help with type checking.
         pom: Element = fromstring(pom_string)
         return pom
-    except defusedxml.ElementTree.ParseError as error:
+    except (DefusedXmlException, defusedxml.ElementTree.ParseError) as error:
         logger.debug("Failed to parse XML: %s", error)
         return None
