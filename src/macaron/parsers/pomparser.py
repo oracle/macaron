@@ -30,6 +30,8 @@ def parse_pom_string(pom_string: str) -> Element | None:
         # Stored here first to help with type checking.
         pom: Element = fromstring(pom_string)
         return pom
-    except (DefusedXmlException, defusedxml.ElementTree.ParseError) as error:
+    except defusedxml.ElementTree.ParseError as error:
         logger.debug("Failed to parse XML: %s", error)
-        return None
+    except DefusedXmlException as error:
+        logger.debug("POM rejected due to possible security issues: %s", error)
+    return None
