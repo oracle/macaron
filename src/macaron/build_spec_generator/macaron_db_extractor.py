@@ -160,7 +160,7 @@ def get_sql_stmt_latest_component_for_purl(purl: PackageURL) -> Select[tuple[Com
         .select_from(Component)
         .join(
             Analysis,
-            onclause=Component.id == Analysis.id,
+            onclause=Component.analysis_id == Analysis.id,
         )
         .where(Component.purl == purl.to_string())
         .order_by(
