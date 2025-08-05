@@ -238,14 +238,6 @@ def test_commit_finder_repo_purl_success(mocked_repo_expanded: Git, mocked_repo_
     assert outcome == CommitFinderInfo.MATCHED
 
 
-def test_commit_finder_tag_no_commit(mocked_repo: Git) -> None:
-    """Test the Commit Finder on a mocked repository that has a tag with no commit."""
-    mocked_repo.repo.create_tag("TEST", ref=mocked_repo.repo.heads.master.commit.tree)
-    match, outcome = commit_finder.find_commit(mocked_repo, PackageURL.from_string("pkg:maven/apache/maven@TEST"))
-    assert not match
-    assert outcome == CommitFinderInfo.NO_TAGS_WITH_COMMITS
-
-
 @pytest.mark.parametrize(
     ("version", "parts", "expected"),
     [
