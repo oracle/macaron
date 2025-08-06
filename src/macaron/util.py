@@ -445,7 +445,7 @@ class BytesDecoder:
 
     @staticmethod
     def decode(data: bytes) -> str | None:
-        """Attempt to decode the passed bytes using the full list of possible encodings.
+        """Attempt to decode the passed bytes using common encodings.
 
         Parameters
         ----------
