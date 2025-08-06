@@ -419,3 +419,49 @@ def copy_file_bulk(file_list: list, src_path: str, target_path: str) -> bool:
                 return False
 
     return True
+
+
+class BytesDecoder:
+    """This class aims to decode some non-UTF8 bytes to a valid string.
+
+    The aim is not to 'correctly' parse the passed data. Only to successfully do so.
+    It is assumed that an attempt to decode using UTF8 has already failed.
+    The top 10 most common encodings (after UTF-8) are tried.
+    """
+
+    # Taken from https://w3techs.com/technologies/overview/character_encoding.
+    COMMON_ENCODINGS = [
+        "ISO-8859-1",
+        "cp1252",
+        "cp1251",
+        "euc-jp",
+        "euc-kr",
+        "shift_jis",
+        "gb2312",
+        "cp1250",
+        "ISO-8859-2",
+        "big5",
+    ]
+
+    @staticmethod
+    def decode(data: bytes) -> str | None:
+        """Attempt to decode the passed bytes using the full list of possible encodings.
+
+        Parameters
+        ----------
+        data: bytes
+            The data to decode.
+
+        Returns
+        -------
+        str | None
+            The data as a string if successful, or None.
+        """
+        for encoding in BytesDecoder.COMMON_ENCODINGS:
+            try:
+                return data.decode(encoding)
+            except UnicodeDecodeError:
+                pass
+
+        logger.debug("Failed to decode bytes using most common character encodings.")
+        return None

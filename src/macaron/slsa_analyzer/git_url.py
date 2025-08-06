@@ -13,7 +13,6 @@ import urllib.parse
 from configparser import ConfigParser
 from pathlib import Path
 
-import chardet
 from git import GitCommandError
 from git.objects import Commit
 from git.repo import Repo
@@ -24,6 +23,7 @@ from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.environment_variables import get_patched_env
 from macaron.errors import CloneError, GitTagError
+from macaron.util import BytesDecoder
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -1091,12 +1091,5 @@ def decode_git_tags(data: bytes) -> str | None:
         return data.decode("utf-8")
     except UnicodeDecodeError as error:
         logger.debug("Error decoding stdout as utf-8: %s", error)
-        detection_result = chardet.detect(data)
-        logger.debug("Charset detector result: %s", detection_result)
-        if not detection_result["encoding"] or detection_result["encoding"] == "utf-8":
-            return None
-        try:
-            return data.decode(detection_result["encoding"])
-        except UnicodeDecodeError as another_error:
-            logger.debug("Error decoding stdout with encoding '%s': %s", detection_result["encoding"], another_error)
-            return None
+        # Try other character encodings.
+        return BytesDecoder.decode(data)

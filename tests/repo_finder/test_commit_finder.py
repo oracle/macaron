@@ -270,7 +270,7 @@ def test_get_repo_tags(mocked_repo_empty_commit: Any) -> None:
     # Check the tags can still be retrieved using the corrected function.
     tags = get_repo_tags(repo)
     assert tags
-    assert "1.0Ã" in tags
+    assert "1.0\u00c3" in tags
 
 
 @given(text())
