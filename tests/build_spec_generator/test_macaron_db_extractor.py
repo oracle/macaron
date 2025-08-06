@@ -86,7 +86,26 @@ def invalid_db_session() -> Generator[Session, Any, None]:
             ],
             "pkg:maven/oracle/macaron@0.16.0",
             3,
-            id="When two analyses of the same PURL has the same timestamp, the component id of the latest analysis is returned.",
+            id="two_analysis_on_the_same_purl_with_same_timestamp",
+        ),
+        pytest.param(
+            [
+                (
+                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=timezone.utc),
+                    "pkg:maven/oracle/macaron@0.16.0",
+                ),
+                (
+                    datetime(year=2025, month=12, day=6, hour=10, minute=30, second=30, tzinfo=timezone.utc),
+                    "pkg:maven/oracle/macaron@0.16.0",
+                ),
+                (
+                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=timezone.utc),
+                    "pkg:maven/boo/foo@0.1.0",
+                ),
+            ],
+            "pkg:maven/oracle/macaron@0.16.0",
+            2,
+            id="two_analysis_on_the_same_purl_with_different_timestamp",
         ),
     ],
 )
@@ -94,7 +113,7 @@ def test_lookup_latest_component(
     macaron_db_session: Session,
     input_data: list[tuple[datetime, str]],
     query_purl_string: str,
-    expect_id: int | None,
+    expect_id: int,
 ) -> None:
     """Test the lookup_latest_component function."""
     for utc_timestamp, purl_string in input_data:
@@ -125,6 +144,7 @@ def test_lookup_latest_component(
         macaron_db_session,
     )
     assert latest_component
+    assert latest_component.purl == query_purl_string
     assert latest_component.id == expect_id
 
 
@@ -134,7 +154,7 @@ def test_lookup_latest_component(
         pytest.param(
             [],
             "pkg:maven/oracle/macaron@0.16.0",
-            id="The database is empty.",
+            id="empty_database",
         ),
         pytest.param(
             [
@@ -148,7 +168,7 @@ def test_lookup_latest_component(
                 ),
             ],
             "pkg:maven/oracle/macaron@0.16.0",
-            id="The database is not empty, but no component matches the query PackageURL string.",
+            id="no_component_matched_the_input_purl",
         ),
     ],
 )
