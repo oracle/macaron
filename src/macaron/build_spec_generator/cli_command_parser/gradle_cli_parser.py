@@ -452,7 +452,7 @@ class GradleCLICommandParser:
         """Initialize the instance."""
         self.arg_parser = argparse.ArgumentParser(
             description="Parse Gradle CLI command",
-            prog="mvn",
+            prog="gradle",
             add_help=False,
             # https://docs.python.org/3/library/argparse.html#exit-on-error
             # Best effort of parsing the build command. Therefore, we don't want to exit on error.
