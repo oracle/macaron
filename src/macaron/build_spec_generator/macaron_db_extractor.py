@@ -15,7 +15,7 @@ from sqlalchemy.dialects import sqlite
 from sqlalchemy.exc import MultipleResultsFound, SQLAlchemyError
 from sqlalchemy.orm import Session, aliased
 
-from macaron.database.table_definitions import Analysis, CheckFacts, Component, MappedCheckResult, Repository
+from macaron.database.table_definitions import Analysis, CheckFacts, Component, MappedCheckResult
 from macaron.errors import QueryMacaronDatabaseError
 from macaron.slsa_analyzer.checks.build_as_code_check import BuildAsCodeFacts
 from macaron.slsa_analyzer.checks.build_script_check import BuildScriptFacts
@@ -353,32 +353,8 @@ def get_sql_stmt_build_script_check(component_id: int) -> Select[tuple[BuildScri
     )
 
 
-def get_sql_stmt_repository(component_id: int) -> Select[tuple[Repository]]:
-    """Return an SQLAlchemy SELECT statement to query the Repository for a given PackageURL.
-
-    Parameters
-    ----------
-    purl_string : str
-        The PackageURL string to find the Repository.
-
-    Returns
-    -------
-    Select[tuple[Repository]]
-        The SQLAlchemy SELECT statement.
-    """
-    return (
-        select(Repository)
-        .select_from(Component)
-        .join(
-            Repository,
-            onclause=Component.id == Repository.component_id,
-        )
-        .where(Component.id == component_id)
-    )
-
-
-def lookup_latest_component_id(purl: PackageURL, session: Session) -> int | None:
-    """Return the component id of the latest analysis that matches a given PackageURL string.
+def lookup_latest_component(purl: PackageURL, session: Session) -> Component | None:
+    """Return the component of the latest analysis that matches a given PackageURL string.
 
     Parameters
     ----------
@@ -389,29 +365,29 @@ def lookup_latest_component_id(purl: PackageURL, session: Session) -> int | None
 
     Returns
     -------
-    int | None
-        The latest component id or None if there isn't one available in the database.
+    Component | None
+        The latest component or None if there isn't one available in the database.
 
     Raises
     ------
     QueryMacaronDatabaseError
         If there is an unexpected error when executing the SQLAlchemy query.
     """
-    latest_component_id_stmt = get_sql_stmt_latest_component_for_purl(purl)
-    logger.debug("Latest Analysis and Component query \n %s", compile_sqlite_select_statement(latest_component_id_stmt))
+    latest_component_stmt = get_sql_stmt_latest_component_for_purl(purl)
+    logger.debug("Latest Analysis and Component query \n %s", compile_sqlite_select_statement(latest_component_stmt))
 
     try:
-        component_results = session.execute(latest_component_id_stmt)
+        component_results = session.execute(latest_component_stmt)
     except SQLAlchemyError as generic_exec_error:
         raise QueryMacaronDatabaseError(
-            f"Critical: unexpected error when execute query {compile_sqlite_select_statement(latest_component_id_stmt)}."
+            f"Critical: unexpected error when execute query {compile_sqlite_select_statement(latest_component_stmt)}."
         ) from generic_exec_error
 
     latest_component = component_results.scalars().first()
     if not latest_component:
         return None
 
-    return latest_component.id
+    return latest_component
 
 
 def lookup_build_tools_check(component_id: int, session: Session) -> Sequence[BuildToolFacts]:
@@ -687,37 +663,3 @@ def lookup_any_build_command(component_id: int, session: Session) -> list[Generi
             error,
         )
         return []
-
-
-def lookup_repository(component_id: int, session: Session) -> Repository | None:
-    """Return the Repository instance for given PackageURL string.
-
-    Parameters
-    ----------
-    component_id : int
-        The component id to look for the Repository.
-    session : Session
-        The SQLAlcemy Session that connects to the Macaron database.
-
-    Returns
-    -------
-    Repository
-        The Repository instances obtained from querying the database.
-
-    Raises
-    ------
-    QueryMacaronDatabaseError
-        If the query result from the database contains more than one Repository instance,
-        or there is an unexpected error when executing the SQLAlchemy query.
-    """
-    repository_select_statement = get_sql_stmt_repository(component_id)
-    logger.debug(
-        "Repository for component %d \n %s.", component_id, compile_sqlite_select_statement(repository_select_statement)
-    )
-
-    repository_result = lookup_one_or_none(
-        select_statement=repository_select_statement,
-        session=session,
-    )
-
-    return repository_result
