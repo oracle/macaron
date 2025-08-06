@@ -121,7 +121,7 @@ def _get_build_command_sequence(cmds_sequence: list[list[str]]) -> str:
 
 
 def _get_default_build_command_sequence(
-    macaron_build_tool_name: _MacaronBuildToolName,
+    rc_build_tool_name: _ReproducibleCentralBuildToolName,
     patches: Mapping[
         PatchCommandBuildTool,
         Mapping[str, PatchValueType | None],
@@ -129,16 +129,19 @@ def _get_default_build_command_sequence(
 ) -> list[list[str]] | None:
     """Return a default build command sequence for the corresponding build tool name discovered by Macaron."""
     default_build_command = None
-    if macaron_build_tool_name == _MacaronBuildToolName.MAVEN:
-        default_build_command = "mvn clean package"
 
-    if macaron_build_tool_name == _MacaronBuildToolName.GRADLE:
-        default_build_command = "./gradlew clean assemble publishToMavenLocal"
+    match rc_build_tool_name:
+        case _ReproducibleCentralBuildToolName.MAVEN:
+            default_build_command = "mvn clean package"
+        case _ReproducibleCentralBuildToolName.GRADLE:
+            default_build_command = "./gradlew clean assemble publishToMavenLocal"
+        case _:
+            pass
 
     if not default_build_command:
         logger.critical(
-            "The default build command %s is not supported for getting default build command.",
-            macaron_build_tool_name,
+            "There is no default build command available for RC build tool %s.",
+            rc_build_tool_name,
         )
         return None
 
@@ -166,10 +169,25 @@ def _get_macaron_build_tool_name(build_tool_facts: Sequence[BuildToolFacts]) -> 
             except ValueError:
                 continue
 
-            # TODO: What happen if we report multiple build tool in the database.
+            # TODO: What happen if we report multiple build tools in the database.
             return macaron_build_tool_name
 
     return None
+
+
+def _get_rc_build_tool_name(
+    build_tool_facts: Sequence[BuildToolFacts],
+) -> _ReproducibleCentralBuildToolName | None:
+    """Return the build tool name to be put into the RC buildspec."""
+    macaron_build_tool_name = _get_macaron_build_tool_name(build_tool_facts)
+    if not macaron_build_tool_name:
+        return None
+
+    match macaron_build_tool_name:
+        case _MacaronBuildToolName.MAVEN:
+            return _ReproducibleCentralBuildToolName.MAVEN
+        case _MacaronBuildToolName.GRADLE:
+            return _ReproducibleCentralBuildToolName.GRADLE
 
 
 def _gen_reproducible_central_build_spec(
@@ -201,6 +219,7 @@ def _gen_reproducible_central_build_spec(
         pformat(patches),
     )
 
+    # Getting groupid, artifactid and version from PURL.
     group = purl.namespace
     artifact = purl.name
     version = purl.version
@@ -210,29 +229,20 @@ def _gen_reproducible_central_build_spec(
 
     extra_comments.append(f"Input PURL - {purl}")
 
-    macaron_build_tool_name = _get_macaron_build_tool_name(build_info.build_tool_facts)
-    if not macaron_build_tool_name:
+    # Getting the RC build tool name from the build tool check facts.
+    rc_build_tool_name = _get_rc_build_tool_name(build_info.build_tool_facts)
+    if not rc_build_tool_name:
         logger.error(
-            "The PackageURL %s doesn't have any build tool that we support for generating RC buildspec. It has %s.",
-            purl.to_string(),
+            "The Component doesn't have any build tool that we support for generating RC buildspec. It has %s.",
             [(fact.build_tool_name, fact.language) for fact in build_info.build_tool_facts],
         )
-        return None
-
-    rc_build_tool_name = None
-    if macaron_build_tool_name == _MacaronBuildToolName.MAVEN:
-        rc_build_tool_name = _ReproducibleCentralBuildToolName.MAVEN
-    elif macaron_build_tool_name == _MacaronBuildToolName.GRADLE:
-        rc_build_tool_name = _ReproducibleCentralBuildToolName.GRADLE
-    if not rc_build_tool_name:
-        logger.critical("%s is not supported to generate RC's buildspec.", macaron_build_tool_name.value)
         return None
 
     # Set the default build command and jdk version.
     # The default build command depends on the build tool, while the default jdk version
     # is 8.
     final_build_command_seq = _get_default_build_command_sequence(
-        macaron_build_tool_name=macaron_build_tool_name,
+        rc_build_tool_name=rc_build_tool_name,
         patches=patches,
     )
     if not final_build_command_seq:
@@ -246,6 +256,22 @@ def _gen_reproducible_central_build_spec(
         f"Initial default JDK version {final_jdk_version} and default build command {final_build_command_seq}."
     )
 
+    # We always attempt to get the JDK version from maven central JAR for this GAV artifact.
+    jdk_from_jar = find_jdk_version_from_central_maven_repo(
+        group_id=purl.name,
+        artifact_id=group,
+        version=version,
+    )
+    if jdk_from_jar:
+        extra_comments.append(f"Use JDK version from jar {jdk_from_jar}.")
+        final_jdk_version = jdk_from_jar
+    else:
+        extra_comments.append(f"No JDK version found from jar {jdk_from_jar}.")
+
+    # If there is a build command available from the database, patch and use it in the final
+    # buildspec.
+    # If we couldn't find a JDK version from Maven Central JAR, we use the language_version
+    # of the build command with the highest confidence score (if available).
     if build_info.generic_build_command_facts:
         # The elements are ordered in decreasing confidence score. We pick the highest one.
         build_fact = build_info.generic_build_command_facts[0]
@@ -265,23 +291,14 @@ def _gen_reproducible_central_build_spec(
 
         final_build_command_seq = patched_build_commands
 
-        lookup_jdk_vers = build_fact.language_versions
-        if lookup_jdk_vers:
-            lookup_jdk_ver = lookup_jdk_vers.pop()
-            extra_comments.append(f"Jdk version from lookup build command {lookup_jdk_ver}.")
+        if not jdk_from_jar and build_fact.language_versions:
+            # We pop the last element without any concrete reason, and we haven't had any issue
+            # with it so far.
+            lookup_jdk_ver = build_fact.language_versions.pop()
+            extra_comments.append(f"Use Jdk version from lookup build command {lookup_jdk_ver}.")
             final_jdk_version = lookup_jdk_ver
         else:
-            extra_comments.append("No JDK version found from lookup result.")
-            jdk_from_jar = find_jdk_version_from_central_maven_repo(
-                group_id=purl.name,
-                artifact_id=group,
-                version=version,
-            )
-            if jdk_from_jar:
-                extra_comments.append(f"Found JDK version from jar {jdk_from_jar}.")
-                final_jdk_version = jdk_from_jar
-            else:
-                extra_comments.append(f"No JDK version found from jar {jdk_from_jar}.")
+            extra_comments.append("No JDK version used from lookup result.")
 
     major_jdk_version = normalize_jdk_version(final_jdk_version)
     if not major_jdk_version:
