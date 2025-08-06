@@ -15,8 +15,7 @@ from macaron.build_spec_generator.macaron_db_extractor import (
     GenericBuildCommandInfo,
     lookup_any_build_command,
     lookup_build_tools_check,
-    lookup_latest_component_id,
-    lookup_repository,
+    lookup_latest_component,
 )
 from macaron.database.table_definitions import Repository
 from macaron.errors import QueryMacaronDatabaseError
@@ -64,36 +63,30 @@ def get_rc_internal_build_info(
         An instance of ``RcInternalBuildInfo`` or None if there was an error.
     """
     try:
-        latest_component_id = lookup_latest_component_id(
+        latest_component = lookup_latest_component(
             purl=purl,
             session=session,
         )
     except QueryMacaronDatabaseError as lookup_component_error:
         logger.error(
-            "Unexpected result from querying latest component id for %s. Error: %s",
+            "Unexpected result from querying latest component for %s. Error: %s",
             purl.to_string(),
             lookup_component_error,
         )
         return None
-    if not latest_component_id:
+    if not latest_component:
         logger.error(
             "Cannot find an analysis result for PackageURL %s in the database. "
             + "Please check if an analysis for it exists in the database.",
             purl.to_string(),
         )
         return None
+
+    latest_component_id = latest_component.id
     logger.debug("Latest component ID: %d", latest_component_id)
 
-    try:
-        lookup_component_repository = lookup_repository(latest_component_id, session)
-    except QueryMacaronDatabaseError as lookup_repository_error:
-        logger.error(
-            "Unexpected result from querying repository information for %s. Error: %s",
-            purl.to_string(),
-            lookup_repository_error,
-        )
-        return None
-    if not lookup_component_repository:
+    latest_component_repository = latest_component.repository
+    if not latest_component_repository:
         logger.error(
             "Cannot find any repository information for %s in the database.",
             purl.to_string(),
@@ -102,8 +95,8 @@ def get_rc_internal_build_info(
     logger.info(
         "Repository information for purl %s: url %s, commit %s",
         purl,
-        lookup_component_repository.remote_path,
-        lookup_component_repository.commit_sha,
+        latest_component_repository.remote_path,
+        latest_component_repository.commit_sha,
     )
 
     try:
@@ -146,7 +139,7 @@ def get_rc_internal_build_info(
 
     return RcInternalBuildInfo(
         purl=purl,
-        repository=lookup_component_repository,
+        repository=latest_component_repository,
         latest_component_id=latest_component_id,
         build_tool_facts=build_tool_facts,
         generic_build_command_facts=lookup_build_command_infos,
