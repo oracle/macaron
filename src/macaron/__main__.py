@@ -16,7 +16,7 @@ from packageurl import PackageURL
 import macaron
 from macaron.build_spec_generator.build_spec_generator import (
     BuildSpecFormat,
-    gen_build_spec_str,
+    gen_build_spec_for_purl,
 )
 from macaron.config.defaults import create_defaults, load_defaults
 from macaron.config.global_config import global_config
@@ -272,35 +272,12 @@ def gen_build_spec(gen_build_spec_args: argparse.Namespace) -> int:
         gen_build_spec_args.database,
     )
 
-    build_spec_content = gen_build_spec_str(
+    return gen_build_spec_for_purl(
         purl=purl,
         database_path=gen_build_spec_args.database,
         build_spec_format=build_spec_format,
+        output_path=global_config.output_path,
     )
-
-    if not build_spec_content:
-        logger.error("Error while generate reproducible central build spec.")
-        return os.EX_DATAERR
-
-    logger.debug("Build spec content: \n%s", build_spec_content)
-    build_spec_filepath = os.path.join(global_config.output_path, "macaron.buildspec")
-    try:
-        with open(build_spec_filepath, mode="w", encoding="utf-8") as file:
-            logger.info(
-                "Generating the %s format build spec to %s.",
-                build_spec_format.value,
-                os.path.relpath(build_spec_filepath, os.getcwd()),
-            )
-            file.write(build_spec_content)
-    except OSError as error:
-        logger.error(
-            "Could not generate the Buildspec to %s. Error: %s",
-            os.path.relpath(build_spec_filepath, os.getcwd()),
-            error,
-        )
-        return os.EX_DATAERR
-
-    return os.EX_OK
 
 
 def find_source(find_args: argparse.Namespace) -> int:

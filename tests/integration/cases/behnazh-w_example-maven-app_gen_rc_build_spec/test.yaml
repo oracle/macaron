@@ -29,5 +29,5 @@ steps:
   kind: compare
   options:
     kind: rc_build_spec
-    result: ./output/macaron.buildspec
+    result: ./output/buildspec/github/behnazh-w/example-maven-app/macaron.buildspec
     expected: expected_macaron.buildspec

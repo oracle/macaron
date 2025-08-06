@@ -4,6 +4,7 @@
 """This module contains the functions used for generating build specs from the Macaron database."""
 
 import logging
+import os
 from collections.abc import Mapping
 from enum import Enum
 
@@ -13,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from macaron.build_spec_generator.build_command_patcher import PatchCommandBuildTool, PatchValueType
 from macaron.build_spec_generator.reproducible_central.reproducible_central import gen_reproducible_central_build_spec
+from macaron.path_utils.purl_based_path import get_purl_based_dir
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -63,11 +65,12 @@ CLI_COMMAND_PATCHES: dict[
 }
 
 
-def gen_build_spec_str(
+def gen_build_spec_for_purl(
     purl: PackageURL,
     database_path: str,
     build_spec_format: BuildSpecFormat,
-) -> str | None:
+    output_path: str,
+) -> int:
     """Return the content of a build spec file from a given PURL.
 
     Parameters
@@ -81,16 +84,59 @@ def gen_build_spec_str(
 
     Returns
     -------
-    str | None
-        The build spec content as a string, or None if there is an error.
+    int
+        The exit code for this function. ``os.EX_OK`` if everything is fine, ``os.EX_OSERR`` if the
+        buildspec file cannot be created in the local filesystem, ``os.EX_DATAERR`` if there was an
+        error in generate the content for the buildspec file.
     """
     db_engine = create_engine(f"sqlite+pysqlite:///{database_path}", echo=False)
 
     with Session(db_engine) as session, session.begin():
+        build_spec_content = None
         match build_spec_format:
             case BuildSpecFormat.REPRODUCIBLE_CENTRAL:
-                return gen_reproducible_central_build_spec(
+                build_spec_content = gen_reproducible_central_build_spec(
                     purl=purl,
                     session=session,
                     patches=CLI_COMMAND_PATCHES,
                 )
+
+        if not build_spec_content:
+            logger.error("Error while generate reproducible central build spec.")
+            return os.EX_DATAERR
+
+        logger.debug("Build spec content: \n%s", build_spec_content)
+
+        build_spec_filepath = os.path.join(
+            output_path,
+            "buildspec",
+            get_purl_based_dir(
+                purl_name=purl.name,
+                purl_namespace=purl.namespace,
+                purl_type=purl.type,
+            ),
+            "macaron.buildspec",
+        )
+
+        os.makedirs(
+            name=os.path.dirname(build_spec_filepath),
+            exist_ok=True,
+        )
+
+        try:
+            with open(build_spec_filepath, mode="w", encoding="utf-8") as file:
+                logger.info(
+                    "Generating the %s format build spec to %s.",
+                    build_spec_format.value,
+                    os.path.relpath(build_spec_filepath, os.getcwd()),
+                )
+                file.write(build_spec_content)
+        except OSError as error:
+            logger.error(
+                "Could not generate the Buildspec to %s. Error: %s",
+                os.path.relpath(build_spec_filepath, os.getcwd()),
+                error,
+            )
+            return os.EX_OSERR
+
+        return os.EX_OK
