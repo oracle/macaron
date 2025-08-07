@@ -6,6 +6,7 @@ import logging
 from xml.etree.ElementTree import Element  # nosec B405
 
 import defusedxml.ElementTree
+from defusedxml import DefusedXmlException
 from defusedxml.ElementTree import fromstring
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -31,4 +32,6 @@ def parse_pom_string(pom_string: str) -> Element | None:
         return pom
     except defusedxml.ElementTree.ParseError as error:
         logger.debug("Failed to parse XML: %s", error)
-        return None
+    except DefusedXmlException as error:
+        logger.debug("POM rejected due to possible security issues: %s", error)
+    return None
