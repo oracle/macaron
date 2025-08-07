@@ -100,10 +100,14 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             Returns True if any result of the dependency heuristic does not match the expected result.
             Otherwise, returns False.
         """
+        mapped_h: dict[Heuristics, list[HeuristicResult]] = {}
         for heuristic, expected_result in depends_on:
-            dep_heuristic_result: HeuristicResult = results[heuristic]
-            if dep_heuristic_result is not expected_result:
-                return True
+            mapped_h.setdefault(heuristic, []).append(expected_result)
+
+            for heuristic, exp_results in mapped_h.items():
+                dep_heuristic_result = results.get(heuristic)
+                if dep_heuristic_result not in exp_results:
+                    return True
         return False
 
     def analyze_source(
