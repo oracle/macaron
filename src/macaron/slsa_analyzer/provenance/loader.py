@@ -123,6 +123,9 @@ def decode_provenance(provenance: dict) -> dict[str, JsonType]:
         # GitHub Attestation.
         # TODO Check if old method (above) actually works.
         provenance_payload = json_extract(provenance, ["bundle", "dsseEnvelope", "payload"], str)
+    if not provenance_payload and "attestations" in provenance:
+        # Check for multiple attestation and return the first instance.
+        provenance_payload = json_extract(provenance, ["attestations", 0, "bundle", "dsseEnvelope", "payload"], str)
     if not provenance_payload:
         raise LoadIntotoAttestationError(
             'Cannot find the "payload" field in the decoded provenance.',
