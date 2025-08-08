@@ -1,8 +1,8 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Tutorial test: testing automatic dependency resolution.
+  Tutorial test: testing dependency resolution with sbom.
 
 tags:
 - macaron-python-package
@@ -14,10 +14,11 @@ steps:
   options:
     command_args:
     - -purl
-    - pkg:maven/io.github.behnazh-w.demo/example-maven-app@1.0?type=jar
+    - pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar
     - -rp
     - https://github.com/behnazh-w/example-maven-app
     - --deps-depth=1
+    sbom: sbom.json
 - name: Compare dependencies report.
   kind: compare
   options:

@@ -7,9 +7,7 @@ import json
 import logging
 import os
 import subprocess  # nosec B404
-from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from enum import Enum
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -97,14 +95,6 @@ def deserialize_bom_json(file_path: Path) -> Bom:
         raise CycloneDXParserError(f"Could not process the dependencies at {file_path}")
 
 
-class DependencyTools(str, Enum):
-    """Dependency resolvers supported by Macaron."""
-
-    CYCLONEDX_MAVEN = "cyclonedx-maven"
-    CYCLONEDX_GRADLE = "cyclonedx-gradle"
-    CYCLONEDX_PYTHON = "cyclonedx_py"
-
-
 class DependencyInfo(TypedDict):
     """The information of a resolved dependency."""
 
@@ -114,8 +104,8 @@ class DependencyInfo(TypedDict):
     available: SCMStatus
 
 
-class DependencyAnalyzer(ABC):
-    """This abstract class is used to implement dependency analyzers."""
+class DependencyAnalyzer:
+    """This base class is used to implement dependency analyzers."""
 
     def __init__(self, resources_path: str, file_name: str, tool_name: str, tool_version: str) -> None:
         """Initialize the dependency analyzer instance.
@@ -128,7 +118,7 @@ class DependencyAnalyzer(ABC):
             The name of dependency output file.
         tool_name: str
             The name of the dependency analyzer.
-        tool_version : str
+        tool_version: str
             The version of the dependency analyzer.
         """
         self.resources_path: str = resources_path
@@ -137,16 +127,36 @@ class DependencyAnalyzer(ABC):
         self.tool_version: str = tool_version
         self.visited_deps: set = set()
 
-    @abstractmethod
-    def collect_dependencies(
-        self, dir_path: str, target_component: Component, recursive: bool = False
-    ) -> dict[str, DependencyInfo]:
+    @staticmethod
+    def get_purl_from_cdx_component(component: CDXComponent, purl_type: str) -> PackageURL:
+        """Construct and return a PackageURL from a CycloneDX component.
+
+        Parameters
+        ----------
+        component: CDXComponent
+            The CycloneDX component
+        purl_type: str
+            The PURL type, e.g., maven, pypi, npm.
+
+        Returns
+        -------
+        PackageURL
+            The PackageURL object constructed from the CycloneDX component.
+        """
+        if component.purl:
+            return component.purl
+        return PackageURL(
+            type=purl_type,
+            namespace=component.group,
+            name=component.name,
+            version=component.version or None,
+        )
+
+    def collect_dependencies(self, target_component: Component, recursive: bool = False) -> dict[str, DependencyInfo]:
         """Process the dependency JSON files and collect direct dependencies.
 
         Parameters
         ----------
-        dir_path : str
-            Local path to the target repo.
         target_component: Component
             The analyzed target software component.
         recursive: bool
@@ -157,23 +167,15 @@ class DependencyAnalyzer(ABC):
         dict
             A dictionary where artifacts are grouped based on "artifactId:groupId".
         """
+        return self.convert_components_to_artifacts(
+            self.get_dep_components(
+                target_component=target_component,
+                root_bom_path=Path(global_config.output_path, self.file_name),
+                recursive=recursive,
+            ),
+            purl_type=target_component.namespace,
+        )
 
-    @abstractmethod
-    def remove_sboms(self, dir_path: str) -> bool:
-        """Remove all the SBOM files in the provided directory recursively.
-
-        Parameters
-        ----------
-        dir_path : str
-            Path to the repo.
-
-        Returns
-        -------
-        bool
-            Returns True if all the files are removed successfully.
-        """
-
-    @abstractmethod
     def get_cmd(self) -> list:
         """Return the CLI command to run the dependency analyzer.
 
@@ -182,20 +184,8 @@ class DependencyAnalyzer(ABC):
         list
             The command line arguments.
         """
-
-    @abstractmethod
-    def get_purl_from_cdx_component(self, component: CDXComponent) -> PackageURL:
-        """Construct and return a PackageURL from a CycloneDX component.
-
-        Parameters
-        ----------
-        component: CDXComponent
-
-        Returns
-        -------
-        PackageURL
-            The PackageURL object constructed from the CycloneDX component.
-        """
+        logger.debug("Automatic SBOM generation is not supported for %s.", self.tool_name)
+        return []
 
     @staticmethod
     def add_latest_version(
@@ -299,40 +289,6 @@ class DependencyAnalyzer(ABC):
         return config_list
 
     @staticmethod
-    def tool_valid(tool: str) -> bool:
-        """Validate the dependency analyzer name.
-
-        Parameters
-        ----------
-        tool : str
-            The full name of the dependency analyzer, i.e., <name>:<version>.
-
-        Returns
-        -------
-        bool
-            Return True if the tool name is valid.
-        """
-        if ":" not in tool:
-            return False
-        items = tool.split(":")
-        supported = False
-        for element in DependencyTools:
-            if items[0] == element.value:
-                supported = True
-                break
-        if not supported:
-            logger.error("Dependency tool %s is not supported.", items[0])
-            return False
-        try:
-            if not version.Version(items[1].lower()):
-                logger.error("Invalid dependency analyzer version: %s", items[1])
-                return False
-        except ValueError as error:
-            logger.error("Dependency analyzer: %s.", error)
-            return False
-        return True
-
-    @staticmethod
     def resolve_dependencies(main_ctx: Any, sbom_path: str, recursive: bool = False) -> dict[str, DependencyInfo]:
         """Resolve the dependencies of the main target repo.
 
@@ -352,6 +308,23 @@ class DependencyAnalyzer(ABC):
         """
         deps_resolved: dict[str, DependencyInfo] = {}
 
+        if sbom_path:
+            logger.info(
+                "Getting the dependencies from the SBOM defined at %s.", os.path.relpath(sbom_path, os.getcwd())
+            )
+
+            deps_resolved = DependencyAnalyzer.get_deps_from_sbom(
+                sbom_path,
+                main_ctx.component,
+                recursive=recursive,
+            )
+
+            # Use repo finder to find more repositories to analyze.
+            if defaults.getboolean("repofinder", "find_repos"):
+                DependencyAnalyzer._resolve_more_dependencies(deps_resolved)
+
+            return deps_resolved
+
         build_tools = main_ctx.dynamic_data["build_spec"]["tools"]
         if not build_tools:
             # If the repository is not available, we use the first build tool object that has
@@ -361,11 +334,12 @@ class DependencyAnalyzer(ABC):
 
             # Check if we cannot still find a matching build tool.
             if not build_tools:
-                logger.info("Unable to find any valid build tools.")
+                logger.debug("Unable to find any valid build tools.")
                 return {}
 
         # Grab dependencies for each build tool, collate all into the deps_resolved.
         for build_tool in build_tools:
+
             try:
                 # We allow dependency analysis if SBOM is provided but no repository is found.
                 dep_analyzer = build_tool.get_dep_analyzer()
@@ -380,29 +354,6 @@ class DependencyAnalyzer(ABC):
                 )
                 continue
 
-            if sbom_path:
-                logger.info(
-                    "Getting the dependencies from the SBOM defined at %s.", os.path.relpath(sbom_path, os.getcwd())
-                )
-
-                deps_resolved = dep_analyzer.get_deps_from_sbom(
-                    sbom_path,
-                    main_ctx.component,
-                    recursive=recursive,
-                )
-
-                # Use repo finder to find more repositories to analyze.
-                if defaults.getboolean("repofinder", "find_repos"):
-                    DependencyAnalyzer._resolve_more_dependencies(deps_resolved)
-
-                return deps_resolved
-
-            if not main_ctx.component.repository:
-                logger.info(
-                    "Unable to find a repository and no SBOM is provided as input. Analyzing the dependencies will be skipped."
-                )
-                return {}
-
             # Start resolving dependencies.
             logger.info(
                 "Running %s version %s dependency analyzer on %s",
@@ -416,43 +367,32 @@ class DependencyAnalyzer(ABC):
                 f"{main_ctx.component.report_file_name}.{dep_analyzer.tool_name}.log",
             )
 
-            # Clean up existing SBOM files.
-            if not dep_analyzer.remove_sboms(main_ctx.component.repository.fs_path):
-                logger.debug("Unable to remove intermediate files generated during the creation of SBOM.")
-
             commands = dep_analyzer.get_cmd()
-            working_dirs: Iterable[Path] = build_tool.get_build_dirs(main_ctx.component.repository.fs_path)
-            for working_dir in working_dirs:
-                # Get the absolute path to use as the working dir in the subprocess.
-                working_dir = Path(main_ctx.component.repository.fs_path).joinpath(working_dir)
-
-                try:
-                    # Suppressing Bandit's B603 report because the repo paths are validated.
-                    analyzer_output = subprocess.run(  # nosec B603
-                        commands,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT,
-                        check=True,
-                        cwd=str(working_dir),
-                        timeout=defaults.getint("dependency.resolver", "timeout", fallback=1200),
-                    )
-                    with open(log_path, mode="a", encoding="utf-8") as log_file:
-                        log_file.write(analyzer_output.stdout.decode("utf-8"))
-
-                except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
-                    logger.error(error)
-                    with open(log_path, mode="a", encoding="utf-8") as log_file:
-                        log_file.write(error.output.decode("utf-8"))
-                except FileNotFoundError as error:
-                    logger.error(error)
-
-                # We collect the generated SBOM as a best effort, even if the build exits with errors.
-                # TODO: add improvements to help the SBOM build succeed as much as possible.
-                deps_resolved |= dep_analyzer.collect_dependencies(
-                    str(working_dir),
-                    main_ctx.component,
-                    recursive=recursive,
+            try:
+                # Suppressing Bandit's B603 report because the repo paths are validated.
+                analyzer_output = subprocess.run(  # nosec B603
+                    commands,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    check=True,
+                    timeout=defaults.getint("dependency.resolver", "timeout", fallback=1200),
                 )
+                with open(log_path, mode="a", encoding="utf-8") as log_file:
+                    log_file.write(analyzer_output.stdout.decode("utf-8"))
+
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+                logger.error(error)
+                with open(log_path, mode="a", encoding="utf-8") as log_file:
+                    log_file.write(error.output.decode("utf-8"))
+            except FileNotFoundError as error:
+                logger.error(error)
+
+            # We collect the generated SBOM as a best effort, even if the build exits with errors.
+            # TODO: add improvements to help the SBOM build succeed as much as possible.
+            deps_resolved |= dep_analyzer.collect_dependencies(
+                main_ctx.component,
+                recursive=recursive,
+            )
 
             logger.info(
                 "Stored dependency resolver log for %s to %s.",
@@ -506,7 +446,8 @@ class DependencyAnalyzer(ABC):
 
         return None
 
-    def get_target_cdx_component(self, root_bom: Bom, target_component: Component) -> CDXComponent | None:
+    @staticmethod
+    def get_target_cdx_component(root_bom: Bom, target_component: Component) -> CDXComponent | None:
         """Get the CycloneDX component that matches the analyzed target software component.
 
         Parameters
@@ -525,7 +466,7 @@ class DependencyAnalyzer(ABC):
         def _is_target_cmp(cmp: CDXComponent | None) -> bool:
             if cmp is None:
                 return False
-            cmp_purl = self.get_purl_from_cdx_component(cmp)
+            cmp_purl = DependencyAnalyzer.get_purl_from_cdx_component(cmp, target_component.namespace)
             if str(cmp_purl) == target_component.purl:
                 logger.debug("Found the target CycloneDX component: %s", cmp.bom_ref.value)
                 return True
@@ -547,7 +488,9 @@ class DependencyAnalyzer(ABC):
                         " Please fix the PURL input and try again."
                     ),
                     target_component.purl,
-                    self.get_purl_from_cdx_component(root_bom.metadata.component),
+                    DependencyAnalyzer.get_purl_from_cdx_component(
+                        root_bom.metadata.component, target_component.namespace
+                    ),
                 )
                 return None
 
@@ -557,8 +500,8 @@ class DependencyAnalyzer(ABC):
         )
         return None
 
+    @staticmethod
     def get_dep_components(
-        self,
         target_component: Component,
         root_bom_path: Path,
         child_bom_paths: list[Path] | None = None,
@@ -595,7 +538,9 @@ class DependencyAnalyzer(ABC):
         dependencies: list[CDXDependency] = []
 
         # Find dependencies in the root BOM file.
-        target_cdx_component = self.get_target_cdx_component(root_bom=root_bom, target_component=target_component)
+        target_cdx_component = DependencyAnalyzer.get_target_cdx_component(
+            root_bom=root_bom, target_component=target_component
+        )
         if target_cdx_component is None:
             return
 
@@ -648,8 +593,9 @@ class DependencyAnalyzer(ABC):
                 except AttributeError as error:
                     logger.debug(error)
 
+    @staticmethod
     def convert_components_to_artifacts(
-        self, components: Iterable[CDXComponent], root_component: CDXComponent | None = None
+        components: Iterable[CDXComponent], purl_type: str, root_component: CDXComponent | None = None
     ) -> dict[str, DependencyInfo]:
         """Convert CycloneDX components using internal artifact representation.
 
@@ -657,6 +603,8 @@ class DependencyAnalyzer(ABC):
         ----------
         components : Iterable[CDXComponent]
             The dependency components.
+        purl_type: str
+            The PURL type for the main target software component
         root_component: CDXComponent | None
             The root CycloneDX component.
 
@@ -673,7 +621,7 @@ class DependencyAnalyzer(ABC):
             # TODO make this function language agnostic when CycloneDX SBOM processing also is.
             # See https://github.com/oracle/macaron/issues/464
             key = f"{component.group}:{component.name}"
-            purl = self.get_purl_from_cdx_component(component)
+            purl = DependencyAnalyzer.get_purl_from_cdx_component(component, purl_type)
 
             # According to PEP-0589 all keys must be present in a TypedDict.
             # See https://peps.python.org/pep-0589/#totality
@@ -719,8 +667,9 @@ class DependencyAnalyzer(ABC):
 
         return latest_deps
 
+    @staticmethod
     def get_deps_from_sbom(
-        self, sbom_path: str | Path, target_component: Component, recursive: bool = False
+        sbom_path: str | Path, target_component: Component, recursive: bool = False
     ) -> dict[str, DependencyInfo]:
         """Get the dependencies from a provided SBOM.
 
@@ -737,12 +686,13 @@ class DependencyAnalyzer(ABC):
         -------
             A dictionary where dependency artifacts are grouped based on "groupId:artifactId".
         """
-        return self.convert_components_to_artifacts(
-            self.get_dep_components(
+        return DependencyAnalyzer.convert_components_to_artifacts(
+            DependencyAnalyzer.get_dep_components(
                 target_component=target_component,
                 root_bom_path=Path(sbom_path),
                 recursive=recursive,
-            )
+            ),
+            purl_type=target_component.namespace,
         )
 
 
@@ -752,68 +702,3 @@ class NoneDependencyAnalyzer(DependencyAnalyzer):
     def __init__(self) -> None:
         """Initialize the dependency analyzer instance."""
         super().__init__(resources_path="", file_name="", tool_name="", tool_version="")
-
-    def collect_dependencies(
-        self, dir_path: str, target_component: Component, recursive: bool = False
-    ) -> dict[str, DependencyInfo]:
-        """Process the dependency JSON files and collect direct dependencies.
-
-        Parameters
-        ----------
-        dir_path : str
-            Local path to the target repo.
-        target_component: Component
-            The analyzed target software component.
-        recursive: bool
-            Whether to get all transitive dependencies, otherwise only the direct dependencies will be returned (default: False).
-
-        Returns
-        -------
-        dict
-            A dictionary where artifacts are grouped based on "artifactId:groupId".
-        """
-        return {}
-
-    def remove_sboms(self, dir_path: str) -> bool:
-        """Remove all the SBOM files in the provided directory recursively.
-
-        Parameters
-        ----------
-        dir_path : str
-            Path to the repo.
-
-        Returns
-        -------
-        bool
-            Returns True if all the files are removed successfully.
-        """
-        return False
-
-    def get_cmd(self) -> list:
-        """Return the CLI command to run the dependency analyzer.
-
-        Returns
-        -------
-        list
-            The command line arguments.
-        """
-        return []
-
-    def get_purl_from_cdx_component(self, component: CDXComponent) -> PackageURL:
-        """Construct and return a PackageURL from a CycloneDX component.
-
-        Parameters
-        ----------
-        component: CDXComponent
-
-        Returns
-        -------
-        PackageURL
-            The PackageURL object constructed from the CycloneDX component.
-        """
-        return component.purl or PackageURL(
-            type="unknown",
-            namespace=component.group,
-            name=component.name,
-            version=component.version or None,
-        )

@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the NPM class which inherits BaseBuildTool.
@@ -58,25 +58,6 @@ class NPM(BaseBuildTool):
         #       they would still count as "detected"
         npm_config_files = self.build_configs + self.package_lock + self.entry_conf
         return any(file_exists(repo_path, file) for file in npm_config_files)
-
-    def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
-        """Prepare the necessary wrapper files for running the build.
-
-        npm/pnpm doesn't require preparation, so return true.
-
-        Parameters
-        ----------
-        wrapper_path : str
-            The path where all necessary wrapper files are located.
-        build_dir : str
-            The path of the build dir. This is where all files are copied to.
-
-        Returns
-        -------
-        bool
-            True if succeed else False.
-        """
-        return True
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.
