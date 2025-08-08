@@ -66,7 +66,7 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.asset import VirtualReleaseAsset
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 
-# To load all checks into the registry
+# To load all checks into the registry.
 from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.database_store import store_analyze_context_to_db
@@ -136,7 +136,7 @@ class Analyzer:
         # Get the db manager singleton object.
         self.db_man: DatabaseManager = get_db_manager()
 
-        # Create database tables: all checks have been registered so all tables should be mapped now
+        # Create database tables: all checks have been registered so all tables should be mapped now.
         self.db_man.create_tables()
 
         self.local_artifact_repo_mapper = Analyzer._get_local_artifact_repo_mapper()
@@ -653,7 +653,7 @@ class Analyzer:
         commit_date_str = commit_date.isoformat(sep="T", timespec="seconds")
 
         # We only allow complete_name's length to be 2 or 3 because we need to construct PURL
-        # strings using the complete_name, i.e., type/namespace/name@commitsha
+        # strings using the complete_name, i.e., type/namespace/name@commitsha.
         if (parts_len := len(Path(complete_name).parts)) < 2 or parts_len > 3:
             logger.error("The repository path %s is not valid.", complete_name)
             return None
@@ -901,7 +901,7 @@ class Analyzer:
                     # As there is no repo or commit from provenance, use the Repo Finder to find the repo.
                     converted_repo_path = repo_finder.to_repo_path(parsed_purl, available_domains)
                     if converted_repo_path is None:
-                        # Try to find repo from PURL
+                        # Try to find repo from PURL.
                         repo, repo_finder_outcome = repo_finder.find_repo(
                             parsed_purl, package_registries_info=package_registries_info
                         )

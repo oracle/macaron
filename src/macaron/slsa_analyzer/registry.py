@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Registry class for loading checks."""
@@ -41,7 +41,7 @@ class Registry:
     # Map between a check and any child checks that depend on it.
     _check_relationships_mapping: dict[str, dict[str, CheckResultType]] = {}
 
-    # The format for check id
+    # The format for check id.
     _id_format = re.compile(r"^mcn_([a-z]+_)+([0-9]+)$")
 
     def __init__(self) -> None:
@@ -154,7 +154,7 @@ class Registry:
             )
             return False
 
-        # Try to get the path to the check module file
+        # Try to get the path to the check module file.
         check_module = inspect.getmodule(check)
         if not check_module:
             logger.critical("Cannot resolve the Check module.")
@@ -479,7 +479,7 @@ class Registry:
                 )
                 continue
 
-            # Don't run excluded checks
+            # Don't run excluded checks.
             if check_id not in self.checks_to_run:
                 logger.debug(
                     "Check %s is disabled by user configuration.",
@@ -487,7 +487,7 @@ class Registry:
                 )
                 continue
 
-            # Look up check results to see if this check should be run based on its parent status
+            # Look up check results to see if this check should be run based on its parent status.
             skipped_info = self._should_skip_check(check, results)
             if skipped_info:
                 skipped_checks.append(skipped_info)
@@ -589,7 +589,7 @@ class Registry:
             parent_id: str = parent[0]
             expect_status: CheckResultType = parent[1]
 
-            # Look up the result of this parent check
+            # Look up the result of this parent check.
             parent_result = results[parent_id]
             got_status = parent_result.result.result_type
 

@@ -507,7 +507,7 @@ class SetupJava(Language, ThirdPartyAction):
         external_node: GitHubWorkflowNode
             The external GitHub Action workflow node.
         """
-        # external_node is assumed to be an EXTERNAL node with ActionStep parsed_obj
+        # external_node is assumed to be an EXTERNAL node with ActionStep parsed_obj.
         step = external_node.parsed_obj
         if not is_parsed_obj_action_step(step):
             raise ValueError("Expected an action step node")
@@ -603,7 +603,7 @@ class OracleSetupJava(Language, ThirdPartyAction):
         external_node: GitHubWorkflowNode
             The external GitHub Action workflow node.
         """
-        # external_node is assumed to be an EXTERNAL node with ActionStep parsed_obj
+        # external_node is assumed to be an EXTERNAL node with ActionStep parsed_obj.
         step = external_node.parsed_obj
         if not is_parsed_obj_action_step(step):
             raise ValueError("Expected an action step node")
@@ -699,7 +699,7 @@ class GraalVMSetup(Language, ThirdPartyAction):
         external_node: GitHubWorkflowNode
             The external GitHub Action workflow node.
         """
-        # external_node is assumed to be an EXTERNAL node with ActionStep parsed_obj
+        # external_node is assumed to be an EXTERNAL node with ActionStep parsed_obj.
         step = external_node.parsed_obj
         if not is_parsed_obj_action_step(step):
             raise ValueError("Expected an action step node")

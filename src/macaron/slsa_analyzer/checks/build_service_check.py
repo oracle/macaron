@@ -200,7 +200,7 @@ class BuildServiceCheck(BaseCheck):
         # build tool usage.
         # TODO: When more sophisticated build tool detection is
         # implemented, consider whether this should be one fail = whole
-        # check fails instead
+        # check fails instead.
 
         return CheckResultData(result_tables=result_tables, result_type=overall_res)
 

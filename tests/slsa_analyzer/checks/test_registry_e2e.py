@@ -1,5 +1,6 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+# grammar: off
 
 """This module contains an end-to-end test for the check registry."""
 
@@ -50,12 +51,12 @@ class TestRegistryE2E(MacaronTestCase):
 
         This test uses EmptyCheck with pre-defined return value.
         """
-        # Create a fresh registry
+        # Create a fresh registry.
         registry = Registry()
         Registry._all_checks_mapping = {}
         Registry._check_relationships_mapping = {}
 
-        # Register checks
+        # Register checks.
         # The final graph should be:
         # (The annotation A ----> B means B depends on A
         # the label P means PASSED and F means FAILED.)

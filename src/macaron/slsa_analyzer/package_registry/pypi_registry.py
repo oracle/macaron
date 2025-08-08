@@ -194,7 +194,7 @@ class PyPIRegistry(PackageRegistry):
         _, _, file_name = url.rpartition("/")
         package_name = re.sub(r"\.tar\.gz$", "", file_name)
 
-        # temporary directory to unzip and read all source files
+        # Temporary directory to unzip and read all source files.
         temp_dir = tempfile.mkdtemp(prefix=f"{package_name}_")
         response = send_get_http_raw(url, stream=True)
         if response is None:
@@ -249,7 +249,7 @@ class PyPIRegistry(PackageRegistry):
 
                 extracted_dir = os.listdir(temp_dir)
                 if len(extracted_dir) == 1 and package_name == extracted_dir[0]:
-                    # structure used package name and version as top-level directory
+                    # Structure used package name and version as top-level directory.
                     temp_dir = os.path.join(temp_dir, extracted_dir[0])
 
             else:
@@ -320,7 +320,7 @@ class PyPIRegistry(PackageRegistry):
         str | None
             The package main page.
         """
-        # Important: trailing '/' avoids JS-based redirect; ensures Macaron can access the page directly
+        # Important: trailing '/' avoids JS-based redirect; ensures Macaron can access the page directly.
         url = urllib.parse.urljoin(self.registry_url, f"project/{package_name}/")
         response = send_get_http_raw(url)
         if response:
@@ -361,7 +361,7 @@ class PyPIRegistry(PackageRegistry):
         str | None
             The profile page.
         """
-        # Important: trailing '/' avoids JS-based redirect; ensures Macaron can access the page directly
+        # Important: trailing '/' avoids JS-based redirect; ensures Macaron can access the page directly.
         url = urllib.parse.urljoin(self.registry_url, f"user/{username}/")
         response = send_get_http_raw(url, headers=None)
         if response:
@@ -488,7 +488,7 @@ class PyPIPackageJsonAsset:
     #: The asset content.
     package_json: dict
 
-    #: the source code temporary location name
+    #: The source code temporary location name.
     package_sourcecode_path: str
 
     #: The size of the asset (in bytes). This attribute is added to match the AssetLocator
