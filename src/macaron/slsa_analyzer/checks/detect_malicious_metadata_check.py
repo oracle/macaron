@@ -23,6 +23,7 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import
 from macaron.malware_analyzer.pypi_heuristics.metadata.fake_email import FakeEmailAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.similar_projects import SimilarProjectAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
@@ -364,6 +365,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         AnomalousVersionAnalyzer,
         TyposquattingPresenceAnalyzer,
         FakeEmailAnalyzer,
+        SimilarProjectAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
@@ -434,7 +436,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     % Package released recently with the a maintainer email address that is not valid.
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_3) :-
         quickUndetailed,
-        failed({Heuristics.FAKE_EMAIL.value}).
+        failed({Heuristics.FAKE_EMAIL.value}),
+        failed({Heuristics.SIMILAR_PROJECTS.value}).
+
     % ----- Evaluation -----
 
     % Aggregate result

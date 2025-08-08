@@ -369,6 +369,27 @@ class PyPIRegistry(PackageRegistry):
             return html_snippets
         return None
 
+    def get_packages_by_username(self, username: str) -> list[str] | None:
+        """Implement custom API to get the maintainer's packages.
+
+        Parameters
+        ----------
+        username: str
+            The maintainer's username.
+
+        Returns
+        -------
+            list[str]: A list of package names.
+        """
+        user_page: str | None = self.get_maintainer_profile_page(username)
+        if user_page is None:
+            return None
+
+        soup = BeautifulSoup(user_page, "html.parser")
+        headers = soup.find_all("h3", class_="package-snippet__title")
+        packages = list({header.get_text(strip=True) for header in headers})
+        return packages
+
     def get_maintainer_join_date(self, username: str) -> datetime | None:
         """Implement custom API to get the maintainer's join date.
 
