@@ -108,9 +108,6 @@ class CommitFinderInfo(Enum):
     #: Reported if the repository has no Git tags.
     NO_TAGS = "No Git tags"
 
-    #: Reported if the repository has no Git tags with associated commits.
-    NO_TAGS_WITH_COMMITS = "No Git tags with commits"
-
     #: Reported if the tag selected from the repository fails to resolve to a commit despite having one associated with
     # it.
     NO_TAG_COMMIT = "No valid commit found for Git tag"

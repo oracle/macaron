@@ -7,13 +7,13 @@ import re
 from enum import Enum
 from re import Pattern
 
-from git import TagReference
 from gitdb.exc import BadName
 from packageurl import PackageURL
 from pydriller import Commit, Git
 
 from macaron.repo_finder import repo_finder_deps_dev, to_domain_from_known_purl_types
 from macaron.repo_finder.repo_finder_enums import CommitFinderInfo
+from macaron.repo_finder.repo_utils import get_repo_tags
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -247,27 +247,13 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
     logger.debug("Searching for commit of artifact version using tags: %s@%s", name, version)
 
     # Only consider tags that have a commit.
-    repo_tags = git_obj.repo.tags
+    repo_tags = get_repo_tags(git_obj)
     if not repo_tags:
         logger.debug("No tags found for %s", name)
         return None, CommitFinderInfo.NO_TAGS
 
-    valid_tags = {}
-    for tag in repo_tags:
-        commit = _get_tag_commit(tag)
-        if not commit:
-            logger.debug("No commit found for tag: %s", tag)
-            continue
-
-        tag_name = str(tag)
-        valid_tags[tag_name] = tag
-
-    if not valid_tags:
-        logger.debug("No tags with commits found for %s", name)
-        return None, CommitFinderInfo.NO_TAGS_WITH_COMMITS
-
     # Match tags.
-    matched_tags, outcome = match_tags(list(valid_tags.keys()), name, version)
+    matched_tags, outcome = match_tags(list(repo_tags.keys()), name, version)
 
     if not matched_tags:
         logger.debug("No tags matched for %s", name)
@@ -279,25 +265,21 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
         logger.debug("Up to 5 others: %s", matched_tags[1:6])
 
     tag_name = matched_tags[0]
-    tag = valid_tags[tag_name]
-    if not tag:
-        # Tag names are taken from valid_tags and should always exist within it.
-        logger.debug("Missing tag name from tag dict: %s not in %s", tag_name, valid_tags.keys())
-
-    try:
-        hexsha = tag.commit.hexsha
-    except ValueError:
-        logger.debug("Error trying to retrieve digest of commit: %s", tag.commit)
-        return None, CommitFinderInfo.NO_TAG_COMMIT
+    commit = None
+    if tag_name not in repo_tags:
+        # Tag names are taken from repo_tags and should always exist within it.
+        logger.debug("Missing tag name from tag dict: %s not in %s", tag_name, repo_tags.keys())
+    else:
+        commit = repo_tags[tag_name]
 
     logger.debug(
         "Found tag %s with commit %s for artifact version %s@%s",
-        tag,
-        hexsha,
+        tag_name,
+        commit,
         name,
         version,
     )
-    return hexsha if hexsha else None, CommitFinderInfo.MATCHED
+    return commit if commit else None, CommitFinderInfo.MATCHED
 
 
 def _split_name(name: str) -> list[str]:
@@ -907,15 +889,3 @@ def _create_suffix_tag_comparison_pattern(tag_part: str) -> Pattern | None:
 
     # Combine the alphabetic and zero-extended numeric parts.
     return re.compile(f"{versioned_string_result.group(1)}(0*){versioned_string_result.group(3)}", re.IGNORECASE)
-
-
-def _get_tag_commit(tag: TagReference) -> Commit | None:
-    """Return the commit of the passed tag.
-
-    This is a standalone function to more clearly handle the potential error raised by accessing the tag's commit
-    property.
-    """
-    try:
-        return tag.commit
-    except ValueError:
-        return None
