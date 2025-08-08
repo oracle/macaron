@@ -31,10 +31,10 @@ def is_case_sensitive_filesystem() -> bool:
 
         try:
             os.mkdir(upper)
-            # if upper is not treated the same as lower -> case sensitive
+            # If upper is not treated the same as lower -> case-sensitive.
             return True
         except FileExistsError:
-            # upper is treated the same as lower -> case insensitive
+            # Upper is treated the same as lower -> case-insensitive.
             return False
 
 

@@ -1,7 +1,7 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module contains code to verify whether a reported repository with Maven build system can be linked back to the artifact."""
+"""This module contains code to verify whether a reported Maven-based repository can be linked back to the artifact."""
 import logging
 from pathlib import Path
 from urllib.parse import urlparse
@@ -10,7 +10,7 @@ from macaron.parsers.pomparser import parse_pom_string
 from macaron.repo_verifier.repo_verifier_base import (
     RepositoryVerificationResult,
     RepositoryVerificationStatus,
-    RepoVerifierBase,
+    RepoVerifierToolSpecific,
     find_file_in_repo,
 )
 from macaron.slsa_analyzer.build_tool import Maven
@@ -22,12 +22,12 @@ from macaron.slsa_analyzer.package_registry.maven_central_registry import (
 logger = logging.getLogger(__name__)
 
 
-class RepoVerifierMaven(RepoVerifierBase):
+class RepoVerifierMaven(RepoVerifierToolSpecific):
     """A class to verify whether a repository with Maven build tool links back to the artifact."""
 
-    build_tool = Maven()
+    specific_tool = Maven()
 
-    def verify_repo(self) -> RepositoryVerificationResult:
+    def verify_by_tool(self) -> RepositoryVerificationResult:
         """Verify whether the reported repository links back to the Maven artifact.
 
         Returns

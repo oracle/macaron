@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains code to verify whether a reported repository can be linked back to the artifact."""
@@ -6,8 +6,8 @@ import logging
 
 from macaron.repo_verifier.repo_verifier_base import (
     RepositoryVerificationResult,
-    RepositoryVerificationStatus,
-    RepoVerifierBase,
+    RepoVerifierFromProvenance,
+    RepoVerifierToolSpecific,
 )
 from macaron.repo_verifier.repo_verifier_gradle import RepoVerifierGradle
 from macaron.repo_verifier.repo_verifier_maven import RepoVerifierMaven
@@ -22,6 +22,7 @@ def verify_repo(
     version: str,
     reported_repo_url: str,
     reported_repo_fs: str,
+    provenance_repo_url: str | None,
     build_tool: BaseBuildTool,
 ) -> RepositoryVerificationResult:
     """Verify whether the repository links back to the artifact.
@@ -38,6 +39,8 @@ def verify_repo(
         The reported repository URL.
     reported_repo_fs : str
         The reported repository filesystem path.
+    provenance_repo_url : str | None
+            The URL of the repository from a provenance file, or None if it, or the provenance, is not present.
     build_tool : BaseBuildTool
         The build tool used to build the package.
 
@@ -47,7 +50,7 @@ def verify_repo(
         The result of the repository verification
     """
     # TODO: Add support for other build tools.
-    verifier_map: dict[type[BaseBuildTool], type[RepoVerifierBase]] = {
+    verifier_map: dict[type[BaseBuildTool], type[RepoVerifierToolSpecific]] = {
         Maven: RepoVerifierMaven,
         Gradle: RepoVerifierGradle,
         # Poetry(): RepoVerifierPoetry,
@@ -60,16 +63,27 @@ def verify_repo(
 
     verifier_cls = verifier_map.get(type(build_tool))
     if not verifier_cls:
-        return RepositoryVerificationResult(
-            status=RepositoryVerificationStatus.UNKNOWN, reason="unsupported_type", build_tool=build_tool
+        # For unsupported types fallback to the default implementation that can verify based on the from-provenance
+        # repository URL.
+        verifier = RepoVerifierFromProvenance(
+            namespace=namespace,
+            name=name,
+            version=version,
+            reported_repo_url=reported_repo_url,
+            reported_repo_fs=reported_repo_fs,
+            provenance_repo_url=provenance_repo_url,
+            build_tool=build_tool,
+        )
+    else:
+        # Otherwise, use the correct repo verifier.
+        verifier = verifier_cls(
+            namespace=namespace,
+            name=name,
+            version=version,
+            reported_repo_url=reported_repo_url,
+            reported_repo_fs=reported_repo_fs,
+            provenance_repo_url=provenance_repo_url,
         )
 
-    verifier = verifier_cls(
-        namespace=namespace,
-        name=name,
-        version=version,
-        reported_repo_url=reported_repo_url,
-        reported_repo_fs=reported_repo_fs,
-    )
-
+    # Perform verification.
     return verifier.verify_repo()

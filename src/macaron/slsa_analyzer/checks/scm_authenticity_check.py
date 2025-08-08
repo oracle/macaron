@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """A check to determine whether the source repository of a package can be independently verified."""
@@ -10,7 +10,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from macaron.database.table_definitions import CheckFacts
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
-from macaron.repo_verifier.repo_verifier_base import RepositoryVerificationStatus
+from macaron.repo_verifier.repo_verifier_base import (
+    RepositoryVerificationStatus,
+    RepoVerifierFromProvenance,
+)
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
@@ -64,7 +67,7 @@ class ScmAuthenticityCheck(BaseCheck):
             "Check whether the claims of a source repository provenance"
             " made by a package can be corroborated."
             " At this moment, this check only supports Maven packages"
-            " and returns UNKNOWN for others."
+            ", or packages with a from-provenance repository, and returns UNKNOWN for others."
         )
 
         super().__init__(
@@ -85,11 +88,6 @@ class ScmAuthenticityCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        # Only support Maven at the moment.
-        # TODO: Add support for other systems.
-        if ctx.component.type != "maven":
-            return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
-
         stars_count: int | None = None
         fork_count: int | None = None
         deps_dev_repo_info: dict | None = None
@@ -105,13 +103,16 @@ class ScmAuthenticityCheck(BaseCheck):
         result_type = CheckResultType.UNKNOWN
         result_tables: list[CheckFacts] = []
         for verification_result in ctx.dynamic_data.get("repo_verification", []):
+            reason = verification_result.reason
             result_tables.append(
                 ScmAuthenticityFacts(
                     repo_link=repo_link,
-                    reason=verification_result.reason,
+                    reason=reason,
                     status=verification_result.status.value,
                     build_tool=verification_result.build_tool.name,
-                    confidence=Confidence.MEDIUM,
+                    confidence=(
+                        Confidence.HIGH if reason == RepoVerifierFromProvenance.DEFAULT_REASON else Confidence.MEDIUM
+                    ),
                     stars_count=stars_count,
                     fork_count=fork_count,
                 )

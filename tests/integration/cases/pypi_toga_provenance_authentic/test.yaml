@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Analyzing a PyPI PURL that has provenance available on the PyPI registry.
+  Analyzing a PyPI PURL that has provenance available on the PyPI registry, and passes the SCM authenticity check.
 
 tags:
 - macaron-python-package

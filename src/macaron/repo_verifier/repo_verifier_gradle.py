@@ -1,7 +1,7 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module contains code to verify whether a repository with Gradle build system can be linked back to the artifact."""
+"""This module contains code to verify whether a Gradle-based repository can be linked back to the artifact."""
 import logging
 from pathlib import Path
 
@@ -9,7 +9,7 @@ from macaron.artifact.maven import is_valid_maven_group_id
 from macaron.repo_verifier.repo_verifier_base import (
     RepositoryVerificationResult,
     RepositoryVerificationStatus,
-    RepoVerifierBase,
+    RepoVerifierToolSpecific,
     find_file_in_repo,
 )
 from macaron.repo_verifier.repo_verifier_maven import RepoVerifierMaven
@@ -19,10 +19,10 @@ from macaron.slsa_analyzer.package_registry.maven_central_registry import same_o
 logger = logging.getLogger(__name__)
 
 
-class RepoVerifierGradle(RepoVerifierBase):
+class RepoVerifierGradle(RepoVerifierToolSpecific):
     """A class to verify whether a repository with Gradle build tool links back to the artifact."""
 
-    build_tool = Gradle()
+    specific_tool = Gradle()
 
     def __init__(
         self,
@@ -31,6 +31,7 @@ class RepoVerifierGradle(RepoVerifierBase):
         version: str,
         reported_repo_url: str,
         reported_repo_fs: str,
+        provenance_repo_url: str | None,
     ):
         """Initialize a RepoVerifierGradle instance.
 
@@ -46,8 +47,10 @@ class RepoVerifierGradle(RepoVerifierBase):
             The URL of the repository reported by the publisher.
         reported_repo_fs : str
             The file system path of the reported repository.
+        provenance_repo_url : str | None
+            The URL of the repository from a provenance file, or None if it, or the provenance, is not present.
         """
-        super().__init__(namespace, name, version, reported_repo_url, reported_repo_fs)
+        super().__init__(namespace, name, version, reported_repo_url, reported_repo_fs, provenance_repo_url)
 
         self.maven_verifier = RepoVerifierMaven(
             namespace=namespace,
@@ -55,9 +58,10 @@ class RepoVerifierGradle(RepoVerifierBase):
             version=version,
             reported_repo_url=reported_repo_url,
             reported_repo_fs=reported_repo_fs,
+            provenance_repo_url=provenance_repo_url,
         )
 
-    def verify_repo(self) -> RepositoryVerificationResult:
+    def verify_by_tool(self) -> RepositoryVerificationResult:
         """Verify whether the reported repository links back to the artifact.
 
         Returns

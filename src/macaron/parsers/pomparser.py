@@ -1,11 +1,12 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the parser for POM files."""
 import logging
-from xml.etree.ElementTree import Element  # nosec
+from xml.etree.ElementTree import Element  # nosec B405
 
 import defusedxml.ElementTree
+from defusedxml import DefusedXmlException
 from defusedxml.ElementTree import fromstring
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -31,4 +32,6 @@ def parse_pom_string(pom_string: str) -> Element | None:
         return pom
     except defusedxml.ElementTree.ParseError as error:
         logger.debug("Failed to parse XML: %s", error)
-        return None
+    except DefusedXmlException as error:
+        logger.debug("POM rejected due to possible security issues: %s", error)
+    return None

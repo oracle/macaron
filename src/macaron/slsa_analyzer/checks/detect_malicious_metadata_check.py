@@ -20,8 +20,10 @@ from macaron.malware_analyzer.pypi_heuristics.heuristics import HeuristicResult,
 from macaron.malware_analyzer.pypi_heuristics.metadata.anomalous_version import AnomalousVersionAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date import CloserReleaseJoinDateAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.fake_email import FakeEmailAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.similar_projects import SimilarProjectAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
@@ -99,15 +101,19 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             Returns True if any result of the dependency heuristic does not match the expected result.
             Otherwise, returns False.
         """
+        mapped_h: dict[Heuristics, list[HeuristicResult]] = {}
         for heuristic, expected_result in depends_on:
-            dep_heuristic_result: HeuristicResult = results[heuristic]
-            if dep_heuristic_result is not expected_result:
-                return True
+            mapped_h.setdefault(heuristic, []).append(expected_result)
+
+            for heuristic, exp_results in mapped_h.items():
+                dep_heuristic_result = results.get(heuristic)
+                if dep_heuristic_result not in exp_results:
+                    return True
         return False
 
     def analyze_source(
         self, pypi_package_json: PyPIPackageJsonAsset, results: dict[Heuristics, HeuristicResult], force: bool = False
-    ) -> tuple[HeuristicResult, dict[str, JsonType]]:
+    ) -> tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]:
         """Analyze the source code of the package with a textual scan, looking for malicious code patterns.
 
         Parameters
@@ -122,7 +128,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
         Returns
         -------
-        tuple[HeuristicResult, dict[str, JsonType]]
+        tuple[dict[Heuristics, HeuristicResult], dict[str, JsonType]]
             Containing the analysis results and relevant patterns identified.
 
         Raises
@@ -136,11 +142,13 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         analyzer = PyPISourcecodeAnalyzer()
 
         if not force and analyzer.depends_on and self._should_skip(results, analyzer.depends_on):
-            return HeuristicResult.SKIP, {}
+            return {analyzer.heuristic: HeuristicResult.SKIP}, {}
 
         try:
             with pypi_package_json.sourcecode():
-                return analyzer.analyze(pypi_package_json)
+                result, detail_info = analyzer.analyze(pypi_package_json)
+                return {analyzer.heuristic: result}, detail_info
+
         except SourceCodeError as error:
             error_msg = f"Unable to perform analysis, source code not available: {error}"
             logger.debug(error_msg)
@@ -310,23 +318,22 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                             confidence = Confidence.HIGH
                             result_type = CheckResultType.PASSED
 
-                        # optional sourcecode analysis feature
-                        if ctx.dynamic_data["analyze_source"]:
-                            try:
-                                sourcecode_result, sourcecode_detail_info = self.analyze_source(
-                                    pypi_package_json, heuristic_results, force=ctx.dynamic_data["force_analyze_source"]
-                                )
-                            except (HeuristicAnalyzerValueError, ConfigurationError):
-                                return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
+                        # Source code analysis
+                        try:
+                            sourcecode_result, sourcecode_detail_info = self.analyze_source(
+                                pypi_package_json, heuristic_results, force=ctx.dynamic_data["force_analyze_source"]
+                            )
+                        except (HeuristicAnalyzerValueError, ConfigurationError):
+                            return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-                            heuristic_results[Heuristics.SUSPICIOUS_PATTERNS] = sourcecode_result
-                            heuristics_detail_info.update(sourcecode_detail_info)
+                        heuristic_results.update(sourcecode_result)
+                        heuristics_detail_info.update(sourcecode_detail_info)
 
-                            if sourcecode_result == HeuristicResult.FAIL:
-                                if result_type == CheckResultType.PASSED:
-                                    # heuristics determined it benign, so lower the confidence
-                                    confidence = Confidence.LOW
-                                result_type = CheckResultType.FAILED
+                        if sourcecode_result[Heuristics.SUSPICIOUS_PATTERNS] == HeuristicResult.FAIL:
+                            if result_type == CheckResultType.PASSED:
+                                # heuristics determined it benign, so lower the confidence
+                                confidence = Confidence.LOW
+                            result_type = CheckResultType.FAILED
 
                         result_tables.append(
                             MaliciousMetadataFacts(
@@ -357,6 +364,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         WheelAbsenceAnalyzer,
         AnomalousVersionAnalyzer,
         TyposquattingPresenceAnalyzer,
+        FakeEmailAnalyzer,
+        SimilarProjectAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
@@ -424,6 +433,12 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.ONE_RELEASE.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}).
 
+    % Package released recently with the a maintainer email address that is not valid.
+    {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_3) :-
+        quickUndetailed,
+        failed({Heuristics.FAKE_EMAIL.value}),
+        failed({Heuristics.SIMILAR_PROJECTS.value}).
+
     % ----- Evaluation -----
 
     % Aggregate result
@@ -431,6 +446,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
     {problog_result_access} :- trigger(malware_high_confidence_4).
+    {problog_result_access} :- trigger(malware_medium_confidence_3).
     {problog_result_access} :- trigger(malware_medium_confidence_2).
     {problog_result_access} :- trigger(malware_medium_confidence_1).
     query({problog_result_access}).
