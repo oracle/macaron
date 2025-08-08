@@ -25,6 +25,13 @@ class JavaArtifactExt(str, Enum):
     JAR = ".jar"
 
 
+class CacheStrategy(Enum):
+    """The strategy for caching the downloaded artifacts for JDK version finding."""
+
+    DISABLE = 0
+    MAVEN_LAYOUT = 1
+
+
 def download_file(url: str, dest: str) -> None:
     """Stream a file into a local destination.
 
@@ -213,7 +220,7 @@ def find_jdk_version_from_remote_maven_repo_cache(
     """Return the jdk version string from an artifact matching a given GAV from a remote maven layout repository.
 
     This function cache the downloaded artifact in a maven layout https://maven.apache.org/repository/layout.html
-    undert ``local_cache_repo``.
+    under ``local_cache_repo``.
     We assume that the remote maven layout repository supports downloading a file through a HTTPS URL.
 
     Parameters
@@ -286,7 +293,7 @@ def find_jdk_version_from_central_maven_repo(
     group_id: str,
     artifact_id: str,
     version: str,
-    use_cache: bool = True,
+    cache_strat: CacheStrategy = CacheStrategy.MAVEN_LAYOUT,
 ) -> str | None:
     """Return the jdk version string from an artifact matching a given GAV from Maven Central repository.
 
@@ -302,11 +309,8 @@ def find_jdk_version_from_central_maven_repo(
         The artifact ID part of the GAV coordinate.
     version: str
         The version part of the GAV coordinate.
-    remote_maven_repo_url: str
-        The URL to the remote maven layout repository.
-    local_cache_repo: str
-        The path to a local directory for caching the downloaded artifact used in JDK version
-        extraction.
+    cache_strat: CacheStrategy
+        Specify how artifacts from maven central are persisted.
 
     Returns
     -------
@@ -321,20 +325,21 @@ def find_jdk_version_from_central_maven_repo(
     )
     asset_name = f"{artifact_id}-{version}{JavaArtifactExt.JAR.value}"
 
-    if use_cache:
-        return find_jdk_version_from_remote_maven_repo_cache(
-            group_id=group_id,
-            artifact_id=artifact_id,
-            version=version,
-            asset_name=asset_name,
-            remote_maven_repo_url=central_repo_url,
-            local_cache_repo=local_cache_maven_repo,
-        )
-
-    return find_jdk_version_from_remote_maven_repo_standalone(
-        group_id=group_id,
-        artifact_id=artifact_id,
-        version=version,
-        asset_name=asset_name,
-        remote_maven_repo_url=central_repo_url,
-    )
+    match cache_strat:
+        case CacheStrategy.MAVEN_LAYOUT:
+            return find_jdk_version_from_remote_maven_repo_cache(
+                group_id=group_id,
+                artifact_id=artifact_id,
+                version=version,
+                asset_name=asset_name,
+                remote_maven_repo_url=central_repo_url,
+                local_cache_repo=local_cache_maven_repo,
+            )
+        case CacheStrategy.DISABLE:
+            return find_jdk_version_from_remote_maven_repo_standalone(
+                group_id=group_id,
+                artifact_id=artifact_id,
+                version=version,
+                asset_name=asset_name,
+                remote_maven_repo_url=central_repo_url,
+            )

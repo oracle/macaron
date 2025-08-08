@@ -5,40 +5,15 @@
 
 import pytest
 
+from macaron.build_spec_generator.macaron_db_extractor import GenericBuildCommandInfo
 from macaron.build_spec_generator.reproducible_central.reproducible_central import (
-    _get_build_command_sequence,
-    _get_extra_comments,
-    _get_rc_build_tool_name,
-    _ReproducibleCentralBuildToolName,
+    ReproducibleCentralBuildTool,
+    _get_rc_build_tool_name_from_build_facts,
+    get_lookup_build_command_jdk,
+    get_rc_build_command,
+    get_rc_default_build_command,
 )
 from macaron.slsa_analyzer.checks.build_tool_check import BuildToolFacts
-
-
-@pytest.mark.parametrize(
-    ("comments", "expected"),
-    [
-        pytest.param(
-            [
-                "Input PURL - pkg:maven/oracle/macaron@v0.16.0",
-                "Initial default JDK version 8 and default build command boo",
-            ],
-            "# Input PURL - pkg:maven/oracle/macaron@v0.16.0\n# Initial default JDK version 8 and default build command boo",
-        ),
-        pytest.param(
-            [
-                "Input PURL - pkg:maven/oracle/macaron@v0.16.0",
-            ],
-            "# Input PURL - pkg:maven/oracle/macaron@v0.16.0",
-        ),
-        pytest.param(
-            [],
-            "",
-        ),
-    ],
-)
-def test_get_extra_comments(comments: list[str], expected: str) -> None:
-    """Test the _get_extra_comments function."""
-    assert _get_extra_comments(comments) == expected
 
 
 @pytest.mark.parametrize(
@@ -59,12 +34,12 @@ def test_get_extra_comments(comments: list[str], expected: str) -> None:
         ),
     ],
 )
-def test_get_build_command_sequence(
+def test_get_rc_build_command(
     cmds_sequence: list[list[str]],
     expected: str,
 ) -> None:
     """Test the _get_build_command_sequence function."""
-    assert _get_build_command_sequence(cmds_sequence) == expected
+    assert get_rc_build_command(cmds_sequence) == expected
 
 
 @pytest.mark.parametrize(
@@ -87,7 +62,7 @@ def test_get_build_command_sequence(
                     build_tool_name="gradle",
                 )
             ],
-            _ReproducibleCentralBuildToolName.GRADLE,
+            ReproducibleCentralBuildTool.GRADLE,
             id="build_tool_gradle",
         ),
         pytest.param(
@@ -97,7 +72,7 @@ def test_get_build_command_sequence(
                     build_tool_name="maven",
                 )
             ],
-            _ReproducibleCentralBuildToolName.MAVEN,
+            ReproducibleCentralBuildTool.MAVEN,
             id="build_tool_maven",
         ),
         pytest.param(
@@ -124,7 +99,45 @@ def test_get_build_command_sequence(
 )
 def test_get_rc_build_tool_name(
     build_tool_facts: list[BuildToolFacts],
-    expected: _ReproducibleCentralBuildToolName | None,
+    expected: ReproducibleCentralBuildTool | None,
 ) -> None:
     """Test the _get_rc_build_tool_name function."""
-    assert _get_rc_build_tool_name(build_tool_facts) == expected
+    assert _get_rc_build_tool_name_from_build_facts(build_tool_facts) == expected
+
+
+def test_get_rc_default_build_command_unsupported() -> None:
+    """Test the get_rc_default_build_command function for an unsupported RC build tool."""
+    assert not get_rc_default_build_command(ReproducibleCentralBuildTool.SBT)
+
+
+@pytest.mark.parametrize(
+    ("build_command_info", "expected"),
+    [
+        pytest.param(
+            GenericBuildCommandInfo(
+                command=["mvn", "package"],
+                language="java",
+                language_versions=["8"],
+                build_tool_name="maven",
+            ),
+            "8",
+            id="has_language_version",
+        ),
+        pytest.param(
+            GenericBuildCommandInfo(
+                command=["mvn", "package"],
+                language="java",
+                language_versions=[],
+                build_tool_name="maven",
+            ),
+            None,
+            id="no_language_version",
+        ),
+    ],
+)
+def test_get_lookup_build_command_jdk(
+    build_command_info: GenericBuildCommandInfo,
+    expected: str | None,
+) -> None:
+    """Test the get_lookup_build_command_jdk function."""
+    assert get_lookup_build_command_jdk(build_command_info) == expected
