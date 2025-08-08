@@ -13,7 +13,6 @@ on:
 permissions:
   contents: read
 env:
-  ARTIFACT_NAME: artifact-ubuntu-latest-python-3.11
   # This is the username and email for the user who commits and pushes the release
   # commit. In an organisation that should be a dedicated devops account.
   USER_NAME: behnazh-w
@@ -133,18 +132,36 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
       with:
-        name: ${{ env.ARTIFACT_NAME }}
-        path: dist
+        path: downloads
 
     # Verify hashes by first computing hashes for the artifacts and then comparing them
     # against the hashes computed by the build job.
     - name: Verify the artifact hash
-      env:
-        ARTIFACT_HASH: ${{ needs.build.outputs.artifacts-sha256 }}
       run: |
         set -euo pipefail
-        echo "Hash of package should be $ARTIFACT_HASH."
-        echo "$ARTIFACT_HASH" | base64 --decode | sha256sum --strict --check --status || exit 1
+        cd downloads
+        for ARCH in "ubuntu-x86-64" "ubuntu-arm64"; do
+          HASH_DIR="artifacts-sha256-file-${ARCH}"
+          ARTIFACT_DIR="artifacts-${ARCH}"
+          HASH_FILE="${HASH_DIR}/artifacts-sha256-file-${ARCH}"
+
+          echo "Verifying artifacts for ${ARCH}"
+          echo "Decoding expected SHA256 digest:"
+          DECODED_HASH=$(base64 --decode "${HASH_FILE}")
+          echo "$DECODED_HASH"
+
+          pushd "${ARTIFACT_DIR}"
+          echo "$DECODED_HASH" | sha256sum --strict --check --status || {
+            echo "Hash verification failed for ${ARCH}!"
+            exit 1
+          }
+          popd
+
+          # Copy the target dist folder to the repo directory for the subsequent steps.
+          cp -r "${ARTIFACT_DIR}"/dist ../
+
+          echo "Hash verified successfully for ${ARCH}"
+        done
 
     # Log in to ghcr.io to push the Docker image.
     - name: Log in to GitHub Container Registry
@@ -329,10 +346,9 @@ jobs:
       pages: write
       id-token: write
     with:
-      # TODO: use ${{ env.ARTIFACT_NAME }} when this issue is addressed:
-      # https://github.com/actions/runner/issues/2394.
-      artifact-name: artifact-ubuntu-latest-python-3.11
-      artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
+      # TODO: use ${{ env.RELEASE_OS_X86_64 }}
+      # when this issue is addressed: https://github.com/actions/runner/issues/2394.
+      artifact-architecture: ubuntu-x86-64
 
   # Send out release notifications after the Release was published on GitHub.
   # Uncomment the `if` to disable sending release notifications.

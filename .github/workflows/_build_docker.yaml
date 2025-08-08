@@ -10,10 +10,7 @@ name: Build and push Docker image
 on:
   workflow_call:
     inputs:
-      artifact-name:
-        required: true
-        type: string
-      artifact-sha256:
+      artifact-architecture:
         required: true
         type: string
 permissions:
@@ -40,18 +37,35 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
       with:
-        name: ${{ inputs.artifact-name }}
-        path: dist
+        path: downloads
 
     # Verify hashes by first computing hashes for the artifacts and then comparing them
     # against the hashes for the artifact.
     - name: Verify the artifact hash
-      env:
-        ARTIFACT_HASH: ${{ inputs.artifact-sha256 }}
       run: |
         set -euo pipefail
-        echo "Hash of package should be $ARTIFACT_HASH."
-        echo "$ARTIFACT_HASH" | base64 --decode | sha256sum --strict --check --status || exit 1
+        cd downloads
+        ARCH=${{ inputs.artifact-architecture }}
+        HASH_DIR="artifacts-sha256-file-${ARCH}"
+        ARTIFACT_DIR="artifacts-${ARCH}"
+        HASH_FILE="${HASH_DIR}/artifacts-sha256-file-${ARCH}"
+
+        echo "Verifying artifacts for ${ARCH}"
+        echo "Decoding expected SHA256 digest:"
+        DECODED_HASH=$(base64 --decode "${HASH_FILE}")
+        echo "$DECODED_HASH"
+
+        pushd "${ARTIFACT_DIR}"
+        echo "$DECODED_HASH" | sha256sum --strict --check --status || {
+          echo "Hash verification failed for ${ARCH}!"
+          exit 1
+        }
+        popd
+
+        # Copy the target dist folder to the repo directory for the subsequent steps.
+        cp -r "${ARTIFACT_DIR}"/dist ../
+
+        echo "Hash verified successfully for ${ARCH}."
 
     # Login so the docker build has access to the internal dependencies image
     - name: Log in to GitHub Container Registry
