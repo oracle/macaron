@@ -1,0 +1,20 @@
+[
+    {
+        "id": "io.github.behnazh-w.demo:jackson-databind",
+        "purl": "pkg:maven/io.github.behnazh-w.demo/jackson-databind@1.0?type=jar",
+        "path": "https://github.com/behnazh-w/maven-demo",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    },
+    {
+        "id": "org.apache.logging.log4j:log4j-core",
+        "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta2?type=jar",
+        "path": "https://github.com/apache/logging-log4j2",
+        "branch": "",
+        "digest": "",
+        "note": "",
+        "available": "AVAILABLE"
+    }
+]
