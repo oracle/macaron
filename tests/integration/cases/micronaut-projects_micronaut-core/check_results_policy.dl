@@ -1,4 +1,4 @@
-/* Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 #include "prelude.dl"
@@ -6,7 +6,7 @@
 Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_build_as_code_1"),
     check_passed(component_id, "mcn_build_script_1"),
-    check_passed(component_id, "mcn_build_service_1"),
+    check_failed(component_id, "mcn_build_service_1"),
     check_passed(component_id, "mcn_version_control_system_1"),
     check_passed(component_id, "mcn_provenance_derived_repo_1"),
     check_failed(component_id, "mcn_provenance_derived_commit_1"),
