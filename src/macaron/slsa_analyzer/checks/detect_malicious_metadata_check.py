@@ -433,8 +433,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.ONE_RELEASE.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}).
 
-    % Package has no links or repo, one release or multiple quick releases, and a suspicious maintainer who recently
-    % joined and has a fake email address.
+    % Package has no links, one release or multiple quick releases, and a suspicious maintainer who recently
+    % joined, has a fake email address, and other similarly-structured projects.
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_3) :-
         quickUndetailed,
         failed({Heuristics.SIMILAR_PROJECTS.value}),
