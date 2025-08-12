@@ -52,7 +52,6 @@ fi
 # The directory that could be mounted to the host machine file systems should
 # have the owner as the current user in the host machine.
 chown --recursive macaron:macaron "$HOME"/.m2
-chown --recursive macaron:macaron "$HOME"/.gradle
 chown --recursive macaron:macaron "$HOME"/output
 
 # Run the provided Macaron command with the user macaron.
