@@ -11,7 +11,6 @@ import os
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 
@@ -65,18 +64,3 @@ class Maven(BaseBuildTool):
             return False
         maven_config_files = self.build_configs
         return any(file_exists(repo_path, file) for file in maven_config_files)
-
-    def get_dep_analyzer(self) -> DependencyAnalyzer:
-        """
-        Create a DependencyAnalyzer for the Maven build tool.
-
-        Returns
-        -------
-        DependencyAnalyzer
-            The DependencyAnalyzer object.
-
-        Raises
-        ------
-        DependencyAnalyzerError
-        """
-        return NoneDependencyAnalyzer()

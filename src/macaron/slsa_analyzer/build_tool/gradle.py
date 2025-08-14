@@ -10,7 +10,6 @@ import logging
 import subprocess  # nosec B404
 
 from macaron.config.defaults import defaults
-from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 
@@ -69,20 +68,6 @@ class Gradle(BaseBuildTool):
         """
         gradle_config_files = self.build_configs + self.entry_conf
         return any(file_exists(repo_path, file) for file in gradle_config_files)
-
-    def get_dep_analyzer(self) -> DependencyAnalyzer:
-        """Create a DependencyAnalyzer for the Gradle build tool.
-
-        Returns
-        -------
-        DependencyAnalyzer
-            The DependencyAnalyzer object.
-
-        Raises
-        ------
-        DependencyAnalyzerError
-        """
-        return NoneDependencyAnalyzer()
 
     def get_group_id(self, gradle_exec: str, project_path: str) -> str | None:
         """Get the group id of a Gradle project.

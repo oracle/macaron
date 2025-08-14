@@ -7,7 +7,6 @@ This module is used to work with repositories that use Docker as a build tool.
 """
 
 from macaron.config.defaults import defaults
-from macaron.dependency_analyzer.cyclonedx import NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 
@@ -45,19 +44,3 @@ class Docker(BaseBuildTool):
             True if this build tool is detected, else False.
         """
         return any(file_exists(repo_path, file) for file in self.build_configs)
-
-    def get_dep_analyzer(self) -> NoneDependencyAnalyzer:
-        """Create a DependencyAnalyzer for the Docker build tool. Currently unimplemented.
-
-        Returns
-        -------
-        NoneDependencyAnalyser
-            The NoneDependencyAnalyser object.
-
-        Raises
-        ------
-        DependencyAnalyzerError
-        """
-        # TODO: Find a suitable tool to analyse dependencies; as of now Syft
-        #       seems to be a good option, but need to experiment.
-        return NoneDependencyAnalyzer()

@@ -486,20 +486,6 @@ else
             argv_command+=("--local-maven-repo" "${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly")
 
             mount_dir_ro "--local-maven-repo" "$HOME/.m2" "$local_maven_repo_in_container"
-        # If the host's $HOME/.m2 doesn't exist, we create and mount an empty directory ${output}/analyze_local_maven_repo_readonly
-        # into ${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly. And then provide
-        # ${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly into the --local-maven-repo
-        # flag.
-        # This is because:
-        #   - By default if --local-maven-repo is not used, Macaron uses $HOME/.m2 of the current
-        #     environment as the local maven repo.
-        else
-            local_maven_repo_in_container="${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly"
-            output_local_maven_repo="${output}/analyze_local_maven_repo_readonly"
-            mkdir -p "$output_local_maven_repo"
-            argv_command+=("--local-maven-repo" "${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly")
-
-            mount_dir_ro "--local-maven-repo" "$output_local_maven_repo" "$local_maven_repo_in_container"
         fi
     fi
 fi

@@ -10,7 +10,6 @@ build tool.
 import os
 
 from macaron.config.defaults import defaults
-from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence
@@ -56,17 +55,6 @@ class Yarn(BaseBuildTool):
         #       they would still count as "detected"
         yarn_config_files = self.build_configs + self.package_lock + self.entry_conf
         return any(file_exists(repo_path, file) for file in yarn_config_files)
-
-    def get_dep_analyzer(self) -> DependencyAnalyzer:
-        """Create a DependencyAnalyzer for the build tool.
-
-        Returns
-        -------
-        DependencyAnalyzer
-            The DependencyAnalyzer object.
-        """
-        # TODO: Implement this method.
-        return NoneDependencyAnalyzer()
 
     def is_deploy_command(
         self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None, provenance_workflow: str | None = None
