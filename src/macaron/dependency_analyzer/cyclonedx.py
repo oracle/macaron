@@ -105,7 +105,7 @@ class DependencyInfo(TypedDict):
 
 
 class DependencyAnalyzer:
-    """This base class is used to implement dependency analyzers."""
+    """This base class is used to implement dependency analyzers for CyclondDx SBOMs."""
 
     def __init__(self, resources_path: str, file_name: str, tool_name: str, tool_version: str) -> None:
         """Initialize the dependency analyzer instance.
