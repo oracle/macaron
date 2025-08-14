@@ -683,7 +683,7 @@ class Case:
 
         ret = 0
 
-        # Clean up previous results
+        # Clean up previous results.
         output_dir = os.path.join(self.case_dir, "output")
         if not dry and os.path.isdir(output_dir):
             remove_output = True

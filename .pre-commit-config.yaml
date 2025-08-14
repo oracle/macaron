@@ -32,6 +32,19 @@ repos:
     args: [--settings-path, pyproject.toml]
     exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
 
+# Format comment grammar.
+- repo: local
+  hooks:
+  - id: comment-checker
+    name: Fix comment grammar and formatting
+    entry: python
+    args:
+    - ./scripts/dev_scripts/format_checker.py
+    - tests
+    - src/macaron
+    language: system
+    pass_filenames: true
+
 # Add Black code formatters.
 - repo: https://github.com/ambv/black
   rev: 25.1.0
@@ -186,7 +199,9 @@ repos:
     language: system
     pass_filenames: false
 
-# On push to the remote, run the unit tests.
+
+
+  # On push to the remote, run the unit tests.
 - repo: local
   hooks:
   - id: pytest

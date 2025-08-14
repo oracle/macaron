@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the NPM class which inherits BaseBuildTool.
@@ -55,7 +55,7 @@ class NPM(BaseBuildTool):
         """
         # TODO: When more complex build detection is being implemented, consider
         #       cases like .npmrc existing but not package-lock.json and whether
-        #       they would still count as "detected"
+        #       they would still count as "detected".
         npm_config_files = self.build_configs + self.package_lock + self.entry_conf
         return any(file_exists(repo_path, file) for file in npm_config_files)
 

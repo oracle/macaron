@@ -53,7 +53,7 @@ class JavaRepoFinder(BaseRepoFinder):
 
         if not version:
             logger.debug("Version missing for maven artifact: %s:%s", group, artifact)
-            # TODO add support for Java artifacts without a version
+            # TODO add support for Java artifacts without a version.
             return "", RepoFinderInfo.NO_VERSION_PROVIDED
 
         # Perform the following in a loop:
@@ -102,7 +102,7 @@ class JavaRepoFinder(BaseRepoFinder):
             urls, read_outcome = self._read_pom(pom, tags)
 
             if urls:
-                # If the found URLs fail to validate, finding can continue on to the next parent POM
+                # If the found URLs fail to validate, finding can continue on to the next parent POM.
                 logger.debug("Found %s urls: %s", len(urls), urls)
                 url = find_valid_repository_url(urls)
                 if url:
@@ -302,7 +302,7 @@ class JavaRepoFinder(BaseRepoFinder):
 
         # Attempt to match the target tag within the children of parent.
         for child in parent:
-            # Handle raw tags, and tags accompanied by Maven metadata enclosed in curly braces. E.g. '{metadata}tag'
+            # Handle raw tags, and tags accompanied by Maven metadata enclosed in curly braces. E.g. '{metadata}tag'.
             if child.tag == target or child.tag.endswith(f"}}{target}"):
                 return child
         return None

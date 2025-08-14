@@ -150,7 +150,7 @@ class BuildAsCodeCheck(BaseCheck):
                 trusted_deploy_actions = tool.ci_deploy_kws["github_actions"] or []
 
                 # Check for use of a trusted GitHub Actions workflow to publish/deploy.
-                # TODO: verify that deployment is legitimate and not a test
+                # TODO: verify that deployment is legitimate and not a test.
                 if trusted_deploy_actions:
                     for callee in ci_info["callgraph"].bfs():
                         if isinstance(callee, GitHubWorkflowNode) and callee.node_type in [
@@ -180,7 +180,7 @@ class BuildAsCodeCheck(BaseCheck):
                                 # Only third-party Actions can be called from a step.
                                 # Reusable workflows have to be directly called from the job.
                                 # See https://docs.github.com/en/actions/sharing-automations/ \
-                                # reusing-workflows#calling-a-reusable-workflow
+                                # reusing-workflows#calling-a-reusable-workflow.
                                 if callee.node_type == GitHubWorkflowType.EXTERNAL:
                                     callee_step_obj = cast(ActionStep, callee.parsed_obj)
                                     if "id" in callee_step_obj:
@@ -332,7 +332,7 @@ class BuildAsCodeCheck(BaseCheck):
         # build tool usage.
         # TODO: When more sophisticated build tool detection is
         # implemented, consider whether this should be one fail = whole
-        # check fails instead
+        # check fails instead.
 
         return CheckResultData(result_tables=result_tables, result_type=overall_res)
 

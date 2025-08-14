@@ -117,9 +117,9 @@ class RepoVerifierMaven(RepoVerifierToolSpecific):
             # but it doesn't match gitlab.com/foo or gitlab.com/bar.
             if (
                 group_parts[0].lower() in {"io", "com"}
-                and group_parts[1].lower() == platform.lower()  # e.g., github
-                and group_parts[1].lower() == reported_hostname.lower()  # e.g., github
-                and group_parts[2].lower() == reported_account.lower()  # e.g., foo in github.com/foo
+                and group_parts[1].lower() == platform.lower()  # E.g., github.
+                and group_parts[1].lower() == reported_hostname.lower()  # E.g., github.
+                and group_parts[2].lower() == reported_account.lower()  # E.g., foo in github.com/foo.
             ):
                 return RepositoryVerificationResult(
                     status=RepositoryVerificationStatus.PASSED, reason="git_ns_match", build_tool=self.build_tool

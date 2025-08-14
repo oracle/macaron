@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module analyzes GitHub Actions CI."""
@@ -168,7 +168,7 @@ class GitHubActions(BaseCIService):
         try:
             # Setting the timezone to UTC because the date format.
             # We are using for GitHub Actions is in ISO format, which contains the offset
-            # from the UTC timezone. For example: 2022-04-10T14:10:01+07:00
+            # from the UTC timezone. For example: 2022-04-10T14:10:01+07:00.
             current_time = datetime.now(timezone.utc)
             # TODO: it is safer to get commit_date as a datetime object directly.
             commit_date_obj = datetime.fromisoformat(commit_date)
@@ -370,7 +370,7 @@ class GitHubActions(BaseCIService):
 
         logger.debug("Checking workflow run of %s.", workflow)
         try:
-            # iterate through the responses in reversed order to add the run
+            # Iterate through the responses in reversed order to add the run
             # closest to the `date_time - time_range` timestamp first.
             for item in reversed(run_data["workflow_runs"]):
                 # The workflow parameter contains the URL to the workflow.
@@ -459,7 +459,7 @@ class GitHubActions(BaseCIService):
         # GitHub retains GitHub Actions pipeline data for 400 days. So, we cannot analyze the
         # pipelines if artifacts are older than 400 days.
         # https://docs.github.com/en/rest/guides/using-the-rest-api-to-interact-with-checks?
-        # apiVersion=2022-11-28#retention-of-checks-data
+        # ApiVersion=2022-11-28#retention-of-checks-data
         # TODO: change this check if this issue is resolved:
         # https://github.com/orgs/community/discussions/138249
         if datetime.now(timezone.utc) - timedelta(days=400) > timestamp:

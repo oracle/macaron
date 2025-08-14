@@ -78,7 +78,7 @@ class Poetry(BaseBuildTool):
                 # Take the highest level file, if there are two at the same level, take the first in the list.
                 file_path = min(files_detected, key=lambda x: len(Path(x).parts))
                 try:
-                    # Parse the .toml file
+                    # Parse the .toml file.
                     with open(file_path, "rb") as toml_file:
                         try:
                             data = tomllib.load(toml_file)

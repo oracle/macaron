@@ -92,7 +92,7 @@ class Gradle(BaseBuildTool):
         bool
             True if succeed else False.
         """
-        # The path of the needed wrapper files
+        # The path of the needed wrapper files.
         wrapper_files = self.wrapper_files
 
         if copy_file_bulk(wrapper_files, wrapper_path, build_dir):
