@@ -7,7 +7,7 @@
 # components:
 #   Python3.11.4 compiled and installed from source.
 #   Oracle JDK 17 installed from dnf.
-#   Souffle 2.3 compiled and installed from source.
+#   Souffle 2.5 compiled and installed from source.
 #   Other runtime libraries (e.g sqlite-devel) which are installed from dnf.
 
 FROM container-registry.oracle.com/os/oraclelinux:9-slim@sha256:e2aa8053b4a15f27c5f80666be1190d24aa3f403225f2dd6fdb545979f08482a
@@ -22,8 +22,8 @@ ENV HOME="/home/macaron" \
     # The GPG key to verify the source tar ball following the instructions in https://www.python.org/downloads/
     PYTHON_SOURCE_GPG="A035C8C19219BA821ECEA86B64E628F8D684696D" \
     # Setting Java related environment variables.
-    JAVA_HOME="/usr/lib/jvm/jdk-17-oracle-x64" \
-    PATH=/usr/local/bin:/usr/lib/jvm/jdk-17-oracle-x64/bin:$PATH
+    JAVA_HOME="/opt/jdk-17.0.12" \
+    PATH=/usr/local/bin:/opt/jdk-17.0.12/bin:$PATH
 
 # We run the installation of all components in one single RUN to minimize the final image size.
 RUN : \
@@ -72,8 +72,6 @@ enabled=1\
         ncurses-devel   \
         sqlite-devel    \
         zlib-devel      \
-        # Oracle JDK17
-        https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.rpm \
     # Store the list of user installed packages to preserve them when we clean up unused packages.
     # https://dnf.readthedocs.io/en/latest/command_ref.html#history-command
     && USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2)" \
@@ -175,6 +173,12 @@ enabled=1\
         ln -svT "$src" "/usr/local/bin/$dst"; \
     done \
 # ---------------------------------------------------------------------------------------------------------------------
+    # INSTALLING JAVA.
+    && mkdir -p /opt \
+    && wget -O jdk-17.0.12_linux-x64_bin.tar.gz https://download.oracle.com/java/17/archive/jdk-17.0.12_linux-x64_bin.tar.gz \
+    && tar -xvf jdk-17.0.12_linux-x64_bin.tar.gz --directory /opt/ \
+    && rm jdk-17.0.12_linux-x64_bin.tar.gz \
+# ---------------------------------------------------------------------------------------------------------------------
     # INSTALLING SOUFFLE FROM SOURCE.
     # Based on https://github.com/souffle-lang/souffle/blob/master/.github/images/oraclelinux-8/Dockerfile.
     # However, some parts are different on Oracle Linux 9.
@@ -195,7 +199,7 @@ enabled=1\
         make \
         pkg-config \
         rpm-build \
-    && git clone --depth=1 https://github.com/souffle-lang/souffle/ -b 2.4 \
+    && git clone --depth=1 https://github.com/souffle-lang/souffle/ -b 2.5 \
     && cd souffle \
     && cmake -S . -B build -DSOUFFLE_DOMAIN_64BIT=ON -DCMAKE_INSTALL_PREFIX="/usr/local" \
     && nproc="$(nproc)" \
