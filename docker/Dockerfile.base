@@ -6,7 +6,7 @@
 # This image is based on the container-registry.oracle.com/os/oraclelinux:9-slim image and contains the following
 # components:
 #   Python3.11.4 compiled and installed from source.
-#   Oracle JDK 17 installed from dnf.
+#   Oracle JDK 17 downloaded and installed from the tarball.
 #   Souffle 2.5 compiled and installed from source.
 #   Other runtime libraries (e.g sqlite-devel) which are installed from dnf.
 
