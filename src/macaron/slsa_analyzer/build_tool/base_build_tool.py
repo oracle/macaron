@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import TypedDict
 
 from macaron.code_analyzer.call_graph import BaseNode
-from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer
+from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence, Evidence, EvidenceWeightMap
 
@@ -155,29 +155,9 @@ class BaseBuildTool(ABC):
         """
 
     @abstractmethod
-    def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
-        """Prepare the necessary wrapper files for running the build.
-
-        This method will return False if there is any errors happened during operation.
-
-        Parameters
-        ----------
-        wrapper_path : str
-            The path where all necessary wrapper files are located.
-        build_dir : str
-            The path of the build dir. This is where all files are copied to.
-
-        Returns
-        -------
-        bool
-            True if succeed else False.
-        """
-
-    @abstractmethod
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
 
-    @abstractmethod
     def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.
 
@@ -186,6 +166,7 @@ class BaseBuildTool(ABC):
         DependencyAnalyzer
             The DependencyAnalyzer object.
         """
+        return NoneDependencyAnalyzer()
 
     def get_build_dirs(self, repo_path: str) -> Iterable[Path]:
         """Find directories in the repository that have their own build scripts.

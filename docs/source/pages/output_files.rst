@@ -20,8 +20,6 @@ Top level structure
 .. code-block::
 
     output/
-        ├── .gradle/
-        ├── .m2/
         ├── build_log/
         ├── git_repos/
         ├── reports/
@@ -182,18 +180,10 @@ This file stores the log messages from the latest run of Macaron.
 build_log
 ^^^^^^^^^
 
-This is the directory for storing the log from running external components such as `CycloneDx SBOM Maven plugin <https://github.com/CycloneDX/cyclonedx-maven-plugin>`_, `CycloneDx SBOM Gradle plugin <https://github.com/CycloneDX/cyclonedx-gradle-plugin>`_ or the `slsa-verifier <https://github.com/slsa-framework/slsa-verifier>`_.
+This is the directory for storing the log from running external components, such as `slsa-verifier <https://github.com/slsa-framework/slsa-verifier>`_.
 
 ^^^^^^^^^^^^^^^
 sbom_debug.json
 ^^^^^^^^^^^^^^^
 
 This file contain the debug information for running the SBOM generator to obtain dependencies of a repository.
-
-^^^^^^^^^^^^^^^
-.m2 and .gradle
-^^^^^^^^^^^^^^^
-
-These two directories cache the content of ``~/.m2`` and ``~/.gradle`` in the Docker container between different runs (which are
-mainly updated by the CycloneDX SBOM plugins).
-This will helps subsequent runs on the same target repository faster.

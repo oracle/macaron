@@ -66,11 +66,11 @@ Skip this section if you already know how to install Macaron.
 Run ``analyze`` command
 ***********************
 
-First, we need to run the ``analyze`` command of Macaron to run a number of :ref:`checks <checks>` and collect evidence for  ``example-maven-app`` and its dependencies.
+First, we need to run the ``analyze`` command of Macaron to run a number of :ref:`checks <checks>` and collect evidence for  ``example-maven-app`` and its dependencies. You need to generate the SBOM and provide it to Macaron. For more details see the instructions : :ref:`here <with-sbom>`.
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar -rp https://github.com/behnazh-w/example-maven-app --deps-depth=1
+  ./run_macaron.sh analyze -purl pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar -rp https://github.com/behnazh-w/example-maven-app --deps-depth=1 -sbom sbom.json
 
 .. note:: By default, Macaron clones the repositories and creates output files under the ``output`` directory. To understand the structure of this directory please see :ref:`Output Files Guide <output_files_guide>`.
 
@@ -98,7 +98,7 @@ As you can see, some of the checks are passing and some are failing. In summary,
 * but it is not deploying any artifacts automatically (``mcn_build_as_code_1``)
 * and no CI workflow runs are detected that automatically publish artifacts (``mcn_find_artifact_pipeline_1``)
 
-As you scroll down in the HTML report, you will see a section for the dependencies that were automatically identified:
+As you scroll down in the HTML report, you will see a section for the dependencies that were identified from the provided ``sbom.json``:
 
 .. _fig_example-maven-app-deps:
 
