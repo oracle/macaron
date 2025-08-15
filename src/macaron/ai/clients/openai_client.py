@@ -8,8 +8,8 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
-from macaron.ai.ai_client import AIClient
-from macaron.ai.ai_tools import structure_response
+from macaron.ai.ai_tools import extract_json
+from macaron.ai.clients.base import AIClient
 from macaron.errors import ConfigurationError, HeuristicAnalyzerValueError
 from macaron.util import send_post_http_raw
 
@@ -25,7 +25,7 @@ class OpenAiClient(AIClient):
         self,
         user_prompt: str,
         temperature: float = 0.2,
-        structured_output: type[T] | None = None,
+        response_format: dict | None = None,
         max_tokens: int = 4000,
         timeout: int = 30,
     ) -> Any:
@@ -38,8 +38,8 @@ class OpenAiClient(AIClient):
             The user prompt to send to the LLM.
         temperature: float
             The temperature for the LLM response.
-        structured_output: Optional[Type[T]]
-            The Pydantic model to validate the response against. If provided, the response will be parsed and validated.
+        response_format: dict
+            The json schema to validate the response against. If provided, the response will be parsed and validated.
         max_tokens: int
             The maximum number of tokens for the LLM response.
         timeout: int
@@ -56,28 +56,21 @@ class OpenAiClient(AIClient):
         HeuristicAnalyzerValueError
             If there is an error in parsing or validating the response.
         """
-        if not self.defaults["enabled"]:
+        if not self.params["enabled"]:
             raise ConfigurationError("AI client is not enabled. Please check your configuration.")
 
-        if len(user_prompt.split()) > self.defaults["context_window"]:
-            logger.warning(
-                "User prompt exceeds context window (%s words). "
-                "Truncating the prompt to fit within the context window.",
-                self.defaults["context_window"],
-            )
-            user_prompt = " ".join(user_prompt.split()[: self.defaults["context_window"]])
-
-        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {self.defaults["api_key"]}"}
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {self.params['api_key']}"}
         payload = {
-            "model": self.defaults["model"],
+            "model": self.params["model"],
             "messages": [{"role": "system", "content": self.system_prompt}, {"role": "user", "content": user_prompt}],
+            "response_format": response_format,
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
 
         try:
             response = send_post_http_raw(
-                url=self.defaults["api_endpoint"], json_data=payload, headers=headers, timeout=timeout
+                url=self.params["api_endpoint"], json_data=payload, headers=headers, timeout=timeout
             )
             if not response:
                 raise HeuristicAnalyzerValueError("No response received from the LLM.")
@@ -89,11 +82,7 @@ class OpenAiClient(AIClient):
                 logger.info("LLM call token usage: %s", usage_str)
 
             message_content = response_json["choices"][0]["message"]["content"]
-
-            if not structured_output:
-                logger.debug("Returning raw message content (no structured output requested).")
-                return message_content
-            return structure_response(message_content, structured_output)
+            return extract_json(message_content)
 
         except Exception as e:
             logger.error("Error during LLM invocation: %s", e)
