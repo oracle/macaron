@@ -2,27 +2,31 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Finding the source of a PyPI PURL that is not correctly found by deps.dev and must be sought on the package registry directly.
+  Testing a repository with a non-utf8 tag.
 
 tags:
 - macaron-python-package
 
 steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/ch.acra/acra-core@5.12.0
+- name: Run macaron verify-policy to verify passed/failed checks
+  kind: verify
+  options:
+    policy: policy.dl
 - name: Run macaron find-source
   kind: find-source
   options:
     command_args:
     - -purl
-    - pkg:pypi/torch@2.6.0
-- name: Validate the produced report
-  kind: validate_schema
-  options:
-    kind: json_schema
-    schema: find_source_json_report
-    result: output/reports/pypi/torch/torch.source.json
+    - pkg:maven/ch.acra/acra-core@5.12.0
 - name: Compare the contents of the report against a known correct one
   kind: compare
   options:
     kind: find_source
-    result: output/reports/pypi/torch/torch.source.json
-    expected: torch.source.json
+    result: output/reports/maven/ch_acra/acra-core.source.json
+    expected: acra-core.source.json

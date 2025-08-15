@@ -23,6 +23,7 @@ from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.environment_variables import get_patched_env
 from macaron.errors import CloneError, GitTagError
+from macaron.util import BytesDecoder
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -412,7 +413,7 @@ def list_remote_references(arguments: list[str], repo: str) -> str | None:
             logger.error("Failed to retrieve remote references from repo: %s", repo)
         return None
 
-    return result.stdout.decode("utf-8")
+    return decode_git_tags(result.stdout)
 
 
 def resolve_local_path(start_dir: str, local_path: str) -> str:
@@ -944,7 +945,7 @@ def is_commit_hash(value: str) -> bool:
     return bool(re.match(pattern, value))
 
 
-def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
+def get_tags_via_git_remote(repo: str) -> dict[str, str]:
     """Retrieve all tags from a given repository using ls-remote.
 
     Parameters
@@ -955,35 +956,14 @@ def get_tags_via_git_remote(repo: str) -> dict[str, str] | None:
     Returns
     -------
     dict[str]
-        A dictionary of tags mapped to their commits, or None if the operation failed..
+        A dictionary of tags mapped to their commits.
     """
     tag_data = list_remote_references(["--tags"], repo)
     if not tag_data:
-        return None
-    tags = {}
+        return {}
 
-    for tag_line in tag_data.splitlines():
-        tag_line = tag_line.strip()
-        if not tag_line:
-            continue
-        split = tag_line.split("\t")
-        if len(split) != 2:
-            continue
-        possible_tag = split[1]
-        if possible_tag.endswith("^{}"):
-            possible_tag = possible_tag[:-3]
-        elif possible_tag in tags:
-            # If a tag already exists, it must be the annotated reference of an annotated tag.
-            # In that case we skip the tag as it does not point to the proper source commit.
-            # Note that this should only happen if the tags are received out of standard order.
-            continue
-        possible_tag = possible_tag.replace("refs/tags/", "")
-        if not possible_tag:
-            continue
-        tags[possible_tag] = split[0]
-
+    tags = parse_git_tags(tag_data)
     logger.debug("Found %s tags via ls-remote of %s", len(tags), repo)
-
     return tags
 
 
@@ -1055,3 +1035,61 @@ def find_highest_git_tag(tags: set[str]) -> str:
         raise GitTagError("No valid version tag found.")
 
     return highest_tag
+
+
+def parse_git_tags(tag_data: str) -> dict[str, str]:
+    """Parse the tags and commits found within the passed data.
+
+    Parameters
+    ----------
+    tag_data: str
+        The tag data to parse.
+
+    Returns
+    -------
+    dict[str, str]
+        A dictionary of tags mapped to commits.
+    """
+    tags = {}
+    for tag_line in tag_data.splitlines():
+        tag_line = tag_line.strip()
+        if not tag_line:
+            continue
+        split = re.split("[\t ]", tag_line, maxsplit=1)
+        if len(split) != 2:
+            continue
+        possible_tag = split[1]
+        if possible_tag.endswith("^{}"):
+            possible_tag = possible_tag[:-3]
+        elif possible_tag in tags:
+            # If a tag already exists, it must be the annotated reference of an annotated tag.
+            # In that case we skip the tag as it does not point to the proper source commit.
+            # Note that this should only happen if the tags are received out of standard order.
+            continue
+        possible_tag = possible_tag.replace("refs/tags/", "")
+        if not possible_tag:
+            continue
+        tags[possible_tag] = split[0]
+
+    return tags
+
+
+def decode_git_tags(data: bytes) -> str | None:
+    """Decode the passed Git tag data.
+
+    Parameters
+    ----------
+    data: bytes
+        The data to decode.
+
+    Returns
+    -------
+    str | None
+        The decoded data, or None if an error occurred.
+    """
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError as error:
+        logger.debug("Error decoding stdout as utf-8: %s", error)
+        # Try other character encodings.
+        return BytesDecoder.decode(data)
