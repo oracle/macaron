@@ -5,18 +5,14 @@
 import json
 import logging
 import re
-from typing import TypeVar
-
-from pydantic import BaseModel, ValidationError
-
-T = TypeVar("T", bound=BaseModel)
+from typing import Any
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def structure_response(response_text: str, response_model: type[T]) -> T | None:
+def extract_json(response_text: str) -> Any:
     """
-    Structure and parse the response from the LLM.
+    Parse the response from the LLM.
 
     If raw JSON parsing fails, attempts to extract a JSON object from text.
 
@@ -24,13 +20,11 @@ def structure_response(response_text: str, response_model: type[T]) -> T | None:
     ----------
     response_text: str
         The response text from the LLM.
-    response_model: Type[T]
-        The Pydantic model to structure the response against.
 
     Returns
     -------
-    T | None
-        The structured Pydantic model instance.
+    dict[str, Any] | None
+        The structured JSON object.
     """
     try:
         data = json.loads(response_text)
@@ -46,8 +40,4 @@ def structure_response(response_text: str, response_model: type[T]) -> T | None:
             logger.debug("Failed to parse extracted JSON: %s", e)
             return None
 
-    try:
-        return response_model.model_validate(data)
-    except ValidationError as e:
-        logger.debug("Validation failed against response model: %s", e)
-        return None
+    return data

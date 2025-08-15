@@ -5,8 +5,8 @@
 
 import logging
 
-from macaron.ai.ai_client import AIClient
-from macaron.ai.openai_client import OpenAiClient
+from macaron.ai.clients import PROVIDER_MAPPING
+from macaron.ai.clients.base import AIClient
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError
 
@@ -16,17 +16,15 @@ logger: logging.Logger = logging.getLogger(__name__)
 class AIClientFactory:
     """Factory to create AI clients based on provider configuration."""
 
-    PROVIDER_MAPPING: dict[str, type[AIClient]] = {"openai": OpenAiClient}
-
     def __init__(self) -> None:
         """
         Initialize the AI client.
 
         The LLM configuration is read from defaults.
         """
-        self.defaults = self._load_defaults()
+        self.params = self._load_defaults()
 
-    def _load_defaults(self) -> dict:
+    def _load_defaults(self) -> dict | None:
         section_name = "llm"
         default_values = {
             "enabled": False,
@@ -34,19 +32,14 @@ class AIClientFactory:
             "api_key": "",
             "api_endpoint": "",
             "model": "",
-            "context_window": 10000,
         }
 
         if defaults.has_section(section_name):
             section = defaults[section_name]
             default_values["enabled"] = section.getboolean("enabled", default_values["enabled"])
-            default_values["api_key"] = str(section.get("api_key", default_values["api_key"])).strip().lower()
-            default_values["api_endpoint"] = (
-                str(section.get("api_endpoint", default_values["api_endpoint"])).strip().lower()
-            )
-            default_values["model"] = str(section.get("model", default_values["model"])).strip().lower()
-            default_values["provider"] = str(section.get("provider", default_values["provider"])).strip().lower()
-            default_values["context_window"] = section.getint("context_window", 10000)
+            for key, default_value in default_values.items():
+                if isinstance(default_value, str):
+                    default_values[key] = str(section.get(key, default_value)).strip().lower()
 
         if default_values["enabled"]:
             for key, value in default_values.items():
@@ -59,12 +52,11 @@ class AIClientFactory:
 
     def create_client(self, system_prompt: str) -> AIClient | None:
         """Create an AI client based on the configured provider."""
-        client_class = self.PROVIDER_MAPPING.get(self.defaults["provider"])
-        if client_class is None:
-            logger.error("Provider '%s' is not supported.", self.defaults["provider"])
+        if not self.params or not self.params["enabled"]:
             return None
-        return client_class(system_prompt, self.defaults)
 
-    def list_available_providers(self) -> list[str]:
-        """List all registered providers."""
-        return list(self.PROVIDER_MAPPING.keys())
+        client_class = PROVIDER_MAPPING.get(self.params["provider"])
+        if client_class is None:
+            logger.error("Provider '%s' is not supported.", self.params["provider"])
+            return None
+        return client_class(system_prompt, self.params)

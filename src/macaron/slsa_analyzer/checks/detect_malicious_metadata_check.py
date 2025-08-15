@@ -22,6 +22,7 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date 
 from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.fake_email import FakeEmailAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.inconsistent_description import InconsistentDescriptionAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.similar_projects import SimilarProjectAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
@@ -368,6 +369,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         FakeEmailAnalyzer,
         SimilarProjectAnalyzer,
         MatchingDocstringsAnalyzer,
+        # This heuristic is not used in any combination below, some tests needed before doing that.
+        InconsistentDescriptionAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
