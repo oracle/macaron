@@ -104,7 +104,7 @@ def test_repo_finder() -> int:
     match, outcome = find_repo(
         PackageURL.from_string("pkg:maven/io.vertx/vertx-auth-common"), check_latest_version=False
     )
-    if not match or outcome != RepoFinderInfo.FOUND:
+    if not match or outcome != RepoFinderInfo.FOUND_FROM_PARENT:
         return os.EX_UNAVAILABLE
 
     return os.EX_OK
