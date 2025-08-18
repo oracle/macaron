@@ -5,25 +5,21 @@
 # to build and run the Docker image.
 # This image is based on the container-registry.oracle.com/os/oraclelinux:9-slim image and contains the following
 # components:
-#   Python3.11.4 compiled and installed from source.
-#   Oracle JDK 17 downloaded and installed from the tarball.
+#   Python3.11.13 compiled and installed from source.
 #   Souffle 2.5 compiled and installed from source.
 #   Other runtime libraries (e.g sqlite-devel) which are installed from dnf.
 
-FROM container-registry.oracle.com/os/oraclelinux:9-slim@sha256:e2aa8053b4a15f27c5f80666be1190d24aa3f403225f2dd6fdb545979f08482a
+FROM container-registry.oracle.com/os/oraclelinux:9-slim@sha256:92deb326256d4d3053d210397b00dce9a423789d1c555adb7a3b7a1f0747ea2f
 
 ENV HOME="/home/macaron" \
     # Setting Python related environment variables.
-    PYTHON3_VERSION=3.11.4 \
+    PYTHON3_VERSION=3.11.13 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L12
     LANG="C.UTF-8" \
     # The GPG key to verify the source tar ball following the instructions in https://www.python.org/downloads/
-    PYTHON_SOURCE_GPG="A035C8C19219BA821ECEA86B64E628F8D684696D" \
-    # Setting Java related environment variables.
-    JAVA_HOME="/opt/jdk-17.0.12" \
-    PATH=/usr/local/bin:/opt/jdk-17.0.12/bin:$PATH
+    PYTHON_SOURCE_GPG="A035C8C19219BA821ECEA86B64E628F8D684696D"
 
 # We run the installation of all components in one single RUN to minimize the final image size.
 RUN : \
@@ -173,12 +169,6 @@ enabled=1\
         ln -svT "$src" "/usr/local/bin/$dst"; \
     done \
 # ---------------------------------------------------------------------------------------------------------------------
-    # INSTALLING JAVA.
-    && mkdir -p /opt \
-    && wget -O jdk-17.0.12_linux-x64_bin.tar.gz https://download.oracle.com/java/17/archive/jdk-17.0.12_linux-x64_bin.tar.gz \
-    && tar -xvf jdk-17.0.12_linux-x64_bin.tar.gz --directory /opt/ \
-    && rm jdk-17.0.12_linux-x64_bin.tar.gz \
-# ---------------------------------------------------------------------------------------------------------------------
     # INSTALLING SOUFFLE FROM SOURCE.
     # Based on https://github.com/souffle-lang/souffle/blob/master/.github/images/oraclelinux-8/Dockerfile.
     # However, some parts are different on Oracle Linux 9.
@@ -230,8 +220,6 @@ enabled=1\
     && dnf clean all \
     && rm -rf /var/cache/yum \
     && rm -rf /var/cache/dnf \
-    && java --version \
-    && javac --version \
     && git --version
 
 CMD [ "/bin/bash" ]
