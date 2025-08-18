@@ -51,10 +51,17 @@ class JavaRepoFinder(BaseRepoFinder):
         artifact = purl.name
         version = purl.version or ""
 
+        outcome = RepoFinderInfo.FOUND
         if not version:
-            logger.debug("Version missing for maven artifact: %s:%s", group, artifact)
-            # TODO add support for Java artifacts without a version
-            return "", RepoFinderInfo.NO_VERSION_PROVIDED
+            # TODO: consider using a Maven specific method for finding missing versions.
+            logger.info("Version missing for maven artifact: %s:%s", group, artifact)
+            latest_purl, outcome = DepsDevRepoFinder().get_latest_version(purl)
+            if not latest_purl or not latest_purl.version:
+                logger.debug("Could not find version for artifact: %s:%s", purl.namespace, purl.name)
+                return "", RepoFinderInfo.NO_VERSION_PROVIDED
+            group = latest_purl.namespace or ""
+            artifact = latest_purl.name
+            version = latest_purl.version
 
         # Perform the following in a loop:
         # - Create URLs for the current artifact POM
@@ -64,19 +71,8 @@ class JavaRepoFinder(BaseRepoFinder):
         # - Repeat
         limit = defaults.getint("repofinder.java", "parent_limit", fallback=10)
         initial_limit = limit
-        last_outcome = RepoFinderInfo.FOUND
+        last_outcome = outcome
         check_parents = defaults.getboolean("repofinder.java", "find_parents")
-
-        if not version:
-            logger.info("Version missing for maven artifact: %s:%s", group, artifact)
-            latest_purl, outcome = DepsDevRepoFinder().get_latest_version(purl)
-            if not latest_purl or not latest_purl.version:
-                logger.debug("Could not find version for artifact: %s:%s", purl.namespace, purl.name)
-                return "", outcome
-            group = latest_purl.namespace or ""
-            artifact = latest_purl.name
-            version = latest_purl.version
-
         while group and artifact and version and limit > 0:
             # Create the URLs for retrieving the artifact's POM.
             group = group.replace(".", "/")

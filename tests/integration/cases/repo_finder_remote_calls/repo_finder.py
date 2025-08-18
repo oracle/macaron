@@ -99,8 +99,12 @@ def test_repo_finder() -> int:
         return os.EX_UNAVAILABLE
 
     # Test Java package that has no version.
-    match, outcome = find_repo(PackageURL.from_string("pkg:maven/io.vertx/vertx-auth-common"))
-    if not match or outcome != RepoFinderInfo.FOUND:
+    # Disabling the latest version check ensures that only the missing version is retrieved, preventing the fallback
+    # functionality of using the non-Java method to find the version and repository.
+    match, outcome = find_repo(
+        PackageURL.from_string("pkg:maven/io.vertx/vertx-auth-common"), check_latest_version=False
+    )
+    if not match or outcome != RepoFinderInfo.FOUND_FROM_PARENT:
         return os.EX_UNAVAILABLE
 
     return os.EX_OK
