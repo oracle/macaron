@@ -143,6 +143,8 @@ This image shows that both checks have passed, confirming that the repository UR
 
   open output/reports/pypi/toga/toga.html
 
+.. note:: For Maven packages, Macaron can make use of the local artifact cache before downloading occurs. Macaron will check for the existence of the home M2 cache at ``$HOME/.m2``. A different location for this cache can be specified using Macaron's ``--local-maven-repo <path_to_m2_cache>`` command line argument.
+
 
 ******************************************
 Attestation discovery for urllib3 (GitHub)
