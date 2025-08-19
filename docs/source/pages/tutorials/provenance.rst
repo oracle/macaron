@@ -12,7 +12,6 @@ Currently, Macaron supports discovery of attestation for:
     * npm artifacts using features provided by `npm <https://npmjs.com/>`_
     * PyPI artifacts using features provided by `Open Source Insights <https://deps.dev/>`_
     * Artifacts that have published attestations to, or released as assets to `GitHub <https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-attestations>`_
-    * Attestation provided by the user to Macaron via the CLI
 
 This tutorial uses example packages to demonstrate these discovery methods: The `semver <https://www.npmjs.com/package/semver>`_ npm package, the `toga <https://pypi.org/pypi/toga>`_ PyPI package, and the `urllib3 <https://pypi.org/project/urllib3>`_ PyPI package.
 
@@ -171,39 +170,6 @@ This image shows that all three checks have passed, confirming that the reposito
 .. code-block:: shell
 
   open output/reports/pypi/urllib3/urllib3.html
-
-**********************************
-Local attestation discovery (toga)
-**********************************
-
-If an attestation file already exists in a local directory, it makes more sense to use it than download it again. For this example case we rely on the attestation URL found for ``toga@0.4.8`` earlier in the tutorial. To download this file in the current directory, use the following command:
-
-.. code-block:: shell
-
-    curl https://api.github.com/repos/beeware/toga/attestations/sha256:0814a72abb0a9a5f22c32cc9479c55041ec30cdf4b12d73a0017aee58f9a1f00 -o toga_0.4.8_attestation.json
-
-
-With the attestation downloaded, we can run the analysis and pass it in as an argument. Like so:
-
-.. code-block:: shell
-
-    ./run_macaron.sh analyze -purl pkg:pypi/toga@0.4.8 -pf toga_0.4.8_attestation.json
-
-To then determine that the provenance was accepted and matched the analysis target, we can examine the results of Macaron's checks: ``mcn_provenance_derived_repo_1``, ``mcn_provenance_derived_commit_1``, and ``mcn_provenance_verified_1``.
-
-.. note:: Because the provenance file was provided by the user, we expect the provenance verification check to fail.
-
-.. _fig_toga_local_checks:
-
-.. figure:: ../../_static/images/tutorial_toga_local.png
-   :alt: HTML report for ``toga 0.4.8`` local, summary
-   :align: center
-
-This image shows that the repository and commit validation checks have passed, confirming that the provenance matches the analysis target. The verification check fails as expected. To view the report directly, use this command:
-
-.. code-block:: shell
-
-  open output/reports/pypi/toga/toga.html
 
 ***************************
 Supported Attestation Types
