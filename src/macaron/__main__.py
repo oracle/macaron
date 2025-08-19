@@ -9,6 +9,7 @@ import logging
 import os
 import sys
 from importlib import metadata as importlib_metadata
+from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from packageurl import PackageURL
@@ -96,6 +97,12 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
 
         global_config.local_maven_repo = user_provided_local_maven_repo
 
+    # Set local artifact path.
+    if analyzer_single_args.local_artifact_path is not None and os.path.isfile(
+        analyzer_single_args.local_artifact_path
+    ):
+        global_config.local_artifact_path = analyzer_single_args.local_artifact_path
+
     analyzer = Analyzer(global_config.output_path, global_config.build_log_path)
 
     # Initiate reporters.
@@ -118,7 +125,6 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         analyzer.reporters.append(HTMLReporter())
     analyzer.reporters.append(JSONReporter())
 
-    run_config = {}
     repo_path = analyzer_single_args.repo_path
     purl = analyzer_single_args.package_url
     branch = analyzer_single_args.branch
@@ -370,8 +376,25 @@ def main(argv: list[str] | None = None) -> None:
     # Add sub parsers for each action.
     sub_parser = main_parser.add_subparsers(dest="action", help="Run macaron <action> --help for help")
 
+    # Dump the default values.
+    sub_parser.add_parser(name="dump-defaults", description="Dumps the defaults.ini file to the output directory.")
+
+    # Add the sub parser commands.
+    _add_analyzer_parser(sub_parser)
+    _add_verify_policy_parser(sub_parser)
+    _add_find_source_parser(sub_parser)
+
+    # Perform parsing.
+    args = parse_arguments(main_parser, argv)
+
+    # Perform actions.
+    perform_action(args)
+
+
+def _add_analyzer_parser(parser: Any) -> None:
+    """Add the analyzer commands to the parser."""
     # Use Macaron to analyze one single repository.
-    single_analyze_parser = sub_parser.add_parser(name="analyze")
+    single_analyze_parser = parser.add_parser(name="analyze")
 
     single_analyze_parser.add_argument(
         "-sbom",
@@ -390,7 +413,7 @@ def main(argv: list[str] | None = None) -> None:
         "--repo-path",
         required=False,
         type=str,
-        help=("The path to the repository, can be local or remote"),
+        help="The path to the repository, can be local or remote",
     )
 
     single_analyze_parser.add_argument(
@@ -411,7 +434,7 @@ def main(argv: list[str] | None = None) -> None:
         required=False,
         type=str,
         default="",
-        help=("The branch of the repository that we want to checkout. If not set, Macaron will use the default branch"),
+        help="The branch of the repository that we want to checkout. If not set, Macaron will use the default branch",
     )
 
     single_analyze_parser.add_argument(
@@ -430,14 +453,14 @@ def main(argv: list[str] | None = None) -> None:
         "-pe",
         "--provenance-expectation",
         required=False,
-        help=("The path to provenance expectation file or directory."),
+        help="The path to provenance expectation file or directory.",
     )
 
     single_analyze_parser.add_argument(
         "-pf",
         "--provenance-file",
         required=False,
-        help=("The path to the provenance file in in-toto format."),
+        help="The path to the provenance file in in-toto format.",
     )
 
     single_analyze_parser.add_argument(
@@ -456,7 +479,7 @@ def main(argv: list[str] | None = None) -> None:
         required=False,
         type=str,
         default="",
-        help=("The path to the Jinja2 html template (please make sure to use .html or .j2 extensions)."),
+        help="The path to the Jinja2 html template (please make sure to use .html or .j2 extensions).",
     )
 
     single_analyze_parser.add_argument(
@@ -472,7 +495,8 @@ def main(argv: list[str] | None = None) -> None:
         "--local-maven-repo",
         required=False,
         help=(
-            "The path to the local .m2 directory. If this option is not used, Macaron will use the default location at $HOME/.m2"
+            "The path to the local .m2 directory. "
+            "If this option is not used, Macaron will use the default location at $HOME/.m2"
         ),
     )
 
@@ -480,36 +504,47 @@ def main(argv: list[str] | None = None) -> None:
         "--force-analyze-source",
         required=False,
         action="store_true",
-        help=("Forces PyPI sourcecode analysis to run regardless of other heuristic results."),
+        help="Forces PyPI sourcecode analysis to run regardless of other heuristic results.",
     )
 
     single_analyze_parser.add_argument(
         "--verify-provenance",
         required=False,
         action="store_true",
-        help=("Allow the analysis to attempt to verify provenance files as part of its normal operations."),
+        help="Allow the analysis to attempt to verify provenance files as part of its normal operations.",
     )
 
-    # Dump the default values.
-    sub_parser.add_parser(name="dump-defaults", description="Dumps the defaults.ini file to the output directory.")
+    single_analyze_parser.add_argument(
+        "-ap",
+        "--local-artifact-path",
+        required=False,
+        type=str,
+        help="The path to the local artifact file that should match the target software component being analyzed.",
+    )
 
+
+def _add_verify_policy_parser(parser: Any) -> None:
+    """Add the verify policy commands parser."""
     # Verify the Datalog policy.
-    vp_parser = sub_parser.add_parser(name="verify-policy")
+    vp_parser = parser.add_parser(name="verify-policy")
     vp_group = vp_parser.add_mutually_exclusive_group(required=True)
 
     vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
     vp_group.add_argument("-f", "--file", type=str, help="Path to the Datalog policy.")
     vp_group.add_argument("-s", "--show-prelude", action="store_true", help="Show policy prelude.")
 
+
+def _add_find_source_parser(parser: Any) -> None:
+    """Add the find source commands parser."""
     # Find the repo and commit of a passed PURL, or the commit of a passed PURL and repo.
-    find_parser = sub_parser.add_parser(name="find-source")
+    find_parser = parser.add_parser(name="find-source")
 
     find_parser.add_argument(
         "-purl",
         "--package-url",
         required=True,
         type=str,
-        help=("The PURL string to perform repository and commit finding for."),
+        help="The PURL string to perform repository and commit finding for.",
     )
 
     find_parser.add_argument(
@@ -523,10 +558,26 @@ def main(argv: list[str] | None = None) -> None:
         ),
     )
 
-    args = main_parser.parse_args(argv)
+
+def parse_arguments(parser: argparse.ArgumentParser, argv: list[str] | None) -> argparse.Namespace:
+    """Parse the arguments of the argument parser.
+
+    Parameters
+    ----------
+    parser: argparse.ArgumentParser
+        The parser to use.
+    argv: list[str]
+        The list of arguments for the parser to parse.
+
+    Returns
+    -------
+    argparse.Namespace
+        The results of the argument parsing.
+    """
+    args = parser.parse_args(argv)
 
     if not args.action:
-        main_parser.print_help()
+        parser.print_help()
         sys.exit(os.EX_USAGE)
 
     if args.verbose:
@@ -587,7 +638,7 @@ def main(argv: list[str] | None = None) -> None:
         logger.error("Exiting because the defaults configuration could not be loaded.")
         sys.exit(os.EX_NOINPUT)
 
-    perform_action(args)
+    return args
 
 
 def _get_token_from_dict_or_env(token: str, token_dict: dict[str, str]) -> str:
