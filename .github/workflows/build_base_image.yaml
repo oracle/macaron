@@ -31,5 +31,5 @@ jobs:
     # only requires docker/Dockerfile.base. The base image will be tagged with ghcr.io/oracle/macaron-base:latest.
     - name: Build and push the base image
       run: |
-        docker build -t ghcr.io/oracle/macaron-base:test -f docker/Dockerfile.base docker/
-        docker push ghcr.io/oracle/macaron-base:test
+        docker build -t ghcr.io/oracle/macaron-base:latest -f docker/Dockerfile.base docker/
+        docker push ghcr.io/oracle/macaron-base:latest
