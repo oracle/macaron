@@ -137,7 +137,7 @@ Attestation discovered through GitHub is signed with verified signatures. As lon
    :alt: HTML report for ``toga 0.4.8``, summary
    :align: center
 
-This image shows that both checks have passed, confirming that the repository URL and commit digest from the provenance match those associated with the user provided PURL. To access the full report use the following:
+This image shows that all three checks have passed, confirming that the repository URL and commit digest from the provenance match those associated with the user provided PURL. To access the full report use the following command:
 
 .. code-block:: shell
 
@@ -156,7 +156,7 @@ To demonstrate GitHub attestation being found from released assets on the platfo
 
     ./run_macaron.sh analyze -purl pkg:pypi/urllib3@2.0.0a1
 
-As part of this analysis, Macaron ends up downloading three different asset files: The `attestation asset <https://api.github.com/repos/urllib3/urllib3/releases/assets/84708804>`_, the artifact's Python wheel file, and the artifact's compressed archive. By examining the attestation, Macaron can verify the two other files. This analysis can then report that provenance exists, and is verified.
+As part of this analysis, Macaron ends up downloading three different asset files: The `attestation asset <https://api.github.com/repos/urllib3/urllib3/releases/assets/84708804>`_, the artifact's Python wheel file, and the source distribution tarball file. By examining the attestation, Macaron can verify the two other files. This analysis can then report that provenance exists, and is verified.
 
 If we look at the results of three of Macaron's checks we can validate this result: ``mcn_provenance_derived_repo_1``, ``mcn_provenance_derived_commit_1``, and ``mcn_provenance_verified_1``.
 
@@ -209,7 +209,7 @@ This image shows that the repository and commit validation checks have passed, c
 Supported Attestation Types
 ***************************
 
-When attestation is provided to Macaron as input, it must be of one of the support types in order to be accepted. Support is defined by the ``predicateType`` and ``buildType`` properties within an attestation.
+When attestation is provided to Macaron as input, it must be of one of the supported types in order to be accepted. Support is defined by the ``predicateType`` and ``buildType`` properties within an attestation.
 
 Predicate Types
 ~~~~~~~~~~~~~~~
