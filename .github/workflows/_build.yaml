@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This is a trusted builder implemented as a reusable workflow that can be called by other
@@ -142,7 +142,7 @@ jobs:
     needs: [build]
     permissions:
       contents: read
-      packages: read
+      packages: write
     uses: ./.github/workflows/_build_docker.yaml
     with:
       artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
