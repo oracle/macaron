@@ -257,7 +257,7 @@ def test_get_artifact_hash_failures(
         httpserver.expect_request(artifact_path + ".sha256").respond_with_data(expected_hash)
         httpserver.expect_request(artifact_path).respond_with_data(b"example_data_2")
 
-    result = maven_registry.get_artifact_hash(purl)
+    result, _ = maven_registry.get_artifact_hash(purl)
 
     assert not result
 
@@ -282,7 +282,9 @@ def test_get_artifact_hash_success(
     expected_hash = hash_algorithm.hexdigest()
     httpserver.expect_request(artifact_path + ".sha256").respond_with_data(expected_hash)
     httpserver.expect_request(artifact_path).respond_with_data(b"example_data")
+    expected_artifact_path = f"http://{httpserver.host}:{httpserver.port}{artifact_path}"
 
-    result = maven_registry.get_artifact_hash(purl)
+    result, result_path = maven_registry.get_artifact_hash(purl)
 
     assert result
+    assert expected_artifact_path == result_path
