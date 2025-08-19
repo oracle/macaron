@@ -4,7 +4,8 @@
 #include "prelude.dl"
 
 Policy("test_policy", component_id, "") :-
-    check_passed(component_id, "mcn_provenance_available_1").
+    check_passed(component_id, "mcn_provenance_available_1"),
+    release_artifact(_, "./output/liftwizard-checkstyle-2.1.22.jar", _, _).
 
 apply_policy_to("test_policy", component_id) :-
     is_component(component_id, "pkg:maven/io.liftwizard/liftwizard-checkstyle@2.1.22").

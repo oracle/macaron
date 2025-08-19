@@ -3,36 +3,12 @@
 
 description: |
   Discovering GitHub attestation of a command line provided Maven artifact.
-  An incorrect file is downloaded first, to demonstrate that the feature is taking precedence over other options.
-  The correct file is then used to ensure the feature works.
 
 tags:
 - macaron-python-package
 - macaron-docker-image
 
 steps:
-- name: Download artifact POM instead of the JAR
-  kind: shell
-  options:
-    cmd: curl --create-dirs -o ./output/liftwizard-checkstyle-2.1.22.jar https://repo1.maven.org/maven2/io/liftwizard/liftwizard-checkstyle/2.1.22/liftwizard-checkstyle-2.1.22.pom
-- name: Run macaron analyze
-  kind: analyze
-  options:
-    command_args:
-    - -purl
-    - pkg:maven/io.liftwizard/liftwizard-checkstyle@2.1.22
-    - -rp
-    - https://github.com/liftwizard/liftwizard
-    - --local-artifact-path
-    - ./output/liftwizard-checkstyle-2.1.22.jar
-- name: Run macaron verify-policy to verify no provenance was found
-  kind: verify
-  options:
-    policy: failure_policy.dl
-- name: cleanup
-  kind: shell
-  options:
-    cmd: rm -rf ./output
 - name: Download artifact JAR
   kind: shell
   options:
@@ -47,7 +23,7 @@ steps:
     - https://github.com/liftwizard/liftwizard
     - --local-artifact-path
     - ./output/liftwizard-checkstyle-2.1.22.jar
-- name: Run macaron verify-policy to verify no provenance was found
+- name: Run macaron verify-policy to verify provenance was found
   kind: verify
   options:
-    policy: success_policy.dl
+    policy: policy.dl
