@@ -19,7 +19,8 @@ ENV HOME="/home/macaron" \
     # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L12
     LANG="C.UTF-8" \
     # The GPG key to verify the source tar ball following the instructions in https://www.python.org/downloads/
-    PYTHON_SOURCE_GPG="A035C8C19219BA821ECEA86B64E628F8D684696D"
+    PYTHON_SOURCE_GPG="A035C8C19219BA821ECEA86B64E628F8D684696D" \
+    PATH=/usr/local/bin:$PATH
 
 # We run the installation of all components in one single RUN to minimize the final image size.
 RUN : \
