@@ -545,7 +545,7 @@ class Analyzer:
                     verified = []
                     for ci_info in analyze_ctx.dynamic_data["ci_services"]:
                         verified.append(verify_ci_provenance(analyze_ctx, ci_info, temp_dir))
-                        if not verified:
+                        if not verified[-1]:
                             break
                     if verified and all(verified):
                         provenance_l3_verified = True

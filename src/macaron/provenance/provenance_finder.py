@@ -590,5 +590,5 @@ def get_artifact_hash(
 
         return pypi_registry.get_artifact_hash(source_url)
 
-    logger.debug("Purl type '%s' not yet supported for GitHub attestation discovery.", purl.type)
+    logger.debug("Purl type '%s' not yet supported for artifact hashing.", purl.type)
     return None
