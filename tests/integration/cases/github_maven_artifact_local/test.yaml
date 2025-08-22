@@ -1,0 +1,29 @@
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Discovering GitHub attestation of a command line provided Maven artifact.
+
+tags:
+- macaron-python-package
+- macaron-docker-image
+
+steps:
+- name: Download artifact JAR
+  kind: shell
+  options:
+    cmd: curl --create-dirs -o ./output/liftwizard-checkstyle-2.1.22.jar https://repo1.maven.org/maven2/io/liftwizard/liftwizard-checkstyle/2.1.22/liftwizard-checkstyle-2.1.22.jar
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.liftwizard/liftwizard-checkstyle@2.1.22
+    - -rp
+    - https://github.com/liftwizard/liftwizard
+    - --local-artifact-path
+    - ./output/liftwizard-checkstyle-2.1.22.jar
+- name: Run macaron verify-policy to verify provenance was found
+  kind: verify
+  options:
+    policy: policy.dl

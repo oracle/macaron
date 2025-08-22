@@ -49,6 +49,9 @@ class GlobalConfig:
     #: The path to the local .m2 Maven repository. This attribute is None if there is no available .m2 directory.
     local_maven_repo: str | None = None
 
+    #: The path to a local artifact file that can be used for analysis.
+    local_artifact_path: str | None = None
+
     def load(
         self,
         macaron_path: str,

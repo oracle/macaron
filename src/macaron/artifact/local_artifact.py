@@ -253,8 +253,33 @@ def get_local_artifact_dirs(
     raise LocalArtifactFinderError(f"Unsupported PURL type {purl_type}")
 
 
-def get_local_artifact_hash(purl: PackageURL, artifact_dirs: list[str]) -> str | None:
-    """Compute the hash of the local artifact.
+def get_artifact_hash_from_file(artifact_path: str) -> str | None:
+    """Compute the hash of the passed artifact.
+
+    Parameters
+    ----------
+    artifact_path: str
+        The path to the artifact.
+
+    Returns
+    -------
+    str | None
+        The artifact hash, or None if it could not be computed.
+    """
+    if not os.path.isfile(artifact_path):
+        return None
+
+    with open(artifact_path, "rb") as file:
+        try:
+            hash_result = hashlib.file_digest(file, "sha256")
+            return hash_result.hexdigest()
+        except ValueError as error:
+            logger.debug("Error while hashing file: %s", error)
+            return None
+
+
+def get_artifact_hash_from_directory(purl: PackageURL, artifact_dirs: list[str]) -> tuple[str | None, str | None]:
+    """Compute the hash of a local artifact found within the passed directories.
 
     Parameters
     ----------
@@ -265,16 +290,16 @@ def get_local_artifact_hash(purl: PackageURL, artifact_dirs: list[str]) -> str |
 
     Returns
     -------
-    str | None
-        The hash, or None if not found.
+    tuple[str | None, str | None]
+            The hash of, and path to, the artifact; or None if no artifact can be found locally or remotely.
     """
     if not artifact_dirs:
         logger.debug("No artifact directories provided.")
-        return None
+        return None, None
 
     if not purl.version:
         logger.debug("PURL is missing version.")
-        return None
+        return None, None
 
     artifact_target = None
     if purl.type == "maven":
@@ -286,20 +311,14 @@ def get_local_artifact_hash(purl: PackageURL, artifact_dirs: list[str]) -> str |
 
     if not artifact_target:
         logger.debug("PURL type not supported: %s", purl.type)
-        return None
+        return None, None
 
     for artifact_dir in artifact_dirs:
-        full_path = os.path.join(artifact_dir, artifact_target)
-        if not os.path.exists(full_path):
+        if not os.path.isdir(artifact_dir):
             continue
+        possible_artifact_path = os.path.join(artifact_dir, artifact_target)
+        artifact_hash = get_artifact_hash_from_file(possible_artifact_path)
+        if artifact_hash:
+            return artifact_hash, possible_artifact_path
 
-        with open(full_path, "rb") as file:
-            try:
-                hash_result = hashlib.file_digest(file, "sha256")
-            except ValueError as error:
-                logger.debug("Error while hashing file: %s", error)
-                continue
-
-            return hash_result.hexdigest()
-
-    return None
+    return None, None

@@ -21,8 +21,9 @@ from sqlalchemy.orm import Session
 
 from macaron import __version__
 from macaron.artifact.local_artifact import (
+    get_artifact_hash_from_directory,
+    get_artifact_hash_from_file,
     get_local_artifact_dirs,
-    get_local_artifact_hash,
 )
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
@@ -30,8 +31,10 @@ from macaron.database.database_manager import DatabaseManager, get_db_manager, g
 from macaron.database.table_definitions import (
     Analysis,
     Component,
+    HashDigest,
     Provenance,
     ProvenanceSubject,
+    ReleaseArtifact,
     RepoFinderMetadata,
     Repository,
 )
@@ -508,11 +511,32 @@ class Analyzer:
         self._determine_build_tools(analyze_ctx, git_service)
 
         # Try to find an attestation from GitHub, if applicable.
+        release_artifact = None
+        release_digest = None
         if parsed_purl and not provenance_payload and analysis_target.repo_path and isinstance(git_service, GitHub):
             # Try to discover GitHub attestation for the target software component.
-            artifact_hash = self.get_artifact_hash(parsed_purl, local_artifact_dirs, package_registries_info)
+            local_artifact = global_config.local_artifact_path
+            artifact_hash, artifact_path = self.get_artifact_hash(
+                parsed_purl, local_artifact, local_artifact_dirs, package_registries_info
+            )
             if artifact_hash:
+                digest = HashDigest(
+                    digest=artifact_hash,
+                    digest_algorithm="sha256",
+                )
+                release_artifact = ReleaseArtifact(
+                    name=artifact_path,
+                    digests=[digest],
+                )
+                release_digest = artifact_hash
                 provenance_payload = self.get_github_attestation_payload(analyze_ctx, git_service, artifact_hash)
+                if provenance_payload:
+                    try:
+                        provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
+                            provenance_payload
+                        )
+                    except ProvenanceError as error:
+                        logger.debug("Failed to extract from provenance: %s", error)
 
         self._determine_package_registries(analyze_ctx, package_registries_info)
 
@@ -561,7 +585,7 @@ class Analyzer:
                 analyze_ctx, provenance_payload, provenance_is_verified, provenance_l3_verified
             )
 
-            analyze_ctx.dynamic_data["provenance_info"] = Provenance(
+            provenance = Provenance(
                 component=component,
                 repository_url=provenance_repo_url,
                 commit_sha=provenance_commit_digest,
@@ -571,8 +595,11 @@ class Analyzer:
                 slsa_version=slsa_version,
                 provenance_asset_name=provenance_asset.name if provenance_asset else None,
                 provenance_asset_url=provenance_asset.url if provenance_asset else None,
-                # TODO Add release digest.
+                release_commit_sha=release_digest if release_digest else None,
             )
+            analyze_ctx.dynamic_data["provenance_info"] = provenance
+            if release_artifact:
+                release_artifact.provenance = provenance
 
         if parsed_purl is not None:
             self._verify_repository_link(parsed_purl, analyze_ctx)
@@ -973,35 +1000,46 @@ class Analyzer:
     def get_artifact_hash(
         self,
         purl: PackageURL,
+        local_artifact_file: str | None,
         local_artifact_dirs: list[str] | None,
         package_registries_info: list[PackageRegistryInfo],
-    ) -> str | None:
+    ) -> tuple[str | None, str | None]:
         """Get the hash of the artifact found from the passed PURL using local or remote files.
 
-        Provided local caches will be searched first. Artifacts will be downloaded if nothing is found within local
-        caches, or if no appropriate cache is provided for the target language.
-        Downloaded artifacts will be added to the passed package registry to prevent downloading them again.
+        Provided local artifacts will be searched first; cached local artifacts second.
+        Artifacts will be downloaded if nothing is found locally. Downloaded artifacts will be added to the passed
+        package registry to prevent downloading them again.
 
         Parameters
         ----------
         purl: PackageURL
             The PURL of the artifact.
+        local_artifact_file: str
+            The path to a local artifact file provided by the user.
         local_artifact_dirs: list[str] | None
-            The list of directories that may contain the artifact file.
+            The list of cache directories that may contain the artifact file.
         package_registries_info: list[PackageRegistryInfo]
             The list of package registry information.
 
         Returns
         -------
-        str | None
-            The hash of the artifact, or None if no artifact can be found locally or remotely.
+        tuple[str | None, str | None]
+            The hash of, and path to, the artifact; or None if no artifact can be found locally or remotely.
         """
-        if local_artifact_dirs:
-            # Try to get the hash from a local file.
-            artifact_hash = get_local_artifact_hash(purl, local_artifact_dirs)
+        if local_artifact_file and os.path.isfile(local_artifact_file):
+            # Try to use the local artifact file.
+            # TODO add file checks based on the PURL type, if desired. E.g. .jar for Maven, etc.
+            artifact_hash = get_artifact_hash_from_file(local_artifact_file)
 
             if artifact_hash:
-                return artifact_hash
+                return artifact_hash, local_artifact_file
+
+        if local_artifact_dirs:
+            # Try to get the hash from a local cache.
+            artifact_hash, artifact_path = get_artifact_hash_from_directory(purl, local_artifact_dirs)
+
+            if artifact_hash:
+                return artifact_hash, artifact_path
 
         # Download the artifact.
         if purl.type == "maven":
@@ -1014,7 +1052,7 @@ class Analyzer:
                 None,
             )
             if not maven_registry:
-                return None
+                return None, None
 
             return maven_registry.get_artifact_hash(purl)
 
@@ -1029,7 +1067,7 @@ class Analyzer:
             )
             if not pypi_registry:
                 logger.debug("Missing registry for PyPI")
-                return None
+                return None, None
 
             registry_info = next(
                 (
@@ -1041,31 +1079,35 @@ class Analyzer:
             )
             if not registry_info:
                 logger.debug("Missing registry information for PyPI")
-                return None
+                return None, None
 
             if not purl.version:
-                return None
+                return None, None
 
             pypi_asset = find_or_create_pypi_asset(purl.name, purl.version, registry_info)
             if not pypi_asset:
-                return None
+                return None, None
 
             pypi_asset.has_repository = True
             if not pypi_asset.download(""):
-                return None
+                return None, None
 
             artifact_hash = pypi_asset.get_sha256()
             if artifact_hash:
-                return artifact_hash
+                return artifact_hash, pypi_asset.url
 
             source_url = pypi_asset.get_sourcecode_url("bdist_wheel")
             if not source_url:
-                return None
+                return None, None
 
-            return pypi_registry.get_artifact_hash(source_url)
+            artifact_hash = pypi_registry.get_artifact_hash(source_url)
+            if artifact_hash:
+                return artifact_hash, source_url
+
+            return None, None
 
         logger.debug("Purl type '%s' not yet supported for GitHub attestation discovery.", purl.type)
-        return None
+        return None, None
 
     def get_github_attestation_payload(
         self, analyze_ctx: AnalyzeContext, git_service: GitHub, artifact_hash: str

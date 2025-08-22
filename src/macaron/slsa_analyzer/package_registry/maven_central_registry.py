@@ -239,7 +239,7 @@ class MavenCentralRegistry(PackageRegistry):
 
         raise InvalidHTTPResponseError(f"Invalid response from Maven central for {url}.")
 
-    def get_artifact_hash(self, purl: PackageURL) -> str | None:
+    def get_artifact_hash(self, purl: PackageURL) -> tuple[str | None, str | None]:
         """Return the hash of the artifact found by the passed purl relevant to the registry's URL.
 
         An artifact's URL will be as follows:
@@ -263,15 +263,17 @@ class MavenCentralRegistry(PackageRegistry):
 
         Returns
         -------
-        str | None
-            The hash of the artifact, or None if not found.
+        tuple[str | None, str | None]
+            The hash and URL of the artifact; or None if no artifact can be found.
         """
         if not purl.namespace:
-            return None
+            logger.debug("Cannot search for Maven artifact without no group ID.")
+            return None, None
 
         file_name = construct_primary_jar_file_name(purl)
         if not (purl.version and file_name):
-            return None
+            logger.debug("Cannot construct remote file name of artifact with no PURL version.")
+            return None, None
 
         # Maven supports but does not require a sha256 hash of uploaded artifacts.
         artifact_path = construct_maven_repository_path(purl.namespace, purl.name, purl.version)
@@ -290,10 +292,11 @@ class MavenCentralRegistry(PackageRegistry):
             response.raise_for_status()
         except requests.exceptions.HTTPError as http_err:
             logger.debug("HTTP error occurred when trying to download artifact: %s", http_err)
-            return None
+            return None, None
 
         if response.status_code != 200:
-            return None
+            logger.debug("Request for artifact failed: %s", response.status_code)
+            return None, None
 
         # Download file and compute hash as chunks are received.
         hash_algorithm = hashlib.sha256()
@@ -304,7 +307,7 @@ class MavenCentralRegistry(PackageRegistry):
             # Something went wrong with the request, abort.
             logger.debug("Error while streaming target file: %s", error)
             response.close()
-            return None
+            return None, None
 
         computed_artifact_hash: str = hash_algorithm.hexdigest()
         if retrieved_artifact_hash and computed_artifact_hash != retrieved_artifact_hash:
@@ -313,7 +316,7 @@ class MavenCentralRegistry(PackageRegistry):
                 computed_artifact_hash,
                 retrieved_artifact_hash,
             )
-            return None
+            return None, None
 
         logger.debug("Computed hash of artifact: %s", computed_artifact_hash)
-        return computed_artifact_hash
+        return computed_artifact_hash, artifact_url
