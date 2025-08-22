@@ -339,6 +339,7 @@ def stream_file_with_size_limit(
     size_limit: int
         The size limit in bytes of the downloaded file.
         A download will terminate if it reaches beyond this amount.
+        The default value of zero disables the limit.
 
     Returns
     -------
@@ -356,7 +357,7 @@ def stream_file_with_size_limit(
         return False
 
     data_processed = 0
-    for chunk in response.iter_content(chunk_size=1048576):
+    for chunk in response.iter_content(chunk_size=512):
         if data_processed >= size_limit > 0:
             response.close()
             logger.warning(
