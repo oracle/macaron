@@ -15,7 +15,6 @@ steps:
     command_args:
     - -purl
     - pkg:maven/io.micronaut.test/micronaut-test-junit5@4.5.0
-    - --verify-provenance
 - name: Validate JSON report schema
   kind: validate_schema
   options:

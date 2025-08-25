@@ -20,7 +20,7 @@ For the full list of supported technologies, such as CI services, registries, an
    commit_finder
    detect_malicious_package
    detect_vulnerable_github_actions
-   npm_provenance
+   provenance
    detect_malicious_java_dep
    generate_verification_summary_attestation
    use_verification_summary_attestation

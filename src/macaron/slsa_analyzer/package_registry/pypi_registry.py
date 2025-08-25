@@ -20,14 +20,13 @@ from typing import TYPE_CHECKING
 
 import requests
 from bs4 import BeautifulSoup, Tag
-from requests import RequestException
 
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceCodeError
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
-from macaron.util import send_get_http_raw
+from macaron.util import download_file_with_size_limit, send_get_http_raw, stream_file_with_size_limit
 
 if TYPE_CHECKING:
     from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -172,6 +171,44 @@ class PyPIRegistry(PackageRegistry):
 
         return res_obj
 
+    @staticmethod
+    def cleanup_sourcecode_directory(
+        directory: str, error_message: str | None = None, error: Exception | None = None
+    ) -> None:
+        """Remove the target directory, and report the passed error if present.
+
+        Parameters
+        ----------
+        directory: str
+            The directory to remove.
+        error_message: str | None
+            The error message to report.
+        error: Exception | None
+            The error to inherit from.
+
+        Raises
+        ------
+        InvalidHTTPResponseError
+            If there was an error during the operation.
+        """
+        if error_message:
+            logger.debug(error_message)
+        try:
+            shutil.rmtree(directory, onerror=_handle_temp_dir_clean)
+        except SourceCodeError as tempdir_exception:
+            tempdir_exception_msg = (
+                f"Unable to cleanup temporary directory {directory} for source code: {tempdir_exception}"
+            )
+            logger.debug(tempdir_exception_msg)
+            raise InvalidHTTPResponseError(error_message) from tempdir_exception
+
+        if not error_message:
+            return
+
+        if error:
+            raise InvalidHTTPResponseError(error_message) from error
+        raise InvalidHTTPResponseError(error_message)
+
     def download_package_sourcecode(self, url: str) -> str:
         """Download the package source code from pypi registry.
 
@@ -194,77 +231,29 @@ class PyPIRegistry(PackageRegistry):
         _, _, file_name = url.rpartition("/")
         package_name = re.sub(r"\.tar\.gz$", "", file_name)
 
-        # temporary directory to unzip and read all source files
+        # Temporary directory to unzip and read all source files.
         temp_dir = tempfile.mkdtemp(prefix=f"{package_name}_")
-        response = send_get_http_raw(url, stream=True)
-        if response is None:
-            error_msg = f"Unable to find package source code using URL: {url}"
-            logger.debug(error_msg)
-            try:
-                shutil.rmtree(temp_dir, onerror=_handle_temp_dir_clean)
-            except SourceCodeError as tempdir_exception:
-                tempdir_exception_msg = (
-                    f"Unable to cleanup temporary directory {temp_dir} for source code: {tempdir_exception}"
-                )
-                logger.debug(tempdir_exception_msg)
-                raise InvalidHTTPResponseError(error_msg) from tempdir_exception
+        source_file = os.path.join(temp_dir, file_name)
+        timeout = defaults.getint("downloads", "timeout", fallback=120)
+        size_limit = defaults.getint("slsa.verifier", "max_download_size", fallback=10000000)
+        if not download_file_with_size_limit(url, {}, source_file, timeout, size_limit):
+            self.cleanup_sourcecode_directory(temp_dir, "Could not download the file.")
 
-            raise InvalidHTTPResponseError(error_msg)
+        if not tarfile.is_tarfile(source_file):
+            self.cleanup_sourcecode_directory(temp_dir, f"Unable to extract source code from file {file_name}")
 
-        with tempfile.NamedTemporaryFile("+wb", delete=True) as source_file:
-            try:
-                for chunk in response.iter_content():
-                    source_file.write(chunk)
-                    source_file.flush()
-            except RequestException as stream_error:
-                error_msg = f"Error while streaming source file: {stream_error}"
-                logger.debug(error_msg)
-                try:
-                    shutil.rmtree(temp_dir, onerror=_handle_temp_dir_clean)
-                except SourceCodeError as tempdir_exception:
-                    tempdir_exception_msg = (
-                        f"Unable to cleanup temporary directory {temp_dir} for source code: {tempdir_exception}"
-                    )
-                    logger.debug(tempdir_exception_msg)
+        try:
+            with tarfile.open(source_file, "r:gz") as sourcecode_tar:
+                sourcecode_tar.extractall(temp_dir, filter="data")
+        except tarfile.ReadError as read_error:
+            self.cleanup_sourcecode_directory(temp_dir, f"Error reading source code tar file: {read_error}", read_error)
 
-                raise InvalidHTTPResponseError(error_msg) from RequestException
+        os.remove(source_file)
 
-            if tarfile.is_tarfile(source_file.name):
-                try:
-                    with tarfile.open(source_file.name, "r:gz") as sourcecode_tar:
-                        sourcecode_tar.extractall(temp_dir, filter="data")
-
-                except tarfile.ReadError as read_error:
-                    error_msg = f"Error reading source code tar file: {read_error}"
-                    logger.debug(error_msg)
-                    try:
-                        shutil.rmtree(temp_dir, onerror=_handle_temp_dir_clean)
-                    except SourceCodeError as tempdir_exception:
-                        tempdir_exception_msg = (
-                            f"Unable to cleanup temporary directory {temp_dir} for source code: {tempdir_exception}"
-                        )
-                        logger.debug(tempdir_exception_msg)
-
-                    raise InvalidHTTPResponseError(error_msg) from read_error
-
-                extracted_dir = os.listdir(temp_dir)
-                if len(extracted_dir) == 1 and package_name == extracted_dir[0]:
-                    # structure used package name and version as top-level directory
-                    temp_dir = os.path.join(temp_dir, extracted_dir[0])
-
-            else:
-                error_msg = f"Unable to extract source code from file {file_name}"
-                logger.debug(error_msg)
-                try:
-                    shutil.rmtree(temp_dir, onerror=_handle_temp_dir_clean)
-                except SourceCodeError as tempdir_exception:
-                    tempdir_exception_msg = (
-                        f"Unable to cleanup temporary directory {temp_dir} for source code: {tempdir_exception}"
-                    )
-                    logger.debug(tempdir_exception_msg)
-                    raise InvalidHTTPResponseError(error_msg) from tempdir_exception
-
-                raise InvalidHTTPResponseError(error_msg)
+        extracted_dir = os.listdir(temp_dir)
+        if len(extracted_dir) == 1 and extracted_dir[0] == package_name:
+            # Structure used package name and version as top-level directory.
+            temp_dir = os.path.join(temp_dir, extracted_dir[0])
 
         logger.debug("Temporary download and unzip of %s stored in %s", file_name, temp_dir)
         return temp_dir
@@ -282,25 +271,10 @@ class PyPIRegistry(PackageRegistry):
         str | None
             The hash of the artifact, or None if not found.
         """
-        try:
-            response = requests.get(artifact_url, stream=True, timeout=40)
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as http_err:
-            logger.debug("HTTP error occurred when trying to download artifact: %s", http_err)
-            return None
-
-        if response.status_code != 200:
-            logger.debug("Invalid response: %s", response.status_code)
-            return None
-
         hash_algorithm = hashlib.sha256()
-        try:
-            for chunk in response.iter_content():
-                hash_algorithm.update(chunk)
-        except RequestException as error:
-            # Something went wrong with the request, abort.
-            logger.debug("Error while streaming source file: %s", error)
-            response.close()
+        timeout = defaults.getint("downloads", "timeout", fallback=120)
+        size_limit = defaults.getint("slsa.verifier", "max_download_size", fallback=10000000)
+        if not stream_file_with_size_limit(artifact_url, {}, hash_algorithm.update, timeout, size_limit):
             return None
 
         artifact_hash: str = hash_algorithm.hexdigest()
@@ -630,7 +604,8 @@ class PyPIPackageJsonAsset:
         if not self.download_sourcecode():
             raise SourceCodeError("Unable to download package source code.")
         yield
-        self.cleanup_sourcecode()
+        if self.package_sourcecode_path:
+            PyPIRegistry.cleanup_sourcecode_directory(self.package_sourcecode_path)
 
     def download_sourcecode(self) -> bool:
         """Get the source code of the package and store it in a temporary directory.
@@ -648,25 +623,6 @@ class PyPIPackageJsonAsset:
             except InvalidHTTPResponseError as error:
                 logger.debug(error)
         return False
-
-    def cleanup_sourcecode(self) -> None:
-        """
-        Delete the temporary directory created when downloading the source code.
-
-        The package source code is no longer accessible after this, and the package_sourcecode_path
-        attribute is set to an empty string.
-        """
-        if self.package_sourcecode_path:
-            try:
-                shutil.rmtree(self.package_sourcecode_path, onerror=_handle_temp_dir_clean)
-                self.package_sourcecode_path = ""
-            except SourceCodeError as tempdir_exception:
-                tempdir_exception_msg = (
-                    f"Unable to cleanup temporary directory {self.package_sourcecode_path}"
-                    f" for source code: {tempdir_exception}"
-                )
-                logger.debug(tempdir_exception_msg)
-                raise tempdir_exception
 
     def get_sourcecode_file_contents(self, path: str) -> bytes:
         """
@@ -717,7 +673,7 @@ class PyPIPackageJsonAsset:
         Returns
         -------
         tuple[str, bytes]
-            The source code file path, and the the raw contents of the source code file.
+            The source code file path, and the raw contents of the source code file.
 
         Raises
         ------

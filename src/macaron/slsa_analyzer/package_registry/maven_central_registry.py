@@ -9,13 +9,12 @@ from datetime import datetime, timezone
 
 import requests
 from packageurl import PackageURL
-from requests import RequestException
 
 from macaron.artifact.maven import construct_maven_repository_path, construct_primary_jar_file_name
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
-from macaron.util import send_get_http_raw
+from macaron.util import send_get_http_raw, stream_file_with_size_limit
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -285,35 +284,20 @@ class MavenCentralRegistry(PackageRegistry):
             # As Maven hashes are user provided and not verified they serve as a reference only.
             logger.debug("Found hash of artifact: %s", retrieved_artifact_hash)
 
-        try:
-            response = requests.get(artifact_url, stream=True, timeout=40)
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as http_err:
-            logger.debug("HTTP error occurred when trying to download artifact: %s", http_err)
-            return None
-
-        if response.status_code != 200:
-            return None
-
-        # Download file and compute hash as chunks are received.
         hash_algorithm = hashlib.sha256()
-        try:
-            for chunk in response.iter_content():
-                hash_algorithm.update(chunk)
-        except RequestException as error:
-            # Something went wrong with the request, abort.
-            logger.debug("Error while streaming target file: %s", error)
-            response.close()
+        timeout = defaults.getint("downloads", "timeout", fallback=120)
+        size_limit = defaults.getint("slsa.verifier", "max_download_size", fallback=10000000)
+        if not stream_file_with_size_limit(artifact_url, {}, hash_algorithm.update, timeout, size_limit):
             return None
 
         computed_artifact_hash: str = hash_algorithm.hexdigest()
+        logger.debug("Computed hash of artifact: %s", computed_artifact_hash)
         if retrieved_artifact_hash and computed_artifact_hash != retrieved_artifact_hash:
             logger.debug(
-                "Artifact hash and discovered hash do not match: %s != %s",
+                "Computed artifact hash and discovered hash do not match: %s != %s",
                 computed_artifact_hash,
                 retrieved_artifact_hash,
             )
             return None
 
-        logger.debug("Computed hash of artifact: %s", computed_artifact_hash)
         return computed_artifact_hash

@@ -17,7 +17,6 @@ steps:
     command_args:
     - -purl
     - pkg:npm/semver@7.6.2
-    - --verify-provenance
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:
