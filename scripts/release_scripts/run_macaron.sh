@@ -283,7 +283,7 @@ while [[ $# -gt 0 ]]; do
             entrypoint+=("macaron")
             ;;
         # Parsing commands for macaron entrypoint.
-        analyze|dump-defaults|verify-policy)
+        analyze|dump-defaults|verify-policy|gen-build-spec)
             command=$1
             shift
             break
@@ -351,6 +351,19 @@ elif [[ $command == "verify-policy" ]]; then
                 ;;
             -f|--file)
                 arg_datalog_policy_file="$2"
+                shift
+                ;;
+            *)
+                rest_command+=("$1")
+                ;;
+        esac
+        shift
+    done
+elif [[ $command == "gen-build-spec" ]]; then
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -d|--database)
+                gen_build_spec_arg_database="$2"
                 shift
                 ;;
             *)
@@ -510,6 +523,28 @@ if [[ -n "${arg_datalog_policy_file:-}" ]]; then
 
     argv_command+=("--file" "$datalog_policy_file_in_container")
     mount_file "-f/--file" "$datalog_policy_file" "$datalog_policy_file_in_container" "ro,Z"
+fi
+
+# MACARON entrypoint - gen-build-spec command argvs
+# This is for macaron gen-build-spec command.
+# Determine the database path to be mounted into ${MACARON_WORKSPACE}/database/<database_file_name>.
+if [[ -n "${gen_build_spec_arg_database:-}" ]]; then
+    gen_build_spec_database_path="${gen_build_spec_arg_database}"
+    file_name="$(basename "${gen_build_spec_database_path}")"
+    gen_build_spec_database_path_in_container="${MACARON_WORKSPACE}/database/${file_name}"
+
+    argv_command+=("--database" "$gen_build_spec_database_path_in_container")
+    mount_file "-d/--database" "$gen_build_spec_database_path" "$gen_build_spec_database_path_in_container" "rw,Z"
+fi
+
+# Determine that ~/.gradle/gradle.properties exists to be mounted into ${MACARON_WORKSPACE}/gradle.properties
+if [[ -f "$HOME/.gradle/gradle.properties" ]]; then
+    mounts+=("-v" "$HOME/.gradle/gradle.properties":"${MACARON_WORKSPACE}/gradle.properties:ro,Z")
+fi
+
+# Determine that ~/.m2/settings.xml exists to be mounted into ${MACARON_WORKSPACE}/settings.xml
+if [[ -f "$HOME/.m2/settings.xml" ]]; then
+    mounts+=("-v" "$HOME/.m2/settings.xml":"${MACARON_WORKSPACE}/settings.xml:ro,Z")
 fi
 
 # Set up proxy.
