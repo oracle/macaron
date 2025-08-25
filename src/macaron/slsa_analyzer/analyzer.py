@@ -144,7 +144,6 @@ class Analyzer:
         )
         logger.info("The following checks will be run: %s", registry.checks_to_run)
         self.rich_handler.add_description_table_content("Final Checks:", "\n".join(registry.checks_to_run))
-        self.rich_handler.no_of_checks(len(registry.checks_to_run))
 
         self.output_path = output_path
 
