@@ -19,6 +19,7 @@ from jinja2 import (
 )
 
 import macaron.output_reporter.jinja2_extensions as jinja2_extensions  # pylint: disable=consider-using-from-import
+from macaron.console import access_handler
 from macaron.output_reporter.results import Report
 from macaron.output_reporter.scm import SCMStatus
 
@@ -42,6 +43,7 @@ class FileReporter(abc.ABC):
         """
         self.mode = mode
         self.encoding = encoding
+        self.rich_handler = access_handler.get_handler()
 
     def write_file(self, file_path: str, data: str) -> bool:
         """Write the data into a file.
@@ -64,7 +66,11 @@ class FileReporter(abc.ABC):
                 file.write(data)
                 return True
         except OSError as error:
-            logger.error("Cannot write to %s. Error: %s", os.path.relpath(file_path, os.getcwd()), error)
+            logger.error(
+                "Cannot write to %s. Error: %s",
+                os.path.relpath(file_path, os.getcwd()),
+                error,
+            )
             return False
 
     @abc.abstractmethod
@@ -115,18 +121,21 @@ class JSONReporter(FileReporter):
         report: Report | dict
             The report to be generated.
         """
+        self.rich_handler = access_handler.get_handler()
         if not isinstance(report, Report):
             return
         try:
             dep_file_name = os.path.join(target_dir, "dependencies.json")
             serialized_configs = list(report.get_serialized_configs())
             self.write_file(dep_file_name, json.dumps(serialized_configs, indent=self.indent))
+            self.rich_handler.update_report_table("Dependencies Report", os.path.relpath(dep_file_name, os.getcwd()))
 
             for record in report.get_records():
                 if record.context and record.status == SCMStatus.AVAILABLE:
                     file_name = os.path.join(target_dir, f"{record.context.component.report_file_name}.json")
                     json_data = json.dumps(record.get_dict(), indent=self.indent)
                     self.write_file(file_name, json_data)
+                    self.rich_handler.update_report_table("JSON Report", os.path.relpath(file_name, os.getcwd()))
         except TypeError as error:
             logger.critical("Cannot serialize output report to JSON: %s", error)
 
@@ -207,6 +216,7 @@ class HTMLReporter(FileReporter):
         report: Report | dict
             The report to be generated.
         """
+        self.rich_handler = access_handler.get_handler()
         if not self.template or not isinstance(report, Report):
             return
 
@@ -218,6 +228,7 @@ class HTMLReporter(FileReporter):
                     # in the original data.
                     html = self.template.render(deepcopy(record.get_dict()))
                     self.write_file(file_name, html)
+                    self.rich_handler.update_report_table("HTML Report", os.path.relpath(file_name, os.getcwd()))
         except TemplateSyntaxError as error:
             location = f"line {error.lineno}"
             name = error.filename or error.name
@@ -261,9 +272,16 @@ class PolicyReporter(FileReporter):
         report: Report | dict
             The report to be generated.
         """
+        self.rich_handler = access_handler.get_handler()
         if not isinstance(report, dict):
             return
         try:
-            self.write_file(os.path.join(target_dir, "policy_report.json"), json.dumps(report, indent=self.indent))
+            self.write_file(
+                os.path.join(target_dir, "policy_report.json"),
+                json.dumps(report, indent=self.indent),
+            )
+            self.rich_handler.update_policy_report(
+                os.path.relpath(os.path.join(target_dir, "policy_report.json"), os.getcwd())
+            )
         except (TypeError, ValueError, OSError) as error:
             logger.critical("Cannot serialize the policy report to JSON: %s", error)

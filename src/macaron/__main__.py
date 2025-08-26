@@ -20,6 +20,7 @@ from macaron.build_spec_generator.build_spec_generator import (
 )
 from macaron.config.defaults import create_defaults, load_defaults
 from macaron.config.global_config import global_config
+from macaron.console import access_handler
 from macaron.errors import ConfigurationError
 from macaron.output_reporter.reporter import HTMLReporter, JSONReporter, PolicyReporter
 from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
@@ -63,7 +64,8 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     if analyzer_single_args.provenance_expectation is not None:
         if not os.path.exists(analyzer_single_args.provenance_expectation):
             logger.critical(
-                'The provenance expectation file "%s" does not exist.', analyzer_single_args.provenance_expectation
+                'The provenance expectation file "%s" does not exist.',
+                analyzer_single_args.provenance_expectation,
             )
             sys.exit(os.EX_OSFILE)
         global_config.load_expectation_files(analyzer_single_args.provenance_expectation)
@@ -72,7 +74,8 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     if analyzer_single_args.python_venv is not None:
         if not os.path.exists(analyzer_single_args.python_venv):
             logger.critical(
-                'The Python virtual environment path "%s" does not exist.', analyzer_single_args.python_venv
+                'The Python virtual environment path "%s" does not exist.',
+                analyzer_single_args.python_venv,
             )
             sys.exit(os.EX_OSFILE)
         global_config.load_python_venv(analyzer_single_args.python_venv)
@@ -95,7 +98,10 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     else:
         user_provided_local_maven_repo = analyzer_single_args.local_maven_repo
         if not os.path.isdir(user_provided_local_maven_repo):
-            logger.error("The user provided local Maven repo at %s is not valid.", user_provided_local_maven_repo)
+            logger.error(
+                "The user provided local Maven repo at %s is not valid.",
+                user_provided_local_maven_repo,
+            )
             sys.exit(os.EX_USAGE)
 
         global_config.local_maven_repo = user_provided_local_maven_repo
@@ -111,7 +117,8 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
             lstrip_blocks=True,
         )
         html_reporter = HTMLReporter(
-            env=custom_jinja_env, target_template=os.path.basename(analyzer_single_args.template_path)
+            env=custom_jinja_env,
+            target_template=os.path.basename(analyzer_single_args.template_path),
         )
         if not html_reporter.template:
             logger.error("Exiting because the custom template cannot be found.")
@@ -207,8 +214,10 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
 
         result = run_policy_engine(verify_policy_args.database, policy_content)
         vsa = generate_vsa(policy_content=policy_content, policy_result=result)
+        rich_handler = access_handler.get_handler()
         if vsa is not None:
             vsa_filepath = os.path.join(global_config.output_path, "vsa.intoto.jsonl")
+            rich_handler.update_vsa(vsa_filepath)
             logger.info(
                 "Generating the Verification Summary Attestation (VSA) to %s.",
                 os.path.relpath(vsa_filepath, os.getcwd()),
@@ -222,8 +231,12 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
                     file.write(json.dumps(vsa))
             except OSError as err:
                 logger.error(
-                    "Could not generate the VSA to %s. Error: %s", os.path.relpath(vsa_filepath, os.getcwd()), err
+                    "Could not generate the VSA to %s. Error: %s",
+                    os.path.relpath(vsa_filepath, os.getcwd()),
+                    err,
                 )
+        else:
+            rich_handler.update_vsa("No VSA generated.")
 
         policy_reporter = PolicyReporter()
         policy_reporter.generate(global_config.output_path, result)
@@ -290,16 +303,23 @@ def find_source(find_args: argparse.Namespace) -> int:
 
 def perform_action(action_args: argparse.Namespace) -> None:
     """Perform the indicated action of Macaron."""
+    rich_handler = access_handler.get_handler()
     match action_args.action:
         case "dump-defaults":
+            if not action_args.disable_rich_output:
+                rich_handler.start("dump-defaults")
             # Create the defaults.ini file in the output dir and exit.
             create_defaults(action_args.output_dir, os.getcwd())
             sys.exit(os.EX_OK)
 
         case "verify-policy":
+            if not action_args.disable_rich_output:
+                rich_handler.start("verify-policy")
             sys.exit(verify_policy(action_args))
 
         case "analyze":
+            if not action_args.disable_rich_output:
+                rich_handler.start("analyze")
             if not global_config.gh_token:
                 logger.error("GitHub access token not set.")
                 sys.exit(os.EX_USAGE)
@@ -317,6 +337,8 @@ def perform_action(action_args: argparse.Namespace) -> None:
             analyze_slsa_levels_single(action_args)
 
         case "find-source":
+            if not action_args.disable_rich_output:
+                rich_handler.start("find-source")
             try:
                 for git_service in GIT_SERVICES:
                     git_service.load_defaults()
@@ -390,6 +412,14 @@ def main(argv: list[str] | None = None) -> None:
         "-v",
         "--verbose",
         help="Run Macaron with more debug logs",
+        action="store_true",
+    )
+
+    main_parser.add_argument(
+        "-dro",
+        "--disable-rich-output",
+        default=False,
+        help="Disable Rich UI output",
         action="store_true",
     )
 
@@ -531,7 +561,10 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     # Dump the default values.
-    sub_parser.add_parser(name="dump-defaults", description="Dumps the defaults.ini file to the output directory.")
+    sub_parser.add_parser(
+        name="dump-defaults",
+        description="Dumps the defaults.ini file to the output directory.",
+    )
 
     # Verify the Datalog policy.
     vp_parser = sub_parser.add_parser(name="verify-policy")
@@ -593,65 +626,94 @@ def main(argv: list[str] | None = None) -> None:
         main_parser.print_help()
         sys.exit(os.EX_USAGE)
 
-    if args.verbose:
-        log_level = logging.DEBUG
-        log_format = "%(asctime)s [%(name)s:%(funcName)s:%(lineno)d] [%(levelname)s] %(message)s"
-    else:
-        log_level = logging.INFO
-        log_format = "%(asctime)s [%(levelname)s] %(message)s"
-
     # Set global logging config. We need the stream handler for the initial
     # output directory checking log messages.
-    st_handler = logging.StreamHandler(sys.stdout)
-    logging.basicConfig(format=log_format, handlers=[st_handler], force=True, level=log_level)
-
-    # Set the output directory.
-    if not args.output_dir:
-        logger.error("The output path cannot be empty. Exiting ...")
-        sys.exit(os.EX_USAGE)
-
-    if os.path.isfile(args.output_dir):
-        logger.error("The output directory already exists. Exiting ...")
-        sys.exit(os.EX_USAGE)
-
-    if os.path.isdir(args.output_dir):
-        logger.info("Setting the output directory to %s", os.path.relpath(args.output_dir, os.getcwd()))
+    st_handler: logging.StreamHandler = logging.StreamHandler(sys.stdout)
+    rich_handler: logging.Handler = logging.Handler()
+    if args.disable_rich_output:
+        if args.verbose:
+            log_level = logging.DEBUG
+            log_format = "%(asctime)s [%(name)s:%(funcName)s:%(lineno)d] [%(levelname)s] %(message)s"
+        else:
+            log_level = logging.INFO
+            log_format = "%(asctime)s [%(levelname)s] %(message)s"
+        st_handler = logging.StreamHandler(sys.stdout)
+        logging.basicConfig(format=log_format, handlers=[st_handler], force=True, level=log_level)
     else:
-        logger.info("No directory at %s. Creating one ...", os.path.relpath(args.output_dir, os.getcwd()))
-        os.makedirs(args.output_dir)
+        if args.verbose:
+            log_level = logging.DEBUG
+            log_format = "%(asctime)s [%(name)s:%(funcName)s:%(lineno)d] %(message)s"
+        else:
+            log_level = logging.INFO
+            log_format = "%(asctime)s %(message)s"
+        rich_handler = access_handler.set_handler(args.verbose)
+        logging.basicConfig(format=log_format, handlers=[rich_handler], force=True, level=log_level)
 
-    # Add file handler to the root logger. Remove stream handler from the
-    # root logger to prevent dependencies printing logs to stdout.
-    debug_log_path = os.path.join(args.output_dir, "debug.log")
-    log_file_handler = logging.FileHandler(debug_log_path, "w")
-    log_file_handler.setFormatter(logging.Formatter(log_format))
-    logging.getLogger().removeHandler(st_handler)
-    logging.getLogger().addHandler(log_file_handler)
+    try:
+        # Set the output directory.
+        if not args.output_dir:
+            logger.error("The output path cannot be empty. Exiting ...")
+            sys.exit(os.EX_USAGE)
 
-    # Add StreamHandler to the Macaron logger only.
-    mcn_logger = logging.getLogger("macaron")
-    mcn_logger.addHandler(st_handler)
+        if os.path.isfile(args.output_dir):
+            logger.error("The output directory already exists. Exiting ...")
+            sys.exit(os.EX_USAGE)
 
-    logger.info("The logs will be stored in debug.log")
+        if os.path.isdir(args.output_dir):
+            logger.info(
+                "Setting the output directory to %s",
+                os.path.relpath(args.output_dir, os.getcwd()),
+            )
+        else:
+            logger.info(
+                "No directory at %s. Creating one ...",
+                os.path.relpath(args.output_dir, os.getcwd()),
+            )
+            os.makedirs(args.output_dir)
 
-    # Set Macaron's global configuration.
-    # The path to provenance expectation files will be updated if
-    # set through analyze sub-command.
-    global_config.load(
-        macaron_path=macaron.MACARON_PATH,
-        output_path=args.output_dir,
-        build_log_path=os.path.join(args.output_dir, "build_log"),
-        debug_level=log_level,
-        local_repos_path=args.local_repos_path,
-        resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
-    )
+        # Add file handler to the root logger. Remove stream handler from the
+        # root logger to prevent dependencies printing logs to stdout.
+        debug_log_path = os.path.join(args.output_dir, "debug.log")
+        log_file_handler = logging.FileHandler(debug_log_path, "w")
+        log_file_handler.setFormatter(logging.Formatter(log_format))
+        if args.disable_rich_output:
+            logging.getLogger().removeHandler(st_handler)
+        else:
+            logging.getLogger().removeHandler(rich_handler)
+        logging.getLogger().addHandler(log_file_handler)
 
-    # Load the default values from defaults.ini files.
-    if not load_defaults(args.defaults_path):
-        logger.error("Exiting because the defaults configuration could not be loaded.")
-        sys.exit(os.EX_NOINPUT)
+        # Add StreamHandler to the Macaron logger only.
+        mcn_logger = logging.getLogger("macaron")
+        if args.disable_rich_output:
+            mcn_logger.addHandler(st_handler)
+        else:
+            mcn_logger.addHandler(rich_handler)
 
-    perform_action(args)
+        logger.info("The logs will be stored in debug.log")
+
+        # Set Macaron's global configuration.
+        # The path to provenance expectation files will be updated if
+        # set through analyze sub-command.
+        global_config.load(
+            macaron_path=macaron.MACARON_PATH,
+            output_path=args.output_dir,
+            build_log_path=os.path.join(args.output_dir, "build_log"),
+            debug_level=log_level,
+            local_repos_path=args.local_repos_path,
+            resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
+        )
+
+        # Load the default values from defaults.ini files.
+        if not load_defaults(args.defaults_path):
+            logger.error("Exiting because the defaults configuration could not be loaded.")
+            sys.exit(os.EX_NOINPUT)
+
+        perform_action(args)
+    finally:
+        if args.disable_rich_output:
+            st_handler.close()
+        else:
+            rich_handler.close()
 
 
 def _get_token_from_dict_or_env(token: str, token_dict: dict[str, str]) -> str:
