@@ -11,7 +11,6 @@ The current ERD of Macaron is shown below:
 For table associated with a check see the check module.
 """
 import logging
-import os
 import string
 from datetime import datetime
 from pathlib import Path
@@ -36,6 +35,7 @@ from macaron.artifact.maven import MavenSubjectPURLMatcher
 from macaron.database.database_manager import ORMBase
 from macaron.database.db_custom_types import ProvenancePayload, RFC3339DateTime
 from macaron.errors import InvalidPURLError
+from macaron.path_utils.purl_based_path import get_purl_based_dir
 from macaron.repo_finder.repo_finder_enums import CommitFinderInfo, RepoFinderInfo
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, ProvenanceSubjectPURLMatcher
 from macaron.slsa_analyzer.slsa_req import ReqName
@@ -256,15 +256,11 @@ class Component(PackageURLMixin, ORMBase):
         str
             The report directory name.
         """
-        # Sanitize the path and make sure it's a valid file name.
-        # A purl string is an ASCII URL string that can allow uppercase letters for
-        # certain parts. So we shouldn't change uppercase letters with lower case
-        # to avoid merging results for two distinct PURL strings.
-        allowed_chars = string.ascii_letters + string.digits + "-"
-        p_type = "".join(c if c in allowed_chars else "_" for c in self.type)
-        p_namespace = "".join(c if c in allowed_chars else "_" for c in self.namespace) if self.namespace else ""
-        p_name = "".join(c if c in allowed_chars else "_" for c in self.name)
-        return os.path.join(p_type, p_namespace, p_name)
+        return get_purl_based_dir(
+            purl_name=self.name,
+            purl_namespace=self.namespace,
+            purl_type=self.type,
+        )
 
 
 class Repository(ORMBase):
