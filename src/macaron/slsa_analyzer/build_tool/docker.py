@@ -20,6 +20,7 @@ class Docker(BaseBuildTool):
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
+        super().load_defaults()
         if "builder.docker" in defaults:
             for item in defaults["builder.docker"]:
                 if hasattr(self, item):
@@ -43,4 +44,4 @@ class Docker(BaseBuildTool):
         bool
             True if this build tool is detected, else False.
         """
-        return any(file_exists(repo_path, file) for file in self.build_configs)
+        return any(file_exists(repo_path, file, filters=self.path_filters) for file in self.build_configs)

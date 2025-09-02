@@ -19,6 +19,7 @@ class Go(BaseBuildTool):
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
+        super().load_defaults()
         if "builder.go" in defaults:
             for item in defaults["builder.go"]:
                 if hasattr(self, item):
@@ -43,4 +44,4 @@ class Go(BaseBuildTool):
             True if this build tool is detected, else False.
         """
         go_config_files = self.build_configs + self.entry_conf
-        return any(file_exists(repo_path, file) for file in go_config_files)
+        return any(file_exists(repo_path, file, filters=self.path_filters) for file in go_config_files)

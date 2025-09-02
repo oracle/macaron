@@ -25,6 +25,7 @@ class Gradle(BaseBuildTool):
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
+        super().load_defaults()
         if "builder.gradle" in defaults:
             for item in defaults["builder.gradle"]:
                 if hasattr(self, item):
@@ -67,7 +68,7 @@ class Gradle(BaseBuildTool):
             True if this build tool is detected, else False.
         """
         gradle_config_files = self.build_configs + self.entry_conf
-        return any(file_exists(repo_path, file) for file in gradle_config_files)
+        return any(file_exists(repo_path, file, filters=self.path_filters) for file in gradle_config_files)
 
     def get_group_id(self, gradle_exec: str, project_path: str) -> str | None:
         """Get the group id of a Gradle project.

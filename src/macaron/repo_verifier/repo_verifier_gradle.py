@@ -10,10 +10,10 @@ from macaron.repo_verifier.repo_verifier_base import (
     RepositoryVerificationResult,
     RepositoryVerificationStatus,
     RepoVerifierToolSpecific,
-    find_file_in_repo,
 )
 from macaron.repo_verifier.repo_verifier_maven import RepoVerifierMaven
 from macaron.slsa_analyzer.build_tool import Gradle
+from macaron.slsa_analyzer.build_tool.base_build_tool import file_exists
 from macaron.slsa_analyzer.package_registry.maven_central_registry import same_organization
 
 logger = logging.getLogger(__name__)
@@ -151,15 +151,15 @@ class RepoVerifierGradle(RepoVerifierToolSpecific):
 
     def _extract_group_id_from_properties(self) -> str | None:
         """Extract the group id from the gradle.properties file."""
-        gradle_properties = find_file_in_repo(Path(self.reported_repo_fs), "gradle.properties")
+        gradle_properties = file_exists(self.reported_repo_fs, "gradle.properties")
         return self._extract_group_id_from_gradle_manifest(gradle_properties)
 
     def _extract_group_id_from_build_groovy(self) -> str | None:
         """Extract the group id from the build.gradle file."""
-        build_gradle = find_file_in_repo(Path(self.reported_repo_fs), "build.gradle")
+        build_gradle = file_exists(self.reported_repo_fs, "build.gradle")
         return self._extract_group_id_from_gradle_manifest(build_gradle, quote_chars={"'", '"'}, delimiter=" ")
 
     def _extract_group_id_from_build_kotlin(self) -> str | None:
         """Extract the group id from the build.gradle.kts file."""
-        build_gradle = find_file_in_repo(Path(self.reported_repo_fs), "build.gradle.kts")
+        build_gradle = file_exists(self.reported_repo_fs, "build.gradle.kts")
         return self._extract_group_id_from_gradle_manifest(build_gradle, quote_chars={'"'}, delimiter="=")
