@@ -4,64 +4,12 @@
 """This module contains the base class and core data models for repository verification."""
 import abc
 import logging
-import os
-from collections import deque
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
 
 from macaron.slsa_analyzer.build_tool import BaseBuildTool
 
 logger = logging.getLogger(__name__)
-
-
-def find_file_in_repo(root_dir: Path, filename: str) -> Path | None:
-    """Find the highest level file with a given name in a local repository.
-
-    This function ignores certain paths that are not under the main source code directories.
-
-    Parameters
-    ----------
-    root_dir : Path
-        The root directory of the repository.
-    filename : str
-        The name of the file to search for.
-
-    Returns
-    -------
-    Path | None
-        The path to the file if it exists, otherwise
-    """
-    # TODO: Consider using BaseBuildTool.get_build_dirs.
-    #   + Refactor 'get_build_dirs' to skip certain directories
-    #   that are most likely not part of the main codebase (e.g., sample).
-    #   + Need to find a way to look for other
-    #   files (e.g., gradle.properties) for the purpose of repo verification
-    #   without breaking the current logic of finding build directories.
-    #   + Add the capability to return the content/path of the file.
-    if not os.path.isdir(root_dir):
-        return None
-
-    queue: deque[Path] = deque()
-    queue.append(Path(root_dir))
-    while queue:
-        current_dir = queue.popleft()
-
-        # Don't look through non-main directories.
-        if any(
-            keyword in current_dir.name.lower()
-            for keyword in ["test", "example", "sample", "doc", "demo", "spec", "mock"]
-        ):
-            continue
-
-        if Path(current_dir, filename).exists():
-            return Path(current_dir, filename)
-
-        # Ignore symlinks to prevent potential infinite loop.
-        sub_dirs = [Path(it) for it in current_dir.iterdir() if it.is_dir() and not it.is_symlink()]
-        queue.extend(sub_dirs)
-
-    return None
 
 
 class RepositoryVerificationStatus(str, Enum):

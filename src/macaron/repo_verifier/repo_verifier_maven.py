@@ -3,7 +3,6 @@
 
 """This module contains code to verify whether a reported Maven-based repository can be linked back to the artifact."""
 import logging
-from pathlib import Path
 from urllib.parse import urlparse
 
 from macaron.parsers.pomparser import parse_pom_string
@@ -11,9 +10,9 @@ from macaron.repo_verifier.repo_verifier_base import (
     RepositoryVerificationResult,
     RepositoryVerificationStatus,
     RepoVerifierToolSpecific,
-    find_file_in_repo,
 )
 from macaron.slsa_analyzer.build_tool import Maven
+from macaron.slsa_analyzer.build_tool.base_build_tool import file_exists
 from macaron.slsa_analyzer.package_registry.maven_central_registry import (
     RECOGNIZED_CODE_HOSTING_SERVICES,
     same_organization,
@@ -47,7 +46,7 @@ class RepoVerifierMaven(RepoVerifierToolSpecific):
 
         # TODO: check other pom files. Think about how to decide in case of contradicting evidence.
         # Check if repo contains pom.xml.
-        pom_file = find_file_in_repo(Path(self.reported_repo_fs), "pom.xml")
+        pom_file = file_exists(self.reported_repo_fs, "pom.xml")
         if not pom_file:
             logger.debug("Could not find any pom.xml in the repository: %s", self.reported_repo_url)
             return RepositoryVerificationResult(

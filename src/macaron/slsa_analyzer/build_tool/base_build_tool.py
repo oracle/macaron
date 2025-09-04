@@ -9,12 +9,14 @@ import json
 import logging
 import os
 from abc import ABC, abstractmethod
+from collections import deque
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TypedDict
 
 from macaron.code_analyzer.call_graph import BaseNode
+from macaron.config.defaults import defaults
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence, Evidence, EvidenceWeightMap
@@ -53,30 +55,77 @@ class BuildToolCommand(TypedDict):
     events: list[str] | None
 
 
-def file_exists(path: str, file_name: str) -> bool:
-    """Return True if a file exists in a directory.
+def find_first_matching_file(directory: Path, pattern: str) -> Path | None:
+    """
+    Return the first file that matches the given glob pattern in the specified directory.
 
-    This method searches in the directory recursively.
+    Parameters
+    ----------
+    directory : Path
+        Directory to search in.
+    pattern : str
+        Glob pattern to match.
+
+    Returns
+    -------
+    Path | None
+        The first matching file's path, or None if no match is found.
+    """
+    for match in directory.glob(pattern):
+        return match
+    return None
+
+
+def file_exists(path: str, file_name: str, filters: list[str] | None = None) -> Path | None:
+    """Search recursively for the first matching file in a directory, skipping directories containing filter keywords.
+
+    To disable filtering, pass an empty list to the `filters` parameter.
 
     Parameters
     ----------
     path : str
         The path to search for the file.
     file_name : str
-        The name of the file to search.
+        The name of the file to search or a glob pattern (e.g., "Dockerfile.*").
+    filters: list[str] | None
+        The list of keywords that should be filtered.
 
     Returns
     -------
-    bool
-        True if file_name exists else False.
+    Path | None
+        The path to the file if it exists, otherwise
     """
-    pattern = os.path.join(path, "**", file_name)
-    files_detected = glob.iglob(pattern, recursive=True)
-    try:
-        next(files_detected)
-        return True
-    except StopIteration:
-        return False
+    if not os.path.isdir(path):
+        return None
+
+    # Check for file directly at root.
+    root_dir = Path(path)
+    if target_path := find_first_matching_file(root_dir, file_name):
+        return target_path
+
+    def _enqueue_subdirs(directory: Path, queue: deque[Path]) -> None:
+        """Add non-symlink subdirectories to the search queue."""
+        for entry in directory.iterdir():
+            if entry.is_dir() and not entry.is_symlink():
+                queue.append(entry)
+
+    search_queue: deque[Path] = deque()
+    _enqueue_subdirs(root_dir, search_queue)
+
+    while search_queue:
+
+        current_dir = search_queue.popleft()
+
+        # Skip filtered directories.
+        if filters and any(keyword in current_dir.name.lower() for keyword in filters):
+            continue
+
+        if candidate_path := find_first_matching_file(current_dir, file_name):
+            return candidate_path
+
+        _enqueue_subdirs(current_dir, search_queue)
+
+    return None
 
 
 @dataclass
@@ -135,6 +184,7 @@ class BaseBuildTool(ABC):
         self.build_log: list[str] = []
         self.wrapper_files: list[str] = []
         self.runtime_options = RuntimeOptions()
+        self.path_filters: list[str] = []
 
     def __str__(self) -> str:
         return self.name
@@ -157,6 +207,9 @@ class BaseBuildTool(ABC):
     @abstractmethod
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
+        # A list of keywords that can be used as filters while detecting build tools.
+        if "builder" in defaults:
+            self.path_filters = defaults.get_list("builder", "build_tool_path_filters", fallback=[])
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.

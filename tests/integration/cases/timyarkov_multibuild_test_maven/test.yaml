@@ -13,6 +13,7 @@ steps:
 - name: Run macaron analyze
   kind: analyze
   options:
+    ini: configuration.ini
     command_args:
     - -purl
     - pkg:maven/org.example/mock_maven_proj@1.0-SNAPSHOT?type=jar
