@@ -85,7 +85,7 @@ venv:
 # So we create the dist dir if it doesn't exist in the setup target.
 # See https://packaging.python.org/en/latest/tutorials/packaging-projects/#generating-distribution-archives.
 # We also install cyclonedx-go to generate SBOM for Go, compile the Go modules,
-# install SLSA verifier binary, download mvnw, and gradlew.
+# and install SLSA verifier binary.
 .PHONY: setup
 setup: force-upgrade setup-go setup-binaries setup-schemastore
 	pre-commit install
@@ -93,26 +93,11 @@ setup: force-upgrade setup-go setup-binaries setup-schemastore
 	go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.3.0
 setup-go:
 	go build -o $(PACKAGE_PATH)/bin/ $(REPO_PATH)/golang/cmd/...
-setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier $(PACKAGE_PATH)/resources/mvnw $(PACKAGE_PATH)/resources/gradlew souffle gnu-sed
+setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier souffle gnu-sed
 $(PACKAGE_PATH)/bin/slsa-verifier:
 	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.7.1
 	cd slsa-verifier/cli/slsa-verifier && go build -o $(PACKAGE_PATH)/bin/
 	cd $(REPO_PATH) && rm -rf slsa-verifier
-$(PACKAGE_PATH)/resources/mvnw:
-	cd $(PACKAGE_PATH)/resources \
-		&& wget https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper-distribution/3.1.1/maven-wrapper-distribution-3.1.1-bin.zip \
-		&& unzip -o maven-wrapper-distribution-3.1.1-bin.zip \
-		&& rm -r maven-wrapper-distribution-3.1.1-bin.zip \
-		&& echo -e "distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.8.6/apache-maven-3.8.6-bin.zip\nwrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.1.1/maven-wrapper-3.1.1.jar" > .mvn/wrapper/maven-wrapper.properties \
-		&& cd $(REPO_PATH)
-$(PACKAGE_PATH)/resources/gradlew:
-	cd $(PACKAGE_PATH)/resources \
-		&& export GRADLE_VERSION=7.6 \
-		&& wget https://services.gradle.org/distributions/gradle-$$GRADLE_VERSION-bin.zip \
-		&& unzip -o gradle-$$GRADLE_VERSION-bin.zip \
-		&& rm -r gradle-$$GRADLE_VERSION-bin.zip \
-		&& gradle-$$GRADLE_VERSION/bin/gradle wrapper \
-		&& cd $(REPO_PATH)
 setup-schemastore: $(PACKAGE_PATH)/resources/schemastore/github-workflow.json $(PACKAGE_PATH)/resources/schemastore/LICENSE $(PACKAGE_PATH)/resources/schemastore/NOTICE
 $(PACKAGE_PATH)/resources/schemastore/github-workflow.json:
 	cd $(PACKAGE_PATH)/resources \
@@ -236,7 +221,7 @@ setup-integration-test-utility-for-docker:
 # Generate a Software Bill of Materials (SBOM).
 .PHONY: sbom
 sbom: requirements
-	cyclonedx-py requirements --output-format json --outfile dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-sbom.json
+	cyclonedx-py requirements --output-format json --output-file dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-sbom.json
 	$$HOME/go/bin/cyclonedx-gomod mod -json -output dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-sbom-go.json $(REPO_PATH)
 
 # Generate a requirements.txt file containing version and integrity hashes for all
@@ -433,11 +418,7 @@ clean: dist-clean bin-clean docs-clean
 nuke-caches: clean
 	find src/ -type d -name __pycache__ -exec rm -fr {} +
 	find tests/ -type d -name __pycache__ -exec rm -fr {} +
-nuke-mvnw:
-	cd $(PACKAGE_PATH)/resources \
-	&& rm mvnw mvnw.cmd mvnwDebug mvnwDebug.cmd \
-	&& cd $(REPO_PATH)
-nuke: nuke-caches nuke-mvnw
+nuke: nuke-caches
 	if [ ! -z "${VIRTUAL_ENV}" ]; then \
 	  echo "Please deactivate the virtual environment first!" && exit 1; \
 	fi

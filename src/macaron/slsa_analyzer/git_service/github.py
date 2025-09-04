@@ -1,15 +1,21 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the spec for the GitHub service."""
+import logging
 
 from pydriller.git import Git
 
 from macaron.config.global_config import global_config
 from macaron.errors import ConfigurationError, RepoCheckOutError
+from macaron.json_tools import json_extract
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient, get_default_gh_client
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, ValidateInTotoPayloadError, validate_intoto_payload
+from macaron.slsa_analyzer.provenance.loader import decode_provenance
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class GitHub(BaseGitService):
@@ -89,3 +95,38 @@ class GitHub(BaseGitService):
             )
 
         return git_obj
+
+    def get_attestation_payload(self, repository_name: str, artifact_hash: str) -> InTotoPayload | None:
+        """Get the GitHub attestation associated with the given PURL, or None if it cannot be found.
+
+        The schema of GitHub attestation can be found on the API page:
+        https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-attestations
+
+        Parameters
+        ----------
+        repository_name: str
+            The name of the repository to retrieve attestation from.
+        artifact_hash: str
+            The hash of the related artifact.
+
+        Returns
+        -------
+        InTotoPayload | None
+            The attestation payload, if found.
+        """
+        git_attestation_dict = self.api_client.get_attestation(repository_name, artifact_hash)
+
+        if not git_attestation_dict:
+            return None
+
+        git_attestation_list = json_extract(git_attestation_dict, ["attestations"], list)
+        if not git_attestation_list:
+            return None
+
+        payload = decode_provenance(git_attestation_list[0])
+
+        try:
+            return validate_intoto_payload(payload)
+        except ValidateInTotoPayloadError as error:
+            logger.debug("Invalid attestation payload: %s", error)
+            return None

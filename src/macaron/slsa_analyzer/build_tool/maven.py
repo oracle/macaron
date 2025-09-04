@@ -11,11 +11,8 @@ import os
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, DependencyAnalyzerError, DependencyTools
-from macaron.dependency_analyzer.cyclonedx_mvn import CycloneDxMaven
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
-from macaron.util import copy_file_bulk
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -67,71 +64,3 @@ class Maven(BaseBuildTool):
             return False
         maven_config_files = self.build_configs
         return any(file_exists(repo_path, file) for file in maven_config_files)
-
-    def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
-        """Prepare the necessary wrapper files for running the build.
-
-        This method will return False if there is any errors happened during operation.
-
-        Parameters
-        ----------
-        wrapper_path : str
-            The path where all necessary wrapper files are located.
-        build_dir : str
-            The path of the build dir. This is where all files are copied to.
-
-        Returns
-        -------
-        bool
-            True if succeed else False.
-        """
-        # The path of the needed wrapper files
-        wrapper_files = self.wrapper_files
-
-        if copy_file_bulk(wrapper_files, wrapper_path, build_dir):
-            # Ensure that mvnw is executable.
-            file_path = os.path.join(build_dir, "mvnw")
-            status = os.stat(file_path)
-            if oct(status.st_mode)[-3:] != "744":
-                logger.debug("%s does not have 744 permission. Changing it to 744.")
-                os.chmod(file_path, 0o744)
-            return True
-
-        return False
-
-    def get_dep_analyzer(self) -> CycloneDxMaven:
-        """
-        Create a DependencyAnalyzer for the Maven build tool.
-
-        Returns
-        -------
-        CycloneDxMaven
-            The CycloneDxMaven object.
-
-        Raises
-        ------
-        DependencyAnalyzerError
-        """
-        if "dependency.resolver" not in defaults or "dep_tool_maven" not in defaults["dependency.resolver"]:
-            raise DependencyAnalyzerError("No default dependency analyzer is found.")
-        if not DependencyAnalyzer.tool_valid(defaults.get("dependency.resolver", "dep_tool_maven")):
-            raise DependencyAnalyzerError(
-                f"Dependency analyzer {defaults.get('dependency.resolver', 'dep_tool_maven')} is not valid.",
-            )
-
-        tool_name, tool_version = tuple(
-            defaults.get(
-                "dependency.resolver",
-                "dep_tool_maven",
-                fallback="cyclonedx-maven:2.6.2",
-            ).split(":")
-        )
-        if tool_name == DependencyTools.CYCLONEDX_MAVEN:
-            return CycloneDxMaven(
-                resources_path=global_config.resources_path,
-                file_name="bom.json",
-                tool_name=tool_name,
-                tool_version=tool_version,
-            )
-
-        raise DependencyAnalyzerError(f"Unsupported SBOM generator for Maven: {tool_name}.")

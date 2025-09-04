@@ -380,13 +380,8 @@ else
     echo "Setting default output directory to ${output}."
 fi
 
-# Mount the necessary .m2 and .gradle directories.
-m2_dir="${output}/.m2"
-gradle_dir="${output}/.gradle"
-
+# Mount the output directory.
 mount_dir_rw_allow_create "" "$output" "${MACARON_WORKSPACE}/output"
-mount_dir_rw_allow_create "" "$m2_dir" "${MACARON_WORKSPACE}/.m2"
-mount_dir_rw_allow_create "" "$gradle_dir" "${MACARON_WORKSPACE}/.gradle"
 
 # Determine the local repos path to be mounted into ${MACARON_WORKSPACE}/output/git_repos/local_repos/
 if [[ -n "${arg_local_repos_path:-}" ]]; then
@@ -491,24 +486,6 @@ else
             argv_command+=("--local-maven-repo" "${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly")
 
             mount_dir_ro "--local-maven-repo" "$HOME/.m2" "$local_maven_repo_in_container"
-        # If the host's $HOME/.m2 doesn't exist, we create and mount an empty directory ${output}/analyze_local_maven_repo_readonly
-        # into ${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly. And then provide
-        # ${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly into the --local-maven-repo
-        # flag.
-        # This is because:
-        #   - By default if --local-maven-repo is not used, Macaron uses $HOME/.m2 of the current
-        #     environment as the local maven repo.
-        #   - If --local-maven-repo is not set when Macaron is running in the Docker container, it will try to
-        #     use $HOME/.m2 WITHIN the container. This is not desirable as this $HOME/.m2 is being used
-        #     by the cyclonedx plugins for dependency resolution, which requires read write. We treat the local
-        #     maven repo as a read only directory, hence they cannot share.
-        else
-            local_maven_repo_in_container="${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly"
-            output_local_maven_repo="${output}/analyze_local_maven_repo_readonly"
-            mkdir -p "$output_local_maven_repo"
-            argv_command+=("--local-maven-repo" "${MACARON_WORKSPACE}/analyze_local_maven_repo_readonly")
-
-            mount_dir_ro "--local-maven-repo" "$output_local_maven_repo" "$local_maven_repo_in_container"
         fi
     fi
 fi
@@ -535,21 +512,8 @@ if [[ -n "${arg_datalog_policy_file:-}" ]]; then
     mount_file "-f/--file" "$datalog_policy_file" "$datalog_policy_file_in_container" "ro,Z"
 fi
 
-# Determine that ~/.gradle/gradle.properties exists to be mounted into ${MACARON_WORKSPACE}/gradle.properties
-if [[ -f "$HOME/.gradle/gradle.properties" ]]; then
-    mounts+=("-v" "$HOME/.gradle/gradle.properties":"${MACARON_WORKSPACE}/gradle.properties:ro,Z")
-fi
-
-# Determine that ~/.m2/settings.xml exists to be mounted into ${MACARON_WORKSPACE}/settings.xml
-if [[ -f "$HOME/.m2/settings.xml" ]]; then
-    mounts+=("-v" "$HOME/.m2/settings.xml":"${MACARON_WORKSPACE}/settings.xml:ro,Z")
-fi
-
 # Set up proxy.
 # We respect the host machine's proxy environment variables.
-# For Maven and Gradle projects that Macaron needs to analyzes, the proxy configuration
-# for Maven wrapper `mvnw` and Gradle wrapper `gradlew` are set using `MAVEN_OPTS` and
-# `GRADLE_OPTS` environment variables.
 proxy_var_names=(
     "http_proxy"
     "https_proxy"
@@ -559,8 +523,6 @@ proxy_var_names=(
     "HTTPS_PROXY"
     "FTP_PROXY"
     "NO_PROXY"
-    "MAVEN_OPTS"
-    "GRADLE_OPTS"
 )
 
 for v in "${proxy_var_names[@]}"; do

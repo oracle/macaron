@@ -172,7 +172,6 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
         analyzer_single_args.sbom_path,
         deps_depth,
         provenance_payload=prov_payload,
-        verify_provenance=analyzer_single_args.verify_provenance,
         force_analyze_source=analyzer_single_args.force_analyze_source,
     )
     sys.exit(status_code)
@@ -481,13 +480,6 @@ def main(argv: list[str] | None = None) -> None:
         required=False,
         action="store_true",
         help=("Forces PyPI sourcecode analysis to run regardless of other heuristic results."),
-    )
-
-    single_analyze_parser.add_argument(
-        "--verify-provenance",
-        required=False,
-        action="store_true",
-        help=("Allow the analysis to attempt to verify provenance files as part of its normal operations."),
     )
 
     # Dump the default values.

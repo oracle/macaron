@@ -433,12 +433,18 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.ONE_RELEASE.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}).
 
-    % Package released recently with the a maintainer email address that is not valid.
+    % Package has no links, one release or multiple quick releases, and a suspicious maintainer who recently
+    % joined, has a fake email address, and other similarly-structured projects.
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_3) :-
         quickUndetailed,
-        failed({Heuristics.FAKE_EMAIL.value}),
-        failed({Heuristics.SIMILAR_PROJECTS.value}).
-
+        failed({Heuristics.SIMILAR_PROJECTS.value}),
+        failed({Heuristics.ONE_RELEASE.value}),
+        failed({Heuristics.FAKE_EMAIL.value}).
+    {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_4) :-
+        quickUndetailed,
+        failed({Heuristics.SIMILAR_PROJECTS.value}),
+        failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
+        failed({Heuristics.FAKE_EMAIL.value}).
     % ----- Evaluation -----
 
     % Aggregate result
@@ -446,9 +452,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
     {problog_result_access} :- trigger(malware_high_confidence_4).
-    {problog_result_access} :- trigger(malware_medium_confidence_3).
-    {problog_result_access} :- trigger(malware_medium_confidence_2).
     {problog_result_access} :- trigger(malware_medium_confidence_1).
+    {problog_result_access} :- trigger(malware_medium_confidence_2).
+    {problog_result_access} :- trigger(malware_medium_confidence_3).
+    {problog_result_access} :- trigger(malware_medium_confidence_4).
     query({problog_result_access}).
 
     % Explainability

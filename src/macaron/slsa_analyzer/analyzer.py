@@ -22,7 +22,6 @@ from sqlalchemy.orm import Session
 from macaron import __version__
 from macaron.artifact.local_artifact import (
     get_local_artifact_dirs,
-    get_local_artifact_hash,
 )
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
@@ -44,7 +43,6 @@ from macaron.errors import (
     ProvenanceError,
     PURLNotFoundError,
 )
-from macaron.json_tools import json_extract
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
 from macaron.provenance import provenance_verifier
@@ -54,7 +52,7 @@ from macaron.provenance.provenance_extractor import (
     extract_predicate_version,
     extract_repo_and_commit_from_provenance,
 )
-from macaron.provenance.provenance_finder import ProvenanceFinder, find_provenance_from_ci
+from macaron.provenance.provenance_finder import ProvenanceFinder, find_provenance_from_ci, get_artifact_hash
 from macaron.provenance.provenance_verifier import determine_provenance_slsa_level, verify_ci_provenance
 from macaron.repo_finder import repo_finder
 from macaron.repo_finder.repo_finder import prepare_repo
@@ -73,16 +71,12 @@ from macaron.slsa_analyzer.database_store import store_analyze_context_to_db
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService, GitHub
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR
-from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, MavenCentralRegistry, PyPIRegistry
-from macaron.slsa_analyzer.package_registry.pypi_registry import find_or_create_pypi_asset
+from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES
 from macaron.slsa_analyzer.provenance.expectations.expectation_registry import ExpectationRegistry
 from macaron.slsa_analyzer.provenance.intoto import (
     InTotoPayload,
     InTotoV01Payload,
-    ValidateInTotoPayloadError,
-    validate_intoto_payload,
 )
-from macaron.slsa_analyzer.provenance.loader import decode_provenance
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
@@ -147,7 +141,6 @@ class Analyzer:
         sbom_path: str = "",
         deps_depth: int = 0,
         provenance_payload: InTotoPayload | None = None,
-        verify_provenance: bool = False,
         force_analyze_source: bool = False,
     ) -> int:
         """Run the analysis and write results to the output path.
@@ -165,8 +158,6 @@ class Analyzer:
             The depth of dependency resolution. Default: 0.
         provenance_payload : InToToPayload | None
             The provenance intoto payload for the main software component.
-        verify_provenance: bool
-            Enable provenance verification if True.
         force_analyze_source : bool
             When true, enforces running source code analysis regardless of other heuristic results. Defaults to False.
 
@@ -201,7 +192,6 @@ class Analyzer:
                     main_config,
                     analysis,
                     provenance_payload=provenance_payload,
-                    verify_provenance=verify_provenance,
                     force_analyze_source=force_analyze_source,
                 )
 
@@ -320,7 +310,6 @@ class Analyzer:
         analysis: Analysis,
         existing_records: dict[str, Record] | None = None,
         provenance_payload: InTotoPayload | None = None,
-        verify_provenance: bool = False,
         force_analyze_source: bool = False,
     ) -> Record:
         """Run the checks for a single repository target.
@@ -338,8 +327,6 @@ class Analyzer:
             The mapping of existing records that the analysis has run successfully.
         provenance_payload : InToToPayload | None
             The provenance intoto payload for the analyzed software component.
-        verify_provenance: bool
-            Enable provenance verification if True.
         force_analyze_source : bool
             When true, enforces running source code analysis regardless of other heuristic results. Defaults to False.
 
@@ -378,7 +365,7 @@ class Analyzer:
                 provenance_payload = provenance_asset.payload
                 if provenance_payload.verified:
                     provenance_is_verified = True
-                if verify_provenance:
+                else:
                     provenance_is_verified = provenance_verifier.verify_provenance(parsed_purl, provenances)
 
         # Try to extract the repository URL and commit digest from the Provenance, if it exists.
@@ -510,9 +497,20 @@ class Analyzer:
         # Try to find an attestation from GitHub, if applicable.
         if parsed_purl and not provenance_payload and analysis_target.repo_path and isinstance(git_service, GitHub):
             # Try to discover GitHub attestation for the target software component.
-            artifact_hash = self.get_artifact_hash(parsed_purl, local_artifact_dirs, package_registries_info)
+            artifact_hash = get_artifact_hash(parsed_purl, local_artifact_dirs, package_registries_info)
             if artifact_hash:
-                provenance_payload = self.get_github_attestation_payload(analyze_ctx, git_service, artifact_hash)
+                provenance_payload = git_service.get_attestation_payload(
+                    analyze_ctx.component.repository.full_name, artifact_hash
+                )
+                if provenance_payload:
+                    try:
+                        provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
+                            provenance_payload
+                        )
+                        # Attestations found from GitHub are signed and verified.
+                        provenance_is_verified = True
+                    except ProvenanceError as error:
+                        logger.debug("Failed to extract from provenance: %s", error)
 
         self._determine_package_registries(analyze_ctx, package_registries_info)
 
@@ -544,14 +542,13 @@ class Analyzer:
                         )
 
                     # Also try to verify CI provenance contents.
-                    if verify_provenance:
-                        verified = []
-                        for ci_info in analyze_ctx.dynamic_data["ci_services"]:
-                            verified.append(verify_ci_provenance(analyze_ctx, ci_info, temp_dir))
-                            if not verified:
-                                break
-                        if verified and all(verified):
-                            provenance_l3_verified = True
+                    verified = []
+                    for ci_info in analyze_ctx.dynamic_data["ci_services"]:
+                        verified.append(verify_ci_provenance(analyze_ctx, ci_info, temp_dir))
+                        if not verified[-1]:
+                            break
+                    if verified and all(verified):
+                        provenance_l3_verified = True
 
         if provenance_payload:
             analyze_ctx.dynamic_data["is_inferred_prov"] = False
@@ -969,144 +966,6 @@ class Analyzer:
         )
 
         return analyze_ctx
-
-    def get_artifact_hash(
-        self,
-        purl: PackageURL,
-        local_artifact_dirs: list[str] | None,
-        package_registries_info: list[PackageRegistryInfo],
-    ) -> str | None:
-        """Get the hash of the artifact found from the passed PURL using local or remote files.
-
-        Provided local caches will be searched first. Artifacts will be downloaded if nothing is found within local
-        caches, or if no appropriate cache is provided for the target language.
-        Downloaded artifacts will be added to the passed package registry to prevent downloading them again.
-
-        Parameters
-        ----------
-        purl: PackageURL
-            The PURL of the artifact.
-        local_artifact_dirs: list[str] | None
-            The list of directories that may contain the artifact file.
-        package_registries_info: list[PackageRegistryInfo]
-            The list of package registry information.
-
-        Returns
-        -------
-        str | None
-            The hash of the artifact, or None if no artifact can be found locally or remotely.
-        """
-        if local_artifact_dirs:
-            # Try to get the hash from a local file.
-            artifact_hash = get_local_artifact_hash(purl, local_artifact_dirs)
-
-            if artifact_hash:
-                return artifact_hash
-
-        # Download the artifact.
-        if purl.type == "maven":
-            maven_registry = next(
-                (
-                    package_registry
-                    for package_registry in PACKAGE_REGISTRIES
-                    if isinstance(package_registry, MavenCentralRegistry)
-                ),
-                None,
-            )
-            if not maven_registry:
-                return None
-
-            return maven_registry.get_artifact_hash(purl)
-
-        if purl.type == "pypi":
-            pypi_registry = next(
-                (
-                    package_registry
-                    for package_registry in PACKAGE_REGISTRIES
-                    if isinstance(package_registry, PyPIRegistry)
-                ),
-                None,
-            )
-            if not pypi_registry:
-                logger.debug("Missing registry for PyPI")
-                return None
-
-            registry_info = next(
-                (
-                    info
-                    for info in package_registries_info
-                    if info.package_registry == pypi_registry and info.build_tool_name in {"pip", "poetry"}
-                ),
-                None,
-            )
-            if not registry_info:
-                logger.debug("Missing registry information for PyPI")
-                return None
-
-            if not purl.version:
-                return None
-
-            pypi_asset = find_or_create_pypi_asset(purl.name, purl.version, registry_info)
-            if not pypi_asset:
-                return None
-
-            pypi_asset.has_repository = True
-            if not pypi_asset.download(""):
-                return None
-
-            artifact_hash = pypi_asset.get_sha256()
-            if artifact_hash:
-                return artifact_hash
-
-            source_url = pypi_asset.get_sourcecode_url("bdist_wheel")
-            if not source_url:
-                return None
-
-            return pypi_registry.get_artifact_hash(source_url)
-
-        logger.debug("Purl type '%s' not yet supported for GitHub attestation discovery.", purl.type)
-        return None
-
-    def get_github_attestation_payload(
-        self, analyze_ctx: AnalyzeContext, git_service: GitHub, artifact_hash: str
-    ) -> InTotoPayload | None:
-        """Get the GitHub attestation associated with the given PURL, or None if it cannot be found.
-
-        The schema of GitHub attestation can be found on the API page:
-        https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-attestations
-
-        Parameters
-        ----------
-        analyze_ctx: AnalyzeContext
-            The analysis context.
-        git_service: GitHub
-            The Git service to retrieve the attestation from.
-        artifact_hash: str
-            The hash of the related artifact.
-
-        Returns
-        -------
-        InTotoPayload | None
-            The attestation payload, if found.
-        """
-        git_attestation_dict = git_service.api_client.get_attestation(
-            analyze_ctx.component.repository.full_name, artifact_hash
-        )
-
-        if not git_attestation_dict:
-            return None
-
-        git_attestation_list = json_extract(git_attestation_dict, ["attestations"], list)
-        if not git_attestation_list:
-            return None
-
-        payload = decode_provenance(git_attestation_list[0])
-
-        try:
-            return validate_intoto_payload(payload)
-        except ValidateInTotoPayloadError as error:
-            logger.debug("Invalid attestation payload: %s", error)
-            return None
 
     def _determine_git_service(self, analyze_ctx: AnalyzeContext) -> BaseGitService:
         """Determine the Git service used by the software component."""

@@ -8,6 +8,7 @@ description: |
 tags:
 - macaron-python-package
 - macaron-docker-image
+- tutorial
 
 steps:
 - name: Run macaron analyze with expectation file
@@ -17,7 +18,6 @@ steps:
     command_args:
     - -purl
     - pkg:pypi/urllib3@2.0.0a1
-    - --verify-provenance
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:

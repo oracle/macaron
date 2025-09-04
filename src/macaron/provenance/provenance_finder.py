@@ -12,6 +12,7 @@ from functools import partial
 from packageurl import PackageURL
 from pydriller import Git
 
+from macaron.artifact.local_artifact import get_local_artifact_hash
 from macaron.config.defaults import defaults
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
@@ -19,14 +20,22 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.provenance_available_check import ProvenanceAvailableException
 from macaron.slsa_analyzer.ci_service import GitHubActions
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
-from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, JFrogMavenRegistry, NPMRegistry
+from macaron.slsa_analyzer.package_registry import (
+    PACKAGE_REGISTRIES,
+    JFrogMavenRegistry,
+    MavenCentralRegistry,
+    NPMRegistry,
+    PyPIRegistry,
+)
 from macaron.slsa_analyzer.package_registry.npm_registry import NPMAttestationAsset
+from macaron.slsa_analyzer.package_registry.pypi_registry import find_or_create_pypi_asset
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError
 from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
 from macaron.slsa_analyzer.provenance.witness import is_witness_provenance_payload, load_witness_verifier_config
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
+from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -490,3 +499,96 @@ def download_provenances_from_ci_service(ci_info: CIInfo, download_path: str) ->
 
     except OSError as error:
         logger.error("Error while storing provenance in the temporary directory: %s", error)
+
+
+def get_artifact_hash(
+    purl: PackageURL,
+    local_artifact_dirs: list[str] | None,
+    package_registries_info: list[PackageRegistryInfo],
+) -> str | None:
+    """Get the hash of the artifact found from the passed PURL using local or remote files.
+
+    Provided local caches will be searched first. Artifacts will be downloaded if nothing is found within local
+    caches, or if no appropriate cache is provided for the target language.
+    Downloaded artifacts will be added to the passed package registry to prevent downloading them again.
+
+    Parameters
+    ----------
+    purl: PackageURL
+        The PURL of the artifact.
+    local_artifact_dirs: list[str] | None
+        The list of directories that may contain the artifact file.
+    package_registries_info: list[PackageRegistryInfo]
+        The list of package registry information.
+
+    Returns
+    -------
+    str | None
+        The hash of the artifact, or None if no artifact can be found locally or remotely.
+    """
+    if local_artifact_dirs:
+        # Try to get the hash from a local file.
+        artifact_hash = get_local_artifact_hash(purl, local_artifact_dirs)
+
+        if artifact_hash:
+            return artifact_hash
+
+    # Download the artifact.
+    if purl.type == "maven":
+        maven_registry = next(
+            (
+                package_registry
+                for package_registry in PACKAGE_REGISTRIES
+                if isinstance(package_registry, MavenCentralRegistry)
+            ),
+            None,
+        )
+        if not maven_registry:
+            return None
+
+        return maven_registry.get_artifact_hash(purl)
+
+    if purl.type == "pypi":
+        pypi_registry = next(
+            (package_registry for package_registry in PACKAGE_REGISTRIES if isinstance(package_registry, PyPIRegistry)),
+            None,
+        )
+        if not pypi_registry:
+            logger.debug("Missing registry for PyPI")
+            return None
+
+        registry_info = next(
+            (
+                info
+                for info in package_registries_info
+                if info.package_registry == pypi_registry and info.build_tool_name in {"pip", "poetry"}
+            ),
+            None,
+        )
+        if not registry_info:
+            logger.debug("Missing registry information for PyPI")
+            return None
+
+        if not purl.version:
+            return None
+
+        pypi_asset = find_or_create_pypi_asset(purl.name, purl.version, registry_info)
+        if not pypi_asset:
+            return None
+
+        pypi_asset.has_repository = True
+        if not pypi_asset.download(""):
+            return None
+
+        artifact_hash = pypi_asset.get_sha256()
+        if artifact_hash:
+            return artifact_hash
+
+        source_url = pypi_asset.get_sourcecode_url("bdist_wheel")
+        if not source_url:
+            return None
+
+        return pypi_registry.get_artifact_hash(source_url)
+
+    logger.debug("Purl type '%s' not yet supported for artifact hashing.", purl.type)
+    return None

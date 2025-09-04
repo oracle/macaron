@@ -119,23 +119,3 @@ You can run the following command to make sure the proxy settings are updated:
 .. code-block:: shell
 
   sudo systemctl show --property=Environment docker
-
-'''''''''''''''''''''''''''''''
-Maven and Gradle proxy settings
-'''''''''''''''''''''''''''''''
-
-Maven and Gradle do not use the system proxy settings. If the target software component (repository)
-is using either of these build tools, make sure to set up the following environment variables:
-
-.. code-block:: shell
-
-  export MAVEN_OPTS="-Dhttp.proxyHost=wwww-example-proxy -Dhttp.proxyPort=80 -Dhttps.proxyHost=wwww-example-proxy -Dhttps.proxyPort=80"
-  export GRADLE_OPTS="-Dhttp.proxyHost=wwww-example-proxy -Dhttp.proxyPort=80 -Dhttps.proxyHost=wwww-example-proxy -Dhttps.proxyPort=80"
-
-In addition, Macaron uses the global settings files for Maven and Gradle if present on the host machine and copies them to
-the Docker container. You can set up your proxy settings in the following files:
-
-* ``~/.m2/settings.xml``
-* ``~/.gradle/gradle.properties``
-
-See the `Maven <https://maven.apache.org/settings.html#proxies>`_ and `Gradle <https://docs.gradle.org/current/userguide/build_environment.html#sec:accessing_the_web_via_a_proxy>`_ documentations for more information on setting up proxies.
