@@ -26,7 +26,12 @@ from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceC
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
-from macaron.util import download_file_with_size_limit, send_get_http_raw, stream_file_with_size_limit, send_head_http_raw 
+from macaron.util import (
+    download_file_with_size_limit,
+    send_get_http_raw,
+    send_head_http_raw,
+    stream_file_with_size_limit,
+)
 
 if TYPE_CHECKING:
     from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
