@@ -9,7 +9,11 @@ from packageurl import PackageURL
 from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, PyPIRegistry
-from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIPackageJsonAsset, find_or_create_pypi_asset
+from macaron.slsa_analyzer.package_registry.pypi_registry import (
+    PyPIInspectorAsset,
+    PyPIPackageJsonAsset,
+    find_or_create_pypi_asset,
+)
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -54,7 +58,9 @@ def find_repo(
         pypi_registry = next((registry for registry in PACKAGE_REGISTRIES if isinstance(registry, PyPIRegistry)), None)
         if not pypi_registry:
             return "", RepoFinderInfo.PYPI_NO_REGISTRY
-        pypi_asset = PyPIPackageJsonAsset(purl.name, purl.version, False, pypi_registry, {}, "", "", "")
+        pypi_asset = PyPIPackageJsonAsset(
+            purl.name, purl.version, False, pypi_registry, {}, "", "", "", PyPIInspectorAsset("", [], {})
+        )
 
     if not pypi_asset:
         # This should be unreachable, as the pypi_registry has already been confirmed to be of type PyPIRegistry.
