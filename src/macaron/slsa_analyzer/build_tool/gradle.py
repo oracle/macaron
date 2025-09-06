@@ -1,5 +1,4 @@
 # Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Gradle class which inherits BaseBuildTool.
@@ -69,94 +68,6 @@ class Gradle(BaseBuildTool):
         """
         gradle_config_files = self.build_configs + self.entry_conf
         return any(file_exists(repo_path, file) for file in gradle_config_files)
-
-    def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
-        """Prepare the necessary wrapper files for running the build.
-
-        This method will return False if there is any errors happened during operation.
-
-        Parameters
-        ----------
-        wrapper_path : str
-            The path where all necessary wrapper files are located.
-        build_dir : str
-            The path of the build dir. This is where all files are copied to.
-
-        Returns
-        -------
-        bool
-            True if succeed else False.
-        """
-        # The path of the needed wrapper files
-        wrapper_files = self.wrapper_files
-
-        if copy_file_bulk(wrapper_files, wrapper_path, build_dir):
-            # Ensure that gradlew is executable.
-            file_path = os.path.join(build_dir, "gradlew")
-            status = os.stat(file_path)
-            if oct(status.st_mode)[-3:] != "744":
-                logger.debug("%s does not have 744 permission. Changing it to 744.")
-                os.chmod(file_path, 0o744)
-            return True
-
-        return False
-
-    def get_dep_analyzer(self) -> CycloneDxGradle:
-        """Create a DependencyAnalyzer for the Gradle build tool.
-
-        Returns
-        -------
-        CycloneDxGradle
-            The CycloneDxGradle object.
-
-        Raises
-        ------
-        DependencyAnalyzerError
-        """
-        if "dependency.resolver" not in defaults or "dep_tool_gradle" not in defaults["dependency.resolver"]:
-            raise DependencyAnalyzerError("No default dependency analyzer is found.")
-        if not DependencyAnalyzer.tool_valid(defaults.get("dependency.resolver", "dep_tool_gradle")):
-            raise DependencyAnalyzerError(
-                f"Dependency analyzer {defaults.get('dependency.resolver', 'dep_tool_gradle')} is not valid.",
-            )
-
-        tool_name, tool_version = tuple(
-            defaults.get(
-                "dependency.resolver",
-                "dep_tool_gradle",
-                fallback="cyclonedx-gradle:1.7.3",
-            ).split(":")
-        )
-        if tool_name == DependencyTools.CYCLONEDX_GRADLE:
-            return CycloneDxGradle(
-                resources_path=global_config.resources_path,
-                file_name="bom.json",
-                tool_name=tool_name,
-                tool_version=tool_version,
-            )
-
-        raise DependencyAnalyzerError(f"Unsupported SBOM generator for Gradle: {tool_name}.")
-
-    def get_gradle_exec(self, repo_path: str) -> str:
-        """Get the Gradle executable for the repo.
-
-        Parameters
-        ----------
-        repo_path: str
-            The absolute path to a repository containing Gradle projects.
-
-        Returns
-        -------
-        str
-            The absolute path to the Gradle executable.
-        """
-        # We try to use the gradlew that comes with the repository first.
-        repo_gradlew = os.path.join(repo_path, "gradlew")
-        if os.path.isfile(repo_gradlew) and os.access(repo_gradlew, os.X_OK):
-            return repo_gradlew
-
-        # We use Macaron's built-in gradlew as a fallback option.
-        return os.path.join(os.path.join(macaron.MACARON_PATH, "resources"), "gradlew")
 
     def get_group_id(self, gradle_exec: str, project_path: str) -> str | None:
         """Get the group id of a Gradle project.

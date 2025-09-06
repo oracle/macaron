@@ -27,6 +27,7 @@ class OpenAiClient(AIClient):
         temperature: float = 0.2,
         response_format: dict | None = None,
         max_tokens: int = 4000,
+        seed: int = 42,
         timeout: int = 30,
     ) -> Any:
         """
@@ -65,6 +66,7 @@ class OpenAiClient(AIClient):
             "messages": [{"role": "system", "content": self.system_prompt}, {"role": "user", "content": user_prompt}],
             "response_format": response_format,
             "temperature": temperature,
+            "seed": seed,
             "max_tokens": max_tokens,
         }
 

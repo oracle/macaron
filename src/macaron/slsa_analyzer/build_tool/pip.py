@@ -64,11 +64,6 @@ class Pip(BaseBuildTool):
         DependencyAnalyzer
             The DependencyAnalyzer object.
         """
-        tool_name = "cyclonedx_py"
-        if not DependencyAnalyzer.tool_valid(f"{tool_name}:{cyclonedx_version}"):
-            raise DependencyAnalyzerError(
-                f"Dependency analyzer {defaults.get('dependency.resolver', 'dep_tool_gradle')} is not valid.",
-            )
         return CycloneDxPython(
             resources_path=global_config.resources_path,
             file_name="python_sbom.json",
