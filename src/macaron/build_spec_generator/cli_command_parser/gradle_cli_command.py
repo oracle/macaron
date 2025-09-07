@@ -139,17 +139,17 @@ class GradleCLIOptions:
     def parse_properties(props: list[str]) -> dict[str, str]:
         """Return a dictionary that maps between a property and its value.
 
-        Each property definition value in `props` can have either of these format:
+        Each property definition value in `props` can have either of these formats:
         - `property=value` (e.g. `property=value` from `-Dproperty=value`): this will
         be parsed into a dictionary mapping of `"property": "value"`.
-        Both the key and value of this mapping is of type string.
+        Both the key and value of this mapping are of type string.
         - `property` (e.g. `property` from `-Dproperty`): this will be parsed into a
         dictionary mapping of `"property": <empty_string>`.
 
         Parameters
         ----------
         props: list[str]
-            The list of properties definition provided in the cli command.
+            The list of property definitions provided in the cli command.
             This is the list parsed by argparse.
 
         Returns

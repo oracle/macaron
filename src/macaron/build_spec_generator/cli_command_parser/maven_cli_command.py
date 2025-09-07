@@ -60,7 +60,7 @@ class MavenCLIOptions:
         cls,
         parsed_arg: argparse.Namespace,
     ) -> "MavenCLIOptions":
-        """Initialize the instance from the the argparse.Namespace object.
+        """Initialize the instance from the argparse.Namespace object.
 
         Parameters
         ----------
@@ -142,8 +142,8 @@ class MavenCLIOptions:
         system_props = {}
         for ele in props:
             prop_name, _, prop_val = ele.partition("=")
-            # Allow the subsequent definition override the previous one.
-            # This follows the way Maven is resolving system property.
+            # Allow subsequent definitions to override previous ones.
+            # This follows the way Maven resolves system properties.
             # For example:
             #   mvn help:evaluate -Da=foo -Da=bar -Dexpression=a -q -DforceStdout
             # => result for `a` is bar

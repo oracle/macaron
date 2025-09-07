@@ -8,9 +8,9 @@ from macaron.build_spec_generator.cli_command_parser import dataclass
 
 @dataclass
 class UnparsedCLICommand:
-    """This class represents a CLICommand that we don't support parsing.
+    """This class represents a CLICommand that we support the parsing of.
 
-    Therefore, it only stores the original command as is.
+    It is stored in its original form.
     """
 
     original_cmds: list[str]

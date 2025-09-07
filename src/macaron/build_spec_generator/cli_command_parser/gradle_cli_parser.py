@@ -47,7 +47,7 @@ class GradleOptionalFlag(OptionDef[bool]):
     dest: str | None = field(default=None)
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[bool]:
-        """Return True if the provide patch value is compatible with the internal type of this option."""
+        """Return True if the provided patch value is compatible with the internal type of this option."""
         return isinstance(patch, bool)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
@@ -76,7 +76,7 @@ class GradleOptionalFlag(OptionDef[bool]):
 
 @dataclass
 class GradleOptionalNegateableFlag(OptionDef[bool]):
-    """This option represents an optional negateable flag in Gradle CLI command.
+    """This option represents an optional negatable flag in Gradle CLI command.
 
     For example: --build-cache/--no-build-cache
     """
@@ -119,12 +119,12 @@ class GradleOptionalNegateableFlag(OptionDef[bool]):
 
 @dataclass
 class GradleSingleValue(OptionDef[str]):
-    """This option represents an option that takes a value in Grale CLI command."""
+    """This option represents an option that takes a value in Gradle CLI command."""
 
     short_name: str | None
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[str]:
-        """Return True if the provide patch value is compatible with the internal type of this option."""
+        """Return True if the provided patch value is compatible with the internal type of this option."""
         return isinstance(patch, str)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
@@ -145,10 +145,10 @@ class GradleSingleValue(OptionDef[str]):
 
 @dataclass
 class GradlePropeties(OptionDef[dict[str, str | None]]):
-    """This option represents an option used to define properties values of a Gradle CLI command.
+    """This option represents an option used to define property values of a Gradle CLI command.
 
     This option can be defined multiple times and the values are appended into a list of string in argparse.
-    However, it's stored internally as a dictionary mapping between the system property name to its value.
+    However, it's stored internally as a dictionary mapping between the system property name and its value.
 
     In Gradle there are 2 options of this type:
         - -D/--system-prop
@@ -158,7 +158,7 @@ class GradlePropeties(OptionDef[dict[str, str | None]]):
     short_name: str
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[dict[str, str | None]]:
-        """Return True if the provide patch value is compatible with the internal type of this option."""
+        """Return True if the provided patch value is compatible with the internal type of this option."""
         return is_dict_of_str_to_str_or_none(patch)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
@@ -181,7 +181,7 @@ class GradleTask(OptionDef[list[str]]):
     """
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[list[str]]:
-        """Return True if the provide patch value is compatible with the internal type of this option."""
+        """Return True if the provided patch value is compatible with the internal type of this option."""
         return is_list_of_strs(patch)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
@@ -199,16 +199,17 @@ class GradleTask(OptionDef[list[str]]):
 
 @dataclass
 class GradleAppendedList(OptionDef[list[str]]):
-    """This option represents an option that can be specify multiple times and they all appended to a list.
+    """This option represents an option that can be specified multiple times.
 
-    For example, one can exclude multiple tasks with
-        gradle <task_to_run> --exclude-task taskA --exclude-task taskB
+    Each instance of the option will be appended to a list.
+    For example, one can exclude multiple tasks with:
+    gradle <task_to_run> --exclude-task taskA --exclude-task taskB
     """
 
     short_name: str
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[list[str]]:
-        """Return True if the provide patch value is compatible with the internal type of this option."""
+        """Return True if the provided patch value is compatible with the internal type of this option."""
         return is_list_of_strs(patch)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
@@ -223,7 +224,7 @@ class GradleAppendedList(OptionDef[list[str]]):
         return "list[str]"
 
 
-# TODO: some value option only allows you to provide certain values
+# TODO: some value options only allow you to provide certain values.
 # For example: --console allows "plain", "auto", "rich" or "verbose".
 # They are right now not enforced. We need to think whether we want to enforce them.
 GRADLE_OPTION_DEF: list[OptionDef] = [
@@ -368,7 +369,7 @@ GRADLE_OPTION_DEF: list[OptionDef] = [
         short_name="-x",
         long_name="--exclude-task",
     ),
-    # TODO: determine which of these options can be provided multiple times
+    # TODO: determine which of these options can be provided multiple times.
     GradleSingleValue(
         short_name="-b",
         long_name="--build-file",
@@ -583,7 +584,7 @@ class GradleCLICommandParser:
 
         `options_patch` is a mapping with:
 
-        - **Key**: the long name of an Gradle CLI option as string. For example: ``--continue``, ``--build-cache``.
+        - **Key**: the long name of a Gradle CLI option as string. For example: ``--continue``, ``--build-cache``.
           For patching tasks, use the key ``tasks``.
 
         - **Value**: The value to patch for an option referred to by the key. The type of this value
@@ -660,7 +661,7 @@ class GradleCLICommandParser:
         if not self.validate_patch(patch):
             raise PatchBuildCommandError("The patch is invalid.")
 
-        # Copy the Maven CLI Options for patching
+        # Copy the Maven CLI Options for patching.
         new_gradle_cli_options = deepcopy(gradle_cli_options)
 
         for option_long_name, patch_value in patch.items():

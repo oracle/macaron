@@ -33,7 +33,7 @@ class MavenOptionalFlag(OptionDef[bool]):
 
     For example: --debug/-X
 
-    A short form for the option is rquired.
+    A short form for the option is required.
     """
 
     short_name: str
@@ -43,7 +43,7 @@ class MavenOptionalFlag(OptionDef[bool]):
     dest: str | None = field(default=None)
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[bool]:
-        """Return True if the provide patch value is compatible with the internal type of this option."""
+        """Return True if the provided patch value is compatible with the internal type of this option."""
         return isinstance(patch, bool)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
@@ -77,7 +77,7 @@ class MavenSingleValue(OptionDef[str]):
     short_name: str
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[str]:
-        """Return True if the provide patch value is compatible with the internal type of this option."""
+        """Return True if the provided patch value is compatible with the internal type of this option."""
         return isinstance(patch, str)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
@@ -96,11 +96,11 @@ class MavenCommaDelimList(OptionDef[list[str]]):
     """This option represents an option that takes a comma delimited value in Maven CLI command.
 
     This option can be defined one time only and the value is stored as a string in argparse.
-    However, it's stored internally as list of strings obtained by spliting its original value in argparse
+    However, it's stored internally as list of strings obtained by splitting its original value in argparse
     using comma as the delimiter.
 
     For example: "-P profile1,profile2,profile3"
-    will be store as ["profile1", "profile2", "profile3"]
+    will be stored as ["profile1", "profile2", "profile3"]
 
     A short form for the option is required.
     """
@@ -108,7 +108,7 @@ class MavenCommaDelimList(OptionDef[list[str]]):
     short_name: str
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[list[str]]:
-        """Return True if the provide patch value is compatible with the internal type of this option."""
+        """Return True if the provided patch value is compatible with the internal type of this option."""
         return is_list_of_strs(patch)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
@@ -138,7 +138,7 @@ class MavenSystemPropeties(OptionDef[dict[str, str | None]]):
     short_name: str
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[dict[str, str | None]]:
-        """Return True if the provide patch value is compatible with the internal type of this option."""
+        """Return True if the provided patch value is compatible with the internal type of this option."""
         return is_dict_of_str_to_str_or_none(patch)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
@@ -161,7 +161,7 @@ class MavenGoalPhase(OptionDef[list[str]]):
     """
 
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[list[str]]:
-        """Return True if the provide patch value is compatible with the internal type of this option."""
+        """Return True if the provided patch value is compatible with the internal type of this option."""
         return is_list_of_strs(patch)
 
     def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
@@ -280,7 +280,7 @@ MAVEN_OPTION_DEF: list[OptionDef] = [
         long_name="goals",
     ),
     # TODO: we need to confirm whether one can provide
-    # -P or -pl multiple times and the values will be aggregate into a list of string
+    # -P or -pl multiple times and the values will be aggregate into a list of string.
     # The current implementation only consider one instance of -P or -pl.
     # Where to begin:
     # https://github.com/apache/maven/blob/maven-3.9.x/maven-embedder/src/main/java/org/apache/maven/cli/CLIManager.java
@@ -360,7 +360,7 @@ class MavenCLICommandParser:
             exit_on_error=False,
         )
 
-        # A mapping between the long name to its option definition.
+        # A mapping between the long name and its option definition.
         self.option_defs: dict[str, OptionDef] = {}
 
         for opt_def in MAVEN_OPTION_DEF:
@@ -452,7 +452,7 @@ class MavenCLICommandParser:
             #   mvn --help
             #   mvn --version
             # Note that we don't allow mvn -V or mvn --show-version as this command will
-            #   failed for mvn
+            #   fail for mvn.
             if not parsed_opts.help_ and not parsed_opts.version:
                 raise CommandLineParseError(f"No goal detected for {' '.join(options)}.")
 
@@ -491,10 +491,9 @@ class MavenCLICommandParser:
         `options_patch` is a mapping with:
 
         - **Key**: the long name of a Maven CLI option as a string. For example: ``--define``, ``--settings``.
-          For patching goals or plugin phases, use the key `goals` with value being a list of string.
+          For patching goals or plugin phases, use the key `goals` with the value being a list of strings.
 
-        - **Value**: The value to patch. The type of this value depends on the type of option you want to
-          patch.
+        - **Value**: The value to patch. The type of this value depends on the type of option to be patched.
 
         The types of patch values:
 
