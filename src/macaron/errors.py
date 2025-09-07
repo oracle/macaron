@@ -128,4 +128,4 @@ class QueryMacaronDatabaseError(Exception):
 
 
 class GenerateBuildSpecError(Exception):
-    """Happens when there is an unexpected error while generate the build spec file."""
+    """Happens when there is an unexpected error while generating the build spec file."""

@@ -1,7 +1,7 @@
 # Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module contains the logic to nomarlize a JDK version string to a major version number."""
+"""This module contains the logic to normalize a JDK version string as a major version number."""
 
 SUPPORTED_JAVA_VERSION = [
     "5",
@@ -30,20 +30,20 @@ SUPPORTED_JAVA_VERSION = [
 def normalize_jdk_version(jdk_version_str: str) -> str | None:
     """Return the major JDK version number.
 
-    We assume that the jdk version string is already valid (e.g not using a JDK
-    version that is not available in the real world.
+    We assume that the JDK version string is already valid (e.g Using a JDK
+    version that is available in the real world).
 
-    For 1.x versions, we returns the major version as ``x``.
+    For 1.x versions, we return the major version as ``x``.
 
     Parameters
     ----------
     jdk_version_str: str
-        The jdk version string.
+        The JDK version string.
 
     Returns
     -------
     str | None
-        The major jdk version number as string or None if there is an error.
+        The major JDK version number as a string, or None if there is an error.
 
     Examples
     --------

@@ -17,7 +17,7 @@ def is_list_of_strs(value: Any) -> TypeGuard[list[str]]:
 
 
 def is_dict_of_str_to_str_or_none(value: Any) -> TypeGuard[dict[str, str | None]]:
-    """Type guard for a dictionary with keys are string and values are strings or None."""
+    """Type guard for a dictionary where the keys are string and values are strings or None."""
     if not isinstance(value, dict):
         return False
 
@@ -37,7 +37,7 @@ def patch_mapping(
 ) -> dict[str, str]:
     """Patch a mapping.
 
-    A key with value in patch set to None will be removed from the original.
+    A key with a value in the patch set to None will be removed from the original.
 
     Parameters
     ----------
@@ -79,7 +79,7 @@ class OptionDef(Generic[P]):
 
     @abstractmethod
     def is_valid_patch_option(self, patch: Any) -> TypeGuard[P]:
-        """Return True if the provide patch value is compatible with the internal type of this option."""
+        """Return True if the provided patch value is compatible with the internal type of this option."""
         raise NotImplementedError()
 
     @abstractmethod
@@ -162,4 +162,4 @@ class CLICommandParser(Protocol[T, Y_contra]):
         cli_command: T,
         options_patch: Mapping[str, Y_contra | None],
     ) -> T:
-        """Return the a new CLICommand object with its option patched, while persisting the executable path."""
+        """Return a new CLICommand object with its option patched, while persisting the executable path."""

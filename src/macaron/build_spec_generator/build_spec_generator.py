@@ -20,7 +20,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class BuildSpecFormat(str, Enum):
-    """The build spec format that we supports."""
+    """The build spec formats that we support."""
 
     REPRODUCIBLE_CENTRAL = "rc-buildspec"
 
@@ -87,7 +87,7 @@ def gen_build_spec_for_purl(
     int
         The exit code for this function. ``os.EX_OK`` if everything is fine, ``os.EX_OSERR`` if the
         buildspec file cannot be created in the local filesystem, ``os.EX_DATAERR`` if there was an
-        error in generate the content for the buildspec file.
+        error generating the content for the buildspec file.
     """
     db_engine = create_engine(f"sqlite+pysqlite:///{database_path}", echo=False)
 
@@ -102,7 +102,7 @@ def gen_build_spec_for_purl(
                 )
 
         if not build_spec_content:
-            logger.error("Error while generate reproducible central build spec.")
+            logger.error("Error while generating reproducible central build spec.")
             return os.EX_DATAERR
 
         logger.debug("Build spec content: \n%s", build_spec_content)
@@ -133,7 +133,7 @@ def gen_build_spec_for_purl(
                 file.write(build_spec_content)
         except OSError as error:
             logger.error(
-                "Could not generate the Buildspec to %s. Error: %s",
+                "Could not create the build spec at %s. Error: %s",
                 os.path.relpath(build_spec_filepath, os.getcwd()),
                 error,
             )

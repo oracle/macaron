@@ -42,14 +42,14 @@ def lookup_multiple(
     select_statement: Select[tuple[T]],
     session: Session,
 ) -> Sequence[T]:
-    """Perform an SELECT statement and return all scalar results.
+    """Perform a SELECT statement and returns all scalar results.
 
     Parameters
     ----------
     select_statement : Select[tuple[T]]
         The SQLAlchemy SELECT statement to execute.
     session : Session
-        The SQLAlchemy session to the database we are querying from.
+        The SQLAlchemy session of the database we are querying.
 
     Returns
     -------
@@ -76,14 +76,14 @@ def lookup_one_or_none(
     select_statement: Select[tuple[T]],
     session: Session,
 ) -> T | None:
-    """Perform an SELECT statement and return at most one scalar result.
+    """Perform a SELECT statement and returns at most one scalar result.
 
     Parameters
     ----------
     select_statement : Select[tuple[T]]
         The SQLAlchemy SELECT statement to execute
     session : Session
-        The SQLAlchemy session to the database we are querying from.
+        The SQLAlchemy session of the database we are querying.
 
     Returns
     -------

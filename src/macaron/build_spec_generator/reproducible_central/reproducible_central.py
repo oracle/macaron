@@ -1,7 +1,7 @@
 # Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module contains the logic to generate a build spec in Reproducible Central format."""
+"""This module contains the logic to generate a build spec in the Reproducible Central format."""
 
 import logging
 import pprint
@@ -62,9 +62,9 @@ buildinfo={buildinfo}
 
 
 class _MacaronBuildToolName(str, Enum):
-    """Represent the name of a build tool that Macaron stores in the database.
+    """Represents the name of a build tool that Macaron stores in the database.
 
-    These doesn't cover all build tools that Macaron support, and ONLY include the ones that we
+    This doesn't cover all build tools that Macaron supports, and ONLY includes the ones that we
     support generating Reproducible Central Buildspec for.
     """
 
@@ -123,7 +123,7 @@ def remove_shell_quote(cmd: list[str]) -> list[str]:
 
 
 def get_rc_build_command(cmds_sequence: list[list[str]]) -> str:
-    """Return a single command as string to be used in RC buildspec from a sequence of commands.
+    """Return a single command as a string to be used in RC buildspec from a sequence of commands.
 
     The build commands in the sequence will be ``&&`` together, because RC's build spec
     is a shell script.
@@ -187,7 +187,7 @@ def _get_macaron_build_tool_name(build_tool_facts: Sequence[BuildToolFacts]) -> 
             except ValueError:
                 continue
 
-            # TODO: What happen if we report multiple build tools in the database.
+            # TODO: What happen if we report multiple build tools in the database?
             return macaron_build_tool_name
 
     return None
@@ -268,14 +268,14 @@ def get_lookup_build_command_info(
     Parameters
     ----------
     component_id: int
-        The id of the component we are finding build command for.
+        The id of the component we are finding the build command for.
     session: sqlalchemy.orm.Session
         The SQLAlchemy Session opened for the database to extract build information.
 
     Returns
     -------
     GenericBuildCommandInfo | None
-        The GenericBuildCommandInfo object for the highest confidence build command or None if there was
+        The GenericBuildCommandInfo object for the highest confidence build command; or None if there was
         an error, or no build command is found from the database.
     """
     try:
@@ -298,7 +298,7 @@ def get_lookup_build_command_info(
 def get_lookup_build_command_jdk(
     build_command_info: GenericBuildCommandInfo,
 ) -> str | None:
-    """Return the jdk version from a GenericBuildCommandInfo object."""
+    """Return the JDK version from a GenericBuildCommandInfo object."""
     if build_command_info.language_versions:
         # There isn't a concrete reason why we select the last element.
         # We just use this at this point because we haven't looked into

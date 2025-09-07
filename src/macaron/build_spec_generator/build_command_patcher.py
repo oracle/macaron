@@ -99,10 +99,10 @@ def patch_commands(
 
     For each command in this command sequence:
 
-    - If the command is not a build command or the build tool is not supported by us, it will be leave intact.
+    - If the command is not a build command, or it's a tool we do not support, it will be left intact.
 
-    - If the command is a build command supported by us, it will be patch if a patch value is provided to ``patches``.
-      If no patch value is provided for a build command, it will be leave intact.
+    - If the command is a build command we support, it will be patched, if a patch value is provided in ``patches``.
+      If no patch value is provided for a build command, it will be left intact.
 
     `patches` is a mapping with:
 
@@ -113,7 +113,7 @@ def patch_commands(
       For example: :class:`macaron.cli_command_parser.maven_cli_parser.MavenCLICommandParser.apply_patch`,
       :class:`macaron.cli_command_parser.gradle_cli_parser.GradleCLICommandParser.apply_patch`.
 
-    This means that all commands that matches a BuildTool will be apply by the same patch value.
+    This means that all commands that match a BuildTool will be applied by the same patch value.
 
     Returns
     -------

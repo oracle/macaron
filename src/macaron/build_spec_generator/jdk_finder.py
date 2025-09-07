@@ -1,7 +1,7 @@
 # Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module includes the functions for obtaining JDK version from a Java artifact."""
+"""This module includes the functions for obtaining the JDK version from a Java artifact."""
 
 import logging
 import os
@@ -151,9 +151,9 @@ def find_jdk_version_from_remote_maven_repo_standalone(
     asset_name: str,
     remote_maven_repo_url: str,
 ) -> str | None:
-    """Return the jdk version string from an artifact matching a given GAV from a remote maven layout repository.
+    """Return the JDK version string from an artifact matching a given GAV from a remote maven layout repository.
 
-    This function doesn't cache the downloaded artifact, and remove it after the function exits.
+    This function doesn't cache the downloaded artifact, and removes it after the function exits.
     We assume that the remote maven layout repository supports downloading a file through a HTTPS URL.
 
     Parameters
@@ -174,8 +174,8 @@ def find_jdk_version_from_remote_maven_repo_standalone(
     Returns
     -------
     str | None
-        The version string extract from the artifact (as is) or None
-        ff there is an error, or if we couldn't find any jdk version.
+        The version string extracted from the artifact (as is); or None
+        if there is an error, or if we couldn't find any jdk version.
     """
     maven_repository_path = construct_maven_repository_path(
         group_id=group_id,
@@ -217,9 +217,9 @@ def find_jdk_version_from_remote_maven_repo_cache(
     remote_maven_repo_url: str,
     local_cache_repo: str,
 ) -> str | None:
-    """Return the jdk version string from an artifact matching a given GAV from a remote maven layout repository.
+    """Return the JDK version string from an artifact matching a given GAV from a remote maven layout repository.
 
-    This function cache the downloaded artifact in a maven layout https://maven.apache.org/repository/layout.html
+    This function caches the downloaded artifact in a maven layout https://maven.apache.org/repository/layout.html
     under ``local_cache_repo``.
     We assume that the remote maven layout repository supports downloading a file through a HTTPS URL.
 
@@ -242,8 +242,8 @@ def find_jdk_version_from_remote_maven_repo_cache(
     Returns
     -------
     str | None
-        The version string extract from the artifact (as is) or None
-        ff there is an error, or if we couldn't find any jdk version.
+        The version string extracted from the artifact (as is); or None
+        if there is an error, or if we couldn't find any jdk version.
     """
     maven_repository_path = construct_maven_repository_path(
         group_id=group_id,
@@ -295,7 +295,7 @@ def find_jdk_version_from_central_maven_repo(
     version: str,
     cache_strat: CacheStrategy = CacheStrategy.MAVEN_LAYOUT,
 ) -> str | None:
-    """Return the jdk version string from an artifact matching a given GAV from Maven Central repository.
+    """Return the JDK version string from an artifact matching a given GAV from Maven Central repository.
 
     The artifacts will be downloaded from https://repo1.maven.org/maven2/ for JDK version extraction.
 
@@ -315,8 +315,8 @@ def find_jdk_version_from_central_maven_repo(
     Returns
     -------
     str | None
-        The version string extract from the artifact (as is) or None
-        ff there is an error, or if we couldn't find any jdk version.
+        The version string extract from the artifact (as is); or None
+        if there is an error, or if we couldn't find any jdk version.
     """
     central_repo_url = "https://repo1.maven.org/maven2/"
     local_cache_maven_repo = os.path.join(
