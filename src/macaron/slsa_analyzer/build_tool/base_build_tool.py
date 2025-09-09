@@ -79,7 +79,7 @@ def find_first_matching_file(directory: Path, pattern: str) -> Path | None:
 def file_exists(path: str, file_name: str, filters: list[str] | None = None) -> Path | None:
     """Search recursively for the first matching file in a directory, skipping directories containing filter keywords.
 
-    To disable filtering, pass an empty list to the `filters` parameter.
+    To disable filtering, pass an empty list or `None` to the `filters` parameter.
 
     Parameters
     ----------

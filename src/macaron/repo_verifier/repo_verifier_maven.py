@@ -11,7 +11,6 @@ from macaron.repo_verifier.repo_verifier_base import (
     RepositoryVerificationStatus,
     RepoVerifierToolSpecific,
 )
-from macaron.slsa_analyzer.build_tool import Maven
 from macaron.slsa_analyzer.build_tool.base_build_tool import file_exists
 from macaron.slsa_analyzer.package_registry.maven_central_registry import (
     RECOGNIZED_CODE_HOSTING_SERVICES,
@@ -23,8 +22,6 @@ logger = logging.getLogger(__name__)
 
 class RepoVerifierMaven(RepoVerifierToolSpecific):
     """A class to verify whether a repository with Maven build tool links back to the artifact."""
-
-    specific_tool = Maven()
 
     def verify_by_tool(self) -> RepositoryVerificationResult:
         """Verify whether the reported repository links back to the Maven artifact.
@@ -44,36 +41,14 @@ class RepoVerifierMaven(RepoVerifierToolSpecific):
         if recognized_services_verification_result.status == RepositoryVerificationStatus.PASSED:
             return recognized_services_verification_result
 
-        # TODO: check other pom files. Think about how to decide in case of contradicting evidence.
-        # Check if repo contains pom.xml.
-        pom_file = file_exists(self.reported_repo_fs, "pom.xml")
-        if not pom_file:
-            logger.debug("Could not find any pom.xml in the repository: %s", self.reported_repo_url)
-            return RepositoryVerificationResult(
-                status=RepositoryVerificationStatus.UNKNOWN, reason="no_pom", build_tool=self.build_tool
-            )
-
-        pom_content = pom_file.read_text(encoding="utf-8")
-        pom_root = parse_pom_string(pom_content)
-
-        if not pom_root:
-            logger.debug("Could not parse pom.xml: %s", pom_file.as_posix())
-            return RepositoryVerificationResult(
-                status=RepositoryVerificationStatus.UNKNOWN, reason="not_parsed_pom", build_tool=self.build_tool
-            )
-
-        # Find the group id in the pom (project/groupId).
-        # The closing curly brace represents the end of the XML namespace.
-        pom_group_id_elem = next((ch for ch in pom_root if ch.tag.endswith("}groupId")), None)
-        if pom_group_id_elem is None or not pom_group_id_elem.text:
-            logger.debug("Could not find groupId in pom.xml: %s", pom_file)
+        pom_group_id = self.extract_group_id_from_pom()
+        if pom_group_id is None:
+            logger.debug("Could not find groupId from the pom.xml in %s", self.reported_repo_url)
             return RepositoryVerificationResult(
                 status=RepositoryVerificationStatus.UNKNOWN, reason="no_group_id_in_pom", build_tool=self.build_tool
             )
-
-        pom_group_id = pom_group_id_elem.text.strip()
         if not same_organization(pom_group_id, self.namespace):
-            logger.debug("Group id in pom.xml does not match the provided group id: %s", pom_file)
+            logger.debug("Group id in pom.xml does not match the provided group id for: %s", self.reported_repo_url)
             return RepositoryVerificationResult(
                 status=RepositoryVerificationStatus.FAILED, reason="group_id_mismatch", build_tool=self.build_tool
             )
@@ -81,6 +56,37 @@ class RepoVerifierMaven(RepoVerifierToolSpecific):
         return RepositoryVerificationResult(
             status=RepositoryVerificationStatus.PASSED, reason="group_id_match", build_tool=self.build_tool
         )
+
+    def extract_group_id_from_pom(self) -> str | None:
+        """Extract the group id from the pom.xml file.
+
+        Returns
+        -------
+        str | None
+            The extracted group id if found, otherwise None.
+        """
+        # TODO: check other pom files. Think about how to decide in case of contradicting evidence.
+        # Check if repo contains pom.xml.
+        pom_file = file_exists(self.reported_repo_fs, "pom.xml", filters=self.build_tool.path_filters)
+        if not pom_file:
+            logger.debug("Could not find any pom.xml in the repository: %s", self.reported_repo_url)
+            return None
+
+        pom_content = pom_file.read_text(encoding="utf-8")
+        pom_root = parse_pom_string(pom_content)
+
+        if pom_root is None:
+            logger.debug("Could not parse pom.xml: %s", pom_file.as_posix())
+            return None
+
+        # Find the group id in the pom (project/groupId).
+        # The closing curly brace represents the end of the XML namespace.
+        pom_group_id_elem = next((ch for ch in pom_root if ch.tag.endswith("}groupId")), None)
+        if pom_group_id_elem is None or not pom_group_id_elem.text:
+            logger.debug("Could not find groupId in pom.xml: %s", pom_file)
+            return None
+
+        return pom_group_id_elem.text.strip()
 
     def verify_domains_from_recognized_code_hosting_services(self) -> RepositoryVerificationResult:
         """Verify repository link by comparing the maven domain name and the account on code hosting services.

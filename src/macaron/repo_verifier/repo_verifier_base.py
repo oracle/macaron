@@ -115,11 +115,6 @@ class RepoVerifierToolSpecific(RepoVerifierFromProvenance, abc.ABC):
     From-provenance verification is inherited from the parent class.
     """
 
-    @property
-    @abc.abstractmethod
-    def specific_tool(self) -> BaseBuildTool:
-        """Define the build tool used to build the package."""
-
     def __init__(
         self,
         namespace: str | None,
@@ -127,6 +122,7 @@ class RepoVerifierToolSpecific(RepoVerifierFromProvenance, abc.ABC):
         version: str,
         reported_repo_url: str,
         reported_repo_fs: str,
+        build_tool: BaseBuildTool,
         provenance_repo_url: str | None,
     ):
         """Instantiate the class.
@@ -143,12 +139,12 @@ class RepoVerifierToolSpecific(RepoVerifierFromProvenance, abc.ABC):
             The URL of the repository reported by the publisher.
         reported_repo_fs : str
             The file system path of the reported repository.
+        build_tool : BaseBuildTool
+            The build tool used to build the package.
         provenance_repo_url : str | None
             The URL of the repository from a provenance file, or None if it, or the provenance, is not present.
         """
-        super().__init__(
-            namespace, name, version, reported_repo_url, reported_repo_fs, provenance_repo_url, self.specific_tool
-        )
+        super().__init__(namespace, name, version, reported_repo_url, reported_repo_fs, provenance_repo_url, build_tool)
 
     def verify_repo(self) -> RepositoryVerificationResult:
         """Verify the repository as per the base class method."""
