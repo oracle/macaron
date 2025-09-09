@@ -31,6 +31,7 @@ class Pip(BaseBuildTool):
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
+        super().load_defaults()
         if "builder.pip" in defaults:
             for item in defaults["builder.pip"]:
                 if hasattr(self, item):
@@ -54,7 +55,7 @@ class Pip(BaseBuildTool):
         bool
             True if this build tool is detected, else False.
         """
-        return any(file_exists(repo_path, file) for file in self.build_configs)
+        return any(file_exists(repo_path, file, filters=self.path_filters) for file in self.build_configs)
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.

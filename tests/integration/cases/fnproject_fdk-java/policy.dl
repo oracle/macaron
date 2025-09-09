@@ -1,0 +1,21 @@
+/* Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("test_policy", component_id, "") :-
+    check_passed(component_id, "mcn_build_tool_1"),
+    build_tool_exists(component_id, "maven"),
+    !build_tool_exists(component_id, "gradle").
+
+.decl build_tool_exists(component_id: number, name: symbol)
+build_tool_exists(component_id, name) :-
+    build_tool_check(
+        check_id,
+        name,
+        _
+    ),
+    check_facts(check_id, _, component_id,_,_).
+
+apply_policy_to("test_policy", component_id) :-
+    is_repo_url(component_id, "https://github.com/fnproject/fdk-java").

@@ -34,6 +34,7 @@ class Poetry(BaseBuildTool):
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
+        super().load_defaults()
         if "builder.poetry" in defaults:
             for item in defaults["builder.poetry"]:
                 if hasattr(self, item):
@@ -59,7 +60,7 @@ class Poetry(BaseBuildTool):
         """
         package_lock_exists = ""
         for file in self.package_lock:
-            if file_exists(repo_path, file):
+            if file_exists(repo_path, file, filters=self.path_filters):
                 package_lock_exists = file
                 break
 

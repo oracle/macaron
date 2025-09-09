@@ -82,6 +82,7 @@ def verify_repo(
             version=version,
             reported_repo_url=reported_repo_url,
             reported_repo_fs=reported_repo_fs,
+            build_tool=build_tool,
             provenance_repo_url=provenance_repo_url,
         )
 
