@@ -90,6 +90,10 @@ class MockGit(Git):
         def __str__(self) -> str:
             return self.commit
 
+        def name(self) -> str:
+            """Return the name of the tag."""
+            return "tag_name"
+
     repo = SimpleNamespace(tags=[MockTag()])
 
 

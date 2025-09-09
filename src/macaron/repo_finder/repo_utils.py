@@ -6,14 +6,16 @@ import json
 import logging
 import os
 import string
+import subprocess  # nosec B404
 from urllib.parse import urlparse
 
 from packageurl import PackageURL
+from pydriller import Git
 
 from macaron.config.global_config import global_config
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
-from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR
+from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR, decode_git_tags, parse_git_tags
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -169,3 +171,63 @@ def check_repo_urls_are_equivalent(repo_1: str, repo_2: str) -> bool:
         return False
 
     return True
+
+
+def get_repo_tags(git_obj: Git) -> dict[str, str]:
+    """Retrieve the tags of the passed repo.
+
+    This will be attempted using the related Pydriller Git function, but will fall back to a Git subprocess for
+    repositories that contain non utf-8 tags.
+
+    Parameters
+    ----------
+    git_obj: Git
+        The Git object of the repository.
+
+    Returns
+    -------
+    dict[str, str]
+        A dictionary of tags mapped to commits.
+    """
+    tags = None
+    try:
+        tags = git_obj.repo.tags
+    except UnicodeDecodeError as error:
+        logger.debug("Failed to retrieve tags in utf-8 encoding: %s", error)
+
+    if tags:
+        tag_dict: dict[str, str] = {}
+        for tag in tags:
+            try:
+                tag_commit = str(tag.commit)
+            except ValueError as error:
+                logger.debug("Commit of tag is a blob or tree: %s", error)
+                continue
+            tag_dict[tag.name] = tag_commit
+        return tag_dict
+
+    # Retrieve tags using a Git subprocess.
+    repository_path = git_obj.repo.working_tree_dir
+    if not os.path.isdir(repository_path):
+        logger.debug("")
+        return {}
+    try:
+        result = subprocess.run(  # nosec B603
+            args=["git", "show-ref", "--tags", "-d"],
+            capture_output=True,
+            cwd=repository_path,
+            check=False,
+        )
+    except (subprocess.CalledProcessError, OSError) as error:
+        logger.debug("Failed to retrieve repository tags: %s", error)
+        return {}
+
+    if result.returncode != 0:
+        logger.debug("Failed to retrieve repository tags.")
+        return {}
+
+    decoded_data = decode_git_tags(result.stdout)
+    if not decoded_data:
+        return {}
+
+    return parse_git_tags(decoded_data)

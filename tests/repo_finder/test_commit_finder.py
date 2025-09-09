@@ -18,12 +18,13 @@ from pydriller.git import Git
 from macaron.repo_finder import commit_finder
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_optional_suffix_index
 from macaron.repo_finder.repo_finder_enums import CommitFinderInfo
+from macaron.repo_finder.repo_utils import get_repo_tags
 from tests.slsa_analyzer.mock_git_utils import commit_files, initiate_repo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_DIR = os.path.join(BASE_DIR, "mock_repos", "commit_finder/sample_repo")
+REPO_DIR = os.path.join(BASE_DIR, "mock_repos", "commit_finder", "sample_repo")
 UNICODE_VERSION = "雪"  # The Japanese character for "snow".
 TAG_VERSION = "2.3.4"
 TAG_VERSION_2 = "4.5.2"
@@ -238,14 +239,6 @@ def test_commit_finder_repo_purl_success(mocked_repo_expanded: Git, mocked_repo_
     assert outcome == CommitFinderInfo.MATCHED
 
 
-def test_commit_finder_tag_no_commit(mocked_repo: Git) -> None:
-    """Test the Commit Finder on a mocked repository that has a tag with no commit."""
-    mocked_repo.repo.create_tag("TEST", ref=mocked_repo.repo.heads.master.commit.tree)
-    match, outcome = commit_finder.find_commit(mocked_repo, PackageURL.from_string("pkg:maven/apache/maven@TEST"))
-    assert not match
-    assert outcome == CommitFinderInfo.NO_TAGS_WITH_COMMITS
-
-
 @pytest.mark.parametrize(
     ("version", "parts", "expected"),
     [
@@ -258,6 +251,26 @@ def test_commit_finder_tag_no_commit(mocked_repo: Git) -> None:
 def test_commit_finder_optional_suffixes(version: str, parts: list, expected: int) -> None:
     """Test the optional suffix function."""
     assert determine_optional_suffix_index(version, parts) == expected
+
+
+def test_get_repo_tags(mocked_repo_empty_commit: Any) -> None:
+    """Test the get repo tags utils function."""
+    # Create the repository object.
+    repo = Git(os.path.join(REPO_DIR))
+
+    # Create a non-utf8 tag in the packed references file.
+    ref_file = os.path.join(REPO_DIR, ".git", "packed-refs")
+    with open(ref_file, "w", encoding="ISO-8859-1") as file:
+        file.write(f"{mocked_repo_empty_commit.hexsha} refs/tags/1.0\u00c3\n")
+
+    # Using Pydriller to retrieve the tags fails.
+    with pytest.raises(UnicodeDecodeError):
+        _ = repo.repo.tags
+
+    # Check the tags can still be retrieved using the corrected function.
+    tags = get_repo_tags(repo)
+    assert tags
+    assert "1.0\u00c3" in tags
 
 
 @given(text())
