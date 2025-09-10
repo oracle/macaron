@@ -16,8 +16,6 @@ from rich.rule import Rule
 from rich.status import Status
 from rich.table import Table
 
-from macaron.slsa_analyzer.checks.check_result import CheckResultType
-
 
 class Check:
     """Class to represent a check with its status and target."""
@@ -72,6 +70,15 @@ class RichConsoleHandler(RichHandler):
             "Policy Report": Status("[green]Generating[/]"),
         }
         self.verification_summary_attestation: str | None = None
+        self.find_source_table = Table(show_header=False, box=None)
+        self.find_source_content: dict[str, str | Status] = {
+            "Repository PURL:": Status("[green]Processing[/]"),
+            "Commit Hash:": Status("[green]Processing[/]"),
+            "JSON Report:": "Not Generated",
+        }
+        for key, value in self.find_source_content.items():
+            self.find_source_table.add_row(key, value)
+        self.dump_defaults: str | Status = Status("[green]Generating[/]")
         self.verbose = verbose
         self.verbose_panel = Panel(
             "\n".join(self.logs),
@@ -137,7 +144,7 @@ class RichConsoleHandler(RichHandler):
         failed_checks_table.add_column("Check ID", justify="left")
         failed_checks_table.add_column("Description", justify="left")
 
-        failed_checks = checks_summary[CheckResultType.FAILED]
+        failed_checks = checks_summary["FAILED"]
         for check in failed_checks:
             failed_checks_table.add_row(
                 "[bold red]FAILED[/]",
@@ -153,15 +160,15 @@ class RichConsoleHandler(RichHandler):
         summary_table.add_row("Total Checks", str(total_checks), style="white")
 
         for check_result_type, checks in checks_summary.items():
-            if check_result_type == CheckResultType.PASSED:
+            if check_result_type == "PASSED":
                 summary_table.add_row("PASSED", str(len(checks)), style="green")
-            if check_result_type == CheckResultType.FAILED:
+            if check_result_type == "FAILED":
                 summary_table.add_row("FAILED", str(len(checks)), style="red")
-            if check_result_type == CheckResultType.SKIPPED:
+            if check_result_type == "SKIPPED":
                 summary_table.add_row("SKIPPED", str(len(checks)), style="yellow")
-            if check_result_type == CheckResultType.DISABLED:
+            if check_result_type == "DISABLED":
                 summary_table.add_row("DISABLED", str(len(checks)), style="bright_blue")
-            if check_result_type == CheckResultType.UNKNOWN:
+            if check_result_type == "UNKNOWN":
                 summary_table.add_row("UNKNOWN", str(len(checks)), style="white")
 
         self.summary_table = summary_table
@@ -236,6 +243,20 @@ class RichConsoleHandler(RichHandler):
 
         self.generate_policy_summary_table()
 
+    def update_find_source_table(self, key: str, value: str | Status) -> None:
+        """Add or update a key-value pair in the find source table."""
+        self.find_source_content[key] = value
+        find_source_table = Table(show_header=False, box=None)
+        find_source_table.add_column("Details", justify="left")
+        find_source_table.add_column("Value", justify="left")
+        for field, content in self.find_source_content.items():
+            find_source_table.add_row(field, content)
+        self.find_source_table = find_source_table
+
+    def update_dump_defaults(self, value: str | Status) -> None:
+        """Update the dump defaults status."""
+        self.dump_defaults = value
+
     def make_layout(self) -> Group:
         """Create the overall layout for the console output."""
         layout: list[RenderableType] = []
@@ -303,6 +324,15 @@ class RichConsoleHandler(RichHandler):
                     )
 
                     layout = layout + [vsa_table]
+        elif self.command == "find-source":
+            if self.find_source_table.row_count > 0:
+                layout = layout + [self.find_source_table]
+        elif self.command == "dump-defaults":
+            dump_defaults_table = Table(show_header=False, box=None)
+            dump_defaults_table.add_column("Detail", justify="left")
+            dump_defaults_table.add_column("Value", justify="left")
+            dump_defaults_table.add_row("Dump Defaults", self.dump_defaults)
+            layout = layout + [dump_defaults_table]
 
         if self.verbose:
             layout = layout + ["", self.verbose_panel]
