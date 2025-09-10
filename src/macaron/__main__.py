@@ -217,7 +217,7 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
         rich_handler = access_handler.get_handler()
         if vsa is not None:
             vsa_filepath = os.path.join(global_config.output_path, "vsa.intoto.jsonl")
-            rich_handler.update_vsa(vsa_filepath)
+            rich_handler.update_vsa(os.path.relpath(vsa_filepath, os.getcwd()))
             logger.info(
                 "Generating the Verification Summary Attestation (VSA) to %s.",
                 os.path.relpath(vsa_filepath, os.getcwd()),
@@ -416,7 +416,6 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     main_parser.add_argument(
-        "-dro",
         "--disable-rich-output",
         default=False,
         help="Disable Rich UI output",
