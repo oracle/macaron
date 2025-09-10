@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides functions to manage default values."""
@@ -8,6 +8,8 @@ import logging
 import os
 import pathlib
 import shutil
+
+from macaron.console import access_handler
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -162,14 +164,17 @@ def create_defaults(output_path: str, cwd_path: str) -> bool:
     # Since we have only one defaults.ini file and ConfigParser.write does not
     # preserve the comments, copy the file directly.
     dest_path = os.path.join(output_path, "defaults.ini")
+    rich_handler = access_handler.get_handler()
     try:
         shutil.copy2(src_path, dest_path)
         logger.info(
             "Dumped the default values in %s.",
             os.path.relpath(os.path.join(output_path, "defaults.ini"), cwd_path),
         )
+        rich_handler.update_dump_defaults(os.path.relpath(dest_path, cwd_path))
         return True
     # We catch OSError to support errors on different platforms.
     except OSError as error:
         logger.error("Failed to create %s: %s.", os.path.relpath(dest_path, cwd_path), error)
+        rich_handler.update_dump_defaults("[bold red]Failed[/]")
         return False
