@@ -339,6 +339,15 @@ def gen_reproducible_central_build_spec(
         for this PURL, 3. Failed to patch the build commands using the provided ``patches``, 4. The database from
         ``session`` doesn't contain enough information.
     """
+    if purl.type != "maven":
+        logger.error(
+            "Reproducible Central build specification only supports PURLs of type 'maven'. "
+            "Received PURL type: '%s' (%s). Please provide a valid Maven package URL.",
+            purl.type,
+            purl.to_string(),
+        )
+        return None
+
     logger.debug(
         "Generating build spec for %s with command patches:\n%s",
         purl,

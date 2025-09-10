@@ -67,10 +67,10 @@ P = TypeVar("P")
 
 @dataclass
 class OptionDef(Generic[P]):
-    """This class represent a definition of a CLI option for argparse.ArgumentParser.
+    """This class represents a definition of a CLI option for argparse.ArgumentParser.
 
     This class also contains the information for validating a patch value.
-    The generic type T is the patch expected type (if it's not None).
+    The generic type P is the patch expected type (if it's not None).
     """
 
     # e.g. `--long-option-name`
@@ -83,7 +83,7 @@ class OptionDef(Generic[P]):
         raise NotImplementedError()
 
     @abstractmethod
-    def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
+    def add_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
         raise NotImplementedError()
 

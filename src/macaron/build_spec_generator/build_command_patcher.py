@@ -59,7 +59,7 @@ def _patch_commands(
             cli_command = effective_cli_parser.parse(cmds)
         except CommandLineParseError as error:
             logger.error(
-                "Failed to parse the cli command %s. Error %s.",
+                "Failed to patch the cli command %s. Error %s.",
                 " ".join(cmds),
                 error,
             )
@@ -77,7 +77,7 @@ def _patch_commands(
             )
         except PatchBuildCommandError as error:
             logger.error(
-                "Failed to patch the mvn command %s. Error %s.",
+                "Failed to patch the build command %s. Error %s.",
                 " ".join(cmds),
                 error,
             )

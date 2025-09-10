@@ -46,7 +46,7 @@ class MavenOptionalFlag(OptionDef[bool]):
         """Return True if the provided patch value is compatible with the internal type of this option."""
         return isinstance(patch, bool)
 
-    def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
+    def add_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
         if self.dest:
             arg_parse.add_argument(
@@ -80,7 +80,7 @@ class MavenSingleValue(OptionDef[str]):
         """Return True if the provided patch value is compatible with the internal type of this option."""
         return isinstance(patch, str)
 
-    def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
+    def add_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
         arg_parse.add_argument(
             *(self.short_name, self.long_name),
@@ -111,7 +111,7 @@ class MavenCommaDelimList(OptionDef[list[str]]):
         """Return True if the provided patch value is compatible with the internal type of this option."""
         return is_list_of_strs(patch)
 
-    def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
+    def add_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
         arg_parse.add_argument(
             *(self.short_name, self.long_name),
@@ -141,7 +141,7 @@ class MavenSystemPropeties(OptionDef[dict[str, str | None]]):
         """Return True if the provided patch value is compatible with the internal type of this option."""
         return is_dict_of_str_to_str_or_none(patch)
 
-    def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
+    def add_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
         arg_parse.add_argument(
             *(self.short_name, self.long_name),
@@ -164,7 +164,7 @@ class MavenGoalPhase(OptionDef[list[str]]):
         """Return True if the provided patch value is compatible with the internal type of this option."""
         return is_list_of_strs(patch)
 
-    def add_itself_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
+    def add_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
         # Doesn't require to allow cases like "mvn --help".
         arg_parse.add_argument(
@@ -364,7 +364,7 @@ class MavenCLICommandParser:
         self.option_defs: dict[str, OptionDef] = {}
 
         for opt_def in MAVEN_OPTION_DEF:
-            opt_def.add_itself_to_arg_parser(self.arg_parser)
+            opt_def.add_to_arg_parser(self.arg_parser)
 
             self.option_defs[opt_def.long_name] = opt_def
 
