@@ -1,3 +1,26 @@
+## v0.17.0 (2025-08-27)
+
+### Feat
+
+- **heuristics**: add SimilarProjectAnalyzer to detect structural similarity across packages from same maintainer (#1089)
+- **heuristics**: add Fake Email analyzer to validate maintainer email domain (#1106)
+- add GitHub attestation discovery (#1020)
+- **security**: add package name typosquatting detection (#1059)
+- add pypi attestation discovery (#1067)
+
+### Fix
+
+- catch defusedxml security errors (#1138)
+- accept from-provenance repos as scm authentic (#1131)
+- **pypi**: update get_maintainers_of_package to avoid request blocking (#1097)
+- include inspector links with information on if they are reachable. (#1102)
+
+### Refactor
+
+- remove the automatic sbom generation feature for Java (#1145)
+- run source code analysis by default (#1107)
+- improve experimental source code pattern analysis of pypi packages (#965)
+
 ## v0.16.0 (2025-04-24)
 
 ### Feat
