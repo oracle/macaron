@@ -324,10 +324,15 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
 
             return find_source(str(purl), latest_repo, False)
 
+    rich_handler = access_handler.get_handler()
     if not input_repo:
         logger.info("Found repository for PURL: %s", found_repo)
+        rich_handler.update_find_source_table("Repository PURL:", found_repo)
+    else:
+        rich_handler.update_find_source_table("Repository PURL:", input_repo)
 
     logger.info("Found commit for PURL: %s", digest)
+    rich_handler.update_find_source_table("Commit Hash:", digest)
 
     if not generate_report(
         purl_string,
