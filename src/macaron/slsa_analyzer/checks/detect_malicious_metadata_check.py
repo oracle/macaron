@@ -421,12 +421,16 @@ class DetectMaliciousMetadataCheck(BaseCheck):
 
     % Package released with a name similar to a popular package.
     {Confidence.HIGH.value}::trigger(malware_high_confidence_4) :-
-        quickUndetailed, forceSetup, failed({Heuristics.TYPOSQUATTING_PRESENCE.value}).
+        quickUndetailed,
+        forceSetup,
+        failed({Heuristics.TYPOSQUATTING_PRESENCE.value}),
+        failed({Heuristics.STUB_NAME.value}).
 
     % Package released with dependency confusion .
     {Confidence.HIGH.value}::trigger(malware_high_confidence_5) :-
         forceSetup,
-        passed({Heuristics.MINIMAL_CONTENT.value}),
+        failed({Heuristics.MINIMAL_CONTENT.value}),
+        failed({Heuristics.STUB_NAME.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}),
         failed({Heuristics.UNSECURE_DESCRIPTION.value}).
 
