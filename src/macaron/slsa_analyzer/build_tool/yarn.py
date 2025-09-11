@@ -26,6 +26,7 @@ class Yarn(BaseBuildTool):
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
+        super().load_defaults()
         if "builder.yarn" in defaults:
             for item in defaults["builder.yarn"]:
                 if hasattr(self, item):
@@ -54,7 +55,7 @@ class Yarn(BaseBuildTool):
         #       cases like .yarnrc existing but not package-lock.json and whether
         #       they would still count as "detected"
         yarn_config_files = self.build_configs + self.package_lock + self.entry_conf
-        return any(file_exists(repo_path, file) for file in yarn_config_files)
+        return any(file_exists(repo_path, file, filters=self.path_filters) for file in yarn_config_files)
 
     def is_deploy_command(
         self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None, provenance_workflow: str | None = None

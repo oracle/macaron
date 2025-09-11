@@ -26,6 +26,7 @@ class Maven(BaseBuildTool):
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
+        super().load_defaults()
         if "builder.maven" in defaults:
             for item in defaults["builder.maven"]:
                 if hasattr(self, item):
@@ -63,4 +64,4 @@ class Maven(BaseBuildTool):
             )
             return False
         maven_config_files = self.build_configs
-        return any(file_exists(repo_path, file) for file in maven_config_files)
+        return any(file_exists(repo_path, file, filters=self.path_filters) for file in maven_config_files)

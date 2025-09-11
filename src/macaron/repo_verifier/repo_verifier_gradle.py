@@ -10,10 +10,9 @@ from macaron.repo_verifier.repo_verifier_base import (
     RepositoryVerificationResult,
     RepositoryVerificationStatus,
     RepoVerifierToolSpecific,
-    find_file_in_repo,
 )
 from macaron.repo_verifier.repo_verifier_maven import RepoVerifierMaven
-from macaron.slsa_analyzer.build_tool import Gradle
+from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 from macaron.slsa_analyzer.package_registry.maven_central_registry import same_organization
 
 logger = logging.getLogger(__name__)
@@ -22,8 +21,6 @@ logger = logging.getLogger(__name__)
 class RepoVerifierGradle(RepoVerifierToolSpecific):
     """A class to verify whether a repository with Gradle build tool links back to the artifact."""
 
-    specific_tool = Gradle()
-
     def __init__(
         self,
         namespace: str,
@@ -31,6 +28,7 @@ class RepoVerifierGradle(RepoVerifierToolSpecific):
         version: str,
         reported_repo_url: str,
         reported_repo_fs: str,
+        build_tool: BaseBuildTool,
         provenance_repo_url: str | None,
     ):
         """Initialize a RepoVerifierGradle instance.
@@ -47,10 +45,12 @@ class RepoVerifierGradle(RepoVerifierToolSpecific):
             The URL of the repository reported by the publisher.
         reported_repo_fs : str
             The file system path of the reported repository.
+        build_tool : BaseBuildTool
+            The build tool used to build the package.
         provenance_repo_url : str | None
             The URL of the repository from a provenance file, or None if it, or the provenance, is not present.
         """
-        super().__init__(namespace, name, version, reported_repo_url, reported_repo_fs, provenance_repo_url)
+        super().__init__(namespace, name, version, reported_repo_url, reported_repo_fs, build_tool, provenance_repo_url)
 
         self.maven_verifier = RepoVerifierMaven(
             namespace=namespace,
@@ -58,6 +58,7 @@ class RepoVerifierGradle(RepoVerifierToolSpecific):
             version=version,
             reported_repo_url=reported_repo_url,
             reported_repo_fs=reported_repo_fs,
+            build_tool=build_tool,
             provenance_repo_url=provenance_repo_url,
         )
 
@@ -81,11 +82,11 @@ class RepoVerifierGradle(RepoVerifierToolSpecific):
         if recognized_services_verification_result.status == RepositoryVerificationStatus.PASSED:
             return recognized_services_verification_result
 
-        gradle_group_id = self._extract_group_id_from_properties()
+        gradle_group_id = self.extract_group_id_from_properties()
         if not gradle_group_id:
-            gradle_group_id = self._extract_group_id_from_build_groovy()
+            gradle_group_id = self.extract_group_id_from_build_groovy()
         if not gradle_group_id:
-            gradle_group_id = self._extract_group_id_from_build_kotlin()
+            gradle_group_id = self.extract_group_id_from_build_kotlin()
         if not gradle_group_id:
             logger.debug("Could not find group from gradle manifests for %s", self.reported_repo_url)
             return RepositoryVerificationResult(
@@ -149,17 +150,37 @@ class RepoVerifierGradle(RepoVerifierToolSpecific):
 
         return None
 
-    def _extract_group_id_from_properties(self) -> str | None:
-        """Extract the group id from the gradle.properties file."""
-        gradle_properties = find_file_in_repo(Path(self.reported_repo_fs), "gradle.properties")
+    def extract_group_id_from_properties(self) -> str | None:
+        """Extract the group id from the gradle.properties file.
+
+        Returns
+        -------
+        str | None
+            The extracted group id if found, otherwise None.
+        """
+        gradle_properties = file_exists(
+            self.reported_repo_fs, "gradle.properties", filters=self.build_tool.path_filters
+        )
         return self._extract_group_id_from_gradle_manifest(gradle_properties)
 
-    def _extract_group_id_from_build_groovy(self) -> str | None:
-        """Extract the group id from the build.gradle file."""
-        build_gradle = find_file_in_repo(Path(self.reported_repo_fs), "build.gradle")
-        return self._extract_group_id_from_gradle_manifest(build_gradle, quote_chars={"'", '"'}, delimiter=" ")
+    def extract_group_id_from_build_groovy(self) -> str | None:
+        """Extract the group id from the build.gradle file.
 
-    def _extract_group_id_from_build_kotlin(self) -> str | None:
-        """Extract the group id from the build.gradle.kts file."""
-        build_gradle = find_file_in_repo(Path(self.reported_repo_fs), "build.gradle.kts")
+        Returns
+        -------
+        str | None
+            The extracted group id if found, otherwise None.
+        """
+        build_gradle = file_exists(self.reported_repo_fs, "build.gradle", filters=self.build_tool.path_filters)
+        return self._extract_group_id_from_gradle_manifest(build_gradle, quote_chars={"'", '"'}, delimiter="=")
+
+    def extract_group_id_from_build_kotlin(self) -> str | None:
+        """Extract the group id from the build.gradle.kts file.
+
+        Returns
+        -------
+        str | None
+            The extracted group id if found, otherwise None.
+        """
+        build_gradle = file_exists(self.reported_repo_fs, "build.gradle.kts", filters=self.build_tool.path_filters)
         return self._extract_group_id_from_gradle_manifest(build_gradle, quote_chars={'"'}, delimiter="=")
