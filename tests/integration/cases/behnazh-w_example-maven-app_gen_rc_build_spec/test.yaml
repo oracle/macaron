@@ -1,0 +1,33 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Test the build spec generation on a Maven project with JDK version obtained
+  from the github action worfklow.
+
+tags:
+- macaron-python-package
+- macaron-docker-image
+- macaron-gen-build-spec
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:github/behnazh-w/example-maven-app@1.0
+- name: Run Reproducible-central build spec generation
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:github/behnazh-w/example-maven-app@1.0
+    - --output-format
+    - rc-buildspec
+- name: Compare Buildspec.
+  kind: compare
+  options:
+    kind: rc_build_spec
+    result: ./output/buildspec/github/behnazh-w/example-maven-app/macaron.buildspec
+    expected: expected_macaron.buildspec
