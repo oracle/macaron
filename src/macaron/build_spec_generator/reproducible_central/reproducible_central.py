@@ -83,12 +83,12 @@ class ReproducibleCentralBuildTool(str, Enum):
     SBT = "sbt"
 
 
-def format_build_command_infos(build_command_infos: list[GenericBuildCommandInfo]) -> str:
+def format_build_command_info(build_command_info: list[GenericBuildCommandInfo]) -> str:
     """Return the prettified str format for a list of `GenericBuildCommandInfo` instances.
 
     Parameters
     ----------
-    build_command_infos: GenericBuildCommandInfo
+    build_command_info: GenericBuildCommandInfo
         A list of ``GenericBuildCommandInfo`` instances.
 
     Returns
@@ -96,7 +96,7 @@ def format_build_command_infos(build_command_infos: list[GenericBuildCommandInfo
     str
         The prettified output.
     """
-    pretty_formatted_ouput = [pprint.pformat(build_command_info) for build_command_info in build_command_infos]
+    pretty_formatted_ouput = [pprint.pformat(build_command_info) for build_command_info in build_command_info]
     return "\n".join(pretty_formatted_ouput)
 
 
@@ -279,7 +279,7 @@ def get_lookup_build_command_info(
         an error, or no build command is found from the database.
     """
     try:
-        lookup_build_command_infos = lookup_any_build_command(component_id, session)
+        lookup_build_command_info = lookup_any_build_command(component_id, session)
     except QueryMacaronDatabaseError as lookup_build_command_error:
         logger.error(
             "Unexpected result from querying all build command information for component id %s. Error: %s",
@@ -289,10 +289,10 @@ def get_lookup_build_command_info(
         return None
     logger.debug(
         "Build command information discovered\n%s",
-        format_build_command_infos(lookup_build_command_infos),
+        format_build_command_info(lookup_build_command_info),
     )
 
-    return lookup_build_command_infos[0] if lookup_build_command_infos else None
+    return lookup_build_command_info[0] if lookup_build_command_info else None
 
 
 def get_lookup_build_command_jdk(
@@ -339,15 +339,6 @@ def gen_reproducible_central_build_spec(
         for this PURL, 3. Failed to patch the build commands using the provided ``patches``, 4. The database from
         ``session`` doesn't contain enough information.
     """
-    if purl.type != "maven":
-        logger.error(
-            "Reproducible Central build specification only supports PURLs of type 'maven'. "
-            "Received PURL type: '%s' (%s). Please provide a valid Maven package URL.",
-            purl.type,
-            purl.to_string(),
-        )
-        return None
-
     logger.debug(
         "Generating build spec for %s with command patches:\n%s",
         purl,
@@ -424,17 +415,14 @@ def gen_reproducible_central_build_spec(
         "Attempted to find build command from the database. Result: %s",
         lookup_build_command_info or "Cannot find any.",
     )
-    lookup_build_command_jdk = (
-        get_lookup_build_command_jdk(
-            lookup_build_command_info,
-        )
-        if lookup_build_command_info
-        else None
+
+    # Select JDK from jar or another source, with a default of version 8.
+    selected_jdk_version = (
+        jdk_from_jar
+        or (get_lookup_build_command_jdk(lookup_build_command_info) if lookup_build_command_info else None)
+        or "8"
     )
 
-    # Select jdk from jar from different source.
-    # The default JDK version is 8.
-    selected_jdk_version = jdk_from_jar or lookup_build_command_jdk or "8"
     major_jdk_version = normalize_jdk_version(selected_jdk_version)
     if not major_jdk_version:
         logger.error("Failed to obtain the major version of %s", selected_jdk_version)

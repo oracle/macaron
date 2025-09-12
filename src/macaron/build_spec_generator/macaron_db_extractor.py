@@ -116,7 +116,7 @@ def lookup_one_or_none(
     return result
 
 
-def compile_sqlite_select_statement(select_statment: Select) -> str:
+def compile_sqlite_select_statement(select_statement: Select) -> str:
     """Return the equivalent SQLite SELECT statement from an SQLAlchemy SELECT statement.
 
     This function also introduces additional cosmetic details so that it can be easily
@@ -132,7 +132,7 @@ def compile_sqlite_select_statement(select_statment: Select) -> str:
     str
         The equivalent SQLite SELECT statement as a string.
     """
-    compiled_sqlite = select_statment.compile(
+    compiled_sqlite = select_statement.compile(
         dialect=sqlite.dialect(),  # type: ignore
         compile_kwargs={"literal_binds": True},
     )
@@ -171,16 +171,16 @@ def get_sql_stmt_latest_component_for_purl(purl: PackageURL) -> Select[tuple[Com
 
 
 def get_sql_stmt_build_tools(component_id: int) -> Select[tuple[BuildToolFacts]]:
-    """Return an SQLAlchemy SELECT statement to query the BuildToolFacts for a given PackageURL.
+    """Return an SQLAlchemy SELECT statement to query the BuildToolFacts for a given component.
 
     Parameters
     ----------
-    purl_string : str
-        The PackageURL string to find the BuildToolFacts.
+    component_id: int
+        The unique identifier of the component for which BuildToolFacts are to be queried.
 
     Returns
     -------
-    Select[tuple[BuildAsCodeFacts]]
+    Select[tuple[BuildToolFacts]]
         The SQLAlchemy SELECT statement.
     """
     # Because BuildToolFacts inherit from CheckFacts, SQLAlchemy had to perform implicit alias
@@ -213,12 +213,12 @@ def get_sql_stmt_build_tools(component_id: int) -> Select[tuple[BuildToolFacts]]
 
 
 def get_sql_stmt_build_as_code_check(component_id: int) -> Select[tuple[BuildAsCodeFacts]]:
-    """Return an SQLAlchemy SELECT statement to query the BuildAsCodeFacts for a given PackageURL.
+    """Return an SQLAlchemy SELECT statement to query the BuildAsCodeFacts for a given component.
 
     Parameters
     ----------
-    purl_string : str
-        The PackageURL string to find the BuildToolFacts.
+    component_id : int
+        The unique identifier of the component for which BuildAsCodeFacts are to be queried.
 
     Returns
     -------
@@ -260,12 +260,12 @@ def get_sql_stmt_build_as_code_check(component_id: int) -> Select[tuple[BuildAsC
 
 
 def get_sql_stmt_build_service_check(component_id: int) -> Select[tuple[BuildServiceFacts]]:
-    """Return an SQLAlchemy SELECT statement to query the BuildServiceFacts for a given PackageURL.
+    """Return an SQLAlchemy SELECT statement to query the BuildServiceFacts for a given component.
 
     Parameters
     ----------
-    purl_string : str
-        The PackageURL string to find the BuildServiceFacts.
+    component_id: int
+        The unique identifier of the component for which BuildServiceFacts are to be queried.
 
     Returns
     -------
@@ -307,12 +307,12 @@ def get_sql_stmt_build_service_check(component_id: int) -> Select[tuple[BuildSer
 
 
 def get_sql_stmt_build_script_check(component_id: int) -> Select[tuple[BuildScriptFacts]]:
-    """Return an SQLAlchemy SELECT statement to query the BuildScriptFacts for a given PackageURL.
+    """Return an SQLAlchemy SELECT statement to query the BuildScriptFacts for a given component.
 
     Parameters
     ----------
-    purl_string : str
-        The PackageURL string to find the BuildScriptFacts.
+    component_id: int
+        The unique identifier of the component for which BuildServiceFacts are to be queried.
 
     Returns
     -------
@@ -515,15 +515,15 @@ def lookup_build_script_check(component_id: int, session: Session) -> Sequence[B
     QueryMacaronDatabaseError
         If there is an unexpected error when executing the SQLAlchemy query.
     """
-    build_script_select_statment = get_sql_stmt_build_script_check(component_id)
+    build_script_select_statement = get_sql_stmt_build_script_check(component_id)
     logger.debug(
         "Build Script Check Fact for component %d \n %s",
         component_id,
-        compile_sqlite_select_statement(build_script_select_statment),
+        compile_sqlite_select_statement(build_script_select_statement),
     )
 
     build_script_check_facts = lookup_multiple(
-        select_statement=build_script_select_statment,
+        select_statement=build_script_select_statement,
         session=session,
     )
 

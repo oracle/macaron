@@ -166,8 +166,6 @@ def find_jdk_version_from_remote_maven_repo_standalone(
         The version part of the GAV coordinate.
     asset_name: str
         The name of artifact to download and extract the jdk version.
-    ext: JavaArtifactExt
-        The extension of the main artifact file.
     remote_maven_repo_url: str
         The URL to the remote maven layout repository.
 

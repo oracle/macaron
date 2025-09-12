@@ -318,7 +318,4 @@ class MavenCLICommand:
 
     def to_cmds(self) -> list[str]:
         """Return the CLI Command as a list of strings."""
-        result = []
-        result.append(self.executable)
-        result.extend(self.options.to_option_cmds())
-        return result
+        return [self.executable] + self.options.to_option_cmds()

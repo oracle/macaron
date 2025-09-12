@@ -52,9 +52,7 @@ class GradleOptionalFlag(OptionDef[bool]):
 
     def add_to_arg_parser(self, arg_parse: argparse.ArgumentParser) -> None:
         """Add a new argument to argparser.ArgumentParser representing this option."""
-        kwargs: dict[str, Any] = {}
-
-        kwargs["action"] = "store_true"
+        kwargs: dict[str, Any] = {"action": "store_true"}
         if self.dest:
             kwargs["dest"] = self.dest
 
@@ -75,7 +73,7 @@ class GradleOptionalFlag(OptionDef[bool]):
 
 
 @dataclass
-class GradleOptionalNegateableFlag(OptionDef[bool]):
+class GradleOptionalNegatableFlag(OptionDef[bool]):
     """This option represents an optional negatable flag in Gradle CLI command.
 
     For example: --build-cache/--no-build-cache
@@ -144,7 +142,7 @@ class GradleSingleValue(OptionDef[str]):
 
 
 @dataclass
-class GradlePropeties(OptionDef[dict[str, str | None]]):
+class GradleProperties(OptionDef[dict[str, str | None]]):
     """This option represents an option used to define property values of a Gradle CLI command.
 
     This option can be defined multiple times and the values are appended into a list of string in argparse.
@@ -175,7 +173,7 @@ class GradlePropeties(OptionDef[dict[str, str | None]]):
 
 @dataclass
 class GradleTask(OptionDef[list[str]]):
-    """This option represents the positional task option in Maven CLI command.
+    """This option represents the positional task option in Gradle CLI command.
 
     argparse.Namespace stores this as a list of string. This is stored internally as a list of string.
     """
@@ -314,25 +312,25 @@ GRADLE_OPTION_DEF: list[OptionDef] = [
         short_names=None,
         long_name="--write-locks",
     ),
-    GradleOptionalNegateableFlag(
+    GradleOptionalNegatableFlag(
         long_name="--build-cache",
     ),
-    GradleOptionalNegateableFlag(
+    GradleOptionalNegatableFlag(
         long_name="--configuration-cache",
     ),
-    GradleOptionalNegateableFlag(
+    GradleOptionalNegatableFlag(
         long_name="--configure-on-demand",
     ),
-    GradleOptionalNegateableFlag(
+    GradleOptionalNegatableFlag(
         long_name="--daemon",
     ),
-    GradleOptionalNegateableFlag(
+    GradleOptionalNegatableFlag(
         long_name="--parallel",
     ),
-    GradleOptionalNegateableFlag(
+    GradleOptionalNegatableFlag(
         long_name="--scan",
     ),
-    GradleOptionalNegateableFlag(
+    GradleOptionalNegatableFlag(
         long_name="--watch-fs",
     ),
     # This has been validated by setting up a minimal gradle project. Gradle version 8.14.2
@@ -430,11 +428,11 @@ GRADLE_OPTION_DEF: list[OptionDef] = [
         short_name=None,
         long_name="--warning-mode",
     ),
-    GradlePropeties(
+    GradleProperties(
         short_name="-D",
         long_name="--system-prop",
     ),
-    GradlePropeties(
+    GradleProperties(
         short_name="-P",
         long_name="--project-prop",
     ),
@@ -447,7 +445,7 @@ GRADLE_OPTION_DEF: list[OptionDef] = [
 class GradleCLICommandParser:
     """A Gradle CLI Command Parser."""
 
-    ACCEPTABLE_EXECUTABLE = ["gradle", "gradlew"]
+    ACCEPTABLE_EXECUTABLE = {"gradle", "gradlew"}
 
     def __init__(self) -> None:
         """Initialize the instance."""
@@ -561,8 +559,35 @@ class GradleCLICommandParser:
         option_long_name: str,
         patch_value: GradleOptionPatchValueType,
     ) -> dict[str, str]:
+        """
+        Apply a patch value to an existing properties dictionary for a specified Gradle option.
+
+        This function locates the metadata definition for the given option by its long name,
+        ensures it is a properties-type option, validates the patch value type, and then
+        applies the patch using `patch_mapping`. Throws a `PatchBuildCommandError` if the
+        option is not valid or the patch value's type is incorrect.
+
+        Parameters
+        ----------
+        original_props: dict[str, str]
+            The original mapping of property names to values.
+        option_long_name: str
+            The long name of the Gradle option to patch.
+        patch_value: GradleOptionPatchValueType
+            The patch to apply to the properties mapping.
+
+        Returns
+        -------
+        dict[str, str]
+            The updated properties mapping after applying the patch.
+
+        Raises
+        ------
+        PatchBuildCommandError
+            If the option is not a valid properties-type option or the patch value does not have a valid type.
+        """
         prop_opt_def = self.option_defs.get(option_long_name)
-        if not prop_opt_def or not isinstance(prop_opt_def, GradlePropeties):
+        if not prop_opt_def or not isinstance(prop_opt_def, GradleProperties):
             raise PatchBuildCommandError(f"{option_long_name} from the patch is not a property type option.")
 
         if not prop_opt_def.is_valid_patch_option(patch_value):
@@ -578,11 +603,11 @@ class GradleCLICommandParser:
     def apply_patch(
         self,
         cli_command: GradleCLICommand,
-        options_patch: Mapping[str, GradleOptionPatchValueType | None],
+        patch_options: Mapping[str, GradleOptionPatchValueType | None],
     ) -> GradleCLICommand:
         """Patch the options of a Gradle CLI command, while persisting the executable path.
 
-        `options_patch` is a mapping with:
+        `patch_options` is a mapping with:
 
         - **Key**: the long name of a Gradle CLI option as string. For example: ``--continue``, ``--build-cache``.
           For patching tasks, use the key ``tasks``.
@@ -630,7 +655,7 @@ class GradleCLICommandParser:
             executable=cli_command.executable,
             options=self.apply_option_patch(
                 cli_command.options,
-                patch=options_patch,
+                patch=patch_options,
             ),
         )
 
