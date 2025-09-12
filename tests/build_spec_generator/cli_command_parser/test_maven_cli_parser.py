@@ -112,6 +112,15 @@ from macaron.build_spec_generator.cli_command_parser.maven_cli_parser import (
             },
             id="allow_no_goal_for_version_and_help",
         ),
+        pytest.param(
+            "mvn",
+            {
+                "goals": [],
+                "help_": False,
+                "version": False,
+            },
+            id="No goal or phase",
+        ),
     ],
 )
 def test_maven_cli_command_parser_valid_input(
@@ -169,7 +178,6 @@ def test_maven_cli_command_parser_executable(
     ("build_command"),
     [
         pytest.param("", id="An empty command"),
-        pytest.param("mvn", id="No goal or phase"),
         pytest.param(
             "mvn --this-argument-should-never-exist-in-mvn",
             id="unrecognized_optional_argument",
@@ -181,10 +189,6 @@ def test_maven_cli_command_parser_executable(
         pytest.param(
             "mmmvvvnnn clean package",
             id="unrecognized_executable_path",
-        ),
-        pytest.param(
-            "mvn --show-version",
-            id="show_version_with_no_goal",
         ),
     ],
 )

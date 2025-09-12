@@ -123,7 +123,7 @@ class MavenCommaDelimList(OptionDef[list[str]]):
 
 
 @dataclass
-class MavenSystemPropeties(OptionDef[dict[str, str | None]]):
+class MavenSystemProperties(OptionDef[dict[str, str | None]]):
     """This option represents the -D/--define option of a Maven CLI command.
 
     This option can be defined multiple times and the values are appended into a list of string in argparse.
@@ -289,7 +289,7 @@ MAVEN_OPTION_DEF: list[OptionDef] = [
         short_name="-b",
         long_name="--builder",
     ),
-    MavenSystemPropeties(
+    MavenSystemProperties(
         short_name="-D",
         long_name="--define",
     ),
@@ -347,7 +347,7 @@ MAVEN_OPTION_DEF: list[OptionDef] = [
 class MavenCLICommandParser:
     """A Maven CLI Command Parser."""
 
-    ACCEPTABLE_EXECUTABLE = ["mvn", "mvnw"]
+    ACCEPTABLE_EXECUTABLE = {"mvn", "mvnw"}
 
     def __init__(self) -> None:
         """Initialize the instance."""
@@ -446,16 +446,6 @@ class MavenCLICommandParser:
         except SystemExit as sys_exit_err:
             raise CommandLineParseError(f"Failed to parse the Maven CLI Options {' '.join(options)}.") from sys_exit_err
 
-        # Handle cases where goal or plugin phase is not provided.
-        if not parsed_opts.goals:
-            # Allow cases such as:
-            #   mvn --help
-            #   mvn --version
-            # Note that we don't allow mvn -V or mvn --show-version as this command will
-            #   fail for mvn.
-            if not parsed_opts.help_ and not parsed_opts.version:
-                raise CommandLineParseError(f"No goal detected for {' '.join(options)}.")
-
         maven_cli_options = MavenCLIOptions.from_parsed_arg(parsed_opts)
 
         return MavenCLICommand(
@@ -469,8 +459,36 @@ class MavenCLICommandParser:
         option_long_name: str,
         patch_value: MavenOptionPatchValueType,
     ) -> dict[str, str]:
+        """
+        Apply a patch to the Maven system properties mapping for a specific option.
+
+        Retrieves the system property option definition for the specified long name,
+        validates its type and the patch value, and applies the patch update to the
+        original properties dictionary. Raises an error if the option or patch type
+        is invalid for Maven `--define` options.
+
+        Parameters
+        ----------
+        original_props : dict[str, str]
+            The original dictionary of Maven system property names and their values.
+        option_long_name : str
+            The long name of the Maven option to patch (usually '--define').
+        patch_value : MavenOptionPatchValueType
+            The value to patch into the original properties dictionary.
+
+        Returns
+        -------
+        dict[str, str]
+            The updated mapping with the patch applied.
+
+        Raises
+        ------
+        PatchBuildCommandError
+            If the option is not a Maven system property option or if the patch value
+            has an invalid type.
+        """
         define_opt_def = self.option_defs.get(option_long_name)
-        if not define_opt_def or not isinstance(define_opt_def, MavenSystemPropeties):
+        if not define_opt_def or not isinstance(define_opt_def, MavenSystemProperties):
             raise PatchBuildCommandError(f"{option_long_name} from the patch is not a --define option.")
 
         if not define_opt_def.is_valid_patch_option(patch_value):
@@ -484,11 +502,11 @@ class MavenCLICommandParser:
     def apply_patch(
         self,
         cli_command: MavenCLICommand,
-        options_patch: Mapping[str, MavenOptionPatchValueType | None],
+        patch_options: Mapping[str, MavenOptionPatchValueType | None],
     ) -> MavenCLICommand:
         """Patch the options of a Gradle CLI command, while persisting the executable path.
 
-        `options_patch` is a mapping with:
+        `patch_options` is a mapping with:
 
         - **Key**: the long name of a Maven CLI option as a string. For example: ``--define``, ``--settings``.
           For patching goals or plugin phases, use the key `goals` with the value being a list of strings.
@@ -529,7 +547,7 @@ class MavenCLICommandParser:
             executable=cli_command.executable,
             options=self.apply_option_patch(
                 cli_command.options,
-                patch=options_patch,
+                patch=patch_options,
             ),
         )
 

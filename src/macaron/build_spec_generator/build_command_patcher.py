@@ -73,7 +73,7 @@ def _patch_commands(
         try:
             new_cli_command = effective_cli_parser.apply_patch(
                 cli_command=cli_command,
-                options_patch=patch,
+                patch_options=patch,
             )
         except PatchBuildCommandError as error:
             logger.error(

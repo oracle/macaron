@@ -114,7 +114,16 @@ class CLICommand(Protocol):
         """Return the CLI Command as a list of strings."""
 
 
+# T is a generic type variable restricted to subclasses of CLICommand.
+# It ensures that only derived types of CLICommand can be used with
+# generic classes or functions parameterized by T.
 T = TypeVar("T", bound="CLICommand")
+
+# Y_contra is a contravariant type variable intended for CLI argument
+# patch values. Using contravariance allows generic classes or functions
+# to accept supertypes of the specified type parameter, making it easier
+# to support broader value types when implementing patching for different
+# build tools.
 Y_contra = TypeVar("Y_contra", contravariant=True)
 
 
@@ -160,6 +169,6 @@ class CLICommandParser(Protocol[T, Y_contra]):
     def apply_patch(
         self,
         cli_command: T,
-        options_patch: Mapping[str, Y_contra | None],
+        patch_options: Mapping[str, Y_contra | None],
     ) -> T:
         """Return a new CLICommand object with its option patched, while persisting the executable path."""
