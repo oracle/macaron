@@ -22,13 +22,15 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.closer_release_join_date 
 from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import EmptyProjectLinkAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.fake_email import FakeEmailAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
-from macaron.malware_analyzer.pypi_heuristics.metadata.minimal_content import MinimalContentAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.package_description_intent import (
+    PackageDescriptionIntentAnalyzer,
+)
 from macaron.malware_analyzer.pypi_heuristics.metadata.similar_projects import SimilarProjectAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.type_stub_file import TypeStubFileAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
-from macaron.malware_analyzer.pypi_heuristics.metadata.unsecure_description import UnsecureDescriptionAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.pypi_sourcecode_analyzer import PyPISourcecodeAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.sourcecode.suspicious_setup import SuspiciousSetupAnalyzer
@@ -368,8 +370,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         TyposquattingPresenceAnalyzer,
         FakeEmailAnalyzer,
         SimilarProjectAnalyzer,
-        UnsecureDescriptionAnalyzer,
-        MinimalContentAnalyzer,
+        PackageDescriptionIntentAnalyzer,
+        TypeStubFileAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
@@ -419,20 +421,17 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.CLOSER_RELEASE_JOIN_DATE.value}),
         forceSetup.
 
-    % Package released with a name similar to a popular package.
+    % Package released recently with little detail, forcing setup.py to run, and suspected of typosquatting.
     {Confidence.HIGH.value}::trigger(malware_high_confidence_4) :-
         quickUndetailed,
         forceSetup,
-        failed({Heuristics.TYPOSQUATTING_PRESENCE.value}),
-        failed({Heuristics.STUB_NAME.value}).
+        failed({Heuristics.TYPOSQUATTING_PRESENCE.value}).
 
-    % Package released with dependency confusion .
+    % Package forces setup.py to run, has a high version number and is not intended to be a stub package.
     {Confidence.HIGH.value}::trigger(malware_high_confidence_5) :-
         forceSetup,
-        failed({Heuristics.MINIMAL_CONTENT.value}),
         failed({Heuristics.STUB_NAME.value}),
-        failed({Heuristics.ANOMALOUS_VERSION.value}),
-        failed({Heuristics.UNSECURE_DESCRIPTION.value}).
+        failed({Heuristics.ANOMALOUS_VERSION.value}).
 
     % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
     % the same code.
@@ -442,12 +441,14 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.UNCHANGED_RELEASE.value}),
         passed({Heuristics.SUSPICIOUS_SETUP.value}).
 
-    % Package released recently with little detail and an anomalous version number for a single-release package.
+    % Package released recently with little detail and an anomalous version number for a single-release package. The
+    % package is not intended to be a stub package.
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_2) :-
         quickUndetailed,
         failed({Heuristics.ONE_RELEASE.value}),
         failed({Heuristics.ANOMALOUS_VERSION.value}),
-        failed({Heuristics.UNSECURE_DESCRIPTION.value}).
+        failed({Heuristics.TYPE_STUB_FILE.value}),
+        failed({Heuristics.PACKAGE_DESCRIPTION_INTENT.value}).
 
     % Package has no links, one release or multiple quick releases, and a suspicious maintainer who recently
     % joined, has a fake email address, and other similarly-structured projects.
