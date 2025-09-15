@@ -126,7 +126,7 @@ def compare_list(
         The result array.
     expected : list
         The expected array.
-    compare_fn_map : str
+    compare_fn_map : dict[str, CompareFn]
         A map from field name to corresponding compare function.
     name : str
         The name of the field whose value is being compared in this function.
@@ -169,7 +169,7 @@ def compare_dict(
         The result object.
     expected : dict
         The expected object.
-    compare_fn_map : str
+    compare_fn_map : dict[str, CompareFn]
         A map from field name to corresponding compare function.
     name : str
         The name of the field whose value is being compared in this function.

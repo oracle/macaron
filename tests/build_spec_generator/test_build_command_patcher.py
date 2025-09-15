@@ -470,7 +470,7 @@ def test_patching_multiple_commands(
                 break
 
         if effective_cli_parser:
-            expected_cli_commands.append(cli_parser.parse(cmd))
+            expected_cli_commands.append(effective_cli_parser.parse(cmd))
         else:
             expected_cli_commands.append(
                 UnparsedCLICommand(

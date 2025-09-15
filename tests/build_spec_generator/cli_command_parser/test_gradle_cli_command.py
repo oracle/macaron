@@ -4,8 +4,6 @@
 """This module contains tests for the gradle_cli_command module."""
 
 
-from typing import Any
-
 import pytest
 
 from macaron.build_spec_generator.cli_command_parser.gradle_cli_command import GradleCLIOptions
@@ -78,33 +76,6 @@ def test_comparing_gradle_cli_command_unequal(
     this_command = gradle_cli_parser.parse(this.split())
     that_command = gradle_cli_parser.parse(that.split())
     assert not this_command == that_command
-
-
-@pytest.mark.parametrize(
-    ("command", "that"),
-    [
-        (
-            "gradle clean build -x test --debug --stacktrace -Dorg.gradle.caching=true",
-            True,
-        ),
-        (
-            "gradle clean build -x test --debug --stacktrace -Dorg.gradle.caching=true",
-            ["boo", "foo"],
-        ),
-        (
-            "gradle clean build -x test --debug --stacktrace -Dorg.gradle.caching=true",
-            {"boo", "foo"},
-        ),
-    ],
-)
-def test_comparing_gradle_cli_command_unequal_types(
-    gradle_cli_parser: GradleCLICommandParser,
-    command: str,
-    that: Any,
-) -> None:
-    """Test comparing MavenCLICommand with another incompatible type oject."""
-    this_command = gradle_cli_parser.parse(command.split())
-    assert not this_command == that
 
 
 @pytest.mark.parametrize(

@@ -282,7 +282,7 @@ def test_lookup_any_build_command_empty_db(macaron_db_session: Session) -> None:
     assert not lookup_any_build_command(component_id=1, session=macaron_db_session)
 
 
-def test_invalid_input_databse(invalid_db_session: Session) -> None:
+def test_invalid_input_database(invalid_db_session: Session) -> None:
     """Test handling invalid input database."""
     with pytest.raises(QueryMacaronDatabaseError):
         lookup_any_build_command(

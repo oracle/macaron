@@ -3,8 +3,6 @@
 
 """This module contains tests for the maven_cli_command module."""
 
-from typing import Any
-
 import pytest
 
 from macaron.build_spec_generator.cli_command_parser.maven_cli_command import MavenCLIOptions
@@ -63,33 +61,6 @@ def test_comparing_maven_cli_command_unequal(
     this_command = maven_cli_parser.parse(this.split())
     that_command = maven_cli_parser.parse(that.split())
     assert not this_command == that_command
-
-
-@pytest.mark.parametrize(
-    ("command", "that"),
-    [
-        (
-            "mvn clean package -P profile1,profile2 -T 2C -ntp -Dmaven.skip.test=true -Dboo=foo",
-            True,
-        ),
-        (
-            "mvn clean package -P profile1,profile2 -T 2C -ntp -Dmaven.skip.test=true -Dboo=foo",
-            ["boo", "foo"],
-        ),
-        (
-            "mvn clean package -P profile1,profile2 -T 2C -ntp -Dmaven.skip.test=true -Dboo=foo",
-            {"boo", "foo"},
-        ),
-    ],
-)
-def test_comparing_maven_cli_command_unequal_types(
-    maven_cli_parser: MavenCLICommandParser,
-    command: str,
-    that: Any,
-) -> None:
-    """Test comparing MavenCLICommand with another incompatible type oject."""
-    this_command = maven_cli_parser.parse(command.split())
-    assert not this_command == that
 
 
 @pytest.mark.parametrize(

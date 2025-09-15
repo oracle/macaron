@@ -62,7 +62,7 @@ def compare_rc_build_spec(
         The result object.
     expected : dict[str, str]
         The expected object.
-    compare_fn_map : str
+    compare_fn_map : dict[str, CompareFn]
         A map from field name to corresponding compare function.
 
     Returns
