@@ -16,6 +16,7 @@ from macaron.artifact.local_artifact import get_local_artifact_hash
 from macaron.config.defaults import defaults
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
+from macaron.repo_finder.repo_utils import get_repo_tags
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.provenance_available_check import ProvenanceAvailableException
 from macaron.slsa_analyzer.ci_service import GitHubActions
@@ -387,15 +388,10 @@ def find_provenance_from_ci(
                 if not digest:
                     logger.debug("Cannot retrieve asset provenance without commit digest.")
                     return None
-                tags = git_obj.repo.tags
-                for _tag in tags:
-                    try:
-                        tag_commit = str(_tag.commit)
-                    except ValueError as error:
-                        logger.debug("Commit of tag is a blob or tree: %s", error)
-                        continue
-                    if tag_commit and tag_commit == digest:
-                        tag = str(_tag)
+                tags = get_repo_tags(git_obj)
+                for key, value in tags.items():
+                    if value == digest:
+                        tag = key
                         break
 
             if not tag:
