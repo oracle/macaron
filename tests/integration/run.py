@@ -80,6 +80,7 @@ COMPARE_SCRIPTS: dict[str, Sequence[str]] = {
     "deps_report": ["tests", "dependency_analyzer", "compare_dependencies.py"],
     "vsa": ["tests", "vsa", "compare_vsa.py"],
     "find_source": ["tests", "find_source", "compare_source_reports.py"],
+    "rc_build_spec": ["tests", "build_spec_generator", "reproducible_central", "compare_rc_build_spec.py"],
 }
 
 VALIDATE_SCHEMA_SCRIPTS: dict[str, Sequence[str]] = {
@@ -465,6 +466,52 @@ class AnalyzeStep(Step):
         return args
 
 
+class GenBuildSpecStepOptions(TypedDict):
+    """The configuration options of an gen-build-spec step."""
+
+    main_args: Sequence[str]
+    command_args: Sequence[str]
+    database: str
+
+
+class GenBuildSpecStep(Step[GenBuildSpecStepOptions]):
+    """A step running the ``macaron gen-build-spec`` command."""
+
+    @staticmethod
+    def options_schema(cwd: str) -> cfgv.Map:  # pylint: disable=unused-argument
+        """Generate the schema of a gen-build-spec step."""
+        return cfgv.Map(
+            "gen-build-spec options",
+            None,
+            *[
+                cfgv.Optional(
+                    key="main_args",
+                    check_fn=cfgv.check_array(cfgv.check_string),
+                    default=[],
+                ),
+                cfgv.Optional(
+                    key="command_args",
+                    check_fn=cfgv.check_array(cfgv.check_string),
+                    default=[],
+                ),
+                cfgv.Optional(
+                    key="database",
+                    check_fn=cfgv.check_string,
+                    default="./output/macaron.db",
+                ),
+            ],
+        )
+
+    def cmd(self, macaron_cmd: str) -> list[str]:
+        """Generate the command of the step."""
+        args = [macaron_cmd]
+        args.extend(self.options["main_args"])
+        args.append("gen-build-spec")
+        args.extend(["--database", self.options["database"]])
+        args.extend(self.options["command_args"])
+        return args
+
+
 class VerifyStepOptions(TypedDict):
     """The configuration options of a verify step."""
 
@@ -599,6 +646,7 @@ def gen_step_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
                         "verify",
                         "validate_schema",
                         "find-source",
+                        "gen-build-spec",
                     ),
                 ),
             ),
@@ -637,6 +685,12 @@ def gen_step_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
                 condition_value="verify",
                 key="options",
                 schema=VerifyStep.options_schema(cwd=cwd),
+            ),
+            cfgv.ConditionalRecurse(
+                condition_key="kind",
+                condition_value="gen-build-spec",
+                key="options",
+                schema=GenBuildSpecStep.options_schema(cwd=cwd),
             ),
             cfgv.ConditionalRecurse(
                 condition_key="kind",
@@ -842,6 +896,7 @@ def parse_step_config(step_id: int, step_config: Mapping) -> Step:
         "compare": CompareStep,
         "validate_schema": ValidateSchemaStep,
         "find-source": FindSourceStep,
+        "gen-build-spec": GenBuildSpecStep,
     }[kind]
     return step_cls(  # type: ignore  # https://github.com/python/mypy/issues/3115
         step_id=step_id,
