@@ -439,7 +439,7 @@ class MavenCLICommandParser:
             parsed_opts = self.arg_parser.parse_args(options)
         except argparse.ArgumentError as error:
             raise CommandLineParseError(f"Failed to parse command {' '.join(options)}.") from error
-        # Even though we have set `exit_on_error`, argparse still exists unexpectedly in some
+        # Even though we have set `exit_on_error`, argparse still exits unexpectedly in some
         # cases. This has been confirmed to be a bug in the argparse library implementation.
         # https://github.com/python/cpython/issues/121018.
         # This is fixed in Python3.12, but not Python3.11

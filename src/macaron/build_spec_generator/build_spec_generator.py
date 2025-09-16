@@ -71,7 +71,7 @@ def gen_build_spec_for_purl(
     build_spec_format: BuildSpecFormat,
     output_path: str,
 ) -> int:
-    """Return the content of a build spec file from a given PURL.
+    """Generate the build spec file for the given PURL in the specified output directory.
 
     Parameters
     ----------
