@@ -73,7 +73,7 @@ class GlobalConfig:
         local_repos_path : str
             The directory to look for local repositories.
         resources_path : str
-            The path to the resources files needed for the analysis (i.e. mvnw, gradlew, etc.)
+            The path to the resource files needed for the analysis.
         """
         self.macaron_path = macaron_path
         self.output_path = output_path

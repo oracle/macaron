@@ -1,0 +1,34 @@
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing local clone with the branch name, the commit digest.
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Clone apache/maven repo
+  kind: shell
+  options:
+    cmd: git clone --filter=tree:0 https://github.com/apache/maven ./output/git_repos/local_repos/apache/maven
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    main_args:
+    - -lr
+    - ./output/git_repos/local_repos
+    command_args:
+    - -purl
+    - pkg:maven/org.apache.maven/maven@4.0.0-alpha-9-SNAPSHOT?type=pom
+    - -rp
+    - apache/maven
+    - -b
+    - master
+    - -d
+    - 3fc399318edef0d5ba593723a24fff64291d6f9b
+- name: Run verify-policy for apache/maven
+  kind: verify
+  options:
+    database: output/macaron.db
+    policy: maven.dl

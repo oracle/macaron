@@ -23,7 +23,12 @@ from macaron.malware_analyzer.pypi_heuristics.metadata.empty_project_link import
 from macaron.malware_analyzer.pypi_heuristics.metadata.fake_email import FakeEmailAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.high_release_frequency import HighReleaseFrequencyAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.one_release import OneReleaseAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.package_description_intent import (
+    PackageDescriptionIntentAnalyzer,
+)
+from macaron.malware_analyzer.pypi_heuristics.metadata.similar_projects import SimilarProjectAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.source_code_repo import SourceCodeRepoAnalyzer
+from macaron.malware_analyzer.pypi_heuristics.metadata.type_stub_file import TypeStubFileAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.typosquatting_presence import TyposquattingPresenceAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.unchanged_release import UnchangedReleaseAnalyzer
 from macaron.malware_analyzer.pypi_heuristics.metadata.wheel_absence import WheelAbsenceAnalyzer
@@ -100,10 +105,14 @@ class DetectMaliciousMetadataCheck(BaseCheck):
             Returns True if any result of the dependency heuristic does not match the expected result.
             Otherwise, returns False.
         """
+        mapped_h: dict[Heuristics, list[HeuristicResult]] = {}
         for heuristic, expected_result in depends_on:
-            dep_heuristic_result: HeuristicResult = results[heuristic]
-            if dep_heuristic_result is not expected_result:
-                return True
+            mapped_h.setdefault(heuristic, []).append(expected_result)
+
+            for heuristic, exp_results in mapped_h.items():
+                dep_heuristic_result = results.get(heuristic)
+                if dep_heuristic_result not in exp_results:
+                    return True
         return False
 
     def analyze_source(
@@ -360,6 +369,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         AnomalousVersionAnalyzer,
         TyposquattingPresenceAnalyzer,
         FakeEmailAnalyzer,
+        SimilarProjectAnalyzer,
+        PackageDescriptionIntentAnalyzer,
+        TypeStubFileAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
@@ -409,9 +421,17 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.CLOSER_RELEASE_JOIN_DATE.value}),
         forceSetup.
 
-    % Package released with a name similar to a popular package.
+    % Package released recently with little detail, forcing setup.py to run, and suspected of typosquatting.
     {Confidence.HIGH.value}::trigger(malware_high_confidence_4) :-
-        quickUndetailed, forceSetup, failed({Heuristics.TYPOSQUATTING_PRESENCE.value}).
+        quickUndetailed,
+        forceSetup,
+        failed({Heuristics.TYPOSQUATTING_PRESENCE.value}).
+
+    % Package forces setup.py to run, has a high version number and is not intended to be a stub package.
+    {Confidence.HIGH.value}::trigger(malware_high_confidence_5) :-
+        forceSetup,
+        failed({Heuristics.STUB_NAME.value}),
+        failed({Heuristics.ANOMALOUS_VERSION.value}).
 
     % Package released recently with little detail, with multiple releases as a trust marker, but frequent and with
     % the same code.
@@ -421,16 +441,28 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         failed({Heuristics.UNCHANGED_RELEASE.value}),
         passed({Heuristics.SUSPICIOUS_SETUP.value}).
 
-    % Package released recently with little detail and an anomalous version number for a single-release package.
+    % Package released recently with little detail and an anomalous version number for a single-release package. The
+    % package is not intended to be a stub package.
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_2) :-
         quickUndetailed,
         failed({Heuristics.ONE_RELEASE.value}),
-        failed({Heuristics.ANOMALOUS_VERSION.value}).
+        failed({Heuristics.ANOMALOUS_VERSION.value}),
+        failed({Heuristics.TYPE_STUB_FILE.value}),
+        failed({Heuristics.PACKAGE_DESCRIPTION_INTENT.value}).
 
-    % Package released recently with the a maintainer email address that is not valid.
+    % Package has no links, one release or multiple quick releases, and a suspicious maintainer who recently
+    % joined, has a fake email address, and other similarly-structured projects.
     {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_3) :-
         quickUndetailed,
+        failed({Heuristics.SIMILAR_PROJECTS.value}),
+        failed({Heuristics.ONE_RELEASE.value}),
         failed({Heuristics.FAKE_EMAIL.value}).
+    {Confidence.MEDIUM.value}::trigger(malware_medium_confidence_4) :-
+        quickUndetailed,
+        failed({Heuristics.SIMILAR_PROJECTS.value}),
+        failed({Heuristics.HIGH_RELEASE_FREQUENCY.value}),
+        failed({Heuristics.FAKE_EMAIL.value}).
+
     % ----- Evaluation -----
 
     % Aggregate result
@@ -438,9 +470,11 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     {problog_result_access} :- trigger(malware_high_confidence_2).
     {problog_result_access} :- trigger(malware_high_confidence_3).
     {problog_result_access} :- trigger(malware_high_confidence_4).
-    {problog_result_access} :- trigger(malware_medium_confidence_3).
-    {problog_result_access} :- trigger(malware_medium_confidence_2).
+    {problog_result_access} :- trigger(malware_high_confidence_5).
     {problog_result_access} :- trigger(malware_medium_confidence_1).
+    {problog_result_access} :- trigger(malware_medium_confidence_2).
+    {problog_result_access} :- trigger(malware_medium_confidence_3).
+    {problog_result_access} :- trigger(malware_medium_confidence_4).
     query({problog_result_access}).
 
     % Explainability

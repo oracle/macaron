@@ -8,7 +8,9 @@ import os
 import shutil
 import time
 import urllib.parse
+from collections.abc import Callable
 from datetime import datetime
+from typing import BinaryIO
 
 import requests
 from requests.models import Response
@@ -270,6 +272,105 @@ def send_post_http_raw(
         )
 
     return response
+
+
+class StreamWriteDownloader:
+    """A class to handle writing a streamed download to a file."""
+
+    def __init__(self, file: BinaryIO) -> None:
+        """Initialise the class with the file path."""
+        self.file = file
+
+    def chunk_function(self, chunk: bytes) -> None:
+        """Write the chunk to the file."""
+        self.file.write(chunk)
+
+
+def download_file_with_size_limit(
+    url: str, headers: dict, file_path: str, timeout: int = 40, size_limit: int = 0
+) -> bool:
+    """Download a file with a size limit that will abort the operation if exceeded.
+
+    Parameters
+    ----------
+    url: str
+        The target of the request.
+    headers: dict
+        The headers to use in the request.
+    file_path: str
+        The path to download the file to.
+    timeout: int
+        The timeout in seconds for the request.
+    size_limit: int
+        The size limit in bytes of the downloaded file.
+        A download will terminate if it reaches beyond this amount.
+
+    Returns
+    -------
+    bool
+        True if the operation succeeded, False otherwise.
+    """
+    try:
+        with open(file_path, "wb") as file:
+            downloader = StreamWriteDownloader(file)
+            return stream_file_with_size_limit(url, headers, downloader.chunk_function, timeout, size_limit)
+    except OSError as error:
+        logger.error(error)
+        return False
+
+
+def stream_file_with_size_limit(
+    url: str, headers: dict, chunk_function: Callable[[bytes], None], timeout: int = 40, size_limit: int = 0
+) -> bool:
+    """Stream a file download and perform the passed function on the chunks of its data.
+
+    If data in excess of the size limit is received, this operation will be aborted.
+
+    Parameters
+    ----------
+    url: str
+        The target of the request.
+    headers: dict
+        The headers to use in the request.
+    chunk_function: Callable[[bytes], None]
+        The function to use with each downloaded chunk.
+    timeout: int
+        The timeout in seconds for the request.
+    size_limit: int
+        The size limit in bytes of the downloaded file.
+        A download will terminate if it reaches beyond this amount.
+        The default value of zero disables the limit.
+
+    Returns
+    -------
+    bool
+        True if the operation succeeded, False otherwise.
+    """
+    try:
+        response = requests.get(url, headers=headers, stream=True, timeout=timeout)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as http_err:
+        logger.debug("HTTP error occurred when trying to stream source: %s", http_err)
+        return False
+
+    if response.status_code != 200:
+        return False
+
+    data_processed = 0
+    for chunk in response.iter_content(chunk_size=512):
+        if data_processed >= size_limit > 0:
+            response.close()
+            logger.warning(
+                "The download of file '%s' has been unsuccessful due to the configured size limit. "
+                "To be able to download this file, increase the size limit and try again.",
+                url,
+            )
+            return False
+
+        chunk_function(chunk)
+        data_processed += len(chunk)
+
+    return True
 
 
 def check_rate_limit(response: Response) -> None:

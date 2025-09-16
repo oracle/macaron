@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This Dockerfile is for building the final production image. It's based on ghcr.io/oracle/macaron-base and ghcr.io/oracle/maracon-deps.
@@ -11,7 +11,7 @@
 # Note that the local machine must login to ghcr.io so that Docker could pull the ghcr.io/oracle/macaron-base
 # image for this build.
 
-FROM ghcr.io/oracle/macaron-base:latest@sha256:79b3b8b03cb9b6a124c6450f4baa58f96f83ee9e37f572c88a97597b35c7bc51
+FROM ghcr.io/oracle/macaron-base:latest@sha256:e7cb431d2a870999b70a9a282a84e7b278f7a9ea91e60ba2a8efdab35b4b7e71
 
 ENV HOME="/home/macaron"
 

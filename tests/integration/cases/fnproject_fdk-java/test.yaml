@@ -1,0 +1,22 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing with repository.
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -rp
+    - https://github.com/fnproject/fdk-java.git
+    - --digest
+    - fdac7f9417156df1936dda1c38125a7f7bf9b21d
+- name: Run macaron verify-policy to verify passed/failed checks
+  kind: verify
+  options:
+    policy: policy.dl

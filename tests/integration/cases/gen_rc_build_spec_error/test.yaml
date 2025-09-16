@@ -1,0 +1,75 @@
+# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Running macaron gen-build-spec with invalid arguments.
+
+tags:
+- macaron-python-package
+- macaron-docker-image
+- macaron-gen-build-spec
+
+steps:
+- name: Run macaron analyze on the remote repository.
+  kind: analyze
+  options:
+    command_args:
+    - --package-url
+    - pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar
+    - -rp
+    - https://github.com/behnazh-w/example-maven-app
+- name: Using a format that we don't support.
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar
+    - --output-format
+    - this-format-is-not-supported
+  expect_fail: true
+- name: Generate the RC Buildspec for a PURL that we haven't analyzed.
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.micronaut/micronaut-core@4.2.3
+    - --output-format
+    - rc-buildspec
+  expect_fail: true
+- name: Generate the RC Buildspec for a PURL that doesn't have namespace information.
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.micronaut@4.2.3
+    - --output-format
+    - rc-buildspec
+  expect_fail: true
+- name: Generate the RC Buildspec for a PURL that doesn't have version information.
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/io.micronaut/micronaut-core
+    - --output-format
+    - rc-buildspec
+  expect_fail: true
+- name: Generate the RC Buildspec using a database that doesn't exist.
+  kind: gen-build-spec
+  options:
+    database: output/some_database.db
+    command_args:
+    - -purl
+    - pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar
+    - --output-format
+    - rc-buildspec
+  expect_fail: true
+- name: Generate the RC Buildspec using an invalid PURL.
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - invalid_purl
+    - --output-format
+    - rc-buildspec
+  expect_fail: true

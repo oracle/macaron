@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for the ``run_macaron.sh`` script."""
@@ -87,7 +87,7 @@ def test_macaron_command_no_home_m2_on_host() -> int:
         TestCase(
             name="no --local-maven-repo and host $HOME/.m2 is not available",
             script_args=["analyze"],
-            expected_macaron_args=["analyze", "--local-maven-repo", "/home/macaron/analyze_local_maven_repo_readonly"],
+            expected_macaron_args=["analyze"],
         ),
     ]
 

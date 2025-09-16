@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Yarn class which inherits BaseBuildTool.
@@ -10,7 +10,6 @@ build tool.
 import os
 
 from macaron.config.defaults import defaults
-from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence
@@ -27,6 +26,7 @@ class Yarn(BaseBuildTool):
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
+        super().load_defaults()
         if "builder.yarn" in defaults:
             for item in defaults["builder.yarn"]:
                 if hasattr(self, item):
@@ -55,37 +55,7 @@ class Yarn(BaseBuildTool):
         #       cases like .yarnrc existing but not package-lock.json and whether
         #       they would still count as "detected"
         yarn_config_files = self.build_configs + self.package_lock + self.entry_conf
-        return any(file_exists(repo_path, file) for file in yarn_config_files)
-
-    def prepare_config_files(self, wrapper_path: str, build_dir: str) -> bool:
-        """Prepare the necessary wrapper files for running the build.
-
-        yarn doesn't require preparation, so return true.
-
-        Parameters
-        ----------
-        wrapper_path : str
-            The path where all necessary wrapper files are located.
-        build_dir : str
-            The path of the build dir. This is where all files are copied to.
-
-        Returns
-        -------
-        bool
-            True if succeed else False.
-        """
-        return True
-
-    def get_dep_analyzer(self) -> DependencyAnalyzer:
-        """Create a DependencyAnalyzer for the build tool.
-
-        Returns
-        -------
-        DependencyAnalyzer
-            The DependencyAnalyzer object.
-        """
-        # TODO: Implement this method.
-        return NoneDependencyAnalyzer()
+        return any(file_exists(repo_path, file, filters=self.path_filters) for file in yarn_config_files)
 
     def is_deploy_command(
         self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None, provenance_workflow: str | None = None
