@@ -9,7 +9,7 @@ from macaron.build_spec_generator.macaron_db_extractor import GenericBuildComman
 from macaron.build_spec_generator.reproducible_central.reproducible_central import (
     ReproducibleCentralBuildTool,
     _get_rc_build_tool_name_from_build_facts,
-    get_lookup_build_command_jdk,
+    get_language_version,
     get_rc_build_command,
     get_rc_default_build_command,
 )
@@ -135,9 +135,9 @@ def test_get_rc_default_build_command_unsupported() -> None:
         ),
     ],
 )
-def test_get_lookup_build_command_jdk(
+def test_get_language_version(
     build_command_info: GenericBuildCommandInfo,
     expected: str | None,
 ) -> None:
-    """Test the get_lookup_build_command_jdk function."""
-    assert get_lookup_build_command_jdk(build_command_info) == expected
+    """Test the get_language_version function."""
+    assert get_language_version(build_command_info) == expected

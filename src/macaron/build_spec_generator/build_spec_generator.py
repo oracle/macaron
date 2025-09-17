@@ -24,6 +24,8 @@ class BuildSpecFormat(str, Enum):
 
     REPRODUCIBLE_CENTRAL = "rc-buildspec"
 
+    GENERIC = "generic-buildspec"
+
 
 CLI_COMMAND_PATCHES: dict[
     PatchCommandBuildTool,
