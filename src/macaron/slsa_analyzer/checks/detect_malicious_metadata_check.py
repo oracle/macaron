@@ -371,7 +371,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         FakeEmailAnalyzer,
         SimilarProjectAnalyzer,
         PackageDescriptionIntentAnalyzer,
-        TypeStubFileAnalyzer
+        TypeStubFileAnalyzer,
     ]
 
     # name used to query the result of all problog rules, so it can be accessed outside the model.
