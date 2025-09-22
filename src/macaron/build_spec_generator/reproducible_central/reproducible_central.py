@@ -23,6 +23,7 @@ from macaron.build_spec_generator.macaron_db_extractor import (
     lookup_build_tools_check,
     lookup_latest_component,
 )
+from macaron.console import access_handler
 from macaron.errors import QueryMacaronDatabaseError
 from macaron.slsa_analyzer.checks.build_tool_check import BuildToolFacts
 
@@ -253,6 +254,11 @@ def get_rc_build_tool_name(
         BuildToolFacts.__tablename__,
         [(fact.build_tool_name, fact.language) for fact in build_tool_facts],
     )
+    rich_handler = access_handler.get_handler()
+    rich_handler.update_gen_build_spec(
+        "Build Tools:",
+        "\n".join([f"{fact.build_tool_name} ({fact.language})" for fact in build_tool_facts]),
+    )
 
     return _get_rc_build_tool_name_from_build_facts(build_tool_facts)
 
@@ -351,6 +357,11 @@ def gen_reproducible_central_build_spec(
     version = purl.version
     if group is None or version is None:
         logger.error("Missing group and/or version for purl %s.", purl.to_string())
+        rich_handler = access_handler.get_handler()
+        rich_handler.update_gen_build_spec("Repository PURL:", "[red]FAILED[/]")
+        rich_handler.update_gen_build_spec("Repository URL:", "[red]FAILED[/]")
+        rich_handler.update_gen_build_spec("Commit Hash:", "[red]FAILED[/]")
+        rich_handler.update_gen_build_spec("Build Tools:", "[red]FAILED[/]")
         return None
 
     try:
@@ -386,6 +397,10 @@ def gen_reproducible_central_build_spec(
         latest_component_repository.remote_path,
         latest_component_repository.commit_sha,
     )
+    rich_handler = access_handler.get_handler()
+    rich_handler.update_gen_build_spec("Repository PURL:", purl.to_string())
+    rich_handler.update_gen_build_spec("Repository URL:", latest_component_repository.remote_path)
+    rich_handler.update_gen_build_spec("Commit Hash:", latest_component_repository.commit_sha)
 
     # Getting the RC build tool name from the build tool check facts.
     rc_build_tool_name = get_rc_build_tool_name(

@@ -79,6 +79,16 @@ class RichConsoleHandler(RichHandler):
         for key, value in self.find_source_content.items():
             self.find_source_table.add_row(key, value)
         self.dump_defaults: str | Status = Status("[green]Generating[/]")
+        self.gen_build_spec: dict[str, str | Status] = {
+            "Repository PURL:": Status("[green]Processing[/]"),
+            "Repository URL:": Status("[green]Processing[/]"),
+            "Commit Hash:": Status("[green]Processing[/]"),
+            "Build Tools:": Status("[green]Processing[/]"),
+            "Build Spec Path:": "Not Generated",
+        }
+        self.gen_build_spec_table = Table(show_header=False, box=None)
+        for key, value in self.gen_build_spec.items():
+            self.gen_build_spec_table.add_row(key, value)
         self.verbose = verbose
         self.verbose_panel = Panel(
             "\n".join(self.logs),
@@ -257,6 +267,16 @@ class RichConsoleHandler(RichHandler):
         """Update the dump defaults status."""
         self.dump_defaults = value
 
+    def update_gen_build_spec(self, key: str, value: str | Status) -> None:
+        """Add or update a key-value pair in the generate build spec table."""
+        self.gen_build_spec[key] = value
+        gen_build_spec_table = Table(show_header=False, box=None)
+        gen_build_spec_table.add_column("Details", justify="left")
+        gen_build_spec_table.add_column("Value", justify="left")
+        for field, content in self.gen_build_spec.items():
+            gen_build_spec_table.add_row(field, content)
+        self.gen_build_spec_table = gen_build_spec_table
+
     def make_layout(self) -> Group:
         """Create the overall layout for the console output."""
         layout: list[RenderableType] = []
@@ -333,7 +353,9 @@ class RichConsoleHandler(RichHandler):
             dump_defaults_table.add_column("Value", justify="left")
             dump_defaults_table.add_row("Dump Defaults", self.dump_defaults)
             layout = layout + [dump_defaults_table]
-
+        elif self.command == "gen-build-spec":
+            if self.gen_build_spec_table.row_count > 0:
+                layout = layout + [self.gen_build_spec_table]
         if self.verbose:
             layout = layout + ["", self.verbose_panel]
         return Group(*layout)
@@ -353,12 +375,11 @@ class AccessHandler:
     """A class to manage access to the RichConsoleHandler instance."""
 
     def __init__(self) -> None:
-        self.verbose = False
         self.rich_handler = RichConsoleHandler()
 
     def set_handler(self, verbose: bool) -> RichConsoleHandler:
         """Set the verbosity and create a new RichConsoleHandler instance."""
-        self.rich_handler = RichConsoleHandler(verbose)
+        self.rich_handler = RichConsoleHandler(verbose=verbose)
         return self.rich_handler
 
     def get_handler(self) -> RichConsoleHandler:
