@@ -351,6 +351,8 @@ def perform_action(action_args: argparse.Namespace) -> None:
             find_source(action_args)
 
         case "gen-build-spec":
+            if not action_args.disable_rich_output:
+                rich_handler.start("gen-build-spec")
             sys.exit(gen_build_spec(action_args))
 
         case _:
