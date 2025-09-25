@@ -154,7 +154,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 return {analyzer.heuristic: result}, detail_info
 
         except SourceCodeError as error:
-            error_msg = f"Unable to perform analysis, source code not available: {error}"
+            error_msg = f"Unable to perform source code analysis: {error}"
             logger.debug(error_msg)
             raise HeuristicAnalyzerValueError(error_msg) from error
 
