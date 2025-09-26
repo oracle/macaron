@@ -255,7 +255,7 @@ def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[
         return []
 
     max_valid_provenance_size = defaults.getint(
-        "slsa.verifier",
+        "downloads",
         "max_download_size",
         fallback=1000000,
     )
@@ -458,7 +458,7 @@ def download_provenances_from_ci_service(ci_info: CIInfo, download_path: str) ->
         for prov_asset in prov_assets:
             # Check the size before downloading.
             if prov_asset.size_in_bytes > defaults.getint(
-                "slsa.verifier",
+                "downloads",
                 "max_download_size",
                 fallback=1000000,
             ):

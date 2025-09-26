@@ -257,7 +257,7 @@ class PyPIRegistry(PackageRegistry):
         temp_dir = tempfile.mkdtemp(prefix=f"{package_name}_")
         source_file = os.path.join(temp_dir, file_name)
         timeout = defaults.getint("downloads", "timeout", fallback=120)
-        size_limit = defaults.getint("slsa.verifier", "max_download_size", fallback=10000000)
+        size_limit = defaults.getint("downloads", "max_download_size", fallback=10000000)
         if not download_file_with_size_limit(url, {}, source_file, timeout, size_limit):
             self.cleanup_sourcecode_directory(temp_dir, "Could not download the file.")
 
@@ -295,7 +295,7 @@ class PyPIRegistry(PackageRegistry):
         """
         hash_algorithm = hashlib.sha256()
         timeout = defaults.getint("downloads", "timeout", fallback=120)
-        size_limit = defaults.getint("slsa.verifier", "max_download_size", fallback=10000000)
+        size_limit = defaults.getint("downloads", "max_download_size", fallback=10000000)
         if not stream_file_with_size_limit(artifact_url, {}, hash_algorithm.update, timeout, size_limit):
             return None
 
