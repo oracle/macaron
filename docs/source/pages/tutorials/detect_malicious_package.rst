@@ -136,6 +136,8 @@ By default, the source code analyzer is run in conjunction with the other metada
 
   ./run_macaron.sh analyze -purl pkg:pypi/django@5.0.6 --python-venv "/tmp/.django_venv" --force-analyze-source
 
+.. note:: Some packages source code, like ``django@5.0.6``, will be larger than the default download limit of 10 megabytes. This is controlled using the ``max_download_size`` configuration under ``downloads`` in ``defaults.ini``, and can be increased by either modifying that value in ``defaults.ini`` or by passing in a configuration file using ``-dp`` with this value increased.
+
 If any suspicious patterns are triggered, this will be identified in the ``mcn_detect_malicious_metadata_1`` result for the heuristic named ``suspicious_patterns``. The output database ``output/macaron.db`` can be used to get the specific results of the analysis by querying the :class:`detect_malicious_metadata_check.result field <macaron.database>`. This will provide detailed JSON information about all data collected by the ``mcn_detect_malicious_metadata_1`` check, including, for source code analysis, any malicious code patterns detected, what Semgrep rule detected it, the file in which it was detected, and the line number for the detection.
 
 +++++++++++++++++++++++++++++++++++++++
