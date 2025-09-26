@@ -26,7 +26,12 @@ from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceC
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
-from macaron.util import download_file_with_size_limit, send_get_http_raw, stream_file_with_size_limit
+from macaron.util import (
+    can_download_file,
+    download_file_with_size_limit,
+    send_get_http_raw,
+    stream_file_with_size_limit,
+)
 
 if TYPE_CHECKING:
     from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -208,6 +213,23 @@ class PyPIRegistry(PackageRegistry):
         if error:
             raise InvalidHTTPResponseError(error_message) from error
         raise InvalidHTTPResponseError(error_message)
+
+    def can_download_package_sourcecode(self, url: str) -> bool:
+        """Check if the package source code can be downloaded within the default file limits.
+
+        Parameters
+        ----------
+        url: str
+            The package source code url.
+
+        Returns
+        -------
+        bool
+            True if it can be downloaded within the size limits, otherwise False.
+        """
+        size_limit = defaults.getint("slsa.verifier", "max_download_size", fallback=10000000)
+        timeout = defaults.getint("downloads", "timeout", fallback=120)
+        return can_download_file(url, size_limit, timeout=timeout)
 
     def download_package_sourcecode(self, url: str) -> str:
         """Download the package source code from pypi registry.
@@ -622,6 +644,19 @@ class PyPIPackageJsonAsset:
                 return True
             except InvalidHTTPResponseError as error:
                 logger.debug(error)
+        return False
+
+    def can_download_sourcecode(self) -> bool:
+        """Return whether the package source code can be downloaded within the download file size limits.
+
+        Returns
+        -------
+        bool
+            ``True`` if the source code can be downloaded; ``False`` if not.
+        """
+        url = self.get_sourcecode_url()
+        if url:
+            return self.pypi_registry.can_download_package_sourcecode(url)
         return False
 
     def get_sourcecode_file_contents(self, path: str) -> bytes:
