@@ -13,6 +13,7 @@ from packageurl import PackageURL
 from pydriller import Git
 
 from macaron.config.global_config import global_config
+from macaron.console import access_handler
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR, decode_git_tags, parse_git_tags
@@ -87,6 +88,9 @@ def generate_report(purl: str, commit: str, repo: str, target_dir: str) -> bool:
         return False
 
     logger.info("Report written to: %s", os.path.relpath(fullpath, os.getcwd()))
+
+    rich_handler = access_handler.get_handler()
+    rich_handler.update_find_source_table("JSON Report:", os.path.relpath(fullpath, os.getcwd()))
 
     return True
 
