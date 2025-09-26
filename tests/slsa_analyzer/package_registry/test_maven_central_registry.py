@@ -30,7 +30,7 @@ def resources() -> Path:
 def maven_central_instance() -> MavenCentralRegistry:
     """Create a ``MavenCentralRegistry`` object for the following tests."""
     return MavenCentralRegistry(
-        search_netloc="search.maven.org",
+        search_netloc="central.sonatype.com",
         search_scheme="https",
         search_endpoint="solrsearch/select",
         registry_url_netloc="repo1.maven.org/maven2",
