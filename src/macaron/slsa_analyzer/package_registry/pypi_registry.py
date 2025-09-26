@@ -227,7 +227,7 @@ class PyPIRegistry(PackageRegistry):
         bool
             True if it can be downloaded within the size limits, otherwise False.
         """
-        size_limit = defaults.getint("slsa.verifier", "max_download_size", fallback=10000000)
+        size_limit = defaults.getint("downloads", "max_download_size", fallback=10000000)
         timeout = defaults.getint("downloads", "timeout", fallback=120)
         return can_download_file(url, size_limit, timeout=timeout)
 
