@@ -286,6 +286,35 @@ class StreamWriteDownloader:
         self.file.write(chunk)
 
 
+def can_download_file(url: str, size_limit: int, timeout: int | None = None) -> bool:
+    """Send a head request to check if the file provided at url can be downloaded within the size limit.
+
+    It expects a URL to a file, and checks the "Content-Length" field of the response.
+
+    Parameters
+    ----------
+    url: str
+        The target of the request.
+    size_limit: int
+        The size limit in bytes of the file.
+    timeout: int | None
+        The request timeout (optional).
+
+    Returns
+    -------
+    bool
+        True if the file can be downloaded within the size limit, False otherwise.
+    """
+    response = send_head_http_raw(url, timeout=timeout, allow_redirects=True)
+    if not response:
+        return False
+
+    size = response.headers.get("Content-Length")
+    if size and int(size) <= size_limit:
+        return True
+    return False
+
+
 def download_file_with_size_limit(
     url: str, headers: dict, file_path: str, timeout: int = 40, size_limit: int = 0
 ) -> bool:

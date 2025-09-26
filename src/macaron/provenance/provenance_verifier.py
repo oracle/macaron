@@ -190,7 +190,7 @@ def verify_ci_provenance(analyze_ctx: AnalyzeContext, ci_info: CIInfo, download_
                 return False
             if not Path(download_path, sub_asset["name"]).is_file():
                 if "size" in sub_asset and sub_asset["size"] > defaults.getint(
-                    "slsa.verifier", "max_download_size", fallback=1000000
+                    "downloads", "max_download_size", fallback=1000000
                 ):
                     logger.debug("Sub asset too large to verify: %s", sub_asset["name"])
                     return False

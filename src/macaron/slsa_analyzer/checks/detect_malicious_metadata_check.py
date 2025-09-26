@@ -148,6 +148,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         if not force and analyzer.depends_on and self._should_skip(results, analyzer.depends_on):
             return {analyzer.heuristic: HeuristicResult.SKIP}, {}
 
+        if not pypi_package_json.can_download_sourcecode():
+            logger.debug("Source code will exceed download limits. Please increase the download size limit to analyze.")
+            return {analyzer.heuristic: HeuristicResult.SKIP}, {}
+
         try:
             with pypi_package_json.sourcecode():
                 result, detail_info = analyzer.analyze(pypi_package_json)

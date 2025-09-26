@@ -286,7 +286,7 @@ class MavenCentralRegistry(PackageRegistry):
 
         hash_algorithm = hashlib.sha256()
         timeout = defaults.getint("downloads", "timeout", fallback=120)
-        size_limit = defaults.getint("slsa.verifier", "max_download_size", fallback=10000000)
+        size_limit = defaults.getint("downloads", "max_download_size", fallback=10000000)
         if not stream_file_with_size_limit(artifact_url, {}, hash_algorithm.update, timeout, size_limit):
             return None
 

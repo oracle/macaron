@@ -204,7 +204,7 @@ Build Types
 File Download Limit
 *******************
 
-To prevent analyses from taking too long, Macaron imposes a configurable size limit for downloads. This includes files being downloaded for provenance verification. In cases where the limit is being reached and you wish to continue analysis regardless, you can specify a new download size in the default configuration file. This value can be found under the ``slsa.verifier`` section, listed as ``max_download_size`` with a default limit of 10 megabytes. See :ref:`How to change the default configuration <change-config>` for more details on configuring values like these.
+To prevent analyses from taking too long, Macaron imposes a configurable size limit for downloads. This includes files being downloaded for provenance verification. In cases where the limit is being reached and you wish to continue analysis regardless, you can specify a new download size in the default configuration file. This value can be found under the ``downloads`` section, listed as ``max_download_size`` with a default limit of 10 megabytes. See :ref:`How to change the default configuration <change-config>` for more details on configuring values like these.
 
 **************************************
 Run ``verify-policy`` command (semver)
