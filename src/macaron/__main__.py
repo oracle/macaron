@@ -204,6 +204,7 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
         show_prelude(verify_policy_args.database)
         return os.EX_OK
 
+    policy_content = None
     if verify_policy_args.file:
         if not os.path.isfile(verify_policy_args.file):
             logger.critical('The policy file "%s" does not exist.', verify_policy_args.file)
@@ -211,7 +212,21 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
 
         with open(verify_policy_args.file, encoding="utf-8") as file:
             policy_content = file.read()
+    elif verify_policy_args.policy:
+        policy_dir = os.path.join(macaron.MACARON_PATH, "resources/policies/datalog")
+        available_policies = [policy[:-3] for policy in os.listdir(policy_dir) if policy.endswith(".dl")]
+        if verify_policy_args.policy not in available_policies:
+            logger.error(
+                "The policy %s is not available. Available policies are: %s",
+                verify_policy_args.policy,
+                available_policies,
+            )
+            return os.EX_USAGE
+        policy_path = os.path.join(policy_dir, f"{verify_policy_args.policy}.dl")
+        with open(policy_path, encoding="utf-8") as file:
+            policy_content = file.read()
 
+    if policy_content:
         result = run_policy_engine(verify_policy_args.database, policy_content)
         vsa = generate_vsa(policy_content=policy_content, policy_result=result)
         # Retrieve the console handler previously configured via the access_handler.
@@ -574,6 +589,7 @@ def main(argv: list[str] | None = None) -> None:
 
     vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
     vp_group.add_argument("-f", "--file", type=str, help="Path to the Datalog policy.")
+    vp_group.add_argument("-p", "--policy", help="Example policy to run.")
     vp_group.add_argument("-s", "--show-prelude", action="store_true", help="Show policy prelude.")
 
     # Find the repo and commit of a passed PURL, or the commit of a passed PURL and repo.
