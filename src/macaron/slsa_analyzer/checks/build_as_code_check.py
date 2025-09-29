@@ -86,7 +86,7 @@ class BuildAsCodeCheck(BaseCheck):
     def __init__(self) -> None:
         """Initiate the BuildAsCodeCheck instance."""
         description = (
-            "The build definition and configuration executed by the build "
+            "Check if the build definition and configuration executed by the build "
             "service is verifiably derived from text file definitions "
             "stored in a version control system."
         )
