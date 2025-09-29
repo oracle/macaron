@@ -695,8 +695,12 @@ class Analyzer:
         )
 
         self.rich_handler.add_description_table_content("Branch:", res_branch if res_branch else "None")
-        self.rich_handler.add_description_table_content("Commit Hash:", commit_sha)
-        self.rich_handler.add_description_table_content("Commit Date:", commit_date_str)
+        self.rich_handler.add_description_table_content(
+            "Commit Hash:", commit_sha if commit_sha else "[red]Not Found[/]"
+        )
+        self.rich_handler.add_description_table_content(
+            "Commit Date:", commit_date_str if commit_date_str else "[red]Not Found[/]"
+        )
 
         return repository
 
@@ -785,6 +789,9 @@ class Analyzer:
             # software component. If this happens, we don't raise error and treat the software component as if it
             # does not have any ``Repository`` attached to it.
             repository = None
+            self.rich_handler.add_description_table_content("Branch:", "[red]Not Found[/]")
+            self.rich_handler.add_description_table_content("Commit Hash:", "[red]Not Found[/]")
+            self.rich_handler.add_description_table_content("Commit Date:", "[red]Not Found[/]")
 
         if not analysis_target.parsed_purl:
             # If the PURL is not available. This will only mean that the user don't provide PURL but only provide the
@@ -1049,6 +1056,10 @@ class Analyzer:
                 )
             else:
                 logger.info("Unable to discover build tools because repository is None.")
+            self.rich_handler.add_description_table_content(
+                "Build Tools:",
+                "[red]Not Found[/]",
+            )
         else:
             self.rich_handler.add_description_table_content(
                 "Build Tools:",
@@ -1058,6 +1069,10 @@ class Analyzer:
     def _determine_ci_services(self, analyze_ctx: AnalyzeContext, git_service: BaseGitService) -> None:
         """Determine the CI services used by the software component."""
         if isinstance(git_service, NoneGitService):
+            self.rich_handler.add_description_table_content(
+                "CI Services:",
+                "[red]Not Found[/]",
+            )
             return
 
         # Determine the CI services.
@@ -1094,6 +1109,11 @@ class Analyzer:
             self.rich_handler.add_description_table_content(
                 "CI Services:",
                 "\n".join([ci_service["service"].name for ci_service in analyze_ctx.dynamic_data["ci_services"]]),
+            )
+        else:
+            self.rich_handler.add_description_table_content(
+                "CI Services:",
+                "[red]Not Found[/]",
             )
 
     def _populate_package_registry_info(self) -> list[PackageRegistryInfo]:
