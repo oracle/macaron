@@ -214,7 +214,7 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
             policy_content = file.read()
     elif verify_policy_args.policy:
         policy_dir = os.path.join(macaron.MACARON_PATH, "resources/policies/datalog")
-        available_policies = [policy[:-3] for policy in os.listdir(policy_dir) if policy.endswith(".dl")]
+        available_policies = [policy[:-12] for policy in os.listdir(policy_dir) if policy.endswith(".dl.template")]
         if verify_policy_args.policy not in available_policies:
             logger.error(
                 "The policy %s is not available. Available policies are: %s",
@@ -222,9 +222,11 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
                 available_policies,
             )
             return os.EX_USAGE
-        policy_path = os.path.join(policy_dir, f"{verify_policy_args.policy}.dl")
+        policy_path = os.path.join(policy_dir, f"{verify_policy_args.policy}.dl.template")
         with open(policy_path, encoding="utf-8") as file:
             policy_content = file.read()
+        if verify_policy_args.package_url:
+            policy_content = policy_content.replace("<PACKAGE_PURL>", verify_policy_args.package_url)
 
     if policy_content:
         result = run_policy_engine(verify_policy_args.database, policy_content)
@@ -588,6 +590,7 @@ def main(argv: list[str] | None = None) -> None:
     vp_group = vp_parser.add_mutually_exclusive_group(required=True)
 
     vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
+    vp_parser.add_argument("-purl", "--package-url", help="PackageURL for policy template.")
     vp_group.add_argument("-f", "--file", type=str, help="Path to the Datalog policy.")
     vp_group.add_argument("-p", "--policy", help="Example policy to run.")
     vp_group.add_argument("-s", "--show-prelude", action="store_true", help="Show policy prelude.")
