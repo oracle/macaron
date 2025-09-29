@@ -18,7 +18,7 @@ python -m http.server -d docs/_build/html
 
 ## Extend the API reference
 
-We use the [sphinx-apidoc](https://www.sphinx-doc.org/en/master/man/sphinx-apidoc.html) tool to generate API reference automatically from Python docstrings. See the [Docstring section in the Macaron Style Guide](https://oracle.github.io/pages/developers_guide/style_guide.html#docstrings) for how to write docstrings in Macaron.
+We use the [sphinx-apidoc](https://www.sphinx-doc.org/en/master/man/sphinx-apidoc.html) tool to generate API reference automatically from Python docstrings. See the [Docstring section in the Macaron Style Guide](https://oracle.github.io/macaron/pages/developers_guide/style_guide.html#docstrings) for how to write docstrings in Macaron.
 
 If you make a code change, make sure to regenerate the API reference by running (with the dev environment activated):
 

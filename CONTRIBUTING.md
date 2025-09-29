@@ -84,7 +84,7 @@ Please see the [README for the malware analyzer](./src/macaron/malware_analyzer/
 
 ### Prerequisites
 
-- Python 3.11
+- Python 3.11.13
 - Go 1.23
 - JDK 17
 
@@ -229,7 +229,7 @@ $ make integration-test
 
 ## Generating documentation
 
-As mentioned above, all package code should make use of [Python docstrings](https://www.python.org/dev/peps/pep-0257/) in [reStructured text format](https://www.python.org/dev/peps/pep-0287/) following [numpydoc style](https://numpydoc.readthedocs.io/en/latest/format.html) (with some exceptions - see our [style guide](https://oracle.github.io/pages/developers_guide/style_guide.html#docstrings)). Using these docstrings and the documentation template in the `docs/source/` folder, you can then generate proper documentation in different formats using the [Sphinx](https://github.com/sphinx-doc/sphinx/) tool:
+As mentioned above, all package code should make use of [Python docstrings](https://www.python.org/dev/peps/pep-0257/) in [reStructured text format](https://www.python.org/dev/peps/pep-0287/) following [numpydoc style](https://numpydoc.readthedocs.io/en/latest/format.html) (with some exceptions - see our [style guide](https://oracle.github.io/macaron/pages/developers_guide/style_guide.html#docstrings)). Using these docstrings and the documentation template in the `docs/source/` folder, you can then generate proper documentation in different formats using the [Sphinx](https://github.com/sphinx-doc/sphinx/) tool:
 
 ```bash
 make docs
