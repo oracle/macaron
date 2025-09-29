@@ -77,12 +77,12 @@ class MaliciousMetadataFacts(CheckFacts):
 
 
 class DetectMaliciousMetadataCheck(BaseCheck):
-    """This check analyzes the metadata of a package for malicious behavior."""
+    """This check analyzes a package for malicious behavior."""
 
     def __init__(self) -> None:
         """Initialize a check instance."""
         check_id = "mcn_detect_malicious_metadata_1"
-        description = """This check analyzes the metadata of a package based on reports malicious behavior.
+        description = """Check if the package is malicious.
         """
         super().__init__(check_id=check_id, description=description, eval_reqs=[])
 
