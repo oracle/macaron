@@ -31,7 +31,7 @@ Download the ``run_macaron.sh`` script and make it executable by running the com
 
 .. code-block:: shell
 
-  curl -O https://raw.githubusercontent.com/oracle/macaron/<tag>/scripts/release_scripts/run_macaron.sh
+  curl -O https://raw.githubusercontent.com/oracle/macaron/refs/tags/<tag>/scripts/release_scripts/run_macaron.sh
   chmod +x run_macaron.sh
 
 ----------------------------------------
