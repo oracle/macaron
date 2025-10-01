@@ -101,7 +101,7 @@ class BaseCheck:
         logger.info("BEGIN CHECK: %s", self.check_info.check_id)
         logger.info("----------------------------------")
 
-        self.rich_handler.update_checks(self.check_info.check_id, target.component.purl)
+        self.rich_handler.update_checks(self.check_info.check_id)
 
         check_result_data: CheckResultData
 
@@ -138,7 +138,6 @@ class BaseCheck:
 
         self.rich_handler.update_checks(
             self.check_info.check_id,
-            target.component.purl,
             check_result_data.result_type.value,
         )
 
