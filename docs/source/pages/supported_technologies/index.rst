@@ -115,7 +115,7 @@ Automatic dependency resolution
 
 Currently, we support the following type of project for automatic dependency resolution.
 
-* Python (with a Python virtual environment created and packages installed using Python3.11, see :ref:`providing Python virtual environment <python-venv-deps>`.)
+* Python (with a Python virtual environment created and packages installed using Python3.11.13, see :ref:`providing Python virtual environment <python-venv-deps>`.)
 
 --------
 See also

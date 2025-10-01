@@ -374,7 +374,7 @@ Where ``--python-venv`` is the path to virtual environment.
 
 Alternatively, you can create an SBOM for the python package and provide it to Macaron as input as explained :ref:`here <with-sbom>`.
 
-.. note:: We only support Python 3.11 for this feature of Macaron. Please make sure to install the package using this version of Python.
+.. note:: We only support Python 3.11.13 for this feature of Macaron. Please make sure to install the package using this version of Python.
 
 
 -----------------------------------------------
