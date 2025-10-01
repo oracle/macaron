@@ -62,7 +62,7 @@ enabled=1\
         # Exceptions (not installed):
         #   mcpp - The package mcpp is not available in Oracle Linux 9. However, we don't use Souffle's feature
         #       that needs it.
-        #   python3 - We use the installed Python3.11.2 for this.
+        #   python3 - We use the installed Python3.11.13 for this.
         gcc-c++         \
         libffi          \
         libffi-devel    \
