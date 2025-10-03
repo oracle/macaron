@@ -480,6 +480,7 @@ def prepare_repo(
     else:
         logger.info("Checking if the path to repo %s is a local path.", repo_path)
         resolved_local_path = resolve_local_path(get_local_repos_path(), repo_path)
+        rich_handler.add_description_table_content("Local Cloned Path:", resolved_local_path)
 
     if resolved_local_path:
         try:
