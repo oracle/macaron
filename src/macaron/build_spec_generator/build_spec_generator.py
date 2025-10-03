@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from macaron.build_spec_generator.build_command_patcher import PatchCommandBuildTool, PatchValueType
 from macaron.build_spec_generator.reproducible_central.reproducible_central import gen_reproducible_central_build_spec
+from macaron.console import access_handler
 from macaron.path_utils.purl_based_path import get_purl_based_dir
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -131,6 +132,8 @@ def gen_build_spec_for_purl(
         build_spec_format.value,
         os.path.relpath(build_spec_filepath, os.getcwd()),
     )
+    rich_handler = access_handler.get_handler()
+    rich_handler.update_gen_build_spec("Build Spec Path:", os.path.relpath(build_spec_filepath, os.getcwd()))
     try:
         with open(build_spec_filepath, mode="w", encoding="utf-8") as file:
             file.write(build_spec_content)
