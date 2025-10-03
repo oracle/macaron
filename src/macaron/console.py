@@ -105,6 +105,7 @@ class RichConsoleHandler(RichHandler):
             title_align="left",
             border_style="blue",
         )
+        self.error_message: str = ""
         self.live = Live(get_renderable=self.make_layout, refresh_per_second=10)
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -521,7 +522,30 @@ class RichConsoleHandler(RichHandler):
                 layout = layout + [self.gen_build_spec_table]
         if self.verbose:
             layout = layout + ["", self.verbose_panel]
+        if self.error_message:
+            error_panel = Panel(
+                self.error_message,
+                title="Error",
+                title_align="left",
+                border_style="red",
+            )
+            layout = layout + ["", error_panel]
         return Group(*layout)
+
+    def error(self, message: str) -> None:
+        """
+        Handle error logging.
+
+        Parameters
+        ----------
+        message : str
+            The error message to be logged.
+
+        Returns
+        -------
+        None
+        """
+        self.error_message = message
 
     def start(self, command: str) -> None:
         """

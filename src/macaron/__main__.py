@@ -20,7 +20,7 @@ from macaron.build_spec_generator.build_spec_generator import (
 )
 from macaron.config.defaults import create_defaults, load_defaults
 from macaron.config.global_config import global_config
-from macaron.console import access_handler
+from macaron.console import RichConsoleHandler, access_handler
 from macaron.errors import ConfigurationError
 from macaron.output_reporter.reporter import HTMLReporter, JSONReporter, PolicyReporter
 from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
@@ -630,7 +630,7 @@ def main(argv: list[str] | None = None) -> None:
     # Set global logging config. We need the stream handler for the initial
     # output directory checking log messages.
     st_handler: logging.StreamHandler = logging.StreamHandler(sys.stdout)
-    rich_handler: logging.Handler = logging.Handler()
+    rich_handler: RichConsoleHandler = access_handler.set_handler(args.verbose)
     if args.disable_rich_output:
         if args.verbose:
             log_level = logging.DEBUG
@@ -710,6 +710,10 @@ def main(argv: list[str] | None = None) -> None:
             sys.exit(os.EX_NOINPUT)
 
         perform_action(args)
+    except KeyboardInterrupt:
+        if not args.disable_rich_output:
+            rich_handler.error("Macaron failed: Interrupted by user")
+        sys.exit(os.EX_SOFTWARE)
     finally:
         if args.disable_rich_output:
             st_handler.close()
