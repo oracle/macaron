@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import BinaryIO
 
 import requests
+from bs4 import BeautifulSoup
 from requests.models import Response
 
 from macaron.config.defaults import defaults
@@ -595,3 +596,37 @@ class BytesDecoder:
 
         logger.debug("Failed to decode bytes using most common character encodings.")
         return None
+
+
+def html_is_js_challenge(html: str) -> bool:
+    """Check if this HTML is the JavaScript Challenge response.
+
+    The JavaScript Challenge is generally returned to a GET request when a CDN serves some
+    JavaScript code to be rendered for the page. This usually means the HTML page isn't obtained
+    when using request libraries that cannot render JavaScript, and this page is returned instead.
+
+    Parameters
+    ----------
+    html: str
+        The string HTML of the page returned by a request.
+
+    Returns
+    -------
+    bool
+        True if the page is a JavaScript Challenge html response. False otherwise.
+    """
+    # Main three components:
+    # <html><head><title>Client Challenge
+    # <html><body><noscript><div><div><span>Javascript is disabled in your browser
+    # <html><body><noscript><div><div><p>Please enable JavaScript to proceed
+
+    soup = BeautifulSoup(html, "html.parser")
+    title = soup.find("title")
+    noscript_span = soup.find("span")
+    noscript_msg = soup.find("p")
+
+    has_title = title is not None and "Client Challenge" in title.get_text()
+    has_span = noscript_span is not None and "JavaScript is disabled in your browser" in noscript_span.get_text()
+    has_msg = noscript_msg is not None and "Please enable JavaScript to proceed" in noscript_msg.get_text()
+
+    return has_title and has_span and has_msg

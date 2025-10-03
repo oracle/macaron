@@ -29,6 +29,7 @@ from macaron.slsa_analyzer.package_registry.package_registry import PackageRegis
 from macaron.util import (
     can_download_file,
     download_file_with_size_limit,
+    html_is_js_challenge,
     send_get_http_raw,
     stream_file_with_size_limit,
 )
@@ -321,6 +322,9 @@ class PyPIRegistry(PackageRegistry):
         response = send_get_http_raw(url)
         if response:
             html_snippets = response.content.decode("utf-8")
+            if html_is_js_challenge(html_snippets):
+                logger.debug("URL returned a JavaScript Challenge: %s", url)
+                return None
             return html_snippets
         return None
 
@@ -362,6 +366,9 @@ class PyPIRegistry(PackageRegistry):
         response = send_get_http_raw(url, headers=None)
         if response:
             html_snippets = response.content.decode("utf-8")
+            if html_is_js_challenge(html_snippets):
+                logger.debug("URL returned a JavaScript Challenge: %s", url)
+                return None
             return html_snippets
         return None
 
