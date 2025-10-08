@@ -12,6 +12,7 @@ from abc import ABC, abstractmethod
 from collections import deque
 from collections.abc import Iterable
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import TypedDict
 
@@ -22,6 +23,16 @@ from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence, Evidence, EvidenceWeightMap
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+class BuildEcosystem(str, Enum):
+    """The supported build ecosystems."""
+
+    MAVEN = "maven"
+    PYPI = "pypi"
+    GOLONAG = "golang"
+    NPM = "npm"
+    DOCKER = "docker"
 
 
 class BuildToolCommand(TypedDict):
@@ -210,6 +221,29 @@ class BaseBuildTool(ABC):
         # A list of keywords that can be used as filters while detecting build tools.
         if "builder" in defaults:
             self.path_filters = defaults.get_list("builder", "build_tool_path_filters", fallback=[])
+
+    def match_purl_type(self, component_purl_type: str) -> bool:
+        """
+        Determine if the given component PURL type matches this build tool's PURL type.
+
+        Returns ``False`` if the component PURL type matches a supported build ecosystem but does not
+        match the build tool's ``purl_type``. Otherwise, returns ``True`` to allow for repositories or
+        other non-standard types.
+
+        Parameters
+        ----------
+        component_purl_type : str
+            The PURL type of the component to check.
+
+        Returns
+        -------
+        bool
+            True if the type matches or is not restricted; False otherwise.
+        """
+        if component_purl_type.upper() in [b.name for b in BuildEcosystem] and component_purl_type != self.purl_type:
+            return False
+        # Otherwise return True because the component PURL type can repositories, like github.
+        return True
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.

@@ -1038,15 +1038,16 @@ class Analyzer:
             if not analyze_ctx.component.repository:
                 continue
 
-            logger.info(
-                "Checking if the repo %s uses build tool %s",
-                analyze_ctx.component.repository.complete_name,
-                build_tool.name,
-            )
+            if build_tool.match_purl_type(analyze_ctx.component.type):
+                logger.info(
+                    "Checking if the repo %s uses build tool %s",
+                    analyze_ctx.component.repository.complete_name,
+                    build_tool.name,
+                )
 
-            if build_tool.is_detected(analyze_ctx.component.repository.fs_path):
-                logger.info("The repo uses %s build tool.", build_tool.name)
-                analyze_ctx.dynamic_data["build_spec"]["tools"].append(build_tool)
+                if build_tool.is_detected(analyze_ctx.component.repository.fs_path):
+                    logger.info("The repo uses %s build tool.", build_tool.name)
+                    analyze_ctx.dynamic_data["build_spec"]["tools"].append(build_tool)
 
         if not analyze_ctx.dynamic_data["build_spec"]["tools"]:
             if analyze_ctx.component.repository:

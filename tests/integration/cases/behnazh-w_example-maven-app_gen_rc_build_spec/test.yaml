@@ -16,18 +16,18 @@ steps:
   options:
     command_args:
     - -purl
-    - pkg:github/behnazh-w/example-maven-app@1.0
-- name: Run Reproducible-central build spec generation
+    - pkg:maven/io.github.behnazh-w.demo/core@2.0.3
+- name: Run Reproducible Central build spec generation
   kind: gen-build-spec
   options:
     command_args:
     - -purl
-    - pkg:github/behnazh-w/example-maven-app@1.0
+    - pkg:maven/io.github.behnazh-w.demo/core@2.0.3
     - --output-format
     - rc-buildspec
-- name: Compare Buildspec.
+- name: Compare Buildspec for Reproducible Central.
   kind: compare
   options:
     kind: rc_build_spec
-    result: ./output/buildspec/github/behnazh-w/example-maven-app/macaron.buildspec
-    expected: expected_macaron.buildspec
+    result: ./output/buildspec/maven/io_github_behnazh-w_demo/core/reproducible_central.buildspec
+    expected: expected_reproducible_central.buildspec
