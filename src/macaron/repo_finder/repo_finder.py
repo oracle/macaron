@@ -123,13 +123,17 @@ def find_repo(
 
     # Try to find the latest version repo.
     logger.debug("Could not find repo for PURL: %s", purl)
+    rich_handler = access_handler.get_handler()
     latest_version_purl = get_latest_purl_if_different(purl)
     if not latest_version_purl:
         logger.debug("Could not find newer PURL than provided: %s", purl)
+        rich_handler.add_description_table_content("Local Cloned Path:", "[red]Not Found[/]")
+        rich_handler.add_description_table_content("Remote Path:", "[red]Not Found[/]")
         return "", RepoFinderInfo.NO_NEWER_VERSION
-
     found_repo, outcome = DepsDevRepoFinder().find_repo(latest_version_purl)
     if found_repo:
+        rich_handler.add_description_table_content("Local Cloned Path:", found_repo)
+        rich_handler.add_description_table_content("Remote Path:", found_repo)
         return found_repo, outcome
 
     if not found_repo:
@@ -137,6 +141,8 @@ def find_repo(
 
     if not found_repo:
         logger.debug("Could not find repo from latest version of PURL: %s", latest_version_purl)
+        rich_handler.add_description_table_content("Local Cloned Path:", "[red]Not Found[/]")
+        rich_handler.add_description_table_content("Remote Path:", "[red]Not Found[/]")
         return "", RepoFinderInfo.LATEST_VERSION_INVALID
 
     return found_repo, outcome
@@ -327,9 +333,9 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
     rich_handler = access_handler.get_handler()
     if not input_repo:
         logger.info("Found repository for PURL: %s", found_repo)
-        rich_handler.update_find_source_table("Repository PURL:", found_repo)
+        rich_handler.update_find_source_table("Repository URL:", found_repo)
     else:
-        rich_handler.update_find_source_table("Repository PURL:", input_repo)
+        rich_handler.update_find_source_table("Repository URL:", input_repo)
 
     logger.info("Found commit for PURL: %s", digest)
     rich_handler.update_find_source_table("Commit Hash:", digest)

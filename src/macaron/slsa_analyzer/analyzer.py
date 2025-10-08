@@ -501,7 +501,7 @@ class Analyzer:
         logger.info("Analyzing %s", repo_id)
         logger.info("With PURL: %s", component.purl)
         logger.info("=====================================")
-        self.rich_handler.add_description_table_content("Full Name:", component.purl)
+        self.rich_handler.add_description_table_content("Package URL:", component.purl)
 
         analyze_ctx = self.create_analyze_ctx(component)
         analyze_ctx.dynamic_data["expectation"] = self.expectations.get_expectation_for_target(

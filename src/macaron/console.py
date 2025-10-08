@@ -43,7 +43,7 @@ class RichConsoleHandler(RichHandler):
         self.logs: list[str] = []
         self.description_table = Table(show_header=False, box=None)
         self.description_table_content: dict[str, str | Status] = {
-            "Full Name:": Status("[green]Processing[/]"),
+            "Package URL:": Status("[green]Processing[/]"),
             "Local Cloned Path:": Status("[green]Processing[/]"),
             "Remote Path:": Status("[green]Processing[/]"),
             "Branch:": Status("[green]Processing[/]"),
@@ -81,7 +81,7 @@ class RichConsoleHandler(RichHandler):
         self.verification_summary_attestation: str | None = None
         self.find_source_table = Table(show_header=False, box=None)
         self.find_source_content: dict[str, str | Status] = {
-            "Repository PURL:": Status("[green]Processing[/]"),
+            "Repository URL:": Status("[green]Processing[/]"),
             "Commit Hash:": Status("[green]Processing[/]"),
             "JSON Report:": "Not Generated",
         }
@@ -89,7 +89,7 @@ class RichConsoleHandler(RichHandler):
             self.find_source_table.add_row(key, value)
         self.dump_defaults: str | Status = Status("[green]Generating[/]")
         self.gen_build_spec: dict[str, str | Status] = {
-            "Repository PURL:": Status("[green]Processing[/]"),
+            "Package URL:": Status("[green]Processing[/]"),
             "Repository URL:": Status("[green]Processing[/]"),
             "Commit Hash:": Status("[green]Processing[/]"),
             "Build Tools:": Status("[green]Processing[/]"),

@@ -355,10 +355,10 @@ def gen_reproducible_central_build_spec(
     group = purl.namespace
     artifact = purl.name
     version = purl.version
+    rich_handler = access_handler.get_handler()
+    rich_handler.update_gen_build_spec("Package URL:", purl.to_string())
     if group is None or version is None:
         logger.error("Missing group and/or version for purl %s.", purl.to_string())
-        rich_handler = access_handler.get_handler()
-        rich_handler.update_gen_build_spec("Repository PURL:", "[red]FAILED[/]")
         rich_handler.update_gen_build_spec("Repository URL:", "[red]FAILED[/]")
         rich_handler.update_gen_build_spec("Commit Hash:", "[red]FAILED[/]")
         rich_handler.update_gen_build_spec("Build Tools:", "[red]FAILED[/]")
@@ -382,6 +382,9 @@ def gen_reproducible_central_build_spec(
             + "Please check if an analysis for it exists in the database.",
             purl.to_string(),
         )
+        rich_handler.update_gen_build_spec("Repository URL:", "[red]FAILED[/]")
+        rich_handler.update_gen_build_spec("Commit Hash:", "[red]FAILED[/]")
+        rich_handler.update_gen_build_spec("Build Tools:", "[red]FAILED[/]")
         return None
 
     latest_component_repository = latest_component.repository
@@ -397,8 +400,6 @@ def gen_reproducible_central_build_spec(
         latest_component_repository.remote_path,
         latest_component_repository.commit_sha,
     )
-    rich_handler = access_handler.get_handler()
-    rich_handler.update_gen_build_spec("Repository PURL:", purl.to_string())
     rich_handler.update_gen_build_spec("Repository URL:", latest_component_repository.remote_path)
     rich_handler.update_gen_build_spec("Commit Hash:", latest_component_repository.commit_sha)
 
