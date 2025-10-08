@@ -44,5 +44,5 @@ steps:
   kind: compare
   options:
     kind: rc_build_spec
-    result: ./output/buildspec/maven/io_micronaut/micronaut-core/macaron.buildspec
-    expected: expected_macaron.buildspec
+    result: ./output/buildspec/maven/io_micronaut/micronaut-core/reproducible_central.buildspec
+    expected: expected_reproducible_central.buildspec
