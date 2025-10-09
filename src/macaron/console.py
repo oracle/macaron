@@ -451,7 +451,7 @@ class RichConsoleHandler(RichHandler):
 
                     layout = layout + [
                         vsa_table,
-                        " cat output/vsa.intoto.jsonl | jq -r [white]'.payload'[/] | base64 -d | jq",
+                        f" cat {self.verification_summary_attestation} | jq -r [white]'.payload'[/] | base64 -d | jq",
                     ]
         elif self.command == "find-source":
             if self.find_source_table.row_count > 0:
