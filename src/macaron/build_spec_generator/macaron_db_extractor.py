@@ -236,7 +236,7 @@ def get_sql_stmt_build_as_code_check(component_id: int) -> Select[tuple[BuildAsC
         .select_from(Component)
         .join(
             MappedCheckResult,
-            onclause=MappedCheckResult.id == Component.id,
+            onclause=MappedCheckResult.component_id == Component.id,
         )
         .join(
             CheckFacts,
