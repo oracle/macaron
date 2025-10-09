@@ -448,11 +448,12 @@ class RichConsoleHandler(RichHandler):
                         "[bold blue]Verification Summary Attestation[/]",
                         self.verification_summary_attestation,
                     )
+                    vsa_table.add_row(
+                        "[bold blue]Decode and Inspect the Content[/]",
+                        f"cat {self.verification_summary_attestation} | jq -r [white]'.payload'[/] | base64 -d | jq",
+                    )
 
-                    layout = layout + [
-                        vsa_table,
-                        f" cat {self.verification_summary_attestation} | jq -r [white]'.payload'[/] | base64 -d | jq",
-                    ]
+                    layout = layout + [vsa_table]
         elif self.command == "find-source":
             if self.find_source_table.row_count > 0:
                 layout = layout + [self.find_source_table]
