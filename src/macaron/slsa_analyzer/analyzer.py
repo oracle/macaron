@@ -117,7 +117,6 @@ class Analyzer:
             "The following checks are excluded based on the user configuration: %s",
             excluded_checks,
         )
-        # To get the console handler which was set earlier
         self.rich_handler = access_handler.get_handler()
         self.rich_handler.add_description_table_content(
             "Excluded Checks:",

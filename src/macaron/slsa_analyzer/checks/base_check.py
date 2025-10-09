@@ -61,7 +61,6 @@ class BaseCheck:
             self._depends_on = depends_on
 
         self._result_on_skip = result_on_skip
-        # To get the console handler which was set earlier
         self.rich_handler = access_handler.get_handler()
 
     @property
@@ -97,7 +96,6 @@ class BaseCheck:
         CheckResult
             The result of the check.
         """
-        # To get the console handler which was set earlier
         self.rich_handler = access_handler.get_handler()
         logger.info("----------------------------------")
         logger.info("BEGIN CHECK: %s", self.check_info.check_id)

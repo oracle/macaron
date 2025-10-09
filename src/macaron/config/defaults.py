@@ -164,7 +164,6 @@ def create_defaults(output_path: str, cwd_path: str) -> bool:
     # Since we have only one defaults.ini file and ConfigParser.write does not
     # preserve the comments, copy the file directly.
     dest_path = os.path.join(output_path, "defaults.ini")
-    # To get the console handler which was set earlier
     rich_handler = access_handler.get_handler()
     try:
         shutil.copy2(src_path, dest_path)

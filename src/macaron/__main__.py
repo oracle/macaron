@@ -214,7 +214,7 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
 
         result = run_policy_engine(verify_policy_args.database, policy_content)
         vsa = generate_vsa(policy_content=policy_content, policy_result=result)
-        # To get the console handler which was set earlier
+        # Retrieve the console handler previously configured via the access_handler.
         rich_handler = access_handler.get_handler()
         if vsa is not None:
             vsa_filepath = os.path.join(global_config.output_path, "vsa.intoto.jsonl")
@@ -304,7 +304,6 @@ def find_source(find_args: argparse.Namespace) -> int:
 
 def perform_action(action_args: argparse.Namespace) -> None:
     """Perform the indicated action of Macaron."""
-    # To get the console handler which was set earlier
     rich_handler = access_handler.get_handler()
     match action_args.action:
         case "dump-defaults":
@@ -649,7 +648,6 @@ def main(argv: list[str] | None = None) -> None:
         else:
             log_level = logging.INFO
             log_format = "%(asctime)s %(message)s"
-        # To get the console handler which was set earlier
         rich_handler = access_handler.set_handler(args.verbose)
         logging.basicConfig(format=log_format, handlers=[rich_handler], force=True, level=log_level)
 

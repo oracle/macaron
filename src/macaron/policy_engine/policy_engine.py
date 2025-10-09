@@ -184,7 +184,6 @@ def run_policy_engine(database_path: str, policy_content: str) -> dict:
 
     logger.info("Policy results:\n%s", "\n".join(output))
 
-    # To get the console handler which was set earlier
     rich_handler = access_handler.get_handler()
     rich_handler.update_policy_engine(res)
 
