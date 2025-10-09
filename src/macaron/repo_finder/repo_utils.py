@@ -89,6 +89,7 @@ def generate_report(purl: str, commit: str, repo: str, target_dir: str) -> bool:
 
     logger.info("Report written to: %s", os.path.relpath(fullpath, os.getcwd()))
 
+    # To get the console handler which was set earlier
     rich_handler = access_handler.get_handler()
     rich_handler.update_find_source_table("JSON Report:", os.path.relpath(fullpath, os.getcwd()))
 

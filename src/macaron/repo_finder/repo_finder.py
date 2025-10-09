@@ -123,6 +123,7 @@ def find_repo(
 
     # Try to find the latest version repo.
     logger.debug("Could not find repo for PURL: %s", purl)
+    # To get the console handler which was set earlier
     rich_handler = access_handler.get_handler()
     latest_version_purl = get_latest_purl_if_different(purl)
     if not latest_version_purl:
@@ -330,6 +331,7 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
 
             return find_source(str(purl), latest_repo, False)
 
+    # To get the console handler which was set earlier
     rich_handler = access_handler.get_handler()
     if not input_repo:
         logger.info("Found repository for PURL: %s", found_repo)
@@ -453,6 +455,7 @@ def prepare_repo(
     tuple[Git | None, CommitFinderInfo]
             The pydriller.Git object of the repository or None if error, and the outcome of the Commit Finder.
     """
+    # To get the console handler which was set earlier
     rich_handler = access_handler.get_handler()
     # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
     logger.info(

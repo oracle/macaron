@@ -254,6 +254,7 @@ def get_rc_build_tool_name(
         BuildToolFacts.__tablename__,
         [(fact.build_tool_name, fact.language) for fact in build_tool_facts],
     )
+    # To get the console handler which was set earlier
     rich_handler = access_handler.get_handler()
     rich_handler.update_gen_build_spec(
         "Build Tools:",
@@ -355,6 +356,7 @@ def gen_reproducible_central_build_spec(
     group = purl.namespace
     artifact = purl.name
     version = purl.version
+    # To get the console handler which was set earlier
     rich_handler = access_handler.get_handler()
     rich_handler.update_gen_build_spec("Package URL:", purl.to_string())
     if group is None or version is None:

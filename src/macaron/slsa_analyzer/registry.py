@@ -52,6 +52,7 @@ class Registry:
 
         self.check_tree: CheckTree = {}
         self.execution_order: list[str] = []
+        # To get the console handler which was set earlier
         self.rich_handler = access_handler.get_handler()
 
     def register(self, check: BaseCheck) -> None:
@@ -469,6 +470,7 @@ class Registry:
         results: dict[str, CheckResult] = {}
         skipped_checks: list[SkippedInfo] = []
 
+        # To get the console handler which was set earlier
         self.rich_handler = access_handler.get_handler()
         self.rich_handler.no_of_checks(len(registry.checks_to_run))
 

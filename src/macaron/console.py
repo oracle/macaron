@@ -420,12 +420,12 @@ class RichConsoleHandler(RichHandler):
             if self.policy_summary_table.row_count > 0:
                 if self.components_violates_table.row_count > 0:
                     layout = layout + [
-                        "[bold red] Components Violates Policy[/]",
+                        "[bold red] Components Violate Policy[/]",
                         self.components_violates_table,
                     ]
                 else:
                     layout = layout + [
-                        "[bold red] Components Violates Policy[/]   [white not italic]None[/]",
+                        "[bold red] Components Violate Policy[/]   [white not italic]None[/]",
                     ]
                 if self.components_satisfy_table.row_count > 0:
                     layout = layout + [
@@ -449,7 +449,10 @@ class RichConsoleHandler(RichHandler):
                         self.verification_summary_attestation,
                     )
 
-                    layout = layout + [vsa_table]
+                    layout = layout + [
+                        vsa_table,
+                        " cat output/vsa.intoto.jsonl | jq -r [white]'.payload'[/] | base64 -d | jq",
+                    ]
         elif self.command == "find-source":
             if self.find_source_table.row_count > 0:
                 layout = layout + [self.find_source_table]

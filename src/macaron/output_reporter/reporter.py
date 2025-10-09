@@ -43,6 +43,7 @@ class FileReporter(abc.ABC):
         """
         self.mode = mode
         self.encoding = encoding
+        # To get the console handler which was set earlier
         self.rich_handler = access_handler.get_handler()
 
     def write_file(self, file_path: str, data: str) -> bool:
@@ -121,6 +122,7 @@ class JSONReporter(FileReporter):
         report: Report | dict
             The report to be generated.
         """
+        # To get the console handler which was set earlier
         self.rich_handler = access_handler.get_handler()
         if not isinstance(report, Report):
             return
@@ -216,6 +218,7 @@ class HTMLReporter(FileReporter):
         report: Report | dict
             The report to be generated.
         """
+        # To get the console handler which was set earlier
         self.rich_handler = access_handler.get_handler()
         if not self.template or not isinstance(report, Report):
             return
@@ -272,6 +275,7 @@ class PolicyReporter(FileReporter):
         report: Report | dict
             The report to be generated.
         """
+        # To get the console handler which was set earlier
         self.rich_handler = access_handler.get_handler()
         if not isinstance(report, dict):
             return

@@ -200,6 +200,7 @@ class Report:
         self.record_mapping: dict[str, Record] = {}
         if root_record.context:
             self.record_mapping[root_record.record_id] = root_record
+        # To get the console handler which was set earlier
         self.rich_handler = access_handler.get_handler()
 
     def get_records(self) -> Iterable[Record]:
@@ -299,6 +300,7 @@ class Report:
         """Return the string representation of the Report instance."""
         ctx_list = list(self.get_ctxs())
         main_ctx: AnalyzeContext = ctx_list.pop(0)
+        # To get the console handler which was set earlier
         self.rich_handler = access_handler.get_handler()
 
         output = "".join(
