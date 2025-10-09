@@ -37,6 +37,7 @@ class RichConsoleHandler(RichHandler):
         self.setLevel(logging.DEBUG)
         self.command = ""
         self.logs: list[str] = []
+        self.error_logs: list[str] = []
         self.description_table = Table(show_header=False, box=None)
         self.description_table_content: dict[str, str | Status] = {
             "Package URL:": Status("[green]Processing[/]"),
@@ -118,6 +119,7 @@ class RichConsoleHandler(RichHandler):
 
         if record.levelno >= logging.ERROR:
             self.logs.append(f"[red][ERROR][/red] {log_time} {msg}")
+            self.error_logs.append(f"[red][ERROR][/red] {log_time} {msg}")
         elif record.levelno >= logging.WARNING:
             self.logs.append(f"[yellow][WARNING][/yellow] {log_time} {msg}")
         else:
@@ -386,10 +388,17 @@ class RichConsoleHandler(RichHandler):
             A rich Group object containing the layout for the live console display.
         """
         layout: list[RenderableType] = []
+        if self.error_logs:
+            error_log_panel = Panel(
+                "\n".join(self.error_logs),
+                title="Error Logs",
+                title_align="left",
+                border_style="red",
+            )
+            layout = layout + [error_log_panel]
         if self.command == "analyze":
-            layout = layout + [Rule(" DESCRIPTION", align="left")]
             if self.description_table.row_count > 0:
-                layout = layout + ["", self.description_table]
+                layout = layout + [Rule(" DESCRIPTION", align="left"), "", self.description_table]
             if self.progress_table.row_count > 0:
                 layout = layout + ["", self.progress, "", self.progress_table]
             if self.failed_checks_table.row_count > 0:
