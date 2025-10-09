@@ -19,6 +19,7 @@ For the full list of supported technologies, such as CI services, registries, an
 
    commit_finder
    detect_malicious_package
+   rebuild_third_party_artifacts
    detect_vulnerable_github_actions
    provenance
    detect_malicious_java_dep

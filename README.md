@@ -76,14 +76,18 @@ To learn how to define your own checks, see the steps in the [checks documentati
 
 * Behnaz Hassanshahi, Trong Nhan Mai, Alistair Michael, Benjamin Selwyn-Smith, Sophie Bates, and Padmanabhan Krishnan: [Macaron: A Logic-based Framework for Software Supply Chain Security Assurance](https://dl.acm.org/doi/abs/10.1145/3605770.3625213), SCORED 2023. Best paper award :trophy:
 
+* * Behnaz Hassanshahi, Trong Nhan Mai, Benjamin Selwyn-Smith, and Nicholas Allen: [Unlocking Reproducibility: Automating re-Build Process for Open-Source Software](https://arxiv.org/pdf/2509.08204), ASE Industry Showcase 2025.
+
 * Ridwan Shariffdeen, Behnaz Hassanshahi, Martin Mirchev, Ali El Husseini, Abhik Roychoudhury [Detecting Python Malware in the Software Supply Chain with Program Analysis](https://labs.oracle.com/pls/apex/f?p=94065:10:11591088449483:11569), ICSE-SEIP 2025.
 
 * Jens Dietrich, Tim White, Behnaz Hassanshahi, Paddy Krishnan [Levels of Binary Equivalence for the Comparison of Binaries
-from Alternative Builds](https://arxiv.org/pdf/2410.08427), pre-print on arXiv.
+from Alternative Builds](https://arxiv.org/pdf/2410.08427), ICSME Industry Track 2025.
 
 * Jens Dietrich, Tim White, Valerio Terragni, Behnaz Hassanshahi [Towards Cross-Build Differential Testing](https://labs.oracle.com/pls/apex/f?p=94065:10:11591088449483:11549), ICST 2025.
 
 * Jens Dietrich, Tim White, Mohammad Mahdi Abdollahpour, Elliott Wen, Behnaz Hassanshahi [BinEq-A Benchmark of Compiled Java Programs to Assess Alternative Builds](https://dl.acm.org/doi/10.1145/3689944.3696162), SCORED 2024.
+
+* Jens Dietrich and Behnaz Hassanshahi [DALEQ--Explainable Equivalence for Java Bytecode](https://arxiv.org/pdf/2508.01530), ASE Industry Showcase 2025.
 
 ## Security
 

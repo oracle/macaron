@@ -23,6 +23,13 @@ such as GitHub Actions workflows.
 * Go
 * Docker
 
+.. _supported_build_gen_tools:
+
+------------------------------
+Build Specification Generation
+------------------------------
+
+* Maven and Gradle builds for Java artifacts
 
 .. _supported_git_services:
 
