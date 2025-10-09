@@ -32,10 +32,6 @@ class RichConsoleHandler(RichHandler):
             Variable length argument list.
         kwargs
             Arbitrary keyword arguments.
-
-        Returns
-        -------
-        None
         """
         super().__init__(*args, **kwargs)
         self.setLevel(logging.DEBUG)
@@ -116,10 +112,6 @@ class RichConsoleHandler(RichHandler):
         ----------
         record : logging.LogRecord
             The log record to be emitted.
-
-        Returns
-        -------
-        None
         """
         log_time = time.strftime("%H:%M:%S")
         msg = self.format(record)
@@ -143,10 +135,6 @@ class RichConsoleHandler(RichHandler):
             The key to be added or updated.
         value : str or Status
             The value associated with the key.
-
-        Returns
-        -------
-        None
         """
         self.description_table_content[key] = value
         description_table = Table(show_header=False, box=None)
@@ -165,10 +153,6 @@ class RichConsoleHandler(RichHandler):
         ----------
         value : int
             The total number of checks to be performed.
-
-        Returns
-        -------
-        None
         """
         self.task_id = self.progress.add_task("analyzing", total=value)
 
@@ -182,10 +166,6 @@ class RichConsoleHandler(RichHandler):
             The identifier of the check to be updated.
         status : str, optional
             The new status of the check, by default "RUNNING"
-
-        Returns
-        -------
-        None
         """
         self.checks[check_id] = status
 
@@ -211,10 +191,6 @@ class RichConsoleHandler(RichHandler):
             Dictionary containing lists of checks categorized by their results.
         total_checks : int
             The total number of checks.
-
-        Returns
-        -------
-        None
         """
         failed_checks_table = Table(show_header=False, box=None)
         failed_checks_table.add_column("Status", justify="left")
@@ -260,10 +236,6 @@ class RichConsoleHandler(RichHandler):
             The type of the report (e.g., "HTML Report", "JSON Report").
         report_path : str
             The relative path to the generated report.
-
-        Returns
-        -------
-        None
         """
         self.reports[report_type] = report_path
         report_table = Table(show_header=False, box=None)
@@ -276,13 +248,7 @@ class RichConsoleHandler(RichHandler):
         self.report_table = report_table
 
     def generate_policy_summary_table(self) -> None:
-        """
-        Generate the policy summary table based on the current policy summary data.
-
-        Returns
-        -------
-        None
-        """
+        """Generate the policy summary table based on the current policy summary data."""
         policy_summary_table = Table(show_header=False, box=None)
         policy_summary_table.add_column("Detail", justify="left")
         policy_summary_table.add_column("Value", justify="left")
@@ -307,10 +273,6 @@ class RichConsoleHandler(RichHandler):
         ----------
         report_path : str
             The relative path to the policy report.
-
-        Returns
-        -------
-        None
         """
         self.policy_summary["Policy Report"] = report_path
         self.generate_policy_summary_table()
@@ -323,10 +285,6 @@ class RichConsoleHandler(RichHandler):
         ----------
         vsa_path : str
             The relative path to the verification summary attestation.
-
-        Returns
-        -------
-        None
         """
         self.verification_summary_attestation = vsa_path
 
@@ -339,10 +297,6 @@ class RichConsoleHandler(RichHandler):
         results : dict
             Dictionary containing policy engine results including components that violate or satisfy policies,
             and lists of passed and failed policies.
-
-        Returns
-        -------
-        None
         """
         components_violates_table = Table(show_header=False, box=None)
         components_violates_table.add_column("Assign No.", justify="left")
@@ -383,10 +337,6 @@ class RichConsoleHandler(RichHandler):
             The key to be added or updated.
         value : str or Status
             The value associated with the key.
-
-        Returns
-        -------
-        None
         """
         self.find_source_content[key] = value
         find_source_table = Table(show_header=False, box=None)
@@ -404,10 +354,6 @@ class RichConsoleHandler(RichHandler):
         ----------
         value : str or Status
             The value to be set for dump defaults.
-
-        Returns
-        -------
-        None
         """
         self.dump_defaults = value
 
@@ -421,10 +367,6 @@ class RichConsoleHandler(RichHandler):
             The key to be added or updated.
         value : str or Status
             The value associated with the key.
-
-        Returns
-        -------
-        None
         """
         self.gen_build_spec[key] = value
         gen_build_spec_table = Table(show_header=False, box=None)
@@ -540,10 +482,6 @@ class RichConsoleHandler(RichHandler):
         ----------
         message : str
             The error message to be logged.
-
-        Returns
-        -------
-        None
         """
         self.error_message = message
 
@@ -555,23 +493,13 @@ class RichConsoleHandler(RichHandler):
         ----------
         command : str
             The command being executed (e.g., "analyze", "verify-policy").
-
-        Returns
-        -------
-        None
         """
         self.command = command
         if not self.live.is_started:
             self.live.start()
 
     def close(self) -> None:
-        """
-        Stop the live console display.
-
-        Returns
-        -------
-        None
-        """
+        """Stop the live console display."""
         self.live.stop()
 
 
@@ -579,13 +507,7 @@ class AccessHandler:
     """A class to manage access to the RichConsoleHandler instance."""
 
     def __init__(self) -> None:
-        """
-        Initialize the AccessHandler with a default RichConsoleHandler instance.
-
-        Returns
-        -------
-        None
-        """
+        """Initialize the AccessHandler with a default RichConsoleHandler instance."""
         self.rich_handler = RichConsoleHandler()
 
     def set_handler(self, verbose: bool) -> RichConsoleHandler:
