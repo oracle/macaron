@@ -42,6 +42,7 @@ from pydriller import Git
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
+from macaron.console import access_handler
 from macaron.errors import CloneError, RepoCheckOutError
 from macaron.repo_finder import repo_finder_pypi, to_domain_from_known_purl_types
 from macaron.repo_finder.commit_finder import find_commit, match_tags
@@ -122,13 +123,17 @@ def find_repo(
 
     # Try to find the latest version repo.
     logger.debug("Could not find repo for PURL: %s", purl)
+    rich_handler = access_handler.get_handler()
     latest_version_purl = get_latest_purl_if_different(purl)
     if not latest_version_purl:
         logger.debug("Could not find newer PURL than provided: %s", purl)
+        rich_handler.add_description_table_content("Local Cloned Path:", "[red]Not Found[/]")
+        rich_handler.add_description_table_content("Remote Path:", "[red]Not Found[/]")
         return "", RepoFinderInfo.NO_NEWER_VERSION
-
     found_repo, outcome = DepsDevRepoFinder().find_repo(latest_version_purl)
     if found_repo:
+        rich_handler.add_description_table_content("Local Cloned Path:", found_repo)
+        rich_handler.add_description_table_content("Remote Path:", found_repo)
         return found_repo, outcome
 
     if not found_repo:
@@ -136,13 +141,17 @@ def find_repo(
 
     if not found_repo:
         logger.debug("Could not find repo from latest version of PURL: %s", latest_version_purl)
+        rich_handler.add_description_table_content("Local Cloned Path:", "[red]Not Found[/]")
+        rich_handler.add_description_table_content("Remote Path:", "[red]Not Found[/]")
         return "", RepoFinderInfo.LATEST_VERSION_INVALID
 
     return found_repo, outcome
 
 
 def find_repo_alternative(
-    purl: PackageURL, outcome: RepoFinderInfo, package_registries_info: list[PackageRegistryInfo] | None = None
+    purl: PackageURL,
+    outcome: RepoFinderInfo,
+    package_registries_info: list[PackageRegistryInfo] | None = None,
 ) -> tuple[str, RepoFinderInfo]:
     """Use PURL type specific methods to find the repository when the standard methods have failed.
 
@@ -279,7 +288,12 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
         repo_dir = os.path.join(global_config.output_path, GIT_REPOS_DIR)
         logging.getLogger("macaron.slsa_analyzer.git_url").disabled = True
         # The prepare_repo function will also check the latest version of the artifact if required.
-        git_obj, _ = prepare_repo(repo_dir, found_repo, purl=purl, latest_version_fallback=not checked_latest_purl)
+        git_obj, _ = prepare_repo(
+            repo_dir,
+            found_repo,
+            purl=purl,
+            latest_version_fallback=not checked_latest_purl,
+        )
 
         if git_obj:
             digest = git_obj.get_head().hash
@@ -316,12 +330,22 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
 
             return find_source(str(purl), latest_repo, False)
 
+    rich_handler = access_handler.get_handler()
     if not input_repo:
         logger.info("Found repository for PURL: %s", found_repo)
+        rich_handler.update_find_source_table("Repository URL:", found_repo)
+    else:
+        rich_handler.update_find_source_table("Repository URL:", input_repo)
 
     logger.info("Found commit for PURL: %s", digest)
+    rich_handler.update_find_source_table("Commit Hash:", digest)
 
-    if not generate_report(purl_string, digest, found_repo, os.path.join(global_config.output_path, "reports")):
+    if not generate_report(
+        purl_string,
+        digest,
+        found_repo,
+        os.path.join(global_config.output_path, "reports"),
+    ):
         return False
 
     return True
@@ -381,7 +405,9 @@ def get_latest_repo_if_different(latest_version_purl: PackageURL, original_repo:
 
     if check_repo_urls_are_equivalent(original_repo, latest_repo):
         logger.error(
-            "Repository from latest PURL is equivalent to original repository: %s ~= %s", latest_repo, original_repo
+            "Repository from latest PURL is equivalent to original repository: %s ~= %s",
+            latest_repo,
+            original_repo,
         )
         return ""
 
@@ -427,6 +453,7 @@ def prepare_repo(
     tuple[Git | None, CommitFinderInfo]
             The pydriller.Git object of the repository or None if error, and the outcome of the Commit Finder.
     """
+    rich_handler = access_handler.get_handler()
     # TODO: separate the logic for handling remote and local repos instead of putting them into this method.
     logger.info(
         "Preparing the repository for the analysis (path=%s, branch=%s, digest=%s)",
@@ -434,6 +461,7 @@ def prepare_repo(
         branch_name,
         digest,
     )
+    rich_handler.add_description_table_content("Remote Path:", repo_path)
 
     is_remote = is_remote_repo(repo_path)
     commit_finder_outcome = CommitFinderInfo.NOT_USED
@@ -451,12 +479,14 @@ def prepare_repo(
         logger.info("Cloning the repository.")
         try:
             git_service.clone_repo(resolved_local_path, resolved_remote_path)
+            rich_handler.add_description_table_content("Local Cloned Path:", repo_unique_path)
         except CloneError as error:
             logger.error("Cannot clone %s: %s", resolved_remote_path, str(error))
             return None, commit_finder_outcome
     else:
         logger.info("Checking if the path to repo %s is a local path.", repo_path)
         resolved_local_path = resolve_local_path(get_local_repos_path(), repo_path)
+        rich_handler.add_description_table_content("Local Cloned Path:", resolved_local_path)
 
     if resolved_local_path:
         try:

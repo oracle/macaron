@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Registry class for loading checks."""
@@ -14,6 +14,7 @@ from graphlib import CycleError, TopologicalSorter
 from typing import Any, TypeVar
 
 from macaron.config.defaults import defaults
+from macaron.console import access_handler
 from macaron.errors import CheckRegistryError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
@@ -51,6 +52,7 @@ class Registry:
 
         self.check_tree: CheckTree = {}
         self.execution_order: list[str] = []
+        self.rich_handler = access_handler.get_handler()
 
     def register(self, check: BaseCheck) -> None:
         """Register the check.
@@ -76,7 +78,10 @@ class Registry:
         else:
             for parent_relationship in check.depends_on:
                 if not self._add_relationship_entry(check.check_info.check_id, parent_relationship):
-                    logger.error("Cannot load relationships of check %s.", check.check_info.check_id)
+                    logger.error(
+                        "Cannot load relationships of check %s.",
+                        check.check_info.check_id,
+                    )
                     sys.exit(1)
 
         self._all_checks_mapping[check.check_info.check_id] = check
@@ -169,7 +174,10 @@ class Registry:
 
         if check_file_abs_path:
             if not (hasattr(check, "result_on_skip") and isinstance(check.result_on_skip, CheckResultType)):
-                logger.error("The status_on_skipped in the Check at %s is invalid.", str(check.check_info.check_id))
+                logger.error(
+                    "The status_on_skipped in the Check at %s is invalid.",
+                    str(check.check_info.check_id),
+                )
                 return False
 
             if not Registry._validate_check_id_format(check.check_info.check_id):
@@ -461,11 +469,18 @@ class Registry:
         results: dict[str, CheckResult] = {}
         skipped_checks: list[SkippedInfo] = []
 
+        self.rich_handler = access_handler.get_handler()
+        self.rich_handler.no_of_checks(len(registry.checks_to_run))
+
         for check_id in self.execution_order:
             check = all_checks.get(check_id)
 
             if not check:
-                logger.error("Check %s is not defined yet. Please add the implementation for %s.", check_id, check_id)
+                logger.error(
+                    "Check %s is not defined yet. Please add the implementation for %s.",
+                    check_id,
+                    check_id,
+                )
                 results[check_id] = CheckResult(
                     check=CheckInfo(
                         check_id=check_id,
@@ -495,7 +510,11 @@ class Registry:
             try:
                 results[check_id] = check.run(target, skipped_info)
             except Exception as exc:  # pylint: disable=broad-exception-caught
-                logger.error("Exception in check %s: %s. Run in verbose mode to get more information.", check_id, exc)
+                logger.error(
+                    "Exception in check %s: %s. Run in verbose mode to get more information.",
+                    check_id,
+                    exc,
+                )
                 logger.debug(traceback.format_exc())
                 logger.info("Check %s has failed.", check_id)
                 return results
@@ -598,7 +617,10 @@ class Registry:
                     f"Check {check.check_info.check_id} is set to {check.result_on_skip.value} "
                     f"because {parent_id} {got_status.value}."
                 )
-                skipped_info = SkippedInfo(check_id=check.check_info.check_id, suppress_comment=suppress_comment)
+                skipped_info = SkippedInfo(
+                    check_id=check.check_info.check_id,
+                    suppress_comment=suppress_comment,
+                )
                 return skipped_info
 
         return None

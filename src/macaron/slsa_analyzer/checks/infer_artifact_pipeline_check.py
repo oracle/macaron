@@ -89,11 +89,8 @@ class ArtifactPipelineCheck(BaseCheck):
     def __init__(self) -> None:
         """Initialize the InferArtifactPipeline instance."""
         check_id = "mcn_find_artifact_pipeline_1"
-        description = """
-        Detects pipelines from which an artifact is published.
-
-        When a verifiable provenance is found for an artifact, we use it to obtain the pipeline trigger.
-        """
+        description = """Detects pipelines from which an artifact is published.
+When a verifiable provenance is found for an artifact, we use it to obtain the pipeline trigger."""
         depends_on: list[tuple[str, CheckResultType]] = [("mcn_build_as_code_1", CheckResultType.PASSED)]
         eval_reqs: list[ReqName] = []
         super().__init__(
