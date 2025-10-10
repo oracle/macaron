@@ -250,7 +250,7 @@ class DependencyAnalyzer:
                 ):
                     latest_deps[key] = item
             except ValueError as error:
-                logger.error("Could not parse dependency version number: %s", error)
+                logger.debug("Could not parse dependency version number: %s", error)
 
     @staticmethod
     def to_configs(resolved_deps: dict[str, DependencyInfo]) -> list[Configuration]:
@@ -344,7 +344,7 @@ class DependencyAnalyzer:
                 # We allow dependency analysis if SBOM is provided but no repository is found.
                 dep_analyzer = build_tool.get_dep_analyzer()
             except DependencyAnalyzerError as error:
-                logger.error("Unable to find a dependency analyzer for %s: %s", build_tool.name, error)
+                logger.debug("Unable to find a dependency analyzer for %s: %s", build_tool.name, error)
                 return {}
 
             if isinstance(dep_analyzer, NoneDependencyAnalyzer):
@@ -381,11 +381,11 @@ class DependencyAnalyzer:
                     log_file.write(analyzer_output.stdout.decode("utf-8"))
 
             except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
-                logger.error(error)
+                logger.debug(error)
                 with open(log_path, mode="a", encoding="utf-8") as log_file:
                     log_file.write(error.output.decode("utf-8"))
             except FileNotFoundError as error:
-                logger.error(error)
+                logger.debug(error)
 
             # We collect the generated SBOM as a best effort, even if the build exits with errors.
             # TODO: add improvements to help the SBOM build succeed as much as possible.
@@ -437,12 +437,12 @@ class DependencyAnalyzer:
         try:
             root_bom = deserialize_bom_json(root_bom_path)
         except CycloneDXParserError as error:
-            logger.error(error)
+            logger.debug(error)
             return None
         try:
             return root_bom.metadata.component
         except AttributeError as error:
-            logger.error(error)
+            logger.debug(error)
 
         return None
 
@@ -482,7 +482,7 @@ class DependencyAnalyzer:
             if _is_target_cmp(root_bom.metadata.component):
                 return root_bom.metadata.component
             if root_bom.metadata.component:
-                logger.error(
+                logger.debug(
                     (
                         "The analysis target %s and the metadata component %s in the BOM file do not match."
                         " Please fix the PURL input and try again."
@@ -494,7 +494,7 @@ class DependencyAnalyzer:
                 )
                 return None
 
-        logger.error(
+        logger.debug(
             "Unable to find the analysis target %s in the BOM file. Please fix the PURL input and try again.",
             target_component.purl,
         )
@@ -528,11 +528,11 @@ class DependencyAnalyzer:
         try:
             root_bom = deserialize_bom_json(root_bom_path)
         except CycloneDXParserError as error:
-            logger.error(error)
+            logger.debug(error)
             return
 
         if root_bom.components is None:
-            logger.error("The BOM file at %s misses components.", str(root_bom_path))
+            logger.debug("The BOM file at %s misses components.", str(root_bom_path))
             return
 
         dependencies: list[CDXDependency] = []
@@ -559,7 +559,7 @@ class DependencyAnalyzer:
             try:
                 child_bom_objects.append(deserialize_bom_json(child_path))
             except CycloneDXParserError as error:
-                logger.error(error)
+                logger.debug(error)
                 continue
 
         for bom in child_bom_objects:
@@ -663,7 +663,7 @@ class DependencyAnalyzer:
             with open(os.path.join(global_config.output_path, "sbom_debug.json"), "w", encoding="utf8") as debug_file:
                 debug_file.write(json.dumps(all_versions, indent=4))
         except OSError as error:
-            logger.error(error)
+            logger.debug(error)
 
         return latest_deps
 

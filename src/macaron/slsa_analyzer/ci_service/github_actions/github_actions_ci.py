@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module analyzes GitHub Actions CI."""
@@ -186,13 +186,13 @@ class GitHubActions(BaseCIService):
 
         workflow_data = self.api_client.get_repo_workflow_data(repo_full_name, workflow)
         if not workflow_data:
-            logger.error("Cannot find data of workflow %s.", workflow)
+            logger.debug("Cannot find data of workflow %s.", workflow)
             return ""
 
         try:
             workflow_id = workflow_data["id"]
         except KeyError:
-            logger.error("Cannot get unique ID of workflow %s.", workflow)
+            logger.debug("Cannot get unique ID of workflow %s.", workflow)
             return ""
 
         logger.info("The unique ID of workflow %s is %s", workflow, workflow_id)
@@ -540,7 +540,7 @@ class GitHubActions(BaseCIService):
                     full_name, branch_name=branch_name, created_after=created_after, page=query_page
                 )
             except KeyError:
-                logger.error("Error while reading run data. Skipping ...")
+                logger.debug("Error while reading run data. Skipping ...")
                 continue
 
         return {}

@@ -398,7 +398,7 @@ def build_call_graph_from_path(root: BaseNode, workflow_path: str, repo_path: st
     try:
         parsed_obj: Workflow = parse_action(workflow_path)
     except ParseError as error:
-        logger.error("Unable to parse GitHub Actions at the target %s: %s", repo_path, error)
+        logger.debug("Unable to parse GitHub Actions at the target %s: %s", repo_path, error)
         raise ParseError from error
 
     # Add internal workflows.

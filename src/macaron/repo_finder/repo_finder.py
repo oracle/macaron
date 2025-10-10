@@ -372,11 +372,11 @@ def get_latest_purl_if_different(purl: PackageURL) -> PackageURL | None:
 
     latest_version_purl, _ = DepsDevRepoFinder.get_latest_version(no_version_purl)
     if not latest_version_purl:
-        logger.error("Latest version PURL could not be found.")
+        logger.debug("Latest version PURL could not be found.")
         return None
 
     if latest_version_purl == purl:
-        logger.error("Latest version PURL is the same as the current.")
+        logger.debug("Latest version PURL is the same as the current.")
         return None
 
     logger.debug("Found new version of PURL: %s", latest_version_purl)
@@ -400,11 +400,11 @@ def get_latest_repo_if_different(latest_version_purl: PackageURL, original_repo:
     """
     latest_repo, _ = find_repo(latest_version_purl, False)
     if not latest_repo:
-        logger.error("Could not find repository from latest PURL: %s", latest_version_purl)
+        logger.debug("Could not find repository from latest PURL: %s", latest_version_purl)
         return ""
 
     if check_repo_urls_are_equivalent(original_repo, latest_repo):
-        logger.error(
+        logger.debug(
             "Repository from latest PURL is equivalent to original repository: %s ~= %s",
             latest_repo,
             original_repo,
@@ -470,7 +470,7 @@ def prepare_repo(
         logger.info("The path to repo %s is a remote path.", repo_path)
         resolved_remote_path = get_remote_vcs_url(repo_path)
         if not resolved_remote_path:
-            logger.error("The provided path to repo %s is not a valid remote path.", repo_path)
+            logger.debug("The provided path to repo %s is not a valid remote path.", repo_path)
             return None, commit_finder_outcome
 
         git_service = get_git_service(resolved_remote_path)

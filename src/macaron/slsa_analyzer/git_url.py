@@ -582,7 +582,7 @@ def get_remote_origin_of_local_repo(git_obj: Git) -> str:
         try:
             url_parse_result = urllib.parse.urlparse(remote_origin_path)
         except ValueError:
-            logger.error("Error occurs while processing the remote URL of repo %s.", git_obj.project_name)
+            logger.debug("Error occurs while processing the remote URL of repo %s.", git_obj.project_name)
             return ""
 
         _, _, hostname = url_parse_result.netloc.rpartition("@")

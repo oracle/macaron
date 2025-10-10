@@ -44,7 +44,7 @@ def send_get_http(url: str, headers: dict) -> dict:
     retry_counter = error_retries
     response = requests.get(url=url, headers=headers, timeout=timeout)
     while response.status_code != 200:
-        logger.error(
+        logger.debug(
             "Receiving error code %s from server. Message: %s.",
             response.status_code,
             response.text,
@@ -500,8 +500,8 @@ def copy_file(src: str, dest_dir: str) -> bool:
         shutil.copy2(src, dest_dir)
         return True
     except shutil.Error as error:
-        logger.error("Error while copying %s to %s", src, dest_dir)
-        logger.error(str(error))
+        logger.debug("Error while copying %s to %s", src, dest_dir)
+        logger.debug(error)
         return False
 
 

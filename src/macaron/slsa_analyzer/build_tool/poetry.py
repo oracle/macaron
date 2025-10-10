@@ -86,11 +86,11 @@ class Poetry(BaseBuildTool):
                             if ("tool" in data) and ("poetry" in data["tool"]):
                                 return True
                         except tomllib.TOMLDecodeError:
-                            logger.error("Failed to read the %s file: invalid toml file.", conf)
+                            logger.debug("Failed to read the %s file: invalid toml file.", conf)
                             return False
                     return False
                 except FileNotFoundError:
-                    logger.error("Failed to read the %s file.", conf)
+                    logger.debug("Failed to read the %s file.", conf)
                     return False
 
         return False
