@@ -25,7 +25,12 @@ from macaron.artifact.local_artifact import (
 )
 from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
-from macaron.database.database_manager import DatabaseManager, get_db_manager, get_db_session
+from macaron.console import access_handler
+from macaron.database.database_manager import (
+    DatabaseManager,
+    get_db_manager,
+    get_db_session,
+)
 from macaron.database.table_definitions import (
     Analysis,
     Component,
@@ -107,11 +112,18 @@ class Analyzer:
             logger.error("Cannot start the analysis. Exiting ...")
             sys.exit(1)
 
+        excluded_checks = [check for check in registry.get_all_checks_mapping() if check not in registry.checks_to_run]
         logger.info(
             "The following checks are excluded based on the user configuration: %s",
-            [check for check in registry.get_all_checks_mapping() if check not in registry.checks_to_run],
+            excluded_checks,
+        )
+        self.rich_handler = access_handler.get_handler()
+        self.rich_handler.add_description_table_content(
+            "Excluded Checks:",
+            ", ".join(excluded_checks) if excluded_checks else "None",
         )
         logger.info("The following checks will be run: %s", registry.checks_to_run)
+        self.rich_handler.add_description_table_content("Final Checks:", "\n".join(registry.checks_to_run))
 
         self.output_path = output_path
 
@@ -217,7 +229,10 @@ class Analyzer:
                     )
                 else:
                     # Can't reach here.
-                    logger.critical("Expecting deps depth to be '0', '1' or '-1', got %s", deps_depth)
+                    logger.critical(
+                        "Expecting deps depth to be '0', '1' or '-1', got %s",
+                        deps_depth,
+                    )
                     return os.EX_USAGE
 
                 # Merge the automatically resolved dependencies with the manual configuration.
@@ -297,7 +312,9 @@ class Analyzer:
             return
 
         output_target_path = os.path.join(
-            global_config.output_path, "reports", report.root_record.context.component.report_dir_name
+            global_config.output_path,
+            "reports",
+            report.root_record.context.component.report_dir_name,
         )
         os.makedirs(output_target_path, exist_ok=True)
 
@@ -484,6 +501,7 @@ class Analyzer:
         logger.info("Analyzing %s", repo_id)
         logger.info("With PURL: %s", component.purl)
         logger.info("=====================================")
+        self.rich_handler.add_description_table_content("Package URL:", component.purl)
 
         analyze_ctx = self.create_analyze_ctx(component)
         analyze_ctx.dynamic_data["expectation"] = self.expectations.get_expectation_for_target(
@@ -555,7 +573,10 @@ class Analyzer:
             slsa_version = extract_predicate_version(provenance_payload)
 
             slsa_level = determine_provenance_slsa_level(
-                analyze_ctx, provenance_payload, provenance_is_verified, provenance_l3_verified
+                analyze_ctx,
+                provenance_payload,
+                provenance_is_verified,
+                provenance_l3_verified,
             )
 
             analyze_ctx.dynamic_data["provenance_info"] = Provenance(
@@ -673,6 +694,14 @@ class Analyzer:
             commit_date_str,
         )
 
+        self.rich_handler.add_description_table_content("Branch:", res_branch if res_branch else "None")
+        self.rich_handler.add_description_table_content(
+            "Commit Hash:", commit_sha if commit_sha else "[red]Not Found[/]"
+        )
+        self.rich_handler.add_description_table_content(
+            "Commit Date:", commit_date_str if commit_date_str else "[red]Not Found[/]"
+        )
+
         return repository
 
     class AnalysisTarget(NamedTuple):
@@ -750,7 +779,8 @@ class Analyzer:
                 is not None
             ):
                 raise DuplicateCmpError(
-                    f"{analysis_target.repo_path} is already analyzed.", context=existing_record.context
+                    f"{analysis_target.repo_path} is already analyzed.",
+                    context=existing_record.context,
                 )
 
             repository = self.add_repository(analysis_target.branch, git_obj)
@@ -759,6 +789,9 @@ class Analyzer:
             # software component. If this happens, we don't raise error and treat the software component as if it
             # does not have any ``Repository`` attached to it.
             repository = None
+            self.rich_handler.add_description_table_content("Branch:", "[red]Not Found[/]")
+            self.rich_handler.add_description_table_content("Commit Hash:", "[red]Not Found[/]")
+            self.rich_handler.add_description_table_content("Commit Date:", "[red]Not Found[/]")
 
         if not analysis_target.parsed_purl:
             # If the PURL is not available. This will only mean that the user don't provide PURL but only provide the
@@ -973,10 +1006,15 @@ class Analyzer:
         git_service = get_git_service(remote_path)
 
         if isinstance(git_service, NoneGitService):
-            logger.info("Unable to find repository or unsupported git service for %s", analyze_ctx.component.purl)
+            logger.info(
+                "Unable to find repository or unsupported git service for %s",
+                analyze_ctx.component.purl,
+            )
         else:
             logger.info(
-                "Detected git service %s for %s.", git_service.name, analyze_ctx.component.repository.complete_name
+                "Detected git service %s for %s.",
+                git_service.name,
+                analyze_ctx.component.repository.complete_name,
             )
             analyze_ctx.dynamic_data["git_service"] = git_service
 
@@ -988,7 +1026,9 @@ class Analyzer:
             build_tool.load_defaults()
             if build_tool.purl_type == analyze_ctx.component.type:
                 logger.debug(
-                    "Found %s build tool based on the %s PackageURL.", build_tool.name, analyze_ctx.component.purl
+                    "Found %s build tool based on the %s PackageURL.",
+                    build_tool.name,
+                    analyze_ctx.component.purl,
                 )
                 analyze_ctx.dynamic_data["build_spec"]["purl_tools"].append(build_tool)
 
@@ -1016,10 +1056,23 @@ class Analyzer:
                 )
             else:
                 logger.info("Unable to discover build tools because repository is None.")
+            self.rich_handler.add_description_table_content(
+                "Build Tools:",
+                "[red]Not Found[/]",
+            )
+        else:
+            self.rich_handler.add_description_table_content(
+                "Build Tools:",
+                "\n".join([build_tool.name for build_tool in analyze_ctx.dynamic_data["build_spec"]["tools"]]),
+            )
 
     def _determine_ci_services(self, analyze_ctx: AnalyzeContext, git_service: BaseGitService) -> None:
         """Determine the CI services used by the software component."""
         if isinstance(git_service, NoneGitService):
+            self.rich_handler.add_description_table_content(
+                "CI Services:",
+                "[red]Not Found[/]",
+            )
             return
 
         # Determine the CI services.
@@ -1052,6 +1105,17 @@ class Analyzer:
                     )
                 )
 
+        if analyze_ctx.dynamic_data["ci_services"]:
+            self.rich_handler.add_description_table_content(
+                "CI Services:",
+                "\n".join([ci_service["service"].name for ci_service in analyze_ctx.dynamic_data["ci_services"]]),
+            )
+        else:
+            self.rich_handler.add_description_table_content(
+                "CI Services:",
+                "[red]Not Found[/]",
+            )
+
     def _populate_package_registry_info(self) -> list[PackageRegistryInfo]:
         """Add all possible package registries to the analysis context."""
         package_registries = []
@@ -1070,7 +1134,9 @@ class Analyzer:
         return package_registries
 
     def _determine_package_registries(
-        self, analyze_ctx: AnalyzeContext, package_registries_info: list[PackageRegistryInfo]
+        self,
+        analyze_ctx: AnalyzeContext,
+        package_registries_info: list[PackageRegistryInfo],
     ) -> None:
         """Determine the package registries used by the software component based on its build tools."""
         build_tools = (

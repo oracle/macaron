@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseCheck class to be inherited by other concrete Checks."""
@@ -6,6 +6,7 @@
 import logging
 from abc import abstractmethod
 
+from macaron.console import access_handler
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import (
     CheckInfo,
@@ -49,7 +50,9 @@ class BaseCheck:
             The status for this check when it's skipped based on another check's result.
         """
         self._check_info = CheckInfo(
-            check_id=check_id, check_description=description, eval_reqs=eval_reqs if eval_reqs else []
+            check_id=check_id,
+            check_description=description,
+            eval_reqs=eval_reqs if eval_reqs else [],
         )
 
         if not depends_on:
@@ -58,6 +61,7 @@ class BaseCheck:
             self._depends_on = depends_on
 
         self._result_on_skip = result_on_skip
+        self.rich_handler = access_handler.get_handler()
 
     @property
     def check_info(self) -> CheckInfo:
@@ -92,9 +96,12 @@ class BaseCheck:
         CheckResult
             The result of the check.
         """
+        self.rich_handler = access_handler.get_handler()
         logger.info("----------------------------------")
         logger.info("BEGIN CHECK: %s", self.check_info.check_id)
         logger.info("----------------------------------")
+
+        self.rich_handler.update_checks(self.check_info.check_id)
 
         check_result_data: CheckResultData
 
@@ -127,6 +134,11 @@ class BaseCheck:
             self.check_info.eval_reqs,
             get_result_as_bool(check_result_data.result_type),
             justification_str,
+        )
+
+        self.rich_handler.update_checks(
+            self.check_info.check_id,
+            check_result_data.result_type.value,
         )
 
         return CheckResult(check=self.check_info, result=check_result_data)

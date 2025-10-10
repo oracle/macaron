@@ -82,8 +82,7 @@ class DetectMaliciousMetadataCheck(BaseCheck):
     def __init__(self) -> None:
         """Initialize a check instance."""
         check_id = "mcn_detect_malicious_metadata_1"
-        description = """Check if the package is malicious.
-        """
+        description = """Check if the package is malicious."""
         super().__init__(check_id=check_id, description=description, eval_reqs=[])
 
     def _should_skip(
@@ -158,9 +157,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 return {analyzer.heuristic: result}, detail_info
 
         except SourceCodeError as error:
-            error_msg = f"Unable to perform source code analysis: {error}"
-            logger.debug(error_msg)
-            raise HeuristicAnalyzerValueError(error_msg) from error
+            logger.debug("Unable to perform source code analysis: %s", error)
+            return {analyzer.heuristic: HeuristicResult.SKIP}, {}
 
     def evaluate_heuristic_results(
         self, heuristic_results: dict[Heuristics, HeuristicResult]
