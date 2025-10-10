@@ -101,7 +101,7 @@ test = [
     "pytest-cov >=6.0.0,<7.0.0",
     "pytest-env >=1.0.0,<2.0.0",
     "pytest_httpserver >=1.0.10,<2.0.0",
-    "syrupy >=4.0.0,<5.0.0",
+    "syrupy >=4.0.0,<6.0.0",
 ]
 
 test-docker = [
