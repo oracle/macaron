@@ -8,7 +8,7 @@ Rebuilding Third-Party Artifacts from Source with Macaron
 *********************************************************
 
 In this tutorial, you'll learn how to use Macaron's new ``gen-build-spec`` command to automatically generate build specification (buildspec) files from analyzed software packages.
-These buildspecs help document and automate the build process for packages, enabling reproducibility and ease of integration with infrastructures such as Reproducible Central.
+These buildspecs help document and automate the build process for packages, enabling reproducibility and ease of integration with infrastructures such as `Reproducible Central <https://github.com/jvm-repo-rebuild/reproducible-central>`_. For a more detailed description of this feature, refer to our accepted ASE 2025 Industry Showcase paper: `Unlocking Reproducibility: Automating the Re-Build Process for Open-Source Software <https://arxiv.org/pdf/2509.08204>`_.
 
 .. list-table::
    :widths: 25
@@ -23,17 +23,15 @@ These buildspecs help document and automate the build process for packages, enab
 Motivation
 **********
 
-Software ecosystems such as Maven Central are foundational to modern software supply chains, providing centralized repositories for libraries, plugins, and other components. However, one ongoing challenge is the separation between distributed binaries and their corresponding source code and build processes. For example, in Maven Central, there is often no direct, transparent link between a published binary and the environment in which it was built. In fact, recent studies show that around 84% of the top 1200 most commonly used Java artifacts are not built through transparent CI/CD pipelines.
+Modern software supply chains rely heavily on centralized repositories like Maven Central to provide easy access to libraries and components. However, a major challenge persists: there is often no clear or transparent link between the published binaries and the environments in which they were built. `Our study <https://arxiv.org/pdf/2509.08204>`_ shows that about 84% of popular Java artifacts on Maven Central aren’t built through transparent CI/CD pipelines, leaving users to blindly trust not only the source code but also opaque build processes that can introduce hidden risks.
 
-This lack of transparency introduces security risks: users must trust not just the upstream source code, but also the build environment itself—including tools, plugins, and configuration details—which may not be visible or reproducible. As supply chain security becomes increasingly critical, rebuilding artifacts from source has become an essential strategy. This process enables deeper code review, verification of binary-source equivalence, and greater control over dependencies.
-
-However, rebuilding artifacts reliably is difficult due to differences in build environments (such as JDK versions or specific build commands), and the challenge only increases with large, complex dependency graphs. Macaron addresses these issues by automating the extraction of build specifications from open CI/CD workflows (like GitHub Actions), improving source code detection, and providing the tools needed to make reproducible rebuilds easier and more robust. By supporting this workflow, Macaron helps increase both the security and transparency of the open-source software supply chain.
+Addressing this lack of transparency is critical for improving supply chain security. Rebuilding software artifacts from source enables thorough code review, verifies that binaries match their sources, and ensures closer control over dependencies. Yet, recreating build environments is complex, especially with large dependency trees and varying configurations. Macaron tackles these challenges by automatically extracting build specifications from open CI/CD workflows, enhancing source detection, and making reproducible rebuilds more accessible. In doing so, it improves both security and transparency across the open-source software ecosystem.
 
 **********
 Background
 **********
 
-A build specification is a file that describes all necessary information to rebuild a package from source. This includes metadata such as the build tool, the specific build command to run, the language version, e.g., JDK for Java, and artifact coordinates. Macaron can now generate this file automatically for supported ecosystems, greatly simplifying reproducible builds.
+A build specification is a file that describes all necessary information to rebuild a package from source. This includes metadata such as the build tool, the specific build command to run, the language version, e.g., JDK for Java, and artifact coordinates. Macaron can now generate this file automatically for supported ecosystems, greatly simplifying build from source.
 
 The generated buildspec will be stored in an ecosystem- and PURL-specific path under the ``output/`` directory (see more under :ref:`Output Files Guide <output_files_guide>`).
 
@@ -41,11 +39,26 @@ The generated buildspec will be stored in an ecosystem- and PURL-specific path u
 Installation and Prerequisites
 ******************************
 
-You need:
+Skip this section if you already know how to install Macaron.
 
-* Docker
-* Macaron image (see :ref:`installation-guide`)
-* GitHub Token (see :ref:`prepare-github-token`)
+.. toggle::
+
+    Please follow the instructions :ref:`here <installation-guide>`. In summary, you need:
+
+        * Docker
+        * the ``run_macaron.sh``  script to run the Macaron image.
+
+    .. note:: At the moment, Docker alternatives (e.g. podman) are not supported.
+
+
+    You also need to provide Macaron with a GitHub token through the ``GITHUB_TOKEN``  environment variable.
+
+    To obtain a GitHub Token:
+
+    * Go to ``GitHub settings`` → ``Developer Settings`` (at the bottom of the left side pane) → ``Personal Access Tokens`` → ``Fine-grained personal access tokens`` → ``Generate new token``. Give your token a name and an expiry period.
+    * Under ``"Repository access"``, choosing ``"Public Repositories (read-only)"`` should be good enough in most cases.
+
+    Now you should be good to run Macaron. For more details, see the documentation :ref:`here <prepare-github-token>`.
 
 *************************
 Step 1: Analyze a Package
@@ -63,7 +76,7 @@ This command will inspect the source repository, CI/CD configuration, and extrac
 Step 2: Generate a Build Specification File
 *******************************************
 
-After analysis is complete, you can generate a buildspec for the package using the ``gen-build-spec`` command.
+After analysis is complete, you can generate a buildspec for the package using the ``gen-build-spec`` command. For more details, refer to the :ref:`gen-build-spec-command-cli`.
 
 .. code-block:: shell
 
@@ -88,15 +101,12 @@ In the example above, the buildspec is located at:
 Step 3: Review and Use the Buildspec File
 *****************************************
 
-The generated buildspec uses the `Reproducible Central buildspec <https://reproducible-central.org/spec/>`_ format, for example:
+The generated buildspec uses the `Reproducible Central buildspec <https://github.com/jvm-repo-rebuild/reproducible-central/blob/master/doc/BUILDSPEC.md>`_ format, for example:
 
 .. code-block:: ini
 
-    # Copyright (c) 2025, Oracle and/or its affiliates.
-    # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
-    # Generated by Macaron version 0.15.0
-    # Input PURL - pkg:maven/org.apache.hugegraph/computer-k8s@1.0.0
-    # Initial default JDK version 8 and default build command [['mvn', '-DskipTests=true', ... ]]
+    # Generated by Macaron version 0.18.0
+
     groupId=org.apache.hugegraph
     artifactId=computer-k8s
     version=1.0.0
@@ -108,20 +118,29 @@ The generated buildspec uses the `Reproducible Central buildspec <https://reprod
     command="mvn -DskipTests=true -Dmaven.test.skip=true -Dmaven.site.skip=true -Drat.skip=true -Dmaven.javadoc.skip=true clean package"
     buildinfo=target/computer-k8s-1.0.0.buildinfo
 
-You can now use this file to automate reproducible builds, for example as part of the Reproducible Central infrastructure.
+You can now use this file to automate rebuilding artifacts, for example as part of the Reproducible Central infrastructure.
+
+************************
+Step 4: Build Validation
+************************
+
+Validating builds is a crucial post-build step that should be performed independently of the build process. Once a build is complete, it is essential to verify that the resulting artifacts meet the established expectations and accurately reflect the original source. Validation techniques vary, ranging from bitwise equivalence, where the artifacts must match exactly at the binary level, to semantic equivalence, which ensures functional similarity even when the binary outputs differ. Each approach offers distinct advantages depending on the specific context.
+
+For example, `Daleq <https://github.com/binaryeq/daleq>`_ is a tool that disassembles Java bytecode into an intermediate representation to infer equivalence between Java classes. Daleq is developed based on recent `research <https://arxiv.org/abs/2410.08427>`_ that proposes practical levels for establishing binary equivalence. To learn more about how Daleq works, see the `paper <https://arxiv.org/pdf/2508.01530>`_.
 
 *******************************
 How It Works: Behind the Scenes
 *******************************
 
-The ``gen-build-spec`` command extracts build data from Macaron’s SQLite database, using several modules:
+The ``gen-build-spec`` works as follows:
 
-- **macaron_db_extractor.py:** extracts metadata and build information using SQLAlchemy ORM mapped classes.
-- **Maven and Gradle CLI Parsers:** parses and patches build commands from CI/CD configs, to ensure compatibility with reproducible build systems.
-- **jdk_finder.py:** identifies the JDK version by parsing CI/CD config or, when unavailable, extracting it from ``META-INF/MANIFEST.MF`` in Maven Central artifacts.
-- **jdk_version_normalizer.py:** ensures only the major JDK version is included, as required by the buildspec format.
+- Extracts metadata and build information from Macaron’s local SQLite database.
+- Parses and modifies build commands from CI/CD configurations to ensure compatibility with rebuild systems.
+- Identifies the JDK version by parsing CI/CD configurations or extracting it from the ``META-INF/MANIFEST.MF`` file in Maven Central artifacts.
+- Ensures that only the major JDK version is included, as required by the build specification format.
 
-This feature is described in more detail in our accepted ASE 2025 Industry ShowCase paper: `"Unlocking Reproducibility: Automating re-Build Process for Open-Source Software" <https://arxiv.org/pdf/2509.08204>`_.
+
+This feature is described in more detail in our accepted ASE 2025 Industry ShowCase paper: `Unlocking Reproducibility: Automating the Re-Build Process for Open-Source Software <https://arxiv.org/pdf/2509.08204>`_.
 
 ***********************************
 Frequently Asked Questions (FAQs)

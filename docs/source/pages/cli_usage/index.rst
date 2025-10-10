@@ -15,7 +15,8 @@ Usage
 
 .. code-block:: shell
 
-	usage: ./run_macaron.sh [-h] [-V] [-v] [-o OUTPUT_DIR] [-dp DEFAULTS_PATH] [-lr LOCAL_REPOS_PATH] {analyze,dump-defaults,verify-policy} ...
+	usage: ./run_macaron.sh [-h] [-V] [-v] [--disable-rich-output] [-o OUTPUT_DIR] [-dp DEFAULTS_PATH] [-lr LOCAL_REPOS_PATH]
+               				{analyze,dump-defaults,verify-policy,find-source,gen-build-spec} ...
 
 Macaron's CLI has multiple common flags (e.g ``-h``, ``-V``) and different commands (e.g. ``analyze``), which have their own set of flags.
 
@@ -27,27 +28,31 @@ Common Options
 
 .. option:: -h, --help
 
-	Show this help message and exit
+    Show this help message and exit.
 
 .. option:: -V, --version
 
-	Show Macaron's version number and exit
+    Show Macaron's version number and exit.
 
 .. option:: -v, --verbose
 
-	Run Macaron with more debug logs
+    Run Macaron with more debug logs to provide additional information for debugging.
+
+.. option:: --disable-rich-output
+
+    Disable Rich UI output. This will turn off any rich formatting (e.g., colored output, tables, etc.) used in the terminal UI.
 
 .. option:: -o OUTPUT_DIR, --output-dir OUTPUT_DIR
 
-	The output destination path for Macaron
+    The output destination path for Macaron. This is where Macaron will store the results of the analysis.
 
 .. option:: -dp DEFAULTS_PATH, --defaults-path DEFAULTS_PATH
 
-	The path to the defaults configuration file.
+    The path to the defaults configuration file. This file can contain preset values for Macaron's options.
 
 .. option:: -lr LOCAL_REPOS_PATH, --local-repos-path LOCAL_REPOS_PATH
 
-	The directory where Macaron looks for already cloned repositories.
+    The directory where Macaron will look for already cloned repositories. This is useful for reusing locally stored repositories without re-cloning them.
 
 ---------------------
 Environment Variables

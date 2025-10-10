@@ -12,6 +12,7 @@ Subpackages
 .. toctree::
    :maxdepth: 1
 
+   macaron.build_spec_generator
    macaron.code_analyzer
    macaron.config
    macaron.database
@@ -19,6 +20,7 @@ Subpackages
    macaron.malware_analyzer
    macaron.output_reporter
    macaron.parsers
+   macaron.path_utils
    macaron.policy_engine
    macaron.provenance
    macaron.repo_finder
@@ -28,6 +30,14 @@ Subpackages
 
 Submodules
 ----------
+
+macaron.console module
+----------------------
+
+.. automodule:: macaron.console
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
 macaron.environment\_variables module
 -------------------------------------

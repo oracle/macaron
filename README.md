@@ -76,7 +76,7 @@ To learn how to define your own checks, see the steps in the [checks documentati
 
 * Behnaz Hassanshahi, Trong Nhan Mai, Alistair Michael, Benjamin Selwyn-Smith, Sophie Bates, and Padmanabhan Krishnan: [Macaron: A Logic-based Framework for Software Supply Chain Security Assurance](https://dl.acm.org/doi/abs/10.1145/3605770.3625213), SCORED 2023. Best paper award :trophy:
 
-* * Behnaz Hassanshahi, Trong Nhan Mai, Benjamin Selwyn-Smith, and Nicholas Allen: [Unlocking Reproducibility: Automating re-Build Process for Open-Source Software](https://arxiv.org/pdf/2509.08204), ASE Industry Showcase 2025.
+* Behnaz Hassanshahi, Trong Nhan Mai, Benjamin Selwyn-Smith, and Nicholas Allen: [Unlocking Reproducibility: Automating re-Build Process for Open-Source Software](https://arxiv.org/pdf/2509.08204), ASE Industry Showcase 2025.
 
 * Ridwan Shariffdeen, Behnaz Hassanshahi, Martin Mirchev, Ali El Husseini, Abhik Roychoudhury [Detecting Python Malware in the Software Supply Chain with Program Analysis](https://labs.oracle.com/pls/apex/f?p=94065:10:11591088449483:11569), ICSE-SEIP 2025.
 
