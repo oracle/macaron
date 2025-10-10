@@ -563,6 +563,40 @@ class PyPIInspectorAsset:
             return True
         return False
 
+    @staticmethod
+    def get_structure(pypi_inspector_url: str) -> list[str] | None:
+        """Get the folder structure of a package from the inspector HTML.
+
+        Parameters
+        ----------
+        pypi_inspector_url: str
+            The URL to a pypi inspector package page.
+
+        Returns
+        -------
+        list[str] | None
+            A list containing the folder structure, or None if it could not be extracted.
+        """
+        # TODO: may have to change this in the asset. Got a client challenge without the "/" appended.
+        response = send_get_http_raw(pypi_inspector_url)
+        if not response:
+            return None
+
+        html = response.content.decode("utf-8")
+        soup = BeautifulSoup(html, "html.parser")
+        # The package structure is present on an inspector.pypi.io page inside an unordered list (<ul>). This
+        # is the only unordered list on the page.
+        if soup.ul is None:
+            return None
+
+        # All the file names sit inside <li> elements in our unordered list, under <a> tags with the 'href' class.
+        files_list = []
+        for element in soup.ul.find_all("li"):
+            if element.a and element.a["href"]:
+                files_list.append(element.a["href"])
+
+        return files_list
+
 
 @dataclass
 class PyPIPackageJsonAsset:
