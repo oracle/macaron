@@ -673,7 +673,7 @@ class Analyzer:
         # We only allow complete_name's length to be 2 or 3 because we need to construct PURL
         # strings using the complete_name, i.e., type/namespace/name@commitsha
         if (parts_len := len(Path(complete_name).parts)) < 2 or parts_len > 3:
-            logger.error("The repository path %s is not valid.", complete_name)
+            logger.debug("The repository path %s is not valid.", complete_name)
             return None
 
         repository = Repository(

@@ -189,7 +189,7 @@ def find_npm_provenance(purl: PackageURL, registry: NPMRegistry) -> list[Provena
                 # Load the provenance file (provenance attestation).
                 provenance_payload = load_provenance_payload(download_path)
             except LoadIntotoAttestationError as error:
-                logger.error("Error while loading provenance attestation: %s", error)
+                logger.debug("Error while loading provenance attestation: %s", error)
                 return []
 
             signed_download_path = f"{download_path}.signed"
@@ -197,7 +197,7 @@ def find_npm_provenance(purl: PackageURL, registry: NPMRegistry) -> list[Provena
                 # Load the other npm provenance file (publish attestation).
                 publish_payload = load_provenance_payload(signed_download_path)
             except LoadIntotoAttestationError as error:
-                logger.error("Error while loading publish attestation: %s", error)
+                logger.debug("Error while loading publish attestation: %s", error)
                 return [ProvenanceAsset(provenance_payload, npm_provenance_asset.name, npm_provenance_asset.url)]
 
             return [
@@ -206,7 +206,7 @@ def find_npm_provenance(purl: PackageURL, registry: NPMRegistry) -> list[Provena
             ]
 
     except OSError as error:
-        logger.error("Error while storing provenance in the temporary directory: %s", error)
+        logger.debug("Error while storing provenance in the temporary directory: %s", error)
         return []
 
 
@@ -331,7 +331,7 @@ def find_pypi_provenance(purl: PackageURL) -> list[ProvenanceAsset]:
             payload.verified = verified
             return [ProvenanceAsset(payload, purl.name, url)]
         except LoadIntotoAttestationError as load_error:
-            logger.error("Error while loading provenance: %s", load_error)
+            logger.debug("Error while loading provenance: %s", load_error)
             return []
 
 
@@ -484,7 +484,7 @@ def download_provenances_from_ci_service(ci_info: CIInfo, download_path: str) ->
             try:
                 payload = load_provenance_payload(provenance_filepath)
             except LoadIntotoAttestationError as error:
-                logger.error("Error logging provenance: %s", error)
+                logger.debug("Error logging provenance: %s", error)
                 continue
 
             # Add the provenance file.

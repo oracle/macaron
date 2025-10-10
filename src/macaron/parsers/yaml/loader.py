@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the loader for YAML files."""
@@ -77,10 +77,10 @@ class YamlLoader:
             yamale.validate(schema, data)
             return True
         except yamale.YamaleError as error:
-            logger.error("Yaml data validation failed.")
+            logger.debug("Yaml data validation failed.")
             for result in error.results:
                 for err_str in result.errors:
-                    logger.error("\t%s", err_str)
+                    logger.debug("\t%s", err_str)
             return False
 
     @classmethod
@@ -105,11 +105,11 @@ class YamlLoader:
         logger.info("Loading yaml content for %s", path)
         loaded_data = YamlLoader._load_yaml_content(path=path)
         if not loaded_data:
-            logger.error("Error while loading the config yaml file %s.", path)
+            logger.debug("Error while loading the config yaml file %s.", path)
             return None
 
         if schema and not YamlLoader.validate_yaml_data(schema, loaded_data):
-            logger.error("The yaml content in %s is invalid according to the schema.", path)
+            logger.debug("The yaml content in %s is invalid according to the schema.", path)
             return None
 
         result = None

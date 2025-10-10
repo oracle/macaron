@@ -126,7 +126,7 @@ class Registry:
         else:
             existed_label = parent.get(check_id)
             if existed_label:
-                logger.error(
+                logger.debug(
                     "The relationship between %s and parent %s has been defined with label %s.",
                     check_id,
                     parent_id,

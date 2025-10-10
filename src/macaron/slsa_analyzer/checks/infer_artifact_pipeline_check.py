@@ -160,7 +160,7 @@ When a verifiable provenance is found for an artifact, we use it to obtain the p
             try:
                 build_def = ProvenancePredicate.find_build_def(prov_payload.statement)
             except ProvenanceError as error:
-                logger.error(error)
+                logger.debug(error)
                 return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
             prov_workflow, prov_trigger_run = build_def.get_build_invocation(prov_payload.statement)
 
