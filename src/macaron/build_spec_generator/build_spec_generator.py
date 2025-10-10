@@ -155,7 +155,7 @@ def gen_build_spec_for_purl(
         os.path.relpath(build_spec_file_path, os.getcwd()),
     )
     rich_handler = access_handler.get_handler()
-    rich_handler.update_gen_build_spec("Build Spec Path:", os.path.relpath(build_spec_filepath, os.getcwd()))
+    rich_handler.update_gen_build_spec("Build Spec Path:", os.path.relpath(build_spec_file_path, os.getcwd()))
     try:
         with open(build_spec_file_path, mode="w", encoding="utf-8") as file:
             file.write(build_spec_content)

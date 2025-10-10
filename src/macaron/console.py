@@ -86,10 +86,6 @@ class RichConsoleHandler(RichHandler):
             self.find_source_table.add_row(key, value)
         self.dump_defaults: str | Status = Status("[green]Generating[/]")
         self.gen_build_spec: dict[str, str | Status] = {
-            "Package URL:": Status("[green]Processing[/]"),
-            "Repository URL:": Status("[green]Processing[/]"),
-            "Commit Hash:": Status("[green]Processing[/]"),
-            "Build Tools:": Status("[green]Processing[/]"),
             "Build Spec Path:": "Not Generated",
         }
         self.gen_build_spec_table = Table(show_header=False, box=None)
