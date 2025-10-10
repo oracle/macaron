@@ -1,3 +1,24 @@
+## v0.18.0 (2025-10-10)
+
+### Feat
+
+- **heuristics**: add whitespace check to detect excessive spacing and invisible characters for malware check (#1086)
+- add reproducible central buildspec generation (#1115)
+- **heuristics**: improve differentiation between stub packages and dependency confusion attacks (#1174)
+- **heuristics**: add two analyzers to detect dependency confusion and distinguish from stub packages (#1117)
+
+### Fix
+
+- gen-build-spec SQL query to look up build-as-code check build command joins on incorrect column (#1207)
+- handle all tarfile extract errors (#1206)
+- ensure Python 3.11.13 is used to address GHSA-4xh5-x5gv-qwph (#1197)
+- **docs**: path of script download example (#1193)
+- improve build tool detection (#1169)
+
+### Refactor
+
+- improve logging in console for macaron commands (#1160)
+
 ## v0.17.0 (2025-08-27)
 
 ### Feat
