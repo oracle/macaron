@@ -268,8 +268,10 @@ class PyPIRegistry(PackageRegistry):
         try:
             with tarfile.open(source_file, "r:gz") as sourcecode_tar:
                 sourcecode_tar.extractall(temp_dir, filter="data")
-        except tarfile.ReadError as read_error:
-            self.cleanup_sourcecode_directory(temp_dir, f"Error reading source code tar file: {read_error}", read_error)
+        except tarfile.TarError as tar_error:
+            self.cleanup_sourcecode_directory(
+                temp_dir, f"Error extracting source code tar file: {tar_error}", tar_error
+            )
 
         os.remove(source_file)
 

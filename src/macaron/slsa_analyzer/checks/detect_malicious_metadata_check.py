@@ -157,9 +157,8 @@ class DetectMaliciousMetadataCheck(BaseCheck):
                 return {analyzer.heuristic: result}, detail_info
 
         except SourceCodeError as error:
-            error_msg = f"Unable to perform source code analysis: {error}"
-            logger.debug(error_msg)
-            raise HeuristicAnalyzerValueError(error_msg) from error
+            logger.debug("Unable to perform source code analysis: %s", error)
+            return {analyzer.heuristic: HeuristicResult.SKIP}, {}
 
     def evaluate_heuristic_results(
         self, heuristic_results: dict[Heuristics, HeuristicResult]
