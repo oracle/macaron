@@ -3,9 +3,9 @@
 
 .. _tutorial-gen-build-spec:
 
-*********************************************************
+---------------------------------------------------------
 Rebuilding Third-Party Artifacts from Source with Macaron
-*********************************************************
+---------------------------------------------------------
 
 In this tutorial, you'll learn how to use Macaron's new ``gen-build-spec`` command to automatically generate build specification (buildspec) files from analyzed software packages.
 These buildspecs help document and automate the build process for packages, enabling reproducibility and ease of integration with infrastructures such as `Reproducible Central <https://github.com/jvm-repo-rebuild/reproducible-central>`_. For a more detailed description of this feature, refer to our accepted ASE 2025 Industry Showcase paper: `Unlocking Reproducibility: Automating the Re-Build Process for Open-Source Software <https://arxiv.org/pdf/2509.08204>`_.

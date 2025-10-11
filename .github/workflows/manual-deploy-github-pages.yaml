@@ -1,0 +1,35 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# Builds and deploys documentation to GitHub Pages on demand.
+# Although documentation is by default deployed as part of the release process,
+# this workflow allows immediate updates for documentation-only changes or urgent fixes.
+
+name: Build and Deploy to GitHub Pages
+on: workflow_dispatch
+
+permissions:
+  contents: read
+env:
+  ARTIFACT_NAME: artifact-ubuntu-latest-python-3.11
+
+jobs:
+  # Build the artifact.
+  build:
+    uses: ./.github/workflows/_build.yaml
+    permissions:
+      contents: read
+      packages: read
+
+  # Publish docs to GitHub pages.
+  github-pages:
+    needs: [build]
+    name: Deploy GitHub pages
+    uses: ./.github/workflows/_deploy-github-pages.yaml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    with:
+      artifact-name: artifact-ubuntu-latest-python-3.11
+      artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
