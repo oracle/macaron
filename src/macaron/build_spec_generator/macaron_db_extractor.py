@@ -133,7 +133,7 @@ def compile_sqlite_select_statement(select_statement: Select) -> str:
         The equivalent SQLite SELECT statement as a string.
     """
     compiled_sqlite = select_statement.compile(
-        dialect=sqlite.dialect(),  # type: ignore
+        dialect=sqlite.dialect(),
         compile_kwargs={"literal_binds": True},
     )
     return f"\n----- Begin SQLite query \n{str(compiled_sqlite)}\n----- End SQLite query\n"
