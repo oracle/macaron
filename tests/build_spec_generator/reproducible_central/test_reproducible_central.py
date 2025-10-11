@@ -1,143 +1,85 @@
 # Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module contains the tests for Reproducible Central build spec generation"""
+"""This module contains tests for Reproducible Central build spec generation."""
 
 import pytest
 
-from macaron.build_spec_generator.macaron_db_extractor import GenericBuildCommandInfo
-from macaron.build_spec_generator.reproducible_central.reproducible_central import (
-    ReproducibleCentralBuildTool,
-    _get_rc_build_tool_name_from_build_facts,
-    get_lookup_build_command_jdk,
-    get_rc_build_command,
-    get_rc_default_build_command,
-)
-from macaron.slsa_analyzer.checks.build_tool_check import BuildToolFacts
+from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict
+from macaron.build_spec_generator.common_spec.core import compose_shell_commands
+from macaron.build_spec_generator.reproducible_central.reproducible_central import gen_reproducible_central_build_spec
+from macaron.errors import GenerateBuildSpecError
+
+
+@pytest.fixture(name="base_build_spec")
+def fixture_base_build_spec() -> BaseBuildSpecDict:
+    """Create a base build spec object."""
+    return BaseBuildSpecDict(
+        {
+            "macaron_version": "1.0.0",
+            "ecosystem": "maven",
+            "language": "java",
+            "group_id": "com.oracle",
+            "artifact_id": "example-artifact",
+            "version": "1.2.3",
+            "git_repo": "https://github.com/oracle/example-artifact.git",
+            "git_tag": "sampletag",
+            "build_tool": "maven",
+            "newline": "lf",
+            "language_version": "17",
+            "build_commands": [["mvn", "package"]],
+            "purl": "pkg:maven/com.oracle/example-artifact@1.2.3",
+        }
+    )
+
+
+def test_successful_build_spec(base_build_spec: BaseBuildSpecDict) -> None:
+    """Check the build spec content."""
+    content = gen_reproducible_central_build_spec(base_build_spec)
+    assert isinstance(content, str), "Expected this build spec to be a string."
+    assert "groupId=com.oracle" in content
+    assert "artifactId=example-artifact" in content
+    assert "tool=mvn" in content
+    assert 'command="mvn package"' in content
+
+
+def test_unsupported_build_tool(base_build_spec: BaseBuildSpecDict) -> None:
+    """Test an unsupported build tool name."""
+    base_build_spec["build_tool"] = "unsupported_tool"
+    with pytest.raises(GenerateBuildSpecError) as excinfo:
+        gen_reproducible_central_build_spec(base_build_spec)
+    assert "is not supported by Reproducible Central" in str(excinfo.value)
+
+
+def test_missing_group_id(base_build_spec: BaseBuildSpecDict) -> None:
+    """Test when group ID is None."""
+    base_build_spec["group_id"] = None
+    with pytest.raises(GenerateBuildSpecError) as excinfo:
+        gen_reproducible_central_build_spec(base_build_spec)
+    assert "Version is missing in PURL" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
-    ("cmds_sequence", "expected"),
+    ("build_tool", "expected"),
     [
-        pytest.param(
-            [
-                "make clean".split(),
-                "mvn clean package".split(),
-            ],
-            "make clean && mvn clean package",
-        ),
-        pytest.param(
-            [
-                "mvn clean package".split(),
-            ],
-            "mvn clean package",
-        ),
+        ("maven", "mvn"),
+        ("gradle", "gradle"),
+        ("MAVEN", "mvn"),
+        ("GRADLE", "gradle"),
     ],
 )
-def test_get_rc_build_command(
-    cmds_sequence: list[list[str]],
-    expected: str,
-) -> None:
-    """Test the _get_build_command_sequence function."""
-    assert get_rc_build_command(cmds_sequence) == expected
+def test_build_tool_name_variants(base_build_spec: BaseBuildSpecDict, build_tool: str, expected: str) -> None:
+    """Test the correct handling of build tool names."""
+    base_build_spec["build_tool"] = build_tool
+    content = gen_reproducible_central_build_spec(base_build_spec)
+    assert content
+    assert f"tool={expected}" in content
 
 
-@pytest.mark.parametrize(
-    ("build_tool_facts", "expected"),
-    [
-        pytest.param(
-            [
-                BuildToolFacts(
-                    language="python",
-                    build_tool_name="pip",
-                )
-            ],
-            None,
-            id="python_is_not_supported_for_rc",
-        ),
-        pytest.param(
-            [
-                BuildToolFacts(
-                    language="java",
-                    build_tool_name="gradle",
-                )
-            ],
-            ReproducibleCentralBuildTool.GRADLE,
-            id="build_tool_gradle",
-        ),
-        pytest.param(
-            [
-                BuildToolFacts(
-                    language="java",
-                    build_tool_name="maven",
-                )
-            ],
-            ReproducibleCentralBuildTool.MAVEN,
-            id="build_tool_maven",
-        ),
-        pytest.param(
-            [
-                BuildToolFacts(
-                    language="not_java",
-                    build_tool_name="maven",
-                )
-            ],
-            None,
-            id="java_is_the_only_supported_language",
-        ),
-        pytest.param(
-            [
-                BuildToolFacts(
-                    language="java",
-                    build_tool_name="some_java_build_tool",
-                )
-            ],
-            None,
-            id="test_unsupported_java_build_tool",
-        ),
-    ],
-)
-def test_get_rc_build_tool_name(
-    build_tool_facts: list[BuildToolFacts],
-    expected: ReproducibleCentralBuildTool | None,
-) -> None:
-    """Test the _get_rc_build_tool_name function."""
-    assert _get_rc_build_tool_name_from_build_facts(build_tool_facts) == expected
-
-
-def test_get_rc_default_build_command_unsupported() -> None:
-    """Test the get_rc_default_build_command function for an unsupported RC build tool."""
-    assert not get_rc_default_build_command(ReproducibleCentralBuildTool.SBT)
-
-
-@pytest.mark.parametrize(
-    ("build_command_info", "expected"),
-    [
-        pytest.param(
-            GenericBuildCommandInfo(
-                command=["mvn", "package"],
-                language="java",
-                language_versions=["8"],
-                build_tool_name="maven",
-            ),
-            "8",
-            id="has_language_version",
-        ),
-        pytest.param(
-            GenericBuildCommandInfo(
-                command=["mvn", "package"],
-                language="java",
-                language_versions=[],
-                build_tool_name="maven",
-            ),
-            None,
-            id="no_language_version",
-        ),
-    ],
-)
-def test_get_lookup_build_command_jdk(
-    build_command_info: GenericBuildCommandInfo,
-    expected: str | None,
-) -> None:
-    """Test the get_lookup_build_command_jdk function."""
-    assert get_lookup_build_command_jdk(build_command_info) == expected
+def test_compose_shell_commands_integration(base_build_spec: BaseBuildSpecDict) -> None:
+    """Test that the correct compose_shell_commands function is used."""
+    base_build_spec["build_commands"] = [["mvn", "clean", "package"], ["echo", "done"]]
+    content = gen_reproducible_central_build_spec(base_build_spec)
+    expected_commands = compose_shell_commands([["mvn", "clean", "package"], ["echo", "done"]])
+    assert content
+    assert f'command="{expected_commands}"' in content
