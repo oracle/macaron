@@ -67,8 +67,8 @@ class RichConsoleHandler(RichHandler):
             "Dependencies Report": "Not Generated",
             "JSON Report": "Not Generated",
         }
-        self.components_violates_table = Table(show_header=False, box=None)
-        self.components_satisfy_table = Table(show_header=False, box=None)
+        self.components_violates_table = Table(box=None)
+        self.components_satisfy_table = Table(box=None)
         self.policy_summary_table = Table(show_header=False, box=None)
         self.policy_summary: dict[str, str | Status] = {
             "Passed Policies": "None",
@@ -296,20 +296,20 @@ class RichConsoleHandler(RichHandler):
             Dictionary containing policy engine results including components that violate or satisfy policies,
             and lists of passed and failed policies.
         """
-        components_violates_table = Table(show_header=False, box=None)
-        components_violates_table.add_column("Assign No.", justify="left")
-        components_violates_table.add_column("Component", justify="left")
-        components_violates_table.add_column("Policy", justify="left")
+        components_violates_table = Table(box=None)
+        components_violates_table.add_column("Component ID", justify="left")
+        components_violates_table.add_column("PURL", justify="left")
+        components_violates_table.add_column("Policy Name", justify="left")
 
         for values in results["component_violates_policy"]:
             components_violates_table.add_row(values[0], values[1], values[2])
 
         self.components_violates_table = components_violates_table
 
-        components_satisfy_table = Table(show_header=False, box=None)
-        components_satisfy_table.add_column("Assign No.", justify="left")
-        components_satisfy_table.add_column("Component", justify="left")
-        components_satisfy_table.add_column("Policy", justify="left")
+        components_satisfy_table = Table(box=None)
+        components_satisfy_table.add_column("Component ID", justify="left")
+        components_satisfy_table.add_column("PURL", justify="left")
+        components_satisfy_table.add_column("Policy Name", justify="left")
 
         for values in results["component_satisfies_policy"]:
             components_satisfy_table.add_row(values[0], values[1], values[2])
