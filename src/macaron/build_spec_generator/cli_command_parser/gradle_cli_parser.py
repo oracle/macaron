@@ -534,7 +534,7 @@ class GradleCLICommandParser:
         # TODO: because our parser is not completed for all cases, should we be more relaxed and use
         # parse_unknown_options?
         try:
-            parsed_opts = self.arg_parser.parse_args(options)
+            parsed_opts = self.arg_parser.parse_intermixed_args(options)
         except argparse.ArgumentError as error:
             raise CommandLineParseError(f"Failed to parse {' '.join(options)}.") from error
         # Even though we have set `exit_on_error`, argparse still exits unexpectedly in some
