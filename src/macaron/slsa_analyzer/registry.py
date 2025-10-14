@@ -519,6 +519,8 @@ class Registry:
                 logger.info("Check %s has failed.", check_id)
                 return results
 
+        self.rich_handler.remove_progress_bar()
+
         return results
 
     def prepare(self) -> bool:

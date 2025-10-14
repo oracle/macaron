@@ -17,27 +17,11 @@ from rich.status import Status
 from rich.table import Table
 
 
-class RichConsoleHandler(RichHandler):
-    """A rich console handler for logging with rich formatting and live updates."""
+class Dependency:
+    """A class to manage the display of dependency analysis in the console."""
 
-    def __init__(self, *args: Any, verbose: bool = False, **kwargs: Any) -> None:
-        """
-        Initialize the RichConsoleHandler.
-
-        Parameters
-        ----------
-        verbose : bool, optional
-            if True, enables verbose logging, by default False
-        args
-            Variable length argument list.
-        kwargs
-            Arbitrary keyword arguments.
-        """
-        super().__init__(*args, **kwargs)
-        self.setLevel(logging.DEBUG)
-        self.command = ""
-        self.logs: list[str] = []
-        self.error_logs: list[str] = []
+    def __init__(self) -> None:
+        """Initialize the Dependency instance with default values and tables."""
         self.description_table = Table(show_header=False, box=None)
         self.description_table_content: dict[str, str | Status] = {
             "Package URL:": Status("[green]Processing[/]"),
@@ -46,8 +30,6 @@ class RichConsoleHandler(RichHandler):
             "Branch:": Status("[green]Processing[/]"),
             "Commit Hash:": Status("[green]Processing[/]"),
             "Commit Date:": Status("[green]Processing[/]"),
-            "Excluded Checks:": Status("[green]Processing[/]"),
-            "Final Checks:": Status("[green]Processing[/]"),
             "CI Services:": Status("[green]Processing[/]"),
             "Build Tools:": Status("[green]Processing[/]"),
         }
@@ -61,67 +43,6 @@ class RichConsoleHandler(RichHandler):
         self.checks: dict[str, str] = {}
         self.failed_checks_table = Table(show_header=False, box=None)
         self.summary_table = Table(show_header=False, box=None)
-        self.report_table = Table(show_header=False, box=None)
-        self.reports = {
-            "HTML Report": "Not Generated",
-            "Dependencies Report": "Not Generated",
-            "JSON Report": "Not Generated",
-        }
-        self.components_violates_table = Table(box=None)
-        self.components_satisfy_table = Table(box=None)
-        self.policy_summary_table = Table(show_header=False, box=None)
-        self.policy_summary: dict[str, str | Status] = {
-            "Passed Policies": "None",
-            "Failed Policies": "None",
-            "Policy Report": Status("[green]Generating[/]"),
-        }
-        self.verification_summary_attestation: str | None = None
-        self.find_source_table = Table(show_header=False, box=None)
-        self.find_source_content: dict[str, str | Status] = {
-            "Repository URL:": Status("[green]Processing[/]"),
-            "Commit Hash:": Status("[green]Processing[/]"),
-            "JSON Report:": "Not Generated",
-        }
-        for key, value in self.find_source_content.items():
-            self.find_source_table.add_row(key, value)
-        self.dump_defaults: str | Status = Status("[green]Generating[/]")
-        self.gen_build_spec: dict[str, str | Status] = {
-            "Build Spec Path:": "Not Generated",
-        }
-        self.gen_build_spec_table = Table(show_header=False, box=None)
-        for key, value in self.gen_build_spec.items():
-            self.gen_build_spec_table.add_row(key, value)
-        self.verbose = verbose
-        self.verbose_panel = Panel(
-            "\n".join(self.logs),
-            title="Verbose Mode",
-            title_align="left",
-            border_style="blue",
-        )
-        self.error_message: str = ""
-        self.live = Live(get_renderable=self.make_layout, refresh_per_second=10)
-
-    def emit(self, record: logging.LogRecord) -> None:
-        """
-        Emit a log record with rich formatting.
-
-        Parameters
-        ----------
-        record : logging.LogRecord
-            The log record to be emitted.
-        """
-        log_time = time.strftime("%H:%M:%S")
-        msg = self.format(record)
-
-        if record.levelno >= logging.ERROR:
-            self.logs.append(f"[red][ERROR][/red] {log_time} {msg}")
-            self.error_logs.append(f"[red][ERROR][/red] {log_time} {msg}")
-        elif record.levelno >= logging.WARNING:
-            self.logs.append(f"[yellow][WARNING][/yellow] {log_time} {msg}")
-        else:
-            self.logs.append(f"[blue][INFO][/blue] {log_time} {msg}")
-
-        self.verbose_panel.renderable = "\n".join(self.logs)
 
     def add_description_table_content(self, key: str, value: str | Status) -> None:
         """
@@ -153,6 +74,10 @@ class RichConsoleHandler(RichHandler):
             The total number of checks to be performed.
         """
         self.task_id = self.progress.add_task("analyzing", total=value)
+
+    def remove_progress_bar(self) -> None:
+        """Remove the progress bar from the display."""
+        self.progress.remove_task(self.task_id)
 
     def update_checks(self, check_id: str, status: str = "RUNNING") -> None:
         """
@@ -224,6 +149,276 @@ class RichConsoleHandler(RichHandler):
 
         self.summary_table = summary_table
 
+    def make_layout(self) -> list[RenderableType]:
+        """
+        Create the layout for the live console display.
+
+        Returns
+        -------
+        list[RenderableType]
+            A list of rich RenderableType objects containing the layout for the live console display.
+        """
+        layout: list[RenderableType] = []
+        if self.description_table.row_count > 0:
+            layout = layout + [
+                "",
+                self.description_table,
+            ]
+        if self.progress_table.row_count > 0:
+            layout = layout + ["", self.progress, "", self.progress_table]
+        if self.failed_checks_table.row_count > 0:
+            layout = layout + [
+                "",
+                Rule(" SUMMARY", align="left"),
+                "",
+                self.failed_checks_table,
+            ]
+            if self.summary_table.row_count > 0:
+                layout = layout + ["", self.summary_table]
+        elif self.summary_table.row_count > 0:
+            layout = layout + [
+                "",
+                Rule(" SUMMARY", align="left"),
+                "",
+                self.summary_table,
+            ]
+        return layout
+
+
+class RichConsoleHandler(RichHandler):
+    """A rich console handler for logging with rich formatting and live updates."""
+
+    def __init__(self, *args: Any, verbose: bool = False, **kwargs: Any) -> None:
+        """
+        Initialize the RichConsoleHandler.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            if True, enables verbose logging, by default False
+        args
+            Variable length argument list.
+        kwargs
+            Arbitrary keyword arguments.
+        """
+        super().__init__(*args, **kwargs)
+        self.setLevel(logging.DEBUG)
+        self.command = ""
+        self.logs: list[str] = []
+        self.error_logs: list[str] = []
+        self.description_table = Table(show_header=False, box=None)
+        self.description_table_content: dict[str, str | Status] = {
+            "Package URL:": Status("[green]Processing[/]"),
+            "Local Cloned Path:": Status("[green]Processing[/]"),
+            "Remote Path:": Status("[green]Processing[/]"),
+            "Branch:": Status("[green]Processing[/]"),
+            "Commit Hash:": Status("[green]Processing[/]"),
+            "Commit Date:": Status("[green]Processing[/]"),
+            "Excluded Checks:": Status("[green]Processing[/]"),
+            "Final Checks:": Status("[green]Processing[/]"),
+            "CI Services:": Status("[green]Processing[/]"),
+            "Build Tools:": Status("[green]Processing[/]"),
+        }
+        self.progress = Progress(
+            TextColumn(" RUNNING ANALYSIS"),
+            BarColumn(bar_width=None, complete_style="green"),
+            MofNCompleteColumn(),
+        )
+        self.task_id: TaskID
+        self.progress_table = Table(show_header=False, box=None)
+        self.checks: dict[str, str] = {}
+        self.failed_checks_table = Table(show_header=False, box=None)
+        self.summary_table = Table(show_header=False, box=None)
+        self.report_table = Table(show_header=False, box=None)
+        self.reports = {
+            "HTML Report": "Not Generated",
+            "Dependencies Report": "Not Generated",
+            "JSON Report": "Not Generated",
+        }
+        self.if_dependency: bool = False
+        self.dependency_analysis_list: list[Dependency] = []
+        self.components_violates_table = Table(box=None)
+        self.components_satisfy_table = Table(box=None)
+        self.policy_summary_table = Table(show_header=False, box=None)
+        self.policy_summary: dict[str, str | Status] = {
+            "Passed Policies": "None",
+            "Failed Policies": "None",
+            "Policy Report": Status("[green]Generating[/]"),
+        }
+        self.verification_summary_attestation: str | None = None
+        self.find_source_table = Table(show_header=False, box=None)
+        self.find_source_content: dict[str, str | Status] = {
+            "Repository URL:": Status("[green]Processing[/]"),
+            "Commit Hash:": Status("[green]Processing[/]"),
+            "JSON Report:": "Not Generated",
+        }
+        for key, value in self.find_source_content.items():
+            self.find_source_table.add_row(key, value)
+        self.dump_defaults: str | Status = Status("[green]Generating[/]")
+        self.gen_build_spec: dict[str, str | Status] = {
+            "Build Spec Path:": "Not Generated",
+        }
+        self.gen_build_spec_table = Table(show_header=False, box=None)
+        for key, value in self.gen_build_spec.items():
+            self.gen_build_spec_table.add_row(key, value)
+        self.verbose = verbose
+        self.verbose_panel = Panel(
+            "\n".join(self.logs),
+            title="Verbose Mode",
+            title_align="left",
+            border_style="blue",
+        )
+        self.error_message: str = ""
+        self.live = Live(get_renderable=self.make_layout, refresh_per_second=10)
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """
+        Emit a log record with rich formatting.
+
+        Parameters
+        ----------
+        record : logging.LogRecord
+            The log record to be emitted.
+        """
+        log_time = time.strftime("%H:%M:%S")
+        msg = self.format(record)
+
+        if record.levelno >= logging.ERROR:
+            self.logs.append(f"[red][ERROR][/red] {log_time} {msg}")
+            self.error_logs.append(f"[red][ERROR][/red] {log_time} {msg}")
+        elif record.levelno >= logging.WARNING:
+            self.logs.append(f"[yellow][WARNING][/yellow] {log_time} {msg}")
+        else:
+            self.logs.append(f"[blue][INFO][/blue] {log_time} {msg}")
+
+        self.verbose_panel.renderable = "\n".join(self.logs)
+
+    def add_description_table_content(self, key: str, value: str | Status) -> None:
+        """
+        Add or update a key-value pair in the description table.
+
+        Parameters
+        ----------
+        key : str
+            The key to be added or updated.
+        value : str or Status
+            The value associated with the key.
+        """
+        if self.if_dependency and self.dependency_analysis_list:
+            dependency = self.dependency_analysis_list[-1]
+            dependency.add_description_table_content(key, value)
+            return
+
+        self.description_table_content[key] = value
+        description_table = Table(show_header=False, box=None)
+        description_table.add_column("Details", justify="left")
+        description_table.add_column("Value", justify="left")
+        for field, content in self.description_table_content.items():
+            description_table.add_row(field, content)
+
+        self.description_table = description_table
+
+    def no_of_checks(self, value: int) -> None:
+        """
+        Initialize the progress bar with the total number of checks.
+
+        Parameters
+        ----------
+        value : int
+            The total number of checks to be performed.
+        """
+        if self.if_dependency and self.dependency_analysis_list:
+            dependency = self.dependency_analysis_list[-1]
+            dependency.no_of_checks(value)
+            return
+        self.task_id = self.progress.add_task("analyzing", total=value)
+
+    def remove_progress_bar(self) -> None:
+        """Remove the progress bar from the display."""
+        if self.if_dependency and self.dependency_analysis_list:
+            dependency = self.dependency_analysis_list[-1]
+            dependency.remove_progress_bar()
+            return
+        self.progress.remove_task(self.task_id)
+
+    def update_checks(self, check_id: str, status: str = "RUNNING") -> None:
+        """
+        Update the status of a specific check and refresh the progress table.
+
+        Parameters
+        ----------
+        check_id : str
+            The identifier of the check to be updated.
+        status : str, optional
+            The new status of the check, by default "RUNNING"
+        """
+        if self.if_dependency and self.dependency_analysis_list:
+            dependency = self.dependency_analysis_list[-1]
+            dependency.update_checks(check_id, status)
+            return
+        self.checks[check_id] = status
+
+        progress_table = Table(show_header=False, box=None)
+        progress_table.add_column("Status", justify="left")
+        progress_table.add_column("Check", justify="left")
+
+        for check_name, check_status in self.checks.items():
+            if check_status == "RUNNING":
+                progress_table.add_row(Status("[bold green]RUNNING[/]"), check_name)
+        self.progress_table = progress_table
+
+        if self.task_id is not None and status != "RUNNING":
+            self.progress.update(self.task_id, advance=1)
+
+    def update_checks_summary(self, checks_summary: dict, total_checks: int) -> None:
+        """
+        Update the summary tables with the results of the checks.
+
+        Parameters
+        ----------
+        checks_summary : dict
+            Dictionary containing lists of checks categorized by their results.
+        total_checks : int
+            The total number of checks.
+        """
+        if self.if_dependency and self.dependency_analysis_list:
+            dependency = self.dependency_analysis_list[-1]
+            dependency.update_checks_summary(checks_summary, total_checks)
+            return
+        failed_checks_table = Table(show_header=False, box=None)
+        failed_checks_table.add_column("Status", justify="left")
+        failed_checks_table.add_column("Check ID", justify="left")
+        failed_checks_table.add_column("Description", justify="left")
+
+        failed_checks = checks_summary["FAILED"]
+        for check in failed_checks:
+            failed_checks_table.add_row(
+                "[bold red]FAILED[/]",
+                check.check.check_id,
+                check.check.check_description,
+            )
+
+        self.failed_checks_table = failed_checks_table
+
+        summary_table = Table(show_header=False, box=None)
+        summary_table.add_column("Check Result Type", justify="left")
+        summary_table.add_column("Count", justify="left")
+        summary_table.add_row("Total Checks", str(total_checks), style="white")
+
+        for check_result_type, checks in checks_summary.items():
+            if check_result_type == "PASSED":
+                summary_table.add_row("PASSED", str(len(checks)), style="green")
+            if check_result_type == "FAILED":
+                summary_table.add_row("FAILED", str(len(checks)), style="red")
+            if check_result_type == "SKIPPED":
+                summary_table.add_row("SKIPPED", str(len(checks)), style="yellow")
+            if check_result_type == "DISABLED":
+                summary_table.add_row("DISABLED", str(len(checks)), style="bright_blue")
+            if check_result_type == "UNKNOWN":
+                summary_table.add_row("UNKNOWN", str(len(checks)), style="white")
+
+        self.summary_table = summary_table
+
     def update_report_table(self, report_type: str, report_path: str) -> None:
         """
         Update the report table with the path of a generated report.
@@ -244,6 +439,20 @@ class RichConsoleHandler(RichHandler):
             report_table.add_row(report_detail, report_value, style="blue")
 
         self.report_table = report_table
+
+    def is_dependency(self, value: bool) -> None:
+        """
+        Update the flag indicating whether the analyzed package is a dependency.
+
+        Parameters
+        ----------
+        value : bool
+            True if the package is a dependency, False otherwise.
+        """
+        self.if_dependency = value
+        if self.if_dependency:
+            dependency = Dependency()
+            self.dependency_analysis_list.append(dependency)
 
     def generate_policy_summary_table(self) -> None:
         """Generate the policy summary table based on the current policy summary data."""
@@ -394,7 +603,11 @@ class RichConsoleHandler(RichHandler):
             layout = layout + [error_log_panel]
         if self.command == "analyze":
             if self.description_table.row_count > 0:
-                layout = layout + [Rule(" DESCRIPTION", align="left"), "", self.description_table]
+                layout = layout + [
+                    Rule(" DESCRIPTION", align="left"),
+                    "",
+                    self.description_table,
+                ]
             if self.progress_table.row_count > 0:
                 layout = layout + ["", self.progress, "", self.progress_table]
             if self.failed_checks_table.row_count > 0:
@@ -421,6 +634,17 @@ class RichConsoleHandler(RichHandler):
                     layout = layout + [
                         self.report_table,
                     ]
+            if self.if_dependency and self.dependency_analysis_list:
+                for idx, dependency in enumerate(self.dependency_analysis_list, start=1):
+                    dependency_layout = dependency.make_layout()
+                    layout = (
+                        layout
+                        + [
+                            "",
+                            Rule(f" DEPENDENCY {idx}", align="left"),
+                        ]
+                        + dependency_layout
+                    )
         elif self.command == "verify-policy":
             if self.policy_summary_table.row_count > 0:
                 if self.components_satisfy_table.row_count > 0:

@@ -240,6 +240,10 @@ class Analyzer:
 
                 # Create a report instance with the record of the main repo.
                 report = Report(main_record)
+                self.rich_handler.update_checks_summary(
+                    main_record.context.get_check_summary(),
+                    len(main_record.context.check_results),
+                )
 
                 duplicated_scm_records: list[Record] = []
 
@@ -257,8 +261,14 @@ class Analyzer:
                             report.add_dep_record(dep_record)
                             duplicated_scm_records.append(dep_record)
                             continue
+                        self.rich_handler.is_dependency(True)
                         dep_record = self.run_single(config, analysis, report.record_mapping)
                         report.add_dep_record(dep_record)
+                        if dep_record.context:
+                            self.rich_handler.update_checks_summary(
+                                dep_record.context.get_check_summary(),
+                                len(dep_record.context.check_results),
+                            )
                 else:
                     logger.info("Found no dependencies to analyze.")
 
