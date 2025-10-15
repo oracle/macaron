@@ -76,3 +76,66 @@ For variables of a class: we do not use the ``Attribute`` section as per the `nu
         x: float
         #: The y coordinate of the point.
         y: float
+
+
+--------------------------
+Logging and Console Output
+--------------------------
+
+Macaron uses the ``rich`` Python library to provide enhanced and well-formatted logging output in the terminal. All logging should be performed using the ``macaron.console`` module.
+
+'''''''''''''''''''''''''
+Why use rich for logging?
+'''''''''''''''''''''''''
+
+- Provides visually appealing, color-coded, and structured terminal UI.
+- Supports custom components like table, progress bar, and panel for complex output.
+- Makes it easier to spot errors, progress, failed checks, etc.
+
+''''''''''''''''''''''''''''''
+How to use the logging handler
+''''''''''''''''''''''''''''''
+
+Import the ``access_handler`` from ``macaron.console`` and use it to set/get the custom rich handler. For simple logging, you can use the handler's methods for info, debug, and error messages.
+
+  .. code-block:: python
+
+    from macaron.console import access_handler
+
+    # Get the RichConsoleHandler
+    rich_handler = access_handler.get_handler()
+
+    # Log an info message
+    console.info("<info message>")
+
+    # Log an debug message
+    console.debug("<debug message>")
+
+    # Log an error message
+    console.error("<error message>")
+
+To modify the console UI, create a function call which takes necessary information and converts them into Rich RenderableType. Also modify the ``make_layout()`` function to use the newly created rich component.
+
+  .. code-block:: python
+
+    def update_find_source_table(self, key: str, value: str | Status) -> None:
+        self.find_source_content[key] = value
+        find_source_table = Table(show_header=False, box=None)
+        find_source_table.add_column("Details", justify="left")
+        find_source_table.add_column("Value", justify="left")
+        for field, content in self.find_source_content.items():
+            find_source_table.add_row(field, content)
+        self.find_source_table = find_source_table
+
+
+    def make_layout(self) -> Group:
+        layout: list[RenderableType] = []
+        if self.command == "find-source":
+            if self.find_source_table.row_count > 0:
+                layout = layout + [self.find_source_table]
+        return Group(*layout)
+
+
+    rich_handler.update_find_source_table("<Detail>", "<Value>")
+
+For more advance formatting, refer to the ``rich`` documentation: https://rich.readthedocs.io/en/stable/
