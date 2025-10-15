@@ -27,6 +27,11 @@ from macaron.build_spec_generator.cli_command_parser.maven_cli_parser import Mav
             "mvn clean package -Dmaven.skip.test",
             id="test_default_value_for_system_property",
         ),
+        pytest.param(
+            "mvn clean package -Dmaven.skip.test=true",
+            "mvn clean -Dmaven.skip.test=true package",
+            id="test_intermixed_args",
+        ),
     ],
 )
 def test_comparing_maven_cli_command_equal(

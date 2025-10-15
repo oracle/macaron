@@ -38,6 +38,11 @@ from macaron.build_spec_generator.cli_command_parser.gradle_cli_parser import Gr
             "gradlew clean build -x test -x boo",
             id="test_excluded_tasks",
         ),
+        pytest.param(
+            "gradlew clean -x test -x boo build",
+            "gradlew clean build -x test -x boo",
+            id="test_intermixed_args",
+        ),
     ],
 )
 def test_comparing_gradle_cli_command_equal(
