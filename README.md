@@ -12,7 +12,7 @@
 ## Key Capabilities
 
 Macaron supports:
-- **Attestation verification** for third-party and internal artifacts across major ecosystems like PyPI, npm, and Go, enabling automated provenance validation ([tutorial](https://oracle.github.io/macaron/pages/tutorials/npm_provenance.html)).
+- **Attestation verification** for third-party and internal artifacts across major ecosystems like PyPI, npm, and Go, enabling automated provenance validation ([tutorial](https://oracle.github.io/macaron/pages/tutorials/provenance.html)).
 - **Detection of malicious or suspicious packages** in popular ecosystems using customizable heuristics ([tutorial](https://oracle.github.io/macaron/pages/tutorials/detect_malicious_package.html), [blog post](https://blogs.oracle.com/developers/post/detecting-malicious-behavior-in-software-supply-chain-part-1)).
 - **Detection of vulnerable GitHub Actions**, which is increasingly important due to recent real-world incidents like [tj-actions/changed-files](https://www.cve.org/CVERecord?id=CVE-2025-30066) ([tutorial](https://oracle.github.io/macaron/pages/tutorials/detect_vulnerable_github_actions.html)).
 - **Reproducible build** through static analysis of build scripts. Macaron enables **rebuilding packages from source** and **comparing to released artifacts** to detect discrepancies, and therefore compromised workflows or artifacts ([paper](https://arxiv.org/pdf/2410.08427)).
