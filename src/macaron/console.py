@@ -17,7 +17,58 @@ from rich.status import Status
 from rich.table import Table
 
 
-class Dependency:
+class TableBuilder:
+    """Builder to provide common table-building utilities for console classes."""
+
+    @staticmethod
+    def _make_table(content: dict, columns: list[str]) -> Table:
+        table = Table(show_header=False, box=None)
+        for col in columns:
+            table.add_column(col, justify="left")
+        for field, value in content.items():
+            table.add_row(field, value)
+        return table
+
+    @staticmethod
+    def _make_checks_table(checks: dict[str, str]) -> Table:
+        table = Table(show_header=False, box=None)
+        table.add_column("Status", justify="left")
+        table.add_column("Check", justify="left")
+        for check_name, check_status in checks.items():
+            if check_status == "RUNNING":
+                table.add_row(Status("[bold green]RUNNING[/]"), check_name)
+        return table
+
+    @staticmethod
+    def _make_failed_checks_table(failed_checks: list) -> Table:
+        table = Table(show_header=False, box=None)
+        table.add_column("Status", justify="left")
+        table.add_column("Check ID", justify="left")
+        table.add_column("Description", justify="left")
+        for check in failed_checks:
+            table.add_row("[bold red]FAILED[/]", check.check.check_id, check.check.check_description)
+        return table
+
+    @staticmethod
+    def _make_summary_table(checks_summary: dict, total_checks: int) -> Table:
+        table = Table(show_header=False, box=None)
+        table.add_column("Check Result Type", justify="left")
+        table.add_column("Count", justify="left")
+        table.add_row("Total Checks", str(total_checks), style="white")
+        color_map = {
+            "PASSED": "green",
+            "FAILED": "red",
+            "SKIPPED": "yellow",
+            "DISABLED": "bright_blue",
+            "UNKNOWN": "white",
+        }
+        for check_result_type, checks in checks_summary.items():
+            if check_result_type in color_map:
+                table.add_row(check_result_type, str(len(checks)), style=color_map[check_result_type])
+        return table
+
+
+class Dependency(TableBuilder):
     """A class to manage the display of dependency analysis in the console."""
 
     def __init__(self) -> None:
@@ -56,13 +107,7 @@ class Dependency:
             The value associated with the key.
         """
         self.description_table_content[key] = value
-        description_table = Table(show_header=False, box=None)
-        description_table.add_column("Details", justify="left")
-        description_table.add_column("Value", justify="left")
-        for field, content in self.description_table_content.items():
-            description_table.add_row(field, content)
-
-        self.description_table = description_table
+        self.description_table = self._make_table(self.description_table_content, ["Details", "Value"])
 
     def no_of_checks(self, value: int) -> None:
         """
@@ -91,16 +136,7 @@ class Dependency:
             The new status of the check, by default "RUNNING"
         """
         self.checks[check_id] = status
-
-        progress_table = Table(show_header=False, box=None)
-        progress_table.add_column("Status", justify="left")
-        progress_table.add_column("Check", justify="left")
-
-        for check_name, check_status in self.checks.items():
-            if check_status == "RUNNING":
-                progress_table.add_row(Status("[bold green]RUNNING[/]"), check_name)
-        self.progress_table = progress_table
-
+        self.progress_table = self._make_checks_table(self.checks)
         if self.task_id is not None and status != "RUNNING":
             self.progress.update(self.task_id, advance=1)
 
@@ -115,39 +151,8 @@ class Dependency:
         total_checks : int
             The total number of checks.
         """
-        failed_checks_table = Table(show_header=False, box=None)
-        failed_checks_table.add_column("Status", justify="left")
-        failed_checks_table.add_column("Check ID", justify="left")
-        failed_checks_table.add_column("Description", justify="left")
-
-        failed_checks = checks_summary["FAILED"]
-        for check in failed_checks:
-            failed_checks_table.add_row(
-                "[bold red]FAILED[/]",
-                check.check.check_id,
-                check.check.check_description,
-            )
-
-        self.failed_checks_table = failed_checks_table
-
-        summary_table = Table(show_header=False, box=None)
-        summary_table.add_column("Check Result Type", justify="left")
-        summary_table.add_column("Count", justify="left")
-        summary_table.add_row("Total Checks", str(total_checks), style="white")
-
-        for check_result_type, checks in checks_summary.items():
-            if check_result_type == "PASSED":
-                summary_table.add_row("PASSED", str(len(checks)), style="green")
-            if check_result_type == "FAILED":
-                summary_table.add_row("FAILED", str(len(checks)), style="red")
-            if check_result_type == "SKIPPED":
-                summary_table.add_row("SKIPPED", str(len(checks)), style="yellow")
-            if check_result_type == "DISABLED":
-                summary_table.add_row("DISABLED", str(len(checks)), style="bright_blue")
-            if check_result_type == "UNKNOWN":
-                summary_table.add_row("UNKNOWN", str(len(checks)), style="white")
-
-        self.summary_table = summary_table
+        self.failed_checks_table = self._make_failed_checks_table(checks_summary.get("FAILED", []))
+        self.summary_table = self._make_summary_table(checks_summary, total_checks)
 
     def make_layout(self) -> list[RenderableType]:
         """
@@ -185,7 +190,7 @@ class Dependency:
         return layout
 
 
-class RichConsoleHandler(RichHandler):
+class RichConsoleHandler(RichHandler, TableBuilder):
     """A rich console handler for logging with rich formatting and live updates."""
 
     def __init__(self, *args: Any, verbose: bool = False, **kwargs: Any) -> None:
@@ -305,18 +310,10 @@ class RichConsoleHandler(RichHandler):
             The value associated with the key.
         """
         if self.if_dependency and self.dependency_analysis_list:
-            dependency = self.dependency_analysis_list[-1]
-            dependency.add_description_table_content(key, value)
+            self.dependency_analysis_list[-1].add_description_table_content(key, value)
             return
-
         self.description_table_content[key] = value
-        description_table = Table(show_header=False, box=None)
-        description_table.add_column("Details", justify="left")
-        description_table.add_column("Value", justify="left")
-        for field, content in self.description_table_content.items():
-            description_table.add_row(field, content)
-
-        self.description_table = description_table
+        self.description_table = self._make_table(self.description_table_content, ["Details", "Value"])
 
     def no_of_checks(self, value: int) -> None:
         """
@@ -353,20 +350,10 @@ class RichConsoleHandler(RichHandler):
             The new status of the check, by default "RUNNING"
         """
         if self.if_dependency and self.dependency_analysis_list:
-            dependency = self.dependency_analysis_list[-1]
-            dependency.update_checks(check_id, status)
+            self.dependency_analysis_list[-1].update_checks(check_id, status)
             return
         self.checks[check_id] = status
-
-        progress_table = Table(show_header=False, box=None)
-        progress_table.add_column("Status", justify="left")
-        progress_table.add_column("Check", justify="left")
-
-        for check_name, check_status in self.checks.items():
-            if check_status == "RUNNING":
-                progress_table.add_row(Status("[bold green]RUNNING[/]"), check_name)
-        self.progress_table = progress_table
-
+        self.progress_table = self._make_checks_table(self.checks)
         if self.task_id is not None and status != "RUNNING":
             self.progress.update(self.task_id, advance=1)
 
@@ -382,42 +369,10 @@ class RichConsoleHandler(RichHandler):
             The total number of checks.
         """
         if self.if_dependency and self.dependency_analysis_list:
-            dependency = self.dependency_analysis_list[-1]
-            dependency.update_checks_summary(checks_summary, total_checks)
+            self.dependency_analysis_list[-1].update_checks_summary(checks_summary, total_checks)
             return
-        failed_checks_table = Table(show_header=False, box=None)
-        failed_checks_table.add_column("Status", justify="left")
-        failed_checks_table.add_column("Check ID", justify="left")
-        failed_checks_table.add_column("Description", justify="left")
-
-        failed_checks = checks_summary["FAILED"]
-        for check in failed_checks:
-            failed_checks_table.add_row(
-                "[bold red]FAILED[/]",
-                check.check.check_id,
-                check.check.check_description,
-            )
-
-        self.failed_checks_table = failed_checks_table
-
-        summary_table = Table(show_header=False, box=None)
-        summary_table.add_column("Check Result Type", justify="left")
-        summary_table.add_column("Count", justify="left")
-        summary_table.add_row("Total Checks", str(total_checks), style="white")
-
-        for check_result_type, checks in checks_summary.items():
-            if check_result_type == "PASSED":
-                summary_table.add_row("PASSED", str(len(checks)), style="green")
-            if check_result_type == "FAILED":
-                summary_table.add_row("FAILED", str(len(checks)), style="red")
-            if check_result_type == "SKIPPED":
-                summary_table.add_row("SKIPPED", str(len(checks)), style="yellow")
-            if check_result_type == "DISABLED":
-                summary_table.add_row("DISABLED", str(len(checks)), style="bright_blue")
-            if check_result_type == "UNKNOWN":
-                summary_table.add_row("UNKNOWN", str(len(checks)), style="white")
-
-        self.summary_table = summary_table
+        self.failed_checks_table = self._make_failed_checks_table(checks_summary.get("FAILED", []))
+        self.summary_table = self._make_summary_table(checks_summary, total_checks)
 
     def update_report_table(self, report_type: str, report_path: str) -> None:
         """
