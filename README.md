@@ -18,6 +18,12 @@ Macaron supports:
 - **Reproducible build** through static analysis of build scripts. Macaron enables **rebuilding packages from source** and **comparing to released artifacts** to detect discrepancies, and therefore compromised workflows or artifacts ([paper](https://arxiv.org/pdf/2410.08427)).
 - **Accurate repository and commit detection** for released artifacts, improving traceability and trust ([tutorial](https://oracle.github.io/macaron/pages/tutorials/source_finder.html)).
 
+## Demo: Analyzing Django with Dependencies
+
+This screencast shows how Macaron analyzes the `django@5.0.6` Python package and its dependencies. Macaron runs the same set of checks, including malware detection, on the dependencies as it does on the Django package. You can either generate a Software Bill of Materials (SBOM) manually or point Macaron to a virtual environment where Django is installed to automatically analyze the entire dependency tree. The policy engine ensures that the malware detection check passes for all packages in the dependency tree.
+
+![Demo](./docs/source/assets/macaron_0.18.0_demo.gif)
+
 ## Based on SLSA
 
 Macaron follows the recommendations of the [SLSA (Supply chain Levels for Software Artifacts)](https://slsa.dev) framework. It offers a flexible, extensible policy engine for checking compliance with SLSA levels. Users can define and compose custom rules tailored to their CI/CD practices and security needs.
