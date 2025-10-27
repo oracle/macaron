@@ -64,27 +64,32 @@ class PyPIBuildSpec(
             if pypi_package_json.package_json or pypi_package_json.download(dest=""):
                 requires_array: list[str] = []
                 build_backends: dict[str, str] = {}
-                with pypi_package_json.wheel():
-                    logger.debug("Wheel at %s", pypi_package_json.wheel_path)
-                    # Should only have .dist-info directory
-                    logger.debug("It has directories %s", ",".join(os.listdir(pypi_package_json.wheel_path)))
-                    # Make build-req array
-                    wheel_contents, metadata_contents = self.read_directory(pypi_package_json.wheel_path, purl)
-                    generator, version = self.read_generator_line(wheel_contents)
-                    if generator != "":
-                        build_backends[generator] = "==" + version
-                    if generator != "setuptools":
-                        # Apply METADATA heuristics to determine setuptools version
-                        if "License-File" in metadata_contents:
-                            build_backends["setuptools"] = "==" + defaults.get(
-                                "heuristic.pypi", "setuptools_version_emitting_license"
-                            )
-                        elif "Platform: UNKNOWN" in metadata_contents:
-                            build_backends["setuptools"] = "==" + defaults.get(
-                                "heuristic.pypi", "setuptools_version_emitting_platform_unknown"
-                            )
-                        else:
-                            build_backends["setuptools"] = "==" + defaults.get("heuristic.pypi", "default_setuptools")
+                try:
+                    with pypi_package_json.wheel():
+                        logger.debug("Wheel at %s", pypi_package_json.wheel_path)
+                        # Should only have .dist-info directory
+                        logger.debug("It has directories %s", ",".join(os.listdir(pypi_package_json.wheel_path)))
+                        # Make build-req array
+                        wheel_contents, metadata_contents = self.read_directory(pypi_package_json.wheel_path, purl)
+                        generator, version = self.read_generator_line(wheel_contents)
+                        if generator != "":
+                            build_backends[generator] = "==" + version
+                        if generator != "setuptools":
+                            # Apply METADATA heuristics to determine setuptools version
+                            if "License-File" in metadata_contents:
+                                build_backends["setuptools"] = "==" + defaults.get(
+                                    "heuristic.pypi", "setuptools_version_emitting_license"
+                                )
+                            elif "Platform: UNKNOWN" in metadata_contents:
+                                build_backends["setuptools"] = "==" + defaults.get(
+                                    "heuristic.pypi", "setuptools_version_emitting_platform_unknown"
+                                )
+                            else:
+                                build_backends["setuptools"] = "==" + defaults.get(
+                                    "heuristic.pypi", "default_setuptools"
+                                )
+                except SourceCodeError:
+                    logger.debug("Could not find pure wheel matching this PURL")
 
                 logger.debug("From .dist_info:")
                 logger.debug(build_backends)
@@ -99,9 +104,9 @@ class PyPIBuildSpec(
                             logger.debug("From pyproject.toml:")
                             logger.debug(requires_array)
                         except SourceCodeError:
-                            logger.debug("No pyproject.toml")
+                            logger.debug("No pyproject.toml found")
                 except SourceCodeError:
-                    logger.debug("No pyproject.toml")
+                    logger.debug("No source distribution found")
 
                 # Merge in pyproject.toml information only when the wheel dist_info does not contain the same
                 # Hatch is an interesting example of this merge being required.
