@@ -157,7 +157,7 @@ class Dependency(TableBuilder):
     def mark_failed(self) -> None:
         """Convert any Processing Status entries to Failed."""
         for key, value in self.description_table_content.items():
-            if str(value) == "Processing":
+            if isinstance(value, Status):
                 self.description_table_content[key] = "[red]Failed[/red]"
 
         self.description_table = self._make_table(self.description_table_content, ["Details", "Value"])
