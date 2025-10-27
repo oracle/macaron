@@ -154,6 +154,14 @@ class Dependency(TableBuilder):
         self.failed_checks_table = self._make_failed_checks_table(checks_summary.get("FAILED", []))
         self.summary_table = self._make_summary_table(checks_summary, total_checks)
 
+    def mark_failed(self) -> None:
+        """Convert any Processing Status entries to Failed."""
+        for key, value in self.description_table_content.items():
+            if str(value) == "Processing":
+                self.description_table_content[key] = "[red]Failed[/red]"
+
+        self.description_table = self._make_table(self.description_table_content, ["Details", "Value"])
+
     def make_layout(self) -> list[RenderableType]:
         """
         Create the layout for the live console display.
@@ -501,12 +509,7 @@ class RichConsoleHandler(RichHandler, TableBuilder):
             The value associated with the key.
         """
         self.find_source_content[key] = value
-        find_source_table = Table(show_header=False, box=None)
-        find_source_table.add_column("Details", justify="left")
-        find_source_table.add_column("Value", justify="left")
-        for field, content in self.find_source_content.items():
-            find_source_table.add_row(field, content)
-        self.find_source_table = find_source_table
+        self.find_source_table = self._make_table(self.find_source_content, ["Details", "Value"])
 
     def update_dump_defaults(self, value: str | Status) -> None:
         """
@@ -531,12 +534,31 @@ class RichConsoleHandler(RichHandler, TableBuilder):
             The value associated with the key.
         """
         self.gen_build_spec[key] = value
-        gen_build_spec_table = Table(show_header=False, box=None)
-        gen_build_spec_table.add_column("Details", justify="left")
-        gen_build_spec_table.add_column("Value", justify="left")
-        for field, content in self.gen_build_spec.items():
-            gen_build_spec_table.add_row(field, content)
-        self.gen_build_spec_table = gen_build_spec_table
+        self.gen_build_spec_table = self._make_table(self.gen_build_spec, ["Details", "Value"])
+
+    def mark_failed(self) -> None:
+        """Convert any Processing Status entries to Failed."""
+        for key, value in self.description_table_content.items():
+            if isinstance(value, Status):
+                self.description_table_content[key] = "[red]Failed[/red]"
+
+        self.description_table = self._make_table(self.description_table_content, ["Details", "Value"])
+
+        for key, value in self.find_source_content.items():
+            if isinstance(value, Status):
+                self.find_source_content[key] = "[red]Failed[/red]"
+
+        self.find_source_table = self._make_table(self.find_source_content, ["Details", "Value"])
+
+        for key, value in self.gen_build_spec.items():
+            if isinstance(value, Status):
+                self.gen_build_spec[key] = "[red]Failed[/red]"
+
+        self.gen_build_spec_table = self._make_table(self.gen_build_spec, ["Details", "Value"])
+
+        if self.if_dependency and self.dependency_analysis_list:
+            for dependency in self.dependency_analysis_list:
+                dependency.mark_failed()
 
     def make_layout(self) -> Group:
         """
