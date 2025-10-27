@@ -9,8 +9,10 @@ import re
 
 import tomli
 from packageurl import PackageURL
+from packaging.requirements import InvalidRequirement, Requirement
 
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpec, BaseBuildSpecDict
+from macaron.config.defaults import defaults
 from macaron.errors import SourceCodeError
 from macaron.slsa_analyzer.package_registry import pypi_registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -60,6 +62,7 @@ class PyPIBuildSpec(
 
         if pypi_package_json is not None:
             if pypi_package_json.package_json or pypi_package_json.download(dest=""):
+                requires_array: list[str] = []
                 build_backends: dict[str, str] = {}
                 with pypi_package_json.wheel():
                     logger.debug("Wheel at %s", pypi_package_json.wheel_path)
@@ -69,29 +72,51 @@ class PyPIBuildSpec(
                     wheel_contents, metadata_contents = self.read_directory(pypi_package_json.wheel_path, purl)
                     generator, version = self.read_generator_line(wheel_contents)
                     if generator != "":
-                        build_backends[generator] = version
+                        build_backends[generator] = "==" + version
                     if generator != "setuptools":
                         # Apply METADATA heuristics to determine setuptools version
                         if "License-File" in metadata_contents:
-                            build_backends["setuptools"] = "56.2.0"
+                            build_backends["setuptools"] = "==" + defaults.get(
+                                "heuristic.pypi", "setuptools_version_emitting_license"
+                            )
                         elif "Platform: UNKNOWN" in metadata_contents:
-                            build_backends["setuptools"] = "57.5.0"
+                            build_backends["setuptools"] = "==" + defaults.get(
+                                "heuristic.pypi", "setuptools_version_emitting_platform_unknown"
+                            )
                         else:
-                            build_backends["setuptools"] = "67.7.2"
-
-                with pypi_package_json.sourcecode():
-                    try:
-                        pyproject_content = pypi_package_json.get_sourcecode_file_contents("pyproject.toml")
-                        content = tomli.loads(pyproject_content.decode("utf-8"))
-                        build_system: dict[str, list[str]] = content.get("build-system", {})
-                        requires_array: list[str] = build_system.get("requires", [])
-                        logger.debug("From pyproject.toml:")
-                        logger.debug(requires_array)
-                    except SourceCodeError:
-                        logger.debug("No pyproject.toml")
+                            build_backends["setuptools"] = "==" + defaults.get("heuristic.pypi", "default_setuptools")
 
                 logger.debug("From .dist_info:")
                 logger.debug(build_backends)
+
+                try:
+                    with pypi_package_json.sourcecode():
+                        try:
+                            pyproject_content = pypi_package_json.get_sourcecode_file_contents("pyproject.toml")
+                            content = tomli.loads(pyproject_content.decode("utf-8"))
+                            build_system: dict[str, list[str]] = content.get("build-system", {})
+                            requires_array = build_system.get("requires", [])
+                            logger.debug("From pyproject.toml:")
+                            logger.debug(requires_array)
+                        except SourceCodeError:
+                            logger.debug("No pyproject.toml")
+                except SourceCodeError:
+                    logger.debug("No pyproject.toml")
+
+                # Merge in pyproject.toml information only when the wheel dist_info does not contain the same
+                # Hatch is an interesting example of this merge being required.
+                for requirement in requires_array:
+                    try:
+                        parsed_requirement = Requirement(requirement)
+                        if parsed_requirement.name not in build_backends:
+                            build_backends[parsed_requirement.name] = str(parsed_requirement.specifier)
+                    except InvalidRequirement:
+                        logger.debug("Malformed requirement encountered:")
+                        logger.debug(requirement)
+
+                logger.debug("Combined:")
+                logger.debug(build_backends)
+                self.data["build_backends"] = build_backends
 
     def read_directory(self, wheel_path: str, purl: PackageURL) -> tuple[str, str]:
         """
