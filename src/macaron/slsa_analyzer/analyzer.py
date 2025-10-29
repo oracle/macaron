@@ -261,7 +261,7 @@ class Analyzer:
                             report.add_dep_record(dep_record)
                             duplicated_scm_records.append(dep_record)
                             continue
-                        self.rich_handler.is_dependency(True)
+                        self.rich_handler.is_dependency(True, config.get_value("id"))
                         dep_record = self.run_single(config, analysis, report.record_mapping)
                         report.add_dep_record(dep_record)
                         if dep_record.context:

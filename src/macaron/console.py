@@ -67,6 +67,15 @@ class TableBuilder:
                 table.add_row(check_result_type, str(len(checks)), style=color_map[check_result_type])
         return table
 
+    @staticmethod
+    def _make_reports_table(reports: dict) -> Table:
+        table = Table(show_header=False, box=None)
+        table.add_column("Report Type", justify="left")
+        table.add_column("Report Path", justify="left")
+        for report_type, report_path in reports.items():
+            table.add_row(report_type, report_path, style="blue")
+        return table
+
 
 class Dependency(TableBuilder):
     """A class to manage the display of dependency analysis in the console."""
@@ -94,6 +103,12 @@ class Dependency(TableBuilder):
         self.checks: dict[str, str] = {}
         self.failed_checks_table = Table(show_header=False, box=None)
         self.summary_table = Table(show_header=False, box=None)
+        self.report_table = Table(show_header=False, box=None)
+        self.reports = {
+            "HTML Report": "Not Generated",
+            "Dependencies Report": "Not Generated",
+            "JSON Report": "Not Generated",
+        }
 
     def add_description_table_content(self, key: str, value: str | Status) -> None:
         """
@@ -154,6 +169,20 @@ class Dependency(TableBuilder):
         self.failed_checks_table = self._make_failed_checks_table(checks_summary.get("FAILED", []))
         self.summary_table = self._make_summary_table(checks_summary, total_checks)
 
+    def update_report_table(self, report_type: str, report_path: str) -> None:
+        """
+        Update the report table with the path of a generated report.
+
+        Parameters
+        ----------
+        report_type : str
+            The type of the report (e.g., "HTML Report", "JSON Report").
+        report_path : str
+            The relative path to the generated report.
+        """
+        self.reports[report_type] = report_path
+        self.report_table = self._make_reports_table(self.reports)
+
     def mark_failed(self) -> None:
         """Convert any Processing Status entries to Failed."""
         for key, value in self.description_table_content.items():
@@ -188,6 +217,10 @@ class Dependency(TableBuilder):
             ]
             if self.summary_table.row_count > 0:
                 layout = layout + ["", self.summary_table]
+                if self.report_table.row_count > 0:
+                    layout = layout + [
+                        self.report_table,
+                    ]
         elif self.summary_table.row_count > 0:
             layout = layout + [
                 "",
@@ -195,6 +228,10 @@ class Dependency(TableBuilder):
                 "",
                 self.summary_table,
             ]
+            if self.report_table.row_count > 0:
+                layout = layout + [
+                    self.report_table,
+                ]
         return layout
 
 
@@ -249,6 +286,7 @@ class RichConsoleHandler(RichHandler, TableBuilder):
             "JSON Report": "Not Generated",
         }
         self.if_dependency: bool = False
+        self.dependency_analysis_map: dict[str, int] = {}
         self.dependency_analysis_list: list[Dependency] = []
         self.components_violates_table = Table(box=None)
         self.components_satisfy_table = Table(box=None)
@@ -382,7 +420,7 @@ class RichConsoleHandler(RichHandler, TableBuilder):
         self.failed_checks_table = self._make_failed_checks_table(checks_summary.get("FAILED", []))
         self.summary_table = self._make_summary_table(checks_summary, total_checks)
 
-    def update_report_table(self, report_type: str, report_path: str) -> None:
+    def update_report_table(self, report_type: str, report_path: str, record_id: str = "") -> None:
         """
         Update the report table with the path of a generated report.
 
@@ -393,17 +431,14 @@ class RichConsoleHandler(RichHandler, TableBuilder):
         report_path : str
             The relative path to the generated report.
         """
-        self.reports[report_type] = report_path
-        report_table = Table(show_header=False, box=None)
-        report_table.add_column("Report Type", justify="left")
-        report_table.add_column("Report Path", justify="left")
+        if self.reports[report_type] == "Not Generated":
+            self.reports[report_type] = report_path
+            self.report_table = self._make_reports_table(self.reports)
+        elif record_id:
+            record_ind = self.dependency_analysis_map[record_id]
+            self.dependency_analysis_list[record_ind].update_report_table(report_type, report_path)
 
-        for report_detail, report_value in self.reports.items():
-            report_table.add_row(report_detail, report_value, style="blue")
-
-        self.report_table = report_table
-
-    def is_dependency(self, value: bool) -> None:
+    def is_dependency(self, value: bool, record_id: str) -> None:
         """
         Update the flag indicating whether the analyzed package is a dependency.
 
@@ -415,6 +450,7 @@ class RichConsoleHandler(RichHandler, TableBuilder):
         self.if_dependency = value
         if self.if_dependency:
             dependency = Dependency()
+            self.dependency_analysis_map[record_id] = len(self.dependency_analysis_list)
             self.dependency_analysis_list.append(dependency)
 
     def generate_policy_summary_table(self) -> None:
