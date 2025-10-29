@@ -81,6 +81,7 @@ COMPARE_SCRIPTS: dict[str, Sequence[str]] = {
     "vsa": ["tests", "vsa", "compare_vsa.py"],
     "find_source": ["tests", "find_source", "compare_source_reports.py"],
     "rc_build_spec": ["tests", "build_spec_generator", "reproducible_central", "compare_rc_build_spec.py"],
+    "default_build_spec": ["tests", "build_spec_generator", "common_spec", "compare_default_buildspec.py"],
 }
 
 VALIDATE_SCHEMA_SCRIPTS: dict[str, Sequence[str]] = {
