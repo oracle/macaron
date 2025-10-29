@@ -434,7 +434,7 @@ class RichConsoleHandler(RichHandler, TableBuilder):
         if self.reports[report_type] == "Not Generated":
             self.reports[report_type] = report_path
             self.report_table = self._make_reports_table(self.reports)
-        elif record_id:
+        elif record_id and record_id in self.dependency_analysis_map:
             record_ind = self.dependency_analysis_map[record_id]
             self.dependency_analysis_list[record_ind].update_report_table(report_type, report_path)
 
