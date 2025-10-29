@@ -135,7 +135,9 @@ class JSONReporter(FileReporter):
                     file_name = os.path.join(target_dir, f"{record.context.component.report_file_name}.json")
                     json_data = json.dumps(record.get_dict(), indent=self.indent)
                     self.write_file(file_name, json_data)
-                    self.rich_handler.update_report_table("JSON Report", os.path.relpath(file_name, os.getcwd()))
+                    self.rich_handler.update_report_table(
+                        "JSON Report", os.path.relpath(file_name, os.getcwd()), record.record_id
+                    )
         except TypeError as error:
             logger.critical("Cannot serialize output report to JSON: %s", error)
 
@@ -228,7 +230,9 @@ class HTMLReporter(FileReporter):
                     # in the original data.
                     html = self.template.render(deepcopy(record.get_dict()))
                     self.write_file(file_name, html)
-                    self.rich_handler.update_report_table("HTML Report", os.path.relpath(file_name, os.getcwd()))
+                    self.rich_handler.update_report_table(
+                        "HTML Report", os.path.relpath(file_name, os.getcwd()), record.record_id
+                    )
         except TemplateSyntaxError as error:
             location = f"line {error.lineno}"
             name = error.filename or error.name
