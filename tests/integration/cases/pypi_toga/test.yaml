@@ -3,9 +3,11 @@
 
 description: |
   Analyzing a PyPI PURL that has provenance available on the PyPI registry, and passes the SCM authenticity check.
+  It also tests buildspec generation.
 
 tags:
 - macaron-python-package
+- tutorial
 
 steps:
 - name: Run macaron analyze
@@ -18,3 +20,17 @@ steps:
   kind: verify
   options:
     policy: policy.dl
+- name: Generate the buildspec
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/toga@0.5.1
+    - --output-format
+    - default-buildspec
+- name: Compare Buildspec.
+  kind: compare
+  options:
+    kind: default_build_spec
+    result: output/buildspec/pypi/toga/macaron.buildspec
+    expected: expected_default.buildspec

@@ -3,6 +3,7 @@
 
 """This module contains the functions used for generating build specs from the Macaron database."""
 
+import json
 import logging
 import os
 from collections.abc import Mapping
@@ -13,8 +14,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from macaron.build_spec_generator.build_command_patcher import PatchCommandBuildTool, PatchValueType
+from macaron.build_spec_generator.common_spec.core import gen_generic_build_spec
 from macaron.build_spec_generator.reproducible_central.reproducible_central import gen_reproducible_central_build_spec
 from macaron.console import access_handler
+from macaron.errors import GenerateBuildSpecError
 from macaron.path_utils.purl_based_path import get_purl_based_dir
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -24,6 +27,8 @@ class BuildSpecFormat(str, Enum):
     """The build spec formats that we support."""
 
     REPRODUCIBLE_CENTRAL = "rc-buildspec"
+
+    DEFAULT = "default-buildspec"
 
 
 CLI_COMMAND_PATCHES: dict[
@@ -96,22 +101,7 @@ def gen_build_spec_for_purl(
     db_engine = create_engine(f"sqlite+pysqlite:///file:{database_path}?mode=ro&uri=true", echo=False)
     build_spec_content = None
 
-    with Session(db_engine) as session, session.begin():
-        match build_spec_format:
-            case BuildSpecFormat.REPRODUCIBLE_CENTRAL:
-                build_spec_content = gen_reproducible_central_build_spec(
-                    purl=purl,
-                    session=session,
-                    patches=CLI_COMMAND_PATCHES,
-                )
-
-    if not build_spec_content:
-        logger.error("Error while generating the build spec.")
-        return os.EX_DATAERR
-
-    logger.debug("Build spec content: \n%s", build_spec_content)
-
-    build_spec_filepath = os.path.join(
+    build_spec_dir_path = os.path.join(
         output_path,
         "buildspec",
         get_purl_based_dir(
@@ -119,28 +109,60 @@ def gen_build_spec_for_purl(
             purl_namespace=purl.namespace,
             purl_type=purl.type,
         ),
-        "macaron.buildspec",
     )
 
-    os.makedirs(
-        name=os.path.dirname(build_spec_filepath),
-        exist_ok=True,
-    )
+    with Session(db_engine) as session, session.begin():
+        try:
+            build_spec = gen_generic_build_spec(purl=purl, session=session, patches=CLI_COMMAND_PATCHES)
+        except GenerateBuildSpecError as error:
+            logger.error("Error while generating the build spec: %s.", error)
+            return os.EX_DATAERR
+        match build_spec_format:
+            case BuildSpecFormat.REPRODUCIBLE_CENTRAL:
+                try:
+                    build_spec_content = gen_reproducible_central_build_spec(build_spec)
+                except GenerateBuildSpecError as error:
+                    logger.error("Error while generating the build spec: %s.", error)
+                    return os.EX_DATAERR
+                build_spec_file_path = os.path.join(build_spec_dir_path, "reproducible_central.buildspec")
+            # Default build spec.
+            case BuildSpecFormat.DEFAULT:
+                try:
+                    build_spec_content = json.dumps(build_spec)
+                except ValueError as error:
+                    logger.error("Error while serializing the build spec: %s.", error)
+                    return os.EX_DATAERR
+                build_spec_file_path = os.path.join(build_spec_dir_path, "macaron.buildspec")
+
+    if not build_spec_content:
+        logger.error("Error while generating the build spec.")
+        return os.EX_DATAERR
+
+    logger.debug("Build spec content: \n%s", build_spec_content)
+
+    try:
+        os.makedirs(
+            name=build_spec_dir_path,
+            exist_ok=True,
+        )
+    except OSError as error:
+        logger.error("Unable to create the output file: %s.", error)
+        return os.EX_OSERR
 
     logger.info(
-        "Generating the %s format build spec to %s.",
+        "Generating the %s format build spec to %s",
         build_spec_format.value,
-        os.path.relpath(build_spec_filepath, os.getcwd()),
+        os.path.relpath(build_spec_file_path, os.getcwd()),
     )
     rich_handler = access_handler.get_handler()
-    rich_handler.update_gen_build_spec("Build Spec Path:", os.path.relpath(build_spec_filepath, os.getcwd()))
+    rich_handler.update_gen_build_spec("Build Spec Path:", os.path.relpath(build_spec_file_path, os.getcwd()))
     try:
-        with open(build_spec_filepath, mode="w", encoding="utf-8") as file:
+        with open(build_spec_file_path, mode="w", encoding="utf-8") as file:
             file.write(build_spec_content)
     except OSError as error:
         logger.error(
             "Could not create the build spec at %s. Error: %s",
-            os.path.relpath(build_spec_filepath, os.getcwd()),
+            os.path.relpath(build_spec_file_path, os.getcwd()),
             error,
         )
         return os.EX_OSERR

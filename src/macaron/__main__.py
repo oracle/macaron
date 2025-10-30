@@ -618,8 +618,10 @@ def main(argv: list[str] | None = None) -> None:
     gen_build_spec_parser.add_argument(
         "--output-format",
         type=str,
-        help=('The output format. Can be rc-buildspec (Reproducible-central build spec) (default "rc-buildspec")'),
-        default="rc-buildspec",
+        help=(
+            "The output format. Can be default-buildspec (default) or rc-buildspec (Reproducible-central build spec)"
+        ),
+        default="default-buildspec",
     )
 
     args = main_parser.parse_args(argv)

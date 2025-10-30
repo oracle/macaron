@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from macaron.build_spec_generator.jdk_finder import get_jdk_version_from_jar, join_remote_maven_repo_url
+from macaron.build_spec_generator.common_spec.jdk_finder import get_jdk_version_from_jar, join_remote_maven_repo_url
 
 
 @pytest.mark.parametrize(

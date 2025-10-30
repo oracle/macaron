@@ -5,7 +5,7 @@
 
 import pytest
 
-from macaron.build_spec_generator.jdk_version_normalizer import normalize_jdk_version
+from macaron.build_spec_generator.common_spec.jdk_version_normalizer import normalize_jdk_version
 
 
 @pytest.mark.parametrize(

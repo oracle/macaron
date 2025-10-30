@@ -1,0 +1,44 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Generate a buildspec for this PURL and validate the buildspec content.
+
+tags:
+- macaron-python-package
+- macaron-gen-build-spec
+- tutorial
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/org.apache.hugegraph/computer-k8s@1.0.0
+- name: Run the default buildspec generation
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/org.apache.hugegraph/computer-k8s@1.0.0
+- name: Compare Buildspec.
+  kind: compare
+  options:
+    kind: default_build_spec
+    result: output/buildspec/maven/org_apache_hugegraph/computer-k8s/macaron.buildspec
+    expected: expected_default.buildspec
+- name: Run the buildspec generation explicitly providing the default output format option.
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:maven/org.apache.hugegraph/computer-k8s@1.0.0
+    - --output-format
+    - default-buildspec
+- name: Compare Buildspec.
+  kind: compare
+  options:
+    kind: default_build_spec
+    result: output/buildspec/maven/org_apache_hugegraph/computer-k8s/macaron.buildspec
+    expected: expected_default.buildspec
