@@ -213,8 +213,14 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
         with open(verify_policy_args.file, encoding="utf-8") as file:
             policy_content = file.read()
     elif verify_policy_args.policy:
-        policy_dir = os.path.join(macaron.MACARON_PATH, "resources/policies/datalog")
-        available_policies = [policy[:-12] for policy in os.listdir(policy_dir) if policy.endswith(".dl.template")]
+        policy_dir = os.path.join(macaron.MACARON_PATH, "resources", "policies", "datalog")
+        policy_suffix = ".dl"
+        template_suffix = f"{policy_suffix}.template"
+        available_policies = [
+            os.path.splitext(policy)[0].replace(policy_suffix, "")
+            for policy in os.listdir(policy_dir)
+            if policy.endswith(template_suffix)
+        ]
         if verify_policy_args.policy not in available_policies:
             logger.error(
                 "The policy %s is not available. Available policies are: %s",
@@ -222,11 +228,15 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
                 available_policies,
             )
             return os.EX_USAGE
-        policy_path = os.path.join(policy_dir, f"{verify_policy_args.policy}.dl.template")
+        policy_path = os.path.join(policy_dir, f"{verify_policy_args.policy}{template_suffix}")
         with open(policy_path, encoding="utf-8") as file:
             policy_content = file.read()
-        if verify_policy_args.package_url:
+        try:
+            PackageURL.from_string(verify_policy_args.package_url)
             policy_content = policy_content.replace("<PACKAGE_PURL>", verify_policy_args.package_url)
+        except ValueError as err:
+            logger.error("The package url %s is not valid. Error: %s", verify_policy_args.package_url, err)
+            return os.EX_USAGE
 
     if policy_content:
         result = run_policy_engine(verify_policy_args.database, policy_content)
