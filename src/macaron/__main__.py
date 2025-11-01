@@ -212,7 +212,7 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
 
         with open(verify_policy_args.file, encoding="utf-8") as file:
             policy_content = file.read()
-    elif verify_policy_args.policy:
+    elif verify_policy_args.existing_policy:
         policy_dir = os.path.join(macaron.MACARON_PATH, "resources", "policies", "datalog")
         policy_suffix = ".dl"
         template_suffix = f"{policy_suffix}.template"
@@ -221,14 +221,14 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
             for policy in os.listdir(policy_dir)
             if policy.endswith(template_suffix)
         ]
-        if verify_policy_args.policy not in available_policies:
+        if verify_policy_args.existing_policy not in available_policies:
             logger.error(
                 "The policy %s is not available. Available policies are: %s",
-                verify_policy_args.policy,
+                verify_policy_args.existing_policy,
                 available_policies,
             )
             return os.EX_USAGE
-        policy_path = os.path.join(policy_dir, f"{verify_policy_args.policy}{template_suffix}")
+        policy_path = os.path.join(policy_dir, f"{verify_policy_args.existing_policy}{template_suffix}")
         with open(policy_path, encoding="utf-8") as file:
             policy_content = file.read()
         try:
@@ -602,7 +602,7 @@ def main(argv: list[str] | None = None) -> None:
     vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
     vp_parser.add_argument("-purl", "--package-url", help="PackageURL for policy template.")
     vp_group.add_argument("-f", "--file", type=str, help="Path to the Datalog policy.")
-    vp_group.add_argument("-p", "--policy", help="Example policy to run.")
+    vp_group.add_argument("-e", "--existing-policy", help="Name of the existing policy to run.")
     vp_group.add_argument("-s", "--show-prelude", action="store_true", help="Show policy prelude.")
 
     # Find the repo and commit of a passed PURL, or the commit of a passed PURL and repo.
