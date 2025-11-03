@@ -50,7 +50,7 @@ class BaseBuildSpecDict(TypedDict, total=False):
     newline: NotRequired[str]
 
     #: The version of the programming language or runtime, e.g., '11' for JDK, '3.11' for Python.
-    language_version: Required[str]
+    language_version: Required[list[str]]
 
     #: List of release dependencies.
     dependencies: NotRequired[list[str]]

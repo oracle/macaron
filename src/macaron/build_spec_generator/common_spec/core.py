@@ -442,7 +442,7 @@ def gen_generic_build_spec(
             "git_repo": latest_component_repository.remote_path,
             "git_tag": latest_component_repository.commit_sha,
             "newline": "lf",
-            "language_version": lang_version or "",
+            "language_version": [lang_version] if lang_version else [],
             "ecosystem": purl.type,
             "purl": str(purl),
             "language": target_language,

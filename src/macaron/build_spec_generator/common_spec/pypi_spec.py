@@ -10,6 +10,7 @@ import re
 import tomli
 from packageurl import PackageURL
 from packaging.requirements import InvalidRequirement, Requirement
+from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpec, BaseBuildSpecDict
 from macaron.config.defaults import defaults
@@ -64,12 +65,12 @@ class PyPIBuildSpec(
             if pypi_package_json.package_json or pypi_package_json.download(dest=""):
                 requires_array: list[str] = []
                 build_backends: dict[str, str] = {}
+                python_version_list: list[str] = []
                 try:
                     with pypi_package_json.wheel():
                         logger.debug("Wheel at %s", pypi_package_json.wheel_path)
                         # Should only have .dist-info directory
                         logger.debug("It has directories %s", ",".join(os.listdir(pypi_package_json.wheel_path)))
-                        # Make build-req array
                         wheel_contents, metadata_contents = self.read_directory(pypi_package_json.wheel_path, purl)
                         generator, version = self.read_generator_line(wheel_contents)
                         if generator != "":
@@ -101,6 +102,9 @@ class PyPIBuildSpec(
                             content = tomli.loads(pyproject_content.decode("utf-8"))
                             build_system: dict[str, list[str]] = content.get("build-system", {})
                             requires_array = build_system.get("requires", [])
+                            python_version_constraint = content.get("project", {}).get("requires-python")
+                            if python_version_constraint:
+                                python_version_list.append(python_version_constraint)
                             logger.debug("From pyproject.toml:")
                             logger.debug(requires_array)
                         except SourceCodeError:
@@ -122,6 +126,19 @@ class PyPIBuildSpec(
                 logger.debug("Combined:")
                 logger.debug(build_backends)
                 self.data["build_backends"] = build_backends
+
+                if not python_version_list:
+                    try:
+                        # Get python version specified in the wheel file name
+                        logger.debug(pypi_package_json.wheel_filename)
+                        _, _, _, tags = parse_wheel_filename(pypi_package_json.wheel_filename)
+                        for tag in tags:
+                            python_version_list.append(tag.interpreter)
+                        logger.debug(python_version_list)
+                    except InvalidWheelFilename:
+                        logger.debug("Could not parse wheel file name to extract version")
+
+                self.data["language_version"] = python_version_list
 
     def read_directory(self, wheel_path: str, purl: PackageURL) -> tuple[str, str]:
         """

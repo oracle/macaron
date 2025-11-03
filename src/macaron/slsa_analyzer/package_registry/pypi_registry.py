@@ -331,6 +331,7 @@ class PyPIRegistry(PackageRegistry):
                         members.append(member)
                     if member.filename.endswith("METADATA"):
                         members.append(member)
+                # Intended suppression. The tool is unable to see that .extractall is being called with a filter
                 zip_file.extractall(temp_dir, members)  # nosec B202:tarfile_unsafe_members
         except zipfile.BadZipFile as bad_zip:
             self.cleanup_sourcecode_directory(temp_dir, f"Error extracting wheel: {bad_zip}", bad_zip)
@@ -560,6 +561,9 @@ class PyPIPackageJsonAsset:
     #: the wheel temporary location name
     wheel_path: str
 
+    #: name of the wheel file
+    wheel_filename: str
+
     #: The size of the asset (in bytes). This attribute is added to match the AssetLocator
     #: protocol and is not used because pypi API registry does not provide it.
     @property
@@ -704,12 +708,10 @@ class PyPIPackageJsonAsset:
             if distribution.get("packagetype") != "bdist_wheel":
                 continue
             file_name: str = distribution.get("filename") or ""
-            # Ensure wheel matches tag
-            # IS CURRENTLY A BIT NAIVE, BUT ALSO INTENTIONAL:
-            # Do we want to search for "tag" in the wheel name, or force an exact match for the tag?
             if not file_name.endswith(f"{tag}.whl"):
                 continue
-            # Continue getting url as get_sourcecode_url does
+            self.wheel_filename = file_name
+            # Continue to getting url
             wheel_url: str = distribution.get("url") or ""
             if wheel_url:
                 try:
@@ -941,6 +943,6 @@ def find_or_create_pypi_asset(
         logger.debug("Failed to create PyPIPackageJson asset.")
         return None
 
-    asset = PyPIPackageJsonAsset(asset_name, asset_version, False, package_registry, {}, "", "")
+    asset = PyPIPackageJsonAsset(asset_name, asset_version, False, package_registry, {}, "", "", "")
     pypi_registry_info.metadata.append(asset)
     return asset
