@@ -722,6 +722,7 @@ def main(argv: list[str] | None = None) -> None:
             st_handler.close()
         else:
             rich_handler.mark_failed()
+            rich_handler.modify_layout(True)
             rich_handler.close()
 
 

@@ -256,6 +256,7 @@ class RichConsoleHandler(RichHandler, TableBuilder):
         self.command = ""
         self.logs: list[str] = []
         self.error_logs: list[str] = []
+        self.show_full_layout: bool = False
         self.description_table = Table(show_header=False, box=None)
         self.description_table_content: dict[str, str | Status] = {
             "Package URL:": Status("[green]Processing[/]"),
@@ -615,49 +616,94 @@ class RichConsoleHandler(RichHandler, TableBuilder):
             )
             layout = layout + [error_log_panel]
         if self.command == "analyze":
-            if self.description_table.row_count > 0:
-                layout = layout + [
-                    Rule(" DESCRIPTION", align="left"),
-                    "",
-                    self.description_table,
-                ]
-            if self.progress_table.row_count > 0:
-                layout = layout + ["", self.progress, "", self.progress_table]
-            if self.failed_checks_table.row_count > 0:
-                layout = layout + [
-                    "",
-                    Rule(" SUMMARY", align="left"),
-                    "",
-                    self.failed_checks_table,
-                ]
-                if self.summary_table.row_count > 0:
-                    layout = layout + ["", self.summary_table]
-                if self.report_table.row_count > 0:
+            if self.show_full_layout:
+                if self.description_table.row_count > 0:
                     layout = layout + [
-                        self.report_table,
+                        Rule(" DESCRIPTION", align="left"),
+                        "",
+                        self.description_table,
                     ]
-            elif self.summary_table.row_count > 0:
-                layout = layout + [
-                    "",
-                    Rule(" SUMMARY", align="left"),
-                    "",
-                    self.summary_table,
-                ]
-                if self.report_table.row_count > 0:
+                if self.progress_table.row_count > 0:
+                    layout = layout + ["", self.progress, "", self.progress_table]
+                if self.failed_checks_table.row_count > 0:
                     layout = layout + [
-                        self.report_table,
+                        "",
+                        Rule(" SUMMARY", align="left"),
+                        "",
+                        self.failed_checks_table,
                     ]
-            if self.if_dependency and self.dependency_analysis_list:
-                for idx, dependency in enumerate(self.dependency_analysis_list, start=1):
-                    dependency_layout = dependency.make_layout()
-                    layout = (
-                        layout
-                        + [
-                            "",
-                            Rule(f" DEPENDENCY {idx}", align="left"),
+                    if self.summary_table.row_count > 0:
+                        layout = layout + ["", self.summary_table]
+                    if self.report_table.row_count > 0:
+                        layout = layout + [
+                            self.report_table,
                         ]
-                        + dependency_layout
-                    )
+                elif self.summary_table.row_count > 0:
+                    layout = layout + [
+                        "",
+                        Rule(" SUMMARY", align="left"),
+                        "",
+                        self.summary_table,
+                    ]
+                    if self.report_table.row_count > 0:
+                        layout = layout + [
+                            self.report_table,
+                        ]
+                if self.if_dependency and self.dependency_analysis_list:
+                    for idx, dependency in enumerate(self.dependency_analysis_list, start=1):
+                        dependency_layout = dependency.make_layout()
+                        layout = (
+                            layout
+                            + [
+                                "",
+                                Rule(f" DEPENDENCY {idx}", align="left"),
+                            ]
+                            + dependency_layout
+                        )
+            elif self.if_dependency and self.dependency_analysis_list:
+                dependency = self.dependency_analysis_list[-1]
+                dependency_layout = dependency.make_layout()
+                layout = (
+                    layout
+                    + [
+                        "",
+                        Rule(f" DEPENDENCY {len(self.dependency_analysis_list)}", align="left"),
+                    ]
+                    + dependency_layout
+                )
+            else:
+                if self.description_table.row_count > 0:
+                    layout = layout + [
+                        Rule(" DESCRIPTION", align="left"),
+                        "",
+                        self.description_table,
+                    ]
+                if self.progress_table.row_count > 0:
+                    layout = layout + ["", self.progress, "", self.progress_table]
+                if self.failed_checks_table.row_count > 0:
+                    layout = layout + [
+                        "",
+                        Rule(" SUMMARY", align="left"),
+                        "",
+                        self.failed_checks_table,
+                    ]
+                    if self.summary_table.row_count > 0:
+                        layout = layout + ["", self.summary_table]
+                    if self.report_table.row_count > 0:
+                        layout = layout + [
+                            self.report_table,
+                        ]
+                elif self.summary_table.row_count > 0:
+                    layout = layout + [
+                        "",
+                        Rule(" SUMMARY", align="left"),
+                        "",
+                        self.summary_table,
+                    ]
+                    if self.report_table.row_count > 0:
+                        layout = layout + [
+                            self.report_table,
+                        ]
         elif self.command == "verify-policy":
             if self.policy_summary_table.row_count > 0:
                 if self.components_satisfy_table.row_count > 0:
@@ -731,6 +777,17 @@ class RichConsoleHandler(RichHandler, TableBuilder):
             The error message to be logged.
         """
         self.error_message = message
+
+    def modify_layout(self, value: bool) -> None:
+        """
+        Modify the layout to show full or only analysis segments.
+
+        Parameters
+        ----------
+        value : bool
+            If True then it shows the full layout.
+        """
+        self.show_full_layout = value
 
     def start(self, command: str) -> None:
         """
