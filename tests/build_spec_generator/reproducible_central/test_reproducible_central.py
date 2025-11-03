@@ -26,7 +26,7 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
             "git_tag": "sampletag",
             "build_tool": "maven",
             "newline": "lf",
-            "language_version": "17",
+            "language_version": ["17"],
             "build_commands": [["mvn", "package"]],
             "purl": "pkg:maven/com.oracle/example-artifact@1.2.3",
         }

@@ -95,7 +95,7 @@ def gen_reproducible_central_build_spec(build_spec: BaseBuildSpecDict) -> str | 
         "tool": ReproducibleCentralBuildTool[build_spec["build_tool"].upper()].value,
         "newline": build_spec["newline"],
         "buildinfo": f"target/{build_spec['artifact_id']}-{build_spec['version']}.buildinfo",
-        "jdk": build_spec["language_version"],
+        "jdk": build_spec["language_version"][0],
         "command": compose_shell_commands(build_spec["build_commands"]),
     }
 

@@ -1,0 +1,32 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing a PyPI PURL that has provenance available on the PyPI registry, and passes the SCM authenticity check.
+  It also tests buildspec generation.
+
+tags:
+- macaron-python-package
+- tutorial
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/cachetools@6.2.1
+- name: Generate the buildspec
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/cachetools@6.2.1
+    - --output-format
+    - default-buildspec
+- name: Compare Buildspec.
+  kind: compare
+  options:
+    kind: default_build_spec
+    result: output/buildspec/pypi/cachetools/macaron.buildspec
+    expected: expected_default.buildspec

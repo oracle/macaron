@@ -12,6 +12,7 @@ import shutil
 import tarfile
 import tempfile
 import urllib.parse
+import zipfile
 from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -283,6 +284,67 @@ class PyPIRegistry(PackageRegistry):
         logger.debug("Temporary download and unzip of %s stored in %s", file_name, temp_dir)
         return temp_dir
 
+    def download_package_wheel(self, url: str) -> str:
+        """Download the wheel at input url.
+
+        Parameters
+        ----------
+        url: str
+            The wheel's url.
+
+        Returns
+        -------
+        str
+            The temp directory storing {distribution}-{version}.dist-info/WHEEL and
+            {distribution}-{version}.dist-info/METADATA.
+
+        Raises
+        ------
+        InvalidHTTPResponseError
+            If the HTTP request to the registry fails or an unexpected response is returned.
+        """
+        # Get name of file.
+        _, _, file_name = url.rpartition("/")
+        # Remove the .whl to get wheel name
+        wheel_name = re.sub(r"\.whl$", "", file_name)
+        # Makes a directory in the OS's temp folder
+        temp_dir = tempfile.mkdtemp(prefix=f"{wheel_name}_")
+        # get temp_dir/file_name
+        wheel_file = os.path.join(temp_dir, file_name)
+        # Same timeout and size limit as in download_package_sourcecode
+        timeout = defaults.getint("downloads", "timeout", fallback=120)
+        size_limit = defaults.getint("downloads", "max_download_size", fallback=10000000)
+
+        if not download_file_with_size_limit(url, {}, wheel_file, timeout, size_limit):
+            self.cleanup_sourcecode_directory(temp_dir, "Could not download the file.")
+
+        # Wheel is a zip
+        if not zipfile.is_zipfile(wheel_file):
+            self.cleanup_sourcecode_directory(temp_dir, f"Unable to extract source code from file {file_name}")
+
+        try:
+            # For consumer pattern
+            with zipfile.ZipFile(wheel_file) as zip_file:
+                members = []
+                for member in zip_file.infolist():
+                    if member.filename.endswith("WHEEL"):
+                        members.append(member)
+                    if member.filename.endswith("METADATA"):
+                        members.append(member)
+                # Intended suppression. The tool is unable to see that .extractall is being called with a filter
+                zip_file.extractall(temp_dir, members)  # nosec B202:tarfile_unsafe_members
+        except zipfile.BadZipFile as bad_zip:
+            self.cleanup_sourcecode_directory(temp_dir, f"Error extracting wheel: {bad_zip}", bad_zip)
+
+        # Now we should have it like:
+        # temp_dir/wheel_name.whl
+        # temp_dir/wheel_name.dist-info/
+
+        os.remove(wheel_file)
+
+        logger.debug("Temporary download and unzip of %s stored in %s", file_name, temp_dir)
+        return temp_dir
+
     def get_artifact_hash(self, artifact_url: str) -> str | None:
         """Return the hash of the artifact found at the passed URL.
 
@@ -496,6 +558,12 @@ class PyPIPackageJsonAsset:
     #: the source code temporary location name
     package_sourcecode_path: str
 
+    #: the wheel temporary location name
+    wheel_path: str
+
+    #: name of the wheel file
+    wheel_filename: str
+
     #: The size of the asset (in bytes). This attribute is added to match the AssetLocator
     #: protocol and is not used because pypi API registry does not provide it.
     @property
@@ -615,6 +683,55 @@ class PyPIPackageJsonAsset:
                     return configured_source_url
         return None
 
+    def get_wheel_url(self, tag: str = "none-any") -> str | None:
+        """Get url of wheel corresponding to specified tag.
+
+        Parameters
+        ----------
+        tag: str
+            Wheel tag to match. Defaults to none-any.
+
+        Returns
+        -------
+        str | None
+            URL of the wheel.
+        """
+        if self.component_version:
+            urls = json_extract(self.package_json, ["releases", self.component_version], list)
+        else:
+            # Get the latest version.
+            urls = json_extract(self.package_json, ["urls"], list)
+        if not urls:
+            return None
+        for distribution in urls:
+            # Only examine wheels
+            if distribution.get("packagetype") != "bdist_wheel":
+                continue
+            file_name: str = distribution.get("filename") or ""
+            if not file_name.endswith(f"{tag}.whl"):
+                continue
+            self.wheel_filename = file_name
+            # Continue to getting url
+            wheel_url: str = distribution.get("url") or ""
+            if wheel_url:
+                try:
+                    parsed_url = urllib.parse.urlparse(wheel_url)
+                except ValueError:
+                    logger.debug("Error occurred while processing the wheel URL %s.", wheel_url)
+                    return None
+                if self.pypi_registry.fileserver_url_netloc and self.pypi_registry.fileserver_url_scheme:
+                    configured_wheel_url = urllib.parse.ParseResult(
+                        scheme=self.pypi_registry.fileserver_url_scheme,
+                        netloc=self.pypi_registry.fileserver_url_netloc,
+                        path=parsed_url.path,
+                        params="",
+                        query="",
+                        fragment="",
+                    ).geturl()
+                    logger.debug("Found wheel URL: %s", configured_wheel_url)
+                    return configured_wheel_url
+        return None
+
     def get_latest_release_upload_time(self) -> str | None:
         """Get upload time of the latest release.
 
@@ -628,6 +745,33 @@ class PyPIPackageJsonAsset:
             upload_time: str | None = urls[0].get("upload_time")
             return upload_time
         return None
+
+    @contextmanager
+    def wheel(self) -> Generator[None]:
+        """Download and cleanup wheel of the package with a context manager."""
+        if not self.download_wheel():
+            raise SourceCodeError("Unable to download requested wheel.")
+        yield
+        if self.wheel_path:
+            # Name for cleanup_sourcecode_directory could be refactored here
+            PyPIRegistry.cleanup_sourcecode_directory(self.wheel_path)
+
+    def download_wheel(self) -> bool:
+        """Download and extract wheel metadata to a temporary directory.
+
+        Returns
+        -------
+        bool
+            ``True`` if the wheel is downloaded and extracted successfully; ``False`` if not.
+        """
+        url = self.get_wheel_url()
+        if url:
+            try:
+                self.wheel_path = self.pypi_registry.download_package_wheel(url)
+                return True
+            except InvalidHTTPResponseError as error:
+                logger.debug(error)
+        return False
 
     @contextmanager
     def sourcecode(self) -> Generator[None]:
@@ -799,6 +943,6 @@ def find_or_create_pypi_asset(
         logger.debug("Failed to create PyPIPackageJson asset.")
         return None
 
-    asset = PyPIPackageJsonAsset(asset_name, asset_version, False, package_registry, {}, "")
+    asset = PyPIPackageJsonAsset(asset_name, asset_version, False, package_registry, {}, "", "", "")
     pypi_registry_info.metadata.append(asset)
     return asset
