@@ -9,7 +9,6 @@ from datetime import datetime
 from typing import Generic, TypedDict, TypeVar
 
 from macaron.config.target_config import Configuration
-from macaron.console import access_handler
 from macaron.output_reporter.scm import SCMStatus
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
@@ -200,7 +199,6 @@ class Report:
         self.record_mapping: dict[str, Record] = {}
         if root_record.context:
             self.record_mapping[root_record.record_id] = root_record
-        self.rich_handler = access_handler.get_handler()
 
     def get_records(self) -> Iterable[Record]:
         """Get the generator for all records in the report.
@@ -299,7 +297,6 @@ class Report:
         """Return the string representation of the Report instance."""
         ctx_list = list(self.get_ctxs())
         main_ctx: AnalyzeContext = ctx_list.pop(0)
-        self.rich_handler = access_handler.get_handler()
 
         output = "".join(
             [
@@ -309,7 +306,6 @@ class Report:
                 "\nSLSA REQUIREMENT RESULTS:\n",
             ]
         )
-        self.rich_handler.update_checks_summary(main_ctx.get_check_summary(), len(main_ctx.check_results))
 
         slsa_req_mesg: dict[SLSALevels, list[str]] = {level: [] for level in SLSALevels if level != SLSALevels.LEVEL0}
         for req_name, req_status in main_ctx.ctx_data.items():
