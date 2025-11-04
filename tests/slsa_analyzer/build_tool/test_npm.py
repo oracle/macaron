@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the NPM build functions."""
@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from macaron.code_analyzer.call_graph import BaseNode
 from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.build_tool.npm import NPM
@@ -124,7 +123,7 @@ def test_is_npm_deploy_command(
             language_distributions=language_distributions,
             language_url=None,
             ci_path=ci_path,
-            step_node=BaseNode(),
+            step_node=None,
             reachable_secrets=reachable_secrets,
             events=events,
         ),
@@ -213,7 +212,7 @@ def test_is_npm_package_command(
             language_distributions=language_distributions,
             language_url=None,
             ci_path=ci_path,
-            step_node=BaseNode(),
+            step_node=None,
             reachable_secrets=reachable_secrets,
             events=events,
         ),

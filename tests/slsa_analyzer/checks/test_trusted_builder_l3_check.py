@@ -8,15 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.parsers.actionparser import parse as parse_action
+from macaron.code_analyzer.dataflow_analysis.analysis import analyse_github_workflow_file
+from macaron.code_analyzer.dataflow_analysis.core import NodeForest
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.trusted_builder_l3_check import TrustedBuilderL3Check
-from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
-    GitHubWorkflowNode,
-    GitHubWorkflowType,
-    build_call_graph_from_node,
-)
 from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
 from macaron.slsa_analyzer.specs.ci_spec import CIInfo
@@ -47,7 +42,7 @@ def test_trusted_builder_l3_check(
     workflows_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "github", "workflow_files")
     ci_info = CIInfo(
         service=github_actions_service,
-        callgraph=CallGraph(BaseNode(), ""),
+        callgraph=NodeForest([]),
         provenance_assets=[],
         release={},
         provenances=[],
@@ -57,18 +52,6 @@ def test_trusted_builder_l3_check(
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     ctx.dynamic_data["ci_services"] = [ci_info]
 
-    root: BaseNode = BaseNode()
-    gh_cg = CallGraph(root, "")
     workflow_path = os.path.join(workflows_dir, workflow_name)
-    parsed_obj = parse_action(workflow_path)
-    callee = GitHubWorkflowNode(
-        name=workflow_name,
-        node_type=GitHubWorkflowType.INTERNAL,
-        source_path=workflow_path,
-        parsed_obj=parsed_obj,
-        caller=root,
-    )
-    build_call_graph_from_node(callee, repo_path="")
-    root.add_callee(callee)
-    ci_info["callgraph"] = gh_cg
+    ci_info["callgraph"] = NodeForest([analyse_github_workflow_file(workflow_path, None)])
     assert check.run_check(ctx).result_type == expected_result
