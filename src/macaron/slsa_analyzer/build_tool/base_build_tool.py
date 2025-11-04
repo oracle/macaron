@@ -3,6 +3,8 @@
 
 """This module contains the BaseBuildTool class to be inherited by other specific Build Tools."""
 
+from __future__ import annotations
+
 import glob
 import itertools
 import json
@@ -14,13 +16,15 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
-from macaron.code_analyzer.call_graph import BaseNode
 from macaron.config.defaults import defaults
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence, Evidence, EvidenceWeightMap
+
+if TYPE_CHECKING:
+    from macaron.code_analyzer.dataflow_analysis.core import Node
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -57,7 +61,7 @@ class BuildToolCommand(TypedDict):
     ci_path: str
 
     #: The CI step object that calls the command.
-    step_node: BaseNode | None
+    step_node: Node | None
 
     #: The list of name of reachable variables that contain secrets."""
     reachable_secrets: list[str]
