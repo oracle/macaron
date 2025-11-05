@@ -714,6 +714,14 @@ class BashStatementNode(core.InterpretationNode):
                 return BashIfClauseNode.create(cmd, self.context.get_non_owned())
 
             return {"default": build_if}
+
+        if bashparser_model.is_for_clause(cmd):
+            # For statement.
+
+            def build_for() -> core.Node:
+                return BashForClauseNode.create(cmd, self.context.get_non_owned())
+
+            return {"default": build_for}
         if bashparser_model.is_binary_cmd(cmd):
             match cmd["Op"]:
                 case bashparser_model.BinCmdOperators.Pipe.value:
@@ -896,6 +904,197 @@ class BashIfClauseNode(core.ControlFlowGraphNode):
             else_part = BashIfClauseNode.create(cast(bashparser_model.IfClause, else_clause), context)
         return BashIfClauseNode(
             definition=if_stmt, cond_stmts=cond_stmts, then_stmts=then_stmts, else_stmts=else_part, context=context
+        )
+
+
+class BashForClauseNode(core.ControlFlowGraphNode):
+    """Control-flow-graph node representing a Bash for statement.
+
+    Control flow structure consists of executing the statements of the condition,
+    followed by a branch to execute or skip the loop body node . The analysis is
+    not path sensitive, so both branches are always considered possible regardless
+    of the condition.
+
+    TODO: Currently doesn't actually model the loop back edge (need more testing to
+    be confident of analysis termination in the presence of loops).
+    """
+
+    #: Parsed for statement AST.
+    definition: bashparser_model.ForClause
+    #: Block node to execute the initializer.
+    init_stmts: BashBlockNode | None
+    #: Block node to execute the condition.
+    cond_stmts: BashBlockNode | None
+    #: Block node for the loop body.
+    body_stmts: BashBlockNode
+    #: Block node to execute the post.
+    post_stmts: BashBlockNode | None
+    #: Bash script context.
+    context: core.ContextRef[BashScriptContext]
+    #: Control flow graph.
+    _cfg: core.ControlFlowGraph
+
+    def __init__(
+        self,
+        definition: bashparser_model.ForClause,
+        init_stmts: BashBlockNode | None,
+        cond_stmts: BashBlockNode | None,
+        body_stmts: BashBlockNode,
+        post_stmts: BashBlockNode | None,
+        context: core.ContextRef[BashScriptContext],
+    ) -> None:
+        """Initialize Bash for statement node.
+
+        Typically, construction should be done via the create function rather than using this constructor directly.
+
+        Parameters
+        ----------
+        definition: bashparser_model.ForClause
+            Parsed if statement AST.
+        init_stmts: BashBlockNode | None
+            Block node to execute the initializer.
+        cond_stmts: BashBlockNode | None
+            Block node to execute the condition.
+        body_stmts: BashBlockNode
+            Block node for the body.
+        post_stmts: BashBlockNode | None
+            Block node to execute the post.
+        context: core.ContextRef[BashScriptContext]
+            Bash script context.
+        """
+        super().__init__()
+        self.definition = definition
+        self.init_stmts = init_stmts
+        self.cond_stmts = cond_stmts
+        self.body_stmts = body_stmts
+        self.post_stmts = post_stmts
+        self.context = context
+
+        self._cfg = core.ControlFlowGraph.create_from_sequence(
+            list(filter(core.node_is_not_none, [self.init_stmts, self.cond_stmts, self.body_stmts, self.post_stmts]))
+        )
+
+    def children(self) -> Iterator[core.Node]:
+        """Yield the initializer, condition, body and post nodes."""
+        if self.init_stmts is not None:
+            yield self.init_stmts
+        if self.cond_stmts is not None:
+            yield self.cond_stmts
+        yield self.body_stmts
+        if self.post_stmts is not None:
+            yield self.post_stmts
+
+    def get_entry(self) -> core.Node:
+        """Return the entry node."""
+        return self._cfg.get_entry()
+
+    def get_successors(self, node: core.Node, exit_type: core.ExitType) -> set[core.Node | core.ExitType]:
+        """Return the successor for a given node.
+
+        Returns a propagated early exit of the same type in the case of a BashExit or BashReturn exit type.
+        """
+        if isinstance(exit_type, (BashExit, BashReturn)):
+            return {exit_type}
+        return self._cfg.get_successors(node, core.DEFAULT_EXIT)
+
+    def get_exit_state_transfer_filter(self) -> core.StateTransferFilter:
+        """Return state transfer filter to clear scopes owned by this node after this node exits."""
+        return core.ExcludedScopesStateTransferFilter(core.get_owned_scopes(self.context))
+
+    def get_printable_properties_table(self) -> dict[str, set[tuple[str | None, str]]]:
+        """Return a properties table containing the line number and scopes."""
+        result: dict[str, set[tuple[str | None, str]]] = {}
+        result["line num (in script)"] = {(None, str(self.definition["Pos"]["Line"]))}
+        printing.add_context_owned_scopes_to_properties_table(result, self.context)
+        return result
+
+    @staticmethod
+    def create(
+        for_stmt: bashparser_model.ForClause, context: core.NonOwningContextRef[BashScriptContext]
+    ) -> BashForClauseNode:
+        """Create a Bash for statement node from for statement AST.
+
+        Parameters
+        ----------
+        for_stmt: bashparser_model.ForClause
+            Parsed for statement AST.
+        context: core.NonOwningContextRef[BashScriptContext]
+            Bash script context.
+        """
+        body_stmts = BashBlockNode.create(for_stmt["Do"], context)
+
+        loop = for_stmt["Loop"]
+        if not bashparser_model.is_cstyle_loop(loop):
+            return BashForClauseNode(
+                definition=for_stmt,
+                init_stmts=None,
+                cond_stmts=None,
+                body_stmts=body_stmts,
+                post_stmts=None,
+                context=context,
+            )
+
+        init_stmts: BashBlockNode | None = None
+        if "Init" in loop:
+            init_arithm_cmd = bashparser_model.ArithmCmd(
+                Type="ArithmCmd",
+                Pos=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                End=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                Left=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                Right=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                X=loop["Init"],
+            )
+            init_stmt = bashparser_model.Stmt(
+                Cmd=init_arithm_cmd,
+                Pos=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                End=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                Position=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+            )
+            init_stmts = BashBlockNode.create([init_stmt], context)
+
+        cond_stmts: BashBlockNode | None = None
+        if "Cond" in loop:
+            cond_arithm_cmd = bashparser_model.ArithmCmd(
+                Type="ArithmCmd",
+                Pos=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                End=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                Left=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                Right=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                X=loop["Cond"],
+            )
+            cond_stmt = bashparser_model.Stmt(
+                Cmd=cond_arithm_cmd,
+                Pos=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                End=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                Position=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+            )
+            cond_stmts = BashBlockNode.create([cond_stmt], context)
+
+        post_stmts: BashBlockNode | None = None
+        if "Post" in loop:
+            post_arithm_cmd = bashparser_model.ArithmCmd(
+                Type="ArithmCmd",
+                Pos=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                End=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                Left=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                Right=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                X=loop["Post"],
+            )
+            post_stmt = bashparser_model.Stmt(
+                Cmd=post_arithm_cmd,
+                Pos=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                End=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+                Position=bashparser_model.Pos(Offset=0, Line=0, Col=0),
+            )
+            post_stmts = BashBlockNode.create([post_stmt], context)
+
+        return BashForClauseNode(
+            definition=for_stmt,
+            init_stmts=init_stmts,
+            cond_stmts=cond_stmts,
+            body_stmts=body_stmts,
+            post_stmts=post_stmts,
+            context=context,
         )
 
 
