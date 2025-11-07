@@ -1,1 +1,28 @@
-{"macaron_version": "0.18.0", "group_id": null, "artifact_id": "toga", "version": "0.5.1", "git_repo": "https://github.com/beeware/toga", "git_tag": "ef1912b0a1b5c07793f9aa372409f5b9d36f2604", "newline": "lf", "language_version": [">= 3.9"], "ecosystem": "pypi", "purl": "pkg:pypi/toga@0.5.1", "language": "python", "build_tool": "pip", "build_commands": [["pip", "install", "-U", "pip"]], "build_backends": {"setuptools": "==(80.3.1)", "setuptools_scm": "==8.3.1", "setuptools_dynamic_dependencies": "==1.0.0"}}
+{
+    "macaron_version": "0.18.0",
+    "group_id": null,
+    "artifact_id": "toga",
+    "version": "0.5.1",
+    "git_repo": "https://github.com/beeware/toga",
+    "git_tag": "ef1912b0a1b5c07793f9aa372409f5b9d36f2604",
+    "newline": "lf",
+    "language_version": [
+        ">=3.9"
+    ],
+    "ecosystem": "pypi",
+    "purl": "pkg:pypi/toga@0.5.1",
+    "language": "python",
+    "build_tool": "pip",
+    "build_commands": [
+        [
+            "python",
+            "-m",
+            "build"
+        ]
+    ],
+    "build_backends": {
+        "setuptools": "==(80.3.1)",
+        "setuptools_scm": "==8.3.1",
+        "setuptools_dynamic_dependencies": "==1.0.0"
+    }
+}

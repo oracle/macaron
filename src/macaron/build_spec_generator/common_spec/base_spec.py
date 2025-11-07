@@ -92,3 +92,26 @@ class BaseBuildSpec(ABC):
         This method should be implemented by subclasses to handle
         logic specific to a given package ecosystem, such as Maven or PyPI.
         """
+
+    @abstractmethod
+    def get_default_build_command(
+        self,
+        build_tool_name: str,
+    ) -> list[str]:
+        """Return a default build command for the build tool.
+
+        Parameters
+        ----------
+        build_tool_name: str
+            The build tool to get the default build command.
+
+        Returns
+        -------
+        list[str]
+            The build command as a list[str].
+
+        Raises
+        ------
+        GenerateBuildSpecError
+            If there is no default build command available for the specified build tool.
+        """

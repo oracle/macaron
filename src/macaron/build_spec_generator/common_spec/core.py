@@ -6,15 +6,13 @@
 import logging
 import pprint
 import shlex
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from enum import Enum
 from importlib import metadata as importlib_metadata
-from pprint import pformat
 
 import sqlalchemy.orm
 from packageurl import PackageURL
 
-from macaron.build_spec_generator.build_command_patcher import PatchCommandBuildTool, PatchValueType, patch_commands
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict
 from macaron.build_spec_generator.common_spec.maven_spec import MavenBuildSpec
 from macaron.build_spec_generator.common_spec.pypi_spec import PyPIBuildSpec
@@ -117,45 +115,6 @@ def compose_shell_commands(cmds_sequence: list[list[str]]) -> str:
     removed_shell_quote = [" ".join(remove_shell_quote(cmds)) for cmds in cmds_sequence]
     result = " && ".join(removed_shell_quote)
     return result
-
-
-def get_default_build_command(
-    build_tool_name: MacaronBuildToolName,
-) -> list[str] | None:
-    """Return a default build command for the build tool.
-
-    Parameters
-    ----------
-    build_tool_name: MacaronBuildToolName
-        The type of build tool to get the default build command.
-
-    Returns
-    -------
-    list[str] | None
-        The build command as a list[str] or None if we cannot get one for this tool.
-    """
-    default_build_command = None
-
-    match build_tool_name:
-        case MacaronBuildToolName.MAVEN:
-            default_build_command = "mvn clean package".split()
-        case MacaronBuildToolName.GRADLE:
-            default_build_command = "./gradlew clean assemble publishToMavenLocal".split()
-        case MacaronBuildToolName.PIP:
-            default_build_command = "python -m build".split()
-        case MacaronBuildToolName.POETRY:
-            default_build_command = "poetry build".split()
-        case _:
-            pass
-
-    if not default_build_command:
-        logger.critical(
-            "There is no default build command available for the build tool %s.",
-            build_tool_name,
-        )
-        return None
-
-    return default_build_command
 
 
 def get_macaron_build_tool_name(
@@ -322,10 +281,6 @@ def get_language_version(
 def gen_generic_build_spec(
     purl: PackageURL,
     session: sqlalchemy.orm.Session,
-    patches: Mapping[
-        PatchCommandBuildTool,
-        Mapping[str, PatchValueType | None],
-    ],
 ) -> BaseBuildSpecDict:
     """
     Generate and return the Buildspec file.
@@ -336,9 +291,6 @@ def gen_generic_build_spec(
         The PackageURL to generate build spec for.
     session : sqlalchemy.orm.Session
         The SQLAlchemy Session opened for the database to extract build information.
-    patches : Mapping[PatchCommandBuildTool, Mapping[str, PatchValueType | None]]
-        The patches to apply to the build commands in ``build_info`` before being populated in
-        the output Buildspec.
 
     Returns
     -------
@@ -359,12 +311,6 @@ def gen_generic_build_spec(
         raise GenerateBuildSpecError(
             f"PURL type '{purl.type}' is not supported. Supported: {[e.name.lower() for e in ECOSYSTEMS]}"
         )
-
-    logger.debug(
-        "Generating build spec for %s with command patches:\n%s",
-        purl,
-        pformat(patches),
-    )
 
     target_language = LANGUAGES[purl.type.upper()].value
     group = purl.namespace
@@ -414,22 +360,7 @@ def gen_generic_build_spec(
         build_command_info or "Cannot find any.",
     )
 
-    selected_build_command = (
-        build_command_info.command
-        if build_command_info
-        else get_default_build_command(
-            build_tool_name,
-        )
-    )
-    if not selected_build_command:
-        raise GenerateBuildSpecError(f"Failed to get a build command for {purl}.")
-
-    patched_build_commands = patch_commands(
-        cmds_sequence=[selected_build_command],
-        patches=patches,
-    )
-    if not patched_build_commands:
-        raise GenerateBuildSpecError(f"Failed to patch command sequences {selected_build_command}.")
+    selected_build_command = build_command_info.command if build_command_info else []
 
     lang_version = get_language_version(build_command_info) if build_command_info else ""
 
@@ -447,7 +378,7 @@ def gen_generic_build_spec(
             "purl": str(purl),
             "language": target_language,
             "build_tool": build_tool_name.value,
-            "build_commands": patched_build_commands,
+            "build_commands": [selected_build_command],
         }
     )
     ECOSYSTEMS[purl.type.upper()].value(base_build_spec_dict).resolve_fields(purl)
