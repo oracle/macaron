@@ -12,9 +12,11 @@ from packageurl import PackageURL
 from packaging.requirements import InvalidRequirement, Requirement
 from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 
+from macaron.build_spec_generator.build_command_patcher import CLI_COMMAND_PATCHES, patch_commands
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpec, BaseBuildSpecDict
 from macaron.config.defaults import defaults
-from macaron.errors import SourceCodeError
+from macaron.errors import GenerateBuildSpecError, SourceCodeError
+from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.package_registry import pypi_registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
@@ -37,6 +39,46 @@ class PyPIBuildSpec(
         """
         self.data = data
 
+    def get_default_build_command(
+        self,
+        build_tool_name: str,
+    ) -> list[str]:
+        """Return a default build command for the build tool.
+
+        Parameters
+        ----------
+        build_tool_name: str
+            The build tool to get the default build command.
+
+        Returns
+        -------
+        list[str]
+            The build command as a list[str].
+
+        Raises
+        ------
+        GenerateBuildSpecError
+            If there is no default build command available for the specified build tool.
+        """
+        default_build_command = None
+
+        match build_tool_name:
+            case "pip":
+                default_build_command = "python -m build".split()
+            case "poetry":
+                default_build_command = "poetry build".split()
+            case _:
+                pass
+
+        if not default_build_command:
+            logger.critical(
+                "There is no default build command available for the build tool %s.",
+                build_tool_name,
+            )
+            raise GenerateBuildSpecError("Unable to find a default build command.")
+
+        return default_build_command
+
     def resolve_fields(self, purl: PackageURL) -> None:
         """
         Resolve PyPI-specific fields in the build specification.
@@ -46,7 +88,7 @@ class PyPIBuildSpec(
         purl: str
             The target software component Package URL.
         """
-        if purl.type != "pypi":
+        if purl.type != "pypi" or purl.version is None:
             return
 
         registry = pypi_registry.PyPIRegistry()
@@ -60,23 +102,35 @@ class PyPIBuildSpec(
         )
 
         pypi_package_json = pypi_registry.find_or_create_pypi_asset(purl.name, purl.version, registry_info)
+        patched_build_commands: list[list[str]] = []
 
         if pypi_package_json is not None:
             if pypi_package_json.package_json or pypi_package_json.download(dest=""):
                 requires_array: list[str] = []
                 build_backends: dict[str, str] = {}
-                python_version_list: list[str] = []
+                python_version_set: set[str] = set()
+                wheel_name_python_version_list: list[str] = []
+                wheel_name_platforms: set[str] = set()
+
+                # Get the Python constraints from the PyPI JSON response.
+                json_releases = pypi_package_json.get_releases()
+                if json_releases:
+                    releases = json_extract(json_releases, [purl.version], list) or []
+                    for release in releases:
+                        if py_version := json_extract(release, ["requires_python"], str):
+                            python_version_set.add(py_version.replace(" ", ""))
+
                 try:
                     with pypi_package_json.wheel():
                         logger.debug("Wheel at %s", pypi_package_json.wheel_path)
-                        # Should only have .dist-info directory
+                        # Should only have .dist-info directory.
                         logger.debug("It has directories %s", ",".join(os.listdir(pypi_package_json.wheel_path)))
                         wheel_contents, metadata_contents = self.read_directory(pypi_package_json.wheel_path, purl)
                         generator, version = self.read_generator_line(wheel_contents)
                         if generator != "":
                             build_backends[generator] = "==" + version
                         if generator != "setuptools":
-                            # Apply METADATA heuristics to determine setuptools version
+                            # Apply METADATA heuristics to determine setuptools version.
                             if "License-File" in metadata_contents:
                                 build_backends["setuptools"] = "==" + defaults.get(
                                     "heuristic.pypi", "setuptools_version_emitting_license"
@@ -102,9 +156,10 @@ class PyPIBuildSpec(
                             content = tomli.loads(pyproject_content.decode("utf-8"))
                             build_system: dict[str, list[str]] = content.get("build-system", {})
                             requires_array = build_system.get("requires", [])
-                            python_version_constraint = content.get("project", {}).get("requires-python")
+
+                            python_version_constraint = json_extract(content, ["project", "requires-python"], str)
                             if python_version_constraint:
-                                python_version_list.append(python_version_constraint)
+                                python_version_set.add(python_version_constraint.replace(" ", ""))
                             logger.debug("From pyproject.toml:")
                             logger.debug(requires_array)
                         except SourceCodeError:
@@ -127,18 +182,39 @@ class PyPIBuildSpec(
                 logger.debug(build_backends)
                 self.data["build_backends"] = build_backends
 
-                if not python_version_list:
-                    try:
-                        # Get python version specified in the wheel file name
-                        logger.debug(pypi_package_json.wheel_filename)
-                        _, _, _, tags = parse_wheel_filename(pypi_package_json.wheel_filename)
-                        for tag in tags:
-                            python_version_list.append(tag.interpreter)
-                        logger.debug(python_version_list)
-                    except InvalidWheelFilename:
-                        logger.debug("Could not parse wheel file name to extract version")
+                try:
+                    # Get information from the wheel file name.
+                    logger.debug(pypi_package_json.wheel_filename)
+                    _, _, _, tags = parse_wheel_filename(pypi_package_json.wheel_filename)
+                    for tag in tags:
+                        wheel_name_python_version_list.append(tag.interpreter)
+                        wheel_name_platforms.add(tag.platform)
+                    logger.debug(python_version_set)
+                except InvalidWheelFilename:
+                    logger.debug("Could not parse wheel file name to extract version")
 
-                self.data["language_version"] = python_version_list
+                self.data["language_version"] = list(python_version_set) or wheel_name_python_version_list
+
+                # Use the default build command for pure Python packages.
+                if "any" in wheel_name_platforms:
+                    patched_build_commands = [self.get_default_build_command(self.data["build_tool"])]
+
+            if not patched_build_commands:
+                # Resolve and patch build commands.
+                selected_build_commands = self.data["build_commands"] or [
+                    self.get_default_build_command(self.data["build_tool"])
+                ]
+                patched_build_commands = (
+                    patch_commands(
+                        cmds_sequence=selected_build_commands,
+                        patches=CLI_COMMAND_PATCHES,
+                    )
+                    or []
+                )
+                if not patched_build_commands:
+                    raise GenerateBuildSpecError(f"Failed to patch command sequences {selected_build_commands}.")
+
+            self.data["build_commands"] = patched_build_commands
 
     def read_directory(self, wheel_path: str, purl: PackageURL) -> tuple[str, str]:
         """

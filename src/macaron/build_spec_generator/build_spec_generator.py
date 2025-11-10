@@ -6,14 +6,12 @@
 import json
 import logging
 import os
-from collections.abc import Mapping
 from enum import Enum
 
 from packageurl import PackageURL
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from macaron.build_spec_generator.build_command_patcher import PatchCommandBuildTool, PatchValueType
 from macaron.build_spec_generator.common_spec.core import gen_generic_build_spec
 from macaron.build_spec_generator.reproducible_central.reproducible_central import gen_reproducible_central_build_spec
 from macaron.console import access_handler
@@ -29,46 +27,6 @@ class BuildSpecFormat(str, Enum):
     REPRODUCIBLE_CENTRAL = "rc-buildspec"
 
     DEFAULT = "default-buildspec"
-
-
-CLI_COMMAND_PATCHES: dict[
-    PatchCommandBuildTool,
-    Mapping[str, PatchValueType | None],
-] = {
-    PatchCommandBuildTool.MAVEN: {
-        "goals": ["clean", "package"],
-        "--batch-mode": False,
-        "--quiet": False,
-        "--no-transfer-progress": False,
-        # Example pkg:maven/io.liftwizard/liftwizard-servlet-logging-mdc@1.0.1
-        # https://github.com/liftwizard/liftwizard/blob/
-        # 4ea841ffc9335b22a28a7a19f9156e8ba5820027/.github/workflows/build-and-test.yml#L23
-        "--threads": None,
-        # For cases such as
-        # pkg:maven/org.apache.isis.valuetypes/isis-valuetypes-prism-resources@2.0.0-M7
-        "--version": False,
-        "--define": {
-            # pkg:maven/org.owasp/dependency-check-utils@7.3.2
-            # To remove "-Dgpg.passphrase=$MACARON_UNKNOWN"
-            "gpg.passphrase": None,
-            "skipTests": "true",
-            "maven.test.skip": "true",
-            "maven.site.skip": "true",
-            "rat.skip": "true",
-            "maven.javadoc.skip": "true",
-        },
-    },
-    PatchCommandBuildTool.GRADLE: {
-        "tasks": ["clean", "assemble"],
-        "--console": "plain",
-        "--exclude-task": ["test"],
-        "--project-prop": {
-            "skip.signing": "",
-            "skipSigning": "",
-            "gnupg.skip": "",
-        },
-    },
-}
 
 
 def gen_build_spec_for_purl(
@@ -113,7 +71,7 @@ def gen_build_spec_for_purl(
 
     with Session(db_engine) as session, session.begin():
         try:
-            build_spec = gen_generic_build_spec(purl=purl, session=session, patches=CLI_COMMAND_PATCHES)
+            build_spec = gen_generic_build_spec(purl=purl, session=session)
         except GenerateBuildSpecError as error:
             logger.error("Error while generating the build spec: %s.", error)
             return os.EX_DATAERR
@@ -128,7 +86,7 @@ def gen_build_spec_for_purl(
             # Default build spec.
             case BuildSpecFormat.DEFAULT:
                 try:
-                    build_spec_content = json.dumps(build_spec)
+                    build_spec_content = json.dumps(build_spec, indent=4)
                 except ValueError as error:
                     logger.error("Error while serializing the build spec: %s.", error)
                     return os.EX_DATAERR
