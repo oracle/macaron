@@ -40,6 +40,7 @@ def test_verify_existing_policy_success(tmp_path: Path) -> None:
             database=str(db_file),
             show_prelude=False,
             file=None,
+            list_policies=False,
             existing_policy="malware-detection",
             package_url="pkg:pypi/django",
         )
@@ -56,6 +57,7 @@ def test_verify_existing_policy_not_found(tmp_path: Path) -> None:
         database=str(db_file),
         show_prelude=False,
         file=None,
+        list_policies=False,
         existing_policy="no-such-policy",
         package_url="pkg:pypi/django",
     )
