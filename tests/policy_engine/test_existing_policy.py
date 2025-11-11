@@ -13,8 +13,9 @@ from macaron.__main__ import verify_policy
 
 def test_verify_existing_policy_success(tmp_path: Path) -> None:
     """When an existing policy is provided and package-url is valid, verify_policy returns EX_OK."""
-    db_file = tmp_path / "macaron.db"
-    db_file.write_text("")
+    db_file = os.path.join(tmp_path, "macaron.db")
+    with open(db_file, "w", encoding="utf-8") as f:
+        f.write("")
 
     # Use a MagicMock for the handler.
     mock_handler = MagicMock()
@@ -48,8 +49,9 @@ def test_verify_existing_policy_success(tmp_path: Path) -> None:
 
 def test_verify_existing_policy_not_found(tmp_path: Path) -> None:
     """Requesting a non-existent policy returns usage error."""
-    db_file = tmp_path / "macaron.db"
-    db_file.write_text("")
+    db_file = os.path.join(tmp_path, "macaron.db")
+    with open(db_file, "w", encoding="utf-8") as f:
+        f.write("")
     policy_args = argparse.Namespace(
         database=str(db_file),
         show_prelude=False,

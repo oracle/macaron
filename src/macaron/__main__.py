@@ -205,6 +205,18 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
         return os.EX_OK
 
     policy_content = None
+    if verify_policy_args.list_policies:
+        policy_dir = os.path.join(macaron.MACARON_PATH, "resources", "policies", "datalog")
+        policy_suffix = ".dl"
+        template_suffix = f"{policy_suffix}.template"
+        available_policies = [
+            os.path.splitext(policy)[0].replace(policy_suffix, "")
+            for policy in os.listdir(policy_dir)
+            if policy.endswith(template_suffix)
+        ]
+        logger.info("Available policies are:\n\t%s", "\n\t".join(available_policies))
+        return os.EX_OK
+
     if verify_policy_args.file:
         if not os.path.isfile(verify_policy_args.file):
             logger.critical('The policy file "%s" does not exist.', verify_policy_args.file)
@@ -232,7 +244,8 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
         with open(policy_path, encoding="utf-8") as file:
             policy_content = file.read()
         try:
-            PackageURL.from_string(verify_policy_args.package_url)
+            validation_package_url = verify_policy_args.package_url.replace("*", "")
+            PackageURL.from_string(validation_package_url)
             policy_content = policy_content.replace("<PACKAGE_PURL>", verify_policy_args.package_url)
         except ValueError as err:
             logger.error("The package url %s is not valid. Error: %s", verify_policy_args.package_url, err)
@@ -603,6 +616,7 @@ def main(argv: list[str] | None = None) -> None:
     vp_parser.add_argument("-purl", "--package-url", help="PackageURL for policy template.")
     vp_group.add_argument("-f", "--file", type=str, help="Path to the Datalog policy.")
     vp_group.add_argument("-e", "--existing-policy", help="Name of the existing policy to run.")
+    vp_group.add_argument("-l", "--list-policies", action="store_true", help="List the existing policy to run.")
     vp_group.add_argument("-s", "--show-prelude", action="store_true", help="Show policy prelude.")
 
     # Find the repo and commit of a passed PURL, or the commit of a passed PURL and repo.

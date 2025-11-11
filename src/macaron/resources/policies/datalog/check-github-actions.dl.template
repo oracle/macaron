@@ -5,4 +5,4 @@ Policy("github_actions_vulns", component_id, "GitHub Actions Vulnerability Detec
 
 apply_policy_to("github_actions_vulns", component_id) :-
   is_component(component_id, purl),
-  match("<PACKAGE_PURL>*", purl).
+  match("<PACKAGE_PURL>", purl).
