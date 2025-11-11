@@ -1,20 +1,20 @@
-==============================================================
-Verify with an existing example policy using --existing-policy
-==============================================================
+===================================================================
+How to use the policy engine to verify with our predefined policies
+===================================================================
 
-This short tutorial shows how to use the ``--existing-policy`` flag with the ``verify-policy`` subcommand to run one of the example (predefined) policies that ship with Macaron.
+This tutorial shows how to use the ``--existing-policy`` flag with the ``verify-policy`` subcommand to run one of the predefined policies that ship with Macaron.
 
 --------
 Use case
 --------
 
-Use ``--existing-policy`` when you want to run one of the built-in example policies by name instead of providing a local policy file with ``--file``. Example policies are useful for quick checks or automated examples/tests.
+Use ``--existing-policy`` when you want to run one of the built-in policies by name instead of providing a local policy file with ``--file``. Pre-defined policies are useful for quick checks or automated examples/tests.
 
 -------
 Example
 -------
 
-Run the ``malware-detection`` example policy against a package URL:
+Run the ``malware-detection`` policy against a package URL:
 
 .. code-block:: shell
 
