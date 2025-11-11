@@ -355,8 +355,10 @@ class Analyzer:
         repo_id = config.get_value("id")
         try:
             parsed_purl = Analyzer.parse_purl(config)
+            if not parsed_purl:
+                raise InvalidPURLError("Unable to parse the PURL.")
             # Validate PURL type as per https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst
-            if parsed_purl and not re.match(r"^[a-z.+-][a-z0-9.+-]*$", parsed_purl.type):
+            if not re.match(r"^[a-z.+-][a-z0-9.+-]*$", parsed_purl.type):
                 raise InvalidPURLError(f"Invalid purl type: {parsed_purl.type}")
         except InvalidPURLError as error:
             logger.error(error)
@@ -370,9 +372,37 @@ class Analyzer:
         # Pre-populate all package registries so assets can be stored for later.
         package_registries_info = self._populate_package_registry_info()
 
+        # If artifact is provided, Compute the artifact hash.
         provenance_is_verified = False
+        release_artifact = None
+        release_digest = None
+        local_artifact_dirs = None
+        local_artifact = global_config.local_artifact_path
+        if parsed_purl.type in self.local_artifact_repo_mapper:
+            local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
+            try:
+                local_artifact_dirs = get_local_artifact_dirs(
+                    purl=parsed_purl,
+                    local_artifact_repo_path=local_artifact_repo_path,
+                )
+            except LocalArtifactFinderError as error:
+                logger.debug(error)
+        artifact_hash, artifact_path = self.get_artifact_hash(
+            parsed_purl, local_artifact, local_artifact_dirs, package_registries_info
+        )
+        if artifact_hash:
+            digest = HashDigest(
+                digest=artifact_hash,
+                digest_algorithm="sha256",
+            )
+            release_artifact = ReleaseArtifact(
+                name=artifact_path,
+                digests=[digest],
+            )
+            release_digest = artifact_hash
+
         provenance_asset = None
-        if not provenance_payload and parsed_purl:
+        if not provenance_payload:
             # Try to find the provenance file for the parsed PURL.
             provenance_finder = ProvenanceFinder()
             provenances = provenance_finder.find_provenance(parsed_purl)
@@ -382,11 +412,24 @@ class Analyzer:
                 if provenance_payload.verified:
                     provenance_is_verified = True
                 if verify_provenance:
+                    # TODO: If artifact is provided as input, we should also use it to verify here.
                     provenance_is_verified = provenance_verifier.verify_provenance(parsed_purl, provenances)
 
         # Try to extract the repository URL and commit digest from the Provenance, if it exists.
         repo_path_input: str | None = config.get_value("path")
         provenance_repo_url = provenance_commit_digest = None
+
+        # If repo path is provided as input and no provenance is found yet, try to find it from GitHub attestations.
+        if not provenance_payload and artifact_hash and repo_path_input:
+            match_git_service = get_git_service(repo_path_input)
+            if isinstance(match_git_service, GitHub):
+                provenance_payload = self.get_github_attestation_payload(
+                    repo_path_input, match_git_service, artifact_hash
+                )
+                if provenance_payload:
+                    # TODO: check if we need to use the provenance_verifier module.
+                    provenance_is_verified = True
+
         if provenance_payload:
             try:
                 provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
@@ -421,17 +464,6 @@ class Analyzer:
                 status=SCMStatus.ANALYSIS_FAILED,
             )
 
-        local_artifact_dirs = None
-        if parsed_purl and parsed_purl.type in self.local_artifact_repo_mapper:
-            local_artifact_repo_path = self.local_artifact_repo_mapper[parsed_purl.type]
-            try:
-                local_artifact_dirs = get_local_artifact_dirs(
-                    purl=parsed_purl,
-                    local_artifact_repo_path=local_artifact_repo_path,
-                )
-            except LocalArtifactFinderError as error:
-                logger.debug(error)
-
         # Prepare the repo.
         git_obj = None
         commit_finder_outcome = CommitFinderInfo.NOT_USED
@@ -455,18 +487,17 @@ class Analyzer:
         )
 
         # Check if repo came from direct input.
-        if parsed_purl:
-            if check_if_input_purl_provenance_conflict(
-                bool(repo_path_input),
-                provenance_repo_url,
-                parsed_purl,
-            ):
-                return Record(
-                    record_id=repo_id,
-                    description="Input mismatch between repo (purl) and provenance.",
-                    pre_config=config,
-                    status=SCMStatus.ANALYSIS_FAILED,
-                )
+        if check_if_input_purl_provenance_conflict(
+            bool(repo_path_input),
+            provenance_repo_url,
+            parsed_purl,
+        ):
+            return Record(
+                record_id=repo_id,
+                description="Input mismatch between repo (purl) and provenance.",
+                pre_config=config,
+                status=SCMStatus.ANALYSIS_FAILED,
+            )
 
         # Create the component.
         try:
@@ -510,33 +541,20 @@ class Analyzer:
         self._determine_ci_services(analyze_ctx, git_service)
         self._determine_build_tools(analyze_ctx, git_service)
 
-        # Try to find an attestation from GitHub, if applicable.
-        release_artifact = None
-        release_digest = None
-        if parsed_purl and not provenance_payload and analysis_target.repo_path and isinstance(git_service, GitHub):
-            # Try to discover GitHub attestation for the target software component.
-            local_artifact = global_config.local_artifact_path
-            artifact_hash, artifact_path = self.get_artifact_hash(
-                parsed_purl, local_artifact, local_artifact_dirs, package_registries_info
+        if artifact_hash and not provenance_payload and analysis_target.repo_path and isinstance(git_service, GitHub):
+            # Try to discover GitHub attestation for the target software component one more time.
+            provenance_payload = self.get_github_attestation_payload(
+                analysis_target.repo_path, git_service, artifact_hash
             )
-            if artifact_hash:
-                digest = HashDigest(
-                    digest=artifact_hash,
-                    digest_algorithm="sha256",
-                )
-                release_artifact = ReleaseArtifact(
-                    name=artifact_path,
-                    digests=[digest],
-                )
-                release_digest = artifact_hash
-                provenance_payload = self.get_github_attestation_payload(analyze_ctx, git_service, artifact_hash)
-                if provenance_payload:
-                    try:
-                        provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
-                            provenance_payload
-                        )
-                    except ProvenanceError as error:
-                        logger.debug("Failed to extract from provenance: %s", error)
+            if provenance_payload:
+                # TODO: check if we need to use the provenance_verifier module.
+                provenance_is_verified = True
+                try:
+                    provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
+                        provenance_payload
+                    )
+                except ProvenanceError as error:
+                    logger.debug("Failed to extract from provenance: %s", error)
 
         self._determine_package_registries(analyze_ctx, package_registries_info)
 
@@ -601,8 +619,7 @@ class Analyzer:
             if release_artifact:
                 release_artifact.provenance = provenance
 
-        if parsed_purl is not None:
-            self._verify_repository_link(parsed_purl, analyze_ctx)
+        self._verify_repository_link(parsed_purl, analyze_ctx)
 
         analyze_ctx.dynamic_data["force_analyze_source"] = force_analyze_source
 
@@ -1110,7 +1127,7 @@ class Analyzer:
         return None, None
 
     def get_github_attestation_payload(
-        self, analyze_ctx: AnalyzeContext, git_service: GitHub, artifact_hash: str
+        self, repo_url: str, git_service: GitHub, artifact_hash: str
     ) -> InTotoPayload | None:
         """Get the GitHub attestation associated with the given PURL, or None if it cannot be found.
 
@@ -1119,8 +1136,8 @@ class Analyzer:
 
         Parameters
         ----------
-        analyze_ctx: AnalyzeContext
-            The analysis context.
+        repo_url: str
+            The repository URL.
         git_service: GitHub
             The Git service to retrieve the attestation from.
         artifact_hash: str
@@ -1132,7 +1149,7 @@ class Analyzer:
             The attestation payload, if found.
         """
         git_attestation_dict = git_service.api_client.get_attestation(
-            analyze_ctx.component.repository.full_name, artifact_hash
+            git_url.get_repo_full_name_from_url(repo_url), artifact_hash
         )
 
         if not git_attestation_dict:
@@ -1142,13 +1159,19 @@ class Analyzer:
         if not git_attestation_list:
             return None
 
-        payload = decode_provenance(git_attestation_list[0])
+        for attestation in git_attestation_list:
+            payload = decode_provenance(attestation)
 
-        try:
-            return validate_intoto_payload(payload)
-        except ValidateInTotoPayloadError as error:
-            logger.debug("Invalid attestation payload: %s", error)
-            return None
+            try:
+                intoto_payload = validate_intoto_payload(payload)
+                # Check if the provenance predicate type is supported.
+                extract_repo_and_commit_from_provenance(intoto_payload)
+                return intoto_payload
+            except (ValidateInTotoPayloadError, ProvenanceError) as error:
+                logger.debug("Invalid attestation payload: %s", error)
+                continue
+
+        return None
 
     def _determine_git_service(self, analyze_ctx: AnalyzeContext) -> BaseGitService:
         """Determine the Git service used by the software component."""

@@ -474,7 +474,7 @@ class SLSAGithubActionsBuildDefinitionV1(ProvenanceBuildDefinition):
     """
 
     #: Determines the expected ``buildType`` field in the provenance predicate.
-    expected_build_type = "https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1"
+    expected_build_type = "https://actions.github.io/buildtypes/workflow/v1"
 
     def get_build_invocation(self, statement: InTotoV01Statement | InTotoV1Statement) -> tuple[str | None, str | None]:
         """Retrieve the build invocation information from the given statement.

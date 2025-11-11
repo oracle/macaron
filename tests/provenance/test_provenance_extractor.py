@@ -89,7 +89,7 @@ def slsa_v1_github_provenance_() -> dict[str, JsonType]:
                     "predicateType": "https://slsa.dev/provenance/v1",
                     "predicate": {
                         "buildDefinition": {
-                            "buildType": "https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1",
+                            "buildType": "https://actions.github.io/buildtypes/workflow/v1",
                             "externalParameters": {
                                 "workflow": {
                                     "repository": "https://github.com/oracle/macaron"
