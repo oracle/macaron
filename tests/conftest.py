@@ -20,9 +20,12 @@ from macaron.parsers.bashparser import BashScriptType, create_bash_node
 from macaron.parsers.github_workflow_model import Identified, Job, NormalJob, RunStep, Workflow
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
+from macaron.slsa_analyzer.build_tool.conda import Conda
 from macaron.slsa_analyzer.build_tool.docker import Docker
+from macaron.slsa_analyzer.build_tool.flit import Flit
 from macaron.slsa_analyzer.build_tool.go import Go
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
+from macaron.slsa_analyzer.build_tool.hatch import Hatch
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.build_tool.npm import NPM
 from macaron.slsa_analyzer.build_tool.pip import Pip
@@ -150,6 +153,63 @@ def poetry_tool(setup_test) -> Poetry:  # type: ignore # pylint: disable=unused-
 
 
 @pytest.fixture(autouse=True)
+def flit_tool(setup_test) -> Flit:  # type: ignore # pylint: disable=unused-argument
+    """Create a Flit tool instance.
+
+    Parameters
+    ----------
+    setup_test
+        Depends on setup_test fixture.
+
+    Returns
+    -------
+    Flit
+        The Flit instance.
+    """
+    flit = Flit()
+    flit.load_defaults()
+    return flit
+
+
+@pytest.fixture(autouse=True)
+def hatch_tool(setup_test) -> Hatch:  # type: ignore # pylint: disable=unused-argument
+    """Create a Hatch tool instance.
+
+    Parameters
+    ----------
+    setup_test
+        Depends on setup_test fixture.
+
+    Returns
+    -------
+    Hatch
+        The Hatch instance.
+    """
+    hatch = Hatch()
+    hatch.load_defaults()
+    return hatch
+
+
+@pytest.fixture(autouse=True)
+def conda_tool(setup_test) -> Conda:  # type: ignore # pylint: disable=unused-argument
+    """Create a Conda tool instance.
+
+    Parameters
+    ----------
+    setup_test
+        Depends on setup_test fixture.
+
+    Returns
+    -------
+    Conda
+        The Conda instance.
+    """
+    conda = Conda()
+    conda.load_defaults()
+    return conda
+
+
+@pytest.fixture(autouse=True)
 def pip_tool(setup_test) -> Pip:  # type: ignore # pylint: disable=unused-argument
     """Create a Pip tool instance.
 
@@ -253,6 +313,9 @@ def get_build_tools(
     gradle_tool: BaseBuildTool,
     pip_tool: BaseBuildTool,
     poetry_tool: BaseBuildTool,
+    flit_tool: BaseBuildTool,
+    hatch_tool: BaseBuildTool,
+    conda_tool: BaseBuildTool,
     docker_tool: BaseBuildTool,
 ) -> dict[str, BaseBuildTool]:
     """Create a dictionary to look up build tool fixtures.
@@ -268,6 +331,9 @@ def get_build_tools(
         "gradle": gradle_tool,
         "pip": pip_tool,
         "poetry": poetry_tool,
+        "flit": flit_tool,
+        "hatch": hatch_tool,
+        "conda": conda_tool,
         "docker": docker_tool,
     }
 

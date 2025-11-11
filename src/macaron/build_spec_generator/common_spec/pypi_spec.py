@@ -67,6 +67,12 @@ class PyPIBuildSpec(
                 default_build_command = "python -m build".split()
             case "poetry":
                 default_build_command = "poetry build".split()
+            case "flit":
+                default_build_command = "flit build".split()
+            case "hatch":
+                default_build_command = "hatch build".split()
+            case "conda":
+                default_build_command = "conda build".split()
             case _:
                 pass
 
@@ -95,8 +101,7 @@ class PyPIBuildSpec(
         registry.load_defaults()
 
         registry_info = PackageRegistryInfo(
-            build_tool_name="pip",
-            build_tool_purl_type="pypi",
+            ecosystem="pypi",
             package_registry=registry,
             metadata=[],
         )

@@ -106,7 +106,7 @@ class MavenCentralRegistry(PackageRegistry):
         self.registry_url_scheme = registry_url_scheme or ""
         self.registry_url = ""  # Created from the registry_url_scheme and registry_url_netloc.
         self.request_timeout = request_timeout or 10
-        super().__init__("Maven Central Registry", {"maven", "gradle"})
+        super().__init__("Maven Central Registry", "maven")
 
     def load_defaults(self) -> None:
         """Load the .ini configuration for the current package registry.

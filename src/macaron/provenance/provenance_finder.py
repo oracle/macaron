@@ -554,11 +554,7 @@ def get_artifact_hash(
             return None
 
         registry_info = next(
-            (
-                info
-                for info in package_registries_info
-                if info.package_registry == pypi_registry and info.build_tool_name in {"pip", "poetry"}
-            ),
+            (info for info in package_registries_info if info.package_registry == pypi_registry),
             None,
         )
         if not registry_info:

@@ -57,6 +57,9 @@ class MacaronBuildToolName(str, Enum):
     GRADLE = "gradle"
     PIP = "pip"
     POETRY = "poetry"
+    FLIT = "flit"
+    HATCH = "hatch"
+    CONDA = "conda"
 
 
 def format_build_command_info(build_command_info: list[GenericBuildCommandInfo]) -> str:

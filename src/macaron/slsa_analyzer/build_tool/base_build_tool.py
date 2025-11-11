@@ -172,6 +172,8 @@ class BaseBuildTool(ABC):
         self.build_configs: list[str] = []
         self.package_lock: list[str] = []
         self.builder: list[str] = []
+        self.build_requires: list[str] = []
+        self.build_backend: list[str] = []
         self.packager: list[str] = []
         self.publisher: list[str] = []
         self.interpreter: list[str] = []

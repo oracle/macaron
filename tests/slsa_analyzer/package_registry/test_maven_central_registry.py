@@ -138,21 +138,20 @@ def test_load_defaults_with_invalid_config(tmp_path: Path, user_config_input: st
 
 
 @pytest.mark.parametrize(
-    ("build_tool_name", "expected_result"),
+    ("ecosystem", "expected_result"),
     [
         ("maven", True),
-        ("gradle", True),
-        ("pip", False),
-        ("poetry", False),
+        ("pypi", False),
+        ("npm", False),
     ],
 )
 def test_is_detected(
     maven_central: MavenCentralRegistry,
-    build_tool_name: str,
+    ecosystem: str,
     expected_result: bool,
 ) -> None:
     """Test the ``is_detected`` method."""
-    assert maven_central.is_detected(build_tool_name) == expected_result
+    assert maven_central.is_detected(ecosystem) == expected_result
 
 
 @pytest.mark.parametrize(

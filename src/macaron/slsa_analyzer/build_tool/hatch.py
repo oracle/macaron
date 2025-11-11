@@ -1,9 +1,9 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module contains the Poetry class which inherits BaseBuildTool.
+"""This module contains the Hatch class which inherits BaseBuildTool.
 
-This module is used to work with repositories that use Poetry for dependency management.
+This module is used to work with repositories that use Hatch for dependency management.
 """
 
 import logging
@@ -23,25 +23,25 @@ from macaron.slsa_analyzer.checks.check_result import Confidence
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class Poetry(BaseBuildTool):
-    """This class contains the information of the poetry build tool."""
+class Hatch(BaseBuildTool):
+    """This class contains the information of the hatch build tool."""
 
     def __init__(self) -> None:
         """Initialize instance."""
-        super().__init__(name="poetry", language=BuildLanguage.PYTHON, purl_type="pypi")
+        super().__init__(name="hatch", language=BuildLanguage.PYTHON, purl_type="pypi")
 
     def load_defaults(self) -> None:
         """Load the default values from defaults.ini."""
         super().load_defaults()
-        if "builder.poetry" in defaults:
-            for item in defaults["builder.poetry"]:
+        if "builder.hatch" in defaults:
+            for item in defaults["builder.hatch"]:
                 if hasattr(self, item):
-                    setattr(self, item, defaults.get_list("builder.poetry", item))
+                    setattr(self, item, defaults.get_list("builder.hatch", item))
 
-        if "builder.pip.ci.deploy" in defaults:
-            for item in defaults["builder.poetry.ci.deploy"]:
+        if "builder.hatch.ci.deploy" in defaults:
+            for item in defaults["builder.hatch.ci.deploy"]:
                 if item in self.ci_deploy_kws:
-                    self.ci_deploy_kws[item] = defaults.get_list("builder.poetry.ci.deploy", item)
+                    self.ci_deploy_kws[item] = defaults.get_list("builder.hatch.ci.deploy", item)
 
     def is_detected(self, repo_path: str) -> bool:
         """Return True if this build tool is used in the target repo.
@@ -56,24 +56,18 @@ class Poetry(BaseBuildTool):
         bool
             True if this build tool is detected, else False.
         """
-        package_lock_exists = ""
-        for file in self.package_lock:
-            if file_exists(repo_path, file, filters=self.path_filters):
-                package_lock_exists = file
-                break
-
-        file_paths = (file_exists(repo_path, file, filters=self.path_filters) for file in self.build_configs)
-        for config_path in file_paths:
-            if config_path and os.path.basename(config_path) == "pyproject.toml":
-                if package_lock_exists:
-                    return True
-                if pyproject.contains_build_tool("poetry", config_path):
-                    return True
-                # Check the build-system section.
-                for tool in self.build_requires + self.build_backend:
-                    if pyproject.build_system_contains_tool(tool, config_path):
+        for config_name in self.build_configs:
+            if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
+                if os.path.basename(config_path) == "pyproject.toml":
+                    if pyproject.contains_build_tool("hatch", config_path):
                         return True
-
+                    # Check the build-system section.
+                    for tool in self.build_requires + self.build_backend:
+                        if pyproject.build_system_contains_tool(tool, config_path):
+                            return True
+                else:
+                    # For other build configuration files, the presence of the file alone is sufficient.
+                    return True
         return False
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
@@ -125,7 +119,7 @@ class Poetry(BaseBuildTool):
         deploy_tools = self.publisher if self.publisher else self.builder
         deploy_args = self.deploy_arg
 
-        # Sometimes poetry is called as a Python module.
+        # Sometimes hatch is called as a Python module.
         if cmd_program_name in self.interpreter and len(build_cmd) > 2 and build_cmd[1] in self.interpreter_flag:
             # Use the module cmd-line args.
             build_cmd = build_cmd[2:]
@@ -172,7 +166,7 @@ class Poetry(BaseBuildTool):
         builder = self.packager if self.packager else self.builder
         build_args = self.build_arg
 
-        # Sometimes poetry is called as a Python module.
+        # Sometimes hatch is called as a Python module.
         if cmd_program_name in self.interpreter and len(build_cmd) > 2 and build_cmd[1] in self.interpreter_flag:
             # Use the module cmd-line args.
             build_cmd = build_cmd[2:]
