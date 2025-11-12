@@ -1,8 +1,8 @@
 #include "prelude.dl"
 
 Policy("github_actions_vulns", component_id, "GitHub Actions Vulnerability Detection") :-
-  check_passed(component_id, "mcn_githubactions_vulnerabilities_1").
+    check_passed(component_id, "mcn_githubactions_vulnerabilities_1").
 
 apply_policy_to("github_actions_vulns", component_id) :-
-  is_component(component_id, purl),
-  match("<PACKAGE_PURL>", purl).
+    is_component(component_id, purl),
+    match("<PACKAGE_PURL>", purl).
