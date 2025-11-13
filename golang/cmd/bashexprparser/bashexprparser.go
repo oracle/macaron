@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 package main
@@ -12,11 +12,10 @@ import (
 	"github.com/oracle/macaron/golang/internal/filewriter"
 )
 
-// Parse the bash script and provide parsed objects in JSON format to stdout or a file.
+// Parse the bash expression and provide parsed objects in JSON format to stdout or a file.
 // Params:
 //
-//	-file <FILE_PATH>: the path to the bash script file
-//	-input <SCRIPT_CONTENT>: the bash script content in string
+//	-input <EXPR_CONTENT>: the bash expr content in string
 //	-output <OUTPUT_FILE>: the output file path to store the JSON content
 //
 // Return code:
@@ -26,29 +25,19 @@ import (
 //	1 - Error: Missing bash script or output file paths.
 //	2 - Error: Could not parse the bash script file. Parse errors will be printed to stderr.
 func main() {
-	file_path := flag.String("file", "", "The path of the bash script file.")
-	input := flag.String("input", "", "The bash script content to be parsed. Input is prioritized over file option.")
+	input := flag.String("input", "", "The bash expr content to be parsed.")
 	out_path := flag.String("output", "", "The output file path to store the JSON content.")
-	raw := flag.Bool("raw", false, "Return raw parse-tree")
 	flag.Parse()
 
 	var json_content string
 	var parse_err error
-	if len(*input) > 0 {
-		// Read the bash script from command line argument.
-		json_content, parse_err = bashparser.Parse(*input, *raw)
-	} else if len(*file_path) <= 0 {
-		fmt.Fprintln(os.Stderr, "Missing bash script input or file path.")
+	if len(*input) <= 0 {
+		fmt.Fprintln(os.Stderr, "Missing bash expr input.")
 		flag.PrintDefaults()
 		os.Exit(1)
 	} else {
-		// Read the bash script from file.
-		data, read_err := os.ReadFile(*file_path)
-		if read_err != nil {
-			fmt.Fprintln(os.Stderr, read_err.Error())
-			os.Exit(1)
-		}
-		json_content, parse_err = bashparser.Parse(string(data), *raw)
+		// Read the bash script from command line argument.
+		json_content, parse_err = bashparser.ParseExpr(*input)
 	}
 
 	if parse_err != nil {
@@ -56,7 +45,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	fmt.Fprintln(os.Stdout, json_content)
+	fmt.Println(json_content)
 
 	if len(*out_path) > 0 {
 		err := filewriter.StoreBytesToFile([]byte(json_content), *out_path)

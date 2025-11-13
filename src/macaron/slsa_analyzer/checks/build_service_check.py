@@ -10,6 +10,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
+from macaron.code_analyzer.dataflow_analysis.analysis import get_build_tool_commands
 from macaron.database.table_definitions import CheckFacts
 from macaron.errors import CallGraphError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_build_info_results
@@ -118,9 +119,7 @@ class BuildServiceCheck(BaseCheck):
                     continue
 
                 try:
-                    for build_command in ci_service.get_build_tool_commands(
-                        callgraph=ci_info["callgraph"], build_tool=tool
-                    ):
+                    for build_command in get_build_tool_commands(nodes=ci_info["callgraph"], build_tool=tool):
                         # Yes or no with a confidence score.
                         result, confidence = tool.is_package_command(
                             build_command, ci_service.get_third_party_configurations()

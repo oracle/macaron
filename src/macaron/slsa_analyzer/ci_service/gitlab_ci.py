@@ -1,9 +1,11 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module analyzes GitLab CI."""
 
-from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from __future__ import annotations
+
+from macaron.code_analyzer.dataflow_analysis.core import NodeForest
 from macaron.config.defaults import defaults
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 
@@ -41,7 +43,7 @@ class GitLabCI(BaseCIService):
     def set_api_client(self) -> None:
         """Set the API client using the personal access token."""
 
-    def build_call_graph(self, repo_path: str, macaron_path: str = "") -> CallGraph:
+    def build_call_graph(self, repo_path: str, macaron_path: str = "") -> NodeForest:
         """Build the call Graph for this CI service.
 
         Parameters
@@ -53,10 +55,10 @@ class GitLabCI(BaseCIService):
 
         Returns
         -------
-        CallGraph : CallGraph
+        NodeForest
             The call graph built for the CI.
         """
-        return CallGraph(BaseNode(), "")
+        return NodeForest([])
 
     def has_latest_run_passed(
         self, repo_full_name: str, branch_name: str | None, commit_sha: str, commit_date: str, workflow: str

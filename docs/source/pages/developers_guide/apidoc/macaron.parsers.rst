@@ -33,6 +33,14 @@ macaron.parsers.bashparser module
    :show-inheritance:
    :undoc-members:
 
+macaron.parsers.bashparser\_model module
+----------------------------------------
+
+.. automodule:: macaron.parsers.bashparser_model
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 macaron.parsers.github\_workflow\_model module
 ----------------------------------------------
 
