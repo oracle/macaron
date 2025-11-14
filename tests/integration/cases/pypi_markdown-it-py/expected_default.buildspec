@@ -1,0 +1,29 @@
+{
+    "macaron_version": "0.18.0",
+    "group_id": null,
+    "artifact_id": "markdown-it-py",
+    "version": "4.0.0",
+    "git_repo": "https://github.com/executablebooks/markdown-it-py",
+    "git_tag": "c62983f1554124391b47170180e6c62df4d476ca",
+    "newline": "lf",
+    "language_version": [
+        ">=3.10"
+    ],
+    "ecosystem": "pypi",
+    "purl": "pkg:pypi/markdown-it-py@4.0.0",
+    "language": "python",
+    "build_tools": [
+        "flit"
+    ],
+    "build_commands": [
+        [
+            "flit",
+            "build"
+        ]
+    ],
+    "build_backends": {
+        "flit": "==3.12.0",
+        "setuptools": "==56.2.0",
+        "flit_core": "<4,>=3.4"
+    }
+}

@@ -24,7 +24,7 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
             "version": "1.2.3",
             "git_repo": "https://github.com/oracle/example-artifact.git",
             "git_tag": "sampletag",
-            "build_tool": "maven",
+            "build_tools": ["maven"],
             "newline": "lf",
             "language_version": ["17"],
             "build_commands": [["mvn", "package"]],
@@ -45,7 +45,7 @@ def test_successful_build_spec(base_build_spec: BaseBuildSpecDict) -> None:
 
 def test_unsupported_build_tool(base_build_spec: BaseBuildSpecDict) -> None:
     """Test an unsupported build tool name."""
-    base_build_spec["build_tool"] = "unsupported_tool"
+    base_build_spec["build_tools"] = ["unsupported_tool"]
     with pytest.raises(GenerateBuildSpecError) as excinfo:
         gen_reproducible_central_build_spec(base_build_spec)
     assert "is not supported by Reproducible Central" in str(excinfo.value)
@@ -60,17 +60,17 @@ def test_missing_group_id(base_build_spec: BaseBuildSpecDict) -> None:
 
 
 @pytest.mark.parametrize(
-    ("build_tool", "expected"),
+    ("build_tools", "expected"),
     [
-        ("maven", "mvn"),
-        ("gradle", "gradle"),
-        ("MAVEN", "mvn"),
-        ("GRADLE", "gradle"),
+        (["maven", "pip"], "mvn"),
+        (["gradle"], "gradle"),
+        (["MAVEN"], "mvn"),
+        (["GRADLE", "pip"], "gradle"),
     ],
 )
-def test_build_tool_name_variants(base_build_spec: BaseBuildSpecDict, build_tool: str, expected: str) -> None:
+def test_build_tool_name_variants(base_build_spec: BaseBuildSpecDict, build_tools: list[str], expected: str) -> None:
     """Test the correct handling of build tool names."""
-    base_build_spec["build_tool"] = build_tool
+    base_build_spec["build_tools"] = build_tools
     content = gen_reproducible_central_build_spec(base_build_spec)
     assert content
     assert f"tool={expected}" in content

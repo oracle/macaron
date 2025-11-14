@@ -39,51 +39,53 @@ class PyPIBuildSpec(
         """
         self.data = data
 
-    def get_default_build_command(
+    def get_default_build_commands(
         self,
-        build_tool_name: str,
-    ) -> list[str]:
-        """Return a default build command for the build tool.
+        build_tool_names: list[str],
+    ) -> list[list[str]]:
+        """Return the default build commands for the build tools.
 
         Parameters
         ----------
-        build_tool_name: str
-            The build tool to get the default build command.
+        build_tool_names: list[str]
+            The build tools to get the default build command.
 
         Returns
         -------
-        list[str]
-            The build command as a list[str].
+        list[list[str]]
+            The build command as a list[list[str]].
 
         Raises
         ------
         GenerateBuildSpecError
             If there is no default build command available for the specified build tool.
         """
-        default_build_command = None
+        default_build_commands = []
 
-        match build_tool_name:
-            case "pip":
-                default_build_command = "python -m build".split()
-            case "poetry":
-                default_build_command = "poetry build".split()
-            case "flit":
-                default_build_command = "flit build".split()
-            case "hatch":
-                default_build_command = "hatch build".split()
-            case "conda":
-                default_build_command = "conda build".split()
-            case _:
-                pass
+        for build_tool_name in build_tool_names:
 
-        if not default_build_command:
+            match build_tool_name:
+                case "pip":
+                    default_build_commands.append("python -m build".split())
+                case "poetry":
+                    default_build_commands.append("poetry build".split())
+                case "flit":
+                    default_build_commands.append("flit build".split())
+                case "hatch":
+                    default_build_commands.append("hatch build".split())
+                case "conda":
+                    default_build_commands.append("conda build".split())
+                case _:
+                    pass
+
+        if not default_build_commands:
             logger.critical(
-                "There is no default build command available for the build tool %s.",
-                build_tool_name,
+                "There is no default build command available for the build tools %s.",
+                build_tool_names,
             )
             raise GenerateBuildSpecError("Unable to find a default build command.")
 
-        return default_build_command
+        return default_build_commands
 
     def resolve_fields(self, purl: PackageURL) -> None:
         """
@@ -202,13 +204,14 @@ class PyPIBuildSpec(
 
                 # Use the default build command for pure Python packages.
                 if "any" in wheel_name_platforms:
-                    patched_build_commands = [self.get_default_build_command(self.data["build_tool"])]
+                    patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
 
             if not patched_build_commands:
                 # Resolve and patch build commands.
-                selected_build_commands = self.data["build_commands"] or [
-                    self.get_default_build_command(self.data["build_tool"])
-                ]
+                selected_build_commands = self.data["build_commands"] or self.get_default_build_commands(
+                    self.data["build_tools"]
+                )
+
                 patched_build_commands = (
                     patch_commands(
                         cmds_sequence=selected_build_commands,

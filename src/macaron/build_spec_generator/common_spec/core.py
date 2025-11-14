@@ -120,18 +120,14 @@ def compose_shell_commands(cmds_sequence: list[list[str]]) -> str:
     return result
 
 
-def get_macaron_build_tool_name(
+def get_macaron_build_tool_names(
     build_tool_facts: Sequence[BuildToolFacts], target_language: str
-) -> MacaronBuildToolName | None:
+) -> list[MacaronBuildToolName] | None:
     """
-    Retrieve the Macaron build tool name for supported projects from the database facts.
+    Retrieve the Macaron build tool names for supported projects from the database facts.
 
-    Iterates over the provided build tool facts and returns the first valid `MacaronBuildToolName`
-    for a supported language. If no valid build tool name is found, returns None.
-
-    .. note::
-        If multiple build tools are present in the database, only the first valid one encountered
-        in the sequence is returned.
+    Iterates over the provided build tool facts and returns the list of valid `MacaronBuildToolName`
+    for a supported language.
 
     Parameters
     ----------
@@ -142,31 +138,27 @@ def get_macaron_build_tool_name(
 
     Returns
     -------
-    MacaronBuildToolName or None
-        The corresponding Macaron build tool name if found, otherwise None.
+    list[MacaronBuildToolName]  None
+        The corresponding Macaron build tool names, or None otherwise.
     """
+    build_tool_names = []
     for fact in build_tool_facts:
         if fact.language.lower() == target_language:
             try:
-                macaron_build_tool_name = MacaronBuildToolName(fact.build_tool_name)
+                build_tool_names.append(MacaronBuildToolName(fact.build_tool_name))
             except ValueError:
                 continue
 
-            # TODO: What happen if we report multiple build tools in the database?
-            return macaron_build_tool_name
-
-    return None
+    return build_tool_names or None
 
 
-def get_build_tool_name(
+def get_build_tool_names(
     component_id: int, session: sqlalchemy.orm.Session, target_language: str
-) -> MacaronBuildToolName | None:
-    """
-    Retrieve the Macaron build tool name for a given component.
+) -> list[MacaronBuildToolName] | None:
+    """Retrieve the Macaron build tool names for a given component.
 
-    Queries the database for build tool facts associated with the specified component ID
-    and returns the corresponding `MacaronBuildToolName` if found. If no valid build tool
-    information is available or an error occurs during the query, returns None.
+    Queries the database for build tool facts associated with the specified component ID.
+    It returns the corresponding list of `MacaronBuildToolName` if found.
 
     Parameters
     ----------
@@ -179,7 +171,7 @@ def get_build_tool_name(
 
     Returns
     -------
-    MacaronBuildToolName or None
+    list[MacaronBuildToolName] | None
         The corresponding build tool name for the component if available, otherwise None.
     """
     try:
@@ -206,7 +198,7 @@ def get_build_tool_name(
         [(fact.build_tool_name, fact.language) for fact in build_tool_facts],
     )
 
-    return get_macaron_build_tool_name(build_tool_facts, target_language)
+    return get_macaron_build_tool_names(build_tool_facts, target_language)
 
 
 def get_build_command_info(
@@ -348,11 +340,16 @@ def gen_generic_build_spec(
         latest_component_repository.commit_sha,
     )
 
-    build_tool_name = get_build_tool_name(
+    build_tool_names = []
+    build_tools = get_build_tool_names(
         component_id=latest_component.id, session=session, target_language=target_language
     )
-    if not build_tool_name:
+    if not build_tools:
         raise GenerateBuildSpecError(f"Failed to determine build tool for {purl}.")
+
+    # This check is for Pylint, which is not able to iterate over build_tools, even though it cannot be None.
+    if build_tools is not None:
+        build_tool_names = [build_tool.value for build_tool in build_tools]
 
     build_command_info = get_build_command_info(
         component_id=latest_component.id,
@@ -380,7 +377,7 @@ def gen_generic_build_spec(
             "ecosystem": purl.type,
             "purl": str(purl),
             "language": target_language,
-            "build_tool": build_tool_name.value,
+            "build_tools": build_tool_names,
             "build_commands": [selected_build_command],
         }
     )

@@ -79,3 +79,30 @@ def build_system_contains_tool(tool_name: str, pyproject_path: Path) -> bool:
     except FileNotFoundError:
         logger.debug("Failed to read the %s file.", pyproject_path)
         return False
+
+
+def get_build_system(pyproject_path: Path) -> dict[str, str] | None:
+    """
+    Return the [build-system] section in pyproject.toml if it exists.
+
+    Parameters
+    ----------
+    pyproject_path : Path
+        The file path to the pyproject.toml file.
+
+    Returns
+    -------
+    dict[str, str] | None
+        The [build-system] section as a dict, or None otherwise.
+    """
+    try:
+        with open(pyproject_path, "rb") as toml_file:
+            try:
+                data = tomllib.load(toml_file)
+                return data.get("build-system", {}) or None
+            except tomllib.TOMLDecodeError:
+                logger.debug("Failed to read the %s file: invalid toml file.", pyproject_path)
+                return None
+    except FileNotFoundError:
+        logger.debug("Failed to read the %s file.", pyproject_path)
+        return None

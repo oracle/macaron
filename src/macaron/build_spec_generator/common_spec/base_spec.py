@@ -25,8 +25,8 @@ class BaseBuildSpecDict(TypedDict, total=False):
     #: The programming language, e.g., 'java', 'python', 'javascript'.
     language: Required[str]
 
-    #: The build tool or package manager, e.g., 'maven', 'gradle', 'pip', 'poetry', 'npm', 'yarn'.
-    build_tool: Required[str]
+    #: The build tools or package managers, e.g., 'maven', 'gradle', 'pip', 'poetry', 'npm', 'yarn'.
+    build_tools: Required[list[str]]
 
     #: The version of Macaron used for generating the spec.
     macaron_version: Required[str]
@@ -94,21 +94,21 @@ class BaseBuildSpec(ABC):
         """
 
     @abstractmethod
-    def get_default_build_command(
+    def get_default_build_commands(
         self,
-        build_tool_name: str,
-    ) -> list[str]:
-        """Return a default build command for the build tool.
+        build_tool_names: list[str],
+    ) -> list[list[str]]:
+        """Return the default build commands for the build tools.
 
         Parameters
         ----------
-        build_tool_name: str
-            The build tool to get the default build command.
+        build_tool_names: list[str]
+            The build tools to get the default build command.
 
         Returns
         -------
-        list[str]
-            The build command as a list[str].
+        list[list[str]]
+            The build command as a list[list[str]].
 
         Raises
         ------

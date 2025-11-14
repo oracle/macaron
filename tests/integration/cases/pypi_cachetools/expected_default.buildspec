@@ -12,7 +12,9 @@
     "ecosystem": "pypi",
     "purl": "pkg:pypi/cachetools@6.2.1",
     "language": "python",
-    "build_tool": "pip",
+    "build_tools": [
+        "pip"
+    ],
     "build_commands": [
         [
             "python",

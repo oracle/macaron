@@ -120,7 +120,9 @@ By default we generate the buildspec in JSON format as follows:
         "ecosystem": "maven",
         "purl": "pkg:maven/org.apache.hugegraph/computer-k8s@1.0.0",
         "language": "java",
-        "build_tool": "maven",
+        "build_tools": [
+            "maven"
+        ],
         "build_commands": [
             [
             "mvn",
