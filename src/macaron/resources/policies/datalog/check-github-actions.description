@@ -1,0 +1,1 @@
+Detects whether a component was built using GitHub Actions that are known to be vulnerable or otherwise unsafe. The policy evaluates a check named `mcn_githubactions_vulnerabilities_1` and reports a passed/failed result for the component when applied.
