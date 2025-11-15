@@ -379,7 +379,7 @@ class Analyzer:
             )
 
         # Pre-populate all package registries so assets can be stored for later.
-        package_registries_info = self._populate_package_registry_info()
+        package_registries_info = self._populate_package_registry_info(parsed_purl) if parsed_purl else []
 
         provenance_is_verified = False
         provenance_asset = None
@@ -1127,18 +1127,14 @@ class Analyzer:
                 "[red]Not Found[/]",
             )
 
-    def _populate_package_registry_info(self) -> list[PackageRegistryInfo]:
+    def _populate_package_registry_info(self, parsed_purl: PackageURL) -> list[PackageRegistryInfo]:
         """Add all possible package registries to the analysis context."""
         package_registries = []
         for package_registry in PACKAGE_REGISTRIES:
-            for build_tool in BUILD_TOOLS:
-                build_tool_name = build_tool.name
-                if build_tool_name not in package_registry.build_tool_names:
-                    continue
+            if package_registry.ecosystem == parsed_purl.type:
                 package_registries.append(
                     PackageRegistryInfo(
-                        build_tool_name=build_tool_name,
-                        build_tool_purl_type=build_tool.purl_type,
+                        ecosystem=parsed_purl.type,
                         package_registry=package_registry,
                     )
                 )
@@ -1149,14 +1145,10 @@ class Analyzer:
         analyze_ctx: AnalyzeContext,
         package_registries_info: list[PackageRegistryInfo],
     ) -> None:
-        """Determine the package registries used by the software component based on its build tools."""
-        build_tools = (
-            analyze_ctx.dynamic_data["build_spec"]["tools"] or analyze_ctx.dynamic_data["build_spec"]["purl_tools"]
-        )
-        build_tool_names = {build_tool.name for build_tool in build_tools}
+        """Determine the package registries used by the software component."""
         relevant_package_registries = []
         for package_registry in package_registries_info:
-            if package_registry.build_tool_name not in build_tool_names:
+            if not package_registry.ecosystem == analyze_ctx.component.type:
                 continue
             relevant_package_registries.append(package_registry)
 

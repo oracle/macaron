@@ -15,6 +15,7 @@ from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer
 from macaron.dependency_analyzer.cyclonedx_python import CycloneDxPython
+from macaron.slsa_analyzer.build_tool import pyproject
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence
@@ -55,7 +56,19 @@ class Pip(BaseBuildTool):
         bool
             True if this build tool is detected, else False.
         """
-        return any(file_exists(repo_path, file, filters=self.path_filters) for file in self.build_configs)
+        for config_name in self.build_configs:
+            if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
+                if os.path.basename(config_path) == "pyproject.toml":
+                    # Check the build-system section. If it doesn't exist, by default setuptools should be used.
+                    if pyproject.get_build_system(config_path) is None:
+                        return True
+                    for tool in self.build_requires + self.build_backend:
+                        if pyproject.build_system_contains_tool(tool, config_path):
+                            return True
+                else:
+                    # TODO: For other build configuration files, like setup.py, we need to improve the logic.
+                    return True
+        return False
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.

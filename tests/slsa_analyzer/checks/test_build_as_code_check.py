@@ -89,7 +89,10 @@ def test_no_build_tool(macaron_path: Path) -> None:
         ("poetry", ["poetry publish"], CheckResultType.PASSED),
         ("poetry", ["poetry upload"], CheckResultType.FAILED),
         ("pip", ["twine upload dist/*"], CheckResultType.PASSED),
-        ("pip", ["flit publish"], CheckResultType.PASSED),
+        ("pip", ["flit publish"], CheckResultType.FAILED),
+        ("flit", ["flit publish"], CheckResultType.PASSED),
+        ("hatch", ["hatch publish"], CheckResultType.PASSED),
+        ("conda", ["conda publish"], CheckResultType.PASSED),
     ],
 )
 def test_deploy_commands(

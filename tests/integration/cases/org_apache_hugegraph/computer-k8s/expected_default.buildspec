@@ -1,1 +1,30 @@
-{"macaron_version": "0.18.0", "group_id": "org.apache.hugegraph", "artifact_id": "computer-k8s", "version": "1.0.0", "git_repo": "https://github.com/apache/hugegraph-computer", "git_tag": "d2b95262091d6572cc12dcda57d89f9cd44ac88b", "newline": "lf", "language_version": ["11"], "ecosystem": "maven", "purl": "pkg:maven/org.apache.hugegraph/computer-k8s@1.0.0", "language": "java", "build_tool": "maven", "build_commands": [["mvn", "-DskipTests=true", "-Dmaven.test.skip=true", "-Dmaven.site.skip=true", "-Drat.skip=true", "-Dmaven.javadoc.skip=true", "clean", "package"]]}
+{
+    "macaron_version": "0.18.0",
+    "group_id": "org.apache.hugegraph",
+    "artifact_id": "computer-k8s",
+    "version": "1.0.0",
+    "git_repo": "https://github.com/apache/hugegraph-computer",
+    "git_tag": "d2b95262091d6572cc12dcda57d89f9cd44ac88b",
+    "newline": "lf",
+    "language_version": [
+        "11"
+    ],
+    "ecosystem": "maven",
+    "purl": "pkg:maven/org.apache.hugegraph/computer-k8s@1.0.0",
+    "language": "java",
+    "build_tools": [
+        "maven"
+    ],
+    "build_commands": [
+        [
+            "mvn",
+            "-DskipTests=true",
+            "-Dmaven.test.skip=true",
+            "-Dmaven.site.skip=true",
+            "-Drat.skip=true",
+            "-Dmaven.javadoc.skip=true",
+            "clean",
+            "package"
+        ]
+    ]
+}

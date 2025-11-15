@@ -31,45 +31,47 @@ class MavenBuildSpec(BaseBuildSpec):
         """
         self.data = data
 
-    def get_default_build_command(
+    def get_default_build_commands(
         self,
-        build_tool_name: str,
-    ) -> list[str]:
-        """Return a default build command for the build tool.
+        build_tool_names: list[str],
+    ) -> list[list[str]]:
+        """Return the default build commands for the build tools.
 
         Parameters
         ----------
-        build_tool_name: str
-            The build tool to get the default build command.
+        build_tool_names: list[str]
+            The build tools to get the default build command.
 
         Returns
         -------
-        list[str]
-            The build command as a list[str].
+        list[list[str]]
+            The build command as a list[list[str]].
 
         Raises
         ------
         GenerateBuildSpecError
             If there is no default build command available for the specified build tool.
         """
-        default_build_command = None
+        default_build_commands = []
 
-        match build_tool_name:
-            case "maven":
-                default_build_command = "mvn clean package".split()
-            case "gradle":
-                default_build_command = "./gradlew clean assemble publishToMavenLocal".split()
-            case _:
-                pass
+        for build_tool_name in build_tool_names:
 
-        if not default_build_command:
+            match build_tool_name:
+                case "maven":
+                    default_build_commands.append("mvn clean package".split())
+                case "gradle":
+                    default_build_commands.append("./gradlew clean assemble publishToMavenLocal".split())
+                case _:
+                    pass
+
+        if not default_build_commands:
             logger.critical(
-                "There is no default build command available for the build tool %s.",
-                build_tool_name,
+                "There is no default build command available for the build tools %s.",
+                build_tool_names,
             )
             raise GenerateBuildSpecError("Unable to find a default build command.")
 
-        return default_build_command
+        return default_build_commands
 
     def resolve_fields(self, purl: PackageURL) -> None:
         """
@@ -113,9 +115,9 @@ class MavenBuildSpec(BaseBuildSpec):
         self.data["language_version"] = [major_jdk_version]
 
         # Resolve and patch build commands.
-        selected_build_commands = self.data["build_commands"] or [
-            self.get_default_build_command(self.data["build_tool"])
-        ]
+        selected_build_commands = self.data["build_commands"] or self.get_default_build_commands(
+            self.data["build_tools"]
+        )
 
         patched_build_commands = patch_commands(
             cmds_sequence=selected_build_commands,

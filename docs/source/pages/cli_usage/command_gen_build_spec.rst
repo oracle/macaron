@@ -39,5 +39,4 @@ Options
 
 .. option:: --output-format OUTPUT_FORMAT
 
-    The desired output format for the build specification. The default format is `rc-buildspec`, which is the Reproducible-Central build specification.
-    Other formats may be available depending on your configuration.
+    The output format. Can be `default-buildspec` (default) or `rc-buildspec` (Reproducible-central build spec)

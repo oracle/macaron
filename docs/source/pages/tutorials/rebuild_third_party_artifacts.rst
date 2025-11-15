@@ -16,6 +16,7 @@ These buildspecs help document and automate the build process for packages, enab
 
    * - Currently Supported packages
    * - Maven packages built with Gradle or Maven
+   * - Python packages built with the built-in ``build`` module and various build tools, like Poetry
 
 .. contents:: :local:
 
@@ -31,9 +32,9 @@ Addressing this lack of transparency is critical for improving supply chain secu
 Background
 **********
 
-A build specification is a file that describes all necessary information to rebuild a package from source. This includes metadata such as the build tool, the specific build command to run, the language version, e.g., JDK for Java, and artifact coordinates. Macaron can now generate this file automatically for supported ecosystems, greatly simplifying build from source.
+A build specification is a file that describes all necessary information to rebuild a package from source. This includes metadata such as the build tool, the specific build command to run, the language version, e.g., Python or JDK for Java, and artifact coordinates. Macaron can now generate this file automatically for supported ecosystems, greatly simplifying build from source.
 
-The generated buildspec will be stored in an ecosystem- and PURL-specific path under the ``output/`` directory (see more under :ref:`Output Files Guide <output_files_guide>`).
+The generated buildspec will be stored in an ecosystem- and PURL-specific path under the ``output/`` directory (see more under :ref:`Output Files Guide <output_files_macaron_build_spec-Gen>`).
 
 ******************************
 Installation and Prerequisites
@@ -101,7 +102,48 @@ In the example above, the buildspec is located at:
 Step 3: Review and Use the Buildspec File
 *****************************************
 
-The generated buildspec uses the `Reproducible Central buildspec <https://github.com/jvm-repo-rebuild/reproducible-central/blob/master/doc/BUILDSPEC.md>`_ format, for example:
+By default we generate the buildspec in JSON format as follows:
+
+.. code-block:: ini
+
+    {
+        "macaron_version": "0.18.0",
+        "group_id": "org.apache.hugegraph",
+        "artifact_id": "computer-k8s",
+        "version": "1.0.0",
+        "git_repo": "https://github.com/apache/hugegraph-computer",
+        "git_tag": "d2b95262091d6572cc12dcda57d89f9cd44ac88b",
+        "newline": "lf",
+        "language_version": [
+            "11"
+        ],
+        "ecosystem": "maven",
+        "purl": "pkg:maven/org.apache.hugegraph/computer-k8s@1.0.0",
+        "language": "java",
+        "build_tools": [
+            "maven"
+        ],
+        "build_commands": [
+            [
+            "mvn",
+            "-DskipTests=true",
+            "-Dmaven.test.skip=true",
+            "-Dmaven.site.skip=true",
+            "-Drat.skip=true",
+            "-Dmaven.javadoc.skip=true",
+            "clean",
+            "package"
+            ]
+        ]
+    }
+
+If you use the ``rc-buildspec`` output format, the generated buildspec follows the `Reproducible Central buildspec <https://github.com/jvm-repo-rebuild/reproducible-central/blob/master/doc/BUILDSPEC.md>`_ format. For example, you can generate it with:
+
+.. code-block:: shell
+
+    ./run_macaron.sh gen-build-spec -purl pkg:maven/org.apache.hugegraph/computer-k8s@1.0.0 --database output/macaron.db --output-format rc-buildspec
+
+The resulting file will be saved as ``output/buildspec/maven/org_apache_hugegraph/computer-k8s/reproducible_central.buildspec``, and will look like this:
 
 .. code-block:: ini
 
@@ -136,18 +178,18 @@ The ``gen-build-spec`` works as follows:
 
 - Extracts metadata and build information from Macaron’s local SQLite database.
 - Parses and modifies build commands from CI/CD configurations to ensure compatibility with rebuild systems.
-- Identifies the JDK version by parsing CI/CD configurations or extracting it from the ``META-INF/MANIFEST.MF`` file in Maven Central artifacts.
+- Identifies the language version, e.g., JDK version by parsing CI/CD configurations or extracting it from the ``META-INF/MANIFEST.MF`` file in Maven Central artifacts.
 - Ensures that only the major JDK version is included, as required by the build specification format.
 
 
-This feature is described in more detail in our accepted ASE 2025 Industry ShowCase paper: `Unlocking Reproducibility: Automating the Re-Build Process for Open-Source Software <https://arxiv.org/pdf/2509.08204>`_.
+The Java support for this feature is described in more detail in our accepted ASE 2025 Industry ShowCase paper: `Unlocking Reproducibility: Automating the Re-Build Process for Open-Source Software <https://arxiv.org/pdf/2509.08204>`_.
 
 ***********************************
 Frequently Asked Questions (FAQs)
 ***********************************
 
 *Q: What formats are supported for buildspec output?*
-A: Currently, only ``rc-buildspec`` is supported.
+A: Currently, a default JSON spec and optional ``rc-buildspec`` are supported.
 
 *Q: Do I need to analyze the package every time before generating a buildspec?*
 A: No, you only need to analyze the package once unless you want to update the database with newer information.

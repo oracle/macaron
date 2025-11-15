@@ -10,11 +10,6 @@ import pytest
 
 from macaron.config.defaults import load_defaults
 from macaron.errors import ConfigurationError
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
-from macaron.slsa_analyzer.build_tool.gradle import Gradle
-from macaron.slsa_analyzer.build_tool.maven import Maven
-from macaron.slsa_analyzer.build_tool.pip import Pip
-from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import JFrogMavenAssetMetadata, JFrogMavenRegistry
 
 
@@ -115,26 +110,25 @@ def test_load_defaults_with_invalid_config(tmp_path: Path, user_config_input: st
 
 
 @pytest.mark.parametrize(
-    ("build_tool", "expected_result"),
+    ("ecosystem", "expected_result"),
     [
-        (Maven(), True),
-        (Gradle(), True),
-        (Pip(), False),
-        (Poetry(), False),
+        ("maven", True),
+        ("pypi", False),
+        ("npm", False),
     ],
 )
 def test_is_detected(
     jfrog_maven: JFrogMavenRegistry,
-    build_tool: BaseBuildTool,
+    ecosystem: str,
     expected_result: bool,
 ) -> None:
     """Test the ``is_detected`` method."""
-    assert jfrog_maven.is_detected(build_tool.name) == expected_result
+    assert jfrog_maven.is_detected(ecosystem) == expected_result
 
     # The method always returns False when the jfrog_maven instance is not enabled
     # (in the ini config).
     jfrog_maven.enabled = False
-    assert jfrog_maven.is_detected(build_tool.name) is False
+    assert jfrog_maven.is_detected(ecosystem) is False
 
 
 @pytest.mark.parametrize(

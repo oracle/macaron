@@ -12,7 +12,9 @@
     "ecosystem": "pypi",
     "purl": "pkg:pypi/cachetools@6.2.1",
     "language": "python",
-    "build_tool": "pip",
+    "build_tools": [
+        "pip"
+    ],
     "build_commands": [
         [
             "python",
@@ -20,8 +22,11 @@
             "build"
         ]
     ],
-    "build_backends": {
+    "build_requires": {
         "setuptools": "==(80.9.0)",
         "wheel": ""
-    }
+    },
+    "build_backends": [
+        "setuptools.build_meta"
+    ]
 }

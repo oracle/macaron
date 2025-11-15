@@ -29,7 +29,8 @@ such as GitHub Actions workflows.
 Build Specification Generation
 ------------------------------
 
-* Maven and Gradle builds for Java artifacts
+* Maven and Gradle builds for Java packages
+* The built-in ``build`` module and various build tools, like Poetry for Python packages
 
 .. _supported_git_services:
 
