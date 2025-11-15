@@ -10,6 +10,7 @@ import re
 import tomli
 from packageurl import PackageURL
 from packaging.requirements import InvalidRequirement, Requirement
+from packaging.specifiers import InvalidSpecifier
 from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 
 from macaron.build_spec_generator.build_command_patcher import CLI_COMMAND_PATCHES, patch_commands
@@ -110,14 +111,15 @@ class PyPIBuildSpec(
 
         pypi_package_json = pypi_registry.find_or_create_pypi_asset(purl.name, purl.version, registry_info)
         patched_build_commands: list[list[str]] = []
+        build_requires_set: set[str] = set()
+        build_backends_set: set[str] = set()
+        parsed_build_requires: dict[str, str] = {}
+        python_version_set: set[str] = set()
+        wheel_name_python_version_list: list[str] = []
+        wheel_name_platforms: set[str] = set()
 
         if pypi_package_json is not None:
             if pypi_package_json.package_json or pypi_package_json.download(dest=""):
-                requires_array: list[str] = []
-                build_backends: dict[str, str] = {}
-                python_version_set: set[str] = set()
-                wheel_name_python_version_list: list[str] = []
-                wheel_name_platforms: set[str] = set()
 
                 # Get the Python constraints from the PyPI JSON response.
                 json_releases = pypi_package_json.get_releases()
@@ -135,59 +137,62 @@ class PyPIBuildSpec(
                         wheel_contents, metadata_contents = self.read_directory(pypi_package_json.wheel_path, purl)
                         generator, version = self.read_generator_line(wheel_contents)
                         if generator != "":
-                            build_backends[generator] = "==" + version
-                        if generator != "setuptools":
-                            # Apply METADATA heuristics to determine setuptools version.
-                            if "License-File" in metadata_contents:
-                                build_backends["setuptools"] = "==" + defaults.get(
-                                    "heuristic.pypi", "setuptools_version_emitting_license"
-                                )
-                            elif "Platform: UNKNOWN" in metadata_contents:
-                                build_backends["setuptools"] = "==" + defaults.get(
-                                    "heuristic.pypi", "setuptools_version_emitting_platform_unknown"
-                                )
-                            else:
-                                build_backends["setuptools"] = "==" + defaults.get(
-                                    "heuristic.pypi", "default_setuptools"
-                                )
+                            parsed_build_requires[generator] = "==" + version.replace(" ", "")
+                        # Apply METADATA heuristics to determine setuptools version.
+                        elif "License-File" in metadata_contents:
+                            parsed_build_requires["setuptools"] = "==" + defaults.get(
+                                "heuristic.pypi", "setuptools_version_emitting_license"
+                            )
+                        elif "Platform: UNKNOWN" in metadata_contents:
+                            parsed_build_requires["setuptools"] = "==" + defaults.get(
+                                "heuristic.pypi", "setuptools_version_emitting_platform_unknown"
+                            )
                 except SourceCodeError:
                     logger.debug("Could not find pure wheel matching this PURL")
 
                 logger.debug("From .dist_info:")
-                logger.debug(build_backends)
+                logger.debug(parsed_build_requires)
 
                 try:
                     with pypi_package_json.sourcecode():
                         try:
                             pyproject_content = pypi_package_json.get_sourcecode_file_contents("pyproject.toml")
                             content = tomli.loads(pyproject_content.decode("utf-8"))
-                            build_system: dict[str, list[str]] = content.get("build-system", {})
-                            requires_array = build_system.get("requires", [])
+                            requires = json_extract(content, ["build-system", "requires"], list)
+                            if requires:
+                                build_requires_set.update(elem.replace(" ", "") for elem in requires)
+                            backend = json_extract(content, ["build-system", "build-backend"], str)
+                            if backend:
+                                build_backends_set.add(backend.replace(" ", ""))
 
                             python_version_constraint = json_extract(content, ["project", "requires-python"], str)
                             if python_version_constraint:
                                 python_version_set.add(python_version_constraint.replace(" ", ""))
-                            logger.debug("From pyproject.toml:")
-                            logger.debug(requires_array)
-                        except SourceCodeError:
-                            logger.debug("No pyproject.toml found")
-                except SourceCodeError:
-                    logger.debug("No source distribution found")
+                            logger.debug(
+                                "After analyzing pyproject.toml from the sdist: build-requires: %s, build_backend: %s",
+                                build_requires_set,
+                                build_backends_set,
+                            )
+                        except TypeError as error:
+                            logger.debug(
+                                "Found a type error while reading the pyproject.toml file from the sdist: %s", error
+                            )
+                        except tomli.TOMLDecodeError as error:
+                            logger.debug("Failed to read the pyproject.toml file from the sdist: %s", error)
+                        except SourceCodeError as error:
+                            logger.debug("No pyproject.toml found: %s", error)
+                except SourceCodeError as error:
+                    logger.debug("No source distribution found: %s", error)
 
-                # Merge in pyproject.toml information only when the wheel dist_info does not contain the same
+                # Merge in pyproject.toml information only when the wheel dist_info does not contain the same.
                 # Hatch is an interesting example of this merge being required.
-                for requirement in requires_array:
+                for requirement in build_requires_set:
                     try:
                         parsed_requirement = Requirement(requirement)
-                        if parsed_requirement.name not in build_backends:
-                            build_backends[parsed_requirement.name] = str(parsed_requirement.specifier)
-                    except InvalidRequirement:
-                        logger.debug("Malformed requirement encountered:")
-                        logger.debug(requirement)
-
-                logger.debug("Combined:")
-                logger.debug(build_backends)
-                self.data["build_backends"] = build_backends
+                        if parsed_requirement.name not in parsed_build_requires:
+                            parsed_build_requires[parsed_requirement.name] = str(parsed_requirement.specifier)
+                    except (InvalidRequirement, InvalidSpecifier) as error:
+                        logger.debug("Malformed requirement encountered %s : %s", requirement, error)
 
                 try:
                     # Get information from the wheel file name.
@@ -206,23 +211,33 @@ class PyPIBuildSpec(
                 if "any" in wheel_name_platforms:
                     patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
 
+        # If we were not able to find any build  and backends, use the default setuptools.
+        if not parsed_build_requires:
+            parsed_build_requires["setuptools"] = "==" + defaults.get("heuristic.pypi", "default_setuptools")
+        if not build_backends_set:
+            build_backends_set.add("setuptools.build_meta")
+
+        logger.debug("Combined build-requires: %s", parsed_build_requires)
+        self.data["build_requires"] = parsed_build_requires
+        self.data["build_backends"] = list(build_backends_set)
+
+        if not patched_build_commands:
+            # Resolve and patch build commands.
+            selected_build_commands = self.data["build_commands"] or self.get_default_build_commands(
+                self.data["build_tools"]
+            )
+
+            patched_build_commands = (
+                patch_commands(
+                    cmds_sequence=selected_build_commands,
+                    patches=CLI_COMMAND_PATCHES,
+                )
+                or []
+            )
             if not patched_build_commands:
-                # Resolve and patch build commands.
-                selected_build_commands = self.data["build_commands"] or self.get_default_build_commands(
-                    self.data["build_tools"]
-                )
+                raise GenerateBuildSpecError(f"Failed to patch command sequences {selected_build_commands}.")
 
-                patched_build_commands = (
-                    patch_commands(
-                        cmds_sequence=selected_build_commands,
-                        patches=CLI_COMMAND_PATCHES,
-                    )
-                    or []
-                )
-                if not patched_build_commands:
-                    raise GenerateBuildSpecError(f"Failed to patch command sequences {selected_build_commands}.")
-
-            self.data["build_commands"] = patched_build_commands
+        self.data["build_commands"] = patched_build_commands
 
     def read_directory(self, wheel_path: str, purl: PackageURL) -> tuple[str, str]:
         """
@@ -286,5 +301,6 @@ class PyPIBuildSpec(
         for line in wheel_contents.splitlines():
             if line.startswith("Generator:"):
                 split_line = line.split(" ")
-                return split_line[1], split_line[2]
+                if len(split_line) > 2:
+                    return split_line[1], split_line[2]
         return "", ""

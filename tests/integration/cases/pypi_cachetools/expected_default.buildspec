@@ -22,8 +22,11 @@
             "build"
         ]
     ],
-    "build_backends": {
+    "build_requires": {
         "setuptools": "==(80.9.0)",
         "wheel": ""
-    }
+    },
+    "build_backends": [
+        "setuptools.build_meta"
+    ]
 }

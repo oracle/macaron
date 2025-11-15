@@ -73,10 +73,13 @@ class BaseBuildSpecDict(TypedDict, total=False):
     #: Entry point script, class, or binary for running the project.
     entry_point: NotRequired[str | None]
 
+    #: The build_requires is the required packages that need to be available in the build environment.
+    build_requires: NotRequired[dict[str, str]]
+
     #: A "back end" is tool that a "front end" (such as pip/build) would call to
     #: package the source distribution into the wheel format. build_backends would
     #: be a list of these that were used in building the wheel alongside their version.
-    build_backends: NotRequired[dict[str, str]]
+    build_backends: NotRequired[list[str]]
 
 
 class BaseBuildSpec(ABC):

@@ -21,9 +21,11 @@
             "build"
         ]
     ],
-    "build_backends": {
+    "build_requires": {
         "flit": "==3.12.0",
-        "setuptools": "==56.2.0",
         "flit_core": "<4,>=3.4"
-    }
+    },
+    "build_backends": [
+        "flit_core.buildapi"
+    ]
 }

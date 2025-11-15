@@ -6,8 +6,35 @@
 import logging
 import tomllib
 from pathlib import Path
+from typing import Any
+
+from tomli import TOMLDecodeError
+
+from macaron.json_tools import json_extract
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+def get_content(pyproject_path: Path) -> dict[str, Any] | None:
+    """
+    Return the pyproject.toml content.
+
+    Parameters
+    ----------
+    pyproject_path : Path
+        The file path to the pyproject.toml file.
+
+    Returns
+    -------
+    dict[str, Any] | None
+        The [build-system] section as a dict, or None otherwise.
+    """
+    try:
+        with open(pyproject_path, "rb") as toml_file:
+            return tomllib.load(toml_file)
+    except (FileNotFoundError, TypeError, TOMLDecodeError) as error:
+        logger.debug("Failed to read the %s file: %s", pyproject_path, error)
+        return None
 
 
 def contains_build_tool(tool_name: str, pyproject_path: Path) -> bool:
@@ -26,21 +53,15 @@ def contains_build_tool(tool_name: str, pyproject_path: Path) -> bool:
     bool
         True if the build tool is found in the [tool] section, False otherwise.
     """
-    try:
-        # Parse the pyproject.toml file.
-        with open(pyproject_path, "rb") as toml_file:
-            try:
-                data = tomllib.load(toml_file)
-                # Check for the existence of a [tool.<tool_name>] section.
-                if ("tool" in data) and (tool_name in data["tool"]):
-                    return True
-            except tomllib.TOMLDecodeError:
-                logger.debug("Failed to read the %s file: invalid toml file.", pyproject_path)
-                return False
+    content = get_content(pyproject_path)
+    if not content:
         return False
-    except FileNotFoundError:
-        logger.debug("Failed to read the %s file.", pyproject_path)
-        return False
+
+    # Check for the existence of a [tool.<tool_name>] section.
+    tools = json_extract(content, ["tool"], dict)
+    if tools and tool_name in tools:
+        return True
+    return False
 
 
 def build_system_contains_tool(tool_name: str, pyproject_path: Path) -> bool:
@@ -59,26 +80,20 @@ def build_system_contains_tool(tool_name: str, pyproject_path: Path) -> bool:
     bool
         True if the tool is found in either the 'build-backend' or 'requires' of the [build-system] section, False otherwise.
     """
-    try:
-        with open(pyproject_path, "rb") as toml_file:
-            try:
-                data = tomllib.load(toml_file)
-                build_system = data.get("build-system", {})
-                backend = build_system.get("build-backend", "")
-                requires = build_system.get("requires", [])
-                # Check in 'build-backend'.
-                if tool_name in backend:
-                    return True
-                # Check in 'requires' list.
-                if any(tool_name in req for req in requires):
-                    return True
-            except tomllib.TOMLDecodeError:
-                logger.debug("Failed to read the %s file: invalid toml file.", pyproject_path)
-                return False
+    content = get_content(pyproject_path)
+    if not content:
         return False
-    except FileNotFoundError:
-        logger.debug("Failed to read the %s file.", pyproject_path)
-        return False
+
+    # Check in 'build-backend'.
+    backend = json_extract(content, ["build-system", "build-backend"], str)
+    if backend and tool_name in backend:
+        return True
+    # Check in 'requires' list.
+    requires = json_extract(content, ["build-system", "requires"], list)
+    if requires and any(tool_name in req for req in requires):
+        return True
+
+    return False
 
 
 def get_build_system(pyproject_path: Path) -> dict[str, str] | None:
@@ -95,14 +110,8 @@ def get_build_system(pyproject_path: Path) -> dict[str, str] | None:
     dict[str, str] | None
         The [build-system] section as a dict, or None otherwise.
     """
-    try:
-        with open(pyproject_path, "rb") as toml_file:
-            try:
-                data = tomllib.load(toml_file)
-                return data.get("build-system", {}) or None
-            except tomllib.TOMLDecodeError:
-                logger.debug("Failed to read the %s file: invalid toml file.", pyproject_path)
-                return None
-    except FileNotFoundError:
-        logger.debug("Failed to read the %s file.", pyproject_path)
+    content = get_content(pyproject_path)
+    if not content:
         return None
+
+    return json_extract(content, ["build-system"], dict)

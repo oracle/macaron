@@ -555,13 +555,13 @@ class PyPIPackageJsonAsset:
     #: The asset content.
     package_json: dict
 
-    #: the source code temporary location name
+    #: The source code temporary location name.
     package_sourcecode_path: str
 
-    #: the wheel temporary location name
+    #: The wheel temporary location name.
     wheel_path: str
 
-    #: name of the wheel file
+    #: Name of the wheel file.
     wheel_filename: str
 
     #: The size of the asset (in bytes). This attribute is added to match the AssetLocator
