@@ -209,12 +209,31 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
         policy_dir = os.path.join(macaron.MACARON_PATH, "resources", "policies", "datalog")
         policy_suffix = ".dl"
         template_suffix = f"{policy_suffix}.template"
-        available_policies = [
-            os.path.splitext(policy)[0].replace(policy_suffix, "")
-            for policy in os.listdir(policy_dir)
-            if policy.endswith(template_suffix)
-        ]
-        logger.info("Available policies are:\n\t%s", "\n\t".join(available_policies))
+        description_suffix = ".description"
+
+        policies_with_desc: dict[str, str] = {}
+        try:
+            for policy_file in os.listdir(policy_dir):
+                if not policy_file.endswith(template_suffix):
+                    continue
+                policy = os.path.splitext(policy_file)[0].replace(policy_suffix, "")
+                description_path = os.path.join(policy_dir, f"{policy}{description_suffix}")
+                try:
+                    with open(description_path, encoding="utf-8") as f:
+                        desc = f.read().strip()
+                        if not desc:
+                            desc = "No description available."
+                except OSError:
+                    desc = "Could not read policy description."
+                policies_with_desc[policy] = desc
+        except FileNotFoundError:
+            logger.error("Policy directory %s not found.", policy_dir)
+            return os.EX_OSFILE
+
+        rich_handler = access_handler.get_handler()
+        rich_handler.set_available_policies(policies_with_desc)
+
+        logger.info("Available policies are:\n\t%s", "\n\t".join(sorted(policies_with_desc)))
         return os.EX_OK
 
     if verify_policy_args.file:
