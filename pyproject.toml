@@ -37,7 +37,7 @@ dependencies = [
     "beautifulsoup4 >= 4.12.0,<5.0.0",
     "problog >= 2.2.6,<3.0.0",
     "cryptography >=44.0.0,<45.0.0",
-    "semgrep == 1.113.0",
+    "semgrep == 1.143.1",
     "email-validator >=2.2.0,<3.0.0",
     "rich >=13.5.3,<15.0.0",
 ]
