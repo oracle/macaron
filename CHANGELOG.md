@@ -1,3 +1,19 @@
+## v0.19.0 (2025-11-17)
+
+### Feat
+
+- generate build specification for pure python wheels (#1221)
+- add basic support for Python in gen-build-spec (#1203)
+
+### Fix
+
+- added check for missing release information for anomalous version (#1235)
+- gen-build-spec maven/gradle cli parsers failed to parse valid command lines with intermixed positional args and options (#1212)
+
+### Refactor
+
+- show table headers in console and improve exits (#1216)
+
 ## v0.18.0 (2025-10-10)
 
 ### Feat
