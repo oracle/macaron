@@ -23,9 +23,7 @@ def test_repo_verification_pass(maven_tool: BaseBuildTool, macaron_path: Path) -
 
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl="pkg:maven/test/test")
     maven_registry = MavenCentralRegistry()
-    ctx.dynamic_data["package_registries"] = [
-        PackageRegistryInfo(maven_tool.name, maven_tool.purl_type, maven_registry)
-    ]
+    ctx.dynamic_data["package_registries"] = [PackageRegistryInfo(maven_tool.purl_type, maven_registry)]
     ctx.dynamic_data["repo_verification"] = [
         RepositoryVerificationResult(
             status=RepositoryVerificationStatus.PASSED,
@@ -43,9 +41,7 @@ def test_repo_verification_fail(maven_tool: BaseBuildTool, macaron_path: Path) -
 
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl="pkg:maven/test/test")
     maven_registry = MavenCentralRegistry()
-    ctx.dynamic_data["package_registries"] = [
-        PackageRegistryInfo(maven_tool.name, maven_tool.purl_type, maven_registry)
-    ]
+    ctx.dynamic_data["package_registries"] = [PackageRegistryInfo(maven_tool.purl_type, maven_registry)]
     ctx.dynamic_data["repo_verification"] = [
         RepositoryVerificationResult(
             status=RepositoryVerificationStatus.FAILED,
@@ -63,9 +59,7 @@ def test_check_unknown_for_unknown_repo_verification(maven_tool: BaseBuildTool, 
 
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl="pkg:maven/test/test")
     maven_registry = MavenCentralRegistry()
-    ctx.dynamic_data["package_registries"] = [
-        PackageRegistryInfo(maven_tool.name, maven_tool.purl_type, maven_registry)
-    ]
+    ctx.dynamic_data["package_registries"] = [PackageRegistryInfo(maven_tool.purl_type, maven_registry)]
     ctx.dynamic_data["repo_verification"] = [
         RepositoryVerificationResult(
             status=RepositoryVerificationStatus.UNKNOWN,
@@ -83,6 +77,6 @@ def test_check_unknown_for_unsupported_build_tools(pip_tool: BaseBuildTool, maca
 
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl="pkg:pypi/test/test")
     pypi_registry = PyPIRegistry()
-    ctx.dynamic_data["package_registries"] = [PackageRegistryInfo(pip_tool.name, pip_tool.purl_type, pypi_registry)]
+    ctx.dynamic_data["package_registries"] = [PackageRegistryInfo(pip_tool.purl_type, pypi_registry)]
 
     assert check.run_check(ctx).result_type == CheckResultType.UNKNOWN

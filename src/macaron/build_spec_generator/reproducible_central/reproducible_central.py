@@ -77,9 +77,9 @@ def gen_reproducible_central_build_spec(build_spec: BaseBuildSpecDict) -> str | 
     GenerateBuildSpecError
         Raised if generation of the build spec fails.
     """
-    if build_spec["build_tool"].upper() not in (e.name for e in ReproducibleCentralBuildTool):
+    if build_spec["build_tools"][0].upper() not in (e.name for e in ReproducibleCentralBuildTool):
         raise GenerateBuildSpecError(
-            f"Build tool {build_spec['build_tool']} is not supported by Reproducible Central. "
+            f"Build tool {build_spec['build_tools'][0]} is not supported by Reproducible Central. "
             f"Supported build tools: {[build.name for build in ReproducibleCentralBuildTool]}"
         )
     if build_spec["group_id"] is None:
@@ -92,7 +92,7 @@ def gen_reproducible_central_build_spec(build_spec: BaseBuildSpecDict) -> str | 
         "version": build_spec["version"],
         "git_repo": build_spec["git_repo"],
         "git_tag": build_spec["git_tag"],
-        "tool": ReproducibleCentralBuildTool[build_spec["build_tool"].upper()].value,
+        "tool": ReproducibleCentralBuildTool[build_spec["build_tools"][0].upper()].value,
         "newline": build_spec["newline"],
         "buildinfo": f"target/{build_spec['artifact_id']}-{build_spec['version']}.buildinfo",
         "jdk": build_spec["language_version"][0],

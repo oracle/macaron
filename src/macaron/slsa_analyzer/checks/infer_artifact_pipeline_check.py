@@ -120,7 +120,7 @@ When a verifiable provenance is found for an artifact, we use it to obtain the p
         # Look for the artifact in the corresponding registry and find the publish timestamp.
         artifact_published_date = None
         for registry_info in ctx.dynamic_data["package_registries"]:
-            if registry_info.build_tool_purl_type == ctx.component.type:
+            if registry_info.ecosystem == ctx.component.type:
                 try:
                     artifact_published_date = registry_info.package_registry.find_publish_timestamp(ctx.component.purl)
                     break

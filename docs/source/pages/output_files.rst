@@ -21,6 +21,7 @@ Top level structure
 
     output/
         ├── build_log/
+        ├── buildspec/
         ├── git_repos/
         ├── reports/
         ├── debug.log
@@ -43,8 +44,8 @@ The report files of Macaron (from using the :ref:`analyze command <analyze-comma
 Unique result path
 ''''''''''''''''''
 
-For each target software component, Macaron creates a directory under ``reports`` to store the report files. This directory
-path is formed from the PURL string of that component. The final path is created using the following template:
+For each target software component, Macaron creates a directory under ``reports`` to store the report. These directory
+paths are formed from the PURL string of that component. The final path is created using the following template:
 
 .. code-block::
 
@@ -130,6 +131,25 @@ to the directory:
         └── local_repos
 
 .. note:: Please see :ref:`pages/using:analyzing a repository on the local file system` to know how to set the directory for analyzing local repositories.
+
+.. _output_files_macaron_build_spec-Gen:
+
+--------------------------------------
+Output files of macaron gen-build-spec
+--------------------------------------
+
+As part of the ``gen-build-spec`` command, Macaron generates build spec files to help rebuilding artifacts from source. For each target software component, Macaron creates a dedicated directory under ``buildspec`` to store the generated build specification file. These directory paths are derived from the component's PURL (Package URL) string. The resulting path structure follows this template:
+
+.. code-block::
+
+    <path_to_output>/buildspec/<purl_type>/<purl_namespace>/<purl_name>
+
+Depending on the chosen output format, the following files may be generated in each directory:
+- ``macaron.buildspec`` (default format)
+- ``reproducible_central.buildspec`` (when run with the ``rc-buildspec`` output format for Maven artifacts)
+
+Each file contains the build specification for the corresponding software component.
+
 
 .. _output_files_macaron_verify_policy:
 

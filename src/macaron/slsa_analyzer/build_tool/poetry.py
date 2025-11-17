@@ -6,11 +6,8 @@
 This module is used to work with repositories that use Poetry for dependency management.
 """
 
-import glob
 import logging
 import os
-import tomllib
-from pathlib import Path
 
 from cyclonedx_py import __version__ as cyclonedx_version
 
@@ -18,6 +15,7 @@ from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer
 from macaron.dependency_analyzer.cyclonedx_python import CycloneDxPython
+from macaron.slsa_analyzer.build_tool import pyproject
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence
@@ -41,9 +39,9 @@ class Poetry(BaseBuildTool):
                     setattr(self, item, defaults.get_list("builder.poetry", item))
 
         if "builder.pip.ci.deploy" in defaults:
-            for item in defaults["builder.pip.ci.deploy"]:
+            for item in defaults["builder.poetry.ci.deploy"]:
                 if item in self.ci_deploy_kws:
-                    self.ci_deploy_kws[item] = defaults.get_list("builder.pip.ci.deploy", item)
+                    self.ci_deploy_kws[item] = defaults.get_list("builder.poetry.ci.deploy", item)
 
     def is_detected(self, repo_path: str) -> bool:
         """Return True if this build tool is used in the target repo.
@@ -64,34 +62,17 @@ class Poetry(BaseBuildTool):
                 package_lock_exists = file
                 break
 
-        for conf in self.build_configs:
-            # Find the paths of all pyproject.toml files.
-            pattern = os.path.join(repo_path, "**", conf)
-            files_detected = glob.glob(pattern, recursive=True)
-
-            if files_detected:
-                # If a package_lock file exists, and a config file is present, Poetry build tool is detected.
+        file_paths = (file_exists(repo_path, file, filters=self.path_filters) for file in self.build_configs)
+        for config_path in file_paths:
+            if config_path and os.path.basename(config_path) == "pyproject.toml":
                 if package_lock_exists:
                     return True
-                # TODO: this implementation assumes one build type, so when multiple build types are supported, this
-                # needs to be updated.
-                # Take the highest level file, if there are two at the same level, take the first in the list.
-                file_path = min(files_detected, key=lambda x: len(Path(x).parts))
-                try:
-                    # Parse the .toml file
-                    with open(file_path, "rb") as toml_file:
-                        try:
-                            data = tomllib.load(toml_file)
-                            # Check for the existence of a [tool.poetry] section.
-                            if ("tool" in data) and ("poetry" in data["tool"]):
-                                return True
-                        except tomllib.TOMLDecodeError:
-                            logger.debug("Failed to read the %s file: invalid toml file.", conf)
-                            return False
-                    return False
-                except FileNotFoundError:
-                    logger.debug("Failed to read the %s file.", conf)
-                    return False
+                if pyproject.contains_build_tool("poetry", config_path):
+                    return True
+                # Check the build-system section.
+                for tool in self.build_requires + self.build_backend:
+                    if pyproject.build_system_contains_tool(tool, config_path):
+                        return True
 
         return False
 

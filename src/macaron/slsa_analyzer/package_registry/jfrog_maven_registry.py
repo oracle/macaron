@@ -123,7 +123,7 @@ class JFrogMavenRegistry(PackageRegistry):
         self.request_timeout = request_timeout or 10
         self.download_timeout = download_timeout or 120
         self.enabled = enabled or False
-        super().__init__("JFrog Maven Registry", {"maven", "gradle"})
+        super().__init__("JFrog Maven Registry", "maven")
 
     def load_defaults(self) -> None:
         """Load the .ini configuration for the current package registry.

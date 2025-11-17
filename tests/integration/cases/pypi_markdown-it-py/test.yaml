@@ -1,0 +1,29 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Test buildspec generation for the Flit build tool.
+
+tags:
+- macaron-python-package
+- tutorial
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/markdown-it-py@4.0.0
+- name: Generate the buildspec
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/markdown-it-py@4.0.0
+- name: Compare Buildspec.
+  kind: compare
+  options:
+    kind: default_build_spec
+    result: output/buildspec/pypi/markdown-it-py/macaron.buildspec
+    expected: expected_default.buildspec

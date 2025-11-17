@@ -9,7 +9,7 @@ from macaron.build_spec_generator.common_spec.core import (
     MacaronBuildToolName,
     compose_shell_commands,
     get_language_version,
-    get_macaron_build_tool_name,
+    get_macaron_build_tool_names,
 )
 from macaron.build_spec_generator.macaron_db_extractor import GenericBuildCommandInfo
 from macaron.slsa_analyzer.checks.build_tool_check import BuildToolFacts
@@ -52,7 +52,7 @@ def test_compose_shell_commands(
                 )
             ],
             "python",
-            MacaronBuildToolName.PIP,
+            [MacaronBuildToolName.PIP],
             id="python_pip_supported",
         ),
         pytest.param(
@@ -63,7 +63,7 @@ def test_compose_shell_commands(
                 )
             ],
             "java",
-            MacaronBuildToolName.GRADLE,
+            [MacaronBuildToolName.GRADLE],
             id="build_tool_gradle",
         ),
         pytest.param(
@@ -74,7 +74,7 @@ def test_compose_shell_commands(
                 )
             ],
             "java",
-            MacaronBuildToolName.MAVEN,
+            [MacaronBuildToolName.MAVEN],
             id="build_tool_maven",
         ),
         pytest.param(
@@ -104,10 +104,10 @@ def test_compose_shell_commands(
 def test_get_build_tool_name(
     build_tool_facts: list[BuildToolFacts],
     language: str,
-    expected: MacaronBuildToolName | None,
+    expected: list[MacaronBuildToolName] | None,
 ) -> None:
     """Test build tool name detection."""
-    assert get_macaron_build_tool_name(build_tool_facts, target_language=language) == expected
+    assert get_macaron_build_tool_names(build_tool_facts, target_language=language) == expected
 
 
 @pytest.mark.parametrize(

@@ -17,36 +17,36 @@ logger: logging.Logger = logging.getLogger(__name__)
 class PackageRegistry(ABC):
     """Base package registry class."""
 
-    def __init__(self, name: str, build_tool_names: set[str]) -> None:
+    def __init__(self, name: str, ecosystem: str) -> None:
         self.name = name
-        self.build_tool_names = build_tool_names
+        self.ecosystem = ecosystem
         self.enabled: bool = True
 
     @abstractmethod
     def load_defaults(self) -> None:
         """Load the .ini configuration for the current package registry."""
 
-    def is_detected(self, build_tool_name: str) -> bool:
+    def is_detected(self, ecosystem: str) -> bool:
         """Detect if artifacts of the repo under analysis can possibly be published to this package registry.
 
-        The detection here is based on the repo's detected build tool.
-        If the package registry is compatible with the given build tool, it can be a
-        possible place where the artifacts produced from the repo are published.
+        The detection here is based on the artifact ecosystem.
+        If the package registry is compatible with the given PURL ecosystem, it can be a
+        possible place where it is published.
 
         Parameters
         ----------
-        build_tool_name: str
-            The name of a detected build tool of the repository under analysis.
+        ecosystem: str
+            The name of the artifact ecosystem under analysis.
 
         Returns
         -------
         bool
             ``True`` if the repo under analysis can be published to this package registry,
-            based on the given build tool.
+            based on the given software component ecosystem.
         """
         if not self.enabled:
             return False
-        return build_tool_name in self.build_tool_names
+        return ecosystem == self.ecosystem
 
     def find_publish_timestamp(self, purl: str) -> datetime:
         """Retrieve the publication timestamp for a package specified by its purl from the deps.dev repository by default.
