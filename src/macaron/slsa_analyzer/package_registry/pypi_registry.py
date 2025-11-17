@@ -1093,12 +1093,8 @@ def find_or_create_pypi_asset(
         logger.debug("Failed to create PyPIPackageJson asset.")
         return None
 
-<<<<<<< HEAD
-    asset = PyPIPackageJsonAsset(asset_name, asset_version, False, package_registry, {}, "", "", "")
-=======
     asset = PyPIPackageJsonAsset(
-        asset_name, asset_version, False, package_registry, {}, "", PyPIInspectorAsset("", [], {})
+        asset_name, asset_version, False, package_registry, {}, "", "", "", PyPIInspectorAsset("", [], {})
     )
->>>>>>> 8f240a8 (chore: pypi inspector link generation now lives in a dataclass in the pypi registry code)
     pypi_registry_info.metadata.append(asset)
     return asset
