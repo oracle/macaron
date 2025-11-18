@@ -58,16 +58,16 @@ Run the ``malware-detection`` policy using wildcard:
     ./run_macaron.sh verify-policy \
       --database output/macaron.db \
       --existing-policy malware-detection \
-      --package-url "pkg:pypi/django@*"
+      --package-url "pkg:pypi/django@.*"
 
-It uses the wildcard '*' to checks for components satisfying the expression "pkg:pypi/django@*".
+It uses the wildcard '*' to checks for components satisfying the expression "pkg:pypi/django@.*".
 The result of this command should show that the policy succeeds with a zero exit code (if a policy fails to pass, Macaron returns a none-zero error code):
 
 .. code-block:: shell
 
     Components Satisfy Policy
     1    pkg:pypi/django@5.0.6  check-component
-    1    pkg:pypi/django@1.11.1  check-component
+    2    pkg:pypi/django@1.11.1  check-component
 
     Components Violate Policy   None
 
