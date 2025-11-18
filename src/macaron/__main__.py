@@ -230,10 +230,13 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
             logger.error("Policy directory %s not found.", policy_dir)
             return os.EX_OSFILE
 
+        policies_with_desc = dict(sorted(policies_with_desc.items()))
         rich_handler = access_handler.get_handler()
         rich_handler.set_available_policies(policies_with_desc)
 
-        logger.info("Available policies are:\n\t%s", "\n\t".join(sorted(policies_with_desc)))
+        logger.info(
+            "Available policies are:\n%s", "\n".join(f"{name}\n{desc}\n" for name, desc in policies_with_desc.items())
+        )
         return os.EX_OK
 
     if verify_policy_args.file:

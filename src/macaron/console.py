@@ -80,10 +80,13 @@ class TableBuilder:
     def _make_policies_table(policies: dict[str, str]) -> Table:
         """Build a two-column table of policy name and a short description."""
         table = Table(box=None)
-        table.add_column("Policy", justify="left", style="bold")
+        table.add_column("[blue]Policy[/]", justify="left", style="blue bold")
         table.add_column("Description", justify="left")
-        for name, desc in policies.items():
+        total_policies = len(policies)
+        for i, (name, desc) in enumerate(policies.items()):
             table.add_row(name, desc)
+            if i < total_policies - 1:
+                table.add_row()
         return table
 
 
