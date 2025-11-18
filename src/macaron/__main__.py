@@ -196,7 +196,7 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
     int
         Returns os.EX_OK if successful or the corresponding error code on failure.
     """
-    if not os.path.isfile(verify_policy_args.database):
+    if not verify_policy_args.list_policies and not os.path.isfile(verify_policy_args.database):
         logger.critical("The database file does not exist.")
         return os.EX_OSFILE
 
@@ -375,6 +375,9 @@ def perform_action(action_args: argparse.Namespace) -> None:
         case "verify-policy":
             if not action_args.disable_rich_output:
                 rich_handler.start("verify-policy")
+            if not action_args.list_policies and not action_args.database:
+                logger.error("macaron verify-policy: error: the following arguments are required: -d/--database")
+                sys.exit(os.EX_USAGE)
             sys.exit(verify_policy(action_args))
 
         case "analyze":
@@ -631,7 +634,7 @@ def main(argv: list[str] | None = None) -> None:
     vp_parser = sub_parser.add_parser(name="verify-policy")
     vp_group = vp_parser.add_mutually_exclusive_group(required=True)
 
-    vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
+    vp_parser.add_argument("-d", "--database", type=str, help="Path to the database.")
     vp_parser.add_argument("-purl", "--package-url", help="PackageURL for policy template.")
     vp_group.add_argument("-f", "--file", type=str, help="Path to the Datalog policy.")
     vp_group.add_argument("-e", "--existing-policy", help="Name of the existing policy to run.")
