@@ -76,6 +76,19 @@ class TableBuilder:
             table.add_row(report_type, report_path, style="blue")
         return table
 
+    @staticmethod
+    def _make_policies_table(policies: dict[str, str]) -> Table:
+        """Build a two-column table of policy name and a short description."""
+        table = Table(box=None)
+        table.add_column("[blue]Policy[/]", justify="left", style="blue bold")
+        table.add_column("Description", justify="left")
+        total_policies = len(policies)
+        for i, (name, desc) in enumerate(policies.items()):
+            table.add_row(name, desc)
+            if i < total_policies - 1:
+                table.add_row()
+        return table
+
 
 class Dependency(TableBuilder):
     """A class to manage the display of dependency analysis in the console."""
@@ -289,6 +302,8 @@ class RichConsoleHandler(RichHandler, TableBuilder):
         self.if_dependency: bool = False
         self.dependency_analysis_map: dict[str, int] = {}
         self.dependency_analysis_list: list[Dependency] = []
+        self.available_policies: dict[str, str] = {}
+        self.policies_table = Table(box=None)
         self.components_violates_table = Table(box=None)
         self.components_satisfy_table = Table(box=None)
         self.policy_summary_table = Table(show_header=False, box=None)
@@ -483,6 +498,18 @@ class RichConsoleHandler(RichHandler, TableBuilder):
         """
         self.policy_summary["Policy Report"] = report_path
         self.generate_policy_summary_table()
+
+    def set_available_policies(self, policies: dict[str, str]) -> None:
+        """
+        Store available policies and build the policies table.
+
+        Parameters
+        ----------
+        policies : dict[str, str]
+            Mapping of policy name to short description.
+        """
+        self.available_policies = policies
+        self.policies_table = self._make_policies_table(self.available_policies)
 
     def update_vsa(self, vsa_path: str) -> None:
         """
@@ -705,7 +732,9 @@ class RichConsoleHandler(RichHandler, TableBuilder):
                             self.report_table,
                         ]
         elif self.command == "verify-policy":
-            if self.policy_summary_table.row_count > 0:
+            if self.policies_table.row_count > 0:
+                layout = layout + [self.policies_table]
+            elif self.policy_summary_table.row_count > 0:
                 if self.components_satisfy_table.row_count > 0:
                     layout = layout + [
                         "[bold green] Components Satisfy Policy[/]",

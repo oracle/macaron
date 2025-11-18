@@ -196,12 +196,47 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
     int
         Returns os.EX_OK if successful or the corresponding error code on failure.
     """
-    if not os.path.isfile(verify_policy_args.database):
+    if not verify_policy_args.list_policies and not os.path.isfile(verify_policy_args.database):
         logger.critical("The database file does not exist.")
         return os.EX_OSFILE
 
     if verify_policy_args.show_prelude:
         show_prelude(verify_policy_args.database)
+        return os.EX_OK
+
+    policy_content = None
+    if verify_policy_args.list_policies:
+        policy_dir = os.path.join(macaron.MACARON_PATH, "resources", "policies", "datalog")
+        policy_suffix = ".dl"
+        template_suffix = f"{policy_suffix}.template"
+        description_suffix = ".description"
+
+        policies_with_desc: dict[str, str] = {}
+        try:
+            for policy_file in os.listdir(policy_dir):
+                if not policy_file.endswith(template_suffix):
+                    continue
+                policy = os.path.splitext(policy_file)[0].replace(policy_suffix, "")
+                description_path = os.path.join(policy_dir, f"{policy}{description_suffix}")
+                try:
+                    with open(description_path, encoding="utf-8") as f:
+                        desc = f.read().strip()
+                        if not desc:
+                            desc = "No description available."
+                except OSError:
+                    desc = "Could not read policy description."
+                policies_with_desc[policy] = desc
+        except FileNotFoundError:
+            logger.error("Policy directory %s not found.", policy_dir)
+            return os.EX_OSFILE
+
+        policies_with_desc = dict(sorted(policies_with_desc.items()))
+        rich_handler = access_handler.get_handler()
+        rich_handler.set_available_policies(policies_with_desc)
+
+        logger.info(
+            "Available policies are:\n%s", "\n".join(f"{name}\n{desc}\n" for name, desc in policies_with_desc.items())
+        )
         return os.EX_OK
 
     if verify_policy_args.file:
@@ -211,7 +246,34 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
 
         with open(verify_policy_args.file, encoding="utf-8") as file:
             policy_content = file.read()
+    elif verify_policy_args.existing_policy:
+        policy_dir = os.path.join(macaron.MACARON_PATH, "resources", "policies", "datalog")
+        policy_suffix = ".dl"
+        template_suffix = f"{policy_suffix}.template"
+        available_policies = [
+            os.path.splitext(policy)[0].replace(policy_suffix, "")
+            for policy in os.listdir(policy_dir)
+            if policy.endswith(template_suffix)
+        ]
+        if verify_policy_args.existing_policy not in available_policies:
+            logger.error(
+                "The policy %s is not available. Available policies are: %s",
+                verify_policy_args.existing_policy,
+                available_policies,
+            )
+            return os.EX_USAGE
+        policy_path = os.path.join(policy_dir, f"{verify_policy_args.existing_policy}{template_suffix}")
+        with open(policy_path, encoding="utf-8") as file:
+            policy_content = file.read()
+        try:
+            validation_package_url = verify_policy_args.package_url.replace("*", "")
+            PackageURL.from_string(validation_package_url)
+            policy_content = policy_content.replace("<PACKAGE_PURL>", verify_policy_args.package_url)
+        except ValueError as err:
+            logger.error("The package url %s is not valid. Error: %s", verify_policy_args.package_url, err)
+            return os.EX_USAGE
 
+    if policy_content:
         result = run_policy_engine(verify_policy_args.database, policy_content)
         vsa = generate_vsa(policy_content=policy_content, policy_result=result)
         # Retrieve the console handler previously configured via the access_handler.
@@ -316,6 +378,9 @@ def perform_action(action_args: argparse.Namespace) -> None:
         case "verify-policy":
             if not action_args.disable_rich_output:
                 rich_handler.start("verify-policy")
+            if not action_args.list_policies and not action_args.database:
+                logger.error("macaron verify-policy: error: the following arguments are required: -d/--database")
+                sys.exit(os.EX_USAGE)
             sys.exit(verify_policy(action_args))
 
         case "analyze":
@@ -572,8 +637,11 @@ def main(argv: list[str] | None = None) -> None:
     vp_parser = sub_parser.add_parser(name="verify-policy")
     vp_group = vp_parser.add_mutually_exclusive_group(required=True)
 
-    vp_parser.add_argument("-d", "--database", required=True, type=str, help="Path to the database.")
+    vp_parser.add_argument("-d", "--database", type=str, help="Path to the database.")
+    vp_parser.add_argument("-purl", "--package-url", help="PackageURL for policy template.")
     vp_group.add_argument("-f", "--file", type=str, help="Path to the Datalog policy.")
+    vp_group.add_argument("-e", "--existing-policy", help="Name of the existing policy to run.")
+    vp_group.add_argument("-l", "--list-policies", action="store_true", help="List the existing policy to run.")
     vp_group.add_argument("-s", "--show-prelude", action="store_true", help="Show policy prelude.")
 
     # Find the repo and commit of a passed PURL, or the commit of a passed PURL and repo.
