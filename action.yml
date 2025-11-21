@@ -1,0 +1,171 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+name: Macaron Security Analysis
+description: Run Macaron to analyze supply chain security
+author: Oracle - github.com/oracle/macaron
+
+inputs:
+  sbom_path:
+    description: The path to the SBOM of the analysis target.
+  package_url:
+    description: The PURL string used to uniquely identify the target software component for analysis.
+  repo_path:
+    description: The path to the repository, can be local or remote.
+  policy_file:
+    description: Path to the Datalog policy.
+  defaults_path:
+    description: The path to the defaults configuration file.
+  digest:
+    description: The digest of the commit we want to checkout in the branch.
+  provenanace_expectation:
+    description: The path to provenance expectation file or directory.
+  provenanace_file:
+    description: The path to the provenance file in in-toto format.
+  verify_provenance:
+    description: Allow the analysis to attempt to verify provenance files as part of its normal operations.
+  show_prelude:
+    description: Show policy prelude.
+  branch:
+    description: The branch of the repository that we want to checkout.
+    default: ${{ github.ref_name }}
+  deps_depth:
+    description: 'The depth of the dependency resolution. 0: disable, 1: direct dependencies, inf: all transitive dependencies.'
+    default: '0'
+  github_token:
+    description: The GitHub personal access token is needed for to run the analysis.
+    default: ${{ github.token }}
+  output_dir:
+    description: The output destination path for Macaron.
+    default: output
+  upload_attestation:
+    description: 'Upload the generated VSA report. default : false'
+    default: 'false'
+
+outputs:
+  policy_report:
+    description: Paths to the Macaron analysis report
+    value: ${{ steps.run-macaron-policy-verification.outputs.policy_report }}
+  vsa_report:
+    description: Verification Summary Attestations
+    value: ${{ steps.run-macaron-policy-verification.outputs.vsa_report }}
+
+runs:
+  using: composite
+  steps:
+  - name: Setup Macaron
+    run: |
+      mkdir -p ${{ runner.temp }}/macaron
+      curl -o ${{ runner.temp }}/macaron/run_macaron.sh https://raw.githubusercontent.com/oracle/macaron/release/scripts/release_scripts/run_macaron.sh
+      chmod +x ${{ runner.temp }}/macaron/run_macaron.sh
+      echo "MACARON=${{ runner.temp }}/macaron/run_macaron.sh" >> $GITHUB_ENV
+    shell: bash
+
+  - name: Run Macaron Analysis
+    id: run-macaron-analysis
+    run: |
+      if [ -n "${{ inputs.defaults_path }}" ]; then
+        CMD="$MACARON --defaults-path ${{ inputs.defaults_path }}"
+      else
+        CMD="$MACARON"
+      fi
+
+      CMD="$CMD --output-dir ${{ inputs.output_dir }} -lr . analyze"
+
+      if [ -n "${{ inputs.repo_path }}" ]; then
+        CMD="$CMD -rp ${{ inputs.repo_path }}"
+      elif [ -n "${{ inputs.purl }}" ]; then
+        CMD="$CMD -purl ${{ inputs.purl }}"
+      else
+        CMD="$CMD -rp ."
+      fi
+
+      CMD="$CMD --branch ${{ inputs.branch }}"
+
+      if [ -n "${{ inputs.digest }}" ]; then
+        CMD="$CMD --digest ${{ inputs.digest }}"
+      fi
+
+      CMD="$CMD --deps-depth ${{ inputs.deps_depth }}"
+
+      if [ -n "${{ inputs.sbom_path }}" ]; then
+        CMD="$CMD --sbom-path ${{ inputs.sbom_path }}"
+      fi
+
+      if [ -n "${{ inputs.provenanace_file }}" ]; then
+        CMD="$CMD --provenanace-file ${{ inputs.provenanace_file }}"
+      fi
+
+      if [ -n "${{ inputs.provenanace_expectation }}" ]; then
+        CMD="$CMD --provenanace-expectation ${{ inputs.provenanace_expectation }}"
+      fi
+
+      eval "$CMD"
+
+      if [ $? -eq 0 ]; then
+        echo "report=report_path" >> $GITHUB_OUTPUT
+      else
+        echo "Macaron analysis failed."
+        exit 1
+      fi
+    shell: bash
+    env:
+      GITHUB_TOKEN: ${{ inputs.github_token }}
+
+  - name: Run Macaron Policy Verification
+    id: run-macaron-policy-verification
+    if: ${{ inputs.policy_file }}
+    run: |
+      FILE="${{ inputs.policy_file }}"
+      KEYWORDS=("SALSA-1" "SALSA-2" "SALSA-3")
+
+      if [ -n "${{ inputs.defaults_path }}" ]; then
+        CMD="$MACARON --defaults-path ${{ inputs.defaults_path }}"
+      else
+        CMD="$MACARON"
+      fi
+      CMD="$CMD --output-dir ${{ inputs.output_dir }} verify-policy --database ${{ inputs.output_dir }}/macaron.db"
+
+      if [ -f "$FILE" ]; then
+        CMD="$CMD --file $FILE"
+
+        eval "$CMD"
+
+        if [ $? -eq 0 ]; then
+          echo "policy_report=${{ inputs.output_dir }}/policy_report.json" >> $GITHUB_OUTPUT
+          if [ -f "${{ inputs.output_dir }}/vsa.intoto.jsonl" ]; then
+            echo "vsa_report=${{ inputs.output_dir }}/vsa.intoto.jsonl" >> $GITHUB_OUTPUT
+          else
+            echo "vsa_report=VSA Not Generated." >> $GITHUB_OUTPUT
+          fi
+        fi
+      else
+        for KEYWORD in "${KEYWORDS[@]}"; do
+          if [ "$FILE" == "$KEYWORD" ]; then
+            echo "Matched keyword: $KEYWORD"
+            # CMD="$CMD --file ${{ github.action_path }}/${FILE}.dl"
+            echo "$CMD --file ${{ github.action_path }}/${FILE}.dl"
+
+            # eval "$CMD"
+
+            # if [ $? -eq 0 ]; then
+            #   echo "policy_report=${{ inputs.output_dir }}/policy_report.json" >> $GITHUB_OUTPUT
+            #   if [ -f "${{ inputs.output_dir }}/vsa.intoto.jsonl" ]; then
+            #     echo "vsa_report=${{ inputs.output_dir }}/vsa.intoto.jsonl" >> $GITHUB_OUTPUT
+            #   else
+            #     echo "vsa_report=VSA Not Generated." >> $GITHUB_OUTPUT
+            #   fi
+            # fi
+            break
+          fi
+        done
+      fi
+    shell: bash
+
+  - name: Upload Attestation
+    if: ${{ inputs.upload_attestation && steps.run-macaron-policy-verification.outputs.vsa_report != 'VSA Not Generated.' }}
+    uses: actions/attest@v2
+    with:
+      subject-path: ${{ github.workspace }}
+      predicate-type: https://slsa.dev/verification_summary/v1
+      predicate-path: ${{ steps.run-macaron-policy-verification.outputs.vsa_report }}
