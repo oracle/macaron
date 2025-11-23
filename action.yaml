@@ -117,7 +117,6 @@ runs:
     if: ${{ inputs.policy_file }}
     run: |
       FILE="${{ inputs.policy_file }}"
-      KEYWORDS=("SALSA-1" "SALSA-2" "SALSA-3")
 
       if [ -n "${{ inputs.defaults_path }}" ]; then
         CMD="$MACARON --defaults-path ${{ inputs.defaults_path }}"
@@ -140,25 +139,19 @@ runs:
           fi
         fi
       else
-        for KEYWORD in "${KEYWORDS[@]}"; do
-          if [ "$FILE" == "$KEYWORD" ]; then
-            echo "Matched keyword: $KEYWORD"
-            # CMD="$CMD --file ${{ github.action_path }}/${FILE}.dl"
-            echo "$CMD --file ${{ github.action_path }}/${FILE}.dl"
+        CMD="$CMD --existing-policy ${FILE}"
+        echo "$CMD --existing-policy ${FILE}"
 
-            # eval "$CMD"
+        eval "$CMD"
 
-            # if [ $? -eq 0 ]; then
-            #   echo "policy_report=${{ inputs.output_dir }}/policy_report.json" >> $GITHUB_OUTPUT
-            #   if [ -f "${{ inputs.output_dir }}/vsa.intoto.jsonl" ]; then
-            #     echo "vsa_report=${{ inputs.output_dir }}/vsa.intoto.jsonl" >> $GITHUB_OUTPUT
-            #   else
-            #     echo "vsa_report=VSA Not Generated." >> $GITHUB_OUTPUT
-            #   fi
-            # fi
-            break
+        if [ $? -eq 0 ]; then
+          echo "policy_report=${{ inputs.output_dir }}/policy_report.json" >> $GITHUB_OUTPUT
+          if [ -f "${{ inputs.output_dir }}/vsa.intoto.jsonl" ]; then
+            echo "vsa_report=${{ inputs.output_dir }}/vsa.intoto.jsonl" >> $GITHUB_OUTPUT
+          else
+            echo "vsa_report=VSA Not Generated." >> $GITHUB_OUTPUT
           fi
-        done
+        fi
       fi
     shell: bash
 
