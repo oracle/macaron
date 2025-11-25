@@ -136,7 +136,7 @@ class PyPIBuildSpec(
                         logger.debug("It has directories %s", ",".join(os.listdir(pypi_package_json.wheel_path)))
                         wheel_contents, metadata_contents = self.read_directory(pypi_package_json.wheel_path, purl)
                         generator, version = self.read_generator_line(wheel_contents)
-                        if generator != "":
+                        if generator != "" and version != "":
                             parsed_build_requires[generator] = "==" + version.replace(" ", "")
                         # Apply METADATA heuristics to determine setuptools version.
                         elif "License-File" in metadata_contents:
@@ -302,5 +302,50 @@ class PyPIBuildSpec(
             if line.startswith("Generator:"):
                 split_line = line.split(" ")
                 if len(split_line) > 2:
-                    return split_line[1], split_line[2]
+                    backend = split_line[1]
+                    match backend:
+                        case "bdist_wheel":
+                            backend = "wheel"
+                    version = self.parse_generator_version(split_line[2])
+                    return backend, version
         return "", ""
+
+    def parse_generator_version(self, literal_version_specification: str) -> str:
+        """
+        Parse the generator's version.
+
+        Parameters
+        ----------
+        version_literal : str
+            Version string corresponding to generator.
+
+        Returns
+        -------
+        str
+            Sanitized and standardized version specifier.
+
+        Examples
+        --------
+        >>> spec = PyPIBuildSpec(None)
+        >>> spec.parse_generator_version("(1.2.3)")
+        '1.2.3'
+        >>> spec.parse_generator_version("1.2.3")
+        '1.2.3'
+        >>> spec.parse_generator_version("a.b.c")
+        ''
+        >>> spec.parse_generator_version("1..2.3")
+        ''
+        >>> spec.parse_generator_version("(1..2.3)")
+        ''
+        """
+        # Two patterns p1 and p2 rather than just one
+        # (p1)|(p2) as the latter complicates the group to return
+        pattern_plain = re.compile(r"^(\d(\.(\d)+)*)$")
+        plain_match = pattern_plain.match(literal_version_specification)
+        pattern_parenthesis = re.compile(r"^\((\d(\.(\d)+)*)\)$")
+        parenthesis_match = pattern_parenthesis.match(literal_version_specification)
+        if plain_match:
+            return plain_match.group(1)
+        if parenthesis_match:
+            return parenthesis_match.group(1)
+        return ""
