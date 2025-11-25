@@ -14,6 +14,8 @@ inputs:
     description: The path to the repository, can be local or remote.
   policy_file:
     description: Path to the Datalog policy.
+  policy_purl:
+    description: The PURL string for the pre-defined policy.
   defaults_path:
     description: The path to the defaults configuration file.
   digest:
@@ -41,6 +43,9 @@ inputs:
   upload_attestation:
     description: 'Upload the generated VSA report. default : false'
     default: 'false'
+  subject_path:
+    description: Path to the artifact serving as the subject of the attestation.
+    default: ${{ github.workspace }}
 
 outputs:
   policy_report:
@@ -53,12 +58,36 @@ outputs:
 runs:
   using: composite
   steps:
+  - name: Setup Python
+    uses: actions/setup-python@v6
+    with:
+      python-version: 3.11.13
+
+  - name: Setup Go
+    uses: actions/setup-go@v6
+    with:
+      go-version: '1.23'
+
+  - name: Setup JDK
+    uses: actions/setup-java@v5
+    with:
+      java-version: '17'
+      distribution: oracle
+
   - name: Setup Macaron
     run: |
       mkdir -p ${{ runner.temp }}/macaron
-      curl -o ${{ runner.temp }}/macaron/run_macaron.sh https://raw.githubusercontent.com/oracle/macaron/release/scripts/release_scripts/run_macaron.sh
-      chmod +x ${{ runner.temp }}/macaron/run_macaron.sh
-      echo "MACARON=${{ runner.temp }}/macaron/run_macaron.sh" >> $GITHUB_ENV
+      # curl -o ${{ runner.temp }}/macaron/run_macaron.sh https://raw.githubusercontent.com/oracle/macaron/release/scripts/release_scripts/run_macaron.sh
+      # chmod +x ${{ runner.temp }}/macaron/run_macaron.sh
+      # echo "MACARON=${{ runner.temp }}/macaron/run_macaron.sh" >> $GITHUB_ENV
+
+      cd ${{ runner.temp }}/macaron
+      git clone https://github.com/oracle/macaron.git .
+      make venv
+      source .venv/bin/activate
+      make setup
+      echo "MACARON=macaron" >> $GITHUB_ENV
+      echo "${{ runner.temp }}/macaron/.venv/bin" >> $GITHUB_PATH
     shell: bash
 
   - name: Run Macaron Analysis
@@ -138,9 +167,9 @@ runs:
             echo "vsa_report=VSA Not Generated." >> $GITHUB_OUTPUT
           fi
         fi
-      else
-        CMD="$CMD --existing-policy ${FILE}"
-        echo "$CMD --existing-policy ${FILE}"
+      elif [ -n "${{ inputs.policy_purl }}" ]; then
+        CMD="$CMD --existing-policy ${FILE} --package-url ${{ inputs.policy_purl }}"
+        echo "$CMD"
 
         eval "$CMD"
 
@@ -152,6 +181,8 @@ runs:
             echo "vsa_report=VSA Not Generated." >> $GITHUB_OUTPUT
           fi
         fi
+      else
+        echo "No file or pre-defined policy found for ${FILE} and policy_purl ${{ inputs.policy_purl }}"
       fi
     shell: bash
 
@@ -159,6 +190,6 @@ runs:
     if: ${{ inputs.upload_attestation && steps.run-macaron-policy-verification.outputs.vsa_report != 'VSA Not Generated.' }}
     uses: actions/attest@v2
     with:
-      subject-path: ${{ github.workspace }}
+      subject-path: ${{ inputs.subject_path }}
       predicate-type: https://slsa.dev/verification_summary/v1
       predicate-path: ${{ steps.run-macaron-policy-verification.outputs.vsa_report }}
