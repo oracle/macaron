@@ -537,7 +537,7 @@ class PyPIRegistry(PackageRegistry):
         return attestations[0]
 
 
-# as per https://github.com/pypi/inspector/blob/main/inspector/main.py line 125
+# As per https://github.com/pypi/inspector/blob/main/inspector/main.py line 125
 INSPECTOR_TEMPLATE = (
     "{inspector_url_scheme}://{inspector_url_netloc}/project/"
     "{name}/{version}/packages/{first}/{second}/{rest}/{filename}"
@@ -548,13 +548,13 @@ INSPECTOR_TEMPLATE = (
 class PyPIInspectorAsset:
     """The package PyPI inspector information."""
 
-    #: the pypi inspector link to the tarball
+    #: The pypi inspector link to the tarball
     package_sdist_link: str
 
-    #: the pypi inspector link(s) to the wheel(s)
+    #: The pypi inspector link(s) to the wheel(s)
     package_whl_links: list[str]
 
-    #: a mapping of inspector links to whether they are reachable
+    #: A mapping of inspector links to whether they are reachable
     package_link_reachability: dict[str, bool]
 
     def __bool__(self) -> bool:
@@ -626,7 +626,7 @@ class PyPIPackageJsonAsset:
     #: Name of the wheel file.
     wheel_filename: str
 
-    #: the pypi inspector information about this package
+    #: The pypi inspector information about this package
     inspector_asset: PyPIInspectorAsset
 
     #: The size of the asset (in bytes). This attribute is added to match the AssetLocator
@@ -971,7 +971,7 @@ class PyPIPackageJsonAsset:
         logger.debug("Found sha256 hash: %s", artifact_hash)
         return artifact_hash
 
-    def get_inspector_links(self) -> bool:
+    def get_inspector_src_preview_links(self) -> bool:
         """Generate PyPI inspector links for this package version's distributions and fill in the inspector asset.
 
         Returns
@@ -983,12 +983,12 @@ class PyPIPackageJsonAsset:
             return True
 
         if not self.package_json and not self.download(""):
-            logger.warning("No package metadata available, cannot get links")
+            logger.debug("No package metadata available, cannot get links")
             return False
 
         releases = self.get_releases()
         if releases is None:
-            logger.warning("Package has no releases, cannot create inspector links.")
+            logger.debug("Package has no releases, cannot create inspector links.")
             return False
 
         version = self.component_version
@@ -996,36 +996,34 @@ class PyPIPackageJsonAsset:
             version = self.get_latest_version()
 
         if version is None:
-            logger.warning("No version set, and no latest version exists. cannot create inspector links.")
+            logger.debug("No version set, and no latest version exists. cannot create inspector links.")
             return False
 
         distributions = json_extract(releases, [version], list)
 
         if not distributions:
-            logger.warning(
-                "Package has no distributions for release version %s. Cannot create inspector links.", version
-            )
+            logger.debug("Package has no distributions for release version %s. Cannot create inspector links.", version)
             return False
 
         for distribution in distributions:
             package_type = json_extract(distribution, ["packagetype"], str)
             if package_type is None:
-                logger.warning("The version %s has no 'package type' field in a distribution", version)
+                logger.debug("The version %s has no 'package type' field in a distribution", version)
                 continue
 
             name = json_extract(self.package_json, ["info", "name"], str)
             if name is None:
-                logger.warning("The version %s has no 'name' field in a distribution", version)
+                logger.debug("The version %s has no 'name' field in a distribution", version)
                 continue
 
             blake2b_256 = json_extract(distribution, ["digests", "blake2b_256"], str)
             if blake2b_256 is None:
-                logger.warning("The version %s has no 'blake2b_256' field in a distribution", version)
+                logger.debug("The version %s has no 'blake2b_256' field in a distribution", version)
                 continue
 
             filename = json_extract(distribution, ["filename"], str)
             if filename is None:
-                logger.warning("The version %s has no 'filename' field in a distribution", version)
+                logger.debug("The version %s has no 'filename' field in a distribution", version)
                 continue
 
             link = INSPECTOR_TEMPLATE.format(
@@ -1039,10 +1037,10 @@ class PyPIPackageJsonAsset:
                 filename=filename,
             )
 
-            # use a head request because we don't care about the response contents
+            # Use a head request because we don't care about the response contents.
             reachable = False
             if send_head_http_raw(link):
-                reachable = True  # link was reachable
+                reachable = True  # Link was reachable.
 
             if package_type == "sdist":
                 self.inspector_asset.package_sdist_link = link
@@ -1050,10 +1048,10 @@ class PyPIPackageJsonAsset:
             elif package_type == "bdist_wheel":
                 self.inspector_asset.package_whl_links.append(link)
                 self.inspector_asset.package_link_reachability[link] = reachable
-            else:  # no other package types exist, so else statement should never occur
+            else:  # No other package types exist, so else statement should never occur.
                 logger.debug("Unknown package distribution type: %s", package_type)
 
-        # if all distributions were invalid and went along a 'continue' path
+        # If all distributions were invalid and went along a 'continue' path.
         return bool(self.inspector_asset)
 
 
