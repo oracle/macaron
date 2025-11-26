@@ -34,7 +34,7 @@ RESOURCE_PATH = Path(__file__).parent.joinpath("resources")
         # from reaching the network.
         pytest.param("pkg:pypi/zlibxjson", CheckResultType.PASSED, False, id="test_malicious_pypi_package"),
         pytest.param("pkg:pypi/test", CheckResultType.UNKNOWN, False, id="test_unknown_pypi_package"),
-        pytest.param("pkg:maven:test/test", CheckResultType.UNKNOWN, False, id="test_non_pypi_package"),
+        pytest.param("pkg:maven/test", CheckResultType.UNKNOWN, False, id="test_non_pypi_package"),
         # TODO: including source code analysis that detects flow from a remote point to a file write may assist in resolving
         # the issue of this false negative.
         pytest.param(
