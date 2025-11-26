@@ -32,6 +32,7 @@ from macaron.util import (
     download_file_with_size_limit,
     html_is_js_challenge,
     send_get_http_raw,
+    send_head_http_raw,
     stream_file_with_size_limit,
 )
 
@@ -536,6 +537,67 @@ class PyPIRegistry(PackageRegistry):
         return attestations[0]
 
 
+# As per https://github.com/pypi/inspector/blob/main/inspector/main.py line 125
+INSPECTOR_TEMPLATE = (
+    "{inspector_url_scheme}://{inspector_url_netloc}/project/"
+    "{name}/{version}/packages/{first}/{second}/{rest}/{filename}"
+)
+
+
+@dataclass
+class PyPIInspectorAsset:
+    """The package PyPI inspector information."""
+
+    #: The pypi inspector link to the tarball
+    package_sdist_link: str
+
+    #: The pypi inspector link(s) to the wheel(s)
+    package_whl_links: list[str]
+
+    #: A mapping of inspector links to whether they are reachable
+    package_link_reachability: dict[str, bool]
+
+    def __bool__(self) -> bool:
+        """Determine if this inspector object is empty."""
+        if (self.package_sdist_link or self.package_whl_links) and self.package_link_reachability:
+            return True
+        return False
+
+    @staticmethod
+    def get_structure(pypi_inspector_url: str) -> list[str] | None:
+        """Get the folder structure of a package from the inspector HTML.
+
+        Parameters
+        ----------
+        pypi_inspector_url: str
+            The URL to a pypi inspector package page.
+
+        Returns
+        -------
+        list[str] | None
+            A list containing the folder structure, or None if it could not be extracted.
+        """
+        # TODO: may have to change this in the asset. Got a client challenge without the "/" appended.
+        response = send_get_http_raw(pypi_inspector_url)
+        if not response:
+            return None
+
+        html = response.content.decode("utf-8")
+        soup = BeautifulSoup(html, "html.parser")
+        # The package structure is present on an inspector.pypi.io page inside an unordered list (<ul>). This
+        # is the only unordered list on the page.
+        if soup.ul is None:
+            return None
+
+        # All the file names sit inside <li> elements in our unordered list, under <a> tags with the 'href' class.
+        files_list = []
+        for element in soup.ul.find_all("li"):
+            if element.a and element.a["href"]:
+                files_list.append(element.a["href"])
+
+        return files_list
+
+
 @dataclass
 class PyPIPackageJsonAsset:
     """The package JSON hosted on the PyPI registry."""
@@ -563,6 +625,9 @@ class PyPIPackageJsonAsset:
 
     #: Name of the wheel file.
     wheel_filename: str
+
+    #: The pypi inspector information about this package
+    inspector_asset: PyPIInspectorAsset
 
     #: The size of the asset (in bytes). This attribute is added to match the AssetLocator
     #: protocol and is not used because pypi API registry does not provide it.
@@ -906,6 +971,89 @@ class PyPIPackageJsonAsset:
         logger.debug("Found sha256 hash: %s", artifact_hash)
         return artifact_hash
 
+    def get_inspector_src_preview_links(self) -> bool:
+        """Generate PyPI inspector links for this package version's distributions and fill in the inspector asset.
+
+        Returns
+        -------
+        bool
+            True if the link generation was successful, False otherwise.
+        """
+        if self.inspector_asset:
+            return True
+
+        if not self.package_json and not self.download(""):
+            logger.debug("No package metadata available, cannot get links")
+            return False
+
+        releases = self.get_releases()
+        if releases is None:
+            logger.debug("Package has no releases, cannot create inspector links.")
+            return False
+
+        version = self.component_version
+        if self.component_version is None:
+            version = self.get_latest_version()
+
+        if version is None:
+            logger.debug("No version set, and no latest version exists. cannot create inspector links.")
+            return False
+
+        distributions = json_extract(releases, [version], list)
+
+        if not distributions:
+            logger.debug("Package has no distributions for release version %s. Cannot create inspector links.", version)
+            return False
+
+        for distribution in distributions:
+            package_type = json_extract(distribution, ["packagetype"], str)
+            if package_type is None:
+                logger.debug("The version %s has no 'package type' field in a distribution", version)
+                continue
+
+            name = json_extract(self.package_json, ["info", "name"], str)
+            if name is None:
+                logger.debug("The version %s has no 'name' field in a distribution", version)
+                continue
+
+            blake2b_256 = json_extract(distribution, ["digests", "blake2b_256"], str)
+            if blake2b_256 is None:
+                logger.debug("The version %s has no 'blake2b_256' field in a distribution", version)
+                continue
+
+            filename = json_extract(distribution, ["filename"], str)
+            if filename is None:
+                logger.debug("The version %s has no 'filename' field in a distribution", version)
+                continue
+
+            link = INSPECTOR_TEMPLATE.format(
+                inspector_url_scheme=self.pypi_registry.inspector_url_scheme,
+                inspector_url_netloc=self.pypi_registry.inspector_url_netloc,
+                name=name,
+                version=version,
+                first=blake2b_256[0:2],
+                second=blake2b_256[2:4],
+                rest=blake2b_256[4:],
+                filename=filename,
+            )
+
+            # Use a head request because we don't care about the response contents.
+            reachable = False
+            if send_head_http_raw(link):
+                reachable = True  # Link was reachable.
+
+            if package_type == "sdist":
+                self.inspector_asset.package_sdist_link = link
+                self.inspector_asset.package_link_reachability[link] = reachable
+            elif package_type == "bdist_wheel":
+                self.inspector_asset.package_whl_links.append(link)
+                self.inspector_asset.package_link_reachability[link] = reachable
+            else:  # No other package types exist, so else statement should never occur.
+                logger.debug("Unknown package distribution type: %s", package_type)
+
+        # If all distributions were invalid and went along a 'continue' path.
+        return bool(self.inspector_asset)
+
 
 def find_or_create_pypi_asset(
     asset_name: str, asset_version: str | None, pypi_registry_info: PackageRegistryInfo
@@ -943,6 +1091,8 @@ def find_or_create_pypi_asset(
         logger.debug("Failed to create PyPIPackageJson asset.")
         return None
 
-    asset = PyPIPackageJsonAsset(asset_name, asset_version, False, package_registry, {}, "", "", "")
+    asset = PyPIPackageJsonAsset(
+        asset_name, asset_version, False, package_registry, {}, "", "", "", PyPIInspectorAsset("", [], {})
+    )
     pypi_registry_info.metadata.append(asset)
     return asset
