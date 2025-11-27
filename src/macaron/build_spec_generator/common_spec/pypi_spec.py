@@ -331,6 +331,10 @@ class PyPIBuildSpec(
         '1.2.3'
         >>> spec.parse_generator_version("1.2.3")
         '1.2.3'
+        >>> spec.parse_generator_version("10.2.3")
+        '10.2.3'
+        >>> spec.parse_generator_version("(10.2.3)")
+        '10.2.3'
         >>> spec.parse_generator_version("a.b.c")
         ''
         >>> spec.parse_generator_version("1..2.3")
@@ -340,9 +344,9 @@ class PyPIBuildSpec(
         """
         # Two patterns p1 and p2 rather than just one
         # (p1)|(p2) as the latter complicates the group to return
-        pattern_plain = re.compile(r"^(\d(\.(\d)+)*)$")
+        pattern_plain = re.compile(r"^(\d+(\.(\d)+)*)$")
         plain_match = pattern_plain.match(literal_version_specification)
-        pattern_parenthesis = re.compile(r"^\((\d(\.(\d)+)*)\)$")
+        pattern_parenthesis = re.compile(r"^\((\d+(\.(\d)+)*)\)$")
         parenthesis_match = pattern_parenthesis.match(literal_version_specification)
         if plain_match:
             return plain_match.group(1)

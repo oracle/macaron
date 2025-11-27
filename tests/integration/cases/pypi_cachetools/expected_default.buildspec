@@ -23,7 +23,7 @@
         ]
     ],
     "build_requires": {
-        "setuptools": "==(80.9.0)",
+        "setuptools": "==80.9.0",
         "wheel": ""
     },
     "build_backends": [
