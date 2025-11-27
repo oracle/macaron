@@ -8,6 +8,8 @@ author: Oracle - github.com/oracle/macaron
 inputs:
   sbom_path:
     description: The path to the SBOM of the analysis target.
+  python_venv:
+    description: Path to a Python virtual environment to resolve Python dependencies (used with Python analyze).
   package_url:
     description: The PURL string used to uniquely identify the target software component for analysis.
   repo_path:
@@ -30,7 +32,6 @@ inputs:
     description: Show policy prelude.
   branch:
     description: The branch of the repository that we want to checkout.
-    default: ${{ github.ref_name }}
   deps_depth:
     description: 'The depth of the dependency resolution. 0: disable, 1: direct dependencies, inf: all transitive dependencies.'
     default: '0'
@@ -42,7 +43,7 @@ inputs:
     default: output
   upload_attestation:
     description: 'Upload the generated VSA report. default : false'
-    default: 'false'
+    default: false
   subject_path:
     description: Path to the artifact serving as the subject of the attestation.
     default: ${{ github.workspace }}
@@ -76,22 +77,33 @@ runs:
 
   - name: Setup Macaron
     run: |
-      mkdir -p ${{ runner.temp }}/macaron
-      # curl -o ${{ runner.temp }}/macaron/run_macaron.sh https://raw.githubusercontent.com/oracle/macaron/release/scripts/release_scripts/run_macaron.sh
-      # chmod +x ${{ runner.temp }}/macaron/run_macaron.sh
-      # echo "MACARON=${{ runner.temp }}/macaron/run_macaron.sh" >> $GITHUB_ENV
+      MACARON_DIR="${{ runner.temp }}/macaron"
+      VENV_MACARON="$MACARON_DIR/.venv/bin/macaron"
 
-      cd ${{ runner.temp }}/macaron
+      mkdir -p "$MACARON_DIR"
+      # curl -o $MACARON_DIR/run_macaron.sh https://raw.githubusercontent.com/oracle/macaron/release/scripts/release_scripts/run_macaron.sh
+      # chmod +x $MACARON_DIR/run_macaron.sh
+      # echo "MACARON=$MACARON_DIR/run_macaron.sh" >> $GITHUB_ENV
+
+      if [ -x "$VENV_MACARON" ]; then
+        echo "Using macaron from existing venv: $VENV_MACARON"
+        echo "MACARON=$VENV_MACARON" >> $GITHUB_ENV
+        echo "$MACARON_DIR/.venv/bin" >> $GITHUB_PATH
+        exit 0
+      fi
+
+      cd "$MACARON_DIR"
       git clone https://github.com/oracle/macaron.git .
       make venv
       source .venv/bin/activate
       make setup
-      echo "MACARON=macaron" >> $GITHUB_ENV
-      echo "${{ runner.temp }}/macaron/.venv/bin" >> $GITHUB_PATH
+      echo "MACARON=$VENV_MACARON" >> $GITHUB_ENV
+      echo "$MACARON_DIR/.venv/bin" >> $GITHUB_PATH
     shell: bash
 
   - name: Run Macaron Analysis
     id: run-macaron-analysis
+    if: ${{ inputs.repo_path != '' || inputs.package_url != '' }}
     run: |
       if [ -n "${{ inputs.defaults_path }}" ]; then
         CMD="$MACARON --defaults-path ${{ inputs.defaults_path }}"
@@ -103,13 +115,13 @@ runs:
 
       if [ -n "${{ inputs.repo_path }}" ]; then
         CMD="$CMD -rp ${{ inputs.repo_path }}"
-      elif [ -n "${{ inputs.purl }}" ]; then
-        CMD="$CMD -purl ${{ inputs.purl }}"
-      else
-        CMD="$CMD -rp ."
+      elif [ -n "${{ inputs.package_url }}" ]; then
+        CMD="$CMD -purl ${{ inputs.package_url }}"
       fi
 
-      CMD="$CMD --branch ${{ inputs.branch }}"
+      if [ -n "${{ inputs.branch }}" ]; then
+        CMD="$CMD --branch ${{ inputs.branch }}"
+      fi
 
       if [ -n "${{ inputs.digest }}" ]; then
         CMD="$CMD --digest ${{ inputs.digest }}"
@@ -121,6 +133,10 @@ runs:
         CMD="$CMD --sbom-path ${{ inputs.sbom_path }}"
       fi
 
+      if [ -n "${{ inputs.python_venv }}" ]; then
+        CMD="$CMD --python-venv ${{ inputs.python_venv }}"
+      fi
+
       if [ -n "${{ inputs.provenanace_file }}" ]; then
         CMD="$CMD --provenanace-file ${{ inputs.provenanace_file }}"
       fi
@@ -129,6 +145,7 @@ runs:
         CMD="$CMD --provenanace-expectation ${{ inputs.provenanace_expectation }}"
       fi
 
+      echo "Executing: $CMD"
       eval "$CMD"
 
       if [ $? -eq 0 ]; then
@@ -143,7 +160,7 @@ runs:
 
   - name: Run Macaron Policy Verification
     id: run-macaron-policy-verification
-    if: ${{ inputs.policy_file }}
+    if: ${{ inputs.policy_file != '' }}
     run: |
       FILE="${{ inputs.policy_file }}"
 
@@ -187,7 +204,7 @@ runs:
     shell: bash
 
   - name: Upload Attestation
-    if: ${{ inputs.upload_attestation && steps.run-macaron-policy-verification.outputs.vsa_report != 'VSA Not Generated.' }}
+    if: ${{ inputs.upload_attestation == 'true' && steps.run-macaron-policy-verification.outputs.vsa_report != 'VSA Not Generated.' }}
     uses: actions/attest@v2
     with:
       subject-path: ${{ inputs.subject_path }}
