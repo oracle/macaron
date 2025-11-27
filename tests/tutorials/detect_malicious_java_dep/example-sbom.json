@@ -1,0 +1,430 @@
+{
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.6",
+    "serialNumber": "urn:uuid:c10d1da5-1ee0-36ba-a439-2ade528e7f25",
+    "version": 1,
+    "metadata": {
+        "timestamp": "2025-11-26T15:44:59Z",
+        "lifecycles": [
+            {
+                "phase": "build"
+            }
+        ],
+        "tools": {
+            "components": [
+                {
+                    "type": "library",
+                    "author": "OWASP Foundation",
+                    "group": "org.cyclonedx",
+                    "name": "cyclonedx-maven-plugin",
+                    "version": "2.9.1",
+                    "description": "CycloneDX Maven plugin",
+                    "hashes": [
+                        {
+                            "alg": "MD5",
+                            "content": "9c7a565cf28cce58557d0c621c5ea4b1"
+                        },
+                        {
+                            "alg": "SHA-1",
+                            "content": "be882d5a22050bfa9d19090b1420c188617d0e1c"
+                        },
+                        {
+                            "alg": "SHA-256",
+                            "content": "698e0f37184a5b28c245c4065fd036dfce253b52f82fbb7113d81d36326cc249"
+                        },
+                        {
+                            "alg": "SHA-512",
+                            "content": "c0f0b11026858166f872a2eb54719492e5cecaa0bc9cd6b30b3ecb4a174eed220f4a1b5829d18d6734128e778d3cb3db7ffed177c92866133129cb29081814a0"
+                        },
+                        {
+                            "alg": "SHA-384",
+                            "content": "d80964707dfe5caca8c70521d5066f57589304c0a657e6fbc7c0614ea0fc7b3b3dbe7778361eee0f54ba111e9cb0ffcb"
+                        },
+                        {
+                            "alg": "SHA3-384",
+                            "content": "80bc3a275d9514bc457461ff52a72add8c7ecbbc01d8912efce57139016c544ee776981851be0a58fa977ab4221f703f"
+                        },
+                        {
+                            "alg": "SHA3-256",
+                            "content": "142317d6f245390f4fd2d0c100b16281b8dfc5c0c2cff86943bdcc97039cb699"
+                        },
+                        {
+                            "alg": "SHA3-512",
+                            "content": "af0fb9137c90b65d1a07f72e4d51ae509956cdb8800f35c961b037cdda1fe4a14ce3b496cef71ba85f1621affcfe29cd42704ae4191ff0b090a9602087c8997b"
+                        }
+                    ]
+                }
+            ]
+        },
+        "component": {
+            "type": "library",
+            "bom-ref": "pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar",
+            "group": "io.github.behnazh-w.demo",
+            "name": "example-maven-app",
+            "version": "2.0",
+            "purl": "pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar",
+            "externalReferences": [
+                {
+                    "type": "website",
+                    "url": "https://github.com/behnazh-w/example-maven-app"
+                },
+                {
+                    "type": "vcs",
+                    "url": "https://github.com/behnazh-w/example-maven-app"
+                }
+            ]
+        },
+        "properties": [
+            {
+                "name": "maven.goal",
+                "value": "makeAggregateBom"
+            },
+            {
+                "name": "maven.scopes",
+                "value": "compile,provided,runtime,system"
+            }
+        ]
+    },
+    "components": [
+        {
+            "type": "library",
+            "bom-ref": "pkg:maven/io.github.behnazh-w.demo/jackson-databind@1.0?type=jar",
+            "group": "io.github.behnazh-w.demo",
+            "name": "jackson-databind",
+            "version": "1.0",
+            "description": "A demo library for testing the Macaron tool",
+            "scope": "required",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "be31c635195335043d6e2e44418906c2"
+                },
+                {
+                    "alg": "SHA-1",
+                    "content": "77a79aaa1c7de70bc7004d423c489237b23021c3"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "a0cd1d383ec5534e5600fe0fddc97c65281b1a46710279c978088da7bec86eab"
+                },
+                {
+                    "alg": "SHA-512",
+                    "content": "a62f66daa198defe9116c4c7e7b57834a4488ea976ff15b1c997048bf5dc43bfb62d54a5d7c1df4c209d5bd47634f553b753fdf6eb692562c648cc7bf13467ee"
+                },
+                {
+                    "alg": "SHA-384",
+                    "content": "b04b78f3f6e443f03c9de8800b23606cbeb4593843cb614b544968fa6c4e55db597fb101cc8fea811c0b61dbccf9a3de"
+                },
+                {
+                    "alg": "SHA3-384",
+                    "content": "bfaba6d9123f80db01c973f8e0203b59277c3362a5440c4209f74315c2c981f2a975602811184177e32b7d40beaa15a1"
+                },
+                {
+                    "alg": "SHA3-256",
+                    "content": "d4c140c63a5baddfaee45212aeb7346889082e074b51fe13a83a23f1213e2a0f"
+                },
+                {
+                    "alg": "SHA3-512",
+                    "content": "cabb6575cfc06948131821560c5144428c8dab33b14e1da95bba6ce582dbf0b3d6cbc9236f3e16a2383712a07f25243aa3e315e9754cbc77ab1e986369b06285"
+                }
+            ],
+            "licenses": [
+                {
+                    "license": {
+                        "id": "Apache-2.0"
+                    }
+                }
+            ],
+            "purl": "pkg:maven/io.github.behnazh-w.demo/jackson-databind@1.0?type=jar",
+            "externalReferences": [
+                {
+                    "type": "website",
+                    "url": "https://github.com/behnazh-w/maven-demo"
+                },
+                {
+                    "type": "vcs",
+                    "url": "https://github.com/behnazh-w/maven-demo"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta2?type=jar",
+            "publisher": "The Apache Software Foundation",
+            "group": "org.apache.logging.log4j",
+            "name": "log4j-core",
+            "version": "3.0.0-beta2",
+            "description": "The Apache Log4j Implementation",
+            "scope": "required",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "fc0e3bdb0e8c6d00bf2dae4fa97ffc85"
+                },
+                {
+                    "alg": "SHA-1",
+                    "content": "49714119d6a0f3731d080381f5ddcd61fab27fc3"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "1d4b13972c5d77578fd56ee9ab03f4cd2aced58242310ac66326f1b5c5ac690b"
+                },
+                {
+                    "alg": "SHA-512",
+                    "content": "66f38d61d50e2abc046387c5a19b527bc3ce1062460c51b696dacf7d8683cdfb78abe5cdfcafaf4b0cd9a644962232fb2d478d53cfdb08bd0326c23846dbea5f"
+                },
+                {
+                    "alg": "SHA-384",
+                    "content": "dfd496ed209935dc99535cc0de29ed16eb0414a6fef23c285063916e2bdd1813755c8fa0e402e7aecb6af44b5a0b6337"
+                },
+                {
+                    "alg": "SHA3-384",
+                    "content": "a6eec11151cfb888ac2ce83d9345190b2d1769e987c80ce55137a28e901f0fac9e7454bf1cbd44938ba5e7f57c3ea61e"
+                },
+                {
+                    "alg": "SHA3-256",
+                    "content": "b33d1d044786f643d9e43d3cbad6e92e40b374769d12007b87835a092ad4b060"
+                },
+                {
+                    "alg": "SHA3-512",
+                    "content": "6ef91db6ec613ac1c5db8190feea9d584a39cc450a28d9eb35219d21f3d74987d057eb0e990e751c73ff5420afc99b8f9e87a756198c51ca130ed0b9b196f8be"
+                }
+            ],
+            "licenses": [
+                {
+                    "license": {
+                        "id": "Apache-2.0",
+                        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+                    }
+                }
+            ],
+            "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta2?type=jar",
+            "externalReferences": [
+                {
+                    "type": "website",
+                    "url": "https://logging.apache.org/log4j/3.x/log4j/log4j-core/"
+                },
+                {
+                    "type": "build-system",
+                    "url": "https://github.com/apache/logging-log4j2/actions"
+                },
+                {
+                    "type": "distribution",
+                    "url": "https://logging.apache.org/logging-parent/latest/#distribution"
+                },
+                {
+                    "type": "distribution-intake",
+                    "url": "https://repository.apache.org/service/local/staging/deploy/maven2"
+                },
+                {
+                    "type": "issue-tracker",
+                    "url": "https://github.com/apache/logging-log4j2/issues"
+                },
+                {
+                    "type": "mailing-list",
+                    "url": "https://lists.apache.org/list.html?log4j-user@logging.apache.org"
+                },
+                {
+                    "type": "vcs",
+                    "url": "https://github.com/apache/logging-log4j2"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-api@3.0.0-beta2?type=jar",
+            "publisher": "The Apache Software Foundation",
+            "group": "org.apache.logging.log4j",
+            "name": "log4j-api",
+            "version": "3.0.0-beta2",
+            "description": "The Apache Log4j API",
+            "scope": "required",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "6cfa4692020e5266fd35ab0c3e7ba586"
+                },
+                {
+                    "alg": "SHA-1",
+                    "content": "3df0cf119d50a1840f39e3dd75dbceebb46079f2"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "7cddcf837af4e251541c7b196dadfd1492e54e78217ada45496b629df42449c5"
+                },
+                {
+                    "alg": "SHA-512",
+                    "content": "cb0c42ce21821845208fd505a57ccba2cc919e86998a780eeaff6facb0d299aa191992ae7e10acd94aa7b8cefdc707b825297c07274bc938a34b0ecc1727b1cb"
+                },
+                {
+                    "alg": "SHA-384",
+                    "content": "bf3766c6d6fbde22d0f4b2a24aaa96a5091ef4d406aa34d1e035b62cf20ab4f229ef49397e2d35464a839292fefd056a"
+                },
+                {
+                    "alg": "SHA3-384",
+                    "content": "92cedff0a8c8515e6b51ef78620f65582e876422df69426a060313e3ad550a61741c36597b98e12cb5242d7c7950289c"
+                },
+                {
+                    "alg": "SHA3-256",
+                    "content": "e01222b0e004a6053e99f8086be42e08ec15edfc96af16377f5b983697f1497f"
+                },
+                {
+                    "alg": "SHA3-512",
+                    "content": "f44b488b7da960748389260715dc5444a299ef70214039146c52a3e4f218443e7073c47bcefdd94672f34d02397a858234f55a91ab81605276278820fbb7cd5e"
+                }
+            ],
+            "licenses": [
+                {
+                    "license": {
+                        "id": "Apache-2.0",
+                        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+                    }
+                }
+            ],
+            "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@3.0.0-beta2?type=jar",
+            "externalReferences": [
+                {
+                    "type": "website",
+                    "url": "https://logging.apache.org/log4j/3.x/log4j/log4j-api/"
+                },
+                {
+                    "type": "build-system",
+                    "url": "https://github.com/apache/logging-log4j2/actions"
+                },
+                {
+                    "type": "distribution",
+                    "url": "https://logging.apache.org/logging-parent/latest/#distribution"
+                },
+                {
+                    "type": "distribution-intake",
+                    "url": "https://repository.apache.org/service/local/staging/deploy/maven2"
+                },
+                {
+                    "type": "issue-tracker",
+                    "url": "https://github.com/apache/logging-log4j2/issues"
+                },
+                {
+                    "type": "mailing-list",
+                    "url": "https://lists.apache.org/list.html?log4j-user@logging.apache.org"
+                },
+                {
+                    "type": "vcs",
+                    "url": "https://github.com/apache/logging-log4j2"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-plugins@3.0.0-beta2?type=jar",
+            "publisher": "The Apache Software Foundation",
+            "group": "org.apache.logging.log4j",
+            "name": "log4j-plugins",
+            "version": "3.0.0-beta2",
+            "description": "Log4j Plugin Support",
+            "scope": "required",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "a9f17e4da2e631e0ed65514f3d632a44"
+                },
+                {
+                    "alg": "SHA-1",
+                    "content": "dc24089857163f36a6f3adb8b9036628def859c4"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "2984f58c4ca2a4c1f71ec3723237b40e202644b2f2fdfc148122998a37e02470"
+                },
+                {
+                    "alg": "SHA-512",
+                    "content": "45a6346910fbe2903ece8cabace42e9add1c1339f99022cff1392780fc0f5d8371f3fa5430bf363d65854524be3b2f1f1e9e9db24dd485e386e2db6ec5970c92"
+                },
+                {
+                    "alg": "SHA-384",
+                    "content": "96d45036218385ce4b3ec9aebd21bcc577b28d3242884f4c73f22c5ac2899846d1f8e81574d342ca2d9153a6d93abd7c"
+                },
+                {
+                    "alg": "SHA3-384",
+                    "content": "7733147482826f7ca62a2be0732bcc9255daee0b05b05f610883b5784c1128b25af670a6194747c2c170e7825b9ba0c7"
+                },
+                {
+                    "alg": "SHA3-256",
+                    "content": "22a0a2a6dea1c853789cb7315d479c40f8250f8638e4dd893a608008e15092db"
+                },
+                {
+                    "alg": "SHA3-512",
+                    "content": "faf5a56deab5cbeefb3e56ec52d979f3a80092fb3da639863825619a8b11cab6d779c4ffc9361850ae45532f4b0d5dd0556a113a2f239715f8c4aaa4bcf5537d"
+                }
+            ],
+            "licenses": [
+                {
+                    "license": {
+                        "id": "Apache-2.0",
+                        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+                    }
+                }
+            ],
+            "purl": "pkg:maven/org.apache.logging.log4j/log4j-plugins@3.0.0-beta2?type=jar",
+            "externalReferences": [
+                {
+                    "type": "website",
+                    "url": "https://logging.apache.org/log4j/3.x/log4j/log4j-plugins/"
+                },
+                {
+                    "type": "build-system",
+                    "url": "https://github.com/apache/logging-log4j2/actions"
+                },
+                {
+                    "type": "distribution",
+                    "url": "https://logging.apache.org/logging-parent/latest/#distribution"
+                },
+                {
+                    "type": "distribution-intake",
+                    "url": "https://repository.apache.org/service/local/staging/deploy/maven2"
+                },
+                {
+                    "type": "issue-tracker",
+                    "url": "https://github.com/apache/logging-log4j2/issues"
+                },
+                {
+                    "type": "mailing-list",
+                    "url": "https://lists.apache.org/list.html?log4j-user@logging.apache.org"
+                },
+                {
+                    "type": "vcs",
+                    "url": "https://github.com/apache/logging-log4j2"
+                }
+            ]
+        }
+    ],
+    "dependencies": [
+        {
+            "ref": "pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar",
+            "dependsOn": [
+                "pkg:maven/io.github.behnazh-w.demo/jackson-databind@1.0?type=jar",
+                "pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta2?type=jar"
+            ]
+        },
+        {
+            "ref": "pkg:maven/io.github.behnazh-w.demo/jackson-databind@1.0?type=jar",
+            "dependsOn": []
+        },
+        {
+            "ref": "pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta2?type=jar",
+            "dependsOn": [
+                "pkg:maven/org.apache.logging.log4j/log4j-api@3.0.0-beta2?type=jar",
+                "pkg:maven/org.apache.logging.log4j/log4j-plugins@3.0.0-beta2?type=jar"
+            ]
+        },
+        {
+            "ref": "pkg:maven/org.apache.logging.log4j/log4j-api@3.0.0-beta2?type=jar",
+            "dependsOn": []
+        },
+        {
+            "ref": "pkg:maven/org.apache.logging.log4j/log4j-plugins@3.0.0-beta2?type=jar",
+            "dependsOn": [
+                "pkg:maven/org.apache.logging.log4j/log4j-api@3.0.0-beta2?type=jar"
+            ]
+        }
+    ]
+}
