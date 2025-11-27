@@ -3,7 +3,7 @@
 
 """This module acts as the dispatcher to execute the right dockerfile generation logic for a buildspec's ecosystem."""
 
-import macaron.build_spec_generator.dockerfile.pypi_dockerfile_ouput as pypi_output
+import macaron.build_spec_generator.dockerfile.pypi_dockerfile_output as pypi_output
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict
 from macaron.errors import GenerateBuildSpecError
 
