@@ -68,6 +68,7 @@ runs:
     uses: actions/setup-go@v6
     with:
       go-version: '1.23'
+      cache: false
 
   - name: Setup JDK
     uses: actions/setup-java@v5
