@@ -209,5 +209,5 @@ jobs:
       uses: ./
       with:
         package_url: pkg:maven/io.micronaut/micronaut-core@4.3.10
-        defaults_path: ./resources/exclude_include_checks/defaults_exclude_witness.ini
+        defaults_path: ./tests/tutorials/exclude_include_checks/defaults_exclude_witness.ini
         output_dir: macaron_output/exclude_include_checks/excluded
