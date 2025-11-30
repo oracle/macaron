@@ -22,9 +22,9 @@ inputs:
     description: The path to the defaults configuration file.
   digest:
     description: The digest of the commit we want to checkout in the branch.
-  provenanace_expectation:
+  provenance_expectation:
     description: The path to provenance expectation file or directory.
-  provenanace_file:
+  provenance_file:
     description: The path to the provenance file in in-toto format.
   verify_provenance:
     description: Allow the analysis to attempt to verify provenance files as part of its normal operations.
@@ -138,12 +138,12 @@ runs:
         CMD="$CMD --python-venv ${{ inputs.python_venv }}"
       fi
 
-      if [ -n "${{ inputs.provenanace_file }}" ]; then
-        CMD="$CMD --provenanace-file ${{ inputs.provenanace_file }}"
+      if [ -n "${{ inputs.provenance_file }}" ]; then
+        CMD="$CMD --provenanace-file ${{ inputs.provenance_file }}"
       fi
 
-      if [ -n "${{ inputs.provenanace_expectation }}" ]; then
-        CMD="$CMD --provenanace-expectation ${{ inputs.provenanace_expectation }}"
+      if [ -n "${{ inputs.provenance_expectation }}" ]; then
+        CMD="$CMD --provenanace-expectation ${{ inputs.provenance_expectation }}"
       fi
 
       echo "Executing: $CMD"
