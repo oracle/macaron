@@ -139,11 +139,11 @@ runs:
       fi
 
       if [ -n "${{ inputs.provenance_file }}" ]; then
-        CMD="$CMD --provenanace-file ${{ inputs.provenance_file }}"
+        CMD="$CMD --provenance-file ${{ inputs.provenance_file }}"
       fi
 
       if [ -n "${{ inputs.provenance_expectation }}" ]; then
-        CMD="$CMD --provenanace-expectation ${{ inputs.provenance_expectation }}"
+        CMD="$CMD --provenance-expectation ${{ inputs.provenance_expectation }}"
       fi
 
       echo "Executing: $CMD"
