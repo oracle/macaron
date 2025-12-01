@@ -1,0 +1,35 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing two versions of a PyPI package to show the usefulness of being able to analyze a repository at multiple stages,
+  thereby allowing for a more accurate analysis when investigating artifacts that are, or use, outdated libraries.
+
+tags:
+- macaron-python-package
+- tutorial
+
+steps:
+- name: Run macaron analyze on an old version of arrow.
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/arrow@0.15.0
+- name: Run macaron analyze on a more recent version of arrow.
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/arrow@1.3.0
+- name: Run macaron verify-policy.
+  kind: verify
+  options:
+    policy: policy.dl
+  expect_fail: true
+- name: Compare verify policy result
+  kind: compare
+  options:
+    kind: policy_report
+    result: output/policy_report.json
+    expected: policy_report.json
