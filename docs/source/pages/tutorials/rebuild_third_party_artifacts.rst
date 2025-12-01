@@ -178,13 +178,13 @@ For example, `Daleq <https://github.com/binaryeq/daleq>`_ is a tool that disasse
 Rebuilding a Python wheel
 *************************
 
-The above workflow can be adopted to generate build specifications for Python wheels, often distributed via PyPi, as well. Consider the purl ``pkg:pypi/docker@7.1.0``. We can run analyze like:
+The above workflow can be adopted to generate build specifications for Python wheels, often distributed via PyPI, as well. Consider the purl ``pkg:pypi/docker@7.1.0``. We can run analyze like:
 
 .. code-block:: shell
 
     ./run_macaron.sh analyze -purl pkg:pypi/docker@7.1.0
 
-As with the Maven example, we can also generate a JSON buildspec if we wish to. For the purposes of this tutorial, we will generate a dockerfile output. To do so, we can run ``gen-build-spec`` with the output format flag set to ``dockerfile`` as below:
+Similar to the Maven example, it is also possible to generate a JSON buildspec. However, for this tutorial, we will generate a ``dockerfile`` output. To do this, run ``gen-build-spec`` with the ``--output-format`` flag set to ``dockerfile``, as shown below:
 
 .. code-block:: shell
 
