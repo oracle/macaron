@@ -17,6 +17,7 @@ For the full list of supported technologies, such as CI services, registries, an
 .. toctree::
    :maxdepth: 1
 
+   source_finder
    commit_finder
    detect_malicious_package
    rebuild_third_party_artifacts
@@ -27,4 +28,3 @@ For the full list of supported technologies, such as CI services, registries, an
    generate_verification_summary_attestation
    use_verification_summary_attestation
    exclude_include_checks
-   source_finder
