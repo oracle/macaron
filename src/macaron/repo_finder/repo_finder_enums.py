@@ -90,6 +90,21 @@ class RepoFinderInfo(Enum):
     #: Default value. Reported if the Repo Finder was not called. E.g. Because the repository URL was already present.
     NOT_USED = "Not used"
 
+    #: Reported if there was an error with the request sent to the NPM registry.
+    NPM_HTTP_ERROR = "NPM HTTP error"
+
+    #: Reported if there was an error parsing the JSON returned by the NPM registry.
+    NPM_JSON_ERROR = "NPM JSON error"
+
+    #: Reported if there was no matching URLs in the JSON returned by the NPM registry.
+    NPM_NO_URLS = "NPM no matching URLs"
+
+    #: Reported if the NPM registry is disabled or not present in the list of package registries.
+    NPM_NO_REGISTRY = "NPM registry disabled or absent"
+
+    #: Reported when a repository is found from the NPM registry.
+    FOUND_FROM_NPM = "Found from NPM"
+
 
 class CommitFinderInfo(Enum):
     """An Enum providing information on the outcomes of the Commit Finder being run for a software component."""

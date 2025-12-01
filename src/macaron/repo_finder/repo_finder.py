@@ -44,7 +44,7 @@ from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.console import access_handler
 from macaron.errors import CloneError, RepoCheckOutError
-from macaron.repo_finder import repo_finder_pypi, to_domain_from_known_purl_types
+from macaron.repo_finder import repo_finder_npm, repo_finder_pypi, to_domain_from_known_purl_types
 from macaron.repo_finder.commit_finder import find_commit, match_tags
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
@@ -173,6 +173,8 @@ def find_repo_alternative(
     found_repo = ""
     if purl.type == "pypi":
         found_repo, outcome = repo_finder_pypi.find_repo(purl, package_registries_info)
+    elif purl.type == "npm":
+        found_repo, outcome = repo_finder_npm.find_repo(purl, package_registries_info)
 
     if not found_repo:
         logger.debug(
@@ -297,38 +299,21 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
 
         if git_obj:
             digest = git_obj.get_head().hash
-
-        if not digest:
-            return False
     else:
         # Retrieve the tags using a remote git operation.
-        tags = get_tags_via_git_remote(found_repo)
-        if not tags:
-            return False
-
-        matches, _ = match_tags(list(tags.keys()), purl.name, purl.version)
-
-        if not matches:
-            return False
-
-        matched_tag = matches[0]
-        digest = tags[matched_tag]
+        if tags := get_tags_via_git_remote(found_repo):
+            matches, _ = match_tags(list(tags.keys()), purl.name, purl.version)
+            if matches:
+                matched_tag = matches[0]
+                digest = tags[matched_tag]
 
         if not digest:
-            logger.error("Could not find commit for purl / repository: %s / %s", purl, found_repo)
-            if not latest_version_fallback or checked_latest_purl:
-                return False
+            if latest_version_fallback and not checked_latest_purl:
 
-            # When not cloning the latest version must be checked here.
-            latest_version_purl = get_latest_purl_if_different(purl)
-            if not latest_version_purl:
-                return False
-
-            latest_repo = get_latest_repo_if_different(latest_version_purl, found_repo)
-            if not latest_repo:
-                return False
-
-            return find_source(str(purl), latest_repo, False)
+                # When not cloning the latest version must be checked here.
+                if latest_version_purl := get_latest_purl_if_different(purl):
+                    if latest_repo := get_latest_repo_if_different(latest_version_purl, found_repo):
+                        return find_source(str(purl), latest_repo, False)
 
     rich_handler = access_handler.get_handler()
     if not input_repo:
@@ -337,8 +322,9 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
     else:
         rich_handler.update_find_source_table("Repository URL:", input_repo)
 
-    logger.info("Found commit for PURL: %s", digest)
-    rich_handler.update_find_source_table("Commit Hash:", digest)
+    if digest:
+        logger.info("Found commit for PURL: %s", digest)
+        rich_handler.update_find_source_table("Commit Hash:", digest)
 
     if not generate_report(
         purl_string,
@@ -346,6 +332,10 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
         found_repo,
         os.path.join(global_config.output_path, "reports"),
     ):
+        return False
+
+    if not digest:
+        logger.error("Could not find commit for purl / repository: %s / %s", purl, found_repo)
         return False
 
     return True

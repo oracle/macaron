@@ -81,6 +81,9 @@ class DepsDevService:
             raise APIAccessError(f"The {section_name} section is missing in the .ini configuration file.")
         section = defaults[section_name]
 
+        if not section.getboolean("enabled", fallback=True):
+            raise APIAccessError("The DepsDev API is disabled in the .ini configuration file.")
+
         url_netloc = section.get("url_netloc")
         if not url_netloc:
             raise APIAccessError(

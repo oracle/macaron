@@ -1,0 +1,24 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Extracting repository URL and commit from provenance while Repo Finder is disabled.
+
+tags:
+- macaron-python-package
+- npm-registry-testcase
+
+steps:
+- name: Run find-source command
+  kind: find-source
+  options:
+    ini: config.ini
+    command_args:
+    - -purl
+    - pkg:npm/boolbase@1.0.0
+- name: Compare the content of the source JSON report.
+  kind: compare
+  options:
+    kind: find_source
+    result: output/reports/npm/boolbase/boolbase.source.json
+    expected: expected.source.json
