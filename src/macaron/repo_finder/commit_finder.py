@@ -4,6 +4,7 @@
 """This module contains the logic for matching PackageURL versions to repository commits via the tags they contain."""
 import logging
 import re
+from datetime import datetime
 from enum import Enum
 from re import Pattern
 
@@ -11,6 +12,7 @@ from gitdb.exc import BadName
 from packageurl import PackageURL
 from pydriller import Commit, Git
 
+from macaron.errors import GitTagError
 from macaron.repo_finder import repo_finder_deps_dev, to_domain_from_known_purl_types
 from macaron.repo_finder.repo_finder_enums import CommitFinderInfo
 from macaron.repo_finder.repo_utils import get_repo_tags
@@ -217,6 +219,13 @@ def extract_commit_from_version(git_obj: Git, version: str) -> tuple[str | None,
             # If the tag exists but represents a tree or blob, a ValueError will be raised when trying to retrieve its
             # commit.
             logger.debug("Failed to retrieve commit: %s", error)
+
+    if not commit:
+        try:
+            if parsed_sudo_version := parse_pseudo_version(version):
+                commit = git_obj.get_commit(parsed_sudo_version["commit_hash"])
+        except GitTagError:
+            pass
 
     if not commit:
         return None, CommitFinderInfo.REPO_PURL_FAILURE
@@ -889,3 +898,67 @@ def _create_suffix_tag_comparison_pattern(tag_part: str) -> Pattern | None:
 
     # Combine the alphabetic and zero-extended numeric parts.
     return re.compile(f"{versioned_string_result.group(1)}(0*){versioned_string_result.group(3)}", re.IGNORECASE)
+
+
+def parse_pseudo_version(version: str) -> dict[str, str]:
+    """
+    Parse a pseudo-version string into its components.
+
+    A pseudo-version, e.g., for Go packages has the format
+    vMAJOR.MINOR.PATCH-TIMESTAMP-GITHASH
+
+    Parameters
+    ----------
+    version : str
+        The pseudo-version string to parse.
+
+    Returns
+    -------
+    dict
+        Parsed components with the following keys:
+
+        - base_version : str
+            The semantic base version (e.g., 'v0.0.0').
+        - timestamp : str
+            The commit timestamp in UTC as string (YYYYMMDDHHMMSS).
+        - commit_hash : str
+            The Git commit hash.
+        - datetime : str
+            ISO 8601 formatted datetime.
+
+    Raises
+    ------
+    GitTagError
+        If the input string does not match the expected pseudo-version format.
+
+    Examples
+    --------
+    >>> parse_pseudo_version("v0.0.0-20251124214823-79d6a2a48846")
+    {'base_version': 'v0.0.0', 'timestamp': '20251124214823', 'commit_hash': '79d6a2a48846', 'datetime': '2025-11-24T21:48:23'}
+
+    >>> # This should raise a GitTagError
+    >>> parse_pseudo_version("v1.2.3")
+    Traceback (most recent call last):
+        ...
+    GitTagError: Not a valid pseudo-version: v1.2.3
+
+    """
+    pattern = r"^(v\d+\.\d+\.\d+)-(\d{14})-([0-9a-f]+)$"
+    match = re.match(pattern, version)
+    if not match:
+        raise GitTagError("Not a valid pseudo-version: " + version)
+    base_version, timestamp, commit_hash = match.groups()
+    try:
+        dt = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
+    except ValueError as error:
+        raise GitTagError(
+            f"Timestamp format for {timestamp} is incorrect or contains invalid date/time values."
+        ) from error
+    except TypeError as error:
+        raise GitTagError(f"Timestamp {timestamp} must be a string.") from error
+    return {
+        "base_version": base_version,
+        "timestamp": timestamp,
+        "commit_hash": commit_hash,
+        "datetime": dt.isoformat(),
+    }

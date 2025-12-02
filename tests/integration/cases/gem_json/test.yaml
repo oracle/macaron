@@ -2,23 +2,21 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Extracting repository URL and commit for an npm package while Repo Finder is disabled.
+  Extracting repository URL and commit for gem.
 
 tags:
 - macaron-python-package
-- npm-registry-testcase
 
 steps:
 - name: Run find-source command
   kind: find-source
   options:
-    ini: config.ini
     command_args:
     - -purl
-    - pkg:npm/boolbase@1.0.0
+    - pkg:gem/json@2.16.0
 - name: Compare the content of the source JSON report.
   kind: compare
   options:
     kind: find_source
-    result: output/reports/npm/boolbase/boolbase.source.json
+    result: output/reports/gem/json/json.source.json
     expected: expected.source.json

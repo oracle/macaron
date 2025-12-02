@@ -1,0 +1,8 @@
+{
+    "purl": "pkg:gem/json@2.16.0",
+    "commit": "5a12067f8878d94739d70e0085b91c88fd9e31d6",
+    "repo": "https://github.com/ruby/json",
+    "repo_validated": false,
+    "commit_validated": false,
+    "url": "https://github.com/ruby/json/commit/5a12067f8878d94739d70e0085b91c88fd9e31d6"
+}

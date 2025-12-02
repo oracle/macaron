@@ -43,9 +43,9 @@ from pydriller import Git
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.console import access_handler
-from macaron.errors import CloneError, RepoCheckOutError
+from macaron.errors import CloneError, GitTagError, RepoCheckOutError
 from macaron.repo_finder import repo_finder_npm, repo_finder_pypi, to_domain_from_known_purl_types
-from macaron.repo_finder.commit_finder import find_commit, match_tags
+from macaron.repo_finder.commit_finder import find_commit, match_tags, parse_pseudo_version
 from macaron.repo_finder.repo_finder_base import BaseRepoFinder
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_finder_enums import CommitFinderInfo, RepoFinderInfo
@@ -102,6 +102,8 @@ def find_repo(
         "nuget",
         "cargo",
         "npm",
+        "golang",
+        "gem",
     }:
         repo_finder = DepsDevRepoFinder()
     else:
@@ -267,7 +269,7 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
     if not purl.version:
         purl = get_latest_purl_if_different(purl)
         if not purl or not purl.version:
-            logger.error("PURL is missing version.")
+            logger.error("PURL is missing version and unable to find the latest version.")
             return False
         checked_latest_purl = True
 
@@ -314,6 +316,11 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
                 if latest_version_purl := get_latest_purl_if_different(purl):
                     if latest_repo := get_latest_repo_if_different(latest_version_purl, found_repo):
                         return find_source(str(purl), latest_repo, False)
+            try:
+                if parsed_sudo_version := parse_pseudo_version(purl.version):
+                    digest = parsed_sudo_version["commit_hash"]
+            except GitTagError:
+                pass
 
     rich_handler = access_handler.get_handler()
     if not input_repo:
