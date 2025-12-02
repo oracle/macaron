@@ -38,7 +38,7 @@ jobs:
   #     - name: Run Macaron (verify policy - has-hosted-build)
   #       uses: ./
   #       with:
-  #         policy_file: './tests/tutorials/commit_finder/has-hosted-build.dl'
+  #         policy_file: './tests/tutorial_resources/commit_finder/has-hosted-build.dl'
   #         output_dir: 'macaron_output/commit_finder'
 
   tutorial-detect-malicious-package:
@@ -55,11 +55,11 @@ jobs:
     - name: Run Macaron (verify policy - check-django)
       uses: ./
       with:
-        policy_file: ./tests/tutorials/detect_malicious_package/check-django.dl
+        policy_file: ./tests/tutorial_resources/detect_malicious_package/check-django.dl
         output_dir: macaron_output/detect_malicious_package
 
     - name: Setup Python for analyzed venv
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
       with:
         python-version: 3.11.13
 
@@ -87,7 +87,7 @@ jobs:
     - name: Run Macaron (verify policy - check-dependencies)
       uses: ./
       with:
-        policy_file: ./tests/tutorials/detect_malicious_package/check-dependencies.dl
+        policy_file: ./tests/tutorial_resources/detect_malicious_package/check-dependencies.dl
         output_dir: macaron_output/detect_malicious_package
 
   tutorial-detect-vulnerable-actions:
@@ -105,7 +105,7 @@ jobs:
     - name: Run Macaron (verify policy - github_actions_vulns for repo)
       uses: ./
       with:
-        policy_file: ./tests/tutorials/detect_vulnerable_github_actions/check_github_actions_vuln_repo.dl
+        policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_repo.dl
         output_dir: macaron_output/detect_vulnerable_github_actions
 
     - name: Run Macaron (analyze purl - log4j-core example)
@@ -117,7 +117,7 @@ jobs:
     - name: Run Macaron (verify policy - github_actions_vulns for purl)
       uses: ./
       with:
-        policy_file: ./tests/tutorials/detect_vulnerable_github_actions/check_github_actions_vuln_purl.dl
+        policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_purl.dl
         output_dir: macaron_output/detect_vulnerable_github_actions
 
   tutorial-provenance:
@@ -134,7 +134,7 @@ jobs:
     - name: Run Macaron (verify provenance - semver)
       uses: ./
       with:
-        policy_file: ./tests/tutorials/provenance/has-verified-provenance_semver.dl
+        policy_file: ./tests/tutorial_resources/provenance/has-verified-provenance_semver.dl
         output_dir: macaron_output/provenance
 
     - name: Run Macaron (analyze toga 0.5.1 - PyPI provenance)
@@ -146,7 +146,7 @@ jobs:
     - name: Run Macaron (verify provenance - toga PyPI)
       uses: ./
       with:
-        policy_file: ./tests/tutorials/provenance/has-verified-provenance_toga.dl
+        policy_file: ./tests/tutorial_resources/provenance/has-verified-provenance_toga.dl
         output_dir: macaron_output/provenance
 
     - name: Run Macaron (analyze toga 0.4.8 - GitHub attestation)
@@ -158,7 +158,7 @@ jobs:
     - name: Run Macaron (verify provenance - toga GitHub)
       uses: ./
       with:
-        policy_file: ./tests/tutorials/provenance/has-verified-provenance_toga.dl
+        policy_file: ./tests/tutorial_resources/provenance/has-verified-provenance_toga.dl
         output_dir: macaron_output/provenance
 
     - name: Run Macaron (analyze urllib3 2.0.0a1 - GitHub attestation)
@@ -170,7 +170,7 @@ jobs:
     - name: Run Macaron (verify provenance - urllib3)
       uses: ./
       with:
-        policy_file: ./tests/tutorials/provenance/has-verified-provenance_urllib3.dl
+        policy_file: ./tests/tutorial_resources/provenance/has-verified-provenance_urllib3.dl
         output_dir: macaron_output/provenance
 
   tutorial-detect-malicious-java-dep:
@@ -190,7 +190,7 @@ jobs:
     - name: Run Macaron (verify policy - detect-malicious-upload)
       uses: ./
       with:
-        policy_file: ./tests/tutorials/detect_malicious_java_dep/example-maven-app.dl
+        policy_file: ./tests/tutorial_resources/detect_malicious_java_dep/example-maven-app.dl
         output_dir: macaron_output/detect_malicious_java_dep
 
   tutorial-exclude-include-checks:
@@ -209,5 +209,5 @@ jobs:
       uses: ./
       with:
         package_url: pkg:maven/io.micronaut/micronaut-core@4.3.10
-        defaults_path: ./tests/tutorials/exclude_include_checks/defaults_exclude_witness.ini
+        defaults_path: ./tests/tutorial_resources/exclude_include_checks/defaults_exclude_witness.ini
         output_dir: macaron_output/exclude_include_checks/excluded
