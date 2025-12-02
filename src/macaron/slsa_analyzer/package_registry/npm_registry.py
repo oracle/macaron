@@ -373,6 +373,8 @@ class NPMPackageJsonAsset:
         project_links = {}
         if url := json_extract(self.package_json, ["repository", "url"], str):
             project_links["repository_url"] = url
+        if url := json_extract(self.package_json, ["repository", "git"], str):
+            project_links["repository_git"] = url
         if url := json_extract(self.package_json, ["bugs", "url"], str):
             project_links["bugs_url"] = url
         if url := json_extract(self.package_json, ["bugs", "homepage"], str):
