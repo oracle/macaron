@@ -30,7 +30,7 @@ inputs:
   verify_provenance:
     description: Allow the analysis to attempt to verify provenance files as part of its normal operations.
   show_prelude:
-    description: Show policy prelude.
+    description: Shows the Datalog prelude for the database.
   branch:
     description: The branch of the repository that we want to checkout.
   deps_depth:
@@ -54,7 +54,7 @@ outputs:
     description: Paths to the Macaron analysis report
     value: ${{ steps.run-macaron-policy-verification.outputs.policy_report }}
   vsa_report:
-    description: Verification Summary Attestations
+    description: Verification Summary Attestation
     value: ${{ steps.run-macaron-policy-verification.outputs.vsa_report }}
 
 runs:
