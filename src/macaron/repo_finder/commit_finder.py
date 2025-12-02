@@ -17,6 +17,7 @@ from macaron.repo_finder import repo_finder_deps_dev, to_domain_from_known_purl_
 from macaron.repo_finder.repo_finder_enums import CommitFinderInfo
 from macaron.repo_finder.repo_utils import get_repo_tags
 from macaron.slsa_analyzer.git_service import GIT_SERVICES
+from macaron.slsa_analyzer.git_url import is_commit_hash
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -933,6 +934,11 @@ def parse_pseudo_version(version: str) -> dict[str, str]:
 
     Examples
     --------
+    >>> parse_pseudo_version("")
+    Traceback (most recent call last):
+        ...
+    GitTagError: Not a valid pseudo-version:
+
     >>> parse_pseudo_version("v0.0.0-20251124214823-79d6a2a48846")
     {'base_version': 'v0.0.0', 'timestamp': '20251124214823', 'commit_hash': '79d6a2a48846', 'datetime': '2025-11-24T21:48:23'}
 
@@ -946,8 +952,10 @@ def parse_pseudo_version(version: str) -> dict[str, str]:
     pattern = r"^(v\d+\.\d+\.\d+)-(\d{14})-([0-9a-f]+)$"
     match = re.match(pattern, version)
     if not match:
-        raise GitTagError("Not a valid pseudo-version: " + version)
+        raise GitTagError(f"Not a valid pseudo-version: {version}")
     base_version, timestamp, commit_hash = match.groups()
+    if not is_commit_hash(commit_hash):
+        raise GitTagError(f"Invalid commit hash {commit_hash} found in the pseudo-version: {version}")
     try:
         dt = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
     except ValueError as error:
