@@ -27,8 +27,6 @@ inputs:
     description: The path to provenance expectation file or directory.
   provenance_file:
     description: The path to the provenance file in in-toto format.
-  verify_provenance:
-    description: Allow the analysis to attempt to verify provenance files as part of its normal operations.
   show_prelude:
     description: Shows the Datalog prelude for the database.
   branch:
@@ -46,7 +44,7 @@ inputs:
     description: 'Upload the generated VSA report. default : false'
     default: false
   subject_path:
-    description: Path to the artifact serving as the subject of the attestation.
+    description: 'Path to the artifact serving as the subject of the attestation, the default is current repository. default : ${{ github.workspace }}'
     default: ${{ github.workspace }}
 
 outputs:
