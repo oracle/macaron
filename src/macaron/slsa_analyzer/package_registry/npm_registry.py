@@ -2,18 +2,24 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides abstractions for the npm package registry."""
+from __future__ import annotations
 
 import json
 import logging
-from typing import NamedTuple
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, NamedTuple
 from urllib.parse import SplitResult, urlunsplit
 
 import requests
 
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError
+from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
 from macaron.util import send_get_http_raw
+
+if TYPE_CHECKING:
+    from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -91,6 +97,39 @@ class NPMRegistry(PackageRegistry):
                 f'The "request_timeout" value in section [{section_name}]'
                 f"of the .ini configuration file is invalid: {error}",
             ) from error
+
+    def download_package_json(self, url: str) -> dict:
+        """Download the package JSON metadata from the npm registry.
+
+        Parameters
+        ----------
+        url: str
+            The package JSON url.
+
+        Returns
+        -------
+        dict
+            The JSON response if the request is successful.
+
+        Raises
+        ------
+        InvalidHTTPResponseError
+            If the HTTP request to the registry fails or an unexpected response is returned.
+        """
+        response = send_get_http_raw(url, headers=None, timeout=self.request_timeout)
+
+        if not response:
+            logger.debug("Unable to find package JSON metadata using URL: %s", url)
+            raise InvalidHTTPResponseError(f"Unable to find package JSON metadata using URL: {url}.")
+
+        try:
+            res_obj = response.json()
+        except requests.exceptions.JSONDecodeError as error:
+            raise InvalidHTTPResponseError(f"Failed to process response from npm for {url}.") from error
+        if not isinstance(res_obj, dict):
+            raise InvalidHTTPResponseError(f"Empty response returned by {url} .")
+
+        return res_obj
 
     def download_attestation_payload(self, url: str, download_path: str) -> bool:
         """Download the npm attestation from npm registry.
@@ -228,6 +267,121 @@ class NPMRegistry(PackageRegistry):
         return version
 
 
+@dataclass
+class NPMPackageJsonAsset:
+    """The package JSON hosted on the npm registry."""
+
+    #: The component name.
+    component_name: str
+
+    #: The optional scope of a package on npm, which is used as the namespace in a PURL string.
+    #: See https://docs.npmjs.com/cli/v10/using-npm/scope to know about npm scopes.
+    #: See https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst#npm for the namespace in an npm PURL string.
+    namespace: str | None
+
+    #: The version of the asset.
+    version: str | None
+
+    #: The npm registry.
+    npm_registry: NPMRegistry
+
+    #: The asset content.
+    package_json: dict
+
+    #: The source code temporary location name.
+    package_sourcecode_path: str
+
+    #: The artifact temporary location name.
+    artifact_path: str
+
+    #: Name of the artifact file.
+    artifact_filename: str
+
+    #: Whether the component of this asset has a related repository.
+    has_repository: bool
+
+    #: The size of the asset (in bytes). This attribute is added to match the AssetLocator
+    #: protocol and is not used because npm API registry does not provide it.
+    @property
+    def size_in_bytes(self) -> int:
+        """Get the size of asset."""
+        return -1
+
+    @property
+    def name(self) -> str:
+        """Get the asset name."""
+        return "package_json"
+
+    @property
+    def url(self) -> str:
+        """Get the download URL of the asset.
+
+        Note: we assume that the path parameters used to construct the URL are sanitized already.
+
+        Returns
+        -------
+        str
+        """
+        # Build the path parameters.
+        path_params = []
+        if self.namespace:
+            path_params.append(self.namespace)
+        path_params.append(self.component_name)
+        # Check that version is not an empty string.
+        if self.version:
+            path_params.append(self.version)
+        path = "/".join(path_params)
+
+        return urlunsplit(
+            SplitResult(
+                scheme="https",
+                netloc=self.npm_registry.hostname,
+                path=path,
+                query="",
+                fragment="",
+            )
+        )
+
+    def download(self, dest: str) -> bool:  # pylint: disable=unused-argument
+        """Download the package JSON metadata and store it in the package_json attribute.
+
+        Returns
+        -------
+        bool
+            ``True`` if the asset is downloaded successfully; ``False`` if not.
+        """
+        try:
+            self.package_json = self.npm_registry.download_package_json(self.url)
+            return True
+        except InvalidHTTPResponseError as error:
+            logger.debug(error)
+            return False
+
+    def get_project_links(self) -> dict | None:
+        """Retrieve the project links from the base metadata.
+
+        This method accesses the "info" section of the base metadata to extract the "project_urls" dictionary,
+        which contains various links related to the project.
+
+        Returns
+        -------
+        dict | None
+            Containing project URLs where the keys are the names of the links
+            and the values are the corresponding URLs. Returns None if the "project_urls"
+            section is not found in the base metadata.
+        """
+        project_links = {}
+        if url := json_extract(self.package_json, ["repository", "url"], str):
+            project_links["repository_url"] = url
+        if url := json_extract(self.package_json, ["repository", "git"], str):
+            project_links["repository_git"] = url
+        if url := json_extract(self.package_json, ["bugs", "url"], str):
+            project_links["bugs_url"] = url
+        if url := json_extract(self.package_json, ["bugs", "homepage"], str):
+            project_links["homepage_url"] = url
+        return project_links or None
+
+
 class NPMAttestationAsset(NamedTuple):
     """An attestation asset hosted on the npm registry.
 
@@ -307,3 +461,46 @@ class NPMAttestationAsset(NamedTuple):
         except InvalidHTTPResponseError as error:
             logger.debug(error)
             return False
+
+
+def find_or_create_npm_asset(
+    component_name: str, namespace: str | None, version: str | None, npm_registry_info: PackageRegistryInfo
+) -> NPMPackageJsonAsset | None:
+    """Find the matching asset in the provided package registry information, or if not found, create and add it.
+
+    Parameters
+    ----------
+    component_name: str
+        The name of the component (artifact).
+    namespace: str | None
+        The namespace of the component.
+    version: str | None
+        The version of the component.
+    npm_registry_info:
+        The package registry information. If a new asset is created, it will be added to the metadata of this registry.
+
+    Returns
+    -------
+    NPMPackageJsonAsset | None
+        The asset, or None if not found.
+    """
+    asset = next(
+        (
+            asset
+            for asset in npm_registry_info.metadata
+            if isinstance(asset, NPMPackageJsonAsset) and asset.component_name == component_name
+        ),
+        None,
+    )
+
+    if asset:
+        return asset
+
+    package_registry = npm_registry_info.package_registry
+    if not isinstance(package_registry, NPMRegistry):
+        logger.debug("Failed to create NPMPackageJson asset.")
+        return None
+
+    asset = NPMPackageJsonAsset(component_name, namespace, version, package_registry, {}, "", "", "", False)
+    npm_registry_info.metadata.append(asset)
+    return asset

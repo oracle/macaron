@@ -41,6 +41,10 @@ Where ``artifact_details`` varies based on the provided ``package_type``. Exampl
      - ``pkg:nuget/EnterpriseLibrary.Common@6.0.1304``
    * - NPM (NodeJS)
      - ``pkg:npm/@angular/animation@12.3.1``
+   * - Golang
+     - ``pkg:golang/google.golang.org/genproto@v0.0.0-20251124214823-79d6a2a4884``
+   * - Gem (RubyGems)
+     - ``pkg:gem/json@2.16.0``
 
 For more detailed information on converting a given artifact into a PURL, see `PURL Specification <https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst>`_ and `PURL Types <https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst>`_
 

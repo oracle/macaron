@@ -39,7 +39,7 @@ def find_repo(
     """
     pypi_info = None
     if package_registries_info:
-        # Find the package registry info object that contains the PyPI registry and has the pypi build tool.
+        # Find the package registry info object that contains the PyPI registry.
         pypi_info = next(
             (info for info in package_registries_info if isinstance(info.package_registry, PyPIRegistry)),
             None,

@@ -113,7 +113,7 @@ def create_report(purl: str, commit: str, repo: str) -> str:
         The report as a JSON string.
     """
     data = {"purl": purl, "commit": commit, "repo": repo, "repo_validated": False, "commit_validated": False, "url": ""}
-    if urlparse(repo).hostname == "github.com":
+    if commit:
         data["url"] = f"{repo}/commit/{commit}"
     return json.dumps(data, indent=4)
 

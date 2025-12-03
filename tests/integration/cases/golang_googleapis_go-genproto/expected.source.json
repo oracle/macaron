@@ -1,0 +1,8 @@
+{
+    "purl": "pkg:golang/google.golang.org/genproto@v0.0.0-20251124214823-79d6a2a4884",
+    "commit": "79d6a2a4884",
+    "repo": "https://github.com/googleapis/go-genproto",
+    "repo_validated": false,
+    "commit_validated": false,
+    "url": "https://github.com/googleapis/go-genproto/commit/79d6a2a4884"
+}
