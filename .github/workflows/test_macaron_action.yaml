@@ -1,0 +1,213 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+name: Test Macaron Action (tutorials)
+
+on:
+  push:
+    paths:
+    - action.yaml
+  pull_request:
+    paths:
+    - action.yaml
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  attestations: write
+
+jobs:
+  tutorial-commit-finder:
+    name: Analyzing and comparing different versions of an artifact
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8   # v5.0.0
+
+    - name: Run Macaron (analyze arrow@1.3.0)
+      uses: ./
+      with:
+        package_url: pkg:pypi/arrow@1.3.0
+        output_dir: macaron_output/commit_finder
+
+    - name: Run Macaron (analyze arrow@0.15.0)
+      uses: ./
+      with:
+        package_url: pkg:pypi/arrow@0.15.0
+        output_dir: macaron_output/commit_finder
+
+    - name: Run Macaron (verify policy - has-hosted-build)
+      uses: ./
+      with:
+        policy_file: ./tests/tutorial_resources/commit_finder/has-hosted-build.dl
+        output_dir: macaron_output/commit_finder
+
+  tutorial-detect-malicious-package:
+    name: Detecting malicious packages
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - name: Run Macaron (analyze django@5.0.6 without dependencies)
+      uses: ./
+      with:
+        package_url: pkg:pypi/django@5.0.6
+        output_dir: macaron_output/detect_malicious_package
+
+    - name: Run Macaron (verify policy - check-django)
+      uses: ./
+      with:
+        policy_file: ./tests/tutorial_resources/detect_malicious_package/check-django.dl
+        output_dir: macaron_output/detect_malicious_package
+
+    - name: Setup Python for analyzed venv
+      uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+      with:
+        python-version: 3.11.13
+
+    - name: Create and populate analyzed venv
+      run: |
+        python -m venv /tmp/.django_venv
+        source /tmp/.django_venv/bin/activate
+        pip install --upgrade pip
+        pip install django==5.0.6
+      shell: bash
+
+    - name: Clean previous macaron output
+      run: |
+        rm -rf macaron_output/detect_malicious_package
+      shell: bash
+
+    - name: Run Macaron (analyze django@5.0.6 with direct dependencies)
+      uses: ./
+      with:
+        package_url: pkg:pypi/django@5.0.6
+        output_dir: macaron_output/detect_malicious_package
+        deps_depth: '1'
+        python_venv: /tmp/.django_venv
+
+    - name: Run Macaron (verify policy - check-dependencies)
+      uses: ./
+      with:
+        policy_file: ./tests/tutorial_resources/detect_malicious_package/check-dependencies.dl
+        output_dir: macaron_output/detect_malicious_package
+
+  tutorial-detect-vulnerable-actions:
+    name: How to detect vulnerable GitHub Actions
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+    - name: Run Macaron (analyze repo - apache/logging-log4j2)
+      uses: ./
+      with:
+        repo_path: https://github.com/apache/logging-log4j2
+        output_dir: macaron_output/detect_vulnerable_github_actions
+
+    - name: Run Macaron (verify policy - github_actions_vulns for repo)
+      uses: ./
+      with:
+        policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_repo.dl
+        output_dir: macaron_output/detect_vulnerable_github_actions
+
+    - name: Run Macaron (analyze purl - log4j-core example)
+      uses: ./
+      with:
+        package_url: pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta3
+        output_dir: macaron_output/detect_vulnerable_github_actions
+
+    - name: Run Macaron (verify policy - github_actions_vulns for purl)
+      uses: ./
+      with:
+        policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_purl.dl
+        output_dir: macaron_output/detect_vulnerable_github_actions
+
+  tutorial-provenance:
+    name: Provenance discovery, extraction, and verification
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - name: Run Macaron (analyze semver 7.7.2)
+      uses: ./
+      with:
+        package_url: pkg:npm/semver@7.7.2
+        output_dir: macaron_output/provenance
+
+    - name: Run Macaron (verify provenance - semver)
+      uses: ./
+      with:
+        policy_file: ./tests/tutorial_resources/provenance/has-verified-provenance_semver.dl
+        output_dir: macaron_output/provenance
+
+    - name: Run Macaron (analyze toga 0.5.1 - PyPI provenance)
+      uses: ./
+      with:
+        package_url: pkg:pypi/toga@0.5.1
+        output_dir: macaron_output/provenance
+
+    - name: Run Macaron (verify provenance - toga PyPI)
+      uses: ./
+      with:
+        policy_file: ./tests/tutorial_resources/provenance/has-verified-provenance_toga.dl
+        output_dir: macaron_output/provenance
+
+    - name: Run Macaron (analyze toga 0.4.8 - GitHub attestation)
+      uses: ./
+      with:
+        package_url: pkg:pypi/toga@0.4.8
+        output_dir: macaron_output/provenance
+
+    - name: Run Macaron (verify provenance - toga GitHub)
+      uses: ./
+      with:
+        policy_file: ./tests/tutorial_resources/provenance/has-verified-provenance_toga.dl
+        output_dir: macaron_output/provenance
+
+    - name: Run Macaron (analyze urllib3 2.0.0a1 - GitHub attestation)
+      uses: ./
+      with:
+        package_url: pkg:pypi/urllib3@2.0.0a1
+        output_dir: macaron_output/provenance
+
+    - name: Run Macaron (verify provenance - urllib3)
+      uses: ./
+      with:
+        policy_file: ./tests/tutorial_resources/provenance/has-verified-provenance_urllib3.dl
+        output_dir: macaron_output/provenance
+
+  tutorial-detect-malicious-java-dep:
+    name: Detecting Java dependencies manually uploaded to Maven Central
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - name: Run Macaron (analyze example-maven-app with SBOM)
+      uses: ./
+      with:
+        package_url: pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar
+        repo_path: https://github.com/behnazh-w/example-maven-app
+        output_dir: macaron_output/detect_malicious_java_dep
+        sbom_path: ./resources/detect_malicious_java_dep/example-sbom.json
+        deps_depth: '1'
+
+    - name: Run Macaron (verify policy - detect-malicious-upload)
+      uses: ./
+      with:
+        policy_file: ./tests/tutorial_resources/detect_malicious_java_dep/example-maven-app.dl
+        output_dir: macaron_output/detect_malicious_java_dep
+
+  tutorial-exclude-include-checks:
+    name: Exclude and include checks in Macaron
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+    - name: Run Macaron (analyze micronaut-core with default checks)
+      uses: ./
+      with:
+        package_url: pkg:maven/io.micronaut/micronaut-core@4.3.10
+        output_dir: macaron_output/exclude_include_checks/normal
+
+    - name: Run Macaron (analyze micronaut-core excluding witness check via defaults.ini)
+      uses: ./
+      with:
+        package_url: pkg:maven/io.micronaut/micronaut-core@4.3.10
+        defaults_path: ./tests/tutorial_resources/exclude_include_checks/defaults_exclude_witness.ini
+        output_dir: macaron_output/exclude_include_checks/excluded

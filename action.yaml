@@ -1,0 +1,124 @@
+# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+name: Macaron Security Analysis
+description: Run Macaron to analyze supply chain security
+author: Oracle - github.com/oracle/macaron
+# This composite GitHub Action wraps the Macaron tool. It exposes inputs for analysis options to shell scripts under `scripts/actions/` for readability.
+
+inputs:
+  sbom_path:
+    description: The path to the SBOM of the analysis target.
+  python_venv:
+    description: Path to a Python virtual environment to resolve Python dependencies (used with Python analyze).
+  package_url:
+    description: The PURL string used to uniquely identify the target software component for analysis.
+  repo_path:
+    description: The path to the repository, can be local or remote.
+  policy_file:
+    description: Path to the Datalog policy.
+  policy_purl:
+    description: The PURL string for the pre-defined policy.
+  defaults_path:
+    description: The path to the defaults configuration file.
+  digest:
+    description: The digest of the commit we want to checkout in the branch.
+  provenance_expectation:
+    description: The path to provenance expectation file or directory.
+  provenance_file:
+    description: The path to the provenance file in in-toto format.
+  show_prelude:
+    description: Shows the Datalog prelude for the database.
+  branch:
+    description: The branch of the repository that we want to checkout.
+  deps_depth:
+    description: 'The depth of the dependency resolution. 0: disable, 1: direct dependencies, inf: all transitive dependencies.'
+    default: '0'
+  github_token:
+    description: The GitHub personal access token is needed for to run the analysis.
+    default: ${{ github.token }}
+  output_dir:
+    description: The output destination path for Macaron.
+    default: output
+  upload_attestation:
+    description: 'Upload the generated VSA report. default : false'
+    default: false
+  subject_path:
+    description: 'Path to the artifact serving as the subject of the attestation, the default is current repository. default : github.workspace'
+    default: ${{ github.workspace }}
+
+outputs:
+  policy_report:
+    description: Paths to the Macaron analysis report
+    value: ${{ steps.run-macaron-policy-verification.outputs.policy_report }}
+  vsa_report:
+    description: Verification Summary Attestation
+    value: ${{ steps.run-macaron-policy-verification.outputs.vsa_report }}
+
+runs:
+  using: composite
+  steps:
+  - name: Setup Python
+    uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+    with:
+      python-version: 3.11.13
+
+  - name: Setup Go
+    uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+    with:
+      go-version: '1.23'
+      cache: false
+
+  - name: Setup JDK
+    uses: actions/setup-java@b36c23c0d998641eff861008f374ee103c25ac73 # v4.4.0
+    with:
+      java-version: '17'
+      distribution: oracle
+
+  - name: Setup Macaron
+    # Create or reuse a Python virtualenv with the macaron CLI and export the `MACARON` binary path via `$GITHUB_ENV` so later steps can use it.
+    run: |
+      bash "$GITHUB_ACTION_PATH/scripts/actions/setup_macaron.sh"
+    shell: bash
+
+  - name: Run Macaron Analysis
+    id: run-macaron-analysis
+    if: ${{ inputs.repo_path != '' || inputs.package_url != '' }}
+    # Build and execute the `macaron analyze` command. We pass action inputs into the script via `env` so the script can assemble the CLI command.
+    run: |
+      bash "$GITHUB_ACTION_PATH/scripts/actions/run_macaron_analysis.sh"
+    shell: bash
+    env:
+      GITHUB_TOKEN: ${{ inputs.github_token }}
+      DEFAULTS_PATH: ${{ inputs.defaults_path }}
+      OUTPUT_DIR: ${{ inputs.output_dir }}
+      REPO_PATH: ${{ inputs.repo_path }}
+      PACKAGE_URL: ${{ inputs.package_url }}
+      BRANCH: ${{ inputs.branch }}
+      DIGEST: ${{ inputs.digest }}
+      DEPS_DEPTH: ${{ inputs.deps_depth }}
+      SBOM_PATH: ${{ inputs.sbom_path }}
+      PYTHON_VENV: ${{ inputs.python_venv }}
+      PROVENANCE_FILE: ${{ inputs.provenance_file }}
+      PROVENANCE_EXPECTATION: ${{ inputs.provenance_expectation }}
+
+  - name: Run Macaron Policy Verification
+    id: run-macaron-policy-verification
+    if: ${{ inputs.policy_file != '' }}
+    # Run policy verification using a Datalog policy file or a pre-defined policy and a PURL. The script writes `policy_report` and `vsa_report` to `$GITHUB_OUTPUT` if policy verification is successful.
+    run: |
+      bash "$GITHUB_ACTION_PATH/scripts/actions/run_macaron_policy_verification.sh"
+    shell: bash
+    env:
+      DEFAULTS_PATH: ${{ inputs.defaults_path }}
+      OUTPUT_DIR: ${{ inputs.output_dir }}
+      POLICY_FILE: ${{ inputs.policy_file }}
+      POLICY_PURL: ${{ inputs.policy_purl }}
+
+  - name: Upload Attestation
+    if: ${{ inputs.upload_attestation == 'true' && steps.run-macaron-policy-verification.outputs.vsa_report != 'VSA Not Generated.' }}
+    uses: actions/attest@daf44fb950173508f38bd2406030372c1d1162b1 #3.0.0
+    with:
+      subject-path: ${{ inputs.subject_path }}
+      predicate-type: https://slsa.dev/verification_summary/v1
+      predicate-path: ${{ steps.run-macaron-policy-verification.outputs.vsa_report }}
