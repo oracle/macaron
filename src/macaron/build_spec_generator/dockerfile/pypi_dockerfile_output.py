@@ -87,7 +87,7 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     EOF
 
     # Run the build
-    RUN /deps/bin/python -m build --wheel -n
+    RUN {"source /deps/bin/activate && " + " ".join(x for x in buildspec["build_commands"][0])}
     """
 
     return dedent(dockerfile_content)
