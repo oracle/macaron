@@ -223,8 +223,8 @@ def extract_commit_from_version(git_obj: Git, version: str) -> tuple[str | None,
 
     if not commit:
         try:
-            if parsed_sudo_version := parse_pseudo_version(version):
-                commit = git_obj.get_commit(parsed_sudo_version["commit_hash"])
+            if parsed_pseudo_version := parse_pseudo_version(version):
+                commit = git_obj.get_commit(parsed_pseudo_version["commit_hash"])
         except GitTagError:
             pass
 

@@ -317,8 +317,8 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
                     if latest_repo := get_latest_repo_if_different(latest_version_purl, found_repo):
                         return find_source(str(purl), latest_repo, False)
             try:
-                if parsed_sudo_version := parse_pseudo_version(purl.version):
-                    digest = parsed_sudo_version["commit_hash"]
+                if parsed_pseudo_version := parse_pseudo_version(purl.version):
+                    digest = parsed_pseudo_version["commit_hash"]
             except GitTagError:
                 pass
 
