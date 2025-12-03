@@ -687,7 +687,8 @@ def main(argv: list[str] | None = None) -> None:
         "--output-format",
         type=str,
         help=(
-            "The output format. Can be default-buildspec (default) or rc-buildspec (Reproducible-central build spec)"
+            "The output format. Can be default-buildspec (default), rc-buildspec (Reproducible-central build spec for Java), "
+            + "or dockerfile (currently only supported for Python packages)"
         ),
         default="default-buildspec",
     )

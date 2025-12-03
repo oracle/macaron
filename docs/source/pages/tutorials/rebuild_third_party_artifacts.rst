@@ -61,9 +61,13 @@ Skip this section if you already know how to install Macaron.
 
     Now you should be good to run Macaron. For more details, see the documentation :ref:`here <prepare-github-token>`.
 
-*************************
-Step 1: Analyze a Package
-*************************
+**************************
+Rebuilding a Maven package
+**************************
+
+===========================
+Step 1: Analyze the Package
+===========================
 
 Before generating a buildspec, Macaron must first analyze the target package. For example, to analyze a Maven Java package:
 
@@ -73,9 +77,9 @@ Before generating a buildspec, Macaron must first analyze the target package. Fo
 
 This command will inspect the source repository, CI/CD configuration, and extract build-related data into the local database at ``output/macaron.db``.
 
-*******************************************
+===========================================
 Step 2: Generate a Build Specification File
-*******************************************
+===========================================
 
 After analysis is complete, you can generate a buildspec for the package using the ``gen-build-spec`` command. For more details, refer to the :ref:`gen-build-spec-command-cli`.
 
@@ -98,9 +102,9 @@ In the example above, the buildspec is located at:
 
     output/maven/org_apache_hugegraph/computer-k8s/macaron.buildspec
 
-*****************************************
+=========================================
 Step 3: Review and Use the Buildspec File
-*****************************************
+=========================================
 
 By default we generate the buildspec in JSON format as follows:
 
@@ -162,13 +166,97 @@ The resulting file will be saved as ``output/buildspec/maven/org_apache_hugegrap
 
 You can now use this file to automate rebuilding artifacts, for example as part of the Reproducible Central infrastructure.
 
-************************
+========================
 Step 4: Build Validation
-************************
+========================
 
 Validating builds is a crucial post-build step that should be performed independently of the build process. Once a build is complete, it is essential to verify that the resulting artifacts meet the established expectations and accurately reflect the original source. Validation techniques vary, ranging from bitwise equivalence, where the artifacts must match exactly at the binary level, to semantic equivalence, which ensures functional similarity even when the binary outputs differ. Each approach offers distinct advantages depending on the specific context.
 
 For example, `Daleq <https://github.com/binaryeq/daleq>`_ is a tool that disassembles Java bytecode into an intermediate representation to infer equivalence between Java classes. Daleq is developed based on recent `research <https://arxiv.org/abs/2410.08427>`_ that proposes practical levels for establishing binary equivalence. To learn more about how Daleq works, see the `paper <https://arxiv.org/pdf/2508.01530>`_.
+
+*************************
+Rebuilding a Python wheel
+*************************
+
+The above workflow can be adopted to generate build specifications for Python wheels, often distributed via PyPI, as well. Consider the purl ``pkg:pypi/docker@7.1.0``. We can run analyze like:
+
+.. code-block:: shell
+
+    ./run_macaron.sh analyze -purl pkg:pypi/docker@7.1.0
+
+Similar to the Maven example, it is also possible to generate a JSON buildspec. However, for this tutorial, we will generate a ``dockerfile`` output. To do this, run ``gen-build-spec`` with the ``--output-format`` flag set to ``dockerfile``, as shown below:
+
+.. code-block:: shell
+
+    ./run_macaron.sh gen-build-spec -purl pkg:pypi/docker@7.1.0 --database output/macaron.db --output-format dockerfile
+
+The dockerfile will be created at:
+
+.. code-block:: text
+
+    output/<purl_based_path>/dockerfile.buildspec
+
+Its contents should look like:
+
+.. code-block:: text
+
+    #syntax=docker/dockerfile:1.10
+    FROM oraclelinux:9
+
+    # Install core tools
+    RUN dnf -y install which wget tar git
+
+    # Install compiler and make
+    RUN dnf -y install gcc make
+
+    # Download and unzip interpreter
+    RUN <<EOF
+        wget https://www.python.org/ftp/python/3.14.0/Python-3.14.0.tgz
+        tar -xf Python-3.14.0.tgz
+    EOF
+
+    # Install necessary libraries to build the interpreter
+    # From: https://devguide.python.org/getting-started/setup-building/
+    RUN dnf install \
+    gcc-c++ gdb lzma glibc-devel libstdc++-devel openssl-devel \
+    readline-devel zlib-devel libzstd-devel libffi-devel bzip2-devel \
+    xz-devel sqlite sqlite-devel sqlite-libs libuuid-devel gdbm-libs \
+    perf expat expat-devel mpdecimal python3-pip
+
+    # Build interpreter and create venv
+    RUN <<EOF
+        cd Python-3.14.0
+        ./configure --with-pydebug
+        make -s -j $(nproc)
+        ./python -m venv /deps
+    EOF
+
+    # Clone code to rebuild
+    RUN <<EOF
+        mkdir src
+        cd src
+        git clone https://github.com/docker/docker-py .
+        git checkout --force a3652028b1ead708bd9191efb286f909ba6c2a49
+    EOF
+
+    WORKDIR /src
+
+    # Install build and the build backends
+    RUN <<EOF
+        /deps/bin/pip install "hatchling==1.24.2" && /deps/bin/pip install "hatch-vcs"
+        /deps/bin/pip install build
+    EOF
+
+    # Run the build
+    RUN /deps/bin/python -m build --wheel -n
+
+We can then build the dockerfile like:
+
+.. code-block:: shell
+
+    docker build -f output/<purl_based_path>/dockerfile.buildspec .
+
+If the build succeeds, the package was successfully rebuilt. The image can then be run as needed to perform further validation.
 
 *******************************
 How It Works: Behind the Scenes

@@ -13,6 +13,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from macaron.build_spec_generator.common_spec.core import gen_generic_build_spec
+from macaron.build_spec_generator.dockerfile.dockerfile_output import gen_dockerfile
 from macaron.build_spec_generator.reproducible_central.reproducible_central import gen_reproducible_central_build_spec
 from macaron.console import access_handler
 from macaron.errors import GenerateBuildSpecError
@@ -27,6 +28,8 @@ class BuildSpecFormat(str, Enum):
     REPRODUCIBLE_CENTRAL = "rc-buildspec"
 
     DEFAULT = "default-buildspec"
+
+    DOCKERFILE = "dockerfile"
 
 
 def gen_build_spec_for_purl(
@@ -91,6 +94,13 @@ def gen_build_spec_for_purl(
                     logger.error("Error while serializing the build spec: %s.", error)
                     return os.EX_DATAERR
                 build_spec_file_path = os.path.join(build_spec_dir_path, "macaron.buildspec")
+            case BuildSpecFormat.DOCKERFILE:
+                try:
+                    build_spec_content = gen_dockerfile(build_spec)
+                except ValueError as error:
+                    logger.error("Error while serializing the build spec: %s.", error)
+                    return os.EX_DATAERR
+                build_spec_file_path = os.path.join(build_spec_dir_path, "dockerfile.buildspec")
 
     if not build_spec_content:
         logger.error("Error while generating the build spec.")
