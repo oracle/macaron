@@ -9,7 +9,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "macaron"
-requires-python = ">=3.11.13"
+requires-python = ">=3.11.14"
 authors = [
     {"name" = "Trong Nhan Mai", "email" = "trong.nhan.mai@oracle.com"},
     {"name" = "Behnaz Hassanshahi", "email" = "behnaz.hassanshahi@oracle.com"},

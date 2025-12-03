@@ -257,7 +257,7 @@ requirements.txt: pyproject.toml
 # editable mode (like the one in development here) because they may not have
 # a PyPI entry; also print out CVE description and potential fixes if audit
 # found an issue.
-# Ignore GHSA-4xh5-x5gv-qwph since we are using Python >=3.11.13, which is not vulnerable to this
+# Ignore GHSA-4xh5-x5gv-qwph since we are using Python >=3.11.14, which is not vulnerable to this
 # CVE. Remove this once a new version of pip that fixes the CVE is released.
 # See https://github.com/pypa/pip/issues/13607
 .PHONY: audit

@@ -27,7 +27,7 @@
 
 - gen-build-spec SQL query to look up build-as-code check build command joins on incorrect column (#1207)
 - handle all tarfile extract errors (#1206)
-- ensure Python 3.11.13 is used to address GHSA-4xh5-x5gv-qwph (#1197)
+- ensure Python 3.11.14 is used to address GHSA-4xh5-x5gv-qwph (#1197)
 - **docs**: path of script download example (#1193)
 - improve build tool detection (#1169)
 
