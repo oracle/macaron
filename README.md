@@ -4,10 +4,20 @@
 
 ![Macaron](./docs/source/assets/macaron.svg)
 
-[Full Documentation](https://oracle.github.io/macaron/index.html) | [Tutorials](https://oracle.github.io/macaron/pages/tutorials/index.html) | [Videos](https://www.youtube.com/watch?v=ebo0kGKP6bw) | [Papers](#publications) | [Presentations](#presentations)
+[Full Documentation](https://oracle.github.io/macaron/index.html) | [Tutorials](https://oracle.github.io/macaron/pages/tutorials/index.html) | [Videos](https://www.youtube.com/watch?v=ebo0kGKP6bw) | [Papers](#publications) | [Presentations](#presentations) | [Action](https://oracle.github.io/macaron/pages/macaron_action.html)
 
 
 **Macaron** is a software supply chain security analysis tool from Oracle Labs focused on verifying the **build integrity** of artifacts and their dependencies. It helps developers, security teams, and researchers ensure that packages are built as expected and have not been tampered with.
+
+## Quick Action Usage
+
+To use the macaron action you can reference it in your workflow.
+```yaml
+- uses: oracle/macaron@v1
+  with:
+    repo_path: 'https://github.com/example/project'
+    output_dir: 'macaron-output'
+```
 
 ## Key Capabilities
 
