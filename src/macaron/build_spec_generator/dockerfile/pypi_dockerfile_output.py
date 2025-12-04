@@ -148,4 +148,6 @@ def build_backend_commands(buildspec: BaseBuildSpecDict) -> list[str]:
     commands: list[str] = []
     for backend, version_constraint in buildspec["build_requires"].items():
         commands.append(f'/deps/bin/pip install "{backend}{version_constraint}"')
+    # For a stable order on the install commands
+    commands.sort()
     return commands
