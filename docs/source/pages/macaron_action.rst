@@ -118,11 +118,7 @@ The composite action exposes the following outputs (set by the
 How the action works
 --------------------
 
-1. ``Setup Macaron``: clones the Macaron repository into a temporary folder,
-   creates a Python virtualenv and runs ``make setup``. The step writes the
-   path to the Macaron CLI into the GitHub Actions environment via
-   ``$GITHUB_ENV`` and prepends the venv ``bin`` directory
-   to ``$GITHUB_PATH`` so later steps can invoke the CLI.
+1. ``Setup Macaron``: downloads ``run_macaron.sh`` script to install and run macaron in the action.
 
 2. ``Run Macaron Analysis``: calls ``scripts/actions/run_macaron_analysis.sh``
    which assembles the ``macaron analyze`` command from the inputs and runs
