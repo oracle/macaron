@@ -184,7 +184,7 @@ jobs:
         package_url: pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar
         repo_path: https://github.com/behnazh-w/example-maven-app
         output_dir: macaron_output/detect_malicious_java_dep
-        sbom_path: ./resources/detect_malicious_java_dep/example-sbom.json
+        sbom_path: ./tests/tutorial_resources/detect_malicious_java_dep/example-sbom.json
         deps_depth: '1'
 
     - name: Run Macaron (verify policy - detect-malicious-upload)
