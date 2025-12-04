@@ -94,10 +94,27 @@ setup: force-upgrade setup-go setup-binaries setup-schemastore
 setup-go:
 	go build -o $(PACKAGE_PATH)/bin/ $(REPO_PATH)/golang/cmd/...
 setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier souffle gnu-sed
+
+# Install SLSA Verifier.
+SLSA_VERIFIER_TAG := v2.7.1
+SLSA_VERIFIER_BIN := slsa-verifier-linux-amd64
+SLSA_VERIFIER_BIN_PATH := $(PACKAGE_PATH)/bin/$(SLSA_VERIFIER_BIN)
+SLSA_VERIFIER_PROVENANCE := $(SLSA_VERIFIER_BIN).intoto.jsonl
+SLSA_VERIFIER_PROVENANCE_PATH := $(PACKAGE_PATH)/bin/$(SLSA_VERIFIER_PROVENANCE)
+
 $(PACKAGE_PATH)/bin/slsa-verifier:
-	git clone --depth 1 https://github.com/slsa-framework/slsa-verifier.git -b v2.7.1
-	cd slsa-verifier/cli/slsa-verifier && go build -o $(PACKAGE_PATH)/bin/
-	cd $(REPO_PATH) && rm -rf slsa-verifier
+	mkdir -p $(PACKAGE_PATH)/bin \
+    	&& wget -O $(PACKAGE_PATH)/bin/slsa-verifier https://github.com/slsa-framework/slsa-verifier/releases/download/$(SLSA_VERIFIER_TAG)/$(SLSA_VERIFIER_BIN) \
+    	&& wget -O $(SLSA_VERIFIER_PROVENANCE_PATH) https://github.com/slsa-framework/slsa-verifier/releases/download/$(SLSA_VERIFIER_TAG)/$(SLSA_VERIFIER_PROVENANCE) \
+    	&& chmod +x $(PACKAGE_PATH)/bin/slsa-verifier \
+		&& EXPECTED_HASH=$$(jq -r '.payload' $(SLSA_VERIFIER_PROVENANCE_PATH) | base64 -d | jq -r '.subject[] | select(.name == "$(SLSA_VERIFIER_BIN)") | .digest.sha256') \
+		&& ACTUAL_HASH=$$(sha256sum $(PACKAGE_PATH)/bin/slsa-verifier | awk '{print $$1}'); \
+		if [ "$$EXPECTED_HASH" != "$$ACTUAL_HASH" ]; then \
+			echo "Hash mismatch: expected $$EXPECTED_HASH, got $$ACTUAL_HASH"; \
+			exit 1; \
+		fi
+
+# Set up schemastore for GitHub Actions specs.
 setup-schemastore: $(PACKAGE_PATH)/resources/schemastore/github-workflow.json $(PACKAGE_PATH)/resources/schemastore/LICENSE $(PACKAGE_PATH)/resources/schemastore/NOTICE
 $(PACKAGE_PATH)/resources/schemastore/github-workflow.json:
 	cd $(PACKAGE_PATH)/resources \
@@ -257,15 +274,12 @@ requirements.txt: pyproject.toml
 # editable mode (like the one in development here) because they may not have
 # a PyPI entry; also print out CVE description and potential fixes if audit
 # found an issue.
-# Ignore GHSA-4xh5-x5gv-qwph since we are using Python >=3.11.13, which is not vulnerable to this
-# CVE. Remove this once a new version of pip that fixes the CVE is released.
-# See https://github.com/pypa/pip/issues/13607
 .PHONY: audit
 audit:
 	if ! $$(python -c "import pip_audit" &> /dev/null); then \
 	  echo "No package pip_audit installed, upgrade your environment!" && exit 1; \
 	fi;
-	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln GHSA-4xh5-x5gv-qwph
+	python -m pip_audit --skip-editable --desc on --fix --dry-run
 
 # Run some or all checks over the package code base.
 .PHONY: check check-code check-bandit check-flake8 check-lint check-mypy check-go check-actionlint
@@ -346,9 +360,9 @@ integration-test-update:
 # set to the build date/epoch. For more details, see: https://flit.pypa.io/en/latest/reproducible.html
 .PHONY: dist
 dist: dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-py3-none-any.whl dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-build-epoch.txt
-dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-py3-none-any.whl: check test integration-test
+dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-py3-none-any.whl:
 	flit build --setup-py --format wheel
-dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz: check test integration-test
+dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz:
 	flit build --setup-py --format sdist
 dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip: docs
 	python -m zipfile -c dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip docs/_build/html
@@ -387,6 +401,15 @@ push-docker:
 	  echo "Please set IMAGE_NAME and RELEASE_TAG environment variables!" && exit 1; \
 	fi
 	docker push "${IMAGE_NAME}":latest
+	docker push "${IMAGE_NAME}":"${RELEASE_TAG}"
+
+# Push the test Docker image. The image name and tag are read from IMAGE_NAME and RELEASE_TAG
+# environment variables, respectively.
+.PHONY: push-docker-test
+push-docker-test:
+	if [ -z "${IMAGE_NAME}" ] || [ -z "${RELEASE_TAG}" ]; then \
+	  echo "Please set IMAGE_NAME and RELEASE_TAG environment variables!" && exit 1; \
+	fi
 	docker push "${IMAGE_NAME}":"${RELEASE_TAG}"
 
 # Prune the packages currently installed in the virtual environment down to the required

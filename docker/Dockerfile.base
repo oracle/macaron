@@ -5,15 +5,15 @@
 # to build and run the Docker image.
 # This image is based on the container-registry.oracle.com/os/oraclelinux:9-slim image and contains the following
 # components:
-#   Python3.11.13 compiled and installed from source.
+#   Python3.11.14 compiled and installed from source.
 #   Souffle 2.5 compiled and installed from source.
 #   Other runtime libraries (e.g sqlite-devel) which are installed from dnf.
 
-FROM container-registry.oracle.com/os/oraclelinux:9-slim@sha256:92deb326256d4d3053d210397b00dce9a423789d1c555adb7a3b7a1f0747ea2f
+FROM container-registry.oracle.com/os/oraclelinux:9-slim@sha256:41a867b7f24306cf38c01ba578598164397bd07aa26dbdc9a985bedd9177e82e
 
 ENV HOME="/home/macaron" \
     # Setting Python related environment variables.
-    PYTHON3_VERSION=3.11.13 \
+    PYTHON3_VERSION=3.11.14 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L12
@@ -62,7 +62,7 @@ enabled=1\
         # Exceptions (not installed):
         #   mcpp - The package mcpp is not available in Oracle Linux 9. However, we don't use Souffle's feature
         #       that needs it.
-        #   python3 - We use the installed Python3.11.13 for this.
+        #   python3 - We use the installed Python3.11.14 for this.
         gcc-c++         \
         libffi          \
         libffi-devel    \
