@@ -6,13 +6,10 @@ macaron.code\_analyzer package
    :show-inheritance:
    :undoc-members:
 
-Submodules
-----------
+Subpackages
+-----------
 
-macaron.code\_analyzer.call\_graph module
------------------------------------------
+.. toctree::
+   :maxdepth: 1
 
-.. automodule:: macaron.code_analyzer.call_graph
-   :members:
-   :show-inheritance:
-   :undoc-members:
+   macaron.code_analyzer.dataflow_analysis

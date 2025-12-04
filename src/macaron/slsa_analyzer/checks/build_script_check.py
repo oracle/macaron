@@ -10,6 +10,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
+from macaron.code_analyzer.dataflow_analysis.analysis import get_build_tool_commands
 from macaron.database.table_definitions import CheckFacts
 from macaron.errors import CallGraphError
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
@@ -114,9 +115,7 @@ class BuildScriptCheck(BaseCheck):
                 if isinstance(ci_service, NoneCIService):
                     continue
                 try:
-                    for build_command in ci_service.get_build_tool_commands(
-                        callgraph=ci_info["callgraph"], build_tool=tool
-                    ):
+                    for build_command in get_build_tool_commands(ci_info["callgraph"], tool):
                         trigger_link = ci_service.api_client.get_file_link(
                             ctx.component.repository.full_name,
                             ctx.component.repository.commit_sha,

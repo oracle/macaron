@@ -10,14 +10,13 @@ from typing import Any, NoReturn
 import pytest
 from pytest_httpserver import HTTPServer
 
-import macaron
 from macaron.build_spec_generator.cli_command_parser.gradle_cli_parser import GradleCLICommandParser
 from macaron.build_spec_generator.cli_command_parser.maven_cli_parser import MavenCLICommandParser
-from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from macaron.code_analyzer.dataflow_analysis.analysis import analyse_github_workflow
+from macaron.code_analyzer.dataflow_analysis.core import NodeForest
 from macaron.config.defaults import create_defaults, defaults, load_defaults
 from macaron.database.table_definitions import Analysis, Component, RepoFinderMetadata, Repository
-from macaron.parsers.bashparser import BashScriptType, create_bash_node
-from macaron.parsers.github_workflow_model import Identified, Job, NormalJob, RunStep, Workflow
+from macaron.parsers.github_workflow_model import NormalJob, RunStep, Workflow
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.conda import Conda
@@ -33,11 +32,6 @@ from macaron.slsa_analyzer.build_tool.poetry import Poetry
 from macaron.slsa_analyzer.build_tool.yarn import Yarn
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
-from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
-    GitHubJobNode,
-    GitHubWorkflowNode,
-    GitHubWorkflowType,
-)
 from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
@@ -489,7 +483,7 @@ class MockAnalyzeContext(AnalyzeContext):
         super().__init__(component, *args, **kwargs)
 
 
-def build_github_actions_call_graph_for_commands(commands: list[str]) -> CallGraph:
+def build_github_actions_call_graph_for_commands(commands: list[str]) -> NodeForest:
     """
     Create a dummy callgraph that calls a list of bash commands for testing.
 
@@ -498,37 +492,10 @@ def build_github_actions_call_graph_for_commands(commands: list[str]) -> CallGra
     commands: list[str]
         The list of bash commands.
     """
-    root: BaseNode = BaseNode()
-    gh_cg = CallGraph(root, "")
     run_step: RunStep = {"run": ";".join(commands)}
     job_obj: NormalJob = {"runs-on": "", "steps": [run_step]}
     workflow_obj: Workflow = {"on": "release", "jobs": {"release": job_obj}}
-    workflow_node = GitHubWorkflowNode(
-        name="",
-        node_type=GitHubWorkflowType.INTERNAL,
-        source_path="",
-        parsed_obj=workflow_obj,
-        caller=root,
-    )
-    root.add_callee(workflow_node)
-    job_obj_with_id: Identified[Job] = Identified("release", job_obj)
-    job_node = GitHubJobNode(name="", source_path="", parsed_obj=job_obj_with_id, caller=workflow_node)
-    workflow_node.add_callee(job_node)
-
-    job_node.add_callee(
-        create_bash_node(
-            name="run",
-            node_id=None,
-            node_type=BashScriptType.INLINE,
-            source_path="",
-            ci_step_ast=run_step,
-            repo_path="",
-            caller=job_node,
-            recursion_depth=0,
-            macaron_path=macaron.MACARON_PATH,
-        )
-    )
-
+    gh_cg = NodeForest([analyse_github_workflow(workflow_obj, "test.yaml", None)])
     return gh_cg
 
 
