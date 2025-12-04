@@ -1,3 +1,16 @@
+## v0.20.0 (2025-12-04)
+
+### Feat
+
+- improve repo finder detection and report (#1251)
+- add dockerfile output for Python builds (#1242)
+- add github actions for macaron (#1241)
+- add --existing-policy flag in verify-policy command for predefined policies (#1189)
+
+### Fix
+
+- sanitize version specifier and handled generator name edge case for Python builds (#1247)
+
 ## v0.19.0 (2025-11-17)
 
 ### Feat
