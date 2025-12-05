@@ -30,3 +30,17 @@ steps:
     kind: default_build_spec
     result: output/buildspec/pypi/cachetools/macaron.buildspec
     expected: expected_default.buildspec
+- name: Generate the buildspec
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/cachetools@6.2.1
+    - --output-format
+    - dockerfile
+- name: Compare Dockerfile.
+  kind: compare
+  options:
+    kind: dockerfile_build_spec
+    result: output/buildspec/pypi/cachetools/dockerfile.buildspec
+    expected: expected_dockerfile.buildspec

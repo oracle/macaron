@@ -34,3 +34,17 @@ steps:
     kind: default_build_spec
     result: output/buildspec/pypi/toga/macaron.buildspec
     expected: expected_default.buildspec
+- name: Generate the buildspec
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/toga@0.5.1
+    - --output-format
+    - dockerfile
+- name: Compare Dockerfile
+  kind: compare
+  options:
+    kind: dockerfile_build_spec
+    result: output/buildspec/pypi/toga/dockerfile.buildspec
+    expected: expected_dockerfile.buildspec

@@ -1,0 +1,50 @@
+
+#syntax=docker/dockerfile:1.10
+FROM oraclelinux:9
+
+# Install core tools
+RUN dnf -y install which wget tar git
+
+# Install compiler and make
+RUN dnf -y install gcc make
+
+# Download and unzip interpreter
+RUN <<EOF
+    wget https://www.python.org/ftp/python/3.14.0/Python-3.14.0.tgz
+    tar -xf Python-3.14.0.tgz
+EOF
+
+# Install necessary libraries to build the interpreter
+# From: https://devguide.python.org/getting-started/setup-building/
+RUN dnf install \
+  gcc-c++ gdb lzma glibc-devel libstdc++-devel openssl-devel \
+  readline-devel zlib-devel libzstd-devel libffi-devel bzip2-devel \
+  xz-devel sqlite sqlite-devel sqlite-libs libuuid-devel gdbm-libs \
+  perf expat expat-devel mpdecimal python3-pip
+
+# Build interpreter and create venv
+RUN <<EOF
+    cd Python-3.14.0
+    ./configure --with-pydebug
+    make -s -j $(nproc)
+    ./python -m venv /deps
+EOF
+
+# Clone code to rebuild
+RUN <<EOF
+    mkdir src
+    cd src
+    git clone https://github.com/executablebooks/markdown-it-py .
+    git checkout --force c62983f1554124391b47170180e6c62df4d476ca
+EOF
+
+WORKDIR /src
+
+# Install build and the build backends
+RUN <<EOF
+    /deps/bin/pip install "flit==3.12.0" && /deps/bin/pip install "flit_core<4,>=3.4"
+    /deps/bin/pip install build
+EOF
+
+# Run the build
+RUN source /deps/bin/activate && pip install flit && if test -f "flit.ini"; then python -m flit.tomlify; fi && flit build
