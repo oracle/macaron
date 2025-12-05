@@ -74,9 +74,7 @@ class PyPIBuildSpec(
                 case "flit":
                     # We might also want to deal with existence flit.ini, we can do so via
                     # "python -m flit.tomlify"
-                    default_build_commands.append(
-                        'if test -f "flit.ini"; then python -m flit.tomlify; fi && flit build'.split()
-                    )
+                    default_build_commands.append("flit build".split())
                 case "hatch":
                     default_build_commands.append("hatch build".split())
                 case "conda":

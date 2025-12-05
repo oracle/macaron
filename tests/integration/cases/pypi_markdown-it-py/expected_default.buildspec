@@ -17,16 +17,6 @@
     ],
     "build_commands": [
         [
-            "if",
-            "test",
-            "-f",
-            "\"flit.ini\";",
-            "then",
-            "python",
-            "-m",
-            "flit.tomlify;",
-            "fi",
-            "&&",
             "flit",
             "build"
         ]

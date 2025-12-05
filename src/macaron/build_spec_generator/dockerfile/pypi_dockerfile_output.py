@@ -39,8 +39,16 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
         raise GenerateBuildSpecError("Could not derive specific interpreter version.")
     backend_install_commands: str = " && ".join(build_backend_commands(buildspec))
     build_tool_install: str = ""
-    if buildspec["build_tools"][0] != "pip" and buildspec["build_tools"][0] != "conda":
+    if (
+        buildspec["build_tools"][0] != "pip"
+        and buildspec["build_tools"][0] != "conda"
+        and buildspec["build_tools"][0] != "flit"
+    ):
         build_tool_install = f"pip install {buildspec['build_tools'][0]} && "
+    elif buildspec["build_tools"][0] == "flit":
+        build_tool_install = (
+            f"pip install {buildspec['build_tools'][0]} && if test -f \"flit.ini\"; then python -m flit.tomlify; fi && "
+        )
     dockerfile_content = f"""
     #syntax=docker/dockerfile:1.10
     FROM oraclelinux:9
