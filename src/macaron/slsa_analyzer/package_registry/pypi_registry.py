@@ -4,6 +4,7 @@
 """The module provides abstractions for the pypi package registry."""
 from __future__ import annotations
 
+import bisect
 import hashlib
 import logging
 import os
@@ -15,7 +16,7 @@ import urllib.parse
 import zipfile
 from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -502,6 +503,42 @@ class PyPIRegistry(PackageRegistry):
 
         return res.replace(tzinfo=None) if res else None
 
+    def get_matching_setuptools_version(self, package_release_datetime: datetime) -> str:
+        """Find the setuptools that would be "latest" for the input datetime.
+
+        Parameters
+        ----------
+        package_release_datetime: str
+            Release datetime of a package we wish to rebuild
+
+        Returns
+        -------
+            str: Matching version of setuptools
+        """
+        setuptools_endpoint = urllib.parse.urljoin(self.registry_url, "pypi/setuptools/json")
+        setuptools_json = self.download_package_json(setuptools_endpoint)
+        releases = json_extract(setuptools_json, ["releases"], dict)
+        if releases:
+            release_tuples = [
+                (version, release_info[0].get("upload_time"))
+                for version, release_info in releases.items()
+                if release_info
+            ]
+            # Cannot assume this is sorted, as releases is just a dict
+            release_tuples.sort(key=lambda x: x[1])
+            # bisect_left gives position to insert package_release_datetime to maintain order, hence we do -1
+            index = (
+                bisect.bisect_left(
+                    release_tuples, package_release_datetime, key=lambda x: datetime.strptime(x[1], "%Y-%m-%dT%H:%M:%S")
+                )
+                - 1
+            )
+            return str(release_tuples[index][0])
+        # This realistically cannot happen: it would mean we somehow are trying to rebuild
+        # for a package and version with no releases.
+        # Return default just in case.
+        return defaults.get("heuristic.pypi", "default_setuptools")
+
     @staticmethod
     def extract_attestation(attestation_data: dict) -> dict | None:
         """Extract the first attestation file from a PyPI attestation response.
@@ -618,13 +655,16 @@ class PyPIPackageJsonAsset:
     package_json: dict
 
     #: The source code temporary location name.
-    package_sourcecode_path: str
+    package_sourcecode_path: str = field(init=False)
 
     #: The wheel temporary location name.
-    wheel_path: str
+    wheel_path: str = field(init=False)
 
     #: Name of the wheel file.
-    wheel_filename: str
+    wheel_filename: str = field(init=False)
+
+    #: The datetime that the wheel was uploaded.
+    wheel_upload_time: datetime = field(init=False)
 
     #: The pypi inspector information about this package
     inspector_asset: PyPIInspectorAsset
@@ -779,6 +819,7 @@ class PyPIPackageJsonAsset:
             # Continue to getting url
             wheel_url: str = distribution.get("url") or ""
             if wheel_url:
+                self.wheel_upload_time = datetime.strptime(distribution.get("upload_time") or "", "%Y-%m-%dT%H:%M:%S")
                 try:
                     parsed_url = urllib.parse.urlparse(wheel_url)
                 except ValueError:
@@ -919,6 +960,33 @@ class PyPIPackageJsonAsset:
             logger.debug(error_msg)
             raise SourceCodeError(error_msg) from read_error
 
+    def file_exists(self, path: str) -> bool:
+        """Check if a file exists in the downloaded source code.
+
+        The path can be relative to the package_sourcecode_path attribute, or an absolute path.
+
+        Parameters
+        ----------
+        path: str
+            The absolute or relative to package_sourcecode_path file path to check for.
+
+        Returns
+        -------
+            bool: Whether or not a file at path absolute or relative to package_sourcecode_path exists.
+        """
+        if not self.package_sourcecode_path:
+            # No source code files were downloaded
+            return False
+
+        if not os.path.isabs(path):
+            path = os.path.join(self.package_sourcecode_path, path)
+
+        if not os.path.exists(path):
+            # Could not find a file at that path
+            return False
+
+        return True
+
     def iter_sourcecode(self) -> Iterator[tuple[str, bytes]]:
         """
         Iterate through all source code files.
@@ -1054,6 +1122,16 @@ class PyPIPackageJsonAsset:
         # If all distributions were invalid and went along a 'continue' path.
         return bool(self.inspector_asset)
 
+    def get_chronologically_suitable_setuptools_version(self) -> str:
+        """Find version of setuptools that would be "latest" for this package.
+
+        Returns
+        -------
+        str
+            Chronologically likeliest setuptools version
+        """
+        return self.pypi_registry.get_matching_setuptools_version(self.wheel_upload_time)
+
 
 def find_or_create_pypi_asset(
     asset_name: str, asset_version: str | None, pypi_registry_info: PackageRegistryInfo
@@ -1091,8 +1169,6 @@ def find_or_create_pypi_asset(
         logger.debug("Failed to create PyPIPackageJson asset.")
         return None
 
-    asset = PyPIPackageJsonAsset(
-        asset_name, asset_version, False, package_registry, {}, "", "", "", PyPIInspectorAsset("", [], {})
-    )
+    asset = PyPIPackageJsonAsset(asset_name, asset_version, False, package_registry, {}, PyPIInspectorAsset("", [], {}))
     pypi_registry_info.metadata.append(asset)
     return asset
