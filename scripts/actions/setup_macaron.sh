@@ -10,7 +10,7 @@ mkdir -p "$MACARON_DIR"
 cd "$MACARON_DIR"
 
 # Download image using macaron_image_tag else latest release
-if [ -n "${MACARON_IMAGE_TAG:-}" ]; then
+if [ "${MACARON_IMAGE_TAG}" != "latest" ]; then
     echo "MACARON_IMAGE_TAG detected: ${MACARON_IMAGE_TAG}"
     URL="https://raw.githubusercontent.com/oracle/macaron/refs/tags/${MACARON_IMAGE_TAG}/scripts/release_scripts/run_macaron.sh"
     SCRIPT_NAME="run_macaron_${MACARON_IMAGE_TAG}.sh"
