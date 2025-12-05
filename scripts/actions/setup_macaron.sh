@@ -9,12 +9,24 @@ MACARON_DIR="${RUNNER_TEMP:-/tmp}/macaron"
 mkdir -p "$MACARON_DIR"
 cd "$MACARON_DIR"
 
-# Get the run_macaron.sh script
-if [ ! -f "run_macaron.sh" ]; then
-  curl -fSLO https://raw.githubusercontent.com/oracle/macaron/release/scripts/release_scripts/run_macaron.sh
+# Download image using macaron_image_tag else latest release
+if [ -n "${MACARON_IMAGE_TAG:-}" ]; then
+    echo "MACARON_IMAGE_TAG detected: ${MACARON_IMAGE_TAG}"
+    URL="https://raw.githubusercontent.com/oracle/macaron/refs/tags/${MACARON_IMAGE_TAG}/scripts/release_scripts/run_macaron.sh"
+    SCRIPT_NAME="run_macaron_${MACARON_IMAGE_TAG}.sh"
 else
-  echo "run_macaron.sh already exists, skipping download."
+    echo "Using default latest release."
+    URL="https://raw.githubusercontent.com/oracle/macaron/release/scripts/release_scripts/run_macaron.sh"
+    SCRIPT_NAME="run_macaron.sh"
 fi
 
-chmod +x run_macaron.sh
-echo "MACARON=$MACARON_DIR/run_macaron.sh" >> "$GITHUB_ENV"
+# Get the run_macaron.sh script
+if [ ! -f "$SCRIPT_NAME" ]; then
+  echo "Downloading $SCRIPT_NAME from: $URL"
+  curl -fSL -o "$SCRIPT_NAME" "$URL"
+else
+  echo "$SCRIPT_NAME already exists, skipping download."
+fi
+
+chmod +x "$SCRIPT_NAME"
+echo "MACARON=$MACARON_DIR/$SCRIPT_NAME" >> "$GITHUB_ENV"

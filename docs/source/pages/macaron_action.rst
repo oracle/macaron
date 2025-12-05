@@ -19,10 +19,13 @@ When using this action you can reference the action in your workflow. Example:
       steps:
         - uses: actions/checkout@v4
         - name: Run Macaron Security Analysis
-          uses: oracle/macaron@v1
+          uses: oracle/macaron@v0.21.0
           with:
             repo_path: 'https://github.com/example/project'
+            policy_file: check-github-actions
+            policy_purl: 'pkg:github.com/example/project'
             output_dir: 'macaron-output'
+            upload_attestation: true
 
 Example: policy verification only
 ----------------------------------
@@ -34,10 +37,11 @@ directory containing ``macaron.db``:
 .. code-block:: yaml
 
   - name: Verify policy
-    uses: oracle/macaron@v1
+    uses: oracle/macaron@v0.21.0
     with:
       policy_file: policy.dl
       output_dir: macaron-output
+      upload_attestation: true
 
 Inputs
 ------
