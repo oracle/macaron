@@ -6,6 +6,7 @@
 import logging
 import os
 import re
+from typing import Any
 
 import tomli
 from packageurl import PackageURL
@@ -69,16 +70,15 @@ class PyPIBuildSpec(
                 case "pip":
                     default_build_commands.append("python -m build --wheel -n".split())
                 case "poetry":
-                    default_build_commands.append("pip install poetry && poetry build".split())
+                    default_build_commands.append("poetry build".split())
                 case "flit":
                     # We might also want to deal with existence flit.ini, we can do so via
                     # "python -m flit.tomlify"
                     default_build_commands.append(
-                        'pip install flit && if test -f "flit.ini"; then python -m flit.tomlify; fi '
-                        "&& flit build".split()
+                        'if test -f "flit.ini"; then python -m flit.tomlify; fi && flit build'.split()
                     )
                 case "hatch":
-                    default_build_commands.append("pip install hatch && hatch build".split())
+                    default_build_commands.append("hatch build".split())
                 case "conda":
                     default_build_commands.append('echo("Not supported")'.split())
                 case _:
@@ -167,29 +167,13 @@ class PyPIBuildSpec(
                             requires = json_extract(content, ["build-system", "requires"], list)
                             if requires:
                                 build_requires_set.update(elem.replace(" ", "") for elem in requires)
-                            # If we have hatch as a build_tool, we will
-                            if "hatch" in self.data["build_tools"]:
-                                # Look for [tool.hatch.build.hooks.*]
-                                hatch_build_hooks = json_extract(content, ["tool", "hatch", "build", "hooks"], dict)
-                                if hatch_build_hooks:
-                                    for _, section in hatch_build_hooks.items():
-                                        dependencies = section.get("dependencies")
-                                        if dependencies:
-                                            build_requires_set.update(elem.replace(" ", "") for elem in dependencies)
                             backend = json_extract(content, ["build-system", "build-backend"], str)
                             if backend:
                                 build_backends_set.add(backend.replace(" ", ""))
                             python_version_constraint = json_extract(content, ["project", "requires-python"], str)
                             if python_version_constraint:
                                 python_version_set.add(python_version_constraint.replace(" ", ""))
-                            # If we have flit as a build_tool, we will check if the legacy header [tool.flit.metadata] exists,
-                            # and if so, check to see if we can use its "requires-python".
-                            if "flit" in self.data["build_tools"]:
-                                flit_python_version_constraint = json_extract(
-                                    content, ["tool", "flit", "metadata", "requires-python"], str
-                                )
-                                if flit_python_version_constraint:
-                                    python_version_set.add(flit_python_version_constraint.replace(" ", ""))
+                            self.apply_tool_specific_inferences(build_requires_set, python_version_set, content)
                             logger.debug(
                                 "After analyzing pyproject.toml from the sdist: build-requires: %s, build_backend: %s",
                                 build_requires_set,
@@ -260,6 +244,40 @@ class PyPIBuildSpec(
                 raise GenerateBuildSpecError(f"Failed to patch command sequences {selected_build_commands}.")
 
         self.data["build_commands"] = patched_build_commands
+
+    def apply_tool_specific_inferences(
+        self, build_requires_set: set[str], python_version_set: set[str], pyproject_contents: dict[str, Any]
+    ) -> None:
+        """
+        Based on build tools inferred, look into the pyproject.toml for related additional dependencies.
+
+        Parameters
+        ----------
+        build_requires_set: set[str]
+            Set of build requirements to populate.
+        python_version_set: set[str]
+            Set of compatible interpreter versions to populate.
+        pyproject_contents: dict[str, Any]
+            Parsed contents of the pyproject.toml file.
+        """
+        # If we have hatch as a build_tool, we will examine [tool.hatch.build.hooks.*] to
+        # look for any additional build dependencies declared there.
+        if "hatch" in self.data["build_tools"]:
+            # Look for [tool.hatch.build.hooks.*]
+            hatch_build_hooks = json_extract(pyproject_contents, ["tool", "hatch", "build", "hooks"], dict)
+            if hatch_build_hooks:
+                for _, section in hatch_build_hooks.items():
+                    dependencies = section.get("dependencies")
+                    if dependencies:
+                        build_requires_set.update(elem.replace(" ", "") for elem in dependencies)
+        # If we have flit as a build_tool, we will check if the legacy header [tool.flit.metadata] exists,
+        # and if so, check to see if we can use its "requires-python".
+        if "flit" in self.data["build_tools"]:
+            flit_python_version_constraint = json_extract(
+                pyproject_contents, ["tool", "flit", "metadata", "requires-python"], str
+            )
+            if flit_python_version_constraint:
+                python_version_set.add(flit_python_version_constraint.replace(" ", ""))
 
     def read_directory(self, wheel_path: str, purl: PackageURL) -> tuple[str, str]:
         """

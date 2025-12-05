@@ -38,6 +38,9 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
         logger.debug("Could not derive a specific interpreter version.")
         raise GenerateBuildSpecError("Could not derive specific interpreter version.")
     backend_install_commands: str = " && ".join(build_backend_commands(buildspec))
+    build_tool_install: str = ""
+    if buildspec["build_tools"][0] != "pip" and buildspec["build_tools"][0] != "conda":
+        build_tool_install = f"pip install {buildspec['build_tools'][0]} && "
     dockerfile_content = f"""
     #syntax=docker/dockerfile:1.10
     FROM oraclelinux:9
@@ -87,7 +90,7 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     EOF
 
     # Run the build
-    RUN {"source /deps/bin/activate && " + " ".join(x for x in buildspec["build_commands"][0])}
+    RUN {"source /deps/bin/activate && " + build_tool_install + " ".join(x for x in buildspec["build_commands"][0])}
     """
 
     return dedent(dockerfile_content)

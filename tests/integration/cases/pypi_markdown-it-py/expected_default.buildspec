@@ -17,10 +17,6 @@
     ],
     "build_commands": [
         [
-            "pip",
-            "install",
-            "flit",
-            "&&",
             "if",
             "test",
             "-f",
