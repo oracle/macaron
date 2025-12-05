@@ -19,7 +19,9 @@
         [
             "python",
             "-m",
-            "build"
+            "build",
+            "--wheel",
+            "-n"
         ]
     ],
     "build_requires": {

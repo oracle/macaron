@@ -27,3 +27,17 @@ steps:
     kind: default_build_spec
     result: output/buildspec/pypi/markdown-it-py/macaron.buildspec
     expected: expected_default.buildspec
+- name: Generate the buildspec
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/markdown-it-py@4.0.0
+    - --output-format
+    - dockerfile
+- name: Compare Dockerfile
+  kind: compare
+  options:
+    kind: dockerfile_build_spec
+    result: output/buildspec/pypi/markdown-it-py/dockerfile.buildspec
+    expected: expected_dockerfile.buildspec

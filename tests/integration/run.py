@@ -82,6 +82,7 @@ COMPARE_SCRIPTS: dict[str, Sequence[str]] = {
     "find_source": ["tests", "find_source", "compare_source_reports.py"],
     "rc_build_spec": ["tests", "build_spec_generator", "reproducible_central", "compare_rc_build_spec.py"],
     "default_build_spec": ["tests", "build_spec_generator", "common_spec", "compare_default_buildspec.py"],
+    "dockerfile_build_spec": ["tests", "build_spec_generator", "dockerfile", "compare_dockerfile_buildspec.py"],
 }
 
 VALIDATE_SCHEMA_SCRIPTS: dict[str, Sequence[str]] = {
