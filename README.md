@@ -4,20 +4,25 @@
 
 ![Macaron](./docs/source/assets/macaron.svg)
 
-[Full Documentation](https://oracle.github.io/macaron/index.html) | [Tutorials](https://oracle.github.io/macaron/pages/tutorials/index.html) | [Videos](https://www.youtube.com/watch?v=ebo0kGKP6bw) | [Papers](#publications) | [Presentations](#presentations) | [Action](https://oracle.github.io/macaron/pages/macaron_action.html)
+[Full Documentation](https://oracle.github.io/macaron/index.html) | [Tutorials](https://oracle.github.io/macaron/pages/tutorials/index.html) | [Videos](https://www.youtube.com/watch?v=ebo0kGKP6bw) | [Papers](#publications) | [Presentations](#presentations) | [Macaron GitHub Action](https://oracle.github.io/macaron/pages/macaron_action.html)
 
 
 **Macaron** is a software supply chain security analysis tool from Oracle Labs focused on verifying the **build integrity** of artifacts and their dependencies. It helps developers, security teams, and researchers ensure that packages are built as expected and have not been tampered with.
 
-## Quick Action Usage
+Use Macaron as a GitHub Action
 
-To use the macaron action you can reference it in your workflow.
+To use the Macaron GitHub Action, add the following step to your workflow:
 ```yaml
-- uses: oracle/macaron@v1
+- uses: oracle/macaron@v0.21.0
   with:
     repo_path: 'https://github.com/example/project'
+    policy_file: check-github-actions
+    policy_purl: 'pkg:github.com/example/project'
     output_dir: 'macaron-output'
+    upload_attestation: true
 ```
+
+For detailed instructions and a comprehensive list of available options, please refer to the [Macaron GitHub Action documentation](https://oracle.github.io/macaron/pages/macaron_action.html).
 
 ## Key Capabilities
 
