@@ -4,9 +4,11 @@
 """This module handles the cloning and analyzing a Git repo."""
 
 import glob
+import json
 import logging
 import os
 import re
+import subprocess
 import sys
 import tempfile
 from collections.abc import Mapping
@@ -47,6 +49,7 @@ from macaron.errors import (
     LocalArtifactFinderError,
     ProvenanceError,
     PURLNotFoundError,
+    SourceCodeError,
 )
 from macaron.output_reporter.reporter import FileReporter
 from macaron.output_reporter.results import Record, Report, SCMStatus
@@ -310,7 +313,8 @@ class Analyzer:
             return os.EX_DATAERR
 
     def generate_reports(self, report: Report) -> None:
-        """Generate the report of the analysis to all registered reporters.
+        """
+        Generate the report of the analysis to all registered reporters.
 
         Parameters
         ----------
@@ -330,6 +334,104 @@ class Analyzer:
 
         for reporter in self.reporters:
             reporter.generate(output_target_path, report)
+
+    def extract_source_snippet(self, file_path: str, start: dict, end: dict) -> str:
+        """
+        Extract the code snippet between start and end locations.
+
+        Parameters
+        ----------
+        file_path: str
+            Path to the source file.
+        start: dict
+            {'line': int, 'col': int} (1-based indices)
+        end: dict
+            {'line': int, 'col': int} (1-based indices)
+
+        Returns
+        -------
+        str
+            The extracted code snippet.
+        """
+        with open(file_path, encoding="utf-8") as f:
+            lines = f.readlines()
+
+        # Adjust to Python's 0-based indexing
+        start_line, start_col = start["line"] - 1, start["col"] - 1
+        end_line, end_col = end["line"] - 1, end["col"] - 1
+
+        # Multi-line handling
+        if start_line == end_line:
+            return lines[start_line][start_col:end_col]
+
+        # Start part
+        snippet = lines[start_line][start_col:]
+        # Middle lines
+        for line_num in range(start_line + 1, end_line):
+            snippet += lines[line_num]
+        # End part
+        snippet += lines[end_line][:end_col]
+        return snippet
+
+    def find_version_strings(self, component: Component) -> dict:
+        """
+        Identify version strings in the given component's source code repository using Semgrep.
+
+        Notes
+        -----
+        - Uses Semgrep with a custom rule set to find version strings.
+        - Excludes test directories from analysis.
+        - Captures and logs errors encountered during Semgrep execution.
+
+        Parameters
+        ----------
+        component : Component
+            The code component whose repository will be scanned for version information.
+
+        Returns
+        -------
+        dict
+            Parsed Semgrep JSON output containing findings with extracted source code snippets.
+
+        Raises
+        ------
+        SourceCodeError
+            If Semgrep output cannot be parsed or read due to JSON or decoding errors.
+        """
+        rule_path = os.path.join(global_config.resources_path, "source_analysis_semgrep_rules", "identify_version.yaml")
+        semgrep_commands: list[str] = [
+            "semgrep",
+            "--config",
+            rule_path,
+            component.repository.fs_path,
+            "--json",
+            "--exclude",
+            "test/",
+            "--exclude",
+            "tests/",
+        ]
+        try:
+            process = subprocess.run(semgrep_commands, check=True, capture_output=True)  # nosec B603
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as semgrep_error:
+            error_msg = (
+                f"Unable to run semgrep on {component.repository.fs_path}"
+                f" with argument(s) {semgrep_commands}: {semgrep_error}"
+            )
+            logger.debug(error_msg)
+
+        if process.returncode != 0:
+            error_msg = f"Error running semgrep on {component.repository.fs_path} with argument(s)" f" {process.args}"
+            logger.debug(error_msg)
+
+        try:
+            semgrep_output = json.loads(process.stdout.decode("utf-8"))
+            for r in semgrep_output["results"]:
+                r["code"] = self.extract_source_snippet(r["path"], r["start"], r["end"])
+            return semgrep_output
+        except (json.JSONDecodeError, UnicodeDecodeError) as output_read_error:
+            error_msg = f"Unable to read Semgrep JSON output: {output_read_error}"
+            logger.debug(error_msg)
+            raise SourceCodeError(error_msg) from output_read_error
 
     def run_single(
         self,
@@ -609,6 +711,9 @@ class Analyzer:
 
         if local_artifact_dirs:
             analyze_ctx.dynamic_data["local_artifact_paths"].extend(local_artifact_dirs)
+
+        if component.registry:
+            logger.debug(self.find_version_strings(component))
 
         analyze_ctx.check_results = registry.scan(analyze_ctx)
 
