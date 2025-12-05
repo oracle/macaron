@@ -121,6 +121,7 @@ intermediate representations as abstractions. Using such abstractions, Macaron i
    pages/installation
    pages/using
    pages/cli_usage/index
+   pages/macaron_action
    pages/tutorials/index
    pages/output_files
    pages/checks/slsa_builds

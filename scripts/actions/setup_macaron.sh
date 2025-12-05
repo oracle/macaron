@@ -4,25 +4,29 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 set -euo pipefail
 
-# Setup Macaron virtualenv and make available via GitHub Actions environment files.
-# This script writes `MACARON=<path>` to `$GITHUB_ENV` so later steps can invoke the macaron CLI, and appends the venv `bin` directory to `$GITHUB_PATH`.
-
 MACARON_DIR="${RUNNER_TEMP:-/tmp}/macaron"
-VENV_MACARON="$MACARON_DIR/.venv/bin/macaron"
 
 mkdir -p "$MACARON_DIR"
+cd "$MACARON_DIR"
 
-if [ -x "$VENV_MACARON" ]; then
-  echo "Using macaron from existing venv: $VENV_MACARON"
-  echo "MACARON=$VENV_MACARON" >> "$GITHUB_ENV"
-  echo "$MACARON_DIR/.venv/bin" >> "$GITHUB_PATH"
-  exit 0
+# Download image using macaron_image_tag else latest release
+if [ "${MACARON_IMAGE_TAG}" != "latest" ]; then
+    echo "MACARON_IMAGE_TAG detected: ${MACARON_IMAGE_TAG}"
+    URL="https://raw.githubusercontent.com/oracle/macaron/refs/tags/${MACARON_IMAGE_TAG}/scripts/release_scripts/run_macaron.sh"
+    SCRIPT_NAME="run_macaron_${MACARON_IMAGE_TAG}.sh"
+else
+    echo "Using default latest release."
+    URL="https://raw.githubusercontent.com/oracle/macaron/release/scripts/release_scripts/run_macaron.sh"
+    SCRIPT_NAME="run_macaron.sh"
 fi
 
-cd "$MACARON_DIR"
-git clone https://github.com/oracle/macaron.git .
-make venv
-export PATH="$MACARON_DIR/.venv/bin:$PATH"
-make setup
-echo "MACARON=$VENV_MACARON" >> "$GITHUB_ENV"
-echo "$MACARON_DIR/.venv/bin" >> "$GITHUB_PATH"
+# Get the run_macaron.sh script
+if [ ! -f "$SCRIPT_NAME" ]; then
+  echo "Downloading $SCRIPT_NAME from: $URL"
+  curl -fSL -o "$SCRIPT_NAME" "$URL"
+else
+  echo "$SCRIPT_NAME already exists, skipping download."
+fi
+
+chmod +x "$SCRIPT_NAME"
+echo "MACARON=$MACARON_DIR/$SCRIPT_NAME" >> "$GITHUB_ENV"
