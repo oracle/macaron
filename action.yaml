@@ -37,9 +37,6 @@ inputs:
   github_token:
     description: The GitHub personal access token is needed for to run the analysis.
     default: ${{ github.token }}
-  image_tag:
-    description: 'The tag used to determine macaron version. default: latest'
-    default: latest
   output_dir:
     description: The output destination path for Macaron.
     default: output
@@ -61,30 +58,11 @@ outputs:
 runs:
   using: composite
   steps:
-  - name: Setup Python
-    uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
-    with:
-      python-version: 3.11.14
-
-  - name: Setup Go
-    uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
-    with:
-      go-version: '1.23'
-      cache: false
-
-  - name: Setup JDK
-    uses: actions/setup-java@b36c23c0d998641eff861008f374ee103c25ac73 # v4.4.0
-    with:
-      java-version: '17'
-      distribution: oracle
-
   - name: Setup Macaron
     # Create or reuse run_macaron.sh script
     run: |
       bash "$GITHUB_ACTION_PATH/scripts/actions/setup_macaron.sh"
     shell: bash
-    env:
-      MACARON_IMAGE_TAG: ${{ inputs.image_tag }}
 
   - name: Run Macaron Analysis
     id: run-macaron-analysis
@@ -106,7 +84,6 @@ runs:
       PYTHON_VENV: ${{ inputs.python_venv }}
       PROVENANCE_FILE: ${{ inputs.provenance_file }}
       PROVENANCE_EXPECTATION: ${{ inputs.provenance_expectation }}
-      MACARON_IMAGE_TAG: ${{ inputs.image_tag }}
 
   - name: Run Macaron Policy Verification
     id: run-macaron-policy-verification
@@ -120,7 +97,6 @@ runs:
       OUTPUT_DIR: ${{ inputs.output_dir }}
       POLICY_FILE: ${{ inputs.policy_file }}
       POLICY_PURL: ${{ inputs.policy_purl }}
-      MACARON_IMAGE_TAG: ${{ inputs.image_tag }}
 
   - name: Upload Attestation
     if: ${{ inputs.upload_attestation == 'true' && steps.run-macaron-policy-verification.outputs.vsa_report != 'VSA Not Generated.' }}
