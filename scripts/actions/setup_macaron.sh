@@ -5,14 +5,11 @@
 set -euo pipefail
 
 MACARON_DIR="${RUNNER_TEMP:-/tmp}/macaron"
-
 mkdir -p "$MACARON_DIR"
-cd "$MACARON_DIR"
 
 ref="$GITHUB_REF"
-
 MACARON_IMAGE_TAG=""
-
+cd "$GITHUB_WORKSPACE"
 if [[ "$ref" == refs/tags/* ]]; then
     MACARON_IMAGE_TAG="${ref#refs/tags/}"
     echo "Ref is a tag: $MACARON_IMAGE_TAG"
@@ -21,7 +18,6 @@ else
     if [[ -z "$sha" ]]; then
         sha="$ref"
     fi
-
     # Check for tags pointing directly at the SHA.
     tags=$(git tag --points-at "$sha")
     if [[ -n "$tags" ]]; then
@@ -39,6 +35,8 @@ else
         fi
     fi
 fi
+
+cd "$MACARON_DIR"
 
 # Download image using macaron_image_tag else latest release
 if [ "${MACARON_IMAGE_TAG}" != "" ]; then
