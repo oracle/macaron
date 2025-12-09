@@ -9,7 +9,7 @@ mkdir -p "$MACARON_DIR"
 
 ref="$GITHUB_REF"
 MACARON_IMAGE_TAG=""
-cd "$GITHUB_WORKSPACE"
+cd "$GITHUB_ACTION_PATH"
 if [[ "$ref" == refs/tags/* ]]; then
     MACARON_IMAGE_TAG="${ref#refs/tags/}"
     echo "Ref is a tag: $MACARON_IMAGE_TAG"
