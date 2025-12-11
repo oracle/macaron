@@ -6,7 +6,7 @@
 from unittest import TestCase
 from unittest.mock import MagicMock
 
-from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from macaron.code_analyzer.dataflow_analysis.core import NodeForest
 from macaron.json_tools import JsonType
 from macaron.slsa_analyzer.asset import VirtualReleaseAsset
 from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
@@ -93,7 +93,7 @@ class TestAnalyzeContext(TestCase):
 
         gh_actions_ci_info = CIInfo(
             service=gh_actions,
-            callgraph=CallGraph(BaseNode(), ""),
+            callgraph=NodeForest([]),
             provenance_assets=[],
             release={},
             provenances=[

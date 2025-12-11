@@ -5,7 +5,7 @@
 
 import os
 
-from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from macaron.code_analyzer.dataflow_analysis.core import NodeForest
 from macaron.slsa_analyzer.asset import VirtualReleaseAsset
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.provenance_l3_content_check import ProvenanceL3ContentCheck
@@ -82,7 +82,7 @@ class TestProvenanceL3ContentCheck(MacaronTestCase):
         # Test GitHub Actions.
         ci_info = CIInfo(
             service=github_actions,
-            callgraph=CallGraph(BaseNode(), ""),
+            callgraph=NodeForest([]),
             provenance_assets=[],
             release={},
             provenances=[],

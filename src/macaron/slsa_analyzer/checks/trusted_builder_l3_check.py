@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
@@ -11,16 +11,16 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
+from macaron.code_analyzer.dataflow_analysis.core import traverse_bfs
+from macaron.code_analyzer.dataflow_analysis.github import (
+    GitHubActionsActionStepNode,
+    GitHubActionsReusableWorkflowCallNode,
+)
 from macaron.config.defaults import defaults
 from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_build_info_results
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
-from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
-    GitHubJobNode,
-    GitHubWorkflowNode,
-    GitHubWorkflowType,
-)
 from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.registry import registry
 from macaron.slsa_analyzer.slsa_req import ReqName
@@ -114,37 +114,36 @@ class TrustedBuilderL3Check(BaseCheck):
             trusted_builders = defaults.get_list("ci.github_actions", "trusted_builders", fallback=[])
 
             # Look for trusted builders called as GitHub Actions.
-            for callee in ci_info["callgraph"].bfs():
-                if isinstance(callee, GitHubWorkflowNode):
-                    workflow_name = callee.name.split("@")[0]
+            for root in ci_info["callgraph"].root_nodes:
+                for callee in traverse_bfs(root):
+                    if isinstance(callee, (GitHubActionsReusableWorkflowCallNode, GitHubActionsActionStepNode)):
 
-                    # Check if the action is called as a third-party or reusable workflow.
-                    if not workflow_name or callee.node_type not in [
-                        GitHubWorkflowType.EXTERNAL,
-                        GitHubWorkflowType.REUSABLE,
-                    ]:
-                        logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
-                        continue
-                    if workflow_name in trusted_builders:
-                        caller_path = callee.caller.source_path if isinstance(callee.caller, GitHubJobNode) else ""
-                        caller_link = ci_service.api_client.get_file_link(
-                            ctx.component.repository.full_name,
-                            ctx.component.repository.commit_sha,
-                            ci_service.api_client.get_relative_path_of_workflow(os.path.basename(caller_path)),
-                        )
+                        workflow_name = callee.uses_name
 
-                        store_inferred_build_info_results(
-                            ctx=ctx, ci_info=ci_info, ci_service=ci_service, trigger_link=caller_link
-                        )
+                        if workflow_name in trusted_builders:
+                            if isinstance(callee, GitHubActionsReusableWorkflowCallNode):
+                                caller_path = callee.context.ref.workflow_context.ref.source_filepath
+                            else:
+                                caller_path = callee.context.ref.job_context.ref.workflow_context.ref.source_filepath
 
-                        found_builder = True
-                        result_values.append(
-                            {
-                                "build_tool_name": callee.name,
-                                "build_trigger": caller_link,
-                                "ci_service_name": ci_service.name,
-                            }
-                        )
+                            caller_link = ci_service.api_client.get_file_link(
+                                ctx.component.repository.full_name,
+                                ctx.component.repository.commit_sha,
+                                ci_service.api_client.get_relative_path_of_workflow(os.path.basename(caller_path)),
+                            )
+
+                            store_inferred_build_info_results(
+                                ctx=ctx, ci_info=ci_info, ci_service=ci_service, trigger_link=caller_link
+                            )
+
+                            found_builder = True
+                            result_values.append(
+                                {
+                                    "build_tool_name": workflow_name,
+                                    "build_trigger": caller_link,
+                                    "ci_service_name": ci_service.name,
+                                }
+                            )
 
         result_tables = [TrustedBuilderFacts(**result, confidence=Confidence.HIGH) for result in result_values]
 

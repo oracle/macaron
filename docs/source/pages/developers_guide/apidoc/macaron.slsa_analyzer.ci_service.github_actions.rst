@@ -9,14 +9,6 @@ macaron.slsa\_analyzer.ci\_service.github\_actions package
 Submodules
 ----------
 
-macaron.slsa\_analyzer.ci\_service.github\_actions.analyzer module
-------------------------------------------------------------------
-
-.. automodule:: macaron.slsa_analyzer.ci_service.github_actions.analyzer
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
 macaron.slsa\_analyzer.ci\_service.github\_actions.github\_actions\_ci module
 -----------------------------------------------------------------------------
 

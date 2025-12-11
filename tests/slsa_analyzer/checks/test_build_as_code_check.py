@@ -9,19 +9,14 @@ from typing import cast
 
 import pytest
 
-from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.parsers.actionparser import parse as parse_action
+from macaron.code_analyzer.dataflow_analysis.analysis import analyse_github_workflow_file
+from macaron.code_analyzer.dataflow_analysis.core import NodeForest
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.checks.build_as_code_check import BuildAsCodeCheck, BuildAsCodeFacts
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
-from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
-    GitHubWorkflowNode,
-    GitHubWorkflowType,
-    build_call_graph_from_node,
-)
 from macaron.slsa_analyzer.ci_service.github_actions.github_actions_ci import GitHubActions
 from macaron.slsa_analyzer.ci_service.jenkins import Jenkins
 from macaron.slsa_analyzer.provenance.intoto import InTotoV01Payload
@@ -54,7 +49,7 @@ def test_build_as_code_check_no_callgraph(
     """Test the Build As Code Check when no callgraph is built for the CI service."""
     ci_info = CIInfo(
         service=ci_services[ci_name],
-        callgraph=CallGraph(BaseNode(), ""),
+        callgraph=NodeForest([]),
         provenance_assets=[],
         release={},
         provenances=[],
@@ -146,7 +141,7 @@ def test_gha_workflow_deployment(
     check = BuildAsCodeCheck()
     ci_info = CIInfo(
         service=github_actions_service,
-        callgraph=CallGraph(BaseNode(), ""),
+        callgraph=NodeForest([]),
         provenance_assets=[],
         release={},
         provenances=[],
@@ -160,20 +155,8 @@ def test_gha_workflow_deployment(
     gha_deploy.dynamic_data["build_spec"]["tools"] = [pip_tool]
     gha_deploy.dynamic_data["ci_services"] = [ci_info]
 
-    root: BaseNode = BaseNode()
-    gh_cg = CallGraph(root, "")
     workflow_path = os.path.join(workflows_dir, workflow_name)
-    parsed_obj = parse_action(workflow_path)
-    callee = GitHubWorkflowNode(
-        name=os.path.basename(workflow_path),
-        node_type=GitHubWorkflowType.INTERNAL,
-        source_path=workflow_path,
-        parsed_obj=parsed_obj,
-        caller=root,
-    )
-    root.add_callee(callee)
-    build_call_graph_from_node(callee, repo_path="")
-    ci_info["callgraph"] = gh_cg
+    ci_info["callgraph"] = NodeForest([analyse_github_workflow_file(workflow_path, None)])
     assert check.run_check(gha_deploy).result_type == expected_result
 
 
@@ -192,7 +175,7 @@ def test_travis_ci_deploy(
 
     ci_info = CIInfo(
         service=travis_service,
-        callgraph=CallGraph(BaseNode(), ""),
+        callgraph=NodeForest([]),
         provenance_assets=[],
         release={},
         provenances=[],

@@ -38,6 +38,17 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
         logger.debug("Could not derive a specific interpreter version.")
         raise GenerateBuildSpecError("Could not derive specific interpreter version.")
     backend_install_commands: str = " && ".join(build_backend_commands(buildspec))
+    build_tool_install: str = ""
+    if (
+        buildspec["build_tools"][0] != "pip"
+        and buildspec["build_tools"][0] != "conda"
+        and buildspec["build_tools"][0] != "flit"
+    ):
+        build_tool_install = f"pip install {buildspec['build_tools'][0]} && "
+    elif buildspec["build_tools"][0] == "flit":
+        build_tool_install = (
+            f"pip install {buildspec['build_tools'][0]} && if test -f \"flit.ini\"; then python -m flit.tomlify; fi && "
+        )
     dockerfile_content = f"""
     #syntax=docker/dockerfile:1.10
     FROM oraclelinux:9
@@ -87,7 +98,7 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     EOF
 
     # Run the build
-    RUN /deps/bin/python -m build --wheel -n
+    RUN {"source /deps/bin/activate && " + build_tool_install + " ".join(x for x in buildspec["build_commands"][0])}
     """
 
     return dedent(dockerfile_content)
@@ -148,4 +159,6 @@ def build_backend_commands(buildspec: BaseBuildSpecDict) -> list[str]:
     commands: list[str] = []
     for backend, version_constraint in buildspec["build_requires"].items():
         commands.append(f'/deps/bin/pip install "{backend}{version_constraint}"')
+    # For a stable order on the install commands
+    commands.sort()
     return commands
