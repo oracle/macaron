@@ -1,15 +1,27 @@
 # Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
-# Licensed under the Universal Permissive License v 1.0 as shown at https:#oss.oracle.com/licenses/upl/.
-# pylint: skip-file
-# flake8: noqa
 
-# Type definitions for Bash AST as produced (and json-serialised) by the "mvdan.cc/sh/v3/syntax" bash parser
+"""Type definitions for Bash AST as produced (and json-serialised) by the "mvdan.cc/sh/v3/syntax" bash parser."""
+
+# Suppress warnings about non-ALL_CAPS names (that reference the original names and so are not ours to change).
+# pylint: disable=invalid-name
+
+# Suppress false positive warnings caused by a field with the same name as its type (again, not our names to change)
+# pylint: disable=used-before-assignment
+
+# Refer to original definitions in codebase for description, no need to comment here.
+# pylint: disable=missing-class-docstring,missing-function-docstring
+
+# Forward-referencing union type defs are not expressible with "|" until python 3.12 type statement syntax is available.
+# pylint: disable=consider-alternative-union-syntax
+
+# Suppress all flake8 warnings for the same reasons as above (it does not allow selective disabling at file level).
+# flake8: noqa
 
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Literal, NotRequired, Optional, TypedDict, TypeGuard, Union
+from typing import Literal, NotRequired, TypedDict, TypeGuard, Union
 
 
 class Pos(TypedDict):
