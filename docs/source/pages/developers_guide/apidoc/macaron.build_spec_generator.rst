@@ -14,6 +14,7 @@ Subpackages
 
    macaron.build_spec_generator.cli_command_parser
    macaron.build_spec_generator.common_spec
+   macaron.build_spec_generator.dockerfile
    macaron.build_spec_generator.reproducible_central
 
 Submodules

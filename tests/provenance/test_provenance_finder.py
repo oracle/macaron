@@ -13,7 +13,7 @@ from git import InvalidGitRepositoryError
 from packageurl import PackageURL
 from pydriller import Git
 
-from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from macaron.code_analyzer.dataflow_analysis.core import NodeForest
 from macaron.provenance.provenance_finder import (
     find_gav_provenance,
     find_npm_provenance,
@@ -165,7 +165,7 @@ def test_provenance_on_unsupported_ci(macaron_path: Path, service: BaseCIService
 
     ci_info = CIInfo(
         service=service,
-        callgraph=CallGraph(BaseNode(), ""),
+        callgraph=NodeForest([]),
         provenance_assets=[],
         release={},
         provenances=[],
@@ -190,7 +190,7 @@ def test_provenance_on_supported_ci(macaron_path: Path, test_dir: Path) -> None:
 
     ci_info = CIInfo(
         service=github_actions,
-        callgraph=CallGraph(BaseNode(), ""),
+        callgraph=NodeForest([]),
         provenance_assets=[],
         release={},
         provenances=[],

@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from macaron.code_analyzer.call_graph import BaseNode
 from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
 from macaron.slsa_analyzer.build_tool.flit import Flit
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
@@ -120,7 +119,7 @@ def test_is_flit_deploy_command(
             language_distributions=language_distributions,
             language_url=None,
             ci_path=ci_path,
-            step_node=BaseNode(),
+            step_node=None,
             reachable_secrets=reachable_secrets,
             events=events,
         ),
@@ -220,7 +219,7 @@ def test_is_flit_package_command(
             language_distributions=language_distributions,
             language_url=None,
             ci_path=ci_path,
-            step_node=BaseNode(),
+            step_node=None,
             reachable_secrets=reachable_secrets,
             events=events,
         ),

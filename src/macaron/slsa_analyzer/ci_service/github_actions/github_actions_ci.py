@@ -3,29 +3,19 @@
 
 """This module analyzes GitHub Actions CI."""
 
+from __future__ import annotations
 
 import glob
 import logging
 import os
-from collections.abc import Iterable
 from datetime import datetime, timedelta, timezone
 
-from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from macaron.code_analyzer.dataflow_analysis.analysis import analyse_github_workflow_file
+from macaron.code_analyzer.dataflow_analysis.core import Node, NodeForest
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.errors import CallGraphError, GitHubActionsValueError, ParseError
-from macaron.parsers.bashparser import BashNode, BashScriptType
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand
+from macaron.errors import GitHubActionsValueError, ParseError
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
-from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
-    GitHubJobNode,
-    GitHubWorkflowNode,
-    GitHubWorkflowType,
-    build_call_graph_from_path,
-    find_language_setup_action,
-    get_ci_events,
-    get_reachable_secrets,
-)
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient, get_default_gh_client
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
 from macaron.slsa_analyzer.git_service.github import GitHub
@@ -386,7 +376,7 @@ class GitHubActions(BaseCIService):
                         raise GitHubActionsValueError("GitHub Actions workflow run misses jobs information.")
                     for job in run_jobs["jobs"]:
                         # If the deploy step is a Reusable Workflow, there won't be any steps in the caller job.
-                        if callee_node_type == GitHubWorkflowType.REUSABLE.value:
+                        if callee_node_type == "reusable":
                             if not job["name"].startswith(job_id) or job["conclusion"] != "success":
                                 continue
                             started_at = datetime.fromisoformat(job["started_at"])
@@ -576,7 +566,7 @@ class GitHubActions(BaseCIService):
         logger.info("No build kw in log file. Continue ...")
         return False
 
-    def build_call_graph(self, repo_path: str, macaron_path: str = "") -> CallGraph:
+    def build_call_graph(self, repo_path: str, macaron_path: str = "") -> NodeForest:
         """Build the call Graph for GitHub Actions workflows.
 
         At the moment it does not analyze third-party workflows to include their callees.
@@ -596,106 +586,18 @@ class GitHubActions(BaseCIService):
         if not macaron_path:
             macaron_path = global_config.macaron_path
 
-        root: BaseNode = BaseNode()
-        gh_cg = CallGraph(root, repo_path)
-
         # Parse GitHub Actions workflows.
         files = self.get_workflows(repo_path)
+        nodes: list[Node] = []
         for workflow_path in files:
             try:
-                callee = build_call_graph_from_path(
-                    root=root, workflow_path=workflow_path, repo_path=repo_path, macaron_path=macaron_path
-                )
+                workflow_node = analyse_github_workflow_file(workflow_path, repo_path)
+
             except ParseError:
                 logger.debug("Skip adding workflow at %s to the callgraph.", workflow_path)
                 continue
-            root.add_callee(callee)
-        return gh_cg
-
-    def _get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
-        """Traverse the callgraph and find all the reachable build tool commands."""
-        for node in callgraph.bfs():
-            # We are just interested in nodes that have bash commands.
-            if isinstance(node, BashNode):
-                # We collect useful contextual information for the called BashNode.
-                caller_node = node.caller
-                # The GitHub Actions workflow that triggers the path in the callgraph.
-                workflow_node = None
-                # The GitHub Actions job that triggers the path in the callgraph.
-                job_node = None
-                # The step in GitHub Actions job that triggers the path in the callgraph.
-                step_node = node if node.node_type == BashScriptType.INLINE else None
-
-                # Walk up the callgraph to find the relevant caller nodes.
-                # In GitHub Actions a `GitHubWorkflowNode` may call several `GitHubJobNode`s
-                # and a `GitHubJobNode` may call several steps, which can be external `GitHubWorkflowNode`
-                # or inlined run nodes. We currently support the run steps that call shell scripts as
-                # `BashNode`. An inlined `BashNode` can call `BashNode` as bash files.
-                # TODO: revisit this implementation if analysis of external workflows is supported in
-                # the future, and decide if setting the caller workflow and job nodes to the nodes in the
-                # main triggering workflow is still expected.
-                while caller_node is not None:
-                    match caller_node:
-                        case GitHubWorkflowNode():
-                            workflow_node = caller_node
-                        case GitHubJobNode():
-                            job_node = caller_node
-                        case BashNode(node_type=BashScriptType.INLINE):
-                            step_node = caller_node
-
-                    caller_node = caller_node.caller
-
-                # Check if there was an issue in finding any of the caller nodes.
-                if workflow_node is None or job_node is None or step_node is None:
-                    raise CallGraphError("Unable to traverse the call graph to find build commands.")
-
-                # Find the bash commands that call the build tool.
-                for cmd in node.parsed_bash_obj.get("commands", []):
-                    if build_tool.is_build_command(cmd):
-                        lang_versions = lang_distributions = lang_url = None
-                        if lang_model := find_language_setup_action(job_node, build_tool.language):
-                            lang_versions = lang_model.lang_versions
-                            lang_distributions = lang_model.lang_distributions
-                            lang_url = lang_model.lang_url
-                        yield BuildToolCommand(
-                            ci_path=workflow_node.source_path,
-                            command=cmd,
-                            step_node=step_node,
-                            language=build_tool.language,
-                            language_versions=lang_versions,
-                            language_distributions=lang_distributions,
-                            language_url=lang_url,
-                            reachable_secrets=list(get_reachable_secrets(step_node)),
-                            events=get_ci_events(workflow_node),
-                        )
-
-    def get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
-        """Traverse the callgraph and find all the reachable build tool commands.
-
-        This generator yields sorted build tool command objects to allow a deterministic behavior.
-        The objects are sorted based on the string representation of the build tool object.
-
-        Parameters
-        ----------
-        callgraph: CallGraph
-            The callgraph reachable from the CI workflows.
-        build_tool: BaseBuildTool
-            The corresponding build tool for which shell commands need to be detected.
-
-        Yields
-        ------
-        BuildToolCommand
-            The object that contains the build command as well useful contextual information.
-
-        Raises
-        ------
-        CallGraphError
-            Error raised when an error occurs while traversing the callgraph.
-        """
-        yield from sorted(
-            self._get_build_tool_commands(callgraph=callgraph, build_tool=build_tool),
-            key=str,
-        )
+            nodes.append(workflow_node)
+        return NodeForest(nodes)
 
     def get_third_party_configurations(self) -> list[str]:
         """Get the list of third-party CI configuration files.

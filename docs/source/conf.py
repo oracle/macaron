@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # Configuration file for the Sphinx documentation builder.
@@ -74,6 +74,10 @@ hyphenated_exclusion_list = [
     "<class 'macaron.parsers.github_workflow_model.Step5'>",
     "<class 'macaron.parsers.github_workflow_model.NormalJob'>",
     "<class 'macaron.parsers.github_workflow_model.Workflow'>",
+]
+
+suppress_warnings = [
+    "sphinx_autodoc_typehints.forward_reference",  # Sphinx has issues with resolving forward references.
 ]
 
 
