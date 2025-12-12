@@ -7,6 +7,7 @@ import logging
 from packageurl import PackageURL
 
 from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
+from macaron.repo_finder.repo_utils import extract_repo_links_from_description
 from macaron.repo_finder.repo_validator import find_valid_repository_url
 from macaron.slsa_analyzer.package_registry import PACKAGE_REGISTRIES, PyPIRegistry
 from macaron.slsa_analyzer.package_registry.pypi_registry import (
@@ -76,6 +77,11 @@ def find_repo(
     # Look for the repository URL.
     fixed_url = find_valid_repository_url(url_dict.values())
     if not fixed_url:
+        desc_links = extract_repo_links_from_description(pypi_asset.get_package_description())
+
+        fixed_url = find_valid_repository_url(desc_links)
+        
+    if not fixed_url:    
         return "", RepoFinderInfo.PYPI_NO_URLS
 
     logger.debug("Found repository URL from PyPI: %s", fixed_url)

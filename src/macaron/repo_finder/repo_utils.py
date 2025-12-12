@@ -2,9 +2,11 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the utility functions for repo and commit finder operations."""
+from collections import Counter
 import json
 import logging
 import os
+import re
 import string
 import subprocess  # nosec B404
 from urllib.parse import urlparse
@@ -16,7 +18,7 @@ from macaron.config.global_config import global_config
 from macaron.console import access_handler
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
-from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR, decode_git_tags, parse_git_tags
+from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR, decode_git_tags, get_remote_vcs_url, parse_git_tags
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -235,3 +237,70 @@ def get_repo_tags(git_obj: Git) -> dict[str, str]:
         return {}
 
     return parse_git_tags(decoded_data)
+
+
+def extract_repo_links_from_description(description: str) -> list[str]:
+    """
+    Extract repository links from a package description, sorted by frequency.
+
+    This function identifies and extracts unique repository links (URLs)
+    using common version control protocols such as `http`, `https`, `ftp`,
+    `ssh`, `git+http`, `git+https`, `ssh+git`, and SSH-based `git@host:path`
+    from the provided text. The extracted links are filtered for validity and
+    sorted in descending order by their frequency of occurrence in the input.
+    
+    If a regular expression error or processing exception occurs, the function returns an empty list
+    and logs the error using the `logger.debug()` method.
+
+    Parameters
+    ----------
+    description : str
+        The text to search for repository links.
+
+    Returns
+    -------
+    list of str
+        A list of unique, validated repository links sorted by number of occurrences
+        (most frequent links are returned first). An empty list is returned if
+        regex compilation or matching fails.
+
+    Examples
+    --------
+    >>> description = '''
+    ... git@github.com:user/repo.git
+    ... https://github.com/org/repo
+    ... http://example.com/something
+    ... git@github.com:user/repo.git
+    ... '''
+    >>> extract_repo_links_from_description(description)
+    ['git@github.com:user/repo.git', 'https://github.com/org/repo', 'http://example.com/something']
+    """
+    try:    
+        pattern = re.compile(
+            r'('
+                r'(?:git\+http|git\+https|ssh\+git|ssh|ftp|http|https)://[^\s\)<>\]"\']+'   # URLs
+                r'|'
+                r'git@[^\s:]+:[^\s\)<>\]"\']+'                                             # git@host:path/here.git
+            r')',
+            re.IGNORECASE
+        )
+    except re.error as ex:
+        logger.debug(f"Regex compilation error: {ex}")
+        return []  
+
+    try:          
+        links = pattern.findall(description)
+        valid_links = []
+        for link in links:
+            if (valid_link := get_remote_vcs_url(link)):
+                valid_links.append(valid_link)
+
+        # Count frequencies.
+        link_counts = Counter(valid_links)
+        # Sort by count descending, then alphabetically.
+        sorted_links = sorted(link_counts, key=lambda x: (-link_counts[x], x))
+
+        return sorted_links
+    except Exception as ex:
+        logger.debug(f"Error during regex matching: {ex}")
+        return [] 

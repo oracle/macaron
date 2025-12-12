@@ -820,13 +820,12 @@ def get_allowed_git_service_hostnames(config: ConfigParser) -> list[str]:
     allowed_git_service_hostnames = []
 
     for section_name in git_service_section_names:
-        git_service_section = config[section_name]
 
-        hostname = git_service_section.get("hostname")
-        if not hostname:
+        hostnames = defaults.get_list(section_name, "hostname", )
+        if not hostnames:
             continue
 
-        allowed_git_service_hostnames.append(hostname)
+        allowed_git_service_hostnames.extend(hostnames)
 
     return allowed_git_service_hostnames
 

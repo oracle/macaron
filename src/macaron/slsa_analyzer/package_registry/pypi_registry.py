@@ -693,6 +693,21 @@ class PyPIPackageJsonAsset:
             section is not found in the base metadata.
         """
         return json_extract(self.package_json, ["info", "project_urls"], dict)
+    
+    def get_package_description(self) -> dict | None:
+        """
+        Retrieve the package description from the base metadata.
+
+        This method accesses the "info" section of the base metadata to extract the "description" field,
+        which typically contains a summary or detailed description of the package.
+
+        Returns
+        -------
+        dict | None
+            The package description as a dictionary if the "description" field is found in the metadata.
+            Returns None if the "description" section is not present in the base metadata.
+        """
+        return json_extract(self.package_json, ["info", "description"], str)
 
     def get_latest_version(self) -> str | None:
         """Get the latest version of the package.
