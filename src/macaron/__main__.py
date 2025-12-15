@@ -372,7 +372,7 @@ def perform_action(action_args: argparse.Namespace) -> None:
             if not action_args.disable_rich_output:
                 rich_handler.start("dump-defaults")
             # Create the defaults.ini file in the output dir and exit.
-            create_defaults(action_args.output_dir, os.getcwd())
+            create_defaults(action_args.output, os.getcwd())
             sys.exit(os.EX_OK)
 
         case "verify-policy":
@@ -492,7 +492,7 @@ def main(argv: list[str] | None = None) -> None:
 
     main_parser.add_argument(
         "-o",
-        "--output-dir",
+        "--output",
         default=os.path.join(os.getcwd(), "output"),
         help="The output destination path for Macaron",
     )
@@ -724,29 +724,29 @@ def main(argv: list[str] | None = None) -> None:
 
     try:
         # Set the output directory.
-        if not args.output_dir:
+        if not args.output:
             logger.error("The output path cannot be empty. Exiting ...")
             sys.exit(os.EX_USAGE)
 
-        if os.path.isfile(args.output_dir):
+        if os.path.isfile(args.output):
             logger.error("The output directory already exists. Exiting ...")
             sys.exit(os.EX_USAGE)
 
-        if os.path.isdir(args.output_dir):
+        if os.path.isdir(args.output):
             logger.info(
                 "Setting the output directory to %s",
-                os.path.relpath(args.output_dir, os.getcwd()),
+                os.path.relpath(args.output, os.getcwd()),
             )
         else:
             logger.info(
                 "No directory at %s. Creating one ...",
-                os.path.relpath(args.output_dir, os.getcwd()),
+                os.path.relpath(args.output, os.getcwd()),
             )
-            os.makedirs(args.output_dir)
+            os.makedirs(args.output)
 
         # Add file handler to the root logger. Remove stream handler from the
         # root logger to prevent dependencies printing logs to stdout.
-        debug_log_path = os.path.join(args.output_dir, "debug.log")
+        debug_log_path = os.path.join(args.output, "debug.log")
         log_file_handler = logging.FileHandler(debug_log_path, "w")
         log_file_handler.setFormatter(logging.Formatter(log_format))
         if args.disable_rich_output:
@@ -769,8 +769,8 @@ def main(argv: list[str] | None = None) -> None:
         # set through analyze sub-command.
         global_config.load(
             macaron_path=macaron.MACARON_PATH,
-            output_path=args.output_dir,
-            build_log_path=os.path.join(args.output_dir, "build_log"),
+            output_path=args.output,
+            build_log_path=os.path.join(args.output, "build_log"),
             debug_level=log_level,
             local_repos_path=args.local_repos_path,
             resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
