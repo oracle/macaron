@@ -4,6 +4,7 @@
 """This module implements the logic to generate a dockerfile from a Python buildspec."""
 
 import logging
+import re
 from textwrap import dedent
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
@@ -35,8 +36,7 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     """
     language_version: str | None = pick_specific_version(buildspec)
     if language_version is None:
-        logger.debug("Could not derive a specific interpreter version.")
-        raise GenerateBuildSpecError("Could not derive specific interpreter version.")
+        raise GenerateBuildSpecError("Could not derive specific interpreter version")
     backend_install_commands: str = " && ".join(build_backend_commands(buildspec))
     build_tool_install: str = ""
     if (
@@ -124,8 +124,18 @@ def pick_specific_version(buildspec: BaseBuildSpecDict) -> str | None:
         try:
             version_set &= SpecifierSet(version)
         except InvalidSpecifier as error:
-            logger.debug("Malformed interpreter version encountered: %s (%s)", version, error)
-            return None
+            logger.debug("Non-standard interpreter version encountered: %s (%s)", version, error)
+            # Whilst the Python tags specify interpreter implementation
+            # as well as version, with no standard way to parse out the
+            # implementation, we can attempt to heuristically:
+            try_parse_version = infer_interpreter_version(version)
+            if try_parse_version:
+                try:
+                    version_set &= SpecifierSet(f">={try_parse_version}")
+                except InvalidSpecifier as error_for_retry:
+                    logger.debug("Could not parse interpreter version from: %s (%s)", version, error_for_retry)
+
+    logger.debug(version_set)
 
     # Now to get the latest acceptable one, we can step through all interpreter
     # versions. For the most accurate result, we can query python.org for a
@@ -138,6 +148,31 @@ def pick_specific_version(buildspec: BaseBuildSpecDict) -> str | None:
         except InvalidVersion as error:
             logger.debug("Ran into issue converting %s to a version: %s", minor, error)
             return None
+    return None
+
+
+def infer_interpreter_version(tag: str) -> str | None:
+    """Infer interpreter version from Python-tag.
+
+    Parameters
+    ----------
+    tag: Python-tag, likely inferred from wheel name.
+
+
+    Returns
+    -------
+    str: interpreter version inferred from Python-tag
+    """
+    # We will parse the interpreter version of CPython or just
+    # whatever generic Python version is specified.
+    pattern = re.compile(r"^(py|cp)(\d{1,3})$")
+    parsed_tag = pattern.match(tag)
+    if parsed_tag:
+        digits = parsed_tag.group(2)
+        # As match succeeded len(digits) \in {1,2,3}
+        if len(digits) == 1:
+            return parsed_tag.group(2)
+        return f"{digits[0]}.{digits[1:]}"
     return None
 
 
