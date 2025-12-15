@@ -664,7 +664,7 @@ class PyPIPackageJsonAsset:
     wheel_filename: str = field(init=False)
 
     #: The datetime that the wheel was uploaded.
-    wheel_upload_time: datetime = field(init=False)
+    package_upload_time: datetime = field(init=False)
 
     #: The pypi inspector information about this package
     inspector_asset: PyPIInspectorAsset
@@ -809,6 +809,8 @@ class PyPIPackageJsonAsset:
         if not urls:
             return None
         for distribution in urls:
+            # In this way we have an package_upload_time even if we dont have cannot find the wheel
+            self.package_upload_time = datetime.strptime(distribution.get("upload_time") or "", "%Y-%m-%dT%H:%M:%S")
             # Only examine wheels
             if distribution.get("packagetype") != "bdist_wheel":
                 continue
@@ -819,7 +821,7 @@ class PyPIPackageJsonAsset:
             # Continue to getting url
             wheel_url: str = distribution.get("url") or ""
             if wheel_url:
-                self.wheel_upload_time = datetime.strptime(distribution.get("upload_time") or "", "%Y-%m-%dT%H:%M:%S")
+                self.package_upload_time = datetime.strptime(distribution.get("upload_time") or "", "%Y-%m-%dT%H:%M:%S")
                 try:
                     parsed_url = urllib.parse.urlparse(wheel_url)
                 except ValueError:
@@ -1130,7 +1132,7 @@ class PyPIPackageJsonAsset:
         str
             Chronologically likeliest setuptools version
         """
-        return self.pypi_registry.get_matching_setuptools_version(self.wheel_upload_time)
+        return self.pypi_registry.get_matching_setuptools_version(self.package_upload_time)
 
 
 def find_or_create_pypi_asset(
