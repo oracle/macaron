@@ -25,7 +25,7 @@ if [ -n "$DEFAULTS_PATH" ]; then
 else
   CMD="$MACARON"
 fi
-CMD="$CMD --output-dir ${OUTPUT_DIR} verify-policy --database ${OUTPUT_DIR}/macaron.db"
+CMD="$CMD --output ${OUTPUT_DIR} verify-policy --database ${OUTPUT_DIR}/macaron.db"
 
 if [ -n "$FILE" ] && [ -f "$FILE" ]; then
   CMD="$CMD --file $FILE"

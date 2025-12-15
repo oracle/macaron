@@ -58,28 +58,13 @@ outputs:
 runs:
   using: composite
   steps:
-  - name: Setup Python
-    uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
-    with:
-      python-version: 3.11.14
-
-  - name: Setup Go
-    uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
-    with:
-      go-version: '1.23'
-      cache: false
-
-  - name: Setup JDK
-    uses: actions/setup-java@b36c23c0d998641eff861008f374ee103c25ac73 # v4.4.0
-    with:
-      java-version: '17'
-      distribution: oracle
-
   - name: Setup Macaron
-    # Create or reuse a Python virtualenv with the macaron CLI and export the `MACARON` binary path via `$GITHUB_ENV` so later steps can use it.
+    # Create or reuse run_macaron.sh script
     run: |
       bash "$GITHUB_ACTION_PATH/scripts/actions/setup_macaron.sh"
     shell: bash
+    env:
+      ACTION_REF: ${{ github.action_ref }}
 
   - name: Run Macaron Analysis
     id: run-macaron-analysis

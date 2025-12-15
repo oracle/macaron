@@ -19,7 +19,7 @@ else
 fi
 
 OUTPUT_DIR=${OUTPUT_DIR:-output}
-CMD="$CMD --output-dir ${OUTPUT_DIR} -lr . analyze"
+CMD="$CMD --output ${OUTPUT_DIR} -lr . analyze"
 
 if [ -n "${REPO_PATH:-}" ]; then
   CMD="$CMD -rp ${REPO_PATH}"
