@@ -120,6 +120,8 @@ class PyPIBuildSpec(
         python_version_set: set[str] = set()
         wheel_name_python_version_list: list[str] = []
         wheel_name_platforms: set[str] = set()
+        # Precautionary fallback to default version
+        chronologically_likeliest_version: str = defaults.get("heuristic.pypi", "default_setuptools")
 
         if pypi_package_json is not None:
             if pypi_package_json.package_json or pypi_package_json.download(dest=""):
@@ -150,6 +152,19 @@ class PyPIBuildSpec(
                             parsed_build_requires["setuptools"] = "==" + defaults.get(
                                 "heuristic.pypi", "setuptools_version_emitting_platform_unknown"
                             )
+                        chronologically_likeliest_version = (
+                            pypi_package_json.get_chronologically_suitable_setuptools_version()
+                        )
+                        try:
+                            # Get information from the wheel file name.
+                            logger.debug(pypi_package_json.wheel_filename)
+                            _, _, _, tags = parse_wheel_filename(pypi_package_json.wheel_filename)
+                            for tag in tags:
+                                wheel_name_python_version_list.append(tag.interpreter)
+                                wheel_name_platforms.add(tag.platform)
+                            logger.debug(python_version_set)
+                        except InvalidWheelFilename:
+                            logger.debug("Could not parse wheel file name to extract version")
                 except SourceCodeError:
                     logger.debug("Could not find pure wheel matching this PURL")
 
@@ -165,6 +180,10 @@ class PyPIBuildSpec(
                             requires = json_extract(content, ["build-system", "requires"], list)
                             if requires:
                                 build_requires_set.update(elem.replace(" ", "") for elem in requires)
+                            # If we cannot find [build-system] requires, we lean on the fact that setuptools
+                            # was the de-facto build tool, and infer a setuptools version to include.
+                            else:
+                                build_requires_set.add(f"setuptools=={chronologically_likeliest_version}")
                             backend = json_extract(content, ["build-system", "build-backend"], str)
                             if backend:
                                 build_backends_set.add(backend.replace(" ", ""))
@@ -177,6 +196,10 @@ class PyPIBuildSpec(
                                 build_requires_set,
                                 build_backends_set,
                             )
+                            # Here we have successfully analyzed the pyproject.toml file. Now, if we have a setup.py/cfg,
+                            # we also need to infer a setuptools version to infer.
+                            if pypi_package_json.file_exists("setup.py") or pypi_package_json.file_exists("setup.cfg"):
+                                build_requires_set.add(f"setuptools=={chronologically_likeliest_version}")
                         except TypeError as error:
                             logger.debug(
                                 "Found a type error while reading the pyproject.toml file from the sdist: %s", error
@@ -185,6 +208,9 @@ class PyPIBuildSpec(
                             logger.debug("Failed to read the pyproject.toml file from the sdist: %s", error)
                         except SourceCodeError as error:
                             logger.debug("No pyproject.toml found: %s", error)
+                            # Here we do not have a pyproject.toml file. Instead, we lean on the fact that setuptools
+                            # was the de-facto build tool, and infer a setuptools version to include.
+                            build_requires_set.add(f"setuptools=={chronologically_likeliest_version}")
                 except SourceCodeError as error:
                     logger.debug("No source distribution found: %s", error)
 
@@ -197,17 +223,6 @@ class PyPIBuildSpec(
                             parsed_build_requires[parsed_requirement.name] = str(parsed_requirement.specifier)
                     except (InvalidRequirement, InvalidSpecifier) as error:
                         logger.debug("Malformed requirement encountered %s : %s", requirement, error)
-
-                try:
-                    # Get information from the wheel file name.
-                    logger.debug(pypi_package_json.wheel_filename)
-                    _, _, _, tags = parse_wheel_filename(pypi_package_json.wheel_filename)
-                    for tag in tags:
-                        wheel_name_python_version_list.append(tag.interpreter)
-                        wheel_name_platforms.add(tag.platform)
-                    logger.debug(python_version_set)
-                except InvalidWheelFilename:
-                    logger.debug("Could not parse wheel file name to extract version")
 
                 self.data["language_version"] = list(python_version_set) or wheel_name_python_version_list
 
@@ -227,9 +242,18 @@ class PyPIBuildSpec(
 
         if not patched_build_commands:
             # Resolve and patch build commands.
-            selected_build_commands = self.data["build_commands"] or self.get_default_build_commands(
-                self.data["build_tools"]
-            )
+
+            # To ensure that selected_build_commands is never empty, we seed with the fallback
+            # command of python -m build --wheel -n
+            if self.data["build_commands"]:
+                selected_build_commands = self.data["build_commands"]
+            else:
+                self.data["build_commands"] = ["python -m build --wheel -n".split()]
+                selected_build_commands = (
+                    self.get_default_build_commands(self.data["build_tools"]) or self.data["build_commands"]
+                )
+
+            logger.debug(selected_build_commands)
 
             patched_build_commands = (
                 patch_commands(
