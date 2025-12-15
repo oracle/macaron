@@ -63,6 +63,8 @@ runs:
     run: |
       bash "$GITHUB_ACTION_PATH/scripts/actions/setup_macaron.sh"
     shell: bash
+    env:
+      ACTION_REF: ${{ github.action_ref }}
 
   - name: Run Macaron Analysis
     id: run-macaron-analysis
