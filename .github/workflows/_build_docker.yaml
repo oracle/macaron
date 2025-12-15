@@ -23,7 +23,7 @@ jobs:
   build-docker:
     runs-on: ubuntu-latest
     permissions:
-      packages: read
+      packages: write # to push the test docker image
     steps:
 
     - name: Check out repository
@@ -67,10 +67,78 @@ jobs:
       run: make setup-integration-test-utility-for-docker
 
     # Run the integration tests against the built Docker image.
-    - name: Test the Docker image
+    # - name: Test the Docker image
+    #   env:
+    #     # This environment variable will be picked up by run_macaron.sh.
+    #     MACARON_IMAGE_TAG: test
+    #     DOCKER_PULL: never
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   run: make integration-test-docker
+
+    # Push the test Docker image.
+    - name: Push the Docker image
+      id: push-docker
       env:
-        # This environment variable will be picked up by run_macaron.sh.
-        MACARON_IMAGE_TAG: test
-        DOCKER_PULL: never
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: make integration-test-docker
+        IMAGE_NAME: ghcr.io/oracle/macaron
+        RELEASE_TAG: test
+      run: |
+        make push-docker-test
+        IMAGE_AND_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE_NAME")
+        NAME=$(echo "$IMAGE_AND_DIGEST" | cut -d'@' -f1 | cut -d':' -f1)
+        DIGEST=$(echo "$IMAGE_AND_DIGEST" | cut -d'@' -f2)
+        {
+          echo "image-name=${NAME}"
+          echo "image-digest=${DIGEST}"
+        } >> "$GITHUB_OUTPUT"
+
+    # Generate the Docker image SBOM under the dist/ directory which will be published as part of the release assets.
+    - name: Generate Docker sbom
+      env:
+        SYFT_BIN: ${{ github.workspace }}/bin
+        RELEASE_TAG: test
+        RELEASE_VERSION: test
+        SYFT_VERSION: 1.29.0
+      # We install Syft, which is an SBOM generator tool for Docker images, using the instructions from:
+      #   https://github.com/anchore/syft#installation
+      # We only generate SBOM in CycloneDX format.
+      run: |
+        mkdir -p "$SYFT_BIN"
+        ASSET_NAME="syft_${SYFT_VERSION}_linux_amd64.tar.gz"
+        CHECKSUMS="syft_${SYFT_VERSION}_checksums.txt"
+
+        # Download artifacts.
+        echo "Downloading $ASSET_NAME"
+        curl --output "$ASSET_NAME" --progress-bar --location \
+          "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/${ASSET_NAME}"
+        test -s "$ASSET_NAME" || (echo "Unable to download $ASSET_NAME" && exit 0)
+        echo "Downloading $CHECKSUMS"
+        curl --output "$CHECKSUMS"  --progress-bar --location \
+          "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/${CHECKSUMS}"
+        test -s "$CHECKSUMS" || (echo "Unable to download $CHECKSUMS" && exit 0)
+
+        EXPECTED=$(grep "${ASSET_NAME}" "${CHECKSUMS}" 2>/dev/null | tr '\t' ' ' | cut -d ' ' -f 1)
+        SYFT_DIGEST=$(sha256sum "$ASSET_NAME" | cut -d ' ' -f 1)
+
+        # Check if artifact is valid.
+        if [ "$EXPECTED" == "$SYFT_DIGEST" ]; then
+          tar -zxvf "$ASSET_NAME" -C "$SYFT_BIN" syft
+          "$SYFT_BIN"/syft --version
+          "$SYFT_BIN"/syft \
+            ghcr.io/oracle/macaron:"$RELEASE_TAG" \
+            -o cyclonedx-json=dist/macaron-"$RELEASE_VERSION"-sbom-docker.json
+        else
+          echo "Checksum for '$ASSET_NAME' did not verify: expected $EXPECTED but got $SYFT_DIGEST"
+        fi
+
+        # Remove the downloaded artifacts.
+        rm -f "$ASSET_NAME"
+        rm -f "$CHECKSUMS"
+
+    # Upload the SBOM.
+    - name: Upload the SBOM
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: sbom-macaron-test
+        path: dist/macaron-test-sbom-docker.json
+        if-no-files-found: error
+        retention-days: 7
