@@ -664,7 +664,7 @@ class PyPIPackageJsonAsset:
     wheel_filename: str = field(init=False)
 
     #: The datetime that the wheel was uploaded.
-    package_upload_time: datetime = field(init=False)
+    package_upload_time: datetime | None = field(default=None, init=False)
 
     #: The pypi inspector information about this package
     inspector_asset: PyPIInspectorAsset
@@ -809,8 +809,11 @@ class PyPIPackageJsonAsset:
         if not urls:
             return None
         for distribution in urls:
-            # In this way we have an package_upload_time even if we dont have cannot find the wheel
-            self.package_upload_time = datetime.strptime(distribution.get("upload_time") or "", "%Y-%m-%dT%H:%M:%S")
+            # In this way we have a package_upload_time even if we cannot find the wheel.
+            try:
+                self.package_upload_time = datetime.strptime(distribution.get("upload_time") or "", "%Y-%m-%dT%H:%M:%S")
+            except ValueError:
+                logging.debug("Could not parse the uploaded datetime: %s", distribution.get("upload_time") or "")
             # Only examine wheels
             if distribution.get("packagetype") != "bdist_wheel":
                 continue
@@ -821,7 +824,12 @@ class PyPIPackageJsonAsset:
             # Continue to getting url
             wheel_url: str = distribution.get("url") or ""
             if wheel_url:
-                self.package_upload_time = datetime.strptime(distribution.get("upload_time") or "", "%Y-%m-%dT%H:%M:%S")
+                try:
+                    self.package_upload_time = datetime.strptime(
+                        distribution.get("upload_time") or "", "%Y-%m-%dT%H:%M:%S"
+                    )
+                except ValueError:
+                    logging.debug("Could not parse the uploaded datetime: %s", distribution.get("upload_time") or "")
                 try:
                     parsed_url = urllib.parse.urlparse(wheel_url)
                 except ValueError:
@@ -1132,7 +1140,10 @@ class PyPIPackageJsonAsset:
         str
             Chronologically likeliest setuptools version
         """
-        return self.pypi_registry.get_matching_setuptools_version(self.package_upload_time)
+        if self.package_upload_time:
+            return self.pypi_registry.get_matching_setuptools_version(self.package_upload_time)
+        # If we cannot infer upload time for the package, return the default
+        return defaults.get("heuristic.pypi", "default_setuptools")
 
 
 def find_or_create_pypi_asset(

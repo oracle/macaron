@@ -62,7 +62,7 @@ class BaseBuildSpecDict(TypedDict, total=False):
     build_commands: NotRequired[list[list[str]]]
 
     #: List of shell commands to test the project.
-    test_commands: NotRequired[list[str]]
+    test_commands: NotRequired[list[list[str]]]
 
     #: Environment variables required during build or test.
     environment: NotRequired[dict[str, str]]

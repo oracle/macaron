@@ -170,7 +170,7 @@ class PyPIBuildSpec(
                             requires = json_extract(content, ["build-system", "requires"], list)
                             if requires:
                                 build_requires_set.update(elem.replace(" ", "") for elem in requires)
-                            # If we cannot find [build-system] requires, we lean on the fact that setuptools
+                            # If we cannot find `requires` in `[build-system]`, we lean on the fact that setuptools
                             # was the de-facto build tool, and infer a setuptools version to include.
                             else:
                                 build_requires_set.add(f"setuptools=={chronologically_likeliest_version}")
