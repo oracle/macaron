@@ -167,6 +167,7 @@ gradlew.bat
 .macaron
 reports
 output
+output_dir
 cdx_debug.json
 sbom_debug.json
 golang/internal/filewriter/mock_dir/result.json

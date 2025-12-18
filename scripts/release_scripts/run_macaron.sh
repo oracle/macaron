@@ -56,6 +56,9 @@ IMAGE="ghcr.io/oracle/macaron"
 # Workspace directory inside of the container.
 MACARON_WORKSPACE="/home/macaron"
 
+# Host output path outside the container.
+HOST_OUTPUT=""
+
 # The entrypoint to run Macaron or the Policy Engine.
 # It it set by default to macaron.
 # We use an array here to preserve the arguments as provided by the user.
@@ -388,8 +391,10 @@ fi
 if [[ -n "${arg_output:-}" ]]; then
     output="${arg_output}"
     argv_main+=("--output" "${MACARON_WORKSPACE}/output/")
+    HOST_OUTPUT="${arg_output}"
 else
     output=$(pwd)/output
+    HOST_OUTPUT="output"
     echo "Setting default output directory to ${output}."
 fi
 
@@ -659,6 +664,7 @@ docker run \
     --rm -i "${tty[@]}" \
     -e "USER_UID=${USER_UID}" \
     -e "USER_GID=${USER_GID}" \
+    -e "HOST_OUTPUT=${HOST_OUTPUT}" \
     "${proxy_vars[@]}" \
     "${prod_vars[@]}" \
     "${mounts[@]}" \

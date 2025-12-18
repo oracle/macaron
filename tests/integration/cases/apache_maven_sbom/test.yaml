@@ -13,6 +13,7 @@ steps:
   kind: analyze
   options:
     ini: config.ini
+    output: output_dir
     command_args:
     - -purl
     - pkg:maven/org.apache.maven/maven@4.0.0-alpha-1-SNAPSHOT?type=pom
@@ -28,5 +29,5 @@ steps:
   kind: compare
   options:
     kind: deps_report
-    result: output/reports/maven/org_apache_maven/maven/dependencies.json
+    result: output_dir/reports/maven/org_apache_maven/maven/dependencies.json
     expected: dependencies.json

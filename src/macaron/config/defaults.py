@@ -10,6 +10,7 @@ import pathlib
 import shutil
 
 from macaron.console import access_handler
+from macaron.output_reporter import find_report_output_path
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -138,15 +139,13 @@ def load_defaults(user_config_path: str) -> bool:
         return False
 
 
-def create_defaults(output_path: str, cwd_path: str) -> bool:
+def create_defaults(output_path: str) -> bool:
     """Create the ``defaults.ini`` file at the Macaron's root dir for end users.
 
     Parameters
     ----------
     output_path : str
         The path where the ``defaults.ini`` will be created.
-    cwd_path : str
-        The path to the current working directory.
 
     Returns
     -------
@@ -169,12 +168,12 @@ def create_defaults(output_path: str, cwd_path: str) -> bool:
         shutil.copy2(src_path, dest_path)
         logger.info(
             "Dumped the default values in %s.",
-            os.path.relpath(os.path.join(output_path, "defaults.ini"), cwd_path),
+            find_report_output_path(os.path.join(output_path, "defaults.ini")),
         )
-        rich_handler.update_dump_defaults(os.path.relpath(dest_path, cwd_path))
+        rich_handler.update_dump_defaults(find_report_output_path(dest_path))
         return True
     # We catch OSError to support errors on different platforms.
     except OSError as error:
-        logger.error("Failed to create %s: %s.", os.path.relpath(dest_path, cwd_path), error)
+        logger.error("Failed to create %s: %s.", find_report_output_path(dest_path), error)
         rich_handler.update_dump_defaults("[bold red]Failed[/]")
         return False
