@@ -82,7 +82,7 @@ def setup_test(test_dir: Path, macaron_path: Path) -> NoReturn:  # type: ignore
     """
     # Load values from defaults.ini.
     if not test_dir.joinpath("defaults.ini").exists():
-        create_defaults(str(test_dir), str(macaron_path))
+        create_defaults(str(test_dir))
 
     load_defaults(str(macaron_path))
     yield

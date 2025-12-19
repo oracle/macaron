@@ -49,6 +49,9 @@ class GlobalConfig:
     #: The path to the local .m2 Maven repository. This attribute is None if there is no available .m2 directory.
     local_maven_repo: str | None = None
 
+    #: The host output path, if Macaron is executed as a container.
+    host_output_path: str = ""
+
     def load(
         self,
         macaron_path: str,

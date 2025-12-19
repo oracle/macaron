@@ -14,6 +14,7 @@ from pydriller import Git
 
 from macaron.config.global_config import global_config
 from macaron.console import access_handler
+from macaron.output_reporter import find_report_output_path
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_url import GIT_REPOS_DIR, decode_git_tags, parse_git_tags
@@ -78,7 +79,7 @@ def generate_report(purl: str, commit: str, repo: str, target_dir: str) -> bool:
     fullpath = f"{target_dir}/{filename}"
 
     os.makedirs(os.path.dirname(fullpath), exist_ok=True)
-    logger.info("Writing report to: %s", os.path.relpath(fullpath, os.getcwd()))
+    logger.info("Writing report to: %s", find_report_output_path(fullpath))
 
     try:
         with open(fullpath, "w", encoding="utf-8") as file:
@@ -87,10 +88,10 @@ def generate_report(purl: str, commit: str, repo: str, target_dir: str) -> bool:
         logger.debug("Failed to write report to file: %s", error)
         return False
 
-    logger.info("Report written to: %s", os.path.relpath(fullpath, os.getcwd()))
+    logger.info("Report written to: %s", find_report_output_path(fullpath))
 
     rich_handler = access_handler.get_handler()
-    rich_handler.update_find_source_table("JSON Report:", os.path.relpath(fullpath, os.getcwd()))
+    rich_handler.update_find_source_table("JSON Report:", find_report_output_path(fullpath))
 
     return True
 

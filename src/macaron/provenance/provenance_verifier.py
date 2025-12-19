@@ -16,6 +16,7 @@ from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
+from macaron.output_reporter import find_report_output_path
 from macaron.provenance.provenance_extractor import ProvenancePredicate, SLSAGithubGenericBuildDefinitionV01
 from macaron.provenance.provenance_finder import ProvenanceAsset
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
@@ -336,7 +337,7 @@ def _verify_slsa(
         verified = "PASSED: SLSA verification passed" in output
         log_path = os.path.join(global_config.build_log_path, f"{os.path.basename(source_path)}.slsa_verifier.log")
         with open(log_path, mode="a", encoding="utf-8") as log_file:
-            logger.info("Storing SLSA verifier output for %s to %s", asset_name, os.path.relpath(log_path, os.getcwd()))
+            logger.info("Storing SLSA verifier output for %s to %s", asset_name, find_report_output_path(log_path))
             log_file.writelines(
                 [f"SLSA verifier output for cmd: {' '.join(cmd)}\n", output, "--------------------------------\n"]
             )
@@ -359,7 +360,7 @@ def _verify_slsa(
             )
             with open(error_log_path, mode="a", encoding="utf-8") as log_file:
                 logger.info(
-                    "Storing SLSA verifier log for%s to %s", asset_name, os.path.relpath(error_log_path, os.getcwd())
+                    "Storing SLSA verifier log for%s to %s", asset_name, find_report_output_path(error_log_path)
                 )
                 log_file.write(f"SLSA verifier output for cmd: {' '.join(cmd)}\n")
                 log_file.writelines(errors)

@@ -26,6 +26,7 @@ from macaron.config.global_config import global_config
 from macaron.config.target_config import Configuration
 from macaron.database.table_definitions import Component
 from macaron.errors import CycloneDXParserError, DependencyAnalyzerError
+from macaron.output_reporter import find_report_output_path
 from macaron.output_reporter.scm import SCMStatus
 from macaron.repo_finder.repo_finder import find_repo
 from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
@@ -359,7 +360,7 @@ class DependencyAnalyzer:
                 "Running %s version %s dependency analyzer on %s",
                 dep_analyzer.tool_name,
                 dep_analyzer.tool_version,
-                os.path.relpath(main_ctx.component.repository.fs_path, os.getcwd()),
+                find_report_output_path(main_ctx.component.repository.fs_path),
             )
 
             log_path = os.path.join(
@@ -397,7 +398,7 @@ class DependencyAnalyzer:
             logger.info(
                 "Stored dependency resolver log for %s to %s.",
                 dep_analyzer.tool_name,
-                os.path.relpath(log_path, os.getcwd()),
+                find_report_output_path(log_path),
             )
 
         # Use repo finder to find more repositories to analyze.

@@ -390,6 +390,7 @@ class AnalyzeStepOptions(TypedDict):
     expectation: str | None
     provenance: str | None
     sbom: str | None
+    output: str | None
 
 
 @dataclass
@@ -404,15 +405,7 @@ class AnalyzeStep(Step):
             None,
             *[
                 cfgv.NoAdditionalKeys(
-                    [
-                        "main_args",
-                        "command_args",
-                        "env",
-                        "ini",
-                        "expectation",
-                        "provenance",
-                        "sbom",
-                    ],
+                    ["main_args", "command_args", "env", "ini", "expectation", "provenance", "sbom", "output"],
                 ),
                 cfgv.Optional(
                     key="main_args",
@@ -444,6 +437,11 @@ class AnalyzeStep(Step):
                     check_fn=check_required_file(cwd),
                     default=None,
                 ),
+                cfgv.Optional(
+                    key="output",
+                    check_fn=cfgv.check_string,
+                    default=None,
+                ),
             ],
         )
 
@@ -454,6 +452,9 @@ class AnalyzeStep(Step):
         ini_file = self.options.get("ini", None)
         if ini_file is not None:
             args.extend(["--defaults-path", ini_file])
+        output = self.options.get("output", None)
+        if output is not None:
+            args.extend(["--output", output])
         args.append("analyze")
         expectation_file = self.options.get("expectation", None)
         if expectation_file is not None:

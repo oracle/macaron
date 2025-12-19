@@ -11,6 +11,7 @@ from abc import abstractmethod
 from datetime import datetime
 
 from macaron.code_analyzer.dataflow_analysis.core import NodeForest
+from macaron.output_reporter import find_report_output_path
 from macaron.slsa_analyzer.git_service.api_client import BaseAPIClient
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
 
@@ -146,9 +147,7 @@ class BaseCIService:
                                 line.strip(),
                             )
                             return keyword, config
-                logger.info(
-                    "No build command found for %s in %s", build_tool_name, os.path.relpath(file_path, os.getcwd())
-                )
+                logger.info("No build command found for %s in %s", build_tool_name, find_report_output_path(file_path))
                 return "", ""
             except FileNotFoundError as error:
                 logger.debug(error)

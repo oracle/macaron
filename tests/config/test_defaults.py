@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the defaults module."""
@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 
 from macaron.config.defaults import create_defaults, defaults, load_defaults
-from macaron.config.global_config import global_config
 
 
 def test_load_defaults() -> None:
@@ -29,7 +28,7 @@ def test_load_defaults() -> None:
 def test_create_defaults() -> None:
     """Test dumping the default values."""
     output_dir = os.path.dirname(os.path.abspath(__file__))
-    assert create_defaults(output_dir, global_config.macaron_path) is True
+    assert create_defaults(output_dir) is True
 
 
 @pytest.mark.xfail(
@@ -38,7 +37,7 @@ def test_create_defaults() -> None:
 )
 def test_create_defaults_without_permission() -> None:
     """Test dumping default config in cases where the user does not have write permission to the output location."""
-    assert create_defaults(output_path="/", cwd_path="/") is False
+    assert create_defaults(output_path="/") is False
 
 
 @pytest.mark.parametrize(
