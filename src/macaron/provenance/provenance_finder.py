@@ -6,7 +6,6 @@ import json
 import logging
 import os
 import tempfile
-from dataclasses import dataclass
 from functools import partial
 
 from packageurl import PackageURL
@@ -14,6 +13,7 @@ from pydriller import Git
 
 from macaron.artifact.local_artifact import get_local_artifact_hash
 from macaron.config.defaults import defaults
+from macaron.provenance import ProvenanceAsset
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_utils import get_repo_tags
@@ -30,7 +30,6 @@ from macaron.slsa_analyzer.package_registry import (
 )
 from macaron.slsa_analyzer.package_registry.npm_registry import NPMAttestationAsset
 from macaron.slsa_analyzer.package_registry.pypi_registry import find_or_create_pypi_asset
-from macaron.slsa_analyzer.provenance.intoto import InTotoPayload
 from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError
 from macaron.slsa_analyzer.provenance.loader import load_provenance_payload
 from macaron.slsa_analyzer.provenance.slsa import SLSAProvenanceData
@@ -39,15 +38,6 @@ from macaron.slsa_analyzer.specs.ci_spec import CIInfo
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class ProvenanceAsset:
-    """This class exists to hold a provenance payload with the original asset's name and URL."""
-
-    payload: InTotoPayload
-    name: str
-    url: str
 
 
 class ProvenanceFinder:
