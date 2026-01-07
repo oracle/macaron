@@ -1,4 +1,4 @@
-/* Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 #include "prelude.dl"
@@ -20,4 +20,4 @@ Policy("test_policy", component_id, "") :-
     is_repo_url(component_id, "https://github.com/apache/logging-log4j2").
 
 apply_policy_to("test_policy", component_id) :-
-    is_component(component_id, "pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta3").
+    is_component(component_id, "pkg:maven/org.apache.logging.log4j/log4j-core@2.25.3").
