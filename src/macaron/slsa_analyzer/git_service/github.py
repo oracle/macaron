@@ -9,10 +9,11 @@ from pydriller.git import Git
 from macaron.config.global_config import global_config
 from macaron.errors import ConfigurationError, RepoCheckOutError
 from macaron.json_tools import json_extract
+from macaron.provenance import ProvenanceAsset
 from macaron.slsa_analyzer import git_url
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient, get_default_gh_client
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
-from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, ValidateInTotoPayloadError, validate_intoto_payload
+from macaron.slsa_analyzer.provenance.intoto import ValidateInTotoPayloadError, validate_intoto_payload
 from macaron.slsa_analyzer.provenance.loader import decode_provenance
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -96,7 +97,7 @@ class GitHub(BaseGitService):
 
         return git_obj
 
-    def get_attestation_payload(self, repository_name: str, artifact_hash: str) -> InTotoPayload | None:
+    def get_attestation(self, repository_name: str, artifact_hash: str) -> ProvenanceAsset | None:
         """Get the GitHub attestation associated with the given PURL, or None if it cannot be found.
 
         The schema of GitHub attestation can be found on the API page:
@@ -111,12 +112,12 @@ class GitHub(BaseGitService):
 
         Returns
         -------
-        InTotoPayload | None
-            The attestation payload, if found.
+        ProvenanceAsset | None
+            The provenance asset, if found.
         """
-        git_attestation_dict = self.api_client.get_attestation(repository_name, artifact_hash)
+        attestation_url, git_attestation_dict = self.api_client.get_attestation(repository_name, artifact_hash)
 
-        if not git_attestation_dict:
+        if not attestation_url or not git_attestation_dict:
             return None
 
         git_attestation_list = json_extract(git_attestation_dict, ["attestations"], list)
@@ -124,9 +125,13 @@ class GitHub(BaseGitService):
             return None
 
         payload = decode_provenance(git_attestation_list[0])
-
+        validated_payload = None
         try:
-            return validate_intoto_payload(payload)
+            validated_payload = validate_intoto_payload(payload)
         except ValidateInTotoPayloadError as error:
             logger.debug("Invalid attestation payload: %s", error)
             return None
+        if not validated_payload:
+            return None
+
+        return ProvenanceAsset(validated_payload, artifact_hash, attestation_url)

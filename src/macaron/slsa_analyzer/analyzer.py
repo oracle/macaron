@@ -527,9 +527,10 @@ class Analyzer:
             # Try to discover GitHub attestation for the target software component.
             artifact_hash = get_artifact_hash(parsed_purl, local_artifact_dirs, package_registries_info)
             if artifact_hash:
-                provenance_payload = git_service.get_attestation_payload(
+                provenance_asset = git_service.get_attestation(
                     analyze_ctx.component.repository.full_name, artifact_hash
                 )
+                provenance_payload = provenance_asset.payload if provenance_asset else None
                 if provenance_payload:
                     try:
                         provenance_repo_url, provenance_commit_digest = extract_repo_and_commit_from_provenance(
