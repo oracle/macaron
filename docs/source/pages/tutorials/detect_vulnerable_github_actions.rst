@@ -107,7 +107,7 @@ Alternatively, run the ``analyze`` command with the PURL of a package:
 
 .. code-block:: shell
 
-  ./run_macaron.sh analyze -purl pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta3
+  ./run_macaron.sh analyze -purl pkg:maven/org.apache.logging.log4j/log4j-core@2.25.3
 
 Then, ensure that the ``mcn_githubactions_vulnerabilities_1`` check passes for the component. You can create a similar policy to the one shown earlier and store it in a file (e.g., ``check_github_actions_vuln.dl``):
 

@@ -25,7 +25,7 @@ dependencies:
    * - Artifact name
      - `Package URL (PURL) <https://github.com/package-url/purl-spec>`_
    * - `log4j-core <https://central.sonatype.com/artifact/org.apache.logging.log4j/log4j-core>`_
-     - ``pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta3?type=jar``
+     - ``pkg:maven/org.apache.logging.log4j/log4j-core@2.25.3?type=jar``
    * - `jackson-databind <https://central.sonatype.com/artifact/io.github.behnazh-w.demo/jackson-databind>`_
      - ``pkg:maven/io.github.behnazh-w.demo/jackson-databind@1.0?type=jar``
 
@@ -110,20 +110,20 @@ As you scroll down in the HTML report, you will see a section for the dependenci
 | Macaron has found the two dependencies as expected:
 
 * ``io.github.behnazh-w.demo:jackson-databind:1.0``
-* ``org.apache.logging.log4j:log4j-core:3.0.0-beta3``
+* ``org.apache.logging.log4j:log4j-core:2.25.3``
 
-When we open the reports for each dependency, we see that ``mcn_find_artifact_pipeline_1`` is passed for ``org.apache.logging.log4j:log4j-core:3.0.0-beta3``
-and a GitHub Actions workflow run is found for publishing version ``3.0.0-beta3``. However, this check is failing for ``io.github.behnazh-w.demo:jackson-databind:1.0``.
+When we open the reports for each dependency, we see that ``mcn_find_artifact_pipeline_1`` is passed for ``org.apache.logging.log4j:log4j-core:2.25.3``
+and a GitHub Actions workflow run is found for publishing version ``2.25.3``. However, this check is failing for ``io.github.behnazh-w.demo:jackson-databind:1.0``.
 This means that ``io.github.behnazh-w.demo:jackson-databind:1.0`` could have been built and published manually to Maven Central
 and could potentially be malicious.
 
 .. _fig_find_artifact_pipeline_log4j:
 
 .. figure:: ../../_static/images/tutorial_log4j_find_pipeline.png
-   :alt: mcn_find_artifact_pipeline_1 for org.apache.logging.log4j:log4j-core:3.0.0-beta3
+   :alt: mcn_find_artifact_pipeline_1 for org.apache.logging.log4j:log4j-core:2.25.3
    :align: center
 
-   ``org.apache.logging.log4j:log4j-core:3.0.0-beta3``
+   ``org.apache.logging.log4j:log4j-core:2.25.3``
 
 .. _fig_infer_artifact_pipeline_bh_jackson_databind:
 

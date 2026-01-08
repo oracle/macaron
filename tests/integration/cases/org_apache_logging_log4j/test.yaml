@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
@@ -15,7 +15,7 @@ steps:
   options:
     command_args:
     - -purl
-    - pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta3
+    - pkg:maven/org.apache.logging.log4j/log4j-core@2.25.3
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
   options:
