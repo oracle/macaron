@@ -106,6 +106,7 @@ class PyPIBuildSpec(
             metadata=[],
         )
 
+        artifacts: dict[str, str] = {}
         pypi_package_json = pypi_registry.find_or_create_pypi_asset(purl.name, purl.version, registry_info)
         patched_build_commands: list[list[str]] = []
         build_backends_set: set[str] = set()
@@ -184,6 +185,8 @@ class PyPIBuildSpec(
 
                 try:
                     with pypi_package_json.sourcecode():
+                        artifacts["sdist"] = pypi_package_json.sdist_url
+                        logger.debug("sdist url at %s", artifacts["sdist"])
                         try:
                             # Get the build time requirements from ["build-system", "requires"]
                             pyproject_content = pypi_package_json.get_sourcecode_file_contents("pyproject.toml")
@@ -268,6 +271,33 @@ class PyPIBuildSpec(
         # We do not generate a build command for non-pure packages
         if not self.data["has_binaries"]:
             patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
+        self.data["upstream_artifacts"] = artifacts
+
+        if not patched_build_commands:
+            # Resolve and patch build commands.
+
+            # To ensure that selected_build_commands is never empty, we seed with the fallback
+            # command of python -m build --wheel -n
+            if self.data["build_commands"]:
+                selected_build_commands = self.data["build_commands"]
+            else:
+                self.data["build_commands"] = ["python -m build --wheel -n".split()]
+                selected_build_commands = (
+                    self.get_default_build_commands(self.data["build_tools"]) or self.data["build_commands"]
+                )
+
+            logger.debug(selected_build_commands)
+
+            patched_build_commands = (
+                patch_commands(
+                    cmds_sequence=selected_build_commands,
+                    patches=CLI_COMMAND_PATCHES,
+                )
+                or []
+            )
+            if not patched_build_commands:
+                raise GenerateBuildSpecError(f"Failed to patch command sequences {selected_build_commands}.")
+
         self.data["build_commands"] = patched_build_commands
 
     def add_parsed_requirement(self, build_requirements: dict[str, str], requirement: str) -> None:

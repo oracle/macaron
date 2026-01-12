@@ -62,18 +62,22 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
         build_tool_install = (
             f"pip install {buildspec['build_tools'][0]} && if test -f \"flit.ini\"; then python -m flit.tomlify; fi && "
         )
+
     modern_build_command = build_tool_install + " ".join(x for x in buildspec["build_commands"][0])
     legacy_build_command = (
         'if test -f "setup.py"; then pip install wheel && python setup.py bdist_wheel; '
         "else python -m build --wheel -n; fi"
     )
 
+    wheel_url = buildspec["upstream_artifacts"]["wheel"]
+    wheel_name = wheel_url.rsplit("/", 1)[-1]
+
     dockerfile_content = f"""
     #syntax=docker/dockerfile:1.10
     FROM oraclelinux:9
 
     # Install core tools
-    RUN dnf -y install which wget tar git
+    RUN dnf -y install which wget tar unzip git
 
     # Install compiler and make
     RUN dnf -y install gcc make
@@ -126,7 +130,29 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     EOF
 
     # Run the build
+
     RUN source /deps/bin/activate &&  {modern_build_command if version in SpecifierSet(">=3.6") else legacy_build_command}
+
+    # Validate script
+    RUN cat <<'EOF' >/validate
+        # Capture artifacts generated
+        ARTIFACTS=(/src/dist/*)
+        # Ensure we only have one artefact
+        [ ${{#ARTIFACTS[@]}} -eq 1 ] || {{ echo "Unexpected artifacts prodced!"; exit 1; }}
+        # BUILT_WHEEL is the artefact we built
+        BUILT_WHEEL=${{ARTIFACTS[0]}}
+        # Download the wheel
+        wget -q {wheel_url}
+        # Compare wheel names
+        [ $(basename $BUILT_WHEEL) == "{wheel_name}" ] || {{ echo "Wheel name does not match!"; exit 1; }}
+        # Compare file tree
+        (unzip -Z1 $BUILT_WHEEL | sort) > built.tree
+        (unzip -Z1 "{wheel_name}" | sort ) > pypi_artefact.tree
+        diff -u built.tree pypi_artefact.tree || {{ echo "File trees do not match!"; exit 1; }}
+        echo "Success!"
+    EOF
+
+    ENTRYPOINT ["/bin/bash","/validate"]
     """
 
     return dedent(dockerfile_content)
