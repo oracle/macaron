@@ -112,6 +112,7 @@ class PyPIBuildSpec(
             metadata=[],
         )
 
+        artifacts: dict[str, str] = {}
         pypi_package_json = pypi_registry.find_or_create_pypi_asset(purl.name, purl.version, registry_info)
         patched_build_commands: list[list[str]] = []
         build_requires_set: set[str] = set()
@@ -137,6 +138,7 @@ class PyPIBuildSpec(
 
                 try:
                     with pypi_package_json.wheel():
+                        artifacts["wheel"] = pypi_package_json.wheel_url
                         logger.debug("Wheel at %s", pypi_package_json.wheel_path)
                         # Should only have .dist-info directory.
                         logger.debug("It has directories %s", ",".join(os.listdir(pypi_package_json.wheel_path)))
@@ -174,6 +176,8 @@ class PyPIBuildSpec(
 
                 try:
                     with pypi_package_json.sourcecode():
+                        artifacts["sdist"] = pypi_package_json.sdist_url
+                        logger.debug("sdist url at %s", artifacts["sdist"])
                         try:
                             # Get the build time requirements from ["build-system", "requires"]
                             pyproject_content = pypi_package_json.get_sourcecode_file_contents("pyproject.toml")
@@ -249,6 +253,7 @@ class PyPIBuildSpec(
 
         self.data["build_requires"] = parsed_build_requires
         self.data["build_backends"] = list(build_backends_set)
+        self.data["upstream_artifacts"] = artifacts
 
         if not patched_build_commands:
             # Resolve and patch build commands.
