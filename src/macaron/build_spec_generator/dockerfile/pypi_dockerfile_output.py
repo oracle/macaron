@@ -34,6 +34,8 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     GenerateBuildSpecError
         Raised if dockerfile cannot be generated.
     """
+    if buildspec["has_binaries"]:
+        raise GenerateBuildSpecError("We currently do not support generating a dockerfile for non-pure Python packages")
     language_version: str | None = pick_specific_version(buildspec)
     if language_version is None:
         raise GenerateBuildSpecError("Could not derive specific interpreter version")
