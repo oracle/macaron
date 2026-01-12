@@ -59,6 +59,11 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
             f"pip install {buildspec['build_tools'][0]} && if test -f \"flit.ini\"; then python -m flit.tomlify; fi && "
         )
     modern_build_command = build_tool_install + " ".join(x for x in buildspec["build_commands"][0])
+    legacy_build_command = (
+        'if test -f "setup.py"; then pip install wheel && python setup.py bdist_wheel; '
+        "else python -m build --wheel -n; fi"
+    )
+
     dockerfile_content = f"""
     #syntax=docker/dockerfile:1.10
     FROM oraclelinux:9
@@ -117,7 +122,7 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     EOF
 
     # Run the build
-    RUN source /deps/bin/activate &&  {modern_build_command if version in SpecifierSet(">=3.6") else "python setup.py bdist_wheel"}
+    RUN source /deps/bin/activate &&  {modern_build_command if version in SpecifierSet(">=3.6") else legacy_build_command}
     """
 
     return dedent(dockerfile_content)
@@ -136,8 +141,9 @@ def openssl_install_commands(version: Version) -> str:
     str
        Install commands for the corresponding openssl version
     """
-    # As per https://peps.python.org/pep-0644, all Python >= 3.10 requires at least OpenSSL 1.1.1.
-    if version in SpecifierSet(">=3.10"):
+    # As per https://peps.python.org/pep-0644, all Python >= 3.10 requires at least OpenSSL 1.1.1,
+    # and 3.6 to 3.9 can be compiled with OpenSSL 1.1.1. Therefore, we compile as below:
+    if version in SpecifierSet(">=3.6"):
         openssl_version = "1.1.1w"
         source_url = "https://www.openssl.org/source/old/1.1.1/openssl-1.1.1w.tar.gz"
     # From the same document, "Python versions 3.6 to 3.9 are compatible with OpenSSL 1.0.2,

@@ -243,6 +243,13 @@ class PyPIBuildSpec(
             build_backends_set.add("setuptools.build_meta")
 
         logger.debug("Combined build-requires: %s", parsed_build_requires)
+
+        for package, constraint in parsed_build_requires.items():
+            package_requirement = package + constraint
+            python_version_constraints = registry.get_python_requires_for_package_requirement(package_requirement)
+            if python_version_constraints:
+                self.data["language_version"].append(python_version_constraints)
+
         self.data["build_requires"] = parsed_build_requires
         self.data["build_backends"] = list(build_backends_set)
         # We do not generate a build command for non-pure packages
