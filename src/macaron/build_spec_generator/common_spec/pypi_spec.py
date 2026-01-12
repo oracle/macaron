@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module includes build specification and helper classes for PyPI packages."""
@@ -136,6 +136,7 @@ class PyPIBuildSpec(
 
                 try:
                     with pypi_package_json.wheel():
+                        self.data["has_binaries"] = False
                         logger.debug("Wheel at %s", pypi_package_json.wheel_path)
                         # Should only have .dist-info directory.
                         logger.debug("It has directories %s", ",".join(os.listdir(pypi_package_json.wheel_path)))
@@ -166,6 +167,7 @@ class PyPIBuildSpec(
                         except InvalidWheelFilename:
                             logger.debug("Could not parse wheel file name to extract version")
                 except SourceCodeError:
+                    self.data["has_binaries"] = True
                     logger.debug("Could not find pure wheel matching this PURL")
 
                 logger.debug("From .dist_info:")
