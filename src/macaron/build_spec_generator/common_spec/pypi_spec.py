@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module includes build specification and helper classes for PyPI packages."""
@@ -237,6 +237,13 @@ class PyPIBuildSpec(
             build_backends_set.add("setuptools.build_meta")
 
         logger.debug("Combined build-requires: %s", parsed_build_requires)
+
+        for package, constraint in parsed_build_requires.items():
+            package_requirement = package + constraint
+            python_version_constraints = registry.get_python_requires_for_package_requirement(package_requirement)
+            if python_version_constraints:
+                self.data["language_version"].append(python_version_constraints)
+
         self.data["build_requires"] = parsed_build_requires
         self.data["build_backends"] = list(build_backends_set)
 
