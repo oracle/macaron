@@ -10,8 +10,8 @@ RUN dnf -y install gcc make
 
 # Download and unzip interpreter
 RUN <<EOF
-    wget https://www.python.org/ftp/python/3.14.0/Python-3.14.0.tgz
-    tar -xf Python-3.14.0.tgz
+    wget https://www.python.org/ftp/python/3.9.25/Python-3.9.25.tgz
+    tar -xf Python-3.9.25.tgz
 EOF
 
 # Install necessary libraries to build the interpreter
@@ -20,13 +20,30 @@ RUN dnf install \
   gcc-c++ gdb lzma glibc-devel libstdc++-devel openssl-devel \
   readline-devel zlib-devel libzstd-devel libffi-devel bzip2-devel \
   xz-devel sqlite sqlite-devel sqlite-libs libuuid-devel gdbm-libs \
-  perf expat expat-devel mpdecimal python3-pip
+  perf expat expat-devel mpdecimal python3-pip \
+  perl perl-File-Compare
+
+# Build OpenSSL 1.1.1w
+RUN <<EOF
+    wget https://www.openssl.org/source/old/1.1.1/openssl-1.1.1w.tar.gz
+    tar xzf openssl-1.1.1w.tar.gz
+    cd openssl-1.1.1w
+    ./config --prefix=/opt/openssl --openssldir=/opt/openssl shared zlib
+    make -j"$(nproc)"
+    make install_sw
+EOF
+
+ENV LD_LIBRARY_PATH=/opt/openssl/lib
+ENV CPPFLAGS=-I/opt/openssl/include
+ENV LDFLAGS=-L/opt/openssl/lib
 
 # Build interpreter and create venv
 RUN <<EOF
-    cd Python-3.14.0
+    cd Python-3.9.25
     ./configure --with-pydebug
     make -s -j $(nproc)
+    make install
+    ./python -m ensurepip
     ./python -m venv /deps
 EOF
 
@@ -42,9 +59,9 @@ WORKDIR /src
 
 # Install build and the build backends
 RUN <<EOF
-    /deps/bin/pip install "setuptools==80.3.1" && /deps/bin/pip install "setuptools_dynamic_dependencies==1.0.0" && /deps/bin/pip install "setuptools_scm==8.3.1"
+    /deps/bin/pip install "setuptools_dynamic_dependencies==1.0.0" && /deps/bin/pip install "setuptools_scm==8.3.1" && /deps/bin/pip install --upgrade setuptools
     /deps/bin/pip install build
 EOF
 
 # Run the build
-RUN source /deps/bin/activate && python -m build --wheel -n
+RUN source /deps/bin/activate &&  python -m build --wheel -n
