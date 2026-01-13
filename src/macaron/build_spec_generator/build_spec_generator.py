@@ -98,8 +98,8 @@ def gen_build_spec_for_purl(
             case BuildSpecFormat.DOCKERFILE:
                 try:
                     build_spec_content = gen_dockerfile(build_spec)
-                except ValueError as error:
-                    logger.error("Error while serializing the build spec: %s.", error)
+                except GenerateBuildSpecError as error:
+                    logger.error("Error while generating the build spec: %s.", error)
                     return os.EX_DATAERR
                 build_spec_file_path = os.path.join(build_spec_dir_path, "dockerfile.buildspec")
 

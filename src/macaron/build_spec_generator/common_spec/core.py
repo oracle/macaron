@@ -378,7 +378,7 @@ def gen_generic_build_spec(
             "purl": str(purl),
             "language": target_language,
             "build_tools": build_tool_names,
-            "build_commands": [selected_build_command],
+            "build_commands": [selected_build_command] if selected_build_command else [],
         }
     )
     ECOSYSTEMS[purl.type.upper()].value(base_build_spec_dict).resolve_fields(purl)

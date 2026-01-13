@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module includes build specification and helper classes for PyPI packages."""
@@ -112,6 +112,7 @@ class PyPIBuildSpec(
             metadata=[],
         )
 
+        artifacts: dict[str, str] = {}
         pypi_package_json = pypi_registry.find_or_create_pypi_asset(purl.name, purl.version, registry_info)
         patched_build_commands: list[list[str]] = []
         build_requires_set: set[str] = set()
@@ -120,6 +121,7 @@ class PyPIBuildSpec(
         python_version_set: set[str] = set()
         wheel_name_python_version_list: list[str] = []
         wheel_name_platforms: set[str] = set()
+        version_constraint_set: set[str] = set()
         # Precautionary fallback to default version
         chronologically_likeliest_version: str = defaults.get("heuristic.pypi", "default_setuptools")
 
@@ -136,6 +138,7 @@ class PyPIBuildSpec(
 
                 try:
                     with pypi_package_json.wheel():
+                        artifacts["wheel"] = pypi_package_json.wheel_url
                         logger.debug("Wheel at %s", pypi_package_json.wheel_path)
                         # Should only have .dist-info directory.
                         logger.debug("It has directories %s", ",".join(os.listdir(pypi_package_json.wheel_path)))
@@ -155,6 +158,16 @@ class PyPIBuildSpec(
                         chronologically_likeliest_version = (
                             pypi_package_json.get_chronologically_suitable_setuptools_version()
                         )
+                        try:
+                            # Get information from the wheel file name.
+                            logger.debug(pypi_package_json.wheel_filename)
+                            _, _, _, tags = parse_wheel_filename(pypi_package_json.wheel_filename)
+                            for tag in tags:
+                                wheel_name_python_version_list.append(tag.interpreter)
+                                wheel_name_platforms.add(tag.platform)
+                            logger.debug(python_version_set)
+                        except InvalidWheelFilename:
+                            logger.debug("Could not parse wheel file name to extract version")
                 except SourceCodeError:
                     logger.debug("Could not find pure wheel matching this PURL")
 
@@ -163,6 +176,8 @@ class PyPIBuildSpec(
 
                 try:
                     with pypi_package_json.sourcecode():
+                        artifacts["sdist"] = pypi_package_json.sdist_url
+                        logger.debug("sdist url at %s", artifacts["sdist"])
                         try:
                             # Get the build time requirements from ["build-system", "requires"]
                             pyproject_content = pypi_package_json.get_sourcecode_file_contents("pyproject.toml")
@@ -214,17 +229,6 @@ class PyPIBuildSpec(
                     except (InvalidRequirement, InvalidSpecifier) as error:
                         logger.debug("Malformed requirement encountered %s : %s", requirement, error)
 
-                try:
-                    # Get information from the wheel file name.
-                    logger.debug(pypi_package_json.wheel_filename)
-                    _, _, _, tags = parse_wheel_filename(pypi_package_json.wheel_filename)
-                    for tag in tags:
-                        wheel_name_python_version_list.append(tag.interpreter)
-                        wheel_name_platforms.add(tag.platform)
-                    logger.debug(python_version_set)
-                except InvalidWheelFilename:
-                    logger.debug("Could not parse wheel file name to extract version")
-
                 self.data["language_version"] = list(python_version_set) or wheel_name_python_version_list
 
                 # Use the default build command for pure Python packages.
@@ -238,14 +242,33 @@ class PyPIBuildSpec(
             build_backends_set.add("setuptools.build_meta")
 
         logger.debug("Combined build-requires: %s", parsed_build_requires)
+
+        for package, constraint in parsed_build_requires.items():
+            package_requirement = package + constraint
+            python_version_constraints = registry.get_python_requires_for_package_requirement(package_requirement)
+            if python_version_constraints:
+                version_constraint_set.add(python_version_constraints)
+
+        self.data["language_version"] = sorted(version_constraint_set)
+
         self.data["build_requires"] = parsed_build_requires
         self.data["build_backends"] = list(build_backends_set)
+        self.data["upstream_artifacts"] = artifacts
 
         if not patched_build_commands:
             # Resolve and patch build commands.
-            selected_build_commands = self.data["build_commands"] or self.get_default_build_commands(
-                self.data["build_tools"]
-            )
+
+            # To ensure that selected_build_commands is never empty, we seed with the fallback
+            # command of python -m build --wheel -n
+            if self.data["build_commands"]:
+                selected_build_commands = self.data["build_commands"]
+            else:
+                self.data["build_commands"] = ["python -m build --wheel -n".split()]
+                selected_build_commands = (
+                    self.get_default_build_commands(self.data["build_tools"]) or self.data["build_commands"]
+                )
+
+            logger.debug(selected_build_commands)
 
             patched_build_commands = (
                 patch_commands(
