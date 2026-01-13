@@ -114,6 +114,7 @@ class PyPIBuildSpec(
         python_version_set: set[str] = set()
         wheel_name_python_version_list: list[str] = []
         wheel_name_platforms: set[str] = set()
+        version_constraint_set: set[str] = set()
         # Precautionary fallback to default version
         chronologically_likeliest_version: str = defaults.get("heuristic.pypi", "default_setuptools")
 
@@ -248,7 +249,9 @@ class PyPIBuildSpec(
             package_requirement = package + constraint
             python_version_constraints = registry.get_python_requires_for_package_requirement(package_requirement)
             if python_version_constraints:
-                self.data["language_version"].append(python_version_constraints)
+                version_constraint_set.add(python_version_constraints)
+
+        self.data["language_version"] = sorted(version_constraint_set)
 
         self.data["build_requires"] = parsed_build_requires
         self.data["build_backends"] = list(build_backends_set)
