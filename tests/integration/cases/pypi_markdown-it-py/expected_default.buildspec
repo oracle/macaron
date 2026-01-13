@@ -1,5 +1,5 @@
 {
-    "macaron_version": "0.18.0",
+    "macaron_version": "0.20.0",
     "group_id": null,
     "artifact_id": "markdown-it-py",
     "version": "4.0.0",
@@ -21,6 +21,7 @@
             "build"
         ]
     ],
+    "has_binaries": false,
     "build_requires": {
         "flit": "==3.12.0",
         "flit_core": "<4,>=3.4"
