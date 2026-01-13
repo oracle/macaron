@@ -6,7 +6,7 @@
   FROM oraclelinux:9
   
   # Install core tools
-  RUN dnf -y install which wget tar git
+  RUN dnf -y install which wget tar unzip git
   
   # Install compiler and make
   RUN dnf -y install gcc make
@@ -68,6 +68,27 @@
   
   # Run the build
   RUN source /deps/bin/activate &&  python -m build
+  
+  # Validate script
+  RUN cat <<'EOF' >/validate
+      # Capture artifacts generated
+      ARTIFACTS=(/src/dist/*)
+      # Ensure we only have one artefact
+      [ ${#ARTIFACTS[@]} -eq 1 ] || { echo "Unexpected artifacts prodced!"; exit 1; }
+      # BUILT_WHEEL is the artefact we built
+      BUILT_WHEEL=${ARTIFACTS[0]}
+      # Download the wheel
+      wget -q https://files.pythonhosted.org/packages/96/c5/1e741d26306c42e2bf6ab740b2202872727e0f606033c9dd713f8b93f5a8/cachetools-6.2.1-py3-none-any.whl
+      # Compare wheel names
+      [ $(basename $BUILT_WHEEL) == "cachetools-6.2.1-py3-none-any.whl" ] || { echo "Wheel name does not match!"; exit 1; }
+      # Compare file tree
+      (unzip -Z1 $BUILT_WHEEL | sort) > built.tree
+      (unzip -Z1 "cachetools-6.2.1-py3-none-any.whl" | sort ) > pypi_artefact.tree
+      diff -u built.tree pypi_artefact.tree || { echo "File trees do not match!"; exit 1; }
+      echo "Success!"
+  EOF
+  
+  ENTRYPOINT ["/bin/bash","/validate"]
   
   '''
 # ---
