@@ -3,7 +3,7 @@
 FROM oraclelinux:9
 
 # Install core tools
-RUN dnf -y install which wget tar git
+RUN dnf -y install which wget tar unzip git
 
 # Install compiler and make
 RUN dnf -y install gcc make
@@ -65,3 +65,24 @@ EOF
 
 # Run the build
 RUN source /deps/bin/activate &&  pip install flit && if test -f "flit.ini"; then python -m flit.tomlify; fi && flit build
+
+# Validate script
+RUN cat <<'EOF' >/validate
+    # Capture artifacts generated
+    ARTIFACTS=(/src/dist/*)
+    # Ensure we only have one artefact
+    [ ${#ARTIFACTS[@]} -eq 1 ] || { echo "Unexpected artifacts prodced!"; exit 1; }
+    # BUILT_WHEEL is the artefact we built
+    BUILT_WHEEL=${ARTIFACTS[0]}
+    # Download the wheel
+    wget -q https://files.pythonhosted.org/packages/94/54/e7d793b573f298e1c9013b8c4dade17d481164aa517d1d7148619c2cedbf/markdown_it_py-4.0.0-py3-none-any.whl
+    # Compare wheel names
+    [ $(basename $BUILT_WHEEL) == "markdown_it_py-4.0.0-py3-none-any.whl" ] || { echo "Wheel name does not match!"; exit 1; }
+    # Compare file tree
+    (unzip -Z1 $BUILT_WHEEL | sort) > built.tree
+    (unzip -Z1 "markdown_it_py-4.0.0-py3-none-any.whl" | sort ) > pypi_artefact.tree
+    diff -u built.tree pypi_artefact.tree || { echo "File trees do not match!"; exit 1; }
+    echo "Success!"
+EOF
+
+ENTRYPOINT ["/bin/bash","/validate"]
