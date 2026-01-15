@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module implements the logic to generate a dockerfile from a Python buildspec."""
@@ -151,22 +151,41 @@ def pick_specific_version(buildspec: BaseBuildSpecDict) -> str | None:
     return None
 
 
-def infer_interpreter_version(tag: str) -> str | None:
+def infer_interpreter_version(specifier: str) -> str | None:
     """Infer interpreter version from Python-tag.
+
+    Note: This function is called on version specifiers
+    that we cannot trivially parse. In the case that
+    it is a Python-tag, which is obtained from the
+    wheel name, we attempt to infer the corresponding
+    interpreter version.
 
     Parameters
     ----------
-    tag: Python-tag, likely inferred from wheel name.
-
+    specifier: str
+        specifier string that could not be trivially parsed.
 
     Returns
     -------
-    str: interpreter version inferred from Python-tag
+    str | None
+        The interpreter version inferred from the specifier, or
+        None if we cannot parse the specifier as a Python-tag.
+
+    Examples
+    --------
+    >>> infer_interpreter_version("py3")
+    '3'
+    >>> infer_interpreter_version("cp314")
+    '3.14'
+    >>> infer_interpreter_version("pypy311")
+    '3.11'
+    >>> infer_interpreter_version("malformed123")
     """
-    # We will parse the interpreter version of CPython or just
-    # whatever generic Python version is specified.
-    pattern = re.compile(r"^(py|cp)(\d{1,3})$")
-    parsed_tag = pattern.match(tag)
+    # The primary alternative interpreter implementations are documented here:
+    # https://www.python.org/download/alternatives/
+    # We parse tags for these implementations using below regular expression:
+    pattern = re.compile(r"^(py|cp|ip|pp|pypy|jy|graalpy)(\d{1,3})$")
+    parsed_tag = pattern.match(specifier)
     if parsed_tag:
         digits = parsed_tag.group(2)
         # As match succeeded len(digits) \in {1,2,3}
