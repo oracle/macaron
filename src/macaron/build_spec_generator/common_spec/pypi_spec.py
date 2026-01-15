@@ -155,6 +155,16 @@ class PyPIBuildSpec(
                         chronologically_likeliest_version = (
                             pypi_package_json.get_chronologically_suitable_setuptools_version()
                         )
+                        try:
+                            # Get information from the wheel file name.
+                            logger.debug(pypi_package_json.wheel_filename)
+                            _, _, _, tags = parse_wheel_filename(pypi_package_json.wheel_filename)
+                            for tag in tags:
+                                wheel_name_python_version_list.append(tag.interpreter)
+                                wheel_name_platforms.add(tag.platform)
+                            logger.debug(python_version_set)
+                        except InvalidWheelFilename:
+                            logger.debug("Could not parse wheel file name to extract version")
                 except SourceCodeError:
                     logger.debug("Could not find pure wheel matching this PURL")
 
@@ -214,17 +224,6 @@ class PyPIBuildSpec(
                     except (InvalidRequirement, InvalidSpecifier) as error:
                         logger.debug("Malformed requirement encountered %s : %s", requirement, error)
 
-                try:
-                    # Get information from the wheel file name.
-                    logger.debug(pypi_package_json.wheel_filename)
-                    _, _, _, tags = parse_wheel_filename(pypi_package_json.wheel_filename)
-                    for tag in tags:
-                        wheel_name_python_version_list.append(tag.interpreter)
-                        wheel_name_platforms.add(tag.platform)
-                    logger.debug(python_version_set)
-                except InvalidWheelFilename:
-                    logger.debug("Could not parse wheel file name to extract version")
-
                 self.data["language_version"] = list(python_version_set) or wheel_name_python_version_list
 
                 # Use the default build command for pure Python packages.
@@ -243,9 +242,18 @@ class PyPIBuildSpec(
 
         if not patched_build_commands:
             # Resolve and patch build commands.
-            selected_build_commands = self.data["build_commands"] or self.get_default_build_commands(
-                self.data["build_tools"]
-            )
+
+            # To ensure that selected_build_commands is never empty, we seed with the fallback
+            # command of python -m build --wheel -n
+            if self.data["build_commands"]:
+                selected_build_commands = self.data["build_commands"]
+            else:
+                self.data["build_commands"] = ["python -m build --wheel -n".split()]
+                selected_build_commands = (
+                    self.get_default_build_commands(self.data["build_tools"]) or self.data["build_commands"]
+                )
+
+            logger.debug(selected_build_commands)
 
             patched_build_commands = (
                 patch_commands(
