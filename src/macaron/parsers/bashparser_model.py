@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Type definitions for Bash AST as produced (and json-serialised) by the "mvdan.cc/sh/v3/syntax" bash parser."""
@@ -159,7 +159,7 @@ class SglQuoted(TypedDict):
     Left: Pos
     Right: Pos
     Dollar: NotRequired[bool]
-    Value: str
+    Value: NotRequired[str]
 
 
 def is_sgl_quoted(part: WordPart) -> TypeGuard[SglQuoted]:

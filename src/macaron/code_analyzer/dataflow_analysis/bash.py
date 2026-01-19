@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Dataflow analysis implementation for analysing Bash shell scripts."""
@@ -1811,7 +1811,7 @@ def convert_shell_word_to_value(
     if dbl_quoted_parts is not None:
         return convert_shell_value_sequence_to_fact_value(dbl_quoted_parts, context), True
 
-    sgl_quoted_str = parse_sql_quoted_string(word)
+    sgl_quoted_str = parse_sgl_quoted_string(word)
     if sgl_quoted_str is not None:
         return facts.StringLiteral(sgl_quoted_str), True
 
@@ -1842,7 +1842,7 @@ def parse_dbl_quoted_string(word: bashparser_model.Word) -> list[LiteralOrEnvVar
     return None
 
 
-def parse_sql_quoted_string(word: bashparser_model.Word) -> str | None:
+def parse_sgl_quoted_string(word: bashparser_model.Word) -> str | None:
     """Parse single quoted string.
 
     If the given word is a single quoted string, return the string
@@ -1851,6 +1851,8 @@ def parse_sql_quoted_string(word: bashparser_model.Word) -> str | None:
     if len(word["Parts"]) == 1:
         part = word["Parts"][0]
         if bashparser_model.is_sgl_quoted(part):
+            if "Value" not in part:
+                return ""
             return part["Value"]
 
     return None
