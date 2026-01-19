@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains error classes for Macaron."""
@@ -129,3 +129,7 @@ class QueryMacaronDatabaseError(Exception):
 
 class GenerateBuildSpecError(Exception):
     """Happens when there is an unexpected error while generating the build spec file."""
+
+
+class WheelTagError(MacaronError):
+    """Happens when a Python wheel with unsupported tags is requested for analysis."""

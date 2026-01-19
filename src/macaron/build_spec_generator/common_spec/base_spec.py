@@ -81,7 +81,7 @@ class BaseBuildSpecDict(TypedDict, total=False):
     #: be a list of these that were used in building the wheel alongside their version.
     build_backends: NotRequired[list[str]]
 
-    #: Flag to indicate if the artifact packages binaries
+    #: Flag to indicate if the artifact includes binaries.
     has_binaries: NotRequired[bool]
 
 

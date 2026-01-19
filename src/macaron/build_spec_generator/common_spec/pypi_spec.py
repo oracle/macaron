@@ -17,7 +17,7 @@ from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 from macaron.build_spec_generator.build_command_patcher import CLI_COMMAND_PATCHES, patch_commands
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpec, BaseBuildSpecDict
 from macaron.config.defaults import defaults
-from macaron.errors import GenerateBuildSpecError, SourceCodeError
+from macaron.errors import GenerateBuildSpecError, SourceCodeError, WheelTagError
 from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.package_registry import pypi_registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -114,9 +114,9 @@ class PyPIBuildSpec(
 
         pypi_package_json = pypi_registry.find_or_create_pypi_asset(purl.name, purl.version, registry_info)
         patched_build_commands: list[list[str]] = []
-        build_requires_set: set[str] = set()
         build_backends_set: set[str] = set()
         parsed_build_requires: dict[str, str] = {}
+        sdist_build_requires: dict[str, str] = {}
         python_version_set: set[str] = set()
         wheel_name_python_version_list: list[str] = []
         wheel_name_platforms: set[str] = set()
@@ -134,9 +134,16 @@ class PyPIBuildSpec(
                         if py_version := json_extract(release, ["requires_python"], str):
                             python_version_set.add(py_version.replace(" ", ""))
 
+                self.data["has_binaries"] = not pypi_package_json.has_pure_wheel()
+
+                if self.data["has_binaries"]:
+                    logger.debug("Can not find a pure wheel")
+                else:
+                    logger.debug("Found pure wheel matching this PURL")
+
                 try:
-                    with pypi_package_json.wheel():
-                        self.data["has_binaries"] = False
+                    # Argument called download_binaries
+                    with pypi_package_json.wheel(download_binaries=self.data["has_binaries"]):
                         logger.debug("Wheel at %s", pypi_package_json.wheel_path)
                         # Should only have .dist-info directory.
                         logger.debug("It has directories %s", ",".join(os.listdir(pypi_package_json.wheel_path)))
@@ -166,9 +173,10 @@ class PyPIBuildSpec(
                             logger.debug(python_version_set)
                         except InvalidWheelFilename:
                             logger.debug("Could not parse wheel file name to extract version")
+                except WheelTagError:
+                    logger.debug("Can not analyze non-pure wheels")
                 except SourceCodeError:
-                    self.data["has_binaries"] = True
-                    logger.debug("Could not find pure wheel matching this PURL")
+                    logger.debug("Could not download wheel matching this PURL")
 
                 logger.debug("From .dist_info:")
                 logger.debug(parsed_build_requires)
@@ -181,27 +189,32 @@ class PyPIBuildSpec(
                             content = tomli.loads(pyproject_content.decode("utf-8"))
                             requires = json_extract(content, ["build-system", "requires"], list)
                             if requires:
-                                build_requires_set.update(elem.replace(" ", "") for elem in requires)
+                                for requirement in requires:
+                                    self.add_parsed_requirement(sdist_build_requires, requirement)
                             # If we cannot find `requires` in `[build-system]`, we lean on the fact that setuptools
                             # was the de-facto build tool, and infer a setuptools version to include.
                             else:
-                                build_requires_set.add(f"setuptools=={chronologically_likeliest_version}")
+                                self.add_parsed_requirement(
+                                    sdist_build_requires, f"setuptools=={chronologically_likeliest_version}"
+                                )
                             backend = json_extract(content, ["build-system", "build-backend"], str)
                             if backend:
                                 build_backends_set.add(backend.replace(" ", ""))
                             python_version_constraint = json_extract(content, ["project", "requires-python"], str)
                             if python_version_constraint:
                                 python_version_set.add(python_version_constraint.replace(" ", ""))
-                            self.apply_tool_specific_inferences(build_requires_set, python_version_set, content)
+                            self.apply_tool_specific_inferences(sdist_build_requires, python_version_set, content)
                             logger.debug(
                                 "After analyzing pyproject.toml from the sdist: build-requires: %s, build_backend: %s",
-                                build_requires_set,
+                                sdist_build_requires,
                                 build_backends_set,
                             )
                             # Here we have successfully analyzed the pyproject.toml file. Now, if we have a setup.py/cfg,
                             # we also need to infer a setuptools version to infer.
                             if pypi_package_json.file_exists("setup.py") or pypi_package_json.file_exists("setup.cfg"):
-                                build_requires_set.add(f"setuptools=={chronologically_likeliest_version}")
+                                self.add_parsed_requirement(
+                                    sdist_build_requires, f"setuptools=={chronologically_likeliest_version}"
+                                )
                         except TypeError as error:
                             logger.debug(
                                 "Found a type error while reading the pyproject.toml file from the sdist: %s", error
@@ -212,19 +225,20 @@ class PyPIBuildSpec(
                             logger.debug("No pyproject.toml found: %s", error)
                             # Here we do not have a pyproject.toml file. Instead, we lean on the fact that setuptools
                             # was the de-facto build tool, and infer a setuptools version to include.
-                            build_requires_set.add(f"setuptools=={chronologically_likeliest_version}")
+                            self.add_parsed_requirement(
+                                sdist_build_requires, f"setuptools=={chronologically_likeliest_version}"
+                            )
                 except SourceCodeError as error:
                     logger.debug("No source distribution found: %s", error)
 
+                logger.debug("After complete analysis of the sdist:")
+                logger.debug(sdist_build_requires)
+
                 # Merge in pyproject.toml information only when the wheel dist_info does not contain the same.
                 # Hatch is an interesting example of this merge being required.
-                for requirement in build_requires_set:
-                    try:
-                        parsed_requirement = Requirement(requirement)
-                        if parsed_requirement.name not in parsed_build_requires:
-                            parsed_build_requires[parsed_requirement.name] = str(parsed_requirement.specifier)
-                    except (InvalidRequirement, InvalidSpecifier) as error:
-                        logger.debug("Malformed requirement encountered %s : %s", requirement, error)
+                for requirement_name, specifier in sdist_build_requires.items():
+                    if requirement_name not in parsed_build_requires:
+                        parsed_build_requires[requirement_name] = specifier
 
                 self.data["language_version"] = list(python_version_set) or wheel_name_python_version_list
 
@@ -269,16 +283,34 @@ class PyPIBuildSpec(
 
         self.data["build_commands"] = patched_build_commands
 
+    def add_parsed_requirement(self, build_requirements: dict[str, str], requirement: str) -> None:
+        """
+        Parse a requirement string and add it to build_requirements, doing appropriate error handling.
+
+        Parameters
+        ----------
+        build_requirements: dict[str,str]
+            Dictionary of build requirements to populate.
+        requirement: str
+            Requirement string to parse.
+        """
+        try:
+            parsed_requirement = Requirement(requirement)
+            if parsed_requirement.name not in build_requirements:
+                build_requirements[parsed_requirement.name] = str(parsed_requirement.specifier)
+        except (InvalidRequirement, InvalidSpecifier) as error:
+            logger.debug("Malformed requirement encountered %s : %s", requirement, error)
+
     def apply_tool_specific_inferences(
-        self, build_requires_set: set[str], python_version_set: set[str], pyproject_contents: dict[str, Any]
+        self, build_requirements: dict[str, str], python_version_set: set[str], pyproject_contents: dict[str, Any]
     ) -> None:
         """
         Based on build tools inferred, look into the pyproject.toml for related additional dependencies.
 
         Parameters
         ----------
-        build_requires_set: set[str]
-            Set of build requirements to populate.
+        build_requirements: dict[str,str]
+            Dictionary of build requirements to populate.
         python_version_set: set[str]
             Set of compatible interpreter versions to populate.
         pyproject_contents: dict[str, Any]
@@ -293,7 +325,8 @@ class PyPIBuildSpec(
                 for _, section in hatch_build_hooks.items():
                     dependencies = section.get("dependencies")
                     if dependencies:
-                        build_requires_set.update(elem.replace(" ", "") for elem in dependencies)
+                        for requirement in dependencies:
+                            self.add_parsed_requirement(build_requirements, requirement)
         # If we have flit as a build_tool, we will check if the legacy header [tool.flit.metadata] exists,
         # and if so, check to see if we can use its "requires-python".
         if "flit" in self.data["build_tools"]:
