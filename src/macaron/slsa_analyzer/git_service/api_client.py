@@ -648,8 +648,8 @@ class GhAPIClient(BaseAPIClient):
 
         return download_file_with_size_limit(url, headers, download_path, timeout, size_limit)
 
-    def get_attestation(self, full_name: str, artifact_hash: str) -> dict:
-        """Download and return the attestation associated with the passed artifact hash, if any.
+    def get_attestation(self, full_name: str, artifact_hash: str) -> tuple[str | None, dict]:
+        """Download and return the attestation url and content associated with the passed artifact hash, if any.
 
         Parameters
         ----------
@@ -660,12 +660,14 @@ class GhAPIClient(BaseAPIClient):
 
         Returns
         -------
-        dict
-            The attestation data, or an empty dict if not found.
+        tuple[str|None,dict]
+            The attestation url and data, or None and an empty dict if not found.
         """
         url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/attestations/sha256:{artifact_hash}"
         response_data = send_get_http(url, self.headers)
-        return response_data or {}
+        if not response_data:
+            return (None, {})
+        return (url, response_data)
 
 
 def get_default_gh_client(access_token: str) -> GhAPIClient:
