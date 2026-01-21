@@ -142,7 +142,7 @@ class PyPIBuildSpec(
                     logger.debug("Found pure wheel matching this PURL")
 
                 try:
-                    # Argument called download_binaries
+                    # The wheel function handles downloading binaries in the case that we cannot find a pure wheel.
                     with pypi_package_json.wheel(download_binaries=self.data["has_binaries"]):
                         logger.debug("Wheel at %s", pypi_package_json.wheel_path)
                         # Should only have .dist-info directory.

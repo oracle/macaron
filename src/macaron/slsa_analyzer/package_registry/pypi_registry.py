@@ -865,7 +865,13 @@ class PyPIPackageJsonAsset:
 
     @contextmanager
     def wheel(self, download_binaries: bool) -> Generator[None]:
-        """Download and cleanup wheel of the package with a context manager."""
+        """Download and cleanup wheel of the package with a context manager.
+
+        Parameters
+        ----------
+        download_binaries: bool
+            Whether or not to download a wheel with binaries.
+        """
         if download_binaries:
             raise WheelTagError("Macaron does not currently support analysis of non-pure Python wheels.")
         if not self.download_wheel():
