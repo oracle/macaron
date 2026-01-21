@@ -82,8 +82,8 @@
       # Compare wheel names
       [ $(basename $BUILT_WHEEL) == "cachetools-6.2.1-py3-none-any.whl" ] || { echo "Wheel name does not match!"; exit 1; }
       # Compare file tree
-      (unzip -Z1 $BUILT_WHEEL | sort) > built.tree
-      (unzip -Z1 "cachetools-6.2.1-py3-none-any.whl" | sort ) > pypi_artefact.tree
+      (unzip -Z1 $BUILT_WHEEL | grep -v '\.dist-info' | sort) > built.tree
+      (unzip -Z1 "cachetools-6.2.1-py3-none-any.whl" | grep -v '\.dist-info' | sort ) > pypi_artefact.tree
       diff -u built.tree pypi_artefact.tree || { echo "File trees do not match!"; exit 1; }
       echo "Success!"
   EOF

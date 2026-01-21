@@ -145,8 +145,8 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
         # Compare wheel names
         [ $(basename $BUILT_WHEEL) == "{wheel_name}" ] || {{ echo "Wheel name does not match!"; exit 1; }}
         # Compare file tree
-        (unzip -Z1 $BUILT_WHEEL | sort) > built.tree
-        (unzip -Z1 "{wheel_name}" | sort ) > pypi_artefact.tree
+        (unzip -Z1 $BUILT_WHEEL | grep -v '\\.dist-info' | sort) > built.tree
+        (unzip -Z1 "{wheel_name}" | grep -v '\\.dist-info' | sort ) > pypi_artefact.tree
         diff -u built.tree pypi_artefact.tree || {{ echo "File trees do not match!"; exit 1; }}
         echo "Success!"
     EOF
