@@ -1,0 +1,38 @@
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Test buildspec generation for a non-pure wheel.
+
+tags:
+- macaron-python-package
+- tutorial
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/tree-sitter@0.25.2
+- name: Generate the buildspec
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/tree-sitter@0.25.2
+- name: Compare Buildspec.
+  kind: compare
+  options:
+    kind: default_build_spec
+    result: output/buildspec/pypi/tree-sitter/macaron.buildspec
+    expected: expected_default.buildspec
+- name: Generate the buildspec
+  kind: gen-build-spec
+  expect_fail: true
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/markdown-it-py@0.25.2
+    - --output-format
+    - dockerfile
