@@ -14,7 +14,6 @@ from packaging.requirements import InvalidRequirement, Requirement
 from packaging.specifiers import InvalidSpecifier
 from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 
-from macaron.build_spec_generator.build_command_patcher import CLI_COMMAND_PATCHES, patch_commands
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpec, BaseBuildSpecDict
 from macaron.config.defaults import defaults
 from macaron.errors import GenerateBuildSpecError, SourceCodeError, WheelTagError
@@ -242,10 +241,6 @@ class PyPIBuildSpec(
 
                 self.data["language_version"] = list(python_version_set) or wheel_name_python_version_list
 
-                # Use the default build command for pure Python packages.
-                if "any" in wheel_name_platforms:
-                    patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
-
         # If we were not able to find any build  and backends, use the default setuptools.
         if not parsed_build_requires:
             parsed_build_requires["setuptools"] = "==" + defaults.get("heuristic.pypi", "default_setuptools")
@@ -255,32 +250,9 @@ class PyPIBuildSpec(
         logger.debug("Combined build-requires: %s", parsed_build_requires)
         self.data["build_requires"] = parsed_build_requires
         self.data["build_backends"] = list(build_backends_set)
-
-        if not patched_build_commands:
-            # Resolve and patch build commands.
-
-            # To ensure that selected_build_commands is never empty, we seed with the fallback
-            # command of python -m build --wheel -n
-            if self.data["build_commands"]:
-                selected_build_commands = self.data["build_commands"]
-            else:
-                self.data["build_commands"] = ["python -m build --wheel -n".split()]
-                selected_build_commands = (
-                    self.get_default_build_commands(self.data["build_tools"]) or self.data["build_commands"]
-                )
-
-            logger.debug(selected_build_commands)
-
-            patched_build_commands = (
-                patch_commands(
-                    cmds_sequence=selected_build_commands,
-                    patches=CLI_COMMAND_PATCHES,
-                )
-                or []
-            )
-            if not patched_build_commands:
-                raise GenerateBuildSpecError(f"Failed to patch command sequences {selected_build_commands}.")
-
+        # Always defer to the default commands. In this way we provide a sensible
+        # build command in the case of non-pure packages.
+        patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
         self.data["build_commands"] = patched_build_commands
 
     def add_parsed_requirement(self, build_requirements: dict[str, str], requirement: str) -> None:
