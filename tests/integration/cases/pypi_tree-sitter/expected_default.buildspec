@@ -17,11 +17,11 @@
     ],
     "build_commands": [
         [
-            "pip",
-            "install",
-            "-v",
-            "-e",
-            "$MACARON_UNKNOWN"
+            "python",
+            "-m",
+            "build",
+            "--wheel",
+            "-n"
         ]
     ],
     "has_binaries": true,
