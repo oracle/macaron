@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -27,6 +27,7 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
             "ecosystem": "pypi",
             "purl": "pkg:pypi/cachetools@6.2.1",
             "language": "python",
+            "has_binaries": False,
             "build_tools": ["pip"],
             "build_commands": [["python", "-m", "build"]],
             "build_requires": {"setuptools": "==80.9.0", "wheel": ""},
