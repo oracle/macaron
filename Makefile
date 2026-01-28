@@ -93,26 +93,29 @@ setup: force-upgrade setup-go setup-binaries setup-schemastore
 	go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.3.0
 setup-go:
 	go build -o $(PACKAGE_PATH)/bin/ $(REPO_PATH)/golang/cmd/...
-setup-binaries: $(PACKAGE_PATH)/bin/slsa-verifier souffle gnu-sed
+setup-binaries: souffle gnu-sed
 
-# Install SLSA Verifier.
+# Install SLSA Verifier if not already installed.
 SLSA_VERIFIER_TAG := v2.7.1
 SLSA_VERIFIER_BIN := slsa-verifier-linux-amd64
-SLSA_VERIFIER_BIN_PATH := $(PACKAGE_PATH)/bin/$(SLSA_VERIFIER_BIN)
+SLSA_VERIFIER_BIN_PATH := $(HOME)/.local/bin
 SLSA_VERIFIER_PROVENANCE := $(SLSA_VERIFIER_BIN).intoto.jsonl
 SLSA_VERIFIER_PROVENANCE_PATH := $(PACKAGE_PATH)/bin/$(SLSA_VERIFIER_PROVENANCE)
-
-$(PACKAGE_PATH)/bin/slsa-verifier:
-	mkdir -p $(PACKAGE_PATH)/bin \
-    	&& wget -O $(PACKAGE_PATH)/bin/slsa-verifier https://github.com/slsa-framework/slsa-verifier/releases/download/$(SLSA_VERIFIER_TAG)/$(SLSA_VERIFIER_BIN) \
-    	&& wget -O $(SLSA_VERIFIER_PROVENANCE_PATH) https://github.com/slsa-framework/slsa-verifier/releases/download/$(SLSA_VERIFIER_TAG)/$(SLSA_VERIFIER_PROVENANCE) \
-    	&& chmod +x $(PACKAGE_PATH)/bin/slsa-verifier \
-		&& EXPECTED_HASH=$$(jq -r '.payload' $(SLSA_VERIFIER_PROVENANCE_PATH) | base64 -d | jq -r '.subject[] | select(.name == "$(SLSA_VERIFIER_BIN)") | .digest.sha256') \
-		&& ACTUAL_HASH=$$(sha256sum $(PACKAGE_PATH)/bin/slsa-verifier | awk '{print $$1}'); \
-		if [ "$$EXPECTED_HASH" != "$$ACTUAL_HASH" ]; then \
-			echo "Hash mismatch: expected $$EXPECTED_HASH, got $$ACTUAL_HASH"; \
-			exit 1; \
-		fi
+.PHONY: install-slsa-verifier
+install-slsa-verifier:
+	if ! command -v slsa-verifier >/dev/null 2>&1; then \
+		mkdir -p $(SLSA_VERIFIER_BIN_PATH) \
+			&& wget -O $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier https://github.com/slsa-framework/slsa-verifier/releases/download/$(SLSA_VERIFIER_TAG)/$(SLSA_VERIFIER_BIN) \
+			&& wget -O $(SLSA_VERIFIER_PROVENANCE_PATH) https://github.com/slsa-framework/slsa-verifier/releases/download/$(SLSA_VERIFIER_TAG)/$(SLSA_VERIFIER_PROVENANCE) \
+			&& EXPECTED_HASH=$$(jq -r '.payload' $(SLSA_VERIFIER_PROVENANCE_PATH) | base64 -d | jq -r '.subject[] | select(.name == "$(SLSA_VERIFIER_BIN)") | .digest.sha256') \
+			&& ACTUAL_HASH=$$(sha256sum $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier | awk '{print $$1}'); \
+			if [ "$$EXPECTED_HASH" != "$$ACTUAL_HASH" ]; then \
+				echo "Hash mismatch: expected $$EXPECTED_HASH, got $$ACTUAL_HASH"; \
+				exit 1; \
+			fi \
+			&& chmod +x $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier \
+			&& command -v $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier; \
+	fi
 
 # Set up schemastore for GitHub Actions specs.
 setup-schemastore: $(PACKAGE_PATH)/resources/schemastore/github-workflow.json $(PACKAGE_PATH)/resources/schemastore/LICENSE $(PACKAGE_PATH)/resources/schemastore/NOTICE
