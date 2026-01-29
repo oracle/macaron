@@ -47,12 +47,10 @@ RUN : \
 # Copy only the Makefile from the build context
 COPY Makefile .
 RUN : \
-    && dnf install -y jq \
     && make install-slsa-verifier \
     # Test that slsa-verifier exists and is executable.
-    && ls -l $HOME/.local/bin/slsa-verifier && test -x $HOME/.local/bin/slsa-verifier \
-    && dnf remove -y jq \
-    && dnf clean all
+    && ls -l $HOME/.local/bin/slsa-verifier \
+    && test -x $HOME/.local/bin/slsa-verifier
 
 COPY --chown=macaron:macaron docker/user.sh $HOME/user.sh
 

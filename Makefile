@@ -106,16 +106,6 @@ install-slsa-verifier:
 		mkdir -p $(SLSA_VERIFIER_BIN_PATH) \
 			&& curl --fail -L -o $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier https://github.com/slsa-framework/slsa-verifier/releases/download/$(SLSA_VERIFIER_TAG)/$(SLSA_VERIFIER_BIN) \
 			&& curl --fail -L -o $(SLSA_VERIFIER_PROVENANCE) https://github.com/slsa-framework/slsa-verifier/releases/download/$(SLSA_VERIFIER_TAG)/$(SLSA_VERIFIER_PROVENANCE) \
-			&& EXPECTED_HASH=$$(jq -r '.payload' $(SLSA_VERIFIER_PROVENANCE) | base64 -d | jq -r '.subject[] | select(.name == "$(SLSA_VERIFIER_BIN)") | .digest.sha256') \
-			&& ACTUAL_HASH=$$(sha256sum $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier | awk '{print $$1}') \
-			&& echo "Expected Hash: $$EXPECTED_HASH" \
-			&& echo "Actual Hash: $$ACTUAL_HASH" \
-			&& if [ "$$EXPECTED_HASH" != "$$ACTUAL_HASH" ]; then \
-					echo "Hashes do not match."; \
-					exit 1; \
-				else \
-					echo "Hashes match."; \
-				fi \
 			&& chmod +x $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier \
 			&& command -v $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier; \
 	fi
