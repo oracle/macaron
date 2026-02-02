@@ -102,7 +102,7 @@ runs:
 
   - name: Upload Attestation
     if: ${{ inputs.upload_attestation == 'true' && steps.run-macaron-policy-verification.outputs.vsa_report != 'VSA Not Generated.' }}
-    uses: actions/attest@daf44fb950173508f38bd2406030372c1d1162b1 #3.0.0
+    uses: actions/attest@e59cbc1ad1ac2d59339667419eb8cdde6eb61e3d #3.2.0
     with:
       subject-path: ${{ inputs.subject_path }}
       predicate-type: https://slsa.dev/verification_summary/v1
