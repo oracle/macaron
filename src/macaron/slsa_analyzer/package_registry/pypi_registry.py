@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides abstractions for the pypi package registry."""
@@ -22,6 +22,8 @@ from typing import TYPE_CHECKING
 
 import requests
 from bs4 import BeautifulSoup, Tag
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.version import InvalidVersion, Version
 
 from macaron.config.defaults import defaults
 from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceCodeError
@@ -539,6 +541,50 @@ class PyPIRegistry(PackageRegistry):
         # Return default just in case.
         return defaults.get("heuristic.pypi", "default_setuptools")
 
+    def get_python_requires_for_package_requirement(self, package_requirement: str) -> str | None:
+        """Return the Python version constraint string for earliest version of the package satisfying package_requirement.
+
+        Parameters
+        ----------
+        package_constraint: str
+            pip style requirement string.
+
+        Returns
+        -------
+        str | None
+            Corresponding Python version constraint string.
+        """
+        try:
+            parsed_requirement = Requirement(package_requirement)
+            endpoint = urllib.parse.urljoin(self.registry_url, f"pypi/{parsed_requirement.name}/json")
+            json = self.download_package_json(endpoint)
+            releases = json_extract(json, ["releases"], dict)
+            if releases:
+                # Find smallest requirement satisfying parsed_requirement.name
+                version_tuples: list[tuple[str, Version]] = []
+                for version in releases.keys():
+                    try:
+                        version_name = str(version)
+                        parsed_version = Version(version_name)
+                        if parsed_version in parsed_requirement.specifier:
+                            version_tuple = (version_name, parsed_version)
+                            version_tuples.append(version_tuple)
+                    except InvalidVersion:
+                        continue
+                if not version_tuples:
+                    return None
+                lowest_staisfying_version = min(version_tuples, key=lambda version_tuple: version_tuple[1])
+                release_info = releases[lowest_staisfying_version[0]]
+                if isinstance(release_info, list) and release_info:
+                    release = release_info[0]
+                    if isinstance(release, dict):
+                        constraint_specification = release.get("requires_python")
+                        if isinstance(constraint_specification, str):
+                            return constraint_specification
+            return None
+        except InvalidRequirement:
+            return None
+
     @staticmethod
     def extract_attestation(attestation_data: dict) -> dict | None:
         """Extract the first attestation file from a PyPI attestation response.
@@ -656,6 +702,12 @@ class PyPIPackageJsonAsset:
 
     #: The source code temporary location name.
     package_sourcecode_path: str = field(init=False)
+
+    #: URL of the sdist file.
+    sdist_url: str = field(init=False)
+
+    #: URL of the wheel file.
+    wheel_url: str = field(init=False)
 
     #: The wheel temporary location name.
     wheel_path: str = field(init=False)
@@ -785,6 +837,7 @@ class PyPIPackageJsonAsset:
                         fragment="",
                     ).geturl()
                     logger.debug("Found source URL: %s", configured_source_url)
+                    self.sdist_url = configured_source_url
                     return configured_source_url
         return None
 
@@ -845,6 +898,7 @@ class PyPIPackageJsonAsset:
                         fragment="",
                     ).geturl()
                     logger.debug("Found wheel URL: %s", configured_wheel_url)
+                    self.wheel_url = configured_wheel_url
                     return configured_wheel_url
         return None
 
