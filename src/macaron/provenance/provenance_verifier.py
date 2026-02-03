@@ -325,9 +325,8 @@ def _verify_slsa(download_path: str, prov_asset: AssetLocator, asset_name: str, 
         return False
 
     if not _is_slsa_verifier_installed():
-        os.environ["PATH"] = (
-            os.path.join(Path.home(), ".local", "bin", "slsa-verifier") + os.pathsep + os.environ.get("PATH", "")
-        )
+        os.environ["PATH"] = os.path.join(Path.home(), ".local", "bin") + os.pathsep + os.environ.get("PATH", "")
+        logger.debug("PATH: %s", os.environ["PATH"])
         # Try the ~/.local/bin path.
         if not _is_slsa_verifier_installed():
             logger.error(
