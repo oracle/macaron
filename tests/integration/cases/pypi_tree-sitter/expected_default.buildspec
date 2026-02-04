@@ -15,15 +15,7 @@
     "build_tools": [
         "pip"
     ],
-    "build_commands": [
-        [
-            "python",
-            "-m",
-            "build",
-            "--wheel",
-            "-n"
-        ]
-    ],
+    "build_commands": [],
     "has_binaries": true,
     "build_requires": {
         "setuptools": ">=43"

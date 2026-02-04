@@ -250,9 +250,9 @@ class PyPIBuildSpec(
         logger.debug("Combined build-requires: %s", parsed_build_requires)
         self.data["build_requires"] = parsed_build_requires
         self.data["build_backends"] = list(build_backends_set)
-        # Always defer to the default commands. In this way we provide a sensible
-        # build command in the case of non-pure packages.
-        patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
+        # We do not generate a build command for non-pure packages
+        if not self.data["has_binaries"]:
+            patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
         self.data["build_commands"] = patched_build_commands
 
     def add_parsed_requirement(self, build_requirements: dict[str, str], requirement: str) -> None:
