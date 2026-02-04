@@ -871,6 +871,19 @@ class PyPIPackageJsonAsset:
         ----------
         download_binaries: bool
             Whether or not to download a wheel with binaries.
+
+        Returns
+        -------
+        Generator[None]
+            Generator that yields None and takes care of resource cleanup on
+            exiting the context in which it was called
+
+        Raises
+        ------
+        WheelTagError
+            If download_binaries is True
+        SourceCodeError
+            If we are unable to download the requested wheel
         """
         if download_binaries:
             raise WheelTagError("Macaron does not currently support analysis of non-pure Python wheels.")
